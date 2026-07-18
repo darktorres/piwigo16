@@ -45,11 +45,10 @@ final class MaintenanceSysPageRenderer
                 $data = [];
                 $maint_actions_arr = $maint_actions;
 
-                // $conf['user_fields'] maps generic field names to actual DB column
+                // \Piwigo\Config\Config::userFields() maps generic field names to actual DB column
                 // names (see include/config_default.inc.php); its values are
                 // configuration-supplied, not statically typed, hence the fallback.
-                $user_fields = $conf['user_fields'] ?? null;
-                $user_fields = is_array($user_fields) ? $user_fields : [];
+                $user_fields = \Piwigo\Config\Config::userFields();
                 $username_field = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
                 $id_field = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
 

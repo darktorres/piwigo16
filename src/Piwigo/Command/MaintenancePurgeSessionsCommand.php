@@ -20,7 +20,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * column-mapping convention) is hardcoded to the literal 'id' default from
  * include/config_default.inc.php rather than read from `global $conf` --
  * CLI mode boots the Kernel without the legacy include/common.inc.php
- * bootstrap chain that populates $conf['user_fields'], and pulling in that
+ * bootstrap chain that populates \Piwigo\Config\Config::userFields(), and pulling in that
  * legacy include just for one config default would be disproportionate
  * scope for this command. Only affects installs using Apache-auth external
  * user tables with a non-default id column name -- confirm/extend if that

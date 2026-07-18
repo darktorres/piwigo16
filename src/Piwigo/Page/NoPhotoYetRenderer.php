@@ -28,9 +28,6 @@ final class NoPhotoYetRenderer
 
     public function render(): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         if (
             ! defined('IN_ADMIN')   // no message inside administration
             and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'identification' // keep the ability to login
@@ -72,8 +69,7 @@ final class NoPhotoYetRenderer
                 ]);
 
                 if (\Piwigo\Auth\AccessControl::isAdmin()) {
-                    $url = $conf['no_photo_yet_url'];
-                    $url = is_string($url) ? $url : '';
+                    $url = \Piwigo\Config\Config::noPhotoYetUrl();
                     if (! str_starts_with($url, 'http')) {
                         $url = get_root_url() . $url;
                     }

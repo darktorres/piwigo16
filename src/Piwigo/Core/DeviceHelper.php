@@ -41,7 +41,7 @@ final class DeviceHelper
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        $mobile_theme_conf = $conf['mobile_theme'] ?? null;
+        $mobile_theme_conf = \Piwigo\Config\Config::mobilTheme();
         if ($mobile_theme_conf === null || $mobile_theme_conf === '' || $mobile_theme_conf === 0
             || $mobile_theme_conf === 0.0 || $mobile_theme_conf === '0' || $mobile_theme_conf === false
             || $mobile_theme_conf === []) {

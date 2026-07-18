@@ -93,23 +93,21 @@ namespace Piwigo\Tests\Integration {
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
-            $GLOBALS['conf'] = [
-                'secret_key' => 'test-secret-key',
-                'comments_validation' => true,
-                'comments_author_mandatory' => false,
-                'comments_email_mandatory' => false,
-                'comments_enable_website' => true,
-                'comment_spam_reject' => true,
-                'comment_spam_max_links' => 3,
-                'anti-flood_time' => 0,
-                'guest_id' => 2,
-                'guest_access' => true,
-                'user_fields' => ['id' => 'id', 'username' => 'username', 'password' => 'password', 'email' => 'mail_address'],
-                'email_admin_on_comment' => false,
-                'email_admin_on_comment_validation' => false,
-                'email_admin_on_comment_edition' => false,
-                'email_admin_on_comment_deletion' => false,
-            ];
+            Config::override('secret_key', 'test-secret-key');
+            Config::override('comments_validation', true);
+            Config::override('comments_author_mandatory', false);
+            Config::override('comments_email_mandatory', false);
+            Config::override('comments_enable_website', true);
+            Config::override('comment_spam_reject', true);
+            Config::override('comment_spam_max_links', 3);
+            Config::override('anti-flood_time', 0);
+            Config::override('guest_id', 2);
+            Config::override('guest_access', true);
+            Config::override('user_fields', ['id' => 'id', 'username' => 'username', 'password' => 'password', 'email' => 'mail_address']);
+            Config::override('email_admin_on_comment', false);
+            Config::override('email_admin_on_comment_validation', false);
+            Config::override('email_admin_on_comment_edition', false);
+            Config::override('email_admin_on_comment_deletion', false);
             CurrentUser::set(User::fromUserArray(['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin', 'email' => 'fixture_admin@example.test']));
             $GLOBALS['page'] = [];
             $_POST['cr'] = [];
@@ -385,17 +383,9 @@ namespace Piwigo\Tests\Integration {
             self::assertNull($value);
         }
 
-        /**
-         * $GLOBALS is untyped (values are `mixed`), so a nested write like
-         * `$GLOBALS['conf']['key'] = ...` can't be offset into directly --
-         * round-trip through a locally typed variable instead.
-         */
         private function setConf(string $key, mixed $value): void
         {
-            /** @var array<string, mixed> $conf */
-            $conf = $GLOBALS['conf'];
-            $conf[$key] = $value;
-            $GLOBALS['conf'] = $conf;
+            Config::override($key, $value);
         }
 
         /**
@@ -456,9 +446,7 @@ namespace Piwigo\Tests\Integration {
         {
             $issuedAt = round(microtime(true), 1) - 1.0;
             $remoteAddr = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
-            /** @var array<string, mixed> $conf */
-            $conf = $GLOBALS['conf'];
-            $secretKey = is_string($conf['secret_key'] ?? null) ? $conf['secret_key'] : '';
+            $secretKey = Config::secretKey();
             $signature = hash_hmac('sha256', $issuedAt . substr($remoteAddr, 0, 5) . '0' . $imageId, $secretKey);
 
             return $issuedAt . ':0:' . $signature;

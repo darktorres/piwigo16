@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
 use Piwigo\Template\Combinable;
 use Piwigo\Template\FileCombiner;
 use Piwigo\Users\CurrentUser;
@@ -24,16 +25,14 @@ use Piwigo\Users\CurrentUser;
 // (src/Piwigo/Url/functions.php, P23 batch 8c), no explicit require needed.
 
 beforeEach(function (): void {
-    $GLOBALS['conf'] = [
-        'template_compile_check' => false,
-        'template_combine_files' => false,
-        'guest_access' => true,
-    ];
+    Config::override('template_compile_check', false);
+    Config::override('template_combine_files', false);
     CurrentUser::attachGlobals();
 });
 
 afterEach(function (): void {
     CurrentUser::reset();
+    Config::reset();
 });
 
 test('combine returns an empty array for no combinables', function (): void {

@@ -19,21 +19,25 @@ use Piwigo\Metadata\MetadataService;
 // provides data for site synchronization from the local file system
 class LocalSiteReader
 {
+    /**
+     * @var array<string, int>
+     */
+    private readonly array $flip_file_ext;
+
+    /**
+     * @var array<string, int>
+     */
+    private readonly array $flip_picture_ext;
+
     public function __construct(
         public string $site_url
     ) {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-        if (! isset($conf['flip_file_ext'])) {
-            $file_ext = $conf['file_ext'];
-            $file_ext = is_array($file_ext) ? array_filter($file_ext, is_string(...)) : [];
-            $conf['flip_file_ext'] = array_flip($file_ext);
-        }
-        if (! isset($conf['flip_picture_ext'])) {
-            $picture_ext = $conf['picture_ext'];
-            $picture_ext = is_array($picture_ext) ? array_filter($picture_ext, is_string(...)) : [];
-            $conf['flip_picture_ext'] = array_flip($picture_ext);
-        }
+        // Legacy Coupling Retirement Track A batch A4: was memoized on the
+        // $conf global (flip_file_ext/flip_picture_ext never DB-persist --
+        // pure per-instance derived state), now a private property computed
+        // once per instance instead.
+        $this->flip_file_ext = array_flip(\Piwigo\Config\Config::fileExtensions());
+        $this->flip_picture_ext = array_flip(\Piwigo\Config\Config::pictureExtensions());
     }
 
     /**
@@ -69,20 +73,15 @@ class LocalSiteReader
     }
 
     /**
-     * Returns an array with all file system files according to $conf['file_ext']
-     * and $conf['picture_ext']
+     * Returns an array with all file system files according to
+     * Config::fileExtensions() and Config::pictureExtensions()
      * @param string $path recurse in this directory
      * @return array<string, array<string, mixed>> like "pic.jpg"=>array('representative_ext'=>'jpg' ... )
      */
     public function get_elements($path): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
-        $flip_file_ext = $conf['flip_file_ext'];
-        $flip_file_ext = is_array($flip_file_ext) ? $flip_file_ext : [];
-        $flip_picture_ext = $conf['flip_picture_ext'];
-        $flip_picture_ext = is_array($flip_picture_ext) ? $flip_picture_ext : [];
+        $flip_file_ext = $this->flip_file_ext;
+        $flip_picture_ext = $this->flip_picture_ext;
 
         $subdirs = [];
         $fs = [];
@@ -106,7 +105,7 @@ class LocalSiteReader
                             'representative_ext' => $representative_ext,
                         ];
 
-                        if ((bool) $conf['enable_formats']) {
+                        if (\Piwigo\Config\Config::isFormatsEnabled()) {
                             $fs[$path . '/' . $node]['formats'] = $this->get_formats($path, $filename_wo_ext);
                         }
                     }
@@ -144,18 +143,13 @@ class LocalSiteReader
      */
     public function get_element_update_attributes(string $file): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
         $data = [];
 
         $filename = basename($file);
         $extension = \Piwigo\Core\StringHelper::getExtension($filename);
 
-        $flip_picture_ext = $conf['flip_picture_ext'];
-        $flip_picture_ext = is_array($flip_picture_ext) ? $flip_picture_ext : [];
-
         $representative_ext = null;
-        if (! isset($flip_picture_ext[$extension])) {
+        if (! isset($this->flip_picture_ext[$extension])) {
             $dirname = dirname($file);
             $filename_wo_ext = \Piwigo\Core\StringHelper::getFilenameWoExtension($filename);
             $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext);
@@ -188,12 +182,8 @@ class LocalSiteReader
     // -------------------------------------------------- private functions --------
     public function get_representative_ext(string $path, string $filename_wo_ext): ?string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
         $base_test = $path . '/pwg_representative/' . $filename_wo_ext . '.';
-        $picture_ext = $conf['picture_ext'];
-        $picture_ext = is_array($picture_ext) ? array_filter($picture_ext, is_string(...)) : [];
-        foreach ($picture_ext as $ext) {
+        foreach (\Piwigo\Config\Config::pictureExtensions() as $ext) {
             $test = $base_test . $ext;
             if (is_file($test)) {
                 return $ext;
@@ -207,17 +197,11 @@ class LocalSiteReader
      */
     public function get_formats(string $path, string $filename_wo_ext): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         $formats = [];
 
         $base_test = $path . '/pwg_format/' . $filename_wo_ext . '.';
 
-        $format_ext = $conf['format_ext'];
-        $format_ext = is_array($format_ext) ? array_filter($format_ext, is_string(...)) : [];
-
-        foreach ($format_ext as $ext) {
+        foreach (\Piwigo\Config\Config::formatExtensions() as $ext) {
             $test = $base_test . $ext;
 
             if (is_file($test)) {

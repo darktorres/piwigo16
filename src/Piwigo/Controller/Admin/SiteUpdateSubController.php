@@ -111,7 +111,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         // | Check Access and exit when user status is not ok                      |
         // +-----------------------------------------------------------------------+
 
-        if (! (bool) $conf['enable_synchronization']) {
+        if (! \Piwigo\Config\Config::enableSynchronization()) {
             die('synchronization is disabled');
         }
 
@@ -356,16 +356,16 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                 $dir = basename($fulldir);
                 // sync_chars_regex is a config default, always a regex string; treat
                 // a non-string config value the same as a non-matching name below.
-                $sync_chars_regex = $conf['sync_chars_regex'];
+                $sync_chars_regex = \Piwigo\Config\Config::syncCharsRegex();
                 if (is_string($sync_chars_regex) && (bool) preg_match($sync_chars_regex, $dir)) {
                     $insert = [
                         'id' => $next_id++,
                         'dir' => $dir,
                         'name' => str_replace('_', ' ', $dir),
                         'site_id' => $site_id,
-                        'commentable' => \Piwigo\Db\MysqliDb::booleanToString($conf['newcat_default_commentable']),
-                        'status' => $conf['newcat_default_status'],
-                        'visible' => \Piwigo\Db\MysqliDb::booleanToString($conf['newcat_default_visible']),
+                        'commentable' => \Piwigo\Db\MysqliDb::booleanToString(\Piwigo\Config\Config::newcatDefaultCommentable()),
+                        'status' => \Piwigo\Config\Config::newcatDefaultStatus(),
+                        'visible' => \Piwigo\Db\MysqliDb::booleanToString(\Piwigo\Config\Config::newcatDefaultVisible()),
                     ];
 
                     if (isset($db_fulldirs[dirname($fulldir)])) {
@@ -450,7 +450,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                     ]);
 
                     $category_up = implode(',', array_unique($category_up));
-                    if ((bool) $conf['inheritance_by_default'] and ! empty($category_up)) {
+                    if (\Piwigo\Config\Config::inheritanceByDefault() and ! empty($category_up)) {
                         // predeclared so both stay real arrays below even if a
                         // query below ever returns an empty/falsy result set.
                         $granted_grps = [];
@@ -651,7 +651,7 @@ SELECT id, path
                 $filename = basename($path);
                 // sync_chars_regex is a config default, always a regex string; treat
                 // a non-string config value the same as a non-matching name below.
-                $sync_chars_regex = $conf['sync_chars_regex'];
+                $sync_chars_regex = \Piwigo\Config\Config::syncCharsRegex();
                 if (! is_string($sync_chars_regex) || ! (bool) preg_match($sync_chars_regex, $filename)) {
                     $errors[] = [
                         'path' => $path,
@@ -688,7 +688,7 @@ SELECT id, path
                     'info' => l10n('added'),
                 ];
 
-                if ((bool) $conf['enable_formats']) {
+                if (\Piwigo\Config\Config::isFormatsEnabled()) {
                     // 'formats' is only known as mixed here (get_elements()'s
                     // declared value type is array<string, mixed>), but it's always
                     // the get_formats() float[] result when set.
@@ -713,7 +713,7 @@ SELECT id, path
             }
 
             // search new/removed formats on photos already registered in database
-            if ((bool) $conf['enable_formats']) {
+            if (\Piwigo\Config\Config::isFormatsEnabled()) {
                 $db_elements_flip = array_flip($db_elements);
 
                 $existing_ids = [];

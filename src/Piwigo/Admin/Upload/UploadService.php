@@ -219,7 +219,7 @@ final class UploadService
         }
 
         // we only try to detect duplicate on a new image, not when updating an existing image
-        if (! isset($image_id) and (bool) $conf['upload_detect_duplicate']) {
+        if (! isset($image_id) and \Piwigo\Config\Config::uploadDetectDuplicate()) {
             $query = '
 SELECT
     id
@@ -290,8 +290,7 @@ SELECT
             [$year, $month, $day] = $date_parts;
 
             // upload directory hierarchy
-            $conf_upload_dir = $conf['upload_dir'];
-            $conf_upload_dir = is_string($conf_upload_dir) ? $conf_upload_dir : '';
+            $conf_upload_dir = \Piwigo\Config\Config::uploadDir();
             $upload_dir = sprintf(
                 PHPWG_ROOT_PATH . $conf_upload_dir . '/%s/%s/%s',
                 $year,
@@ -324,7 +323,7 @@ SELECT
                 $file_path .= 'jpg';
             } elseif ($type === IMAGETYPE_WEBP) {
                 $file_path .= 'webp';
-            } elseif (isset($conf['upload_form_all_types']) and (bool) $conf['upload_form_all_types']) {
+            } elseif (\Piwigo\Config\Config::has('upload_form_all_types') and \Piwigo\Config\Config::uploadFormAllTypes()) {
                 $original_extension = strtolower(\Piwigo\Core\StringHelper::getExtension($original_filename));
 
                 $finfo = finfo_open(FILEINFO_MIME_TYPE);
@@ -350,8 +349,7 @@ SELECT
                 // genuinely-matching SVG before it ever reaches storage.
                 $this->sanitizeSvgIfNeeded($source_filepath, is_string($finfo_type) ? $finfo_type : null);
 
-                $conf_file_ext = $conf['file_ext'];
-                $conf_file_ext = is_array($conf_file_ext) ? $conf_file_ext : [];
+                $conf_file_ext = \Piwigo\Config\Config::fileExtensions();
                 if (in_array($original_extension, $conf_file_ext, true)) {
                     $file_path .= $original_extension;
                 } else {
@@ -413,27 +411,24 @@ SELECT
         $logger->info(__METHOD__ . ' : force cache generation, representative_ext = ' . ($representative_ext ?? ''));
 
         if (pwg_image::get_library() !== 'gd') {
-            if ((bool) $conf['original_resize']) {
-                $original_resize_maxwidth = $conf['original_resize_maxwidth'];
-                $original_resize_maxwidth = is_numeric($original_resize_maxwidth) ? (int) $original_resize_maxwidth : 2000;
+            if (\Piwigo\Config\Config::originalResize()) {
+                $original_resize_maxwidth = \Piwigo\Config\Config::originalResizeMaxwidth();
 
-                $original_resize_maxheight = $conf['original_resize_maxheight'];
-                $original_resize_maxheight = is_numeric($original_resize_maxheight) ? (int) $original_resize_maxheight : 2000;
+                $original_resize_maxheight = \Piwigo\Config\Config::originalResizeMaxheight();
 
                 $need_resize = $this->needResize($file_path, $original_resize_maxwidth, $original_resize_maxheight);
 
                 if ($need_resize) {
                     $img = new pwg_image($file_path);
 
-                    $original_resize_quality = $conf['original_resize_quality'];
-                    $original_resize_quality = is_numeric($original_resize_quality) ? (int) $original_resize_quality : 95;
+                    $original_resize_quality = \Piwigo\Config\Config::originalResizeQuality();
 
                     $img->pwg_resize(
                         $file_path,
                         $original_resize_maxwidth,
                         $original_resize_maxheight,
                         $original_resize_quality,
-                        (bool) $conf['upload_form_automatic_rotation'],
+                        \Piwigo\Config\Config::uploadFormAutomaticRotation(),
                         false
                     );
 
@@ -516,8 +511,9 @@ SELECT
         $this->addUploadedFileAddToCategories($image_id, $categories);
 
         // update metadata from the uploaded file (exif/iptc)
-        if ((bool) $conf['use_exif'] and ! function_exists('exif_read_data')) {
+        if (\Piwigo\Config\Config::useExif() and ! function_exists('exif_read_data')) {
             $conf['use_exif'] = false;
+            \Piwigo\Config\Config::override('use_exif', false);
         }
         new MetadataService(new MetadataRepository(DbConnection::build()))->syncMetadata([(int) $image_id]);
 
@@ -562,16 +558,16 @@ SELECT
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        if (! isset($conf['lounge_active'])) {
+        if (! \Piwigo\Config\Config::has('lounge_active')) {
             \Piwigo\Config\ConfigDb::confUpdateParam('lounge_active', false, true);
         }
 
-        if (! (bool) $conf['lounge_active']) {
+        if (! \Piwigo\Config\Config::loungeActive()) {
             // check if we need to use the lounge from now
             $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT COUNT(*) FROM ' . Tables::images() . ';'));
             assert($row !== null);
             [$nb_photos] = $row;
-            if ($nb_photos >= $conf['lounge_activate_threshold']) {
+            if ($nb_photos >= \Piwigo\Config\Config::loungeActivateThreshold()) {
                 \Piwigo\Config\ConfigDb::confUpdateParam('lounge_active', true, true);
             }
         }
@@ -580,7 +576,7 @@ SELECT
             $imageConn = DbConnection::build();
             $imageService = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)));
 
-            if ((bool) $conf['lounge_active']) {
+            if (\Piwigo\Config\Config::loungeActive()) {
                 // fillLounge() requires int keys for $categories; a WS param
                 // forced into an array by makeArrayParam() could theoretically
                 // carry non-sequential/string keys, so reindex to guarantee it.
@@ -590,7 +586,7 @@ SELECT
             }
         }
 
-        if (! (bool) $conf['lounge_active']) {
+        if (! \Piwigo\Config\Config::loungeActive()) {
             UserCacheInvalidator::invalidate();
         }
     }
@@ -799,8 +795,7 @@ SELECT
         $representative_file_path = \Piwigo\Image\ImagePathHelper::originalToRepresentative($file_path, $ext);
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
-        $ext_imagick_dir = $conf['ext_imagick_dir'];
-        $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+        $ext_imagick_dir = \Piwigo\Config\Config::extImagickDir();
         // [SEC-16] escapeshellarg() on the dir prefix and both real paths
         // below -- same pattern P19 established in pwg_image.php/
         // image_ext_imagick.php; the original never escaped an embedded
@@ -852,8 +847,7 @@ SELECT
 
         [$w, $h] = self::getOptimalDimensionsForRepresentative();
 
-        $ext_imagick_dir = $conf['ext_imagick_dir'];
-        $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+        $ext_imagick_dir = \Piwigo\Config\Config::extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . pwg_image::get_ext_imagick_command();
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
@@ -899,14 +893,13 @@ SELECT
         $representative_file_path = dirname($file_path) . '/pwg_representative/';
         $representative_file_path .= \Piwigo\Core\StringHelper::getFilenameWoExtension(basename($file_path)) . '.';
 
-        $conf_tiff_representative_ext = $conf['tiff_representative_ext'];
-        $representative_ext = is_string($conf_tiff_representative_ext) ? $conf_tiff_representative_ext : 'jpg';
+        $conf_tiff_representative_ext = \Piwigo\Config\Config::tiffRepresentativeExt();
+        $representative_ext = $conf_tiff_representative_ext;
         $representative_file_path .= $representative_ext;
 
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
-        $ext_imagick_dir = $conf['ext_imagick_dir'];
-        $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+        $ext_imagick_dir = \Piwigo\Config\Config::extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . pwg_image::get_ext_imagick_command();
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
@@ -985,8 +978,7 @@ SELECT
         $logger->info(__METHOD__ . ', Poster at ' . $second . 's');
 
         // Generate poster, see https://trac.ffmpeg.org/wiki/Seeking
-        $ffmpeg_dir = $conf['ffmpeg_dir'];
-        $ffmpeg_dir = is_string($ffmpeg_dir) ? $ffmpeg_dir : '';
+        $ffmpeg_dir = \Piwigo\Config\Config::ffmpegDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above (same
         // dir-prefix pattern applied to the ffmpeg/avconv binaries here).
         $ffmpeg = escapeshellarg($ffmpeg_dir) . 'ffmpeg';
@@ -1052,8 +1044,7 @@ SELECT
 
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
-        $ext_imagick_dir = $conf['ext_imagick_dir'];
-        $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+        $ext_imagick_dir = \Piwigo\Config\Config::extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . pwg_image::get_ext_imagick_command();
 
@@ -1116,8 +1107,7 @@ SELECT
 
         // convert -density 300 image.eps -resize 2048x2048 image.png
 
-        $ext_imagick_dir = $conf['ext_imagick_dir'];
-        $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+        $ext_imagick_dir = \Piwigo\Config\Config::extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . pwg_image::get_ext_imagick_command();
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
@@ -1180,8 +1170,7 @@ SELECT
          */
         global $conf, $logger;
 
-        $picture_ext = $conf['picture_ext'];
-        $picture_ext = is_array($picture_ext) ? $picture_ext : [];
+        $picture_ext = \Piwigo\Config\Config::pictureExtensions();
         if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($image_filepath)), $picture_ext, true)) {
             return false;
         }
@@ -1257,10 +1246,10 @@ SELECT
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        if (isset($conf['upload_form_all_types']) and (bool) $conf['upload_form_all_types']) {
-            $extensions = $conf['file_ext'];
+        if (\Piwigo\Config\Config::has('upload_form_all_types') and \Piwigo\Config\Config::uploadFormAllTypes()) {
+            $extensions = \Piwigo\Config\Config::fileExtensions();
         } else {
-            $extensions = $conf['picture_ext'];
+            $extensions = \Piwigo\Config\Config::pictureExtensions();
         }
 
         // $conf values are inherently mixed; only string elements can safely
@@ -1336,8 +1325,7 @@ SELECT
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        $upload_dir = $conf['upload_dir'];
-        $upload_dir = is_string($upload_dir) ? $upload_dir : '';
+        $upload_dir = \Piwigo\Config\Config::uploadDir();
 
         $relative_dir = preg_replace('#^' . PHPWG_ROOT_PATH . '#', '', $upload_dir);
 

@@ -63,8 +63,8 @@ final class ImageService
         global $conf;
 
         return [
-            'period' => $conf['slideshow_period'],
-            'repeat' => $conf['slideshow_repeat'],
+            'period' => \Piwigo\Config\Config::slideshowPeriod(),
+            'repeat' => \Piwigo\Config\Config::slideshowRepeat(),
             'play' => true,
         ];
     }
@@ -79,8 +79,8 @@ final class ImageService
         global $conf;
 
         $period = $params['period'] ?? 0;
-        $min = $conf['slideshow_period_min'];
-        $max = $conf['slideshow_period_max'];
+        $min = \Piwigo\Config\Config::slideshowPeriodMin();
+        $max = \Piwigo\Config\Config::slideshowPeriodMax();
 
         if ($period < $min) {
             $params['period'] = $min;
@@ -220,7 +220,7 @@ final class ImageService
             }
 
             $ok = true;
-            if (! isset($conf['never_delete_originals'])) {
+            if (! \Piwigo\Config\Config::has('never_delete_originals')) {
                 foreach ($files as $path) {
                     if (is_file($path) and ! unlink($path)) {
                         $ok = false;
@@ -333,8 +333,8 @@ final class ImageService
          */
         global $logger, $conf;
 
-        if (isset($conf['empty_lounge_running'])) {
-            $emptyLoungeRunning = $conf['empty_lounge_running'];
+        if (\Piwigo\Config\Config::has('empty_lounge_running')) {
+            $emptyLoungeRunning = \Piwigo\Config\Config::emptyLoungeRunning();
             $emptyLoungeRunning = is_string($emptyLoungeRunning) ? $emptyLoungeRunning : '';
             [$runningExecId, $runningExecStartTime] = explode('-', $emptyLoungeRunning);
             if (time() - (int) $runningExecStartTime > 60) {

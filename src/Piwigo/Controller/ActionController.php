@@ -64,7 +64,7 @@ final class ActionController implements ControllerInterface
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        if ((bool) $conf['enable_formats'] and isset($_GET['format'])) {
+        if (\Piwigo\Config\Config::isFormatsEnabled() and isset($_GET['format'])) {
             (new \Piwigo\Validation\InputValidator())->validate('format', $_GET, false, ValidationPattern::ID);
 
             if (! is_numeric($_GET['format'])) {

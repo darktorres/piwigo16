@@ -54,10 +54,10 @@ final class UserActivityPageRenderer
         $tabsheet->select($page['tab']);
         $tabsheet->assign();
 
-        // $conf['user_fields'] maps generic field names to table-specific column
+        // \Piwigo\Config\Config::userFields() maps generic field names to table-specific column
         // names; narrow once here and reuse below.
         /** @var array<string, string> $user_fields */
-        $user_fields = $conf['user_fields'];
+        $user_fields = \Piwigo\Config\Config::userFields();
 
         $activity_service = new ActivityService(new ActivityRepository(DbConnection::build()));
 
@@ -105,7 +105,7 @@ final class UserActivityPageRenderer
 
         $template->assign([
             'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
-            'INHERIT' => $conf['inheritance_by_default'],
+            'INHERIT' => \Piwigo\Config\Config::inheritanceByDefault(),
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['users']),
         ]);
 

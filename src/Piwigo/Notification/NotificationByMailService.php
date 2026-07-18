@@ -49,8 +49,7 @@ final class NotificationByMailService
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        $userFields = $conf['user_fields'] ?? [];
-        $userFields = is_array($userFields) ? $userFields : [];
+        $userFields = \Piwigo\Config\Config::userFields();
         $usernameField = $userFields['username'] ?? 'username';
         $usernameField = is_string($usernameField) ? $usernameField : 'username';
         $emailField = $userFields['email'] ?? 'email';

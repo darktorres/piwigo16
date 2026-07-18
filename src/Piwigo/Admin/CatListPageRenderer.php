@@ -169,9 +169,9 @@ SELECT COUNT(*)
 
         if ($parent_id !== null) {
             // same fallback default as include/config_default.inc.php's
-            // $conf['level_separator'] (' / '); see the identical pattern in
+            // \Piwigo\Config\Config::levelSeparator() (' / '); see the identical pattern in
             // include/section_init.inc.php.
-            $level_separator = is_string($conf['level_separator']) ? $conf['level_separator'] : ' / ';
+            $level_separator = \Piwigo\Config\Config::levelSeparator();
             $navigation .= $level_separator;
 
             $navigation .= new HtmlService()
@@ -329,7 +329,7 @@ SELECT
                 $tpl_cat['U_DELETE'] = $self_url . '&amp;delete=' . $cat_id;
                 $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken();
             } else {
-                if ((bool) $conf['enable_synchronization']) {
+                if (\Piwigo\Config\Config::enableSynchronization()) {
                     $tpl_cat['U_SYNC'] = $base_url . 'site_update&amp;site=1&amp;cat_id=' . $cat_id;
                 }
             }

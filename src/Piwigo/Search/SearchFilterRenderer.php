@@ -43,11 +43,8 @@ final class SearchFilterRenderer
 
     public function render(): void
     {
-        /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
-         */
-        global $conf, $page, $persistent_cache;
+        /** @var array<string, mixed> $page */
+        global $page, $persistent_cache;
         $template = $this->template;
         if (! $persistent_cache instanceof PersistentCache) {
             $this->htmlRenderer->fatalError('persistent cache not initialized');
@@ -56,19 +53,7 @@ final class SearchFilterRenderer
         $tagConn = DbConnection::build();
         $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
 
-        $filtersViewsConf = \Piwigo\Config\ConfigDb::confGetParam('filters_views', null);
-        if (is_array($filtersViewsConf) || is_string($filtersViewsConf)) {
-            $filtersViewsRaw = \Piwigo\Core\ArrayHelper::safeUnserialize($filtersViewsConf);
-        } else {
-            $filtersViewsRaw = $conf['default_filters_views'];
-        }
-
-        if (! is_array($filtersViewsRaw)) {
-            $filtersViewsRaw = $conf['default_filters_views'];
-            if (! is_array($filtersViewsRaw)) {
-                $filtersViewsRaw = [];
-            }
-        }
+        $filtersViewsRaw = \Piwigo\Config\Config::filtersViews() ?? \Piwigo\Config\Config::defaultFiltersViews();
 
         // 'last_filters_conf' is a lone boolean flag stored alongside the
         // per-filter settings in this config value (see
@@ -413,11 +398,10 @@ SELECT
                     }
                 }
 
-                // $conf['user_fields'] maps generic field names to actual
+                // \Piwigo\Config\Config::userFields() maps generic field names to actual
                 // DB columns; fall back to the generic names, matching
                 // MailService::userFields().
-                $confUserFields = $conf['user_fields'] ?? null;
-                $confUserFields = is_array($confUserFields) ? $confUserFields : [];
+                $confUserFields = \Piwigo\Config\Config::userFields();
                 $userFieldId = is_string($confUserFields['id'] ?? null) ? $confUserFields['id'] : 'id';
                 $userFieldUsername = is_string($confUserFields['username'] ?? null) ? $confUserFields['username'] : 'username';
 
@@ -567,7 +551,7 @@ SELECT
         }
 
         // For rating
-        if ((bool) $conf['rate']) {
+        if (\Piwigo\Config\Config::rateEnabled()) {
             $template->assign('SHOW_FILTER_RATINGS', true);
 
             if (isset($searchFields['ratings']) and (bool) $displayFilters['rating']['access']) {

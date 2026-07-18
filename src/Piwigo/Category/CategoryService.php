@@ -237,8 +237,8 @@ final class CategoryService
             [l10n('Date created, old &rarr; new'), 'date_creation ASC', true],
             [l10n('Date posted, new &rarr; old'), 'date_available DESC', true],
             [l10n('Date posted, old &rarr; new'), 'date_available ASC', true],
-            [l10n('Rating score, high &rarr; low'), 'rating_score DESC', $conf['rate']],
-            [l10n('Rating score, low &rarr; high'), 'rating_score ASC', $conf['rate']],
+            [l10n('Rating score, high &rarr; low'), 'rating_score DESC', \Piwigo\Config\Config::rateEnabled()],
+            [l10n('Rating score, low &rarr; high'), 'rating_score ASC', \Piwigo\Config\Config::rateEnabled()],
             [l10n('Visits, high &rarr; low'), 'hit DESC', true],
             [l10n('Visits, low &rarr; high'), 'hit ASC', true],
             [l10n('Permissions'), 'level DESC', \Piwigo\Auth\AccessControl::isAdmin()],
@@ -510,7 +510,7 @@ final class CategoryService
             ])
             : '';
 
-        $orderByConf = $conf['order_by'] ?? null;
+        $orderByConf = \Piwigo\Config\Config::all()['order_by'] ?? null;
         $orderByConfStr = is_scalar($orderByConf) ? (string) $orderByConf : '';
         $effectiveOrderBy = $orderBy === '' ? $orderByConfStr : $orderBy;
 
@@ -557,8 +557,8 @@ final class CategoryService
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        $relatedAlbumsDisplayLimit = $conf['related_albums_display_limit'] ?? null;
-        $relatedAlbumsDisplayLimitInt = is_numeric($relatedAlbumsDisplayLimit) ? (int) $relatedAlbumsDisplayLimit : null;
+        $relatedAlbumsDisplayLimit = \Piwigo\Config\Config::relatedAlbumsDisplayLimit();
+        $relatedAlbumsDisplayLimitInt = $relatedAlbumsDisplayLimit;
 
         $commonCats = $this->getCommonCategories($items, $relatedAlbumsDisplayLimitInt, $excludedCatIds);
 
@@ -752,7 +752,7 @@ final class CategoryService
                     'IS_UPPERCAT' => $selectedCategory !== null && $selectedIdUppercatStr !== null && $selectedIdUppercatStr === $rowIdStr,
                 ]
             );
-            if ((bool) $conf['index_new_icon']) {
+            if (\Piwigo\Config\Config::indexNewIcon()) {
                 $maxDateLast = $row['max_date_last'] ?? null;
                 $recentPeriodForIcon = is_numeric($currentUser->rawAttributes['recent_period'] ?? null) ? (int) $currentUser->rawAttributes['recent_period'] : 0;
                 $row['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon(is_string($maxDateLast) ? $maxDateLast : '', $recentPeriodForIcon, $childDateLast);
@@ -1008,7 +1008,7 @@ final class CategoryService
             $this->repo->clearRepresentativePictureIds($wrongRepresentant);
         }
 
-        if (! (bool) $conf['allow_random_representative']) {
+        if (! \Piwigo\Config\Config::allowRandomRepresentative()) {
             // If the random representant is not allowed, we need to find
             // categories with elements and with no representant. Those categories
             // must be added to the list of categories to set to a random
@@ -1616,7 +1616,7 @@ final class CategoryService
         }
 
         $rank = 0;
-        if ($conf['newcat_default_position'] === 'last') {
+        if (\Piwigo\Config\Config::newcatDefaultPosition() === 'last') {
             // what is the current higher rank for this parent?
             $maxRank = $this->repo->findMaxRankForParent($parentId);
             if ($maxRank !== null) {
@@ -1639,7 +1639,7 @@ final class CategoryService
         if (isset($options['commentable']) && is_bool($options['commentable'])) {
             $insert['commentable'] = $options['commentable'];
         } else {
-            $insert['commentable'] = $conf['newcat_default_commentable'];
+            $insert['commentable'] = \Piwigo\Config\Config::newcatDefaultCommentable();
         }
         $insert['commentable'] = \Piwigo\Db\MysqliDb::booleanToString($insert['commentable']);
 
@@ -1649,7 +1649,7 @@ final class CategoryService
         if (isset($options['visible']) && is_bool($options['visible'])) {
             $insert['visible'] = $options['visible'];
         } else {
-            $insert['visible'] = $conf['newcat_default_visible'];
+            $insert['visible'] = \Piwigo\Config\Config::newcatDefaultVisible();
         }
         $insert['visible'] = \Piwigo\Db\MysqliDb::booleanToString($insert['visible']);
 
@@ -1657,13 +1657,13 @@ final class CategoryService
         if (isset($options['status']) && $options['status'] === 'private') {
             $insert['status'] = 'private';
         } else {
-            $insert['status'] = $conf['newcat_default_status'];
+            $insert['status'] = \Piwigo\Config\Config::newcatDefaultStatus();
         }
 
         // any description for this album?
         if (isset($options['comment'])) {
             $comment = is_scalar($options['comment']) ? (string) $options['comment'] : '';
-            $insert['comment'] = ((bool) $conf['allow_html_descriptions']) ? $options['comment'] : strip_tags($comment);
+            $insert['comment'] = (\Piwigo\Config\Config::allowHtmlDescriptions()) ? $options['comment'] : strip_tags($comment);
         }
 
         $parentIdIsEmpty = $parentId === null || $parentId === 0 || $parentId === '0' || $parentId === '';
@@ -1723,7 +1723,7 @@ final class CategoryService
         $this->updateGlobalRank();
 
         $insertIdUppercat = $insert['id_uppercat'] ?? null;
-        if ($insert['status'] === 'private' && $insertIdUppercat !== null && $insertIdUppercat !== 0 && ((isset($options['inherit']) && (bool) $options['inherit']) || (bool) $conf['inheritance_by_default'])) {
+        if ($insert['status'] === 'private' && $insertIdUppercat !== null && $insertIdUppercat !== 0 && ((isset($options['inherit']) && (bool) $options['inherit']) || \Piwigo\Config\Config::inheritanceByDefault())) {
             $grantedGrps = $this->repo->findAccessGroupIds($insertIdUppercat);
             $inserts = [];
             foreach ($grantedGrps as $grantedGrp) {

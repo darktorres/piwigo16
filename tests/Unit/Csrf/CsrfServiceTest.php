@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
 use Piwigo\Csrf\CsrfService;
 
 beforeEach(function (): void {
-    // CsrfService reads global $conf directly, not Piwigo\Config\Config::
-    // secretKey() -- see the class's own docblock for why (Config::$data is
-    // never synced with the real, admin-configurable DB-persisted config
-    // table during a live request).
-    $GLOBALS['conf'] = ['secret_key' => 'test-secret-key'];
+    Config::override('secret_key', 'test-secret-key');
     unset($_REQUEST['pwg_token']);
+});
+
+afterEach(function (): void {
+    Config::reset();
 });
 
 // getToken()'s `session_id() === false` guard is preserved from the
@@ -32,7 +33,7 @@ test('getToken is stable for the same session id and secret key', function (): v
 // SEC-27/SEC-28 fix.
 test('getToken uses sha256, not md5', function (): void {
     session_id('fixed-test-session-id');
-    $GLOBALS['conf'] = ['secret_key' => 'test-secret-key'];
+    Config::override('secret_key', 'test-secret-key');
 
     $expected = hash_hmac('sha256', 'fixed-test-session-id', 'test-secret-key');
 
@@ -44,7 +45,7 @@ test('getToken changes when the secret key changes', function (): void {
     $service = new CsrfService();
     $first = $service->getToken();
 
-    $GLOBALS['conf'] = ['secret_key' => 'a-different-secret'];
+    Config::override('secret_key', 'a-different-secret');
 
     expect($service->getToken())->not->toBe($first);
 });

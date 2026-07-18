@@ -26,8 +26,8 @@ final class UniqueExecLock
         $exec_id = substr(sha1(random_bytes(1000)), 0, 8);
         $logger->info('[' . $tokenName . '][exec=' . $exec_id . '] starts now');
 
-        if (isset($conf[$tokenName . '_running'])) {
-            $running_token = $conf[$tokenName . '_running'];
+        if (isset(\Piwigo\Config\Config::all()[$tokenName . '_running'])) {
+            $running_token = \Piwigo\Config\Config::all()[$tokenName . '_running'];
             $running_token = is_scalar($running_token) ? (string) $running_token : '';
             [$running_exec_id, $running_exec_start_time] = explode('-', $running_token);
             if (time() - (int) $running_exec_start_time > $timeout) {

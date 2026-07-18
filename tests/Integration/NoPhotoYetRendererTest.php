@@ -63,7 +63,6 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $this->renderer = new NoPhotoYetRenderer($this->conn);
 
-        $GLOBALS['conf'] = is_array($GLOBALS['conf'] ?? null) ? $GLOBALS['conf'] : [];
         // NoPhotoYetRenderer calls Piwigo\Auth\AccessControl::isAGuest()/
         // isAdmin() directly (real class methods), which read
         // Piwigo\Users\CurrentUser (Legacy Coupling Retirement Track A

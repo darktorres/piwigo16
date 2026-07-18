@@ -45,7 +45,7 @@ final class RegisterController implements ControllerInterface
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
-        if (! (bool) $conf['allow_user_registration']) {
+        if (! \Piwigo\Config\Config::allowUserRegistration()) {
             new HtmlService()
                 ->pageForbidden('User registration closed');
         }
@@ -181,7 +181,7 @@ final class RegisterController implements ControllerInterface
                 'F_ACTION' => 'register.php',
                 'F_LOGIN' => $login,
                 'F_EMAIL' => $email,
-                'obligatory_user_mail_address' => $conf['obligatory_user_mail_address'],
+                'obligatory_user_mail_address' => \Piwigo\Config\Config::obligatoryUserMailAddress(),
             ]);
 
             $themeconf = $template->get_template_vars('themeconf');

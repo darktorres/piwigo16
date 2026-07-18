@@ -40,21 +40,13 @@ final class AlbumNotificationPageRenderer
 
         $page['cat'] = (int) $category['id'];
 
-        // $conf['user_fields'] maps generic field names to table-specific column
+        // \Piwigo\Config\Config::userFields() maps generic field names to table-specific column
         // names (see include/config_default.inc.php); every value is a plain
         // string. Extracted once here and reused by both user-list queries below.
-        $user_fields_raw = $conf['user_fields'];
-        $user_fields = [];
-        if (is_array($user_fields_raw)) {
-            foreach ($user_fields_raw as $field_key => $field_value) {
-                if (is_string($field_key) and is_string($field_value)) {
-                    $user_fields[$field_key] = $field_value;
-                }
-            }
-        }
-        $user_field_id = $user_fields['id'] ?? 'id';
-        $user_field_username = $user_fields['username'] ?? 'username';
-        $user_field_email = $user_fields['email'] ?? 'mail_address';
+        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_field_id = $user_fields['id'];
+        $user_field_username = $user_fields['username'];
+        $user_field_email = $user_fields['email'];
 
         // +-------------------------------------------------------------------+
         // |                           form submission                         |
@@ -97,7 +89,7 @@ SELECT id, file, path, representative_ext
             }
 
             $args = [
-                'subject' => l10n('[%s] Visit album %s', $conf['gallery_title'], trigger_change('render_category_name', $category['name'], 'admin_cat_list')),
+                'subject' => l10n('[%s] Visit album %s', \Piwigo\Config\Config::galleryTitle(), trigger_change('render_category_name', $category['name'], 'admin_cat_list')),
                 // TODO : change this language variable to 'Visit album %s'
                 // TODO : 'language_selected' => ....
             ];
@@ -263,8 +255,8 @@ SELECT
 
         // auth_key_duration is a plain int config value (see
         // include/config_default.inc.php).
-        $auth_key_duration = $conf['auth_key_duration'];
-        $auth_key_duration_num = is_numeric($auth_key_duration) ? (int) $auth_key_duration : 0;
+        $auth_key_duration = \Piwigo\Config\Config::authKeyDuration();
+        $auth_key_duration_num = $auth_key_duration;
         if ($auth_key_duration_num > 0) {
             $auth_key_since = strtotime('now -' . $auth_key_duration_num . ' second');
             // the relative time expression above is always syntactically valid

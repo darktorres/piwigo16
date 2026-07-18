@@ -91,7 +91,7 @@ PHP;
 PHP;
 }
 
-$generatedRegion = $beginMarker . "\n" . implode("\n", $methods) . "\n" . $endMarker;
+$generatedRegion = $beginMarker . "\n" . implode("\n\n", $methods) . "\n" . $endMarker;
 
 $before = substr($source, 0, $beginPos);
 $after = substr($source, $endPos + strlen($endMarker));

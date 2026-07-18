@@ -69,13 +69,26 @@ final class SectionPopulator
     public function populate(): void
     {
         /**
-         * @var array<string, mixed> $conf
          * @var array<string, mixed> $filter
          * @var array<string, mixed> $page
          * @var Logger $logger
          */
-        global $conf, $filter, $logger, $page, $persistent_cache;
+        global $filter, $logger, $page, $persistent_cache;
         $template = $this->template;
+
+        // Legacy Coupling Retirement Track A batch A4: 'order_by' is
+        // progressively narrowed/overridden by several of this method's
+        // section-specific branches below and read back by several others
+        // -- a single local variable threaded through the whole method,
+        // seeded from the base config, replaces the former (\Piwigo\Config\Config::all()['order_by'] ?? null)
+        // scratch-global. Config::orderBy() (the typed SCHEMA accessor)
+        // models a structured {field,dir}[] shape that no real code writes
+        // -- 'order_by' is actually stored as a raw "ORDER BY ..." SQL
+        // fragment (see ConfigDb::loadConfFromDb()'s own docblock), so the
+        // seed reads the untyped bag like ConfigService::confGetParam()
+        // does for keys without a compatible accessor.
+        $order_by_conf = \Piwigo\Config\Config::all()['order_by'] ?? null;
+        $order_by = is_string($order_by_conf) ? $order_by_conf : '';
         if (! $persistent_cache instanceof PersistentCache) {
             $this->htmlRenderer->fatalError('persistent cache not initialized');
         }
@@ -107,14 +120,14 @@ final class SectionPopulator
                     break;
                 case 'index':
                     // No section defined, go to random url
-                    // $conf['random_index_redirect'] is a map of URL => named
+                    // Config::randomIndexRedirect() is a map of URL => named
                     // condition string (see include/config_default.inc.php); a
                     // malformed local override shouldn't crash this page.
                     // [SEC-15] RandomIndexRedirectResolver replaces the
                     // original's eval($random_url_condition) -- a config value
                     // with DB write access previously got arbitrary PHP
                     // execution.
-                    $redirect_candidates = is_array($conf['random_index_redirect'] ?? null) ? $conf['random_index_redirect'] : [];
+                    $redirect_candidates = \Piwigo\Config\Config::randomIndexRedirect();
                     $next_token_value = $tokens[$next_token] ?? '';
                     $next_token_is_empty = $next_token_value === '' || $next_token_value === '0';
                     if ($redirect_candidates !== [] and $next_token_is_empty) {
@@ -157,7 +170,8 @@ final class SectionPopulator
         // and not as a category set because we can't use the #image_category.rank :
         // displayed images are not directly linked to the displayed category
         if ($section === 'categories' and ! isset($page['flat'])) {
-            $conf['order_by'] = $conf['order_by_inside_category'];
+            $order_by_inside_category_conf = \Piwigo\Config\Config::all()['order_by_inside_category'] ?? null;
+            $order_by = is_string($order_by_inside_category_conf) ? $order_by_inside_category_conf : '';
         }
 
         if (SessionService::get()->getSessionVar('image_order', 0) > 0) {
@@ -179,10 +193,10 @@ final class SectionPopulator
             //
             // In case of incompatibility, the session stored image_order is removed.
             if ($orders[$image_order_id][2]) {
-                $conf['order_by'] = str_replace(
+                $order_by = str_replace(
                     'ORDER BY ',
                     'ORDER BY ' . $orders[$image_order_id][1] . ',',
-                    is_string($conf['order_by']) ? $conf['order_by'] : ''
+                    $order_by
                 );
                 $page['super_order_by'] = true;
             } else {
@@ -282,7 +296,7 @@ final class SectionPopulator
                     $image_order_raw = $page_category['image_order'] ?? null;
                     $image_order_is_set = is_string($image_order_raw) && $image_order_raw !== '' && $image_order_raw !== '0';
                     if ($image_order_is_set and ! isset($page['super_order_by'])) {
-                        $conf['order_by'] = ' ORDER BY ' . $image_order_raw;
+                        $order_by = ' ORDER BY ' . $image_order_raw;
                     }
                 }
 
@@ -317,8 +331,7 @@ SELECT id
                         $currentUser = \Piwigo\Users\CurrentUser::get();
                         $user_id_for_cache = $currentUser->id;
                         $cache_update_time = $currentUser->cacheUpdateTime;
-                        $order_by_for_cache = is_string($conf['order_by']) ? $conf['order_by'] : '';
-                        $cache_key = $persistent_cache->make_key('all_iids' . $user_id_for_cache . $cache_update_time . $order_by_for_cache);
+                        $cache_key = $persistent_cache->make_key('all_iids' . $user_id_for_cache . $cache_update_time . $order_by);
                         unset($page['is_homepage']);
                         $where_sql = '1=1';
                     }
@@ -348,7 +361,7 @@ SELECT DISTINCT(image_id)
   WHERE
     ' . $where_sql . '
 ' . $forbidden . '
-  ' . (is_string($conf['order_by']) ? $conf['order_by'] : '') . '
+  ' . $order_by . '
 ;';
 
                     $page['items'] = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
@@ -483,7 +496,7 @@ SELECT image_id
 ' . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
                         'visible_images' => 'id',
                     ], 'AND') . '
-  ' . (is_string($conf['order_by']) ? $conf['order_by'] : '') . '
+  ' . $order_by . '
 ;';
                     $page = array_merge(
                         $page,
@@ -514,10 +527,10 @@ SELECT image_id
             // +-----------------------------------------------------------------------+
             elseif ($section === 'recent_pics') {
                 if (! isset($page['super_order_by'])) {
-                    $conf['order_by'] = str_replace(
+                    $order_by = str_replace(
                         'ORDER BY ',
                         'ORDER BY date_available DESC,',
-                        is_string($conf['order_by']) ? $conf['order_by'] : ''
+                        $order_by
                     );
                 }
 
@@ -528,7 +541,7 @@ SELECT DISTINCT(id)
   WHERE '
   . new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $this->htmlRenderer)->getRecentPhotosSql('date_available') . '
   ' . $forbidden
-  . (is_string($conf['order_by']) ? $conf['order_by'] : '') . '
+  . $order_by . '
 ;';
 
                 $page = array_merge(
@@ -561,9 +574,9 @@ SELECT DISTINCT(id)
             // +-----------------------------------------------------------------------+
             elseif ($section === 'most_visited') {
                 $page['super_order_by'] = true;
-                $conf['order_by'] = ' ORDER BY hit DESC, id DESC';
+                $order_by = ' ORDER BY hit DESC, id DESC';
 
-                $top_number = is_numeric($conf['top_number']) ? (int) $conf['top_number'] : 15;
+                $top_number = \Piwigo\Config\Config::topNumber();
 
                 $query = '
 SELECT DISTINCT(id)
@@ -571,7 +584,7 @@ SELECT DISTINCT(id)
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE hit > 0
     ' . $forbidden . '
-    ' . $conf['order_by'] . '
+    ' . $order_by . '
   LIMIT ' . $top_number . '
 ;';
 
@@ -591,9 +604,9 @@ SELECT DISTINCT(id)
             // +-----------------------------------------------------------------------+
             elseif ($section === 'best_rated') {
                 $page['super_order_by'] = true;
-                $conf['order_by'] = ' ORDER BY rating_score DESC, id DESC';
+                $order_by = ' ORDER BY rating_score DESC, id DESC';
 
-                $top_number = is_numeric($conf['top_number']) ? (int) $conf['top_number'] : 15;
+                $top_number = \Piwigo\Config\Config::topNumber();
 
                 $query = '
 SELECT DISTINCT(id)
@@ -601,7 +614,7 @@ SELECT DISTINCT(id)
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE rating_score IS NOT NULL
     ' . $forbidden . '
-    ' . $conf['order_by'] . '
+    ' . $order_by . '
   LIMIT ' . $top_number . '
 ;';
                 $page = array_merge(
@@ -630,7 +643,7 @@ SELECT DISTINCT(id)
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE image_id IN (' . implode(',', $list_ids) . ')
     ' . $forbidden . '
-  ' . (is_string($conf['order_by']) ? $conf['order_by'] : '') . '
+  ' . $order_by . '
 ;';
 
                 $page = array_merge(
@@ -666,7 +679,7 @@ SELECT DISTINCT(id)
             $page['section_title'] = '<a href="' . $gallery_home_url . '">' . l10n('Home') . '</a>';
             $title_value = is_string($page['title']) ? $page['title'] : '';
             if ($title_value !== '' && $title_value !== '0') {
-                $level_separator = is_string($conf['level_separator']) ? $conf['level_separator'] : ' / ';
+                $level_separator = \Piwigo\Config\Config::levelSeparator();
                 $page['section_title'] .= $level_separator . $title_value;
             } else {
                 $page['title'] = $page['section_title'];
@@ -684,7 +697,7 @@ SELECT DISTINCT(id)
             $hit_by_cat_url_name = is_string($hit_by_cat_url_name) ? $hit_by_cat_url_name : null;
             $hit_by_cat_permalink = $hit_by['cat_permalink'] ?? null;
             $hit_by_cat_permalink = is_string($hit_by_cat_permalink) ? $hit_by_cat_permalink : null;
-            $category_url_style = is_string($conf['category_url_style'] ?? null) ? $conf['category_url_style'] : '';
+            $category_url_style = \Piwigo\Config\Config::categoryUrlStyle();
             $category_permalink = is_string($page_category['permalink'] ?? null) ? $page_category['permalink'] : null;
             $category_name = $page_category['name'] ?? null;
             $category_name = is_string($category_name) ? $category_name : '';

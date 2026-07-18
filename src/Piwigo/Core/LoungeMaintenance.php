@@ -27,7 +27,7 @@ final class LoungeMaintenance
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        if (! isset($conf['lounge_active']) || ! (bool) $conf['lounge_active']) {
+        if (! \Piwigo\Config\Config::has('lounge_active') || ! \Piwigo\Config\Config::loungeActive()) {
             return false;
         }
 
@@ -60,8 +60,7 @@ SELECT
         // defensive no-op, not an expected real path.
         $age = ($dbnow !== false ? $dbnow : 0) - ($date_available !== false ? $date_available : 0);
 
-        $lounge_max_duration = $conf['lounge_max_duration'];
-        $lounge_max_duration = is_numeric($lounge_max_duration) ? (int) $lounge_max_duration : 0;
+        $lounge_max_duration = \Piwigo\Config\Config::loungeMaxDuration();
 
         return $age > $lounge_max_duration;
     }

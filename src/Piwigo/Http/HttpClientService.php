@@ -213,12 +213,11 @@ final class HttpClientService implements ClientInterface
             'timeout' => 10,
         ];
 
-        if (! empty($conf['use_proxy']) && ! empty($conf['proxy_server'])) {
-            $proxyServer = $conf['proxy_server'];
-            $proxyUrl = is_string($proxyServer) ? $proxyServer : '';
-            if (! empty($conf['proxy_auth'])) {
-                $proxyAuth = $conf['proxy_auth'];
-                $proxyAuth = is_string($proxyAuth) ? $proxyAuth : '';
+        if (! empty(\Piwigo\Config\Config::useProxy()) && ! empty(\Piwigo\Config\Config::proxyServer())) {
+            $proxyServer = \Piwigo\Config\Config::proxyServer();
+            $proxyUrl = $proxyServer;
+            if (! empty(\Piwigo\Config\Config::proxyAuth())) {
+                $proxyAuth = \Piwigo\Config\Config::proxyAuth();
                 $proxyUrl = preg_replace('#^(https?://)#', '$1' . $proxyAuth . '@', $proxyUrl);
             }
             $extraOptions['proxy'] = $proxyUrl;

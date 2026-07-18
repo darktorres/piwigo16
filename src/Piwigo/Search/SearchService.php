@@ -177,9 +177,6 @@ final class SearchService
      */
     public function getRegularSearchResults(array $search, string $imagesWhere = ''): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         $hasFiltersFilled = false;
         $matchingCatIds = null;
         $matchingTagIds = null;
@@ -192,7 +189,7 @@ final class SearchService
 
         $imageIdsForFilter = [];
 
-        $rawFiltersViews = \Piwigo\Config\ConfigDb::confGetParam('filters_views', $conf['default_filters_views']);
+        $rawFiltersViews = \Piwigo\Config\Config::filtersViews() ?? \Piwigo\Config\Config::defaultFiltersViews();
         $unserializedDisplayFilters = (is_array($rawFiltersViews) || is_string($rawFiltersViews))
             ? \Piwigo\Core\ArrayHelper::safeUnserialize($rawFiltersViews)
             : [];
@@ -353,7 +350,7 @@ final class SearchService
         // ratings
         $ratingsField = $searchFields['ratings'] ?? null;
         $ratings = is_array($ratingsField) ? array_values(array_filter($ratingsField, is_string(...))) : [];
-        if ((bool) $conf['rate'] && $ratings !== [] && (bool) ($displayFilters['rating']['access'] ?? false)) {
+        if (\Piwigo\Config\Config::rateEnabled() && $ratings !== [] && (bool) ($displayFilters['rating']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $clauses = [];
             foreach ($ratings as $r) {
@@ -428,7 +425,14 @@ final class SearchService
         }
 
         if (count($items) > 1) {
-            $orderBy = is_string($conf['order_by']) ? $conf['order_by'] : '';
+            // Config::orderBy() (the typed SCHEMA accessor) models a
+            // structured {field,dir}[] shape that no real code writes --
+            // 'order_by' is actually stored as a raw "ORDER BY ..." SQL
+            // fragment (see ConfigDb::loadConfFromDb()'s own docblock), so
+            // read it via the untyped bag like ConfigService::confGetParam()
+            // does for keys without a compatible accessor.
+            $orderByConf = \Piwigo\Config\Config::all()['order_by'] ?? null;
+            $orderBy = is_string($orderByConf) ? $orderByConf : '';
             $items = $this->repo->findIdsByClause('id', Tables::images() . ' i', 'id IN (' . implode(',', array_map(strval(...), $items)) . ') ' . $orderBy);
         }
 
@@ -881,9 +885,6 @@ final class SearchService
 
     public function qsearchGetCategories(QExpression $expr, QResults $qsr): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         // P23 batch 3: user_cache_categories's INNER JOIN below used to
         // filter to "categories this user's cache row exists for" -- exactly
         // the set build_user()/getuserdata() (include/functions_user.inc.php)
@@ -944,7 +945,7 @@ final class SearchService
             $token = $expr->stokens[$i];
 
             if ($catIds !== []) {
-                if ((bool) $conf['quick_search_include_sub_albums']) {
+                if (\Piwigo\Config\Config::quickSearchIncludeSubAlbums()) {
                     $subcatIds = get_subcat_ids($catIds);
                     $catIds = $subcatIds !== []
                         ? $this->repo->findIdsByClause(
@@ -1049,13 +1050,11 @@ final class SearchService
      */
     public function getQuickSearchResults(string $q, array $options): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
         $cacheKey = $this->cache->make_key([
             strtolower($q),
-            $conf['order_by'],
+            \Piwigo\Config\Config::all()['order_by'] ?? null,
             $currentUser->id, $currentUser->cacheUpdateTime,
             isset($options['permissions']) ? (bool) $options['permissions'] : true,
             $options['images_where'] ?? '',
@@ -1086,9 +1085,6 @@ final class SearchService
      */
     public function getQuickSearchResultsNoCache(string $q, array $options): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         $q = trim(stripslashes($q));
         $searchResults = [
             'items' => [],
@@ -1120,7 +1116,7 @@ final class SearchService
 
         $createdDateAliases = ['taken', 'shot'];
         $postedDateAliases = ['added'];
-        if ($conf['calendar_datefield'] === 'date_creation') {
+        if (\Piwigo\Config\Config::calendarDatefield() === 'date_creation') {
             $createdDateAliases[] = 'date';
         } else {
             $postedDateAliases[] = 'date';
@@ -1263,7 +1259,8 @@ final class SearchService
         // its own docblock), so `GROUP BY id` (functionally dependent via
         // the primary key) replaces DISTINCT here, same fix as
         // CalendarRepository::findImageIds().
-        $orderBy = is_string($conf['order_by']) ? $conf['order_by'] : '';
+        $orderByConf = \Piwigo\Config\Config::all()['order_by'] ?? null;
+        $orderBy = is_string($orderByConf) ? $orderByConf : '';
         $ids = $this->repo->findIdsByClause('id', $from, implode("\n AND ", $whereClauses) . "\nGROUP BY id\n" . $orderBy, $params);
 
         $debug[] = count($ids) . ' final photo count -->';

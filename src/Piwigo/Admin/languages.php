@@ -55,7 +55,7 @@ class languages
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        if (! (bool) $conf['enable_extensions_install'] and $action == 'delete') {
+        if (! \Piwigo\Config\Config::enableExtensionsInstall() and $action == 'delete') {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -133,11 +133,11 @@ UPDATE ' . Tables::userInfos() . '
                 break;
 
             case 'set_default':
-                // $conf['default_user_id']/'guest_id' are always ints (see
+                // \Piwigo\Config\Config::defaultUserId()/'guest_id' are always ints (see
                 // include/config_default.inc.php); same narrowing as
                 // admin/include/functions_upgrade.php and profile.php.
-                $default_user_id = is_numeric($conf['default_user_id']) ? (int) $conf['default_user_id'] : 0;
-                $guest_id = is_numeric($conf['guest_id']) ? (int) $conf['guest_id'] : 0;
+                $default_user_id = is_numeric(\Piwigo\Config\Config::defaultUserId()) ? (int) \Piwigo\Config\Config::defaultUserId() : 0;
+                $guest_id = is_numeric(\Piwigo\Config\Config::guestId()) ? (int) \Piwigo\Config\Config::guestId() : 0;
                 $query = '
 UPDATE ' . Tables::userInfos() . '
   SET language = \'' . $language_id . '\'
@@ -266,14 +266,14 @@ UPDATE ' . Tables::userInfos() . '
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+        // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl()) in
         // one branch of include/common.inc.php, so PHPStan can't prove it's a
         // string across that file boundary — narrow it once here (same
         // pattern as updates.class.php::get_server_extensions()).
         $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
 
         $get_data = [
-            'category_id' => $conf['pem_languages_category'],
+            'category_id' => \Piwigo\Config\Config::pemLanguagesCategory(),
             'format' => 'php',
         ];
 
@@ -382,7 +382,7 @@ UPDATE ' . Tables::userInfos() . '
         /** @var Logger $logger */
         global $logger;
 
-        // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+        // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl()) in
         // one branch of include/common.inc.php, so PHPStan can't prove it's a
         // string across that file boundary — narrow it once here (same
         // pattern as updates.class.php::get_server_extensions()).

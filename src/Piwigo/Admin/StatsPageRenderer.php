@@ -107,13 +107,12 @@ final class StatsPageRenderer
         $lang_month = \Piwigo\Core\Lang::months();
         ksort($lang_month);
 
-        // $conf['stat_compare_year_displayed'] can come back as a numeric string
+        // \Piwigo\Config\Config::statCompareYearDisplayed() can come back as a numeric string
         // when overridden from the config table (see load_conf_from_db()), or the
         // int default from config_default.inc.php; narrow it once to the 'all'|int
         // shape getMonthOfLastYears() expects.
-        $stat_compare_year_displayed = $conf['stat_compare_year_displayed'] ?? 5;
+        $stat_compare_year_displayed = \Piwigo\Config\Config::statCompareYearDisplayed();
         if (is_numeric($stat_compare_year_displayed)) {
-            $stat_compare_year_displayed = (int) $stat_compare_year_displayed;
         } elseif ($stat_compare_year_displayed === 'all') {
             $stat_compare_year_displayed = 'all';
         } else {

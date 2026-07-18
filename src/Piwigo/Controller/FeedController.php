@@ -90,8 +90,7 @@ final class FeedController implements ControllerInterface
         } else {
             $image_only = true;
             if (! \Piwigo\Auth\AccessControl::isAGuest()) {// auto session was created - so switch to guest
-                $guest_id = $conf['guest_id'];
-                $guest_id = is_numeric($guest_id) ? (int) $guest_id : 0;
+                $guest_id = \Piwigo\Config\Config::guestId();
                 $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->buildUser($guest_id, true);
                 \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
             }
@@ -115,10 +114,8 @@ final class FeedController implements ControllerInterface
         // declaration above); each of these values is read again later in
         // this method, so narrow once here and reuse the local variable at
         // every later read.
-        $conf_gallery_title = $conf['gallery_title'] ?? '';
-        $conf_gallery_title = is_string($conf_gallery_title) ? $conf_gallery_title : '';
-        $conf_rss_feed_author = $conf['rss_feed_author'] ?? '';
-        $conf_rss_feed_author = is_string($conf_rss_feed_author) ? $conf_rss_feed_author : '';
+        $conf_gallery_title = \Piwigo\Config\Config::galleryTitle();
+        $conf_rss_feed_author = \Piwigo\Config\Config::rssReedAuthor();
         $user_username = \Piwigo\Users\CurrentUser::get()->username;
 
         $rss_title = $conf_gallery_title . ' (as ' . stripslashes($user_username) . ')';
@@ -177,7 +174,7 @@ final class FeedController implements ControllerInterface
         // settings (see include/config_default.inc.php); narrow the 'RSS'
         // entry to the array<string, int> shape
         // NotificationService::getRecentPostDatesArray() expects.
-        $recent_post_dates_conf = $conf['recent_post_dates'];
+        $recent_post_dates_conf = \Piwigo\Config\Config::recentPostDates();
         $rss_recent_post_dates_raw = (is_array($recent_post_dates_conf) and is_array($recent_post_dates_conf['RSS'] ?? null))
             ? $recent_post_dates_conf['RSS']
             : [];
@@ -233,12 +230,12 @@ final class FeedController implements ControllerInterface
             $rss_items
         );
 
-        // $conf['data_location'] needs narrowing here specifically (used to
+        // \Piwigo\Config\Config::dataLocation() needs narrowing here specifically (used to
         // build the on-disk tmp path this method writes the generated feed
         // to).
-        $data_location = $conf['data_location'];
+        $data_location = \Piwigo\Config\Config::dataLocation();
         if (! is_string($data_location)) {
-            die("Invalid \$conf['data_location'] configuration: expected a string.");
+            die("Invalid \\Piwigo\Config\Config::dataLocation() configuration: expected a string.");
         }
 
         $fileName = PHPWG_ROOT_PATH . $data_location . 'tmp';

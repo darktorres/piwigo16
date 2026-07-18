@@ -210,7 +210,7 @@ final class GalleryController implements ControllerInterface
                     );
                 }
 
-                if ((bool) $conf['index_flat_icon'] and ! isset($page['flat']) and $page['section'] === 'categories') {
+                if (\Piwigo\Config\Config::indexFlatIcon() and ! isset($page['flat']) and $page['section'] === 'categories') {
                     $template->assign(
                         'U_MODE_FLAT',
                         duplicate_index_url([
@@ -225,13 +225,13 @@ final class GalleryController implements ControllerInterface
                         'chronology_style' => 'monthly',
                         'chronology_view' => 'list',
                     ];
-                    if ((bool) $conf['index_created_date_icon']) {
+                    if (\Piwigo\Config\Config::indexCreatedDateIcon()) {
                         $template->assign(
                             'U_MODE_CREATED',
                             duplicate_index_url($chronology_params, ['start', 'flat'])
                         );
                     }
-                    if ((bool) $conf['index_posted_date_icon']) {
+                    if (\Piwigo\Config\Config::indexPostedDateIcon()) {
                         $chronology_params['chronology_field'] = 'posted';
                         $template->assign(
                             'U_MODE_POSTED',
@@ -244,7 +244,7 @@ final class GalleryController implements ControllerInterface
                     } else {
                         $chronology_field = 'created';
                     }
-                    if ((bool) $conf['index_' . $chronology_field . '_date_icon']) {
+                    if ((bool) (\Piwigo\Config\Config::all()['index_' . $chronology_field . '_date_icon'] ?? null)) {
                         $url = duplicate_index_url(
                             [
                                 'chronology_field' => $chronology_field,
@@ -264,8 +264,8 @@ final class GalleryController implements ControllerInterface
                 if ($page['section'] === 'categories' and isset($page['category']) and is_array($page['category']) and ! isset($page['combined_categories'])) {
                     $template->assign(
                         [
-                            'SEARCH_IN_SET_BUTTON' => $conf['index_search_in_set_button'],
-                            'SEARCH_IN_SET_ACTION' => $conf['index_search_in_set_action'],
+                            'SEARCH_IN_SET_BUTTON' => \Piwigo\Config\Config::indexSearchInSetButton(),
+                            'SEARCH_IN_SET_ACTION' => \Piwigo\Config\Config::indexSearchInSetAction(),
                             'SEARCH_IN_SET_URL' => get_root_url() . 'search.php?cat_id=' . (is_numeric($page['category']['id'] ?? null) ? (int) $page['category']['id'] : 0),
                         ]
                     );
@@ -292,7 +292,7 @@ final class GalleryController implements ControllerInterface
 
                     $tags = $tagService->getCommonTags(
                         $page_items,
-                        is_numeric($conf['menubar_tag_cloud_items_number']) ? (int) $conf['menubar_tag_cloud_items_number'] : 0,
+                        is_numeric(\Piwigo\Config\Config::menubarTagCloudItemsNumber()) ? (int) \Piwigo\Config\Config::menubarTagCloudItemsNumber() : 0,
                         new HtmlService(),
                         $excluded_tag_ids
                     );
@@ -377,22 +377,22 @@ final class GalleryController implements ControllerInterface
 
                     $template->assign(
                         [
-                            'SEARCH_IN_SET_BUTTON' => $conf['index_search_in_set_button'],
-                            'SEARCH_IN_SET_ACTION' => $conf['index_search_in_set_action'],
+                            'SEARCH_IN_SET_BUTTON' => \Piwigo\Config\Config::indexSearchInSetButton(),
+                            'SEARCH_IN_SET_ACTION' => \Piwigo\Config\Config::indexSearchInSetAction(),
                             'SEARCH_IN_SET_URL' => get_root_url() . 'search.php?tag_id=' . implode(',', $body_data_tag_ids),
                             'COMBINABLE_TAGS' => $related_tags,
                         ]
                     );
                 }
 
-                if (isset($page['category']) and is_array($page['category']) and \Piwigo\Auth\AccessControl::isAdmin() and (bool) $conf['index_edit_icon']) {
+                if (isset($page['category']) and is_array($page['category']) and \Piwigo\Auth\AccessControl::isAdmin() and \Piwigo\Config\Config::indexEditIcon()) {
                     $template->assign(
                         'U_EDIT',
                         get_root_url() . 'admin.php?page=album-' . (is_numeric($page['category']['id'] ?? null) ? (int) $page['category']['id'] : 0)
                     );
                 }
 
-                if (\Piwigo\Auth\AccessControl::isAdmin() and $page_items !== [] and (bool) $conf['index_caddie_icon']) {
+                if (\Piwigo\Auth\AccessControl::isAdmin() and $page_items !== [] and \Piwigo\Config\Config::indexCaddieIcon()) {
                     $template->assign(
                         'U_CADDIE',
                         add_url_params(duplicate_index_url(), [
@@ -453,7 +453,7 @@ final class GalleryController implements ControllerInterface
                 }
 
                 // image order
-                if ((bool) $conf['index_sort_order_input']
+                if (\Piwigo\Config\Config::indexSortOrderInput()
                     and count($page_items) > 0
                     and $page['section'] !== 'most_visited'
                     and $page['section'] !== 'best_rated') {
@@ -461,7 +461,7 @@ final class GalleryController implements ControllerInterface
                     $order_idx = SessionService::get()->getSessionVar('image_order', 0);
 
                     // get first order field and direction
-                    $order_by = is_string($conf['order_by']) ? $conf['order_by'] : '';
+                    $order_by = is_string((\Piwigo\Config\Config::all()['order_by'] ?? null)) ? (\Piwigo\Config\Config::all()['order_by'] ?? null) : '';
                     $first_order = substr($order_by, 9);
                     if (($pos = strpos($first_order, ',')) !== false) {
                         $first_order = substr($first_order, 0, $pos);
@@ -501,7 +501,7 @@ final class GalleryController implements ControllerInterface
                 // category comment
                 $page_comment = $page['comment'] ?? null;
                 $page_comment_present = is_string($page_comment) && $page_comment !== '' && $page_comment !== '0';
-                if (($page_start === 0 or (bool) $conf['album_description_on_all_pages']) and ! isset($page['chronology_field']) and $page_comment_present) {
+                if (($page_start === 0 or \Piwigo\Config\Config::albumDescriptionOnAllPages()) and ! isset($page['chronology_field']) and $page_comment_present) {
                     $template->assign('CONTENT_DESCRIPTION', $page['comment']);
                 }
 
@@ -524,7 +524,7 @@ final class GalleryController implements ControllerInterface
                     new CategoryDefaultRenderer(new HtmlService(), $template)
                         ->render();
 
-                    if ((bool) $conf['index_sizes_icon']) {
+                    if (\Piwigo\Config\Config::indexSizesIcon()) {
                         $url = add_url_params(
                             duplicate_index_url(),
                             [
@@ -559,7 +559,7 @@ final class GalleryController implements ControllerInterface
                 if ($slideshow_url_present) {
                     if (isset($_GET['slideshow'])) {
                         redirect($slideshow_url);
-                    } elseif ((bool) $conf['index_slideshow_icon']) {
+                    } elseif (\Piwigo\Config\Config::indexSlideShowIcon()) {
                         $template->assign('U_SLIDESHOW', $slideshow_url);
                     }
                 }
@@ -570,7 +570,7 @@ final class GalleryController implements ControllerInterface
                 $body_data_section = is_array($page['body_data'] ?? null) ? ($page['body_data']['section'] ?? null) : null;
                 if ($page_items !== [] and is_array($page['body_data'] ?? null) and $body_data_section !== 'tags') {
                     $selection = array_slice($page_items, $page_start, $page_nb_image_page);
-                    $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, is_numeric($conf['content_tag_cloud_items_number']) ? (int) $conf['content_tag_cloud_items_number'] : 0, new HtmlService()));
+                    $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, is_numeric(\Piwigo\Config\Config::contentTagCloudItemsNumber()) ? (int) \Piwigo\Config\Config::contentTagCloudItemsNumber() : 0, new HtmlService()));
                     $related_tags = [];
                     foreach ($tags as $tag) {
                         $related_tags[] =

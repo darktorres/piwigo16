@@ -72,18 +72,16 @@ final class PwgUsers
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        // $conf['user_fields'] maps generic field names to table-specific DB
+        // \Piwigo\Config\Config::userFields() maps generic field names to table-specific DB
         // column names (see Piwigo\Users\UserService for the same pattern);
         // extracted once here since this function reads id/username/
         // email repeatedly below.
-        $user_fields = $conf['user_fields'];
-        $user_fields = is_array($user_fields) ? $user_fields : [];
+        $user_fields = \Piwigo\Config\Config::userFields();
         $user_field_id = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
         $user_field_username = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
         $user_field_email = is_string($user_fields['email'] ?? null) ? $user_fields['email'] : 'email';
 
-        $available_permission_levels = $conf['available_permission_levels'];
-        $available_permission_levels = is_array($available_permission_levels) ? $available_permission_levels : [];
+        $available_permission_levels = \Piwigo\Config\Config::availablePermissionLevels();
 
         if (! (bool) preg_match(ValidationPattern::ORDER, $params['order'])) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter order');
@@ -425,7 +423,7 @@ SELECT DISTINCT ';
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        if ((bool) $conf['double_password_type_in_admin']) {
+        if (\Piwigo\Config\Config::doublePasswordTypeInAdmin()) {
             if ($params['password'] != ($params['password_confirm'] ?? null)) {
                 return new PwgError(WsError::INVALID_PARAM, l10n('The passwords do not match'));
             }
@@ -520,9 +518,9 @@ SELECT DISTINCT ';
 
         $protected_users = [
             $currentUser->id,
-            $conf['guest_id'],
-            $conf['default_user_id'],
-            $conf['webmaster_id'],
+            \Piwigo\Config\Config::guestId(),
+            \Piwigo\Config\Config::defaultUserId(),
+            \Piwigo\Config\Config::webmasterId(),
         ];
 
         // an admin can't delete other admin/webmaster
@@ -631,12 +629,12 @@ SELECT
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
         // ACTIVATE_COMMENTS
-        if (! (bool) $conf['activate_comments']) {
+        if (! \Piwigo\Config\Config::activateComments()) {
             unset($params['show_nb_comments']);
         }
 
         // ALLOW_USER_CUSTOMIZATION
-        if (! (bool) $conf['allow_user_customization']) {
+        if (! \Piwigo\Config\Config::allowUserCustomization()) {
             unset(
                 $params['nb_image_page'],
                 $params['theme'],
@@ -649,7 +647,7 @@ SELECT
         }
 
         // SPECIAL_USER
-        $special_user = in_array($currentUser->id, [$conf['guest_id'], $conf['default_user_id']]);
+        $special_user = in_array($currentUser->id, [\Piwigo\Config\Config::guestId(), \Piwigo\Config\Config::defaultUserId()]);
         if ($special_user) {
             unset(
                 $params['password'],
@@ -663,11 +661,10 @@ SELECT
                 return new PwgError(403, l10n('The passwords do not match'));
             }
 
-            // $conf['user_fields'] maps generic field names to table-specific
+            // \Piwigo\Config\Config::userFields() maps generic field names to table-specific
             // DB column names (see Piwigo\Users\UserService for the same
             // pattern).
-            $user_fields = $conf['user_fields'];
-            $user_fields = is_array($user_fields) ? $user_fields : [];
+            $user_fields = \Piwigo\Config\Config::userFields();
             $user_field_password = is_string($user_fields['password'] ?? null) ? $user_fields['password'] : 'password';
             $user_field_id = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
             $current_user_id = (string) $currentUser->id;
@@ -853,7 +850,8 @@ DELETE
         self::userService()->checkUserFavorites();
 
         $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
-        $conf_order_by = is_string($conf['order_by'] ?? null) ? $conf['order_by'] : '';
+        $conf_order_by_raw = \Piwigo\Config\Config::all()['order_by'] ?? null;
+        $conf_order_by = is_string($conf_order_by_raw) ? $conf_order_by_raw : '';
         $order_by = empty($order_by) ? $conf_order_by : 'ORDER BY ' . $order_by;
         $current_user_id = (string) \Piwigo\Users\CurrentUser::get()->id;
 
@@ -959,10 +957,10 @@ SELECT
 
         $user_lost_email = is_string($user_lost['email']) ? $user_lost['email'] : null;
 
-        // $conf['gallery_title'] is a raw config string; pwg_generate_set/
+        // \Piwigo\Config\Config::galleryTitle() is a raw config string; pwg_generate_set/
         // reset_password_mail() both require a real string for their 3rd
         // parameter.
-        $gallery_title = is_string($conf['gallery_title'] ?? null) ? $conf['gallery_title'] : '';
+        $gallery_title = \Piwigo\Config\Config::galleryTitle();
 
         if ($params['send_by_mail'] and ! empty($user_lost_email)) {
             $user_lost_username = is_string($user_lost['username']) ? $user_lost['username'] : '';

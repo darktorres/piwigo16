@@ -63,7 +63,7 @@ final class ExtensionLifecycle
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        if (! (bool) $conf['enable_extensions_install'] and $action === 'delete') {
+        if (! \Piwigo\Config\Config::enableExtensionsInstall() and $action === 'delete') {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -256,7 +256,7 @@ final class ExtensionLifecycle
                 }
 
                 $isMobile = (bool) ($fsEntry['mobile'] ?? false);
-                $currentMobileTheme = $conf['mobile_theme'] ?? null;
+                $currentMobileTheme = \Piwigo\Config\Config::mobilTheme();
                 $hasOtherMobileTheme = is_string($currentMobileTheme) && $currentMobileTheme !== '' && $currentMobileTheme !== '0';
                 if ($isMobile && $hasOtherMobileTheme && $currentMobileTheme !== $id) {
                     $errors[] = l10n('You can activate only one mobile theme.');
@@ -387,8 +387,8 @@ final class ExtensionLifecycle
                 break;
 
             case 'set_default':
-                $defaultUserId = is_numeric($conf['default_user_id'] ?? null) ? (int) $conf['default_user_id'] : 0;
-                $guestId = is_numeric($conf['guest_id'] ?? null) ? (int) $conf['guest_id'] : 0;
+                $defaultUserId = \Piwigo\Config\Config::defaultUserId();
+                $guestId = \Piwigo\Config\Config::guestId();
                 $this->repo->setLanguageForUserIds($id, $defaultUserId, $guestId);
                 break;
         }
@@ -451,8 +451,8 @@ final class ExtensionLifecycle
         $defaultTheme = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultTheme();
         $userIds = $this->repo->findUserIdsByTheme($defaultTheme);
 
-        $defaultUserId = is_numeric($conf['default_user_id'] ?? null) ? (int) $conf['default_user_id'] : 0;
-        $guestId = is_numeric($conf['guest_id'] ?? null) ? (int) $conf['guest_id'] : 0;
+        $defaultUserId = \Piwigo\Config\Config::defaultUserId();
+        $guestId = \Piwigo\Config\Config::guestId();
 
         $userIds[] = (string) $defaultUserId;
         $userIds[] = (string) $guestId;

@@ -2,10 +2,15 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
 use Piwigo\Core\PaginationService;
 
 beforeEach(function (): void {
-    $GLOBALS['conf'] = ['paginate_pages_around' => 2];
+    Config::override('paginate_pages_around', 2);
+});
+
+afterEach(function (): void {
+    Config::reset();
 });
 
 test('createNavigationBar returns an empty bar when everything fits on one page', function (): void {

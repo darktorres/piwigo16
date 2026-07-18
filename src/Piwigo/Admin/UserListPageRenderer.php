@@ -19,10 +19,9 @@ final class UserListPageRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         (new \Piwigo\Validation\InputValidator())->validate('group', $_GET, false, ValidationPattern::ID);
@@ -91,8 +90,8 @@ ORDER BY registration_date
         $template->assign(
             [
                 'ADMIN_PAGE_TITLE' => l10n('Users'),
-                'ACTIVATE_COMMENTS' => $conf['activate_comments'],
-                'Double_Password' => $conf['double_password_type_in_admin'],
+                'ACTIVATE_COMMENTS' => \Piwigo\Config\Config::activateComments(),
+                'Double_Password' => \Piwigo\Config\Config::doublePasswordTypeInAdmin(),
             ]
         );
 
@@ -109,12 +108,9 @@ ORDER BY registration_date
         // conf's guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // fetch value or int config default -- same normalization already used by
         // functions.inc.php's get_webmaster_mail_address() and build_user()).
-        $guest_id = $conf['guest_id'];
-        $guest_id = is_numeric($guest_id) ? (int) $guest_id : 0;
-        $default_user_id = $conf['default_user_id'];
-        $default_user_id = is_numeric($default_user_id) ? (int) $default_user_id : 0;
-        $webmaster_id = $conf['webmaster_id'];
-        $webmaster_id = is_numeric($webmaster_id) ? (int) $webmaster_id : 0;
+        $guest_id = \Piwigo\Config\Config::guestId();
+        $default_user_id = \Piwigo\Config\Config::defaultUserId();
+        $webmaster_id = \Piwigo\Config\Config::webmasterId();
 
         $protected_users = [
             \Piwigo\Users\CurrentUser::get()->id,
@@ -143,11 +139,7 @@ SELECT
             $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$current_user_id]));
         }
 
-        // user_fields is a string=>string map (see config_default.inc.php's
-        // $conf['user_fields']); same invariant relied on by
-        // Piwigo\Ws\PwgUsers::setInfo().
-        /** @var array<string, string> $user_fields */
-        $user_fields = $conf['user_fields'];
+        $user_fields = \Piwigo\Config\Config::userFields();
 
         $query = '
 SELECT
@@ -236,11 +228,7 @@ SELECT
         $template->assign('nb_users_by_status', $nb_users_by_status);
 
         // user level options
-        // $conf['available_permission_levels'] defaults to [0, 1, 2, 4, 8] (see
-        // include/config_default.inc.php), always a list of ints -- same invariant
-        // relied on by functions.inc.php's get_privacy_level_options().
-        $available_permission_levels = $conf['available_permission_levels'];
-        $available_permission_levels = is_array($available_permission_levels) ? $available_permission_levels : [];
+        $available_permission_levels = \Piwigo\Config\Config::availablePermissionLevels();
 
         $level_options = [];
         foreach ($available_permission_levels as $level) {

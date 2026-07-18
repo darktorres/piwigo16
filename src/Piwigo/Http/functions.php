@@ -78,8 +78,7 @@ if (! function_exists('redirect_html')) {
         // do not declare $template's type above, it would make PHPStan wrongly
         // treat this real fallback path as dead code.
         if (! isset($lang_info) || ! isset($template)) {
-            $guest_id = $conf['guest_id'];
-            $guest_id = is_numeric($guest_id) ? (int) $guest_id : 0;
+            $guest_id = \Piwigo\Config\Config::guestId();
             $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->buildUser($guest_id, true);
             \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
             \Piwigo\Core\Lang::load('common.lang');
@@ -148,7 +147,7 @@ if (! function_exists('redirect')) {
         global $conf;
 
         // with RefeshTime <> 0, only html must be used
-        if ($conf['default_redirect_method'] == 'http'
+        if (\Piwigo\Config\Config::defaultRedirectMethod() === 'http'
             and $refresh_time == 0
             and ! headers_sent()
         ) {

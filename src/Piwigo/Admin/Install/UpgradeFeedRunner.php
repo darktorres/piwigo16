@@ -41,12 +41,12 @@ class UpgradeFeedRunner
         // |                         Database connection                        |
         // +-------------------------------------------------------------------+
         try {
-            $db_host = $conf['db_host'];
-            $db_user = $conf['db_user'];
-            $db_password = $conf['db_password'];
-            $db_base = $conf['db_base'];
+            $db_host = \Piwigo\Config\Config::dbHost();
+            $db_user = \Piwigo\Config\Config::dbUser();
+            $db_password = \Piwigo\Config\Config::dbPassword();
+            $db_base = \Piwigo\Config\Config::dbName();
             if (! is_string($db_host) || ! is_string($db_user) || ! is_string($db_password) || ! is_string($db_base)) {
-                throw new Exception("Invalid database configuration: \$conf['db_host'], 'db_user', 'db_password' and 'db_base' must be strings.");
+                throw new Exception("Invalid database configuration: \\Piwigo\Config\Config::dbHost(), 'db_user', 'db_password' and 'db_base' must be strings.");
             }
             \Piwigo\Db\MysqliDb::connect(
                 $db_host,

@@ -15,7 +15,6 @@ use Piwigo\Mail\MailService;
 // runs (verified against mail()'s own first guard).
 
 beforeEach(function (): void {
-    $GLOBALS['conf'] = [];
     MailService::reset();
 });
 

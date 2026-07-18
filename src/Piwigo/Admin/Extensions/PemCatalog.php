@@ -45,7 +45,7 @@ final class PemCatalog
         $versionsToCheck = [];
         $url = $pemBaseUrl . '/api/get_version_list.php';
         $getData = [
-            'category_id' => $conf[$type->configCategoryKey()],
+            'category_id' => \Piwigo\Config\Config::all()[$type->configCategoryKey()],
             'format' => 'php',
         ];
 
@@ -122,7 +122,7 @@ final class PemCatalog
         $url = $pemBaseUrl . '/api/get_revision_list-next.php';
         $userLanguage = \Piwigo\Users\CurrentUser::get()->language;
         $getData = [
-            'category_id' => $conf[$type->configCategoryKey()],
+            'category_id' => \Piwigo\Config\Config::all()[$type->configCategoryKey()],
             'format' => 'php',
             'last_revision_only' => 'true',
             'version' => implode(',', $versionsToCheck),
@@ -217,7 +217,7 @@ final class PemCatalog
         $pemBaseUrl = is_string(PEM_URL) ? PEM_URL : '';
         $url = $pemBaseUrl . '/api/get_revision_list.php';
         $getData = [
-            'category_id' => $conf[$type->configCategoryKey()],
+            'category_id' => \Piwigo\Config\Config::all()[$type->configCategoryKey()],
             'format' => 'php',
             'version' => implode(',', $versionsToCheck),
             'extension_include' => implode(',', $extensionIds),

@@ -56,7 +56,7 @@ final class PluginLoader
          */
         global $conf, $pwg_loaded_plugins;
         $pwg_loaded_plugins = [];
-        if ((bool) $conf['enable_plugins']) {
+        if (\Piwigo\Config\Config::enablePlugins()) {
             $plugins = new PluginRepository(DbConnection::build())->getDbPlugins('active');
             foreach ($plugins as $plugin) {// include main from a function to avoid using same function context
                 self::loadPlugin($plugin);

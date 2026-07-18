@@ -131,7 +131,7 @@ class plugins
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        if (! (bool) $conf['enable_extensions_install'] and $action == 'delete') {
+        if (! \Piwigo\Config\Config::enableExtensionsInstall() and $action == 'delete') {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -435,7 +435,7 @@ DELETE FROM ' . Tables::plugins() . '
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+        // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl()) in
         // one branch of include/common.inc.php, so PHPStan can't prove it's a
         // string across that file boundary — narrow it once here (same
         // pattern as updates.class.php::get_server_extensions()).
@@ -446,12 +446,12 @@ DELETE FROM ' . Tables::plugins() . '
         // category_id/format go through HttpClientService::fetch()'s $getData
         // (like get_server_plugins()/get_incompatible_plugins() below)
         // instead of being string-concatenated into the URL:
-        // $conf['pem_plugins_category'] is mixed (from $conf's
+        // \Piwigo\Config\Config::pemPluginsCategory() is mixed (from $conf's
         // array<string, mixed> shape) and fetch() already accepts
         // array<string, mixed> $getData, so this avoids concatenating a
         // non-string value into the query string.
         $get_data = [
-            'category_id' => $conf['pem_plugins_category'],
+            'category_id' => \Piwigo\Config\Config::pemPluginsCategory(),
             'format' => 'php',
         ];
         if (is_string($result = HttpClientService::fetch($url, $get_data)) and (bool) ($pem_versions = @unserialize($result))) {
@@ -547,7 +547,7 @@ DELETE FROM ' . Tables::plugins() . '
         }
 
         // Retrieve PEM plugins infos
-        // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+        // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl()) in
         // one branch of include/common.inc.php, so PHPStan can't prove it's a
         // string across that file boundary — narrow it once here (same
         // pattern as updates.class.php::get_server_extensions()).
@@ -555,7 +555,7 @@ DELETE FROM ' . Tables::plugins() . '
         $url = $pem_base_url . '/api/get_revision_list-next.php';
         $user_language = \Piwigo\Users\CurrentUser::get()->language;
         $get_data = [
-            'category_id' => $conf['pem_plugins_category'],
+            'category_id' => \Piwigo\Config\Config::pemPluginsCategory(),
             'format' => 'php',
             'last_revision_only' => 'true',
             'version' => implode(',', $versions_to_check_strings),
@@ -641,14 +641,14 @@ DELETE FROM ' . Tables::plugins() . '
         }
 
         // Retrieve PEM plugins infos
-        // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+        // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl()) in
         // one branch of include/common.inc.php, so PHPStan can't prove it's a
         // string across that file boundary — narrow it once here (same
         // pattern as updates.class.php::get_server_extensions()).
         $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
         $url = $pem_base_url . '/api/get_revision_list.php';
         $get_data = [
-            'category_id' => $conf['pem_plugins_category'],
+            'category_id' => \Piwigo\Config\Config::pemPluginsCategory(),
             'format' => 'php',
             'version' => implode(',', $versions_to_check_strings),
             'extension_include' => implode(',', $plugins_to_check),
@@ -729,7 +729,7 @@ DELETE FROM ' . Tables::plugins() . '
         global $logger;
 
         if ($archive = tempnam(PluginLoader::pluginsPath(), 'zip')) {
-            // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+            // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl()) in
             // one branch of include/common.inc.php, so PHPStan can't prove it's a
             // string across that file boundary — narrow it once here (same
             // pattern as updates.class.php::get_server_extensions()).

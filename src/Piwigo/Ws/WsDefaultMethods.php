@@ -40,17 +40,16 @@ final class WsDefaultMethods
         global $conf;
         $service = &$arr[0];
 
-        // $conf['available_permission_levels'] defaults to [0, 1, 2, 4, 8] (see
+        // \Piwigo\Config\Config::availablePermissionLevels() defaults to [0, 1, 2, 4, 8] (see
         // include/config_default.inc.php); guard against a misconfigured/empty value
         // since max() requires a non-empty array.
-        $available_permission_levels = $conf['available_permission_levels'];
+        $available_permission_levels = \Piwigo\Config\Config::availablePermissionLevels();
         $available_permission_levels = is_array($available_permission_levels) && $available_permission_levels !== []
             ? $available_permission_levels
             : [0, 1, 2, 4, 8];
 
-        // $conf['nb_comment_page'] is a numeric config value (see admin/configuration.php).
-        $nb_comment_page = $conf['nb_comment_page'];
-        $nb_comment_page = is_numeric($nb_comment_page) ? (int) $nb_comment_page : 0;
+        // \Piwigo\Config\Config::nbCommentPage() is a numeric config value (see admin/configuration.php).
+        $nb_comment_page = \Piwigo\Config\Config::nbCommentPage();
 
         $f_params = [
             'f_min_rate' => [
@@ -209,7 +208,7 @@ final class WsDefaultMethods
                 ],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $conf['ws_max_images_per_page'],
+                    'maxValue' => \Piwigo\Config\Config::wsMaxImagesPerPage(),
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -356,7 +355,7 @@ final class WsDefaultMethods
                 'query' => [],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $conf['ws_max_images_per_page'],
+                    'maxValue' => \Piwigo\Config\Config::wsMaxImagesPerPage(),
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -560,7 +559,7 @@ final class WsDefaultMethods
                 ],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $conf['ws_max_images_per_page'],
+                    'maxValue' => \Piwigo\Config\Config::wsMaxImagesPerPage(),
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -627,7 +626,7 @@ final class WsDefaultMethods
                 'original_sum' => [],
                 'original_filename' => [
                     'default' => null,
-                    'Provide it if "check_uniqueness" is true and $conf["uniqueness_mode"] is "filename".',
+                    'Provide it if "check_uniqueness" is true and \Piwigo\Config\Config::uniquenessMode() is "filename".',
                 ],
                 'name' => [
                     'default' => null,
@@ -835,7 +834,7 @@ final class WsDefaultMethods
             [PwgImages::class, 'setMd5sum'],
             [
                 'block_size' => [
-                    'default' => $conf['checksum_compute_blocksize'],
+                    'default' => \Piwigo\Config\Config::checksumComputeBlocksize(),
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'pwg_token' => [],
@@ -1458,7 +1457,7 @@ final class WsDefaultMethods
                 ],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $conf['ws_max_users_per_page'],
+                    'maxValue' => \Piwigo\Config\Config::wsMaxUsersPerPage(),
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -1638,7 +1637,7 @@ final class WsDefaultMethods
                 ],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $conf['ws_max_users_per_page'],
+                    'maxValue' => \Piwigo\Config\Config::wsMaxUsersPerPage(),
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -1995,7 +1994,7 @@ final class WsDefaultMethods
             [
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $conf['ws_max_images_per_page'],
+                    'maxValue' => \Piwigo\Config\Config::wsMaxImagesPerPage(),
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -2312,7 +2311,7 @@ final class WsDefaultMethods
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'per_page' => [
-                    'default' => $conf['comments_page_nb_comments'],
+                    'default' => \Piwigo\Config\Config::commentsPageNbComments(),
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
             ],

@@ -62,9 +62,7 @@ final class NotificationByMailServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $this->service = new NotificationByMailService(new NotificationByMailRepository($this->conn));
 
-        $GLOBALS['conf'] = [
-            'user_fields' => ['username' => 'username', 'email' => 'mail_address', 'id' => 'id'],
-        ];
+        Config::override('user_fields', ['username' => 'username', 'email' => 'mail_address', 'id' => 'id']);
     }
 
     public function test_find_available_check_key_matches_the_expected_shape(): void

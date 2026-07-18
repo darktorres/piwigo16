@@ -64,11 +64,10 @@ final class MaintenanceActionDispatcher
     public function dispatch(string $action): void
     {
         /**
-         * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
          * @var PersistentFileCache $persistent_cache
          */
-        global $conf, $page, $persistent_cache;
+        global $page, $persistent_cache;
 
         if (! is_array($page['infos'] ?? null)) {
             $page['infos'] = [];
@@ -171,11 +170,10 @@ final class MaintenanceActionDispatcher
 
                 SessionService::get()->sessionGc();
 
-                // $conf['user_fields'] maps generic field names to actual DB column
+                // \Piwigo\Config\Config::userFields() maps generic field names to actual DB column
                 // names (see include/config_default.inc.php); its values are
                 // configuration-supplied, not statically typed, hence the fallback.
-                $user_fields = $conf['user_fields'] ?? null;
-                $user_fields = is_array($user_fields) ? $user_fields : [];
+                $user_fields = \Piwigo\Config\Config::userFields();
                 $id_field = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
 
                 $db_maintenance->purgeSessionsForDeletedUsers($id_field);

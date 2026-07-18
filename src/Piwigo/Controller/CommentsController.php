@@ -49,7 +49,7 @@ final class CommentsController implements ControllerInterface
         global $conf, $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        if (! (bool) $conf['activate_comments']) {
+        if (! \Piwigo\Config\Config::activateComments()) {
             new HtmlService()
                 ->pageNotFound(null);
         }
@@ -73,12 +73,11 @@ final class CommentsController implements ControllerInterface
         // items_number : list of number of items to display per page
         $items_number = [5, 10, 20, 50, 'all'];
 
-        // $conf['comments_page_nb_comments'] is a plain int setting (see
+        // \Piwigo\Config\Config::commentsPageNbComments() is a plain int setting (see
         // include/config_default.inc.php); $conf itself is only known as
         // array<string, mixed>, so narrow with a fallback matching the
         // shipped default rather than trust the shape blindly.
-        $comments_page_nb_comments = $conf['comments_page_nb_comments'];
-        $comments_page_nb_comments = is_numeric($comments_page_nb_comments) ? (int) $comments_page_nb_comments : 10;
+        $comments_page_nb_comments = \Piwigo\Config\Config::commentsPageNbComments();
 
         // if the default value is not in the expected values, we add it in
         // the $items_number array
@@ -184,13 +183,12 @@ final class CommentsController implements ControllerInterface
               'category_id IN (' . implode(',', $category_ids) . ')';
         }
 
-        // $conf['user_fields'] maps generic field names to actual DB column
+        // \Piwigo\Config\Config::userFields() maps generic field names to actual DB column
         // names (see include/config_default.inc.php, always a
         // string=>string map); $conf itself is only known as
         // array<string, mixed>, so narrow with fallbacks matching the
         // shipped defaults rather than trust the shape blindly.
-        $user_fields = $conf['user_fields'] ?? null;
-        $user_fields = is_array($user_fields) ? $user_fields : [];
+        $user_fields = \Piwigo\Config\Config::userFields();
         $username_field = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
         $email_field = is_string($user_fields['email'] ?? null) ? $user_fields['email'] : 'mail_address';
         $id_field = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';

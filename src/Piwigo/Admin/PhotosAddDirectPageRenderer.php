@@ -139,7 +139,7 @@ SELECT COUNT(*)
         // |                             Formats Mode                          |
         // +-------------------------------------------------------------------+
 
-        $display_formats = (bool) $conf['enable_formats'] && isset($_GET['formats']);
+        $display_formats = \Piwigo\Config\Config::isFormatsEnabled() && isset($_GET['formats']);
 
         $have_formats_original = false;
         $formats_original_info = [];
@@ -214,13 +214,13 @@ SELECT *
 
         trigger_notify('loc_end_photo_add_direct');
 
-        // $conf['format_ext'] is read twice below; narrow once and reuse instead of
+        // \Piwigo\Config\Config::formatExtensions() is read twice below; narrow once and reuse instead of
         // re-reading the offset (each re-read is `mixed`), same pattern as
         // admin/batch_manager.php.
-        $conf_format_ext = is_array($conf['format_ext'] ?? null) ? $conf['format_ext'] : [];
+        $conf_format_ext = is_array(\Piwigo\Config\Config::formatExtensions()) ? \Piwigo\Config\Config::formatExtensions() : [];
 
         $template->assign([
-            'ENABLE_FORMATS' => $conf['enable_formats'],
+            'ENABLE_FORMATS' => \Piwigo\Config\Config::isFormatsEnabled(),
             'DISPLAY_FORMATS' => $display_formats,
             'HAVE_FORMATS_ORIGINAL' => $have_formats_original,
             'FORMATS_ORIGINAL_INFO' => $formats_original_info,
@@ -259,8 +259,8 @@ SELECT *
         $template->assign(
             [
                 'F_ADD_ACTION' => self::baseUrl(),
-                'chunk_size' => $conf['upload_form_chunk_size'],
-                'max_file_size' => $conf['upload_form_max_file_size'],
+                'chunk_size' => \Piwigo\Config\Config::uploadFormChunkSize(),
+                'max_file_size' => \Piwigo\Config\Config::uploadFormMaxFileSize(),
                 'ADMIN_PAGE_TITLE' => l10n('Upload Photos'),
             ]
         );
@@ -294,11 +294,11 @@ SELECT *
         }
 
         // warn the user if the picture will be resized after upload
-        if ((bool) $conf['original_resize']) {
+        if (\Piwigo\Config\Config::originalResize()) {
             $template->assign(
                 [
-                    'original_resize_maxwidth' => $conf['original_resize_maxwidth'],
-                    'original_resize_maxheight' => $conf['original_resize_maxheight'],
+                    'original_resize_maxwidth' => \Piwigo\Config\Config::originalResizeMaxwidth(),
+                    'original_resize_maxheight' => \Piwigo\Config\Config::originalResizeMaxheight(),
                 ]
             );
         }
@@ -310,7 +310,7 @@ SELECT *
             ]
         );
 
-        $upload_extensions = ((bool) $conf['upload_form_all_types']) ? $conf['file_ext'] : $conf['picture_ext'];
+        $upload_extensions = (\Piwigo\Config\Config::uploadFormAllTypes()) ? \Piwigo\Config\Config::fileExtensions() : \Piwigo\Config\Config::pictureExtensions();
         // $conf values are inherently mixed; only string elements can safely
         // be passed to strtolower() below.
         $upload_extensions = is_array($upload_extensions) ? array_filter($upload_extensions, is_string(...)) : [];
@@ -437,7 +437,7 @@ SELECT
         if (! isset($_SESSION['upload_hide_warnings'])) {
             $setup_warnings = [];
 
-            if ((bool) $conf['use_exif'] and ! function_exists('exif_read_data')) {
+            if (\Piwigo\Config\Config::useExif() and ! function_exists('exif_read_data')) {
                 $setup_warnings[] = l10n('Exif extension not available, admin should disable exif use');
             }
 
@@ -449,8 +449,7 @@ SELECT
                 );
             }
 
-            $upload_form_chunk_size = $conf['upload_form_chunk_size'];
-            $upload_form_chunk_size = is_numeric($upload_form_chunk_size) ? (int) $upload_form_chunk_size : 0;
+            $upload_form_chunk_size = \Piwigo\Config\Config::uploadFormChunkSize();
             if ($uploadService->getIniSize('upload_max_filesize') < $upload_form_chunk_size * 1024) {
                 $upload_max_filesize = $uploadService->getIniSize('upload_max_filesize');
                 // upload_max_filesize is a core php.ini directive, always present

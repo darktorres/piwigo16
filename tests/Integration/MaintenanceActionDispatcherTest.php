@@ -90,13 +90,12 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // test avoids leaking $page['infos']/errors state across tests.
         $this->page = [];
         $GLOBALS['page'] = &$this->page;
-        $GLOBALS['conf'] = [];
     }
 
     #[\Override]
     protected function tearDown(): void
     {
-        unset($GLOBALS['page'], $GLOBALS['conf']);
+        unset($GLOBALS['page']);
         parent::tearDown();
     }
 

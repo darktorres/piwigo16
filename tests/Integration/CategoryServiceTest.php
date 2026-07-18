@@ -123,7 +123,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
         CurrentUser::set(User::fromUserArray([]));
         $GLOBALS['filter'] = [];
-        $GLOBALS['conf'] = ['rate' => true];
+        Config::override('rate', true);
     }
 
     #[\Override]

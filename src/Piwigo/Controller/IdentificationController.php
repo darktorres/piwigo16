@@ -70,7 +70,7 @@ final class IdentificationController implements ControllerInterface
         $get_redirect = $_GET['redirect'] ?? null;
         if (is_string($get_redirect) && $get_redirect !== '') {
             $redirect_to = urldecode($get_redirect);
-            if ((bool) $conf['guest_access'] and ! isset($_GET['hide_redirect_error'])) {
+            if (\Piwigo\Config\Config::guestAccess() and ! isset($_GET['hide_redirect_error'])) {
                 $page['errors']['login_page_error'] = l10n('You are not authorized to access the requested page');
             }
         }
@@ -90,7 +90,7 @@ final class IdentificationController implements ControllerInterface
                 $username = is_string($_POST['username'] ?? null) ? $_POST['username'] : '';
                 $password = is_string($_POST['password'] ?? null) ? $_POST['password'] : null;
 
-                if ((bool) $conf['insensitive_case_logon']) {
+                if (\Piwigo\Config\Config::insensitiveCaseLogon()) {
                     $username = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->searchCaseUsername($username);
                 }
 
@@ -148,22 +148,22 @@ final class IdentificationController implements ControllerInterface
                     'U_REDIRECT' => $redirect_to,
 
                     'F_LOGIN_ACTION' => get_root_url() . 'identification.php',
-                    'authorize_remembering' => $conf['authorize_remembering'],
+                    'authorize_remembering' => \Piwigo\Config\Config::authorizeRemembering(),
                 ]
             );
 
-            if (! (bool) $conf['gallery_locked'] && (bool) $conf['allow_user_registration']) {
+            if (! \Piwigo\Config\Config::galleryLocked() && \Piwigo\Config\Config::allowUserRegistration()) {
                 $template->assign('U_REGISTER', get_root_url() . 'register.php');
             }
 
-            if (! (bool) $conf['gallery_locked']) {
+            if (! \Piwigo\Config\Config::galleryLocked()) {
                 $template->assign('U_LOST_PASSWORD', get_root_url() . 'password.php');
             }
 
             $themeconf = $template->get_template_vars('themeconf');
             $themeconf = is_array($themeconf) ? $themeconf : [];
             $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
-            if (! (bool) $conf['gallery_locked'] && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on, true))) {
+            if (! \Piwigo\Config\Config::galleryLocked() && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on, true))) {
                 new MenubarRenderer()
                     ->render();
             }

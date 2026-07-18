@@ -60,6 +60,7 @@
     "ext-imap": "Optional email-address parsing helper for notification features."
   },
   "require-dev": {
+    "cweagans/composer-patches": "^2.0",
     "cyclonedx/cyclonedx-php-composer": "^6.2",
     "deptrac/deptrac": "^4.6",
     "icanhazstring/composer-unused": "^0.9",
@@ -131,7 +132,17 @@
     "allow-plugins": {
       "cyclonedx/cyclonedx-php-composer": true,
       "pestphp/pest-plugin": true,
-      "phpstan/extension-installer": true
+      "phpstan/extension-installer": true,
+      "cweagans/composer-patches": true,
+      "cweagans/composer-configurable-plugin": true
+    }
+  },
+  "extra": {
+    "patches": {
+      "pestphp/pest-plugin-browser": {
+        "Fix expectScreenshot() unconditionally failing when the tolerant threshold comparison actually passes (missing return after Page.php's foreach loop)": "patches/pest-plugin-browser-4.3.1-expect-screenshot-success-path.patch",
+        "Add Chromium launch flags for deterministic screenshot rendering on Linux (font hinting/LCD text/color profile) -- the plugin's own maintainers don't trust screenshot assertions on Linux/CI without this class of mitigation, see PR pestphp/pest-plugin-browser#175": "patches/pest-plugin-browser-4.3.1-deterministic-screenshot-flags.patch"
+      }
     }
   },
   "minimum-stability": "dev",

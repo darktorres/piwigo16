@@ -109,8 +109,8 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         // set debug_template=2 for Smarty's "per-template debug window"
         // mode (vendor/smarty/smarty/src/Smarty.php), so int must survive
         // as-is and only non-int values fall back to a bool coercion.
-        $debug_template = $conf['debug_template'];
-        $this->smarty->debugging = is_int($debug_template) ? $debug_template : (bool) $debug_template;
+        $debug_template = \Piwigo\Config\Config::debugTemplate();
+        $this->smarty->debugging = is_int($debug_template) ? $debug_template : $debug_template;
         if (! (bool) $this->smarty->debugging) {
             $this->smarty->error_reporting = error_reporting() & ~E_NOTICE;
         }
@@ -119,17 +119,17 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         // vendor/smarty/smarty/src/Smarty.php), whose own @var docblocks
         // (int / boolean respectively) don't carry the same bool|int
         // flexibility as $debugging above.
-        $compile_check = $conf['template_compile_check'];
+        $compile_check = \Piwigo\Config\Config::templateCompileCheck();
         $this->smarty->compile_check = is_scalar($compile_check) ? (int) $compile_check : Smarty::COMPILECHECK_ON;
-        $this->smarty->force_compile = (bool) $conf['template_force_compile'];
+        $this->smarty->force_compile = \Piwigo\Config\Config::templateForceCompile();
 
-        $conf_data_location = $conf['data_location'] ?? null;
+        $conf_data_location = \Piwigo\Config\Config::dataLocation();
         if (! is_string($conf_data_location)) {
             new HtmlService()
-                ->fatalError("Invalid \$conf['data_location'] configuration: expected a string.");
+                ->fatalError("Invalid \\Piwigo\Config\Config::dataLocation() configuration: expected a string.");
         }
 
-        if (! isset($conf['data_dir_checked'])) {
+        if (! \Piwigo\Config\Config::has('data_dir_checked')) {
             $dir = PHPWG_ROOT_PATH . $conf_data_location;
             \Piwigo\Core\FilesystemHelper::mkgetdir($dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
             if (! is_writable($dir)) {
@@ -201,7 +201,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         $this->smarty->registerPlugin('modifier', 'sizeOf', 'sizeOf');
         $this->smarty->registerPlugin('modifier', 'array_key_exists', 'array_key_exists');
 
-        if ((bool) $conf['compiled_template_cache_language']) {
+        if (\Piwigo\Config\Config::compiledTemplateCacheLanguage()) {
             $this->smarty->registerFilter('post', [self::class, 'postfilter_language']);
         }
 
@@ -225,9 +225,8 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
 
         $this->smarty->assign('lang_info', $lang_info);
 
-        if (! defined('IN_ADMIN') and isset($conf['extents_for_templates']) and is_string($conf['extents_for_templates'])) {
-            $tpl_extents = unserialize($conf['extents_for_templates']);
-            $this->set_extents($tpl_extents, './template-extension/', true, $theme);
+        if (! defined('IN_ADMIN') and \Piwigo\Config\Config::has('extents_for_templates')) {
+            $this->set_extents(\Piwigo\Config\Config::extentsForTemplates(), './template-extension/', true, $theme);
         }
     }
 
@@ -416,8 +415,8 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
     /**
      * Sets template extentions filenames for handles.
      *
-     * @param mixed $filename_array hashmap of handle=>filename; the real
-     *   caller (__construct()) passes unserialize($conf['extents_for_templates']),
+     * @param mixed $filename_array hashmap of handle=>filename; also called
+     *   directly with a plugin-supplied value (set_extent()'s caller),
      *   which is not guaranteed to be an array
      * @param string $dir
      * @param bool $overwrite
@@ -578,7 +577,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
          * @var array<string, mixed> $lang_info
          */
         global $conf, $lang_info;
-        if ((bool) $conf['compiled_template_cache_language'] and isset($lang_info['code']) and is_string($lang_info['code'])) {
+        if (\Piwigo\Config\Config::compiledTemplateCacheLanguage() and isset($lang_info['code']) and is_string($lang_info['code'])) {
             $this->smarty->compile_id .= '_' . $lang_info['code'];
         }
 
@@ -686,7 +685,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
             // \Smarty_Internal_Debug doesn't exist in the installed Smarty
             // 5.x package (that's Smarty\Debug now, an instance method, not
             // static) — this call already fatals with "Class not found"
-            // whenever $conf['debug_template'] is enabled. Not in scope for
+            // whenever \Piwigo\Config\Config::debugTemplate() is enabled. Not in scope for
             // a pure extraction; preserved verbatim (still backslash-
             // qualified so it keeps failing the same way, not silently
             // resolving to a new Piwigo\Template\Smarty_Internal_Debug
@@ -734,7 +733,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
                 // -- it's always a real string here since $params[0] is a
                 // template-compiled string literal expression, but narrow
                 // explicitly since the callee's return type is opaque.
-                if ((bool) $conf['compiled_template_cache_language']
+                if (\Piwigo\Config\Config::compiledTemplateCacheLanguage()
                   && is_string($key)
                   && Lang::has($key)
                 ) {
@@ -743,7 +742,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
                 return 'l10n(' . $params[0] . ')';
 
             default:
-                if ((bool) $conf['compiled_template_cache_language']) {
+                if (\Piwigo\Config\Config::compiledTemplateCacheLanguage()) {
                     $ret = 'sprintf(';
                     $ret .= self::modcompiler_translate([$params[0]]);
                     $ret .= ',' . implode(',', array_slice($params, 1));
@@ -768,7 +767,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
          * @var array<string, mixed> $lang_info
          */
         global $conf, $lang_info;
-        if ((bool) $conf['compiled_template_cache_language']) {
+        if (\Piwigo\Config\Config::compiledTemplateCacheLanguage()) {
             $ret = 'sprintf(';
             if ((bool) $lang_info['zero_plural']) {
                 $ret .= '($tmp=(' . $params[0] . '))>1||$tmp==0';
@@ -1269,7 +1268,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     }
 
     /**
-     * Postfilter used when $conf['compiled_template_cache_language'] is true.
+     * Postfilter used when \Piwigo\Config\Config::compiledTemplateCacheLanguage() is true.
      *
      * @param string $source
      * @param Smarty $smarty

@@ -84,8 +84,11 @@ final class PictureCoiPageRenderer
                 ->deleteElementDerivatives($derivative_infos, ImageStdParams::CUSTOM);
             $uid = '&b=' . time();
             $conf['question_mark_in_urls'] = $conf['php_extension_in_urls'] = true;
-            if ($conf['derivative_url_style'] === 1) {
+            \Piwigo\Config\Config::override('question_mark_in_urls', true);
+            \Piwigo\Config\Config::override('php_extension_in_urls', true);
+            if (\Piwigo\Config\Config::derivativeUrlStyle() === 1) {
                 $conf['derivative_url_style'] = 0; // auto
+                \Piwigo\Config\Config::override('derivative_url_style', 0);
             }
         } else {
             $uid = '';

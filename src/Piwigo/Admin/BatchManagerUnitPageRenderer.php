@@ -54,11 +54,10 @@ final class BatchManagerUnitPageRenderer
     {
         /**
          * @var array<string, mixed> $cache
-         * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
          * @var array<string, mixed> $pwg_loaded_plugins
          */
-        global $cache, $conf, $page, $pwg_loaded_plugins;
+        global $cache, $page, $pwg_loaded_plugins;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();
@@ -112,7 +111,7 @@ SELECT id, date_creation
                 $data['author'] = $_POST['author-' . $row['id']];
                 $data['level'] = $_POST['level-' . $row['id']];
 
-                if ((bool) $conf['allow_html_descriptions']) {
+                if (\Piwigo\Config\Config::allowHtmlDescriptions()) {
                     $data['comment'] = @$_POST['description-' . $row['id']];
                 } else {
                     $description_post = $_POST['description-' . $row['id']] ?? null;
@@ -222,10 +221,10 @@ SELECT id, date_creation
         // how many items to display on this page
         if (isset($_GET['display']) && $_GET['display'] !== '' && $_GET['display'] !== '0') {
             // \Piwigo\Config\ConfigDb::confUpdateParam('batch_manager_images_per_page_unit' , intval($_GET['display']));
-            // $page['nb_images'] = $conf['batch_manager_images_per_page_unit'];
+            // $page['nb_images'] = \Piwigo\Config\Config::batchManagerImagesPerPageUnit();
             $page['nb_images'] = is_numeric($_GET['display']) ? intval($_GET['display']) : 0;
-        } elseif (in_array($conf['batch_manager_images_per_page_unit'], [5, 10, 50], true)) {
-            $page['nb_images'] = $conf['batch_manager_images_per_page_unit'];
+        } elseif (in_array(\Piwigo\Config\Config::batchManagerImagesPerPageUnit(), [5, 10, 50], true)) {
+            $page['nb_images'] = \Piwigo\Config\Config::batchManagerImagesPerPageUnit();
         } else {
             $page['nb_images'] = 5;
         }
@@ -262,7 +261,16 @@ SELECT id, date_creation
 
             if (isset($bulk_manager_filter['prefilter'])
                 and $bulk_manager_filter['prefilter'] === 'duplicates') {
-                $conf['order_by'] = ' ORDER BY file, id';
+                $order_by = ' ORDER BY file, id';
+            } else {
+                // Config::orderBy() (the typed SCHEMA accessor) models a
+                // structured {field,dir}[] shape that no real code writes --
+                // 'order_by' is actually stored as a raw "ORDER BY ..." SQL
+                // fragment (see ConfigDb::loadConfFromDb()'s own docblock),
+                // so read it via the untyped bag like ConfigService::
+                // confGetParam() does for keys without a compatible accessor.
+                $order_by_conf = \Piwigo\Config\Config::all()['order_by'] ?? null;
+                $order_by = is_string($order_by_conf) ? $order_by_conf : '';
             }
 
             $query = '
@@ -272,9 +280,10 @@ SELECT *
             if ($is_category) {
                 $category_info = get_cat_info($filter_category_id);
 
-                $conf['order_by'] = $conf['order_by_inside_category'];
+                $order_by_inside_category_conf = \Piwigo\Config\Config::all()['order_by_inside_category'] ?? null;
+                $order_by = is_string($order_by_inside_category_conf) ? $order_by_inside_category_conf : '';
                 if (is_string($category_info['image_order'] ?? null) && $category_info['image_order'] !== '') {
-                    $conf['order_by'] = ' ORDER BY ' . $category_info['image_order'];
+                    $order_by = ' ORDER BY ' . $category_info['image_order'];
                 }
 
                 $query .= '
@@ -290,7 +299,7 @@ SELECT *
             }
 
             $query .= '
-  ' . (is_string($conf['order_by']) ? $conf['order_by'] : '') . '
+  ' . $order_by . '
   LIMIT ' . $page_nb_images . ' OFFSET ' . $page_start . '
 ;';
             // $result = \Piwigo\Db\MysqliDb::query($query);
@@ -303,12 +312,7 @@ SELECT *
             // that cross-block invariant).
             $added_by_username_of = [];
             if (count($added_by_ids) > 0) {
-                // $conf['user_fields'] maps generic field names to table-specific
-                // DB column names (see include/config_default.inc.php); matches
-                // the established narrowing pattern used across
-                // include/functions_user.inc.php.
-                /** @var array<string, string> $user_fields */
-                $user_fields = $conf['user_fields'];
+                $user_fields = \Piwigo\Config\Config::userFields();
                 $query = '
 SELECT
     ' . $user_fields['username'] . ' AS username,

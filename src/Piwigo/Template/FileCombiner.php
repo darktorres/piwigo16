@@ -65,7 +65,7 @@ final class FileCombiner
         /** @var array<string, mixed> $conf */
         global $conf;
         $force = false;
-        if (\Piwigo\Auth\AccessControl::isAdmin() && ($this->is_css || ! (bool) $conf['template_compile_check'])) {
+        if (\Piwigo\Auth\AccessControl::isAdmin() && ($this->is_css || ! \Piwigo\Config\Config::templateCompileCheck())) {
             $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && is_string($_SERVER['HTTP_CACHE_CONTROL']) && str_contains($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
               || (isset($_SERVER['HTTP_PRAGMA']) && is_string($_SERVER['HTTP_PRAGMA']) && (bool) strpos($_SERVER['HTTP_PRAGMA'], 'no-cache'));
         }
@@ -82,14 +82,14 @@ final class FileCombiner
                 $result[] = $combinable;
                 continue;
             }
-            if (! (bool) $conf['template_combine_files']) {
+            if (! \Piwigo\Config\Config::templateCombineFiles()) {
                 $this->flush_pending($result, $pending, $key, $force);
                 $key = $ini_key;
             }
 
             $key[] = $combinable->path;
             $key[] = (string) $combinable->version;
-            if ((bool) $conf['template_compile_check']) {
+            if (\Piwigo\Config\Config::templateCompileCheck()) {
                 $key[] = (string) filemtime(PHPWG_ROOT_PATH . $combinable->path);
             }
             $pending[] = $combinable;
@@ -148,7 +148,7 @@ final class FileCombiner
         if ($combinable->is_template) {
             if (! $return_content) {
                 $key = [$combinable->path, $combinable->version];
-                if ((bool) $conf['template_compile_check']) {
+                if (\Piwigo\Config\Config::templateCompileCheck()) {
                     $key[] = filemtime(PHPWG_ROOT_PATH . $combinable->path);
                 }
                 $file = Config::combinedDir() . 't' . base_convert(hash('crc32b', implode(',', $key)), 16, 36) . '.' . $this->type;

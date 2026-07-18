@@ -54,14 +54,12 @@ final class MetadataServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $this->service = new MetadataService(new MetadataRepository($this->conn));
 
-        $GLOBALS['conf'] = [
-            'use_iptc' => false,
-            'use_exif' => true,
-            'allow_html_in_metadata' => false,
-            'metadata_keyword_separator_regex' => '/[.,;]/',
-            'use_exif_mapping' => ['author' => 'Artist', 'name' => 'ImageDescription'],
-            'use_iptc_mapping' => [],
-        ];
+        Config::override('use_iptc', false);
+        Config::override('use_exif', true);
+        Config::override('allow_html_in_metadata', false);
+        Config::override('metadata_keyword_separator_regex', '/[.,;]/');
+        Config::override('use_exif_mapping', ['author' => 'Artist', 'name' => 'ImageDescription']);
+        Config::override('use_iptc_mapping', []);
 
         // Self-contained scratch dir under this project's own _data/ (never
         // a real upload path) -- created here, torn down below.
@@ -147,7 +145,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_sync_metadata_attributes_omits_exif_fields_when_disabled(): void
     {
-        $GLOBALS['conf'] = array_merge(is_array($GLOBALS['conf']) ? $GLOBALS['conf'] : [], ['use_exif' => false]);
+        Config::override('use_exif', false);
 
         $attributes = $this->service->getSyncMetadataAttributes();
 

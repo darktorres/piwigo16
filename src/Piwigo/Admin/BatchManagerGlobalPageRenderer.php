@@ -53,10 +53,9 @@ final class BatchManagerGlobalPageRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (count($_POST) > 0) {
@@ -569,16 +568,16 @@ DELETE
             } else {
                 $page['nb_images'] = is_numeric($_GET['display']) ? intval($_GET['display']) : 0;
             }
-        } elseif (in_array($conf['batch_manager_images_per_page_global'], [20, 50, 100], true)) {
-            $page['nb_images'] = $conf['batch_manager_images_per_page_global'];
+        } elseif (in_array(\Piwigo\Config\Config::batchManagerImagesPerPageGlobal(), [20, 50, 100], true)) {
+            $page['nb_images'] = \Piwigo\Config\Config::batchManagerImagesPerPageGlobal();
         } else {
             $page['nb_images'] = 20;
         }
 
         // $page['nb_images'] is always int here: the block above assigns
-        // count()/intval() (both int), or a $conf value already narrowed to
-        // one of the literal ints in the in_array(..., true) check, or a
-        // literal int fallback -- PHPStan proves this, so no cast is needed.
+        // count()/intval() (both int), or Config::batchManagerImagesPerPageGlobal()
+        // already narrowed to one of the literal ints in the in_array(..., true)
+        // check, or a literal int fallback -- PHPStan proves this, so no cast is needed.
         // $page_start (the pagination offset) was already narrowed once,
         // above, and is reused here.
         $nb_images = $page['nb_images'];
@@ -609,7 +608,16 @@ DELETE
                 // that boundary, hence the is_array()/is_string() checks.
                 $duplicates_on_fields = array_filter($duplicates_on_fields, is_string(...));
                 $order_by_fields = array_merge($duplicates_on_fields, ['id']);
-                $conf['order_by'] = ' ORDER BY ' . join(', ', $order_by_fields);
+                $order_by = ' ORDER BY ' . join(', ', $order_by_fields);
+            } else {
+                // Config::orderBy() (the typed SCHEMA accessor) models a
+                // structured {field,dir}[] shape that no real code writes --
+                // 'order_by' is actually stored as a raw "ORDER BY ..." SQL
+                // fragment (see ConfigDb::loadConfFromDb()'s own docblock),
+                // so read it via the untyped bag like ConfigService::
+                // confGetParam() does for keys without a compatible accessor.
+                $order_by_conf = \Piwigo\Config\Config::all()['order_by'] ?? null;
+                $order_by = is_string($order_by_conf) ? $order_by_conf : '';
             }
 
             $query = '
@@ -619,9 +627,10 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
             if ($is_category) {
                 $category_info = get_cat_info($filter_category_id);
 
-                $conf['order_by'] = $conf['order_by_inside_category'];
+                $order_by_inside_category_conf = \Piwigo\Config\Config::all()['order_by_inside_category'] ?? null;
+                $order_by = is_string($order_by_inside_category_conf) ? $order_by_inside_category_conf : '';
                 if (is_string($category_info['image_order'] ?? null) && $category_info['image_order'] !== '') {
-                    $conf['order_by'] = ' ORDER BY ' . $category_info['image_order'];
+                    $order_by = ' ORDER BY ' . $category_info['image_order'];
                 }
 
                 $query .= '
@@ -635,12 +644,6 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
                 $query .= '
     AND category_id = ' . $filter_category_id;
             }
-
-            // $conf['order_by'] is always a string here: it's either loaded verbatim
-            // from the piwigo_config DB table by ConfigDb::loadConfFromDb() in
-            // include/common.inc.php (install/config.sql always inserts this row),
-            // or overwritten above with a string built from string concatenation.
-            $order_by = is_string($conf['order_by']) ? $conf['order_by'] : '';
 
             $query .= '
   ' . $order_by . '

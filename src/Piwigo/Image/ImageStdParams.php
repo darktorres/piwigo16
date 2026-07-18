@@ -124,7 +124,7 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]|string $conf['disabled_derivatives'] is
+     * @return DerivativeParams[]|string \Piwigo\Config\Config::disabledDerivatives() is
      *   stored serialized in the database — callers must safe_unserialize()
      *   this when it falls through to that fallback
      */
@@ -137,7 +137,7 @@ final class ImageStdParams
             return self::$disabled_type_map;
         }
 
-        $disabled_derivatives = $conf['disabled_derivatives'] ?? null;
+        $disabled_derivatives = \Piwigo\Config\Config::disabledDerivatives() ?? null;
         return is_string($disabled_derivatives) ? $disabled_derivatives : [];
     }
 
@@ -198,13 +198,13 @@ final class ImageStdParams
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        // $conf['derivatives'] does not exist at all until save() has been
+        // \Piwigo\Config\Config::derivatives() does not exist at all until save() has been
         // called once (a fresh install's config.sql has no 'derivatives'
         // row) -- guard with is_string() rather than unserialize()-ing a
         // possibly-null value directly, which would throw a TypeError
         // under strict_types instead of falling through to the "build
         // defaults" branch below like this function intends.
-        $derivatives_raw = $conf['derivatives'] ?? null;
+        $derivatives_raw = \Piwigo\Config\Config::derivatives() ?? null;
         $arr = is_string($derivatives_raw) ? @unserialize($derivatives_raw) : false;
         // unserialize() is only typed mixed by PHP itself (the serialized
         // blob could decode to any PHP value, or to a malformed non-array

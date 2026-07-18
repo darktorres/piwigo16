@@ -288,11 +288,11 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 $template->assign(
                     $page_mode,
                     [
-                        'SEND_HTML_MAIL' => $conf['nbm_send_html_mail'],
-                        'SEND_MAIL_AS' => $conf['nbm_send_mail_as'],
-                        'SEND_DETAILED_CONTENT' => $conf['nbm_send_detailed_content'],
-                        'COMPLEMENTARY_MAIL_CONTENT' => $conf['nbm_complementary_mail_content'],
-                        'SEND_RECENT_POST_DATES' => $conf['nbm_send_recent_post_dates'],
+                        'SEND_HTML_MAIL' => \Piwigo\Config\Config::nbmSendHtmlMail(),
+                        'SEND_MAIL_AS' => \Piwigo\Config\Config::nbmSendMailAs(),
+                        'SEND_DETAILED_CONTENT' => \Piwigo\Config\Config::nbmSendDetailedContent(),
+                        'COMPLEMENTARY_MAIL_CONTENT' => \Piwigo\Config\Config::nbmComplementaryMailContent(),
+                        'SEND_RECENT_POST_DATES' => \Piwigo\Config\Config::nbmSendRecentPostDates(),
                     ]
                 );
                 break;
@@ -353,7 +353,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 $tpl_var['CUSTOMIZE_MAIL_CONTENT'] =
                   (isset($_POST['send_customize_mail_content']) and is_string($_POST['send_customize_mail_content']))
                     ? stripslashes($_POST['send_customize_mail_content'])
-                    : $conf['nbm_complementary_mail_content'];
+                    : \Piwigo\Config\Config::nbmComplementaryMailContent();
 
                 $post_send_selection = (isset($_POST['send_selection']) and is_array($_POST['send_selection']))
                     ? $_POST['send_selection']
@@ -387,8 +387,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
                 // auth_key_duration is a plain int config value (see
                 // include/config_default.inc.php).
-                $auth_key_duration = $conf['auth_key_duration'];
-                $auth_key_duration_num = is_numeric($auth_key_duration) ? (int) $auth_key_duration : 0;
+                $auth_key_duration = \Piwigo\Config\Config::authKeyDuration();
+                $auth_key_duration_num = $auth_key_duration;
                 if ($auth_key_duration_num > 0) {
                     $auth_key_since = strtotime('now -' . $auth_key_duration_num . ' second');
                     // the relative time expression above is always syntactically valid
@@ -475,18 +475,10 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
         // user_fields maps generic field names to table-specific column names
         // (see include/config_default.inc.php); every value is a plain string.
-        $user_fields_raw = $conf['user_fields'];
-        $user_fields = [];
-        if (is_array($user_fields_raw)) {
-            foreach ($user_fields_raw as $field_key => $field_value) {
-                if (is_string($field_key) and is_string($field_value)) {
-                    $user_fields[$field_key] = $field_value;
-                }
-            }
-        }
-        $user_field_email = $user_fields['email'] ?? 'mail_address';
-        $user_field_id = $user_fields['id'] ?? 'id';
-        $user_field_username = $user_fields['username'] ?? 'username';
+        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_field_email = $user_fields['email'];
+        $user_field_id = $user_fields['id'];
+        $user_field_username = $user_fields['username'];
 
         // Set null mail_address empty
         $query = '
@@ -544,7 +536,7 @@ order by
             // Update field enabled with specific function
             $check_key_treated = $nbmSender->doSubscribeUnsubscribeNotificationByMail(
                 true,
-                (bool) $conf['nbm_default_value_user_enabled'],
+                \Piwigo\Config\Config::nbmDefaultValueUserEnabled(),
                 $check_key_list
             );
 
@@ -580,7 +572,7 @@ order by
         // non-scalar value.
         $customize_mail_content_str = is_string($customize_mail_content) ? $customize_mail_content : '';
 
-        if ((bool) $conf['nbm_send_html_mail'] and ! str_starts_with($customize_mail_content_str, '<')) {
+        if (\Piwigo\Config\Config::nbmSendHtmlMail() and ! str_starts_with($customize_mail_content_str, '<')) {
             // On HTML mail, detects if the content are HTML format.
             // If it's plain text format, convert content to readable HTML
             return nl2br(htmlspecialchars($customize_mail_content_str));

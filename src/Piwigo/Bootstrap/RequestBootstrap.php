@@ -170,11 +170,11 @@ final class RequestBootstrap
         // with the frozen install/db scripts and its top-level define()s
         // became MysqliDb class constants, so nothing on this path needs it.
 
-        if (isset($conf['show_php_errors']) && ! empty($conf['show_php_errors'])) {
-            if (is_scalar($conf['show_php_errors'])) {
-                @ini_set('error_reporting', $conf['show_php_errors']);
+        if (\Piwigo\Config\Config::has('show_php_errors') && ! empty(\Piwigo\Config\Config::showPhpErrors())) {
+            if (is_scalar(\Piwigo\Config\Config::showPhpErrors())) {
+                @ini_set('error_reporting', \Piwigo\Config\Config::showPhpErrors());
             }
-            if ((bool) $conf['show_php_errors_on_frontend']) {
+            if (\Piwigo\Config\Config::showPhpErrorsOnFrontend()) {
                 // Route errors to DevTools (X-PHP-Error-N response headers)
                 // instead of inline output, which corrupts JSON/XML/binary
                 // responses (see Piwigo\Core\ErrorCollector).
@@ -182,10 +182,9 @@ final class RequestBootstrap
             }
         }
 
-        if ($conf['session_gc_probability'] > 0) {
+        if (\Piwigo\Config\Config::sessionGcProbability() > 0) {
             @ini_set('session.gc_divisor', 100);
-            $gc_probability = $conf['session_gc_probability'];
-            $gc_probability = is_numeric($gc_probability) ? (int) $gc_probability : 1;
+            $gc_probability = \Piwigo\Config\Config::sessionGcProbability();
             @ini_set('session.gc_probability', min($gc_probability, 100));
         }
 
@@ -197,12 +196,12 @@ final class RequestBootstrap
 
         // Database connection
         try {
-            $db_host = $conf['db_host'];
-            $db_user = $conf['db_user'];
-            $db_password = $conf['db_password'];
-            $db_base = $conf['db_base'];
+            $db_host = \Piwigo\Config\Config::dbHost();
+            $db_user = \Piwigo\Config\Config::dbUser();
+            $db_password = \Piwigo\Config\Config::dbPassword();
+            $db_base = \Piwigo\Config\Config::dbName();
             if (! is_string($db_host) || ! is_string($db_user) || ! is_string($db_password) || ! is_string($db_base)) {
-                throw new \Exception("Invalid database configuration: \$conf['db_host'], 'db_user', 'db_password' and 'db_base' must be strings.");
+                throw new \Exception("Invalid database configuration: \\Piwigo\Config\Config::dbHost(), 'db_user', 'db_password' and 'db_base' must be strings.");
             }
             \Piwigo\Db\MysqliDb::connect(
                 $db_host,
@@ -223,30 +222,30 @@ final class RequestBootstrap
 
         \Piwigo\Config\ConfigDb::loadConfFromDb();
 
-        // $conf['data_location']/'log_dir' lost their specific string types the same
+        // \Piwigo\Config\Config::dataLocation()/'log_dir' lost their specific string types the same
         // way $conf['dblayer'] did above (see comment near the dblayer include); we
         // already validated 'db_password' is a string above ($db_password), so it is
         // reused here rather than re-narrowed.
-        $log_data_location = $conf['data_location'];
-        $log_dir = $conf['log_dir'];
+        $log_data_location = \Piwigo\Config\Config::dataLocation();
+        $log_dir = \Piwigo\Config\Config::logDir();
         if (! is_string($log_data_location) || ! is_string($log_dir)) {
             new HtmlService()
-                ->fatalError("Invalid \$conf['data_location']/'log_dir' configuration: expected strings.");
+                ->fatalError("Invalid \\Piwigo\Config\Config::dataLocation()/'log_dir' configuration: expected strings.");
         }
 
         $logger = new Logger([
             'directory' => PHPWG_ROOT_PATH . $log_data_location . $log_dir,
-            'severity' => $conf['log_level'],
+            'severity' => \Piwigo\Config\Config::logLevel(),
             // we use an hashed filename to prevent direct file access, and we salt with
             // the db_password instead of secret_key because the log must be usable in i.php
             // (secret_key is in the database)
             'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $db_password) . '.txt',
             'globPattern' => 'log_*.txt',
-            'archiveDays' => $conf['log_archive_days'],
+            'archiveDays' => \Piwigo\Config\Config::logArchiveDays(),
         ]);
 
-        if (! (bool) $conf['check_upgrade_feed']) {
-            if (! isset($conf['piwigo_db_version']) or $conf['piwigo_db_version'] != \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)) {
+        if (! \Piwigo\Config\Config::checkUpgradeFeed()) {
+            if (! \Piwigo\Config\Config::has('piwigo_db_version') or \Piwigo\Config\Config::piwigoDbVersion() !== \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)) {
                 redirect(get_root_url() . 'upgrade.php');
             }
         }
@@ -256,29 +255,29 @@ final class RequestBootstrap
         session_start();
         PluginLoader::loadPlugins();
 
-        if (! isset($conf['piwigo_installed_version'])) {
+        if (! \Piwigo\Config\Config::has('piwigo_installed_version')) {
             \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
-        } elseif ($conf['piwigo_installed_version'] != AppInfo::VERSION) {
+        } elseif (\Piwigo\Config\Config::piwigoInstalledVersion() !== AppInfo::VERSION) {
             // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
             (new ActivityService(new ActivityRepository(DbConnection::build())))->record('system', ActivitySystem::Core, 'autoupdate', [
-                'from_version' => $conf['piwigo_installed_version'],
+                'from_version' => \Piwigo\Config\Config::piwigoInstalledVersion(),
                 'to_version' => AppInfo::VERSION,
             ]);
             \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         }
 
         // Check if last major update conf is set if not set it
-        if (! isset($conf['last_major_update'])) {
+        if (! \Piwigo\Config\Config::has('last_major_update')) {
             $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT NOW();'));
             assert($row !== null);
             [$dbnow] = $row;
             \Piwigo\Config\ConfigDb::confUpdateParam('last_major_update', $dbnow, true);
         }
 
-        // 2022-02-25 due to escape on "rank" (becoming a mysql keyword in version 8), the $conf['order_by'] might
+        // 2022-02-25 due to escape on "rank" (becoming a mysql keyword in version 8), the (\Piwigo\Config\Config::all()['order_by'] ?? null) might
         // use a "rank", even if admin/configuration.php should have removed it. We must remove it.
         // TODO remove this data update as soon as 2025 arrives
-        $conf_order_by = $conf['order_by'];
+        $conf_order_by = (\Piwigo\Config\Config::all()['order_by'] ?? null);
         if (is_string($conf_order_by) && (bool) preg_match('/(, )?`rank` ASC/', $conf_order_by)) {
             $order_by = preg_replace('/(, )?`rank` ASC/', '', $conf_order_by);
             if ($order_by == 'ORDER BY ') {
@@ -287,12 +286,20 @@ final class RequestBootstrap
             \Piwigo\Config\ConfigDb::confUpdateParam('order_by', $order_by, true);
         }
 
-        // users can have defined a custom order pattern, incompatible with GUI form
-        if (isset($conf['order_by_custom'])) {
-            $conf['order_by'] = $conf['order_by_custom'];
+        // users can have defined a custom order pattern, incompatible with GUI form.
+        // Config::orderByCustom()/orderByInsideCategoryCustom() (the typed SCHEMA
+        // accessors) model a structured {field,dir}[] shape that no real code
+        // writes -- these are actually stored as raw "ORDER BY ..." SQL fragments
+        // (see ConfigDb::loadConfFromDb()'s own docblock), so read/write them via
+        // the untyped bag like ConfigService::confGetParam() does for keys
+        // without a compatible accessor.
+        if (\Piwigo\Config\Config::has('order_by_custom')) {
+            $conf['order_by'] = \Piwigo\Config\Config::all()['order_by_custom'] ?? null;
+            \Piwigo\Config\Config::override('order_by', $conf['order_by']);
         }
-        if (isset($conf['order_by_inside_category_custom'])) {
-            $conf['order_by_inside_category'] = $conf['order_by_inside_category_custom'];
+        if (\Piwigo\Config\Config::has('order_by_inside_category_custom')) {
+            $conf['order_by_inside_category'] = \Piwigo\Config\Config::all()['order_by_inside_category_custom'] ?? null;
+            \Piwigo\Config\Config::override('order_by_inside_category', $conf['order_by_inside_category']);
         }
 
         if (\Piwigo\Core\LoungeMaintenance::needsEmptying()) {
@@ -307,7 +314,7 @@ final class RequestBootstrap
         // optional (only auth_key_login() sets them, and only on an invalid/expiring
         // auth key), so these defaults are real fallbacks, not just analysis
         // scaffolding.
-        $user['id'] = $conf['guest_id'];
+        $user['id'] = \Piwigo\Config\Config::guestId();
         $user['email'] = null;
         $user['theme'] = '';
         $page['auth_key_invalid'] = false;
@@ -345,8 +352,8 @@ final class RequestBootstrap
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        if (isset($conf['alternative_pem_url']) and $conf['alternative_pem_url'] != '') {
-            $alternative_pem_url = $conf['alternative_pem_url'];
+        if (\Piwigo\Config\Config::has('alternative_pem_url') and \Piwigo\Config\Config::alternativePemUrl() != '') {
+            $alternative_pem_url = \Piwigo\Config\Config::alternativePemUrl();
             return is_scalar($alternative_pem_url) ? (string) $alternative_pem_url : '';
         }
 
@@ -463,9 +470,8 @@ final class RequestBootstrap
         } else { // Classic template
             $theme = $user['theme'];
             if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'ws' and \Piwigo\Core\DeviceHelper::mobileTheme()) {
-                $theme = $conf['mobile_theme'];
+                $theme = \Piwigo\Config\Config::mobilTheme();
             }
-            $theme = is_string($theme) ? $theme : '';
             $template = new Template(PHPWG_ROOT_PATH . 'themes', $theme);
         }
 
@@ -486,7 +492,7 @@ final class RequestBootstrap
         // function had the exact same availability window).
         \Piwigo\Image\SrcImage::setThemeConfProvider($template);
 
-        if (! isset($conf['no_photo_yet'])) {
+        if (! \Piwigo\Config\Config::has('no_photo_yet')) {
             // Formerly include/no_photo_yet.inc.php, a seam of exactly this
             // one call (deleted, P23 sub-batch 8f-5). render() exits itself
             // when it decides to take over the page.
@@ -499,7 +505,7 @@ final class RequestBootstrap
             $header_msgs[] = l10n('Bad status for user "guest", using default status. Please notify the webmaster.');
         }
 
-        if ((bool) $conf['gallery_locked']) {
+        if (\Piwigo\Config\Config::galleryLocked()) {
             $header_msgs[] = l10n('The gallery is locked for maintenance. Please, come back later.');
 
             if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'identification' and ! \Piwigo\Auth\AccessControl::isAdmin()) {
@@ -513,7 +519,7 @@ final class RequestBootstrap
             }
         }
 
-        if ((bool) $conf['check_upgrade_feed']) {
+        if (\Piwigo\Config\Config::checkUpgradeFeed()) {
             // Formerly `include_once .../functions_upgrade.php` + bare
             // check_upgrade_feed() (migrated to a real class, P23 sub-batch
             // 8f-6; the legacy file now only carries frozen-script
@@ -529,7 +535,7 @@ final class RequestBootstrap
             $header_msgs = [];
         }
 
-        if (! empty($conf['filter_pages']) and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
+        if (! empty(\Piwigo\Config\Config::filterPages()) and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
             // Formerly a conditional `include PHPWG_ROOT_PATH .
             // 'include/filter.inc.php';` (deleted, P23 sub-batch 8f-5).
             new FilterService()
@@ -538,13 +544,13 @@ final class RequestBootstrap
             $filter['enabled'] = false;
         }
 
-        if (isset($conf['header_notes']) && is_array($conf['header_notes'])) {
-            $header_notes = array_merge($header_notes, $conf['header_notes']);
+        if (\Piwigo\Config\Config::has('header_notes') && is_array(\Piwigo\Config\Config::headerNotes())) {
+            $header_notes = array_merge($header_notes, \Piwigo\Config\Config::headerNotes());
         }
 
         // default event handlers
         add_event_handler('render_category_literal_description', new HtmlService()->renderCategoryLiteralDescription(...));
-        if (! (bool) $conf['allow_html_descriptions']) {
+        if (! \Piwigo\Config\Config::allowHtmlDescriptions()) {
             add_event_handler('render_category_description', new HtmlService()->pwgNl2br(...));
         }
         add_event_handler('render_comment_content', new HtmlService()->renderCommentContent(...));
@@ -596,7 +602,7 @@ final class RequestBootstrap
         add_event_handler('upload_file', [UploadService::class, 'uploadFileVideo']);
         add_event_handler('upload_file', [UploadService::class, 'uploadFilePsd']);
         add_event_handler('upload_file', [UploadService::class, 'uploadFileEps']);
-        if (! empty($conf['original_url_protection'])) {
+        if (! empty(\Piwigo\Config\Config::originalUrlProtection())) {
             add_event_handler('get_element_url', new HtmlService()->getElementUrlProtectionHandler(...));
             add_event_handler('get_src_image_url', new HtmlService()->getSrcImageUrlProtectionHandler(...));
         }

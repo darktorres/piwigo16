@@ -55,10 +55,10 @@ final class UserBootstrap
 
         $authService = new AuthService(new AuthRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService());
 
-        $guest_id_int = is_numeric($conf['guest_id'] ?? null) ? (int) $conf['guest_id'] : 2;
+        $guest_id_int = \Piwigo\Config\Config::guestId();
 
         // by default we start with guest
-        $user['id'] = $conf['guest_id'];
+        $user['id'] = \Piwigo\Config\Config::guestId();
 
         $session_cookie_name = session_name();
         $session_cookie_name = is_string($session_cookie_name) ? $session_cookie_name : '';
@@ -86,7 +86,7 @@ final class UserBootstrap
         }
 
         // using Apache authentication override the above user search
-        if ((bool) $conf['apache_authentication']) {
+        if (\Piwigo\Config\Config::apacheAuthentication()) {
             $remote_user = self::resolveApacheRemoteUser($_SERVER);
 
             if ($remote_user !== null) {
@@ -162,7 +162,7 @@ final class UserBootstrap
             is_string($http_referer) ? $http_referer : null,
         );
 
-        // $user['id'] is always numeric here (either $conf['guest_id'], a
+        // $user['id'] is always numeric here (either \Piwigo\Config\Config::guestId(), a
         // $_SESSION['pwg_uid'] set by a prior login, or the int|false result of
         // get_userid()/register_user() coerced above); the is_numeric() check is a
         // defensive narrowing to satisfy build_user()'s int $user_id, matching the
@@ -182,7 +182,7 @@ final class UserBootstrap
         // CurrentUser in their own setUp(), masking the gap).
         \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
 
-        if ((bool) $conf['browser_language'] and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric()) and (bool) ($language = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getBrowserLanguage())) {
+        if (\Piwigo\Config\Config::browserLanguage() and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric()) and (bool) ($language = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getBrowserLanguage())) {
             $user['language'] = $language;
             if (is_string($language)) {
                 \Piwigo\Users\CurrentUser::updateLanguage($language);

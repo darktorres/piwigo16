@@ -1,0 +1,51 @@
+# Adds Chromium launch flags to force deterministic screenshot rendering
+# on Linux. Without these, font hinting, subpixel/LCD text
+# anti-aliasing, and color management vary run-to-run even for a
+# genuinely unchanged page -- producing spurious VR-test failures that
+# are unrelated to any real visual regression.
+#
+# The plugin's own maintainers only validate assertScreenshotMatches()
+# on macOS: PR pestphp/pest-plugin-browser#175 (merged 2025-10-09) added
+# onlyOnMac() to every screenshot-assertion test in the plugin's own test
+# suite, on top of an already-existing skipOnCI(). Their own stated
+# reason: "Trying to run the tests on Linux, I find that the screenshots
+# are not pixel perfect... the -webkit-font-smoothing/
+# -moz-osx-font-smoothing CSS properties [that assertScreenshotMatches()
+# itself sets] only work on macOS."
+#
+# This project runs headless Chromium on Linux, where that CSS-based
+# stabilization is a no-op. The flags below are the standard,
+# widely-documented mitigation for this exact class of flakiness
+# (see e.g. Playwright's own visual-testing guidance and
+# https://adequatica.medium.com/operating-system-independent-screenshot-testing-with-playwright-and-docker-6e2251a9eb32).
+#
+# `args` is a genuine, documented Playwright LaunchOptions field passed
+# straight through to the browser executable -- this is not a protocol
+# guess, it's the same launch-options plumbing already used two lines
+# above for headless/ignoreHTTPSErrors/bypassCSP.
+--- a/src/Playwright/Client.php	2026-04-08 18:04:12.000000000 -0300
++++ b/src/Playwright/Client.php	2026-07-17 23:15:36.251053722 -0300
+@@ -55,6 +55,23 @@
+                 'headless' => Playwright::isHeadless(),
+                 'ignoreHTTPSErrors' => true,
+                 'bypassCSP' => true,
++                // Force deterministic Chromium rendering on Linux: without
++                // these, font hinting/subpixel anti-aliasing/color
++                // management vary run-to-run even for a visually
++                // unchanged page, producing spurious screenshot-assertion
++                // failures. The plugin's own maintainers only validate
++                // assertScreenshotMatches() on macOS (see
++                // pestphp/pest-plugin-browser#175) -- this project runs
++                // headless Chromium on Linux, so these flags are required
++                // for any real determinism there.
++                'args' => [
++                    '--font-render-hinting=none',
++                    '--disable-lcd-text',
++                    '--force-color-profile=srgb',
++                    '--disable-partial-raster',
++                    '--run-all-compositor-stages-before-draw',
++                    '--disable-skia-runtime-opts',
++                ],
+             ]);
+ 
+             $this->websocketConnection = connect(

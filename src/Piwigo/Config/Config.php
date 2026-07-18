@@ -219,6 +219,13 @@ final class Config
             'method' => 'browserLanguage',
             'description' => 'Automatically detect and use the visitor browser language preference.',
         ],
+        'c13y_ignore' => [
+            'type' => 'string',
+            'default' => null,
+            'method' => 'c13yIgnore',
+            'custom' => true,
+            'description' => 'Serialized {version, list} of integrity-check anomalies the admin has acknowledged/ignored (Admin/Integrity check_integrity.php).',
+        ],
         'cache.backend' => [
             'type' => 'string',
             'default' => 'file',
@@ -242,6 +249,13 @@ final class Config
             'default' => 'redis://localhost:6379',
             'method' => 'cacheRedisUrl',
             'description' => 'Redis connection DSN used when cache.backend is redis.',
+        ],
+        'cache_sizes' => [
+            'type' => 'array',
+            'default' => null,
+            'method' => 'cacheSizes',
+            'custom' => true,
+            'description' => 'Serialized [name, value] rows of cache-directory sizes computed by the maintenance page, cached to avoid recomputing on every dashboard/maintenance load.',
         ],
         'calendar_datefield' => [
             'type' => 'string',
@@ -363,6 +377,13 @@ final class Config
             'method' => 'dashboardCheckForUpdates',
             'description' => 'Check for Piwigo core updates on the admin dashboard.',
         ],
+        'data_dir_checked' => [
+            'type' => 'string',
+            'default' => null,
+            'method' => 'dataDirChecked',
+            'nullable' => true,
+            'description' => "Presence-only marker: once set (to '1'), Template's data-directory writability check is permanently skipped. Genuine absence until the check first passes, matching the gallery_url/last_major_update convention.",
+        ],
         'data_location' => [
             'type' => 'string',
             'default' => '_data/',
@@ -435,6 +456,13 @@ final class Config
             'method' => 'debugTemplate',
             'description' => 'Add template debugging information to rendered pages.',
         ],
+        'default_filters_views' => [
+            'type' => 'array',
+            'default' => null,
+            'method' => 'defaultFiltersViews',
+            'custom' => true,
+            'description' => "Factory-default search-filter definitions (access level + default-on state per filter key); seeds the 'filters_views' DB row on first use and drives the search filters admin page.",
+        ],
         'default_redirect_method' => [
             'type' => 'string',
             'default' => 'http',
@@ -459,6 +487,13 @@ final class Config
             'method' => 'derivativeUrlStyle',
             'description' => 'Derivative URL format: 0 = path-based, 1 = query-string-based.',
         ],
+        'derivatives' => [
+            'type' => 'string',
+            'default' => null,
+            'method' => 'derivatives',
+            'custom' => true,
+            'description' => 'Serialized ImageStdParams derivative-size definitions saved by the photo sizes admin page. Absent on a fresh install until the admin saves the sizes form once.',
+        ],
         'derivatives_strip_metadata_threshold' => [
             'type' => 'int',
             'default' => 256000,
@@ -470,6 +505,13 @@ final class Config
             'default' => false,
             'method' => 'dieOnSqlError',
             'description' => 'Halt execution immediately when a database query fails.',
+        ],
+        'disabled_derivatives' => [
+            'type' => 'string',
+            'default' => null,
+            'method' => 'disabledDerivatives',
+            'custom' => true,
+            'description' => 'Serialized list of derivative type keys the admin has disabled from generation via the photo sizes admin page.',
         ],
         'display_fromto' => [
             'type' => 'bool',
@@ -484,34 +526,41 @@ final class Config
             'description' => 'Require admins to enter a new password twice when setting it.',
         ],
         'email_admin_on_comment' => [
-            'type' => 'string',
-            'default' => 'none',
+            'type' => 'bool',
+            'default' => false,
             'method' => 'emailAdminOnComment',
-            'description' => 'When to email the webmaster about new comments: none, all, or new.',
+            'description' => 'Send an email to the administrators when a valid comment is entered.',
         ],
         'email_admin_on_comment_deletion' => [
-            'type' => 'string',
-            'default' => 'none',
+            'type' => 'bool',
+            'default' => false,
             'method' => 'emailAdminOnCommentDeletion',
-            'description' => 'When to email the webmaster when a comment is deleted: none, all, or new.',
+            'description' => 'Send an email to the administrators when a comment is deleted.',
         ],
         'email_admin_on_comment_edition' => [
-            'type' => 'string',
-            'default' => 'none',
+            'type' => 'bool',
+            'default' => false,
             'method' => 'emailAdminOnCommentEdition',
-            'description' => 'When to email the webmaster when a comment is edited: none, all, or new.',
+            'description' => 'Send an email to the administrators when a comment is modified.',
         ],
         'email_admin_on_comment_validation' => [
-            'type' => 'string',
-            'default' => 'none',
+            'type' => 'bool',
+            'default' => true,
             'method' => 'emailAdminOnCommentValidation',
-            'description' => 'When to email the webmaster when a comment is validated: none, all, or new.',
+            'description' => 'Send an email to the administrators when a comment requires validation.',
         ],
         'email_admin_on_new_user' => [
             'type' => 'string',
             'default' => 'none',
             'method' => 'emailAdminOnNewUser',
             'description' => 'When to email the webmaster when a new user registers: none, all, or new.',
+        ],
+        'empty_lounge_running' => [
+            'type' => 'string',
+            'default' => null,
+            'method' => 'emptyLoungeRunning',
+            'custom' => true,
+            'description' => 'Transient "<execId>-<startTime>" marker set while ImageService::emptyLounge() is running, used to detect a concurrent/stalled run. Absent when no run is in progress.',
         ],
         'enable_core_update' => [
             'type' => 'bool',
@@ -582,6 +631,13 @@ final class Config
             'method' => 'filterPages',
             'custom' => true,
             'description' => 'Pages on which the tag/date filter UI is displayed.',
+        ],
+        'filters_views' => [
+            'type' => 'array',
+            'default' => null,
+            'method' => 'filtersViews',
+            'custom' => true,
+            'description' => "Admin-customized search-filter definitions, lazily seeded from 'default_filters_views' the first time the search filters admin page is saved. Absent (falls back to defaultFiltersViews()) until then.",
         ],
         'format_ext' => [
             'type' => 'array',
@@ -683,6 +739,13 @@ final class Config
             'method' => 'historyGuest',
             'description' => 'Log page visits by guest (unauthenticated) users in the history table.',
         ],
+        'history_sections_cache' => [
+            'type' => 'array',
+            'default' => null,
+            'method' => 'historySectionsCache',
+            'custom' => true,
+            'description' => 'Cached list of the history.section enum column values, refreshed when a plugin adds a new section.',
+        ],
         'home_page' => [
             'type' => 'string',
             'default' => 'recent_pics',
@@ -750,10 +813,10 @@ final class Config
             'description' => 'Show the slideshow icon on album index pages.',
         ],
         'index_sort_order_input' => [
-            'type' => 'string',
-            'default' => '',
+            'type' => 'bool',
+            'default' => true,
             'method' => 'indexSortOrderInput',
-            'description' => 'Default sort order string applied to album index listings.',
+            'description' => 'Display the image order selection list on album index pages.',
         ],
         'inheritance_by_default' => [
             'type' => 'bool',
@@ -1017,6 +1080,13 @@ final class Config
             'method' => 'newcatDefaultVisible',
             'description' => 'Make newly created albums visible by default.',
         ],
+        'no_photo_yet' => [
+            'type' => 'string',
+            'default' => null,
+            'method' => 'noPhotoYet',
+            'nullable' => true,
+            'description' => "Presence-only marker: once set (to 'false'), NoPhotoYetRenderer's first-run banner is permanently suppressed. Genuine absence on a fresh install/reset -- callers use Config::has() to detect first-run state, matching the gallery_url/last_major_update convention.",
+        ],
         'no_photo_yet_url' => [
             'type' => 'string',
             'default' => 'admin.php?page=photos_add',
@@ -1143,6 +1213,12 @@ final class Config
             'method' => 'pemThemesCategory',
             'description' => 'PEM category ID for themes.',
         ],
+        'php_extension_in_urls' => [
+            'type' => 'bool',
+            'default' => true,
+            'method' => 'phpExtensionInUrls',
+            'description' => 'Include the .php extension in generated picture/category URLs. Works only with Options +MultiViews or URL rewriting active.',
+        ],
         'picture_caddie_icon' => [
             'type' => 'bool',
             'default' => true,
@@ -1254,6 +1330,12 @@ final class Config
             'default' => '',
             'method' => 'proxyServer',
             'description' => 'HTTP proxy server URL used for outgoing connections from Piwigo.',
+        ],
+        'question_mark_in_urls' => [
+            'type' => 'bool',
+            'default' => true,
+            'method' => 'questionMarkInUrls',
+            'description' => 'Include a ? in generated URLs. Can only be set false when the server translates PATH_INFO (AcceptPathInfo).',
         ],
         'quick_search_include_sub_albums' => [
             'type' => 'bool',
@@ -1597,6 +1679,12 @@ final class Config
             'method' => 'tagsLevels',
             'description' => 'Number of font-size levels used in the tag cloud.',
         ],
+        'template_combine_files' => [
+            'type' => 'bool',
+            'default' => true,
+            'method' => 'templateCombineFiles',
+            'description' => 'Merge JavaScript/CSS files together at render time to reduce the number of HTTP requests.',
+        ],
         'template_compile_check' => [
             'type' => 'bool',
             'default' => true,
@@ -1652,6 +1740,13 @@ final class Config
             'nullable' => true,
             'description' => 'Timestamp of the last update-availability check.',
         ],
+        'update_notify_last_notification' => [
+            'type' => 'array',
+            'default' => null,
+            'method' => 'updateNotifyLastNotification',
+            'custom' => true,
+            'description' => 'Serialized {version, notified_on} of the last update-availability notification shown to the admin. Genuine absence before the first check.',
+        ],
         'update_notify_last_notification_at' => [
             'type' => 'string',
             'default' => null,
@@ -1671,6 +1766,13 @@ final class Config
             'default' => 604800,
             'method' => 'updateNotifyReminderPeriod',
             'description' => 'Interval in seconds between repeated update reminder notifications.',
+        ],
+        'updates_ignored' => [
+            'type' => 'array',
+            'default' => null,
+            'method' => 'updatesIgnored',
+            'custom' => true,
+            'description' => 'Serialized {plugins, themes, languages} lists of extension IDs the admin has dismissed from update notifications.',
         ],
         'upload_detect_duplicate' => [
             'type' => 'bool',
@@ -2087,6 +2189,12 @@ final class Config
         return self::getBool('dashboard_check_for_updates', true);
     }
 
+    public static function dataDirChecked(): ?string
+    {
+        $v = self::src()['data_dir_checked'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+
     public static function dataLocation(): string
     {
         return self::getString('data_location', '_data/');
@@ -2177,24 +2285,24 @@ final class Config
         return self::getBool('double_password_type_in_admin', false);
     }
 
-    public static function emailAdminOnComment(): string
+    public static function emailAdminOnComment(): bool
     {
-        return self::getString('email_admin_on_comment', 'none');
+        return self::getBool('email_admin_on_comment', false);
     }
 
-    public static function emailAdminOnCommentDeletion(): string
+    public static function emailAdminOnCommentDeletion(): bool
     {
-        return self::getString('email_admin_on_comment_deletion', 'none');
+        return self::getBool('email_admin_on_comment_deletion', false);
     }
 
-    public static function emailAdminOnCommentEdition(): string
+    public static function emailAdminOnCommentEdition(): bool
     {
-        return self::getString('email_admin_on_comment_edition', 'none');
+        return self::getBool('email_admin_on_comment_edition', false);
     }
 
-    public static function emailAdminOnCommentValidation(): string
+    public static function emailAdminOnCommentValidation(): bool
     {
-        return self::getString('email_admin_on_comment_validation', 'none');
+        return self::getBool('email_admin_on_comment_validation', true);
     }
 
     public static function emailAdminOnNewUser(): string
@@ -2369,9 +2477,9 @@ final class Config
         return self::getBool('index_slideshow_icon', true);
     }
 
-    public static function indexSortOrderInput(): string
+    public static function indexSortOrderInput(): bool
     {
-        return self::getString('index_sort_order_input', '');
+        return self::getBool('index_sort_order_input', true);
     }
 
     public static function inheritanceByDefault(): bool
@@ -2575,6 +2683,12 @@ final class Config
         return self::getBool('newcat_default_visible', true);
     }
 
+    public static function noPhotoYet(): ?string
+    {
+        $v = self::src()['no_photo_yet'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+
     public static function noPhotoYetUrl(): string
     {
         return self::getString('no_photo_yet_url', 'admin.php?page=photos_add');
@@ -2653,6 +2767,11 @@ final class Config
     public static function pemThemesCategory(): int
     {
         return self::getInt('pem_themes_category', 10);
+    }
+
+    public static function phpExtensionInUrls(): bool
+    {
+        return self::getBool('php_extension_in_urls', true);
     }
 
     public static function pictureCaddieIcon(): bool
@@ -2735,6 +2854,11 @@ final class Config
     public static function proxyServer(): string
     {
         return self::getString('proxy_server', '');
+    }
+
+    public static function questionMarkInUrls(): bool
+    {
+        return self::getBool('question_mark_in_urls', true);
     }
 
     public static function quickSearchIncludeSubAlbums(): bool
@@ -2980,6 +3104,11 @@ final class Config
         return self::getInt('tags_levels', 5);
     }
 
+    public static function templateCombineFiles(): bool
+    {
+        return self::getBool('template_combine_files', true);
+    }
+
     public static function templateCompileCheck(): bool
     {
         return self::getBool('template_compile_check', true);
@@ -3132,6 +3261,186 @@ final class Config
 
     // ---- Custom accessors (hand-written) --------------------------------
 
+    public static function c13yIgnore(): ?string
+    {
+        $v = self::src()['c13y_ignore'] ?? null;
+        return is_string($v) ? $v : null;
+    }
+
+    /**
+     * @return array<mixed>|null
+     */
+    public static function cacheSizes(): ?array
+    {
+        $v = self::src()['cache_sizes'] ?? null;
+        if (is_array($v)) {
+            return $v;
+        }
+        if (! is_string($v)) {
+            return null;
+        }
+        $unserialized = \Piwigo\Core\ArrayHelper::safeUnserialize($v);
+        return is_array($unserialized) ? $unserialized : null;
+    }
+
+    /**
+     * @return array<string, array{access: string, default: bool}>
+     */
+    public static function defaultFiltersViews(): array
+    {
+        $default = [
+            'words' => [
+                'access' => 'everybody',
+                'default' => true,
+            ],
+            'tags' => [
+                'access' => 'everybody',
+                'default' => false,
+            ],
+            'post_date' => [
+                'access' => 'everybody',
+                'default' => false,
+            ],
+            'creation_date' => [
+                'access' => 'everybody',
+                'default' => true,
+            ],
+            'album' => [
+                'access' => 'everybody',
+                'default' => true,
+            ],
+            'author' => [
+                'access' => 'everybody',
+                'default' => false,
+            ],
+            'added_by' => [
+                'access' => 'everybody',
+                'default' => false,
+            ],
+            'file_type' => [
+                'access' => 'everybody',
+                'default' => false,
+            ],
+            'ratio' => [
+                'access' => 'everybody',
+                'default' => false,
+            ],
+            'rating' => [
+                'access' => 'everybody',
+                'default' => false,
+            ],
+            'file_size' => [
+                'access' => 'everybody',
+                'default' => false,
+            ],
+            'height' => [
+                'access' => 'everybody',
+                'default' => false,
+            ],
+            'width' => [
+                'access' => 'everybody',
+                'default' => false,
+            ],
+            'expert' => [
+                'access' => 'everybody',
+                'default' => false,
+            ],
+        ];
+        $v = self::src()['default_filters_views'] ?? $default;
+        return is_array($v) ? $v : $default;
+    }
+
+    public static function derivatives(): ?string
+    {
+        $v = self::src()['derivatives'] ?? null;
+        return is_string($v) ? $v : null;
+    }
+
+    /**
+     * @return array<mixed>|string
+     */
+    public static function disabledDerivatives(): array|string
+    {
+        $v = self::src()['disabled_derivatives'] ?? null;
+        return is_string($v) ? $v : [];
+    }
+
+    public static function emptyLoungeRunning(): ?string
+    {
+        $v = self::src()['empty_lounge_running'] ?? null;
+        return is_string($v) ? $v : null;
+    }
+
+    /**
+     * @return array<mixed>|null
+     */
+    public static function filtersViews(): ?array
+    {
+        $v = self::src()['filters_views'] ?? null;
+        if (is_array($v)) {
+            return $v;
+        }
+        if (! is_string($v)) {
+            return null;
+        }
+        $unserialized = \Piwigo\Core\ArrayHelper::safeUnserialize($v);
+        return is_array($unserialized) ? $unserialized : null;
+    }
+
+    /**
+     * @return list<string>|null
+     */
+    public static function historySectionsCache(): ?array
+    {
+        $v = self::src()['history_sections_cache'] ?? null;
+        if (is_array($v)) {
+            return array_values(array_filter($v, is_string(...)));
+        }
+        if (! is_string($v)) {
+            return null;
+        }
+        $unserialized = \Piwigo\Core\ArrayHelper::safeUnserialize($v);
+        return is_array($unserialized) ? array_values(array_filter($unserialized, is_string(...))) : null;
+    }
+
+    /**
+     * @return array{version?: mixed, notified_on?: mixed}|null
+     */
+    public static function updateNotifyLastNotification(): ?array
+    {
+        $v = self::src()['update_notify_last_notification'] ?? null;
+        if (is_array($v)) {
+            return $v;
+        }
+        if (! is_string($v)) {
+            return null;
+        }
+        $unserialized = \Piwigo\Core\ArrayHelper::safeUnserialize($v);
+        return is_array($unserialized) ? $unserialized : null;
+    }
+
+    /**
+     * @return array{plugins: list<string>, themes: list<string>, languages: list<string>}
+     */
+    public static function updatesIgnored(): array
+    {
+        $default = [
+            'plugins' => [],
+            'themes' => [],
+            'languages' => [],
+        ];
+        $v = self::src()['updates_ignored'] ?? $default;
+        $arr = is_string($v) ? \Piwigo\Core\ArrayHelper::safeUnserialize($v) : $v;
+        if (! is_array($arr)) {
+            return $default;
+        }
+        return [
+            'plugins' => is_array($arr['plugins'] ?? null) ? array_values(array_filter($arr['plugins'], is_string(...))) : [],
+            'themes' => is_array($arr['themes'] ?? null) ? array_values(array_filter($arr['themes'], is_string(...))) : [],
+            'languages' => is_array($arr['languages'] ?? null) ? array_values(array_filter($arr['languages'], is_string(...))) : [],
+        ];
+    }
+
     public static function dbPort(): ?int
     {
         $v = self::src()['db_port'] ?? null;
@@ -3213,8 +3522,20 @@ final class Config
      */
     public static function extentsForTemplates(): array
     {
+        // Stored as a serialize()d string in the config table (see
+        // ExtendForTemplatesPageRenderer's raw SQL UPDATE) -- the original
+        // accessor only handled an already-unserialized array, silently
+        // discarding every DB-loaded value (P24 Track A batch A4 finding,
+        // same shape-mismatch class as Config::orderBy()).
         $v = self::src()['extents_for_templates'] ?? null;
-        return is_array($v) ? $v : [];
+        if (is_array($v)) {
+            return $v;
+        }
+        if (! is_string($v)) {
+            return [];
+        }
+        $unserialized = \Piwigo\Core\ArrayHelper::safeUnserialize($v);
+        return is_array($unserialized) ? $unserialized : [];
     }
 
     /**
@@ -3414,7 +3735,17 @@ final class Config
      */
     public static function pictureInformations(): array
     {
+        // Stored as a serialize()d string in the config table (see
+        // ConfigurationSubController's own addslashes(serialize(...))
+        // write-back) -- the original accessor only handled an
+        // already-unserialized array, silently discarding every DB-loaded
+        // value (P24 Track A batch A4 finding, same shape-mismatch class
+        // as Config::orderBy()/Config::extentsForTemplates()).
         $v = self::src()['picture_informations'] ?? null;
+        if (is_string($v)) {
+            $unserialized = \Piwigo\Core\ArrayHelper::safeUnserialize($v);
+            $v = is_array($unserialized) ? $unserialized : null;
+        }
         if (! is_array($v)) {
             return [];
         }

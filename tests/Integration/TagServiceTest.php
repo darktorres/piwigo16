@@ -62,7 +62,7 @@ namespace Piwigo\Tests\Integration {
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
-            $GLOBALS['conf'] = ['tags_levels' => 5];
+            Config::override('tags_levels', 5);
 
             $conn = DbConnection::build();
             $this->service = new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)), new ActivityService(new ActivityRepository($conn)));

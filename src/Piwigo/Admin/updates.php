@@ -137,8 +137,8 @@ class updates
             $url = PHPWG_URL . '/download/all_versions.php';
             $url .= '?rand=' . md5(uniqid((string) mt_rand(), true)); // Avoid server cache
             $url .= ($env === 'Official') ? '&docker' : '&show_requirements'; // Check docker version if in container
-            $secret_key_raw = $conf['secret_key'] ?? null;
-            $secret_key = is_string($secret_key_raw) ? $secret_key_raw : '';
+            $secret_key_raw = \Piwigo\Config\Config::secretKey();
+            $secret_key = $secret_key_raw;
             $url .= '&origin_hash=' . sha1($secret_key . get_absolute_root_url());
 
             if (is_string($result = @HttpClientService::fetch($url))) {
@@ -200,7 +200,7 @@ class updates
 
     /**
      * Checks for new versions of Piwigo. Notify webmasters if new versions are available, but not too often, see
-     * $conf['update_notify_reminder_period'] parameter.
+     * \Piwigo\Config\Config::updateNotifyReminderPeriod() parameter.
      *
      * @since 2.9
      */
@@ -239,7 +239,7 @@ class updates
         // 3. no new versions but reminder needed
 
         $notify = false;
-        if (! isset($conf['update_notify_last_notification'])) {
+        if (! \Piwigo\Config\Config::has('update_notify_last_notification')) {
             $notify = true;
         } else {
             // safe_unserialize() returns mixed (unserialize() of an
@@ -249,17 +249,18 @@ class updates
             // requires array<int|string, mixed>|string, so validate the
             // raw conf value's shape before passing it in.
             // isset() above already guarantees this offset exists.
-            $last_notification_setting = $conf['update_notify_last_notification'];
+            $last_notification_setting = \Piwigo\Config\Config::updateNotifyLastNotification();
             $last_notification_raw = (is_array($last_notification_setting) || is_string($last_notification_setting))
                 ? \Piwigo\Core\ArrayHelper::safeUnserialize($last_notification_setting)
                 : false;
             $last_notification_data = is_array($last_notification_raw) ? $last_notification_raw : [];
             $conf['update_notify_last_notification'] = $last_notification_data;
+            \Piwigo\Config\Config::override('update_notify_last_notification', $last_notification_data);
             $last_notification = $last_notification_data['notified_on'] ?? null;
             $last_notification_version = $last_notification_data['version'] ?? null;
 
-            $reminder_period_raw = $conf['update_notify_reminder_period'] ?? null;
-            $reminder_period = is_numeric($reminder_period_raw) ? (int) $reminder_period_raw : 0;
+            $reminder_period_raw = \Piwigo\Config\Config::updateNotifyReminderPeriod();
+            $reminder_period = $reminder_period_raw;
 
             if ($new_versions_string != $last_notification_version) {
                 $notify = true;
@@ -316,7 +317,7 @@ class updates
 
     public function get_server_extensions(string $version = AppInfo::VERSION): bool
     {
-        // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+        // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl()) in
         // one branch of include/common.inc.php, so PHPStan can't prove it's a
         // string across that file boundary — narrow it once here.
         $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
@@ -443,17 +444,13 @@ class updates
     // Check all extensions upgrades
     public function check_extensions(): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         if (! $this->get_server_extensions()) {
             return;
         }
 
         $_SESSION['extensions_need_update'] = [];
 
-        $updates_ignored_raw = $conf['updates_ignored'] ?? null;
-        $updates_ignored = is_array($updates_ignored_raw) ? $updates_ignored_raw : [];
+        $updates_ignored = \Piwigo\Config\Config::updatesIgnored();
 
         foreach ($this->types as $type) {
             $fs = 'fs_' . $type;
@@ -497,7 +494,8 @@ class updates
             $updates_ignored[$type] = $ignore_list;
         }
         $conf['updates_ignored'] = $updates_ignored;
-        \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($conf['updates_ignored'])));
+        \Piwigo\Config\Config::override('updates_ignored', $updates_ignored);
+        \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($updates_ignored)));
     }
 
     // Check if extension have been upgraded since last check
@@ -611,8 +609,8 @@ class updates
         $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
         $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
 
-        $data_location_raw = $conf['data_location'] ?? null;
-        $data_location = is_string($data_location_raw) ? $data_location_raw : '';
+        $data_location_raw = \Piwigo\Config\Config::dataLocation();
+        $data_location = $data_location_raw;
 
         if ($check_current_version and ! version_compare($upgrade_to, AppInfo::VERSION, '>')) {
             // TODO why redirect to a plugin page? maybe a remaining code from when

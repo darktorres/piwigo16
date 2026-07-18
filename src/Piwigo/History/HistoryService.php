@@ -58,12 +58,12 @@ final class HistoryService
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        $doLog = $conf['log'];
+        $doLog = \Piwigo\Config\Config::logConf();
         if (AccessControl::isAdmin()) {
-            $doLog = $conf['history_admin'];
+            $doLog = \Piwigo\Config\Config::historyAdmin();
         }
         if (AccessControl::isAGuest()) {
-            $doLog = $conf['history_guest'];
+            $doLog = \Piwigo\Config\Config::historyGuest();
         }
 
         $doLog = trigger_change('pwg_log_allowed', $doLog, $imageId, $imageType);
@@ -89,8 +89,7 @@ final class HistoryService
         $currentUser = \Piwigo\Users\CurrentUser::get();
         $lastVisit = $currentUser->rawAttributes['last_visit'] ?? null;
         $lastVisitStr = is_string($lastVisit) ? $lastVisit : (is_numeric($lastVisit) ? (string) $lastVisit : '');
-        $sessionLength = $conf['session_length'];
-        $sessionLength = is_numeric($sessionLength) ? (int) $sessionLength : 0;
+        $sessionLength = \Piwigo\Config\Config::sessionLength();
 
         $updateLastVisit = false;
         if (empty($lastVisit) or strtotime($lastVisitStr) < time() - $sessionLength) {
@@ -148,11 +147,11 @@ UPDATE ' . Tables::userInfos() . '
         // If plugin developers add their own sections, Piwigo will automatically add it in the history.section enum column
         if ($pageSection !== null) {
             // set cache if not available
-            if (! isset($conf['history_sections_cache'])) {
+            if (! \Piwigo\Config\Config::has('history_sections_cache')) {
                 \Piwigo\Config\ConfigDb::confUpdateParam('history_sections_cache', \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'section'), true);
             }
 
-            $cachedSections = $conf['history_sections_cache'];
+            $cachedSections = \Piwigo\Config\Config::historySectionsCache();
             $cachedSections = is_string($cachedSections) || is_array($cachedSections) ? \Piwigo\Core\ArrayHelper::safeUnserialize($cachedSections) : null;
             if (! is_array($cachedSections)) {
                 $cachedSections = \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'section');
@@ -166,6 +165,7 @@ UPDATE ' . Tables::userInfos() . '
             }
 
             $conf['history_sections_cache'] = $historySectionsCache;
+            \Piwigo\Config\Config::override('history_sections_cache', $historySectionsCache);
 
             if (
                 in_array($pageSection, $historySectionsCache)
@@ -237,8 +237,7 @@ INSERT INTO ' . Tables::history() . '
             $this->summarize(50000);
         }
 
-        $historyAutopurgeEvery = $conf['history_autopurge_every'];
-        $historyAutopurgeEvery = is_numeric($historyAutopurgeEvery) ? (int) $historyAutopurgeEvery : 0;
+        $historyAutopurgeEvery = \Piwigo\Config\Config::historyAutopurgeEvery();
         if ($historyAutopurgeEvery > 0 and $historyId % $historyAutopurgeEvery == 0) {
             $this->autopurge();
         }
@@ -444,7 +443,7 @@ INSERT INTO ' . Tables::history() . '
          */
         global $conf, $logger;
 
-        $keepLines = is_numeric($conf['history_autopurge_keep_lines'] ?? null) ? (int) $conf['history_autopurge_keep_lines'] : 0;
+        $keepLines = \Piwigo\Config\Config::historyAutopurgeKeepLines();
         if ($keepLines === 0) {
             return;
         }
@@ -465,7 +464,7 @@ INSERT INTO ' . Tables::history() . '
         }
 
         $oldestId = $this->repo->findOldestHistoryId() ?? 0;
-        $blocksize = is_numeric($conf['history_autopurge_blocksize'] ?? null) ? (int) $conf['history_autopurge_blocksize'] : 0;
+        $blocksize = \Piwigo\Config\Config::historyAutopurgeBlocksize();
 
         $searchMin = [
             $lastSummary['historyIdTo'],

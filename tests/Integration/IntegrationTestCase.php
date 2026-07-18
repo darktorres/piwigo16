@@ -70,6 +70,7 @@ abstract class IntegrationTestCase extends TestCase
     protected function tearDown(): void
     {
         \Piwigo\Users\CurrentUser::reset();
+        \Piwigo\Config\Config::reset();
         parent::tearDown();
     }
 

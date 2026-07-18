@@ -48,10 +48,10 @@ final class RatingPageRenderer
             $order_by_index = (int) $_GET['order_by'];
         }
 
-        // $conf['guest_id'] is set as a PHP int literal in
+        // \Piwigo\Config\Config::guestId() is set as a PHP int literal in
         // include/config_default.inc.php.
-        $conf_guest_id = $conf['guest_id'];
-        $guest_id = is_numeric($conf_guest_id) ? (int) $conf_guest_id : 0;
+        $conf_guest_id = \Piwigo\Config\Config::guestId();
+        $guest_id = $conf_guest_id;
 
         $cat_ids = [];
         if (isset($_GET['cat']) and is_numeric($_GET['cat'])) {
@@ -71,7 +71,7 @@ final class RatingPageRenderer
         }
 
         /** @var array<string, string> $user_fields */
-        $user_fields = $conf['user_fields'];
+        $user_fields = \Piwigo\Config\Config::userFields();
         $rate_repository = new RateRepository(DbConnection::build());
 
         $usernames_by_id = $rate_repository->findUsernamesById($user_fields['id'], $user_fields['username']);

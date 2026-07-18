@@ -90,7 +90,10 @@ final class PwgCore
         $uid = '&b=' . time();
 
         $conf['question_mark_in_urls'] = $conf['php_extension_in_urls'] = true;
+        \Piwigo\Config\Config::override('question_mark_in_urls', true);
+        \Piwigo\Config\Config::override('php_extension_in_urls', true);
         $conf['derivative_url_style'] = 2; // script
+        \Piwigo\Config\Config::override('derivative_url_style', 2);
 
         $qlimit = min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
         $where_clauses = WsHelper::stdImageSqlFilter($params, '');
@@ -263,8 +266,7 @@ SELECT id, path, representative_ext, width, height, rotation
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        $data_location = $conf['data_location'];
-        $data_location = is_string($data_location) ? $data_location : '';
+        $data_location = \Piwigo\Config\Config::dataLocation();
 
         // Cache size
         $path_cache = $data_location;
@@ -470,7 +472,7 @@ DELETE FROM ' . Tables::rate() . '
         }
 
         if (\Piwigo\Auth\AccessControl::isAdmin()) {
-            $upload_ext_list = ((bool) $conf['upload_form_all_types']) ? $conf['file_ext'] : $conf['picture_ext'];
+            $upload_ext_list = (\Piwigo\Config\Config::uploadFormAllTypes()) ? \Piwigo\Config\Config::fileExtensions() : \Piwigo\Config\Config::pictureExtensions();
             $upload_ext_list = is_array($upload_ext_list) ? array_values(array_filter($upload_ext_list, is_string(...))) : [];
 
             $res['upload_file_types'] = implode(
@@ -483,8 +485,8 @@ DELETE FROM ' . Tables::rate() . '
                 )
             );
 
-            $chunk_size = $conf['upload_form_chunk_size'];
-            $res['upload_form_chunk_size'] = is_numeric($chunk_size) ? (int) $chunk_size : 0;
+            $chunk_size = \Piwigo\Config\Config::uploadFormChunkSize();
+            $res['upload_form_chunk_size'] = $chunk_size;
         }
 
         return $res;
@@ -580,10 +582,10 @@ DELETE FROM ' . Tables::rate() . '
     AND object_id = ' . $param['id'];
         }
 
-        if ($conf['activity_display_connections'] == 'none') {
+        if (\Piwigo\Config\Config::activityDisplayConnections() === 'none') {
             $where .= '
     AND action NOT IN (\'login\', \'logout\')';
-        } elseif ($conf['activity_display_connections'] == 'admins_only') {
+        } elseif (\Piwigo\Config\Config::activityDisplayConnections() === 'admins_only') {
             $admin_ids = new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())->findAdminIds();
             $where .= '
     AND NOT (action IN (\'login\', \'logout\') AND object_id NOT IN (' . implode(',', $admin_ids) . '))';
@@ -687,12 +689,9 @@ SELECT
         $username_of = [];
         $user_id_list = [];
         if (count($user_ids) > 0) {
-            $user_fields = $conf['user_fields'];
-            $user_fields = is_array($user_fields) ? $user_fields : [];
-            $user_field_id = $user_fields['id'] ?? 'id';
-            $user_field_id = is_string($user_field_id) ? $user_field_id : 'id';
-            $user_field_username = $user_fields['username'] ?? 'username';
-            $user_field_username = is_string($user_field_username) ? $user_field_username : 'username';
+            $user_fields = \Piwigo\Config\Config::userFields();
+            $user_field_id = $user_fields['id'];
+            $user_field_username = $user_fields['username'];
 
             $query = '
 SELECT
@@ -1064,12 +1063,9 @@ SELECT
         }
 
         if (count($user_ids) > 0) {
-            $user_fields = $conf['user_fields'];
-            $user_fields = is_array($user_fields) ? $user_fields : [];
-            $user_field_id = $user_fields['id'] ?? 'id';
-            $user_field_id = is_string($user_field_id) ? $user_field_id : 'id';
-            $user_field_username = $user_fields['username'] ?? 'username';
-            $user_field_username = is_string($user_field_username) ? $user_field_username : 'username';
+            $user_fields = \Piwigo\Config\Config::userFields();
+            $user_field_id = $user_fields['id'];
+            $user_field_username = $user_fields['username'];
 
             $query = '
 SELECT ' . $user_field_id . ' AS id
@@ -1158,8 +1154,7 @@ SELECT
         $page_start = $page['start'];
         $page_start = is_numeric($page_start) ? (int) $page_start : 0;
 
-        $nb_logs_page = $conf['nb_logs_page'];
-        $nb_logs_page = is_numeric($nb_logs_page) ? (int) $nb_logs_page : 0;
+        $nb_logs_page = \Piwigo\Config\Config::nbLogsPage();
 
         $i = 0;
         $first_line = $page_start + 1;
@@ -1204,7 +1199,7 @@ SELECT
                 $summary['total_filesize'] = $running_total_filesize + @intval($image_infos[$line_image_id]['filesize'] ?? null);
             }
 
-            if ($line_user_id == $conf['guest_id']) {
+            if (is_numeric($line_user_id) and (int) $line_user_id === \Piwigo\Config\Config::guestId()) {
                 $ip_key = $line_ip ?? '';
                 // 'guests_IP' is only ever set to array by this same loop
                 // (initialized to [] above, then always reassigned as array below).
@@ -1379,7 +1374,7 @@ SELECT
 
             // we delete the "guest" from the $username_of hash so that it is
             // avoided in next steps
-            $guest_id = $conf['guest_id'];
+            $guest_id = \Piwigo\Config\Config::guestId();
             $guest_id_key = is_string($guest_id) || is_int($guest_id) ? $guest_id : null;
             if ($guest_id_key !== null) {
                 unset($username_of[$guest_id_key]);

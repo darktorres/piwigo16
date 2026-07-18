@@ -43,8 +43,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $GLOBALS['conf'] = is_array($GLOBALS['conf'] ?? null) ? $GLOBALS['conf'] : [];
-        $GLOBALS['conf']['question_mark_in_urls'] = false;
+        Config::override('question_mark_in_urls', false);
 
         unset($_SERVER['SCRIPT_NAME'], $_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
     }

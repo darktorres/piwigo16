@@ -88,7 +88,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         } elseif ($tab === 'coi') {
             new PictureCoiPageRenderer()
                 ->render();
-        } elseif ((bool) $conf['enable_formats']) {
+        } elseif (\Piwigo\Config\Config::isFormatsEnabled()) {
             new PictureFormatsPageRenderer()
                 ->render();
         }

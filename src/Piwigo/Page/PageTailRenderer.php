@@ -49,7 +49,7 @@ final class PageTailRenderer
 
         $template->assign(
             [
-                'VERSION' => (bool) $conf['show_version'] ? AppInfo::VERSION : '',
+                'VERSION' => \Piwigo\Config\Config::showVersion() ? AppInfo::VERSION : '',
                 'PHPWG_URL' => defined('PHPWG_URL') ? str_replace('http:', 'https:', PHPWG_URL) : '',
                 // web-vitals RUM beacon (docs/PLAN-REPLAY.md P1, item 11b) --
                 // fixed, non-hashed filename (vite.config.ts), so no
@@ -72,13 +72,13 @@ final class PageTailRenderer
         // ------------------------------------------------------------- generation time
         $debug_vars = [];
 
-        if ((bool) $conf['show_queries']) {
+        if (\Piwigo\Config\Config::showQueries()) {
             $debug_vars = array_merge($debug_vars, [
                 'QUERIES_LIST' => $debug,
             ]);
         }
 
-        if ((bool) $conf['show_gt']) {
+        if (\Piwigo\Config\Config::showGt()) {
             $count_queries = $page['count_queries'] ?? null;
             if (! is_int($count_queries)) {
                 $count_queries = 0;
@@ -104,7 +104,7 @@ final class PageTailRenderer
         $template->assign('debug', $debug_vars);
 
         // ------------------------------------------------------------- mobile version
-        if (! self::emptyValue($conf['mobile_theme']) && (\Piwigo\Core\DeviceHelper::getDevice() !== 'desktop' || \Piwigo\Core\DeviceHelper::mobileTheme())) {
+        if (! self::emptyValue(\Piwigo\Config\Config::mobilTheme()) && (\Piwigo\Core\DeviceHelper::getDevice() !== 'desktop' || \Piwigo\Core\DeviceHelper::mobileTheme())) {
             $request_uri = $_SERVER['REQUEST_URI'] ?? '';
             $template->assign(
                 'TOGGLE_MOBILE_THEME_URL',

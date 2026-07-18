@@ -27,7 +27,7 @@ use Piwigo\Session\SessionService;
  * carry forward since this class doesn't exist yet on this branch.
  *
  * calculate_auto_login_key()'s own secret_key read was already correct in
- * the original (global $conf['secret_key'], never Piwigo\Config\Config)
+ * the original (global \Piwigo\Config\Config::secretKey(), never Piwigo\Config\Config)
  * -- preserved as-is, not the Config::secretKey() bug found and fixed
  * elsewhere this phase (CsrfService/EphemeralKeyService).
  */
@@ -58,7 +58,7 @@ final class AuthService
 
         // see validate_mail_address() for why this is string=>string
         /** @var array<string, string> $user_fields */
-        $user_fields = $conf['user_fields'];
+        $user_fields = \Piwigo\Config\Config::userFields();
 
         $found = $this->repo->findUsernameAndPassword(
             $userId,
@@ -78,8 +78,7 @@ final class AuthService
         $data = $time . $userId . $username;
         // secret_key is a random string generated at install time (see
         // install/index.php), always a string in a working install
-        $secret_key = $conf['secret_key'] ?? '';
-        $secret_key = is_string($secret_key) ? $secret_key : '';
+        $secret_key = \Piwigo\Config\Config::secretKey();
         $key = base64_encode(hash_hmac('sha256', $data, $secret_key . $found['password'], true));
 
         return [
@@ -115,10 +114,8 @@ final class AuthService
         // include/config_default.inc.php, but once persisted to the config
         // DB table both come back as raw strings (see load_conf_from_db())
         // -- accept either.
-        $remember_me_name = $conf['remember_me_name'] ?? null;
-        $remember_me_name = is_string($remember_me_name) ? $remember_me_name : 'pwg_remember';
-        $remember_me_length = $conf['remember_me_length'] ?? null;
-        $remember_me_length = is_numeric($remember_me_length) ? (int) $remember_me_length : 5184000;
+        $remember_me_name = \Piwigo\Config\Config::rememberMeName();
+        $remember_me_length = \Piwigo\Config\Config::rememberMeLength();
 
         // New default login and register pages, if users changes languages
         // and succesfully logs in we want to update the userpref language
@@ -142,7 +139,7 @@ final class AuthService
             ]);
         }
 
-        if ($rememberMe && (bool) $conf['authorize_remembering']) {
+        if ($rememberMe && \Piwigo\Config\Config::authorizeRemembering()) {
             $now = time();
             $calculated = $this->calculateAutoLoginKey($userId, $now);
             if ($calculated['key'] !== false) {
@@ -192,10 +189,8 @@ final class AuthService
 
         // see logUser() for why these accept both the config-default
         // scalar type and the DB-persisted string form
-        $remember_me_name = $conf['remember_me_name'] ?? null;
-        $remember_me_name = is_string($remember_me_name) ? $remember_me_name : 'pwg_remember';
-        $remember_me_length = $conf['remember_me_length'] ?? null;
-        $remember_me_length = is_numeric($remember_me_length) ? (int) $remember_me_length : 5184000;
+        $remember_me_name = \Piwigo\Config\Config::rememberMeName();
+        $remember_me_length = \Piwigo\Config\Config::rememberMeLength();
 
         if (isset($_COOKIE[$remember_me_name])) {
             $remember_me_cookie = $_COOKIE[$remember_me_name];
@@ -284,8 +279,7 @@ final class AuthService
         }
         // see logUser() for why this accepts both the config-default
         // scalar type and the DB-persisted string form
-        $remember_me_name = $conf['remember_me_name'] ?? null;
-        $remember_me_name = is_string($remember_me_name) ? $remember_me_name : 'pwg_remember';
+        $remember_me_name = \Piwigo\Config\Config::rememberMeName();
         setcookie($remember_me_name, '', [
             'expires' => 0,
             'path' => new CookieService()
@@ -408,7 +402,7 @@ final class AuthService
 
         // see UserService::validateMailAddress() for why this is string=>string
         /** @var array<string, string> $user_fields */
-        $user_fields = $conf['user_fields'];
+        $user_fields = \Piwigo\Config\Config::userFields();
 
         $usernameOrEmail = \Piwigo\Db\MysqliDb::realEscapeString($usernameOrEmail);
 
@@ -503,7 +497,7 @@ FROM ' . Tables::users() . ' AS u
 
         // see UserService::validateMailAddress() for why this is string=>string
         /** @var array<string, string> $user_fields */
-        $user_fields = $conf['user_fields'];
+        $user_fields = \Piwigo\Config\Config::userFields();
 
         $authKey = is_string($authKey) ? $authKey : '';
 
@@ -634,8 +628,7 @@ SELECT
         // auth_key_duration defaults to 3*24*60*60 (int) in
         // include/config_default.inc.php, but once persisted to the config DB
         // table it comes back as a raw string (see load_conf_from_db())
-        $auth_key_duration = $conf['auth_key_duration'];
-        $auth_key_duration = is_numeric($auth_key_duration) ? (int) $auth_key_duration : 0;
+        $auth_key_duration = \Piwigo\Config\Config::authKeyDuration();
 
         if ($auth_key_duration == 0) {
             return false;
@@ -748,8 +741,8 @@ UPDATE ' . Tables::userAuthKeys() . '
         // in include/config_default.inc.php, but once persisted to the config
         // DB table they come back as raw strings (see load_conf_from_db())
         $duration = $firstLogin
-        ? $conf['password_activation_duration']
-        : $conf['password_reset_duration'];
+        ? \Piwigo\Config\Config::passwordActivationDuration()
+        : \Piwigo\Config\Config::passwordResetDuration();
         $duration = is_numeric($duration) ? (int) $duration : 0;
         $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT ADDDATE(NOW(), INTERVAL ' . $duration . ' SECOND)'));
         assert($row !== null);
@@ -859,8 +852,7 @@ SELECT COUNT(*)
         // password_reset_code_duration defaults to 5*60 (int) in
         // include/config_default.inc.php, but once persisted to the config DB
         // table it comes back as a raw string (see load_conf_from_db())
-        $password_reset_code_duration = $conf['password_reset_code_duration'];
-        $password_reset_code_duration = is_numeric($password_reset_code_duration) ? (int) $password_reset_code_duration : 300;
+        $password_reset_code_duration = \Piwigo\Config\Config::passwordResetCodeDuration();
         $code = PwgTOTP::generateCode($secret, min($password_reset_code_duration, 900)); // max 15 minutes
 
         return [
@@ -880,8 +872,7 @@ SELECT COUNT(*)
         global $conf;
 
         // see generateUserCode() for why this needs numeric narrowing
-        $password_reset_code_duration = $conf['password_reset_code_duration'];
-        $password_reset_code_duration = is_numeric($password_reset_code_duration) ? (int) $password_reset_code_duration : 300;
+        $password_reset_code_duration = \Piwigo\Config\Config::passwordResetCodeDuration();
         return PwgTOTP::verifyCode($code, $secret, min($password_reset_code_duration, 900), 1);
     }
 }

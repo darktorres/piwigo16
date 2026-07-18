@@ -32,7 +32,7 @@ final class PictureRateRenderer
          */
         global $picture, $url_self;
 
-        if (! (bool) $conf['rate']) {
+        if (! \Piwigo\Config\Config::rateEnabled()) {
             return;
         }
 
@@ -61,7 +61,7 @@ SELECT COUNT(rate) AS count
         $template->assign('rate_summary', $rate_summary);
 
         $user_rate = null;
-        if ((bool) $conf['rate_anonymous'] or \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic)) {
+        if (\Piwigo\Config\Config::rateAnonymous() or \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic)) {
             if ($rate_summary['count'] > 0) {
                 // $page['image_id'] is always numeric (int or numeric
                 // string) -- see the identical narrowing in picture.php.
@@ -103,7 +103,7 @@ SELECT COUNT(rate) AS count
                         ]
                     ),
                     'USER_RATE' => $user_rate,
-                    'marks' => $conf['rate_items'],
+                    'marks' => \Piwigo\Config\Config::rateItems(),
                 ]
             );
         }

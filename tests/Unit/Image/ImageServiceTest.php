@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
@@ -33,12 +34,14 @@ if (! function_exists('boolean_to_string')) {
 }
 
 beforeEach(function (): void {
-    $GLOBALS['conf'] = [
-        'slideshow_period' => 4,
-        'slideshow_period_min' => 1,
-        'slideshow_period_max' => 10,
-        'slideshow_repeat' => true,
-    ];
+    Config::override('slideshow_period', 4);
+    Config::override('slideshow_period_min', 1);
+    Config::override('slideshow_period_max', 10);
+    Config::override('slideshow_repeat', true);
+});
+
+afterEach(function (): void {
+    Config::reset();
 });
 
 test('getDefaultSlideshowParams reads conf', function (): void {

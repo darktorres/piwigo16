@@ -69,7 +69,7 @@ final class MetadataService
                     foreach (array_keys($map, $iptcKey, true) as $pwgKey) {
                         $result[$pwgKey] = $value;
 
-                        if (! (bool) ($conf['allow_html_in_metadata'] ?? false)) {
+                        if (! (bool) (\Piwigo\Config\Config::allowHtmlInMetadata())) {
                             // photo origin is unsecured (user upload) --
                             // strip HTML to avoid XSS.
                             $result[$pwgKey] = strip_tags($result[$pwgKey]);
@@ -202,7 +202,7 @@ final class MetadataService
             }
         }
 
-        if (! (bool) ($conf['allow_html_in_metadata'] ?? false)) {
+        if (! (bool) (\Piwigo\Config\Config::allowHtmlInMetadata())) {
             foreach ($result as $key => $value) {
                 // photo origin is unsecured (user upload) -- strip HTML to
                 // avoid XSS.
@@ -254,7 +254,7 @@ final class MetadataService
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        $map = $this->stringMap($conf['use_iptc_mapping'] ?? null);
+        $map = $this->stringMap(\Piwigo\Config\Config::useIptcMapping());
 
         $iptc = $this->getIptcData($file, $map);
 
@@ -295,7 +295,7 @@ final class MetadataService
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        $map = $this->stringMap($conf['use_exif_mapping'] ?? null);
+        $map = $this->stringMap(\Piwigo\Config\Config::useExifMapping());
 
         $exif = $this->getExifData($file, $map);
 
@@ -345,18 +345,18 @@ final class MetadataService
 
         $updateFields = ['filesize', 'width', 'height'];
 
-        if ((bool) ($conf['use_exif'] ?? false)) {
+        if ((bool) (\Piwigo\Config\Config::useExif())) {
             $updateFields = array_merge(
                 $updateFields,
-                array_map(strval(...), array_keys($this->stringMap($conf['use_exif_mapping'] ?? null))),
+                array_map(strval(...), array_keys($this->stringMap(\Piwigo\Config\Config::useExifMapping()))),
                 ['latitude', 'longitude']
             );
         }
 
-        if ((bool) ($conf['use_iptc'] ?? false)) {
+        if ((bool) (\Piwigo\Config\Config::useIptc())) {
             $updateFields = array_merge(
                 $updateFields,
-                array_map(strval(...), array_keys($this->stringMap($conf['use_iptc_mapping'] ?? null)))
+                array_map(strval(...), array_keys($this->stringMap(\Piwigo\Config\Config::useIptcMapping())))
             );
         }
 
@@ -427,11 +427,11 @@ final class MetadataService
             $file = PHPWG_ROOT_PATH . $path;
         }
 
-        if ((bool) ($conf['use_exif'] ?? false)) {
+        if ((bool) (\Piwigo\Config\Config::useExif())) {
             $infos = array_merge($infos, $this->getSyncExifData($file));
         }
 
-        if ((bool) ($conf['use_iptc'] ?? false)) {
+        if ((bool) (\Piwigo\Config\Config::useIptc())) {
             $infos = array_merge($infos, $this->getSyncIptcData($file));
         }
 
@@ -601,10 +601,7 @@ final class MetadataService
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        $separatorRegex = $conf['metadata_keyword_separator_regex'] ?? null;
-        // matches the built-in default (config_default.inc.php) if the
-        // config value is somehow missing/mistyped at runtime.
-        $separatorRegex = is_string($separatorRegex) ? $separatorRegex : '/[.,;]/';
+        $separatorRegex = \Piwigo\Config\Config::metadataKeywordSeparatorRegex();
 
         $keywordsString = preg_replace($separatorRegex, ',', $keywordsString);
         assert($keywordsString !== null);

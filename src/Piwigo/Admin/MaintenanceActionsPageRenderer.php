@@ -86,10 +86,10 @@ final class MaintenanceActionsPageRenderer
         assert($row !== null);
         [$db_current_date] = $row;
 
-        // $conf['cache_sizes'] is a serialized 4-row [name, value] list produced by
+        // \Piwigo\Config\Config::cacheSizes() is a serialized 4-row [name, value] list produced by
         // ws_getCacheSize() (cache_size, msizes, tsizes, last_date_calc); row 3's
         // value is the last_date_calc date string used for time_since().
-        $cache_sizes_raw = $conf['cache_sizes'] ?? null;
+        $cache_sizes_raw = \Piwigo\Config\Config::cacheSizes() ?? null;
         $cache_sizes = is_string($cache_sizes_raw) ? unserialize($cache_sizes_raw) : null;
         if (! is_array($cache_sizes)) {
             $cache_sizes = null;
@@ -144,8 +144,7 @@ final class MaintenanceActionsPageRenderer
         switch (pwg_image::get_library()) {
             case 'ext_imagick':
                 $library = 'External ImageMagick';
-                $ext_imagick_dir = $conf['ext_imagick_dir'] ?? null;
-                $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+                $ext_imagick_dir = \Piwigo\Config\Config::extImagickDir();
                 $returnarray = [];
                 exec($ext_imagick_dir . pwg_image::get_ext_imagick_command() . ' -version', $returnarray);
                 $returnarray_line0 = $returnarray[0] ?? '';
@@ -172,7 +171,7 @@ final class MaintenanceActionsPageRenderer
                 break;
         }
 
-        if ((bool) $conf['gallery_locked']) {
+        if (\Piwigo\Config\Config::galleryLocked()) {
             $template->assign(
                 [
                     'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),

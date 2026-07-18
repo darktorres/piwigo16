@@ -77,8 +77,8 @@ final class CoreUpdateService
         $url = PHPWG_URL . '/download/all_versions.php';
         $url .= '?rand=' . md5(uniqid((string) mt_rand(), true));
         $url .= $env === 'Official' ? '&docker' : '&show_requirements';
-        $secretKeyRaw = $conf['secret_key'] ?? null;
-        $secretKey = is_string($secretKeyRaw) ? $secretKeyRaw : '';
+        $secretKeyRaw = \Piwigo\Config\Config::secretKey();
+        $secretKey = $secretKeyRaw;
         $url .= '&origin_hash=' . sha1($secretKey . get_absolute_root_url());
 
         if (! is_string($result = @HttpClientService::fetch($url))) {
@@ -143,7 +143,7 @@ final class CoreUpdateService
 
     /**
      * Checks for new Piwigo versions and notifies webmasters by email, not
-     * too often (see $conf['update_notify_reminder_period']).
+     * too often (see \Piwigo\Config\Config::updateNotifyReminderPeriod()).
      */
     public function notifyPiwigoNewVersions(): void
     {
@@ -172,20 +172,21 @@ final class CoreUpdateService
         }
 
         $notify = false;
-        if (! isset($conf['update_notify_last_notification'])) {
+        if (! \Piwigo\Config\Config::has('update_notify_last_notification')) {
             $notify = true;
         } else {
-            $lastNotificationSetting = $conf['update_notify_last_notification'];
+            $lastNotificationSetting = \Piwigo\Config\Config::updateNotifyLastNotification();
             $lastNotificationRaw = (is_array($lastNotificationSetting) || is_string($lastNotificationSetting))
                 ? \Piwigo\Core\ArrayHelper::safeUnserialize($lastNotificationSetting)
                 : false;
             $lastNotificationData = is_array($lastNotificationRaw) ? $lastNotificationRaw : [];
             $conf['update_notify_last_notification'] = $lastNotificationData;
+            \Piwigo\Config\Config::override('update_notify_last_notification', $lastNotificationData);
             $lastNotification = $lastNotificationData['notified_on'] ?? null;
             $lastNotificationVersion = $lastNotificationData['version'] ?? null;
 
-            $reminderPeriodRaw = $conf['update_notify_reminder_period'] ?? null;
-            $reminderPeriod = is_numeric($reminderPeriodRaw) ? (int) $reminderPeriodRaw : 0;
+            $reminderPeriodRaw = \Piwigo\Config\Config::updateNotifyReminderPeriod();
+            $reminderPeriod = $reminderPeriodRaw;
 
             if ($newVersionsString !== $lastNotificationVersion) {
                 $notify = true;
@@ -252,8 +253,8 @@ final class CoreUpdateService
         $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
         $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
 
-        $dataLocationRaw = $conf['data_location'] ?? null;
-        $dataLocation = is_string($dataLocationRaw) ? $dataLocationRaw : '';
+        $dataLocationRaw = \Piwigo\Config\Config::dataLocation();
+        $dataLocation = $dataLocationRaw;
 
         if ($checkCurrentVersion and ! version_compare($upgradeTo, AppInfo::VERSION, '>')) {
             redirect(get_root_url() . 'admin.php?page=plugin-' . basename(__DIR__));

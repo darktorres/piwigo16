@@ -42,8 +42,8 @@ class image_ext_imagick implements imageInterface
     ) {
         /** @var array<string, mixed> $conf */
         global $conf;
-        $imagick_dir = $conf['ext_imagick_dir'];
-        $this->imagickdir = is_string($imagick_dir) ? $imagick_dir : '';
+        $imagick_dir = \Piwigo\Config\Config::extImagickDir();
+        $this->imagickdir = $imagick_dir;
 
         $script_filename = $_SERVER['SCRIPT_FILENAME'] ?? null;
         if (is_string($script_filename) && str_starts_with($script_filename, '/kunden/')) {  // 1and1
@@ -145,8 +145,7 @@ class image_ext_imagick implements imageInterface
             // in cas of animated WebP, we need to maximize quality to 70 to avoid
             // heavy thumbnails (or square or whatever is displayed on the thumbnails
             // page)
-            $max_quality = $conf['animated_webp_compression_quality'];
-            $max_quality = is_numeric($max_quality) ? (int) $max_quality : $quality;
+            $max_quality = \Piwigo\Config\Config::animatedWebpCompressionQuality();
             $quality = min($quality, $max_quality);
         }
 

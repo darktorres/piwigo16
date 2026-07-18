@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Lang\Translator;
 use Piwigo\Template\Template;
@@ -23,6 +24,7 @@ use Piwigo\Template\Template;
 afterEach(function (): void {
     Lang::reset();
     Translator::reset();
+    Config::reset();
 });
 
 test('get_php_str_val evaluates a single-quoted PHP string literal', function (): void {
@@ -42,7 +44,7 @@ test('get_php_str_val returns null for a string too short to be quoted', functio
 });
 
 test('modcompiler_translate returns a cached lang lookup when compiled_template_cache_language is on', function (): void {
-    $GLOBALS['conf'] = ['compiled_template_cache_language' => true];
+    Config::override('compiled_template_cache_language', true);
     Lang::loadArray(['Comment' => 'Commentaire']);
 
     $result = Template::modcompiler_translate(["'Comment'"]);
@@ -51,7 +53,7 @@ test('modcompiler_translate returns a cached lang lookup when compiled_template_
 });
 
 test('modcompiler_translate falls back to a runtime l10n() call when caching is off', function (): void {
-    $GLOBALS['conf'] = ['compiled_template_cache_language' => false];
+    Config::override('compiled_template_cache_language', false);
     Lang::loadArray(['Comment' => 'Commentaire']);
 
     $result = Template::modcompiler_translate(["'Comment'"]);
@@ -60,7 +62,7 @@ test('modcompiler_translate falls back to a runtime l10n() call when caching is 
 });
 
 test('modcompiler_translate falls back to a runtime l10n() call when the key is not in the cached lang table', function (): void {
-    $GLOBALS['conf'] = ['compiled_template_cache_language' => true];
+    Config::override('compiled_template_cache_language', true);
     Lang::loadArray([]);
 
     $result = Template::modcompiler_translate(["'Unknown'"]);
@@ -69,7 +71,7 @@ test('modcompiler_translate falls back to a runtime l10n() call when the key is 
 });
 
 test('modcompiler_translate wraps a runtime l10n() call in sprintf when extra params are given', function (): void {
-    $GLOBALS['conf'] = ['compiled_template_cache_language' => false];
+    Config::override('compiled_template_cache_language', false);
     Lang::loadArray([]);
 
     $result = Template::modcompiler_translate(["'%d comments'", '$count']);
@@ -78,7 +80,7 @@ test('modcompiler_translate wraps a runtime l10n() call in sprintf when extra pa
 });
 
 test('modcompiler_translate_dec falls back to a runtime l10n_dec() call when caching is off', function (): void {
-    $GLOBALS['conf'] = ['compiled_template_cache_language' => false];
+    Config::override('compiled_template_cache_language', false);
 
     $result = Template::modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
 

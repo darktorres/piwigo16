@@ -39,17 +39,13 @@ final class PaginationService
         bool $cleanUrl = false,
         string $paramName = 'start'
     ): array {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         // real callers pass numeric strings here (see docblock); all downstream
         // logic is pure arithmetic/comparison, so normalize once at the entry
         $nbElement = (int) $nbElement;
         $start = (int) $start;
 
         $navbar = [];
-        $pages_around = $conf['paginate_pages_around'];
-        $pages_around = is_numeric($pages_around) ? (int) $pages_around : 0;
+        $pages_around = \Piwigo\Config\Config::paginatePagesAround();
         $start_str = $cleanUrl ? '/' . $paramName . '-' : (! str_contains($url, '?') ? '?' : '&amp;') . $paramName . '=';
 
         if ($start < 0) {

@@ -34,7 +34,7 @@ final class SectionInitializer
 
         // some ISPs set PATH_INFO to empty string or to SCRIPT_FILENAME while in the
         // default apache implementation it is not set
-        if ($conf['question_mark_in_urls'] === false and
+        if (\Piwigo\Config\Config::questionMarkInUrls() === false and
              isset($_SERVER['PATH_INFO']) and $_SERVER['PATH_INFO'] !== '') {
             $rewritten = $_SERVER['PATH_INFO'];
             // $_SERVER values are typed mixed by PHPStan (PATH_INFO is a string in

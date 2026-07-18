@@ -27,7 +27,7 @@ final class FilterService implements FilterUpdaterInterface
      * Builds the request's $filter global — the top-level body of the
      * deleted include/filter.inc.php (P23 sub-batch 8f-5), ported verbatim.
      * Called by Piwigo\Bootstrap\RequestBootstrap::finalize() when
-     * $conf['filter_pages'] declares the current page filterable and the
+     * \Piwigo\Config\Config::filterPages() declares the current page filterable and the
      * 'used' page-filter flag is on, exactly like the old conditional
      * `include` (the caller keeps the `$filter['enabled'] = false;`
      * else-branch, matching the old not-included case, which deliberately

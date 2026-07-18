@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Mail\MailService;
 
@@ -23,13 +24,11 @@ function mail_service_with_fake_webmaster(): MailService
 }
 
 beforeEach(function (): void {
-    // MailService reads mail settings from the real, request-live $conf
-    // global (see the class's own docblock: Piwigo\Config\Config's typed
-    // accessors are NOT synced with DB-persisted config -- ConfigService::
-    // loadConfFromDb() is never called from the live bootstrap sequence),
-    // so tests configure $GLOBALS['conf'] directly rather than Config::override().
-    $GLOBALS['conf'] = [];
     MailService::reset();
+});
+
+afterEach(function (): void {
+    Config::reset();
 });
 
 test('formatEmail wraps a name and email into "name <email>"', function (): void {
@@ -155,14 +154,14 @@ test('moveCssToBody inlines a <style> block into the element it targets', functi
 });
 
 test('getMailSenderName falls back to gallery_title when mail_sender_name is unset', function (): void {
-    $GLOBALS['conf'] = ['gallery_title' => 'My Gallery'];
+    Config::override('gallery_title', 'My Gallery');
     $service = new MailService();
 
     expect($service->getMailSenderName())->toBe('My Gallery');
 });
 
 test('getMailSenderName uses mail_sender_name when configured', function (): void {
-    $GLOBALS['conf'] = ['mail_sender_name' => 'Custom Sender'];
+    Config::override('mail_sender_name', 'Custom Sender');
     $service = new MailService();
 
     expect($service->getMailSenderName())->toBe('Custom Sender');
@@ -175,19 +174,17 @@ test('getMailConfiguration reports use_smtp false when smtp_host is unset', func
 });
 
 test('getMailConfiguration reports use_smtp true when smtp_host is configured', function (): void {
-    $GLOBALS['conf'] = ['smtp_host' => 'smtp.example.test'];
+    Config::override('smtp_host', 'smtp.example.test');
     $service = mail_service_with_fake_webmaster();
 
     expect($service->getMailConfiguration()['use_smtp'])->toBeTrue();
 });
 
-test('getMailConfiguration reads debug_mail-adjacent smtp settings from the live $conf global, not Config::', function (): void {
-    $GLOBALS['conf'] = [
-        'smtp_host' => 'smtp.example.test',
-        'smtp_user' => 'mailuser',
-        'smtp_password' => 'secret',
-        'smtp_secure' => 'tls',
-    ];
+test('getMailConfiguration reads debug_mail-adjacent smtp settings from Config::', function (): void {
+    Config::override('smtp_host', 'smtp.example.test');
+    Config::override('smtp_user', 'mailuser');
+    Config::override('smtp_password', 'secret');
+    Config::override('smtp_secure', 'tls');
     $service = mail_service_with_fake_webmaster();
 
     $config = $service->getMailConfiguration();

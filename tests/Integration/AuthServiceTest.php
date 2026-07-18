@@ -50,10 +50,8 @@ namespace Piwigo\Tests\Integration {
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
-            $GLOBALS['conf'] = [
-                'user_fields' => ['id' => 'id', 'username' => 'username', 'password' => 'password'],
-                'secret_key' => 'test-secret-key',
-            ];
+            Config::override('user_fields', ['id' => 'id', 'username' => 'username', 'password' => 'password']);
+            Config::override('secret_key', 'test-secret-key');
 
             $this->service = new AuthService(new AuthRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService());
         }
@@ -94,10 +92,7 @@ namespace Piwigo\Tests\Integration {
         {
             $first = $this->service->calculateAutoLoginKey(1, 1000);
 
-            $GLOBALS['conf'] = [
-                'user_fields' => ['id' => 'id', 'username' => 'username', 'password' => 'password'],
-                'secret_key' => 'a-different-secret',
-            ];
+            Config::override('secret_key', 'a-different-secret');
 
             $second = $this->service->calculateAutoLoginKey(1, 1000);
 

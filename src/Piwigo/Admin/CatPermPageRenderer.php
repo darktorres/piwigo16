@@ -137,20 +137,12 @@ SELECT group_id
         // users...
         $users = [];
 
-        // $conf['user_fields'] maps generic field names to table-specific column
+        // \Piwigo\Config\Config::userFields() maps generic field names to table-specific column
         // names (see include/config_default.inc.php); every value is a plain
         // string.
-        $user_fields_raw = $conf['user_fields'];
-        $user_fields = [];
-        if (is_array($user_fields_raw)) {
-            foreach ($user_fields_raw as $field_key => $field_value) {
-                if (is_string($field_key) and is_string($field_value)) {
-                    $user_fields[$field_key] = $field_value;
-                }
-            }
-        }
-        $user_field_id = $user_fields['id'] ?? 'id';
-        $user_field_username = $user_fields['username'] ?? 'username';
+        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_field_id = $user_fields['id'];
+        $user_field_username = $user_fields['username'];
 
         $query = '
 SELECT ' . $user_field_id . ' AS id,
@@ -239,7 +231,7 @@ SELECT user_id, group_id
         // +-------------------------------------------------------------------+
         $template->assign([
             'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
-            'INHERIT' => $conf['inheritance_by_default'],
+            'INHERIT' => \Piwigo\Config\Config::inheritanceByDefault(),
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['groups', 'users']),
         ]);
 

@@ -62,7 +62,7 @@ final class HistoryPageRenderer
         );
 
         if (isset($page['search_id'])) {
-            // $page['nb_lines']/['start'] and $conf['nb_logs_page'] come from
+            // $page['nb_lines']/['start'] and \Piwigo\Config\Config::nbLogsPage() come from
             // loosely-typed global bags; create_navigation_bar() needs a real
             // int|string/int, so narrow each before the call.
             $nb_lines = $page['nb_lines'] ?? null;
@@ -71,8 +71,7 @@ final class HistoryPageRenderer
             $navbar_start = $page['start'] ?? null;
             $navbar_start = is_numeric($navbar_start) ? (int) $navbar_start : 0;
 
-            $nb_logs_page = $conf['nb_logs_page'] ?? null;
-            $nb_logs_page = is_numeric($nb_logs_page) ? (int) $nb_logs_page : 0;
+            $nb_logs_page = \Piwigo\Config\Config::nbLogsPage();
 
             $navbar = (new \Piwigo\Core\PaginationService())->createNavigationBar(get_root_url() . 'admin.php' . get_query_string_diff(['start']), $nb_lines, $navbar_start, $nb_logs_page);
 
@@ -124,13 +123,13 @@ final class HistoryPageRenderer
         }
 
         if ($form_param['user_id'] !== -1) {
-            // $conf['user_fields'] maps generic field names to table-specific DB
+            // \Piwigo\Config\Config::userFields() maps generic field names to table-specific DB
             // column names (see include/config_default.inc.php, used for external
             // auth integrations) -- the previous raw query here hardcoded the
             // literal 'id'/'username' column names, unlike sibling admin pages
             // (e.g. admin/batch_manager_unit.php) that already read this mapping.
             /** @var array<string, string> $user_fields */
-            $user_fields = $conf['user_fields'];
+            $user_fields = \Piwigo\Config\Config::userFields();
 
             $form_param['user_name'] = new UserRepository(DbConnection::build())
                 ->findUsernameById($form_param['user_id'], $user_fields['id'], $user_fields['username']);
@@ -150,7 +149,7 @@ final class HistoryPageRenderer
 
         $template->assign('display_thumbnails', $display_thumbnails);
         $template->assign('display_thumbnail_selected', $form['display_thumbnail'] ?? null);
-        $template->assign('guest_id', $conf['guest_id']);
+        $template->assign('guest_id', \Piwigo\Config\Config::guestId());
         $template->assign('ADMIN_PAGE_TITLE', l10n('History'));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'history');

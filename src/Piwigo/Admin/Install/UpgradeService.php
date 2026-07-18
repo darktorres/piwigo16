@@ -200,8 +200,8 @@ DELETE
                                 . '<p><i>' . implode(', ', $theme_names) . '</i></p>';
 
             // what is the default theme?
-            // $conf['default_user_id'] is always an int (see include/config_default.inc.php)
-            $default_user_id = is_numeric($conf['default_user_id']) ? (int) $conf['default_user_id'] : 0;
+            // \Piwigo\Config\Config::defaultUserId() is always an int (see include/config_default.inc.php)
+            $default_user_id = is_numeric(\Piwigo\Config\Config::defaultUserId()) ? (int) \Piwigo\Config\Config::defaultUserId() : 0;
             $query = '
 SELECT theme
   FROM ' . PREFIX_TABLE . 'user_infos
@@ -320,10 +320,10 @@ FROM ' . Tables::users() . '
 WHERE username = \'' . $username . '\'
 ;';
         } else {
-            // $conf['user_fields'] maps generic field names to table specific
+            // \Piwigo\Config\Config::userFields() maps generic field names to table specific
             // field names and is always array<string, string> (see
             // include/config_default.inc.php).
-            $user_fields = is_array($conf['user_fields']) ? $conf['user_fields'] : [];
+            $user_fields = is_array(\Piwigo\Config\Config::userFields()) ? \Piwigo\Config\Config::userFields() : [];
             $id_field = isset($user_fields['id']) && is_string($user_fields['id']) ? $user_fields['id'] : 'id';
             $username_field = isset($user_fields['username']) && is_string($user_fields['username']) ? $user_fields['username'] : 'username';
             $query = '
@@ -394,12 +394,12 @@ SELECT id
         global $conf;
 
         try {
-            $db_host = $conf['db_host'];
-            $db_user = $conf['db_user'];
-            $db_password = $conf['db_password'];
-            $db_base = $conf['db_base'];
+            $db_host = \Piwigo\Config\Config::dbHost();
+            $db_user = \Piwigo\Config\Config::dbUser();
+            $db_password = \Piwigo\Config\Config::dbPassword();
+            $db_base = \Piwigo\Config\Config::dbName();
             if (! is_string($db_host) || ! is_string($db_user) || ! is_string($db_password) || ! is_string($db_base)) {
-                throw new Exception("Invalid database configuration: \$conf['db_host'], 'db_user', 'db_password' and 'db_base' must be strings.");
+                throw new Exception("Invalid database configuration: \\Piwigo\Config\Config::dbHost(), 'db_user', 'db_password' and 'db_base' must be strings.");
             }
             \Piwigo\Db\MysqliDb::connect(
                 $db_host,

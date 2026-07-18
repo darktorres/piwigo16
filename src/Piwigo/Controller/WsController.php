@@ -48,7 +48,7 @@ final class WsController implements ControllerInterface
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
-        if (! (bool) $conf['allow_web_services']) {
+        if (! \Piwigo\Config\Config::allowWebServices()) {
             new HtmlService()
                 ->pageForbidden('Web services are disabled');
         }

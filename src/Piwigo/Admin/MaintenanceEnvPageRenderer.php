@@ -35,10 +35,6 @@ final class MaintenanceEnvPageRenderer
 {
     public function render(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $action = is_string($_GET['action'] ?? null) ? $_GET['action'] : '';
@@ -75,20 +71,7 @@ final class MaintenanceEnvPageRenderer
             $container_name = '(unofficial) ' . $container_name;
         }
 
-        // $conf['cache_sizes'] is normally the serialized string as loaded from the
-        // config table, but conf_update_param(..., true) can also leave the raw
-        // array in place within the same request.
-        $cache_sizes = null;
-        if (isset($conf['cache_sizes'])) {
-            if (is_string($conf['cache_sizes'])) {
-                $unserialized_cache_sizes = unserialize($conf['cache_sizes']);
-                if (is_array($unserialized_cache_sizes)) {
-                    $cache_sizes = $unserialized_cache_sizes;
-                }
-            } elseif (is_array($conf['cache_sizes'])) {
-                $cache_sizes = $conf['cache_sizes'];
-            }
-        }
+        $cache_sizes = \Piwigo\Config\Config::has('cache_sizes') ? \Piwigo\Config\Config::cacheSizes() : null;
 
         $time_elapsed_since_last_calc = null;
         if ($cache_sizes !== null && is_array($cache_sizes[3] ?? null) && (is_string($cache_sizes[3]['value'] ?? null) || is_int($cache_sizes[3]['value'] ?? null))) {
@@ -135,7 +118,7 @@ final class MaintenanceEnvPageRenderer
             $template->assign('GRAPHICS_LIBRARY', $graphics_library);
         }
 
-        if ((bool) $conf['gallery_locked']) {
+        if (\Piwigo\Config\Config::galleryLocked()) {
             $template->assign(
                 [
                     'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),

@@ -58,8 +58,8 @@ if (! function_exists('l10n')) {
 
         $key = is_string($key) ? $key : (string) $key;
 
-        $debug_l10n = $conf['debug_l10n'] ?? false;
-        if ((bool) $debug_l10n && ! isset($lang[$key]) && $key !== '') {
+        $debug_l10n = \Piwigo\Config\Config::debugL10n();
+        if ($debug_l10n && ! isset($lang[$key]) && $key !== '') {
             trigger_error('[l10n] language key "' . $key . '" not defined', E_USER_WARNING);
         }
 

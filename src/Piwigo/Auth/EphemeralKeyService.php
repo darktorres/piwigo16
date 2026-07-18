@@ -7,17 +7,14 @@ namespace Piwigo\Auth;
 /**
  * Short-lived, time-windowed keys sent back with a form (e.g. a signed
  * "not submitted too fast" / "not submitted too late" token), keyed by the
- * secret-key config. Reads `global $conf['secret_key']` directly, NOT
- * Piwigo\Config\Config::secretKey() -- confirmed empirically (recomputed a
- * real live pwg_token and it matched the empty-secret hash, not the real
- * DB-persisted secret_key) that Config::secretKey() is silently inert on a
- * live request, same root cause as the SEC-29 UrlService bug: secret_key is
- * inserted into the piwigo_config DB table at install time
- * (install/upgrade_1.6.2.php), loaded into $conf by the legacy
- * load_conf_from_db(), with no sync back into Config::$data. This also
- * means the already-shipped Piwigo\Csrf\CsrfService has the identical bug
- * (see task tracking the CsrfService fix) -- caught here before this class
- * shipped, unlike Csrf which needs its own follow-up fix commit.
+ * secret-key config. Reads Piwigo\Config\Config::secretKey() directly --
+ * safe since Legacy Coupling Retirement Track A batch A4's ConfigDb fix:
+ * ConfigDb::loadConfFromDb()/confUpdateParam() now sync every DB-persisted
+ * config row into Config::$data at the same point they update the legacy
+ * $conf global, so Config::secretKey() reflects the real, admin/install-set
+ * secret_key on every live request (previously it did not -- see
+ * Piwigo\Csrf\CsrfService's own docblock for the historical P18 incident
+ * this same gap caused there).
  *
  * [SEC-28] Built with sha256 + hash_equals() from the start, unlike the
  * original get_ephemeral_key()/verify_ephemeral_key() (hash_hmac('md5', ...),
@@ -34,13 +31,10 @@ final class EphemeralKeyService
      */
     public function generate(int $validAfterSeconds, string $additionalDataToHash = ''): string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         $time = round(microtime(true), 1);
         $remote_addr = $_SERVER['REMOTE_ADDR'] ?? '';
         $remote_addr = is_string($remote_addr) ? $remote_addr : '';
-        $secret_key = $conf['secret_key'] ?? '';
+        $secret_key = \Piwigo\Config\Config::secretKey();
         $secret_key = is_scalar($secret_key) ? (string) $secret_key : '';
 
         return $time . ':' . $validAfterSeconds . ':'
@@ -56,9 +50,6 @@ final class EphemeralKeyService
      */
     public function verify(string $key, string $additionalDataToHash = ''): bool
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         $time = microtime(true);
         $keyParts = explode(':', $key);
 
@@ -82,7 +73,7 @@ final class EphemeralKeyService
 
         $remote_addr = $_SERVER['REMOTE_ADDR'] ?? '';
         $remote_addr = is_string($remote_addr) ? $remote_addr : '';
-        $secret_key = $conf['secret_key'] ?? '';
+        $secret_key = \Piwigo\Config\Config::secretKey();
         $secret_key = is_scalar($secret_key) ? (string) $secret_key : '';
 
         $expected = hash_hmac(

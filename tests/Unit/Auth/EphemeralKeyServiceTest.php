@@ -3,14 +3,15 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Config\Config;
 
 beforeEach(function (): void {
-    // EphemeralKeyService reads global $conf directly, not
-    // Piwigo\Config\Config::secretKey() -- see the class's own docblock
-    // for why (Config::$data is never synced with the real,
-    // admin-configurable DB-persisted config table during a live request).
-    $GLOBALS['conf'] = ['secret_key' => 'test-secret-key'];
+    Config::override('secret_key', 'test-secret-key');
     $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
+});
+
+afterEach(function (): void {
+    Config::reset();
 });
 
 test('generate then verify round-trips immediately', function (): void {
@@ -88,7 +89,7 @@ test('generate produces a different signature when the secret key changes', func
     $service = new EphemeralKeyService();
     $key = $service->generate(0);
 
-    $GLOBALS['conf'] = ['secret_key' => 'a-different-secret'];
+    Config::override('secret_key', 'a-different-secret');
 
     expect($service->verify($key))->toBeFalse();
 });

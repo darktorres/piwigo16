@@ -44,7 +44,7 @@ final class UpdatesPwgPageRenderer
         global $conf, $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        if (! (bool) $conf['enable_core_update']) {
+        if (! \Piwigo\Config\Config::enableCoreUpdate()) {
             die('Piwigo core update system is disabled');
         }
 

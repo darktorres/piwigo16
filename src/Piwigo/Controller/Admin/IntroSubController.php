@@ -162,7 +162,7 @@ SELECT COUNT(*)
             'intro' => 'intro.tpl',
         ]);
 
-        if ((bool) $conf['show_newsletter_subscription'] and (bool) (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('show_newsletter_subscription', true)) {
+        if (\Piwigo\Config\Config::showNewsletterSubscription() and (bool) (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('show_newsletter_subscription', true)) {
             $query = '
   SELECT registration_date
     FROM ' . Tables::userInfos() . '
@@ -237,11 +237,11 @@ SELECT COUNT(*)
                 'NB_PLUGINS' => count($pwg_loaded_plugins),
                 'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))),
                 'U_QUICK_SYNC' => PHPWG_ROOT_PATH . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken(),
-                'CHECK_FOR_UPDATES' => $conf['dashboard_check_for_updates'],
+                'CHECK_FOR_UPDATES' => \Piwigo\Config\Config::dashboardCheckForUpdates(),
             ]
         );
 
-        if ((bool) $conf['activate_comments']) {
+        if (\Piwigo\Config\Config::activateComments()) {
             $query = '
 SELECT COUNT(*)
   FROM ' . Tables::comments() . '
@@ -254,7 +254,7 @@ SELECT COUNT(*)
             $template->assign('NB_COMMENTS', 0);
         }
 
-        if ((bool) $conf['show_piwigo_latest_news']) {
+        if (\Piwigo\Config\Config::showPiwigoLatestNews()) {
             $latest_news = self::getLatestNews();
 
             // getLatestNews() is declared to return mixed (it can come straight
@@ -293,7 +293,7 @@ SELECT COUNT(*)
         // |                           get activity data                           |
         // +-----------------------------------------------------------------------+
 
-        $nb_weeks = $conf['dashboard_activity_nb_weeks'];
+        $nb_weeks = \Piwigo\Config\Config::dashboardActivityNbWeeks();
 
         // Count mondays
         $mondays = 0;
@@ -488,8 +488,7 @@ SELECT COUNT(*)
         /** @var array<string, array<string, array<string, mixed>>> $data_storage */
         $data_storage = [];
 
-        $picture_ext = $conf['picture_ext'] ?? null;
-        $picture_ext = is_array($picture_ext) ? $picture_ext : [];
+        $picture_ext = \Piwigo\Config\Config::pictureExtensions();
 
         // Select files in Image_Table
         $query = '
@@ -572,19 +571,8 @@ SELECT
         }
 
         // Add cache size if requested and known.
-        // $conf['cache_sizes'] is normally the serialized string as loaded from the
-        // config table, but conf_update_param(..., true) can also leave the raw
-        // array in place within the same request (see admin/maintenance_env.php).
-        if ((bool) $conf['add_cache_to_storage_chart'] && isset($conf['cache_sizes'])) {
-            $cache_sizes = null;
-            if (is_string($conf['cache_sizes'])) {
-                $unserialized_cache_sizes = unserialize($conf['cache_sizes']);
-                if (is_array($unserialized_cache_sizes)) {
-                    $cache_sizes = $unserialized_cache_sizes;
-                }
-            } elseif (is_array($conf['cache_sizes'])) {
-                $cache_sizes = $conf['cache_sizes'];
-            }
+        if (\Piwigo\Config\Config::addCacheToStorageChart() && \Piwigo\Config\Config::has('cache_sizes')) {
+            $cache_sizes = \Piwigo\Config\Config::cacheSizes();
 
             if (is_array($cache_sizes)) {
                 $cache_size_zero = $cache_sizes[0] ?? null;

@@ -289,8 +289,7 @@ SELECT
         $message .= '<p style="margin: 20px 0">' . l10n('To continue using the API, please renew your key before it expires.') . '</p>';
         $message .= '<p style="margin: 20px 0">' . l10n('You can manage your API keys in your <a href="%s">account settings.</a>', get_absolute_root_url() . 'profile.php') . '</p>';
 
-        $gallery_title = $conf['gallery_title'];
-        $gallery_title = is_string($gallery_title) ? $gallery_title : '';
+        $gallery_title = \Piwigo\Config\Config::galleryTitle();
 
         return $this->mailer->mail(
             $email,

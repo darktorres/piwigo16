@@ -34,10 +34,9 @@ final class UpdatesExtPageRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // $page['warnings']/$page['errors'] are always initialized to an array by
@@ -46,7 +45,7 @@ final class UpdatesExtPageRenderer
         $page['warnings'] = is_array($page['warnings'] ?? null) ? $page['warnings'] : [];
         $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
-        if (! (bool) $conf['enable_extensions_install']) {
+        if (! \Piwigo\Config\Config::enableExtensionsInstall()) {
             die('Piwigo extensions install/update system is disabled');
         }
 
@@ -54,14 +53,7 @@ final class UpdatesExtPageRenderer
             $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
         }
 
-        // unserialize() of a conf value is typed mixed by PHP's own stub -- the
-        // config table always stores this key as a serialized string (see the
-        // install-time default row in install/db/103-database.php), but that isn't
-        // visible across the include() boundary, so narrow before calling
-        // unserialize().
-        $updates_ignored_setting = $conf['updates_ignored'] ?? null;
-        $updates_ignored_raw = is_string($updates_ignored_setting) ? unserialize($updates_ignored_setting) : false;
-        $conf['updates_ignored'] = is_array($updates_ignored_raw) ? $updates_ignored_raw : [];
+        $updates_ignored = \Piwigo\Config\Config::updatesIgnored();
 
         // $page['page'] is always set to a validated string page slug by admin.php
         // before this renderer runs -- see the identical narrowing in admin.php.
@@ -101,7 +93,7 @@ final class UpdatesExtPageRenderer
         // partial result no legacy code path could ever produce.
         $all_types_reachable = true;
 
-        // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+        // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl()) in
         // one branch of include/common.inc.php, so PHPStan can't prove it's a
         // string across that file boundary -- narrow it once here (see the
         // identical narrowing in updates::get_server_extensions()).
@@ -122,7 +114,7 @@ final class UpdatesExtPageRenderer
 
             $type_updates = [];
 
-            $ignored_ids = $conf['updates_ignored'][$type] ?? [];
+            $ignored_ids = $updates_ignored[$type] ?? [];
             if (! is_array($ignored_ids)) {
                 $ignored_ids = [];
             }

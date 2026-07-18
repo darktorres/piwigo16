@@ -46,9 +46,9 @@ final class PageHeaderRenderer
         // always strings; $page['page_banner'] is only ever assigned string literals
         // (see popuphelp.php, admin.php, admin/popuphelp.php).
         /** @var string $conf_gallery_title */
-        $conf_gallery_title = $conf['gallery_title'];
+        $conf_gallery_title = \Piwigo\Config\Config::galleryTitle();
         /** @var string $page_banner */
-        $page_banner = $page['page_banner'] ?? $conf['page_banner'];
+        $page_banner = $page['page_banner'] ?? \Piwigo\Config\Config::pageBanner();
 
         $template->assign(
             [
@@ -70,7 +70,7 @@ final class PageHeaderRenderer
 
                 'U_HOME' => get_gallery_home_url(),
 
-                'LEVEL_SEPARATOR' => $conf['level_separator'],
+                'LEVEL_SEPARATOR' => \Piwigo\Config\Config::levelSeparator(),
 
                 'SHOW_MOBILE_APP_BANNER' => $show_mobile_app_banner,
 
@@ -92,7 +92,7 @@ final class PageHeaderRenderer
         if (! isset($page['meta_robots']) || ! is_array($page['meta_robots'])) {
             $page['meta_robots'] = [];
         }
-        if (! (bool) $conf['meta_ref']) {
+        if (! \Piwigo\Config\Config::metaRef()) {
             $page['meta_robots']['noindex'] = 1;
             $page['meta_robots']['nofollow'] = 1;
         }

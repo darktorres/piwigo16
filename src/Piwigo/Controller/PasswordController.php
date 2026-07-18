@@ -260,8 +260,8 @@ final class PasswordController implements ControllerInterface
         if ($is_user_found) {
             $user_id = $user_id_raw;
         } else {
-            $guest_id = $conf['guest_id'] ?? null;
-            $user_id = is_numeric($guest_id) ? (int) $guest_id : 0;
+            $guest_id = \Piwigo\Config\Config::guestId();
+            $user_id = $guest_id;
         }
 
         $userdata = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getUserData($user_id, false);
@@ -318,7 +318,7 @@ final class PasswordController implements ControllerInterface
             'attempts' => 0,
             'user_id' => $is_user_found ? $user_id : null,
             'created_at' => time(),
-            'ttl' => min($conf['password_reset_code_duration'], 900), // max 15 min
+            'ttl' => min(\Piwigo\Config\Config::passwordResetCodeDuration(), 900), // max 15 min
         ];
 
         return true;
@@ -543,7 +543,7 @@ SELECT
 
         // see validate_mail_address() for why this is string=>string
         /** @var array<string, string> $user_fields */
-        $user_fields = $conf['user_fields'];
+        $user_fields = \Piwigo\Config\Config::userFields();
 
         \Piwigo\Db\MysqliDb::singleUpdate(
             Tables::users(),

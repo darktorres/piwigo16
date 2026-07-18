@@ -105,7 +105,7 @@ SELECT *
                   ]
               );
 
-            if ((bool) $conf['activate_comments'] and (bool) \Piwigo\Users\CurrentUser::get()->rawAttributes['show_nb_comments']) {
+            if (\Piwigo\Config\Config::activateComments() and (bool) \Piwigo\Users\CurrentUser::get()->rawAttributes['show_nb_comments']) {
                 $query = '
 SELECT image_id, COUNT(*) AS nb_comments
   FROM ' . Tables::comments() . '
@@ -164,7 +164,7 @@ SELECT image_id, COUNT(*) AS nb_comments
                 'file_ext' => strtolower(\Piwigo\Core\StringHelper::getExtension($rowFile)),
             ]);
 
-            if ((bool) $conf['index_new_icon']) {
+            if (\Piwigo\Config\Config::indexNewIcon()) {
                 // '' falls through get_icon()'s own empty($date) guard
                 // exactly like a non-string/null column value would, so
                 // behavior is unchanged.
@@ -200,8 +200,8 @@ SELECT image_id, COUNT(*) AS nb_comments
 
         $template->assign([
             'derivative_params' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type($indexDeriv)),
-            'maxRequests' => $conf['max_requests'],
-            'SHOW_THUMBNAIL_CAPTION' => $conf['show_thumbnail_caption'],
+            'maxRequests' => \Piwigo\Config\Config::maxRequests(),
+            'SHOW_THUMBNAIL_CAPTION' => \Piwigo\Config\Config::showThumbnailCaption(),
         ]);
         $tplThumbnailsVar = trigger_change('loc_end_index_thumbnails', $tplThumbnailsVar, $pictures);
         $template->assign('thumbnails', $tplThumbnailsVar);

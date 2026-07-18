@@ -61,7 +61,7 @@ class pwg_image
 
         $extension = strtolower(\Piwigo\Core\StringHelper::getExtension($this->source_filepath));
 
-        $picture_ext = is_array($conf['picture_ext']) ? $conf['picture_ext'] : [];
+        $picture_ext = is_array(\Piwigo\Config\Config::pictureExtensions()) ? \Piwigo\Config\Config::pictureExtensions() : [];
         if (! in_array($extension, $picture_ext)) {
             die('[Image] unsupported file extension');
         }
@@ -413,7 +413,7 @@ class pwg_image
         if (! is_string($command)) {
             $retval = null;
             $cmd_out = null;
-            $imagick_dir = is_string($conf['ext_imagick_dir']) ? $conf['ext_imagick_dir'] : '';
+            $imagick_dir = \Piwigo\Config\Config::extImagickDir();
             // check if magick is in path
             // [SEC-16] escapeshellarg() quotes the dir prefix; the adjacent
             // quoted+unquoted shell tokens still concatenate into one word
@@ -435,7 +435,7 @@ class pwg_image
             return false;
         }
 
-        $imagick_dir = is_string($conf['ext_imagick_dir']) ? $conf['ext_imagick_dir'] : '';
+        $imagick_dir = \Piwigo\Config\Config::extImagickDir();
         // [SEC-16] see the escapeshellarg() note above.
         @exec(escapeshellarg($imagick_dir) . self::get_ext_imagick_command() . ' -version', $returnarray);
         if (! empty($returnarray[0]) and (bool) preg_match('/ImageMagick/i', $returnarray[0])) {
@@ -458,8 +458,8 @@ class pwg_image
         global $conf;
 
         if ($library === null) {
-            $conf_library = $conf['graphics_library'];
-            $library = is_string($conf_library) ? $conf_library : 'auto';
+            $conf_library = \Piwigo\Config\Config::graphicsLibrary();
+            $library = $conf_library;
         }
 
         // Choose image library
@@ -505,8 +505,7 @@ class pwg_image
 
         switch ($library) {
             case 'ext_imagick':
-                $ext_imagick_dir = $conf['ext_imagick_dir'];
-                $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+                $ext_imagick_dir = \Piwigo\Config\Config::extImagickDir();
                 exec($ext_imagick_dir . self::get_ext_imagick_command() . ' -version', $returnarray);
                 if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                     $library .= '/' . $match[1];

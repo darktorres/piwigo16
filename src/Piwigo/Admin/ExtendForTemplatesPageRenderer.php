@@ -44,20 +44,17 @@ final class ExtendForTemplatesPageRenderer
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         $tpl_extension = [];
-        if (isset($conf['extents_for_templates']) && is_string($conf['extents_for_templates'])) {
-            $unserialized_tpl_extension = unserialize($conf['extents_for_templates']);
-            if (is_array($unserialized_tpl_extension)) {
-                foreach ($unserialized_tpl_extension as $tpl_extension_file => $tpl_extension_conditions) {
-                    if (is_string($tpl_extension_file) && is_array($tpl_extension_conditions)
-                        && isset($tpl_extension_conditions[0], $tpl_extension_conditions[1], $tpl_extension_conditions[2])
-                        && is_string($tpl_extension_conditions[0]) && is_string($tpl_extension_conditions[1])
-                        && is_string($tpl_extension_conditions[2])) {
-                        $tpl_extension[$tpl_extension_file] = [
-                            $tpl_extension_conditions[0],
-                            $tpl_extension_conditions[1],
-                            $tpl_extension_conditions[2],
-                        ];
-                    }
+        if (\Piwigo\Config\Config::has('extents_for_templates')) {
+            foreach (\Piwigo\Config\Config::extentsForTemplates() as $tpl_extension_file => $tpl_extension_conditions) {
+                if (is_string($tpl_extension_file) && is_array($tpl_extension_conditions)
+                    && isset($tpl_extension_conditions[0], $tpl_extension_conditions[1], $tpl_extension_conditions[2])
+                    && is_string($tpl_extension_conditions[0]) && is_string($tpl_extension_conditions[1])
+                    && is_string($tpl_extension_conditions[2])) {
+                    $tpl_extension[$tpl_extension_file] = [
+                        $tpl_extension_conditions[0],
+                        $tpl_extension_conditions[1],
+                        $tpl_extension_conditions[2],
+                    ];
                 }
             }
         }
@@ -165,6 +162,7 @@ SELECT permalink
             }
             $serialized_extents = serialize($replacements);
             $conf['extents_for_templates'] = $serialized_extents;
+            \Piwigo\Config\Config::override('extents_for_templates', $replacements);
             $tpl_extension = $replacements;
             /* ecrire la nouvelle conf */
             $query = '

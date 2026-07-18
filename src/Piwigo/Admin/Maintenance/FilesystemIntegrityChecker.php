@@ -29,8 +29,8 @@ final class FilesystemIntegrityChecker
          */
         global $page, $conf;
 
-        $fs_quick_check_period = $conf['fs_quick_check_period'];
-        if (is_numeric($fs_quick_check_period) && (int) $fs_quick_check_period === 0) {
+        $fs_quick_check_period = \Piwigo\Config\Config::fsQuickCheckPeriod();
+        if (is_numeric($fs_quick_check_period) && $fs_quick_check_period === 0) {
             return;
         }
 

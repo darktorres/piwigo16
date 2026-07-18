@@ -24,7 +24,7 @@ namespace Piwigo\Core;
 interface WebmasterMailProviderInterface
 {
     /**
-     * Returns the webmaster mail address depending on $conf['webmaster_id'].
+     * Returns the webmaster mail address depending on \Piwigo\Config\Config::webmasterId().
      */
     public function getWebmasterMailAddress(): string;
 }

@@ -149,7 +149,7 @@ SELECT id
             foreach ($to_sanitize_fields as $field) {
                 $raw_field_value = $_POST[$field] ?? null;
                 $field_value = is_scalar($raw_field_value) ? (string) $raw_field_value : '';
-                $data[$field] = ((bool) $conf['allow_html_descriptions']) ? $field_value : strip_tags($field_value);
+                $data[$field] = (\Piwigo\Config\Config::allowHtmlDescriptions()) ? $field_value : strip_tags($field_value);
             }
 
             if (! empty($_POST['date_creation'])) {
@@ -358,7 +358,7 @@ SELECT
         );
 
         $added_by = 'N/A';
-        $user_fields = is_array($conf['user_fields']) ? $conf['user_fields'] : [];
+        $user_fields = is_array(\Piwigo\Config\Config::userFields()) ? \Piwigo\Config\Config::userFields() : [];
         $uf_username = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : '';
         $uf_id = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : '';
         $row_added_by = is_numeric($row['added_by']) ? (int) $row['added_by'] : 0;
@@ -382,7 +382,7 @@ SELECT
             'is_svg' => (strtoupper(end($extTab)) === 'SVG'),
         ];
 
-        if ((bool) $conf['rate'] && ! empty($row['rating_score'])) {
+        if (\Piwigo\Config\Config::rateEnabled() && ! empty($row['rating_score'])) {
             $query = '
 SELECT
     COUNT(*)
@@ -391,7 +391,7 @@ SELECT
 ;';
             $rate_row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             // \Piwigo\Db\MysqliDb::query() can return false (and \Piwigo\Db\MysqliDb::fetchRow() then null) on a
-            // SQL error when $conf['die_on_sql_error'] is off; a COUNT(*) query
+            // SQL error when \Piwigo\Config\Config::dieOnSqlError() is off; a COUNT(*) query
             // always yields exactly one row otherwise, so this guard -- not
             // assert(), which is a no-op under this app's zend.assertions=-1 -- is
             // what actually protects the list-destructure below.
@@ -424,7 +424,7 @@ SELECT *
         $template->assign('INTRO', $intro_vars);
 
         $row_path = is_string($row['path']) ? $row['path'] : null;
-        $picture_ext = is_array($conf['picture_ext']) ? $conf['picture_ext'] : [];
+        $picture_ext = is_array(\Piwigo\Config\Config::pictureExtensions()) ? \Piwigo\Config\Config::pictureExtensions() : [];
         if (in_array(\Piwigo\Core\StringHelper::getExtension($row_path), $picture_ext)) {
             $template->assign('U_COI', get_root_url() . 'admin.php?page=picture_coi&amp;image_id=' . $image_id);
         }

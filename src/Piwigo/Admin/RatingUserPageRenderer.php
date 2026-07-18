@@ -35,14 +35,14 @@ final class RatingUserPageRenderer
             $filter_min_rates = (int) $_GET['f_min_rates'];
         }
 
-        $consensus_top_number = is_numeric($conf['top_number']) ? (int) $conf['top_number'] : 15;
+        $consensus_top_number = is_numeric(\Piwigo\Config\Config::topNumber()) ? (int) \Piwigo\Config\Config::topNumber() : 15;
         if (isset($_GET['consensus_top_number']) && is_numeric($_GET['consensus_top_number'])) {
             $consensus_top_number = (int) $_GET['consensus_top_number'];
         }
 
         // build users
         /** @var array<string, string> $user_fields */
-        $user_fields = $conf['user_fields'];
+        $user_fields = \Piwigo\Config\Config::userFields();
         $rate_repository = new RateRepository(DbConnection::build());
 
         $users_by_id = [];
@@ -53,7 +53,7 @@ final class RatingUserPageRenderer
             ];
         }
 
-        $rate_items_raw = $conf['rate_items'];
+        $rate_items_raw = \Piwigo\Config\Config::rateItems();
         /** @var list<int> $rate_items */
         $rate_items = is_array($rate_items_raw) ? array_map(intval(...), array_filter($rate_items_raw, is_numeric(...))) : [];
 
@@ -201,7 +201,7 @@ final class RatingUserPageRenderer
             'F_ACTION' => get_root_url() . 'admin.php',
             'F_MIN_RATES' => $filter_min_rates,
             'CONSENSUS_TOP_NUMBER' => $consensus_top_number,
-            'available_rates' => $conf['rate_items'],
+            'available_rates' => \Piwigo\Config\Config::rateItems(),
             'ratings' => $by_user_ratings,
             'image_urls' => $image_urls,
             'TN_WIDTH' => ImageStdParams::get_by_type(ImageStdParams::SQUARE)->sizing->ideal_size[0],

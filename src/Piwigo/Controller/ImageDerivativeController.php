@@ -63,12 +63,12 @@ final class ImageDerivativeController
          */
         global $conf, $page, $prefixeTable, $logger;
 
-        // $conf['data_location'] needs narrowing here specifically (used
+        // \Piwigo\Config\Config::dataLocation() needs narrowing here specifically (used
         // before Env::applyEnvToConf() below widens $conf's per-key type
         // info again -- see the comment near the Logger construction).
-        $data_location = $conf['data_location'];
+        $data_location = \Piwigo\Config\Config::dataLocation();
         if (! is_string($data_location)) {
-            die("Invalid \$conf['data_location'] configuration: expected a string.");
+            die("Invalid \\Piwigo\Config\Config::dataLocation() configuration: expected a string.");
         }
 
         Env::loadEnvFile(PHPWG_ROOT_PATH);
@@ -84,22 +84,22 @@ final class ImageDerivativeController
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        // $conf['data_location']/'log_dir'/'db_password' lost their specific
+        // \Piwigo\Config\Config::dataLocation()/'log_dir'/'db_password' lost their specific
         // string types the same way the common bootstrap's equivalent config
         // reads do (see Piwigo\Bootstrap\RequestBootstrap): Env::
         // applyEnvToConf(array &$conf, ...)'s by-ref `array` parameter erases
         // the per-key type info PHPStan had built up for $conf, so we
         // re-narrow here.
-        $log_data_location = $conf['data_location'];
-        $log_dir = $conf['log_dir'];
-        $db_password = $conf['db_password'];
+        $log_data_location = \Piwigo\Config\Config::dataLocation();
+        $log_dir = \Piwigo\Config\Config::logDir();
+        $db_password = \Piwigo\Config\Config::dbPassword();
         if (! is_string($log_data_location) || ! is_string($log_dir) || ! is_string($db_password)) {
-            die("Invalid \$conf['data_location']/'log_dir'/'db_password' configuration: expected strings.");
+            die("Invalid \\Piwigo\Config\Config::dataLocation()/'log_dir'/'db_password' configuration: expected strings.");
         }
 
         $logger = new Logger([
             'directory' => PHPWG_ROOT_PATH . $log_data_location . $log_dir,
-            'severity' => $conf['log_level'],
+            'severity' => \Piwigo\Config\Config::logLevel(),
             // we use an hashed filename to prevent direct file access, and we salt with
             // the db_password instead of secret_key because the log must be usable in i.php
             // (secret_key is in the database)
@@ -122,11 +122,11 @@ final class ImageDerivativeController
         // MASS_UPDATES_SKIP_EMPTY define()s became MysqliDb class constants,
         // so the fast path no longer loads any legacy file for them.
 
-        $db_host = $conf['db_host'];
-        $db_user = $conf['db_user'];
-        $db_base = $conf['db_base'];
+        $db_host = \Piwigo\Config\Config::dbHost();
+        $db_user = \Piwigo\Config\Config::dbUser();
+        $db_base = \Piwigo\Config\Config::dbName();
         if (! is_string($db_host) || ! is_string($db_user) || ! is_string($db_base)) {
-            $this->ierror("Invalid \$conf['db_host']/'db_user'/'db_base' configuration: expected strings.", 500);
+            $this->ierror("Invalid \\Piwigo\Config\Config::dbHost()/'db_user'/'db_base' configuration: expected strings.", 500);
         }
 
         try {
@@ -156,6 +156,11 @@ SELECT param, value
                 continue;
             }
             $conf[$row['param']] = $row['value'];
+            // ImageStdParams::load_from_db() reads Config::derivatives()/
+            // Config::disabledDerivatives() (Legacy Coupling Retirement
+            // Track A batch A4), not the raw $conf global, so this
+            // fast-path mini-bootstrap's own DB load must sync both.
+            \Piwigo\Config\Config::override($row['param'], $row['value']);
         }
         ImageStdParams::load_from_db();
 
@@ -403,7 +408,7 @@ SELECT *
             $this->ierror($page['src_url'], 301);
         }
 
-        if ($conf['derivatives_strip_metadata_threshold'] > $d_size[0] * $d_size[1]) {// strip metadata for small images
+        if (\Piwigo\Config\Config::derivativesStripMetadataThreshold() > $d_size[0] * $d_size[1]) {// strip metadata for small images
             $image->strip();
         }
 
@@ -457,17 +462,17 @@ SELECT *
          */
         global $conf, $prefixeTable;
 
-        $guestId = is_numeric($conf['guest_id'] ?? null) ? (int) $conf['guest_id'] : 0;
+        $guestId = \Piwigo\Config\Config::guestId();
         $userId = $guestId;
 
-        $sessionName = $conf['session_name'] ?? null;
+        $sessionName = \Piwigo\Config\Config::sessionName();
         if (is_string($sessionName) && $sessionName !== '') {
             $cookieValue = $_COOKIE[$sessionName] ?? null;
             if (is_string($cookieValue) && $cookieValue !== '') {
                 $resolved = new SessionUserResolver(new SessionRepository(DbConnection::build()))
                     ->resolveLoggedUserId(
                         $cookieValue,
-                        (bool) ($conf['session_use_ip_address'] ?? true),
+                        (bool) (\Piwigo\Config\Config::sessionUseIpAddress()),
                     );
                 if ($resolved !== null) {
                     $userId = $resolved;
@@ -573,7 +578,7 @@ SELECT *
          */
         global $conf, $page;
 
-        if ($conf['question_mark_in_urls'] == false and
+        if (\Piwigo\Config\Config::questionMarkInUrls() === false and
              isset($_SERVER['PATH_INFO']) and ! empty($_SERVER['PATH_INFO'])) {
             $req = $_SERVER['PATH_INFO'];
             // PHPStan types superglobal reads as mixed; PATH_INFO is only ever
@@ -600,9 +605,9 @@ SELECT *
         if ($req_tokens === false) {
             $this->ierror('Invalid request', 400);
         }
-        // config_default.inc.php always sets $conf['sync_chars_regex'] to a
+        // config_default.inc.php always sets \Piwigo\Config\Config::syncCharsRegex() to a
         // string literal; guard rather than trust a local-config override.
-        $sync_chars_regex = $conf['sync_chars_regex'];
+        $sync_chars_regex = \Piwigo\Config\Config::syncCharsRegex();
         if (! is_string($sync_chars_regex)) {
             $this->ierror('Invalid sync_chars_regex configuration', 500);
         }

@@ -85,8 +85,7 @@ final class FilesystemHelper
                 $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
             }
             $umask = umask(0);
-            $chmod_value = $conf['chmod_value'];
-            $chmod_value = is_numeric($chmod_value) ? (int) $chmod_value : 0755;
+            $chmod_value = \Piwigo\Config\Config::chmodValue();
             $mkd = @mkdir($dir, $chmod_value, ((bool) ($flags & self::MKGETDIR_RECURSIVE)) ? true : false);
             umask($umask);
             // Retest existence on mkdir() failure: concurrent requests (e.g.
@@ -143,7 +142,7 @@ final class FilesystemHelper
         $dirs = [];
         $path = rtrim($path, '/');
 
-        $sync_exclude_folders = $conf['sync_exclude_folders'];
+        $sync_exclude_folders = \Piwigo\Config\Config::syncExcludeFolders();
         $sync_exclude_folders = is_array($sync_exclude_folders)
             ? array_filter($sync_exclude_folders, is_string(...))
             : [];

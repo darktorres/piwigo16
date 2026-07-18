@@ -222,9 +222,9 @@ SELECT id, name, id_uppercat
             ]
         );
 
-        $template->assign('delay_before_autoOpen', $conf['album_move_delay_before_auto_opening']);
+        $template->assign('delay_before_autoOpen', \Piwigo\Config\Config::albumMoveDelayBeforeAutoOpening());
 
-        $template->assign('POS_PREF', $conf['newcat_default_position']); // TODO use user pref if it exists
+        $template->assign('POS_PREF', \Piwigo\Config\Config::newcatDefaultPosition()); // TODO use user pref if it exists
 
         // +-------------------------------------------------------------------+
         // |                          Album display                            |
@@ -330,7 +330,7 @@ SELECT
                 'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
                 'nb_albums' => count($allAlbum),
                 'ADMIN_PAGE_TITLE' => l10n('Albums'),
-                'light_album_manager' => ($albums_counter > $conf['light_album_manager_threshold']) ? 1 : 0,
+                'light_album_manager' => ($albums_counter > \Piwigo\Config\Config::lightAlbumManagerThreshold()) ? 1 : 0,
             ]
         );
 

@@ -37,8 +37,7 @@ final class PermissionService
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        $available_permission_levels = $conf['available_permission_levels'];
-        $available_permission_levels = is_array($available_permission_levels) ? $available_permission_levels : [];
+        $available_permission_levels = \Piwigo\Config\Config::availablePermissionLevels();
 
         $options = [];
         $label = '';

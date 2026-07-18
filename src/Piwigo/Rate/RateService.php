@@ -41,12 +41,11 @@ final class RateService
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        $rateItems = $conf['rate_items'] ?? null;
-        $rateItems = is_array($rateItems) ? $rateItems : [];
+        $rateItems = \Piwigo\Config\Config::rateItems();
 
         if (
             $rate === null
-            || ! (bool) $conf['rate']
+            || ! \Piwigo\Config\Config::rateEnabled()
             || ! (bool) preg_match('/^[0-9]+$/', (string) $rate)
         ) {
             return false;
@@ -63,7 +62,7 @@ final class RateService
 
         $userAnonymous = ! \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic);
 
-        if ($userAnonymous && ! (bool) $conf['rate_anonymous']) {
+        if ($userAnonymous && ! \Piwigo\Config\Config::rateAnonymous()) {
             return false;
         }
 

@@ -57,7 +57,7 @@ final class AccessControl
         global $conf;
 
         return match (self::getUserStatus($userStatus)) {
-            'guest' => (bool) $conf['guest_access'] ? AccessLevel::Guest : AccessLevel::Free,
+            'guest' => \Piwigo\Config\Config::guestAccess() ? AccessLevel::Guest : AccessLevel::Free,
             'generic' => AccessLevel::Guest,
             'normal' => AccessLevel::Classic,
             'admin' => AccessLevel::Administrator,
@@ -125,13 +125,13 @@ final class AccessControl
 
         $currentUserId = \Piwigo\Users\CurrentUser::get()->id;
 
-        if ($action === 'edit' && (bool) $conf['user_can_edit_comment']) {
+        if ($action === 'edit' && \Piwigo\Config\Config::userCanEditComment()) {
             if ((int) $commentAuthorId === $currentUserId) {
                 return true;
             }
         }
 
-        if ($action === 'delete' && (bool) $conf['user_can_delete_comment']) {
+        if ($action === 'delete' && \Piwigo\Config\Config::userCanDeleteComment()) {
             if ((int) $commentAuthorId === $currentUserId) {
                 return true;
             }

@@ -90,7 +90,7 @@ final class PwgExtensions
             return new PwgError(403, l10n('Webmaster status is required.'));
         }
 
-        if (! (bool) $conf['enable_extensions_install'] and $params['action'] == 'delete') {
+        if (! \Piwigo\Config\Config::enableExtensionsInstall() and $params['action'] == 'delete') {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -135,7 +135,7 @@ final class PwgExtensions
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (! (bool) $conf['enable_extensions_install'] and $params['action'] == 'delete') {
+        if (! \Piwigo\Config\Config::enableExtensionsInstall() and $params['action'] == 'delete') {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -172,7 +172,7 @@ final class PwgExtensions
         global $conf;
 
         /** @var array<string, mixed> $conf */
-        if (! (bool) $conf['enable_extensions_install']) {
+        if (! \Piwigo\Config\Config::enableExtensionsInstall()) {
             return new PwgError(401, 'Piwigo extensions install/update system is disabled');
         }
 
@@ -300,27 +300,7 @@ final class PwgExtensions
             return new PwgError(403, 'Invalid security token');
         }
 
-        // unserialize() is typed mixed by PHP's own stub -- narrow to the
-        // known {plugins,themes,languages} shape (each a plain list of
-        // extension id strings, per the install-time default row in
-        // install/db/103-database.php) before any offset access below.
-        // $conf['updates_ignored'] is a serialized string written by
-        // ConfigDb::confUpdateParam() a few lines below and in
-        // checkUpdates(); guard with is_string() rather than
-        // assuming, since $conf is only known as array<string, mixed>.
-        $updates_ignored_conf = $conf['updates_ignored'];
-        $updates_ignored_raw = is_string($updates_ignored_conf) ? unserialize($updates_ignored_conf) : false;
-        $updates_ignored_raw = is_array($updates_ignored_raw) ? $updates_ignored_raw : [];
-
-        $ignored_plugins = $updates_ignored_raw['plugins'] ?? null;
-        $ignored_themes = $updates_ignored_raw['themes'] ?? null;
-        $ignored_languages = $updates_ignored_raw['languages'] ?? null;
-
-        $conf['updates_ignored'] = [
-            'plugins' => is_array($ignored_plugins) ? array_values(array_filter($ignored_plugins, is_string(...))) : [],
-            'themes' => is_array($ignored_themes) ? array_values(array_filter($ignored_themes, is_string(...))) : [],
-            'languages' => is_array($ignored_languages) ? array_values(array_filter($ignored_languages, is_string(...))) : [],
-        ];
+        $conf['updates_ignored'] = \Piwigo\Config\Config::updatesIgnored();
 
         // Reset ignored extension
         if ($params['reset']) {
@@ -333,6 +313,7 @@ final class PwgExtensions
                     'languages' => [],
                 ];
             }
+            \Piwigo\Config\Config::override('updates_ignored', $conf['updates_ignored']);
 
             \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($conf['updates_ignored'])));
             unset($_SESSION['extensions_need_update']);
@@ -348,6 +329,7 @@ final class PwgExtensions
             $conf['updates_ignored'][$params['type']][] = $params['id'];
         }
 
+        \Piwigo\Config\Config::override('updates_ignored', $conf['updates_ignored']);
         \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($conf['updates_ignored'])));
         unset($_SESSION['extensions_need_update']);
         return true;
@@ -364,9 +346,6 @@ final class PwgExtensions
      */
     public static function checkUpdates(array $params, PwgServer &$service): array
     {
-        global $conf;
-
-        /** @var array<string, mixed> $conf */
         $update = new updates();
         $result = [];
 
@@ -375,13 +354,6 @@ final class PwgExtensions
         }
 
         $result['piwigo_need_update'] = $_SESSION['need_update' . AppInfo::VERSION];
-
-        // $conf['updates_ignored'] is a serialized string written by
-        // ConfigDb::confUpdateParam() (see ignoreUpdate() above); guard
-        // with is_string() rather than assuming, since $conf is only known
-        // as array<string, mixed>.
-        $updates_ignored_conf = $conf['updates_ignored'];
-        $conf['updates_ignored'] = is_string($updates_ignored_conf) ? unserialize($updates_ignored_conf) : false;
 
         if (! isset($_SESSION['extensions_need_update'])) {
             $update->check_extensions();

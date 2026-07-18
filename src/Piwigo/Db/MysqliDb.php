@@ -168,7 +168,7 @@ final class MysqliDb
          */
         global $mysqli, $conf, $page, $debug, $t2;
 
-        $die_on_sql_error = (bool) ($conf['die_on_sql_error'] ?? false);
+        $die_on_sql_error = \Piwigo\Config\Config::dieOnSqlError();
 
         $start = microtime(true);
         if (! (bool) ($result = $mysqli->query($query))) {
@@ -191,7 +191,7 @@ final class MysqliDb
         $queries_time += $time;
         $page['queries_time'] = $queries_time;
 
-        if ((bool) ($conf['show_queries'] ?? false)) {
+        if ((bool) (\Piwigo\Config\Config::showQueries())) {
             $output = '';
             $output .= '<pre>[' . $count_queries . '] ';
             $output .= "\n" . $query;

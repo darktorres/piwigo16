@@ -48,7 +48,7 @@ final class MenubarPageRenderer
         $menu->load_registered_blocks();
         $reg_blocks = $menu->get_registered_blocks();
 
-        $mb_conf = $conf['blk_' . $menu->get_id()] ?? null;
+        $mb_conf = \Piwigo\Config\Config::all()['blk_' . $menu->get_id()] ?? null;
         if (is_string($mb_conf)) {
             $mb_conf = unserialize($mb_conf);
         }

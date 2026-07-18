@@ -118,7 +118,7 @@ SELECT COUNT(DISTINCT(com.id))
             return $action;
         }
 
-        $myAction = (bool) $conf['comment_spam_reject'] ? 'reject' : 'moderate';
+        $myAction = \Piwigo\Config\Config::commentSpamReject() ? 'reject' : 'moderate';
         if ($action === $myAction) {
             return $action;
         }
@@ -137,8 +137,7 @@ SELECT COUNT(DISTINCT(com.id))
             $linkCount++;
         }
 
-        $maxLinks = $conf['comment_spam_max_links'] ?? 0;
-        $maxLinks = is_numeric($maxLinks) ? (int) $maxLinks : 0;
+        $maxLinks = \Piwigo\Config\Config::commentSpamMaxLinks();
 
         if ($linkCount > $maxLinks) {
             self::pushCrReason('links');
@@ -166,11 +165,11 @@ SELECT COUNT(DISTINCT(com.id))
         $comm['agent'] = is_scalar($_SERVER['HTTP_USER_AGENT'] ?? null) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
 
         $infos = [];
-        $commentAction = (! (bool) $conf['comments_validation'] || \Piwigo\Auth\AccessControl::isAdmin()) ? 'validate' : 'moderate';
+        $commentAction = (! \Piwigo\Config\Config::commentsValidation() || \Piwigo\Auth\AccessControl::isAdmin()) ? 'validate' : 'moderate';
 
         if (! \Piwigo\Auth\AccessControl::isClassicUser()) {
             if (self::emptyValue($comm['author'] ?? null)) {
-                if ((bool) $conf['comments_author_mandatory']) {
+                if (\Piwigo\Config\Config::commentsAuthorMandatory()) {
                     $infos[] = l10n('Username is mandatory');
                     $commentAction = 'reject';
                 }
@@ -178,15 +177,14 @@ SELECT COUNT(DISTINCT(com.id))
                 $comm['author'] = 'guest';
             }
 
-            $guestId = $conf['guest_id'] ?? 0;
-            $comm['author_id'] = is_numeric($guestId) ? (int) $guestId : 0;
+            $guestId = \Piwigo\Config\Config::guestId();
+            $comm['author_id'] = $guestId;
 
             // if a guest tries to use the name of an already existing user,
             // they must be rejected
             if ($comm['author'] !== 'guest') {
                 $authorName = is_string($comm['author']) ? $comm['author'] : '';
-                $user_fields = $conf['user_fields'] ?? null;
-                $user_fields = is_array($user_fields) ? $user_fields : [];
+                $user_fields = \Piwigo\Config\Config::userFields();
                 $usernameColumn = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
 
                 if ($this->repo->usernameExists($usernameColumn, $authorName)) {
@@ -214,7 +212,7 @@ SELECT COUNT(DISTINCT(com.id))
 
         // website
         if (! self::emptyValue($comm['website_url'] ?? null)) {
-            if (! (bool) $conf['comments_enable_website']) { // honeypot: if the field is disabled, it should be empty !
+            if (! \Piwigo\Config\Config::commentsEnableWebsite()) { // honeypot: if the field is disabled, it should be empty !
                 $commentAction = 'reject';
                 self::pushCrReason('website_url');
             } else {
@@ -237,7 +235,7 @@ SELECT COUNT(DISTINCT(com.id))
             $currentUserEmail = \Piwigo\Users\CurrentUser::get()->email;
             if (! self::emptyValue($currentUserEmail)) {
                 $comm['email'] = $currentUserEmail;
-            } elseif ((bool) $conf['comments_email_mandatory']) {
+            } elseif (\Piwigo\Config\Config::commentsEmailMandatory()) {
                 $infos[] = l10n('Email address is missing. Please specify an email address.');
                 $commentAction = 'reject';
             }
@@ -266,8 +264,7 @@ SELECT COUNT(DISTINCT(com.id))
         // branches above.
         $authorId = $comm['author_id'];
 
-        $antiFloodTime = $conf['anti-flood_time'] ?? 0;
-        $antiFloodTime = is_numeric($antiFloodTime) ? (int) $antiFloodTime : 0;
+        $antiFloodTime = \Piwigo\Config\Config::antiFloodTime();
 
         if ($commentAction !== 'reject' && $antiFloodTime > 0 && ! \Piwigo\Auth\AccessControl::isAdmin()) { // anti-flood system
             $anonymousIdPrefix = \Piwigo\Auth\AccessControl::isClassicUser() ? null : $trimmedIp;
@@ -306,8 +303,8 @@ SELECT COUNT(DISTINCT(com.id))
 
             $this->invalidateNbCommentsCache();
 
-            $emailAdminOnComment = (bool) $conf['email_admin_on_comment'] && $commentAction === 'validate';
-            $emailAdminOnValidation = (bool) $conf['email_admin_on_comment_validation'] && $commentAction === 'moderate';
+            $emailAdminOnComment = \Piwigo\Config\Config::emailAdminOnComment() && $commentAction === 'validate';
+            $emailAdminOnValidation = \Piwigo\Config\Config::emailAdminOnCommentValidation() && $commentAction === 'moderate';
             if ($emailAdminOnComment || $emailAdminOnValidation) {
                 $commentUrl = get_absolute_root_url() . 'comments.php?comment_id=' . $id;
 
@@ -394,7 +391,7 @@ SELECT COUNT(DISTINCT(com.id))
 
         if (! $this->ephemeralKeys->verify($postKey, $imageIdRaw)) {
             $commentAction = 'reject';
-        } elseif (! (bool) $conf['comments_validation'] || \Piwigo\Auth\AccessControl::isAdmin()) { // should the updated comment be validated
+        } elseif (! \Piwigo\Config\Config::commentsValidation() || \Piwigo\Auth\AccessControl::isAdmin()) { // should the updated comment be validated
             $commentAction = 'validate';
         } else {
             $commentAction = 'moderate';
@@ -453,7 +450,7 @@ SELECT COUNT(DISTINCT(com.id))
             );
 
             // mail admin and ask to validate the comment
-            if ($updated && (bool) $conf['email_admin_on_comment_validation'] && $commentAction === 'moderate') {
+            if ($updated && \Piwigo\Config\Config::emailAdminOnCommentValidation() && $commentAction === 'moderate') {
                 $commentUrl = get_absolute_root_url() . 'comments.php?comment_id=' . $commentId;
 
                 $keyargsContent = [
@@ -489,12 +486,9 @@ SELECT COUNT(DISTINCT(com.id))
      */
     public function emailAdmin(string $action, array $comment): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         if (! in_array($action, ['edit', 'delete'], true)
-            || ($action === 'edit' && ! (bool) $conf['email_admin_on_comment_edition'])
-            || ($action === 'delete' && ! (bool) $conf['email_admin_on_comment_deletion'])) {
+            || ($action === 'edit' && ! \Piwigo\Config\Config::emailAdminOnCommentEdition())
+            || ($action === 'delete' && ! \Piwigo\Config\Config::emailAdminOnCommentDeletion())) {
             return;
         }
 

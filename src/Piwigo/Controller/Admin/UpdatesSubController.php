@@ -62,7 +62,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
          */
         global $conf, $page;
 
-        if (! (bool) $conf['enable_extensions_install'] and ! (bool) $conf['enable_core_update']) {
+        if (! \Piwigo\Config\Config::enableExtensionsInstall() and ! \Piwigo\Config\Config::enableCoreUpdate()) {
             die('update system is disabled');
         }
 

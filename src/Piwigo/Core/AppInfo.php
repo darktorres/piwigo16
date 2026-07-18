@@ -14,7 +14,7 @@ final class AppInfo
 {
     // Matches include/constants.php's real PHPWG_VERSION value exactly --
     // the app/codebase version Piwigo itself tracks (compared against
-    // $conf['piwigo_db_version'] to trigger upgrade.php), NOT this
+    // \Piwigo\Config\Config::piwigoDbVersion() to trigger upgrade.php), NOT this
     // project's own "17.x-rewrite" branch/milestone name. Confirmed via a
     // real regression: an initial '17.0.0' guess here sent every request
     // into an upgrade.php redirect loop once real callers (common.inc.php's

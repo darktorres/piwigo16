@@ -59,7 +59,7 @@ final class PasswordService
                 return false;
             }
 
-            if ($userId === null || (bool) $conf['external_authentification']) {
+            if ($userId === null || \Piwigo\Config\Config::externalAuthentification()) {
                 return true;
             }
 

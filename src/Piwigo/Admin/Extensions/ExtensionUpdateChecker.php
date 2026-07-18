@@ -95,13 +95,9 @@ final class ExtensionUpdateChecker
      */
     public function checkExtensions(): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         $_SESSION['extensions_need_update'] = [];
 
-        $updatesIgnoredRaw = $conf['updates_ignored'] ?? null;
-        $updatesIgnored = is_array($updatesIgnoredRaw) ? $updatesIgnoredRaw : [];
+        $updatesIgnored = \Piwigo\Config\Config::updatesIgnored();
 
         foreach (ExtensionType::cases() as $type) {
             $pending = $this->getPendingUpdates($type);
@@ -125,7 +121,7 @@ final class ExtensionUpdateChecker
             $updatesIgnored[$type->value] = $ignoreList;
         }
 
-        $conf['updates_ignored'] = $updatesIgnored;
+        \Piwigo\Config\Config::override('updates_ignored', $updatesIgnored);
         \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($updatesIgnored)));
     }
 

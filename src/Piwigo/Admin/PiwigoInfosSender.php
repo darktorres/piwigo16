@@ -65,17 +65,17 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
 
         $startTime = TimingHelper::getMoment();
 
-        if (! (bool) $conf['send_piwigo_infos']) {
+        if (! \Piwigo\Config\Config::sendPiwigoInfos()) {
             return;
         }
 
-        // $conf['send_piwigo_infos_last_notice'] has been loaded in include/common, maybe
+        // \Piwigo\Config\Config::sendPiwigoInfosLastNotice() has been loaded in include/common, maybe
         // a few seconds earlier, we need a refreshed value from the database. Another
         // concurrent execution might have already performed send_piwigo_infos 3 seconds ago.
         \Piwigo\Config\ConfigDb::loadConfFromDb('param = "send_piwigo_infos_last_notice"', false);
 
         $doSend = false;
-        $lastNotice = $conf['send_piwigo_infos_last_notice'] ?? null;
+        $lastNotice = \Piwigo\Config\Config::sendPiwigoInfosLastNotice() ?? null;
         // conf_get_param()/load_conf_from_db() both feed $conf through a
         // loosely-typed mixed pipeline, but this particular param is always a
         // MySQL datetime string once set; only strtotime()'s argument needs the
@@ -116,14 +116,14 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         assert($row !== null);
         [$dbCurrentDate] = $row;
 
-        if (! isset($conf['send_piwigo_infos_origin_hash'])) {
+        if (! \Piwigo\Config\Config::has('send_piwigo_infos_origin_hash')) {
             \Piwigo\Config\ConfigDb::confUpdateParam('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
         }
 
         [$containerType, $containerVersion] = ContainerDetector::detect();
 
         $piwigoInfos = [
-            'origin_hash' => $conf['send_piwigo_infos_origin_hash'],
+            'origin_hash' => \Piwigo\Config\Config::sendPiwigoInfosOriginHash(),
             'technical' => [
                 'php_version' => PHP_VERSION,
                 'piwigo_version' => AppInfo::VERSION,
@@ -206,7 +206,7 @@ SELECT
 
         // $conf['pem_plugins_category'] = 12;
         // $conf['pem_themes_category'] = 10;
-        // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url'])
+        // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl())
         // in common.inc.php on one branch, so PHPStan infers the constant's
         // global type as mixed even though it's always a URL string at runtime.
         $pemUrl = PEM_URL;
@@ -278,7 +278,7 @@ SELECT
 
                 if (empty($eid)) {
                     // let's search in the data fetched from PEM
-                    $pemPluginsCategory = $conf['pem_plugins_category'];
+                    $pemPluginsCategory = \Piwigo\Config\Config::pemPluginsCategory();
                     $pemPluginsCategory = (is_int($pemPluginsCategory) || is_string($pemPluginsCategory)) ? $pemPluginsCategory : 0;
                     $eid = $officialExts[$pemPluginsCategory][$pluginId] ?? null;
                 }
@@ -330,7 +330,7 @@ SELECT
 
             if (empty($eid)) {
                 // let's search in the data fetched from PEM
-                $pemThemesCategory = $conf['pem_themes_category'];
+                $pemThemesCategory = \Piwigo\Config\Config::pemThemesCategory();
                 $pemThemesCategory = (is_int($pemThemesCategory) || is_string($pemThemesCategory)) ? $pemThemesCategory : 0;
                 $eid = $officialExts[$pemThemesCategory][$themeId] ?? null;
             }
@@ -576,7 +576,7 @@ SELECT
         ];
 
         foreach ($features as $feature) {
-            $piwigoInfos['features'][$feature] = ((bool) $conf[$feature]) ? 'yes' : 'no';
+            $piwigoInfos['features'][$feature] = ((bool) (\Piwigo\Config\Config::all()[$feature] ?? null)) ? 'yes' : 'no';
         }
 
         // conf_get_param() reads $conf with a dynamic (non-literal) key, so its
@@ -617,7 +617,7 @@ SELECT
         global $conf, $logger;
 
         // let's fake a last_notice so that we only try 1 day later
-        $existingLastNotice = $conf['send_piwigo_infos_last_notice'] ?? null;
+        $existingLastNotice = \Piwigo\Config\Config::sendPiwigoInfosLastNotice() ?? null;
         $lastNotice = is_string($existingLastNotice) ? strtotime($existingLastNotice) : time();
         $lastNotice = ($lastNotice === false ? time() : $lastNotice) + $waitTime;
 

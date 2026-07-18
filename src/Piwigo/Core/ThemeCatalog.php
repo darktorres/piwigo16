@@ -43,7 +43,7 @@ SELECT
                 continue;
             }
 
-            $mobile_theme = $conf['mobile_theme'] ?? null;
+            $mobile_theme = \Piwigo\Config\Config::mobilTheme();
             if (is_string($mobile_theme) && $id === $mobile_theme) {
                 if (! $showMobile) {
                     continue;
@@ -79,8 +79,7 @@ SELECT
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        $themes_dir = $conf['themes_dir'];
-        $themes_dir = is_string($themes_dir) ? $themes_dir : '';
+        $themes_dir = \Piwigo\Config\Config::themesDir();
 
         return file_exists($themes_dir . '/' . $themeId . '/themeconf.inc.php');
     }

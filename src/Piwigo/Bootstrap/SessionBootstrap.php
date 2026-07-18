@@ -34,28 +34,27 @@ final class SessionBootstrap
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        if (isset($conf['session_save_handler'])
-          and ($conf['session_save_handler'] === 'db')
+        if (\Piwigo\Config\Config::has('session_save_handler')
+          and (\Piwigo\Config\Config::sessionSaveHandler() === 'db')
           and defined('PHPWG_INSTALLED')) {
             session_set_save_handler(new PwgSession());
 
             if (function_exists('ini_set')) {
-                $session_use_cookies = $conf['session_use_cookies'];
+                $session_use_cookies = \Piwigo\Config\Config::sessionUseCookies();
                 $session_use_cookies = is_scalar($session_use_cookies) ? $session_use_cookies : null;
                 ini_set('session.use_cookies', $session_use_cookies);
 
-                $session_use_only_cookies = $conf['session_use_only_cookies'];
+                $session_use_only_cookies = \Piwigo\Config\Config::sessionUseOnlyCookies();
                 $session_use_only_cookies = is_scalar($session_use_only_cookies) ? $session_use_only_cookies : null;
                 ini_set('session.use_only_cookies', $session_use_only_cookies);
 
-                $session_use_trans_sid = $conf['session_use_trans_sid'];
+                $session_use_trans_sid = \Piwigo\Config\Config::sessionUseTransSid();
                 $session_use_trans_sid = is_scalar($session_use_trans_sid) ? $session_use_trans_sid : 0;
                 ini_set('session.use_trans_sid', intval($session_use_trans_sid));
                 ini_set('session.cookie_httponly', 1);
             }
 
-            $session_name = $conf['session_name'];
-            $session_name = is_string($session_name) ? $session_name : null;
+            $session_name = \Piwigo\Config\Config::sessionName();
             session_name($session_name);
             session_set_cookie_params(0, new CookieService()->cookiePath());
             register_shutdown_function(session_write_close(...));

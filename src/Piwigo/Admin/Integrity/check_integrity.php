@@ -52,7 +52,7 @@ class check_integrity
         global $conf;
 
         // Ignore list
-        $conf_c13y_ignore_raw = $conf['c13y_ignore'] ?? null;
+        $conf_c13y_ignore_raw = \Piwigo\Config\Config::c13yIgnore() ?? null;
         $conf_c13y_ignore = is_string($conf_c13y_ignore_raw) ? unserialize($conf_c13y_ignore_raw) : false;
         if (
             is_array($conf_c13y_ignore) and

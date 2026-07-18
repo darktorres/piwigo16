@@ -1,0 +1,66 @@
+# Fixes a real bug in pestphp/pest-plugin-browser 4.3.1's
+# Page::expectScreenshot(): once the strict, byte-exact
+# expect($actual)->toMatchSnapshot() check fails (which routinely happens
+# on ordinary render-timing/font-antialiasing jitter, even for a visually
+# identical screenshot -- expected, and exactly why the tolerant fallback
+# below exists), the fallback catch block has no success path at all.
+#
+# Confirmed directly from Playwright's own driver source
+# (node_modules/playwright-core/lib/coreBundle.js, Page.expectScreenshot):
+#   - On a genuine mismatch beyond threshold, the driver throws
+#     server-side. Client::execute() (Client.php) already turns this into
+#     an ExpectationFailedException with Playwright's own message before
+#     Page.php's result-handling loop is ever reached.
+#   - On a genuine pass within threshold, the driver returns `{}` -- no
+#     `diff` key, ever.
+#
+# But Page::expectScreenshot()'s loop only handles "a message carried
+# result.diff" (real mismatch). If the loop finishes without ever seeing a
+# diff key -- exactly what happens on a genuine pass -- it fell through to
+# an unconditional failure (a placeholder "missing image" diff view plus
+# the same canned "Screenshot does not match the last one" message),
+# regardless of what the tolerant comparison actually determined.
+#
+# Live proof (piwigo17-rewrite, 2026-07-17): a failing "search" VR test's
+# embedded "actual" screenshot decoded to be MD5-identical to its baseline
+# .snap file -- a confirmed pass, reported as a failure.
+#
+# This patch removes the unconditional fallback failure and lets the
+# method fall through to its implicit `void` return once the loop
+# completes without finding a diff, since that state is only reachable
+# after Playwright's own driver already determined the screenshots match.
+--- a/src/Playwright/Page.php	2026-04-08 18:04:12.000000000 -0300
++++ b/src/Playwright/Page.php	2026-07-17 23:15:09.068360086 -0300
+@@ -550,19 +550,19 @@
+                 }
+             }
+ 
+-            $this->createImageDiffView(
+-                $snapshotName,
+-                $expectedImageBlob,
+-                $actualImageBlob,
+-                ImageDiffView::missingImage(),
+-                $openDiff,
+-            );
+-
+-            throw new ExpectationFailedException(<<<'EOT'
+-                Screenshot does not match the last one.
+-                  - Expected? Update the snapshots with [--update-snapshots].
+-                EOT,
+-            );
++            // No message carried a `result.diff`. Playwright's own driver
++            // (playwright-core's Page.expectScreenshot handler) returns an
++            // empty result (`{}`) when the screenshot matches within the
++            // threshold/maxDiffPixels/maxDiffPixelRatio options passed
++            // above, and throws server-side on a genuine mismatch instead
++            // -- which Client::execute() already turns into an
++            // ExpectationFailedException before this loop is ever reached.
++            // Reaching this point therefore means the tolerant comparison
++            // passed: the strict, byte-exact toMatchSnapshot() above is
++            // far more sensitive than the comparator (any render-timing/
++            // anti-aliasing jitter fails it even when the image is
++            // visually identical). Falling through to a hardcoded failure
++            // here was reporting these passes as flaky test failures.
+         }
+     }
+ 

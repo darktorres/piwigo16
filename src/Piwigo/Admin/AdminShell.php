@@ -65,7 +65,7 @@ final class AdminShell
         // | Filesystem checks                                                 |
         // +-------------------------------------------------------------------+
 
-        if ($conf['fs_quick_check_period'] > 0) {
+        if (\Piwigo\Config\Config::fsQuickCheckPeriod() > 0) {
             $perform_fsqc = false;
 
             // Real invariant: fs_quick_check_last_check is only written (as an ISO
@@ -73,12 +73,12 @@ final class AdminShell
             // least once — on a fresh install the config key genuinely does not
             // exist yet, so this isset() is a real "has it ever run" guard, not
             // just type-narrowing boilerplate.
-            $fs_quick_check_last_check = isset($conf['fs_quick_check_last_check']) && is_string($conf['fs_quick_check_last_check'])
-                ? $conf['fs_quick_check_last_check']
+            $fs_quick_check_last_check = \Piwigo\Config\Config::has('fs_quick_check_last_check') && is_string(\Piwigo\Config\Config::fsQuickCheckLastCheck())
+                ? \Piwigo\Config\Config::fsQuickCheckLastCheck()
                 : null;
 
             if ($fs_quick_check_last_check !== null) {
-                $fs_quick_check_period = $conf['fs_quick_check_period'];
+                $fs_quick_check_period = \Piwigo\Config\Config::fsQuickCheckPeriod();
                 if (is_numeric($fs_quick_check_period) and strtotime($fs_quick_check_last_check) < strtotime($fs_quick_check_period . ' seconds ago')) {
                     $perform_fsqc = true;
                 }
@@ -137,7 +137,7 @@ final class AdminShell
         // +-------------------------------------------------------------------+
 
         // sync_user() is only useful when external authentication is activated
-        if ((bool) $conf['external_authentification']) {
+        if (\Piwigo\Config\Config::externalAuthentification()) {
             $syncUsersConn = \Piwigo\Db\DbConnection::build();
             new \Piwigo\Users\UserService(
                 new \Piwigo\Users\UserRepository($syncUsersConn),
@@ -239,7 +239,7 @@ final class AdminShell
         $template->assign(
             [
                 'USERNAME' => \Piwigo\Users\CurrentUser::get()->username,
-                'ENABLE_SYNCHRONIZATION' => $conf['enable_synchronization'],
+                'ENABLE_SYNCHRONIZATION' => \Piwigo\Config\Config::enableSynchronization(),
                 'U_SITE_MANAGER' => $link_start . 'site_manager',
                 'U_HISTORY_STAT' => $link_start . 'stats&amp;year=' . date('Y') . '&amp;month=' . date('n'),
                 'U_FAQ' => $link_start . 'help',
@@ -269,16 +269,16 @@ final class AdminShell
                 'U_CHANGE_THEME' => $change_theme_url,
                 'ADMIN_PAGE_TITLE' => 'Piwigo Administration Page',
                 'ADMIN_PAGE_OBJECT_ID' => '',
-                'U_SHOW_TEMPLATE_TAB' => $conf['show_template_in_side_menu'],
-                'SHOW_RATING' => $conf['rate'],
+                'U_SHOW_TEMPLATE_TAB' => \Piwigo\Config\Config::showTemplateInSideMenu(),
+                'SHOW_RATING' => \Piwigo\Config\Config::rateEnabled(),
             ]
         );
 
-        if ((bool) $conf['enable_core_update']) {
+        if (\Piwigo\Config\Config::enableCoreUpdate()) {
             $template->assign('U_UPDATES', $link_start . 'updates');
         }
 
-        if ((bool) $conf['activate_comments']) {
+        if (\Piwigo\Config\Config::activateComments()) {
             $template->assign('U_COMMENTS', $link_start . 'comments');
 
             // pending comments
@@ -388,7 +388,7 @@ SELECT COUNT(*)
         $whats_new_major_version = \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION);
 
         if ((bool) (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('show_whats_new_' . $whats_new_major_version, true) and \Piwigo\Config\ConfigDb::pwgIsDbconfWriteable()) {
-            if (\Piwigo\Users\CurrentUser::get()->rawAttributes['registration_date'] > $conf['last_major_update']) {
+            if (\Piwigo\Users\CurrentUser::get()->rawAttributes['registration_date'] > \Piwigo\Config\Config::lastMajorUpdate()) {
                 (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->updateParam('show_whats_new_' . $whats_new_major_version, false);
             } else {
                 // purge old whats_new_*
@@ -419,10 +419,10 @@ SELECT COUNT(*)
 
         // If last major update conf is less than a month old then display bell for whats new popin
         // Real invariant: include/common.inc.php always writes last_major_update as
-        // a DB NOW() string (see the `! isset($conf['last_major_update'])` block
+        // a DB NOW() string (see the `! \Piwigo\Config\Config::has('last_major_update')` block
         // there) before this shell runs.
         $display_bell = false;
-        $last_major_update = $conf['last_major_update'];
+        $last_major_update = \Piwigo\Config\Config::lastMajorUpdate();
         if (is_string($last_major_update) and strtotime($last_major_update) > strtotime('1 month ago')) {
             $display_bell = true;
         }

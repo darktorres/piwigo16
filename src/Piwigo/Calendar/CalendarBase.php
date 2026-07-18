@@ -130,7 +130,7 @@ abstract class CalendarBase
         // level_separator is documented as a character string
         // (see config_default.inc.php); see the identical pattern in
         // include/section_init.inc.php and admin/cat_list.php.
-        $level_separator = is_string($conf['level_separator']) ? $conf['level_separator'] : ' / ';
+        $level_separator = \Piwigo\Config\Config::levelSeparator();
         // chronology_date is always an array by the time calendar classes
         // run (see CalendarRenderer::render(),
         // which sanitizes it before this is ever called); see the identical
@@ -223,7 +223,7 @@ abstract class CalendarBase
 
         $nav_bar_datas = [];
 
-        if ((bool) $conf['calendar_show_empty'] and $show_empty and ! empty($labels)) {
+        if (\Piwigo\Config\Config::calendarShowEmpty() and $show_empty and ! empty($labels)) {
             foreach ($labels as $item => $label) {
                 if (! isset($items[$item])) {
                     $items[$item] = -1;
@@ -260,7 +260,7 @@ abstract class CalendarBase
 
         }
 
-        if ((bool) $conf['calendar_show_any'] and $show_any and count($items) > 1 and
+        if (\Piwigo\Config\Config::calendarShowAny() and $show_any and count($items) > 1 and
               count($date_components) < count($this->calendar_levels) - 1) {
             $url = duplicate_index_url(
                 [

@@ -73,7 +73,7 @@ class c13y_internal
         global $conf;
 
         foreach (['show_exif', 'use_exif'] as $value) {
-            if (((bool) $conf[$value]) and (! function_exists('exif_read_data'))) {
+            if (((bool) (\Piwigo\Config\Config::all()[$value] ?? null)) and (! function_exists('exif_read_data'))) {
                 $c13y->add_anomaly(
                     sprintf(l10n('%s value is not correct file because exif are not supported'), '$conf[\'' . $value . '\']'),
                     null,
@@ -98,14 +98,11 @@ class c13y_internal
 
         // guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // primary keys or config defaults, see include/config_default.inc.php).
-        $guest_id = $conf['guest_id'];
-        $guest_id = is_numeric($guest_id) ? (int) $guest_id : 0;
+        $guest_id = \Piwigo\Config\Config::guestId();
 
-        $default_user_id = $conf['default_user_id'];
-        $default_user_id = is_numeric($default_user_id) ? (int) $default_user_id : 0;
+        $default_user_id = \Piwigo\Config\Config::defaultUserId();
 
-        $webmaster_id = $conf['webmaster_id'];
-        $webmaster_id = is_numeric($webmaster_id) ? (int) $webmaster_id : 0;
+        $webmaster_id = \Piwigo\Config\Config::webmasterId();
 
         $c13y_users = [];
         $c13y_users[$guest_id] = [
@@ -127,11 +124,11 @@ class c13y_internal
             'l10n_bad_status' => 'Main "webmaster" user status is incorrect',
         ];
 
-        // $conf['user_fields'] maps generic field names to table-specific DB
+        // \Piwigo\Config\Config::userFields() maps generic field names to table-specific DB
         // column names (see include/config_default.inc.php); always a
         // string=>string map at runtime.
         /** @var array<string, string> $user_fields */
-        $user_fields = $conf['user_fields'];
+        $user_fields = \Piwigo\Config\Config::userFields();
         $user_id_field = $user_fields['id'];
 
         $query = '
@@ -199,14 +196,11 @@ class c13y_internal
 
         // guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // primary keys or config defaults, see include/config_default.inc.php).
-        $guest_id = $conf['guest_id'];
-        $guest_id = is_numeric($guest_id) ? (int) $guest_id : 0;
+        $guest_id = \Piwigo\Config\Config::guestId();
 
-        $default_user_id = $conf['default_user_id'];
-        $default_user_id = is_numeric($default_user_id) ? (int) $default_user_id : 0;
+        $default_user_id = \Piwigo\Config\Config::defaultUserId();
 
-        $webmaster_id = $conf['webmaster_id'];
-        $webmaster_id = is_numeric($webmaster_id) ? (int) $webmaster_id : 0;
+        $webmaster_id = \Piwigo\Config\Config::webmasterId();
 
         $result = false;
 

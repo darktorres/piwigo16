@@ -23,7 +23,7 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
 {
     /**
      * Returns the webmaster's email address (the users row whose id
-     * column matches $conf['webmaster_id']).
+     * column matches \Piwigo\Config\Config::webmasterId()).
      *
      * P23 batch 8f-4: implements Piwigo\Core\WebmasterMailProviderInterface
      * (MailService's test seam for this exact lookup -- see that
@@ -32,7 +32,7 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
      * P23 batch 8d: relocated from include/functions.inc.php's
      * get_webmaster_mail_address(), unchanged logic (including its
      * trigger_change('get_webmaster_mail_address', ...) filter hook and
-     * its own $conf['user_fields'] column-name resolution) -- stays
+     * its own \Piwigo\Config\Config::userFields() column-name resolution) -- stays
      * zero-arg, matching the original's own signature exactly, so every
      * real call site retargets as a pure rename.
      */
@@ -42,14 +42,10 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        $user_fields = $conf['user_fields'] ?? [];
-        $user_fields = is_array($user_fields) ? $user_fields : [];
-        $email_field = $user_fields['email'] ?? 'email';
-        $email_field = is_string($email_field) ? $email_field : 'email';
-        $id_field = $user_fields['id'] ?? 'id';
-        $id_field = is_string($id_field) ? $id_field : 'id';
-        $webmaster_id = $conf['webmaster_id'] ?? 0;
-        $webmaster_id = is_numeric($webmaster_id) ? (int) $webmaster_id : 0;
+        $user_fields = \Piwigo\Config\Config::userFields();
+        $email_field = $user_fields['email'];
+        $id_field = $user_fields['id'];
+        $webmaster_id = \Piwigo\Config\Config::webmasterId();
 
         $value = $this->conn->createQueryBuilder()
             ->select($email_field)
@@ -187,7 +183,7 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
     /**
      * @param array<string, mixed> $columns generic pwgfield => real DB
      *   column-name-and-value pairs (username/password/email), matching
-     *   the original's $conf['user_fields'] mapping
+     *   the original's \Piwigo\Config\Config::userFields() mapping
      */
     public function insertUser(array $columns): int
     {
@@ -323,7 +319,7 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
                 ->executeStatement();
         }
 
-        $userFields = $conf['user_fields'];
+        $userFields = \Piwigo\Config\Config::userFields();
         $userIdField = is_array($userFields) && is_string($userFields['id'] ?? null) ? $userFields['id'] : 'id';
         $this->conn->createQueryBuilder()
             ->delete(Tables::users())

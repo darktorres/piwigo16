@@ -83,7 +83,7 @@ class BlockManager
         /** @var array<string, mixed> $conf */
         global $conf;
         $conf_id = 'blk_' . $this->id;
-        $mb_conf = $conf[$conf_id] ?? [];
+        $mb_conf = \Piwigo\Config\Config::all()[$conf_id] ?? [];
         if (! is_array($mb_conf)) {
             $mb_conf = is_string($mb_conf) ? @unserialize($mb_conf) : false;
         }

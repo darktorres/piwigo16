@@ -48,19 +48,19 @@ final class ProfileFormHandler
         }
 
         // $userdata['id'] is always the current session user's numeric id
-        // (built in include/user.inc.php from $conf['guest_id'] or
+        // (built in include/user.inc.php from \Piwigo\Config\Config::guestId() or
         // $_SESSION['pwg_uid'], never a raw untyped value); narrow once here
         // for reuse below.
         $user_id = is_numeric($userdata['id']) ? (int) $userdata['id'] : 0;
 
-        // $conf['user_fields'] maps generic field names to table-specific DB
+        // \Piwigo\Config\Config::userFields() maps generic field names to table-specific DB
         // column names (see include/config_default.inc.php); always a
         // string=>string map at runtime (same invariant documented in
         // validate_mail_address(), functions_user.inc.php).
         /** @var array<string, string> $user_fields */
-        $user_fields = $conf['user_fields'];
+        $user_fields = \Piwigo\Config\Config::userFields();
 
-        $special_user = in_array($userdata['id'], [$conf['guest_id'], $conf['default_user_id']], true);
+        $special_user = in_array($userdata['id'], [\Piwigo\Config\Config::guestId(), \Piwigo\Config\Config::defaultUserId()], true);
         if ($special_user) {
             unset(
                 $_POST['username'],
@@ -79,7 +79,7 @@ final class ProfileFormHandler
             unset($_POST['username']);
         }
 
-        if ((bool) $conf['allow_user_customization'] or defined('IN_ADMIN')) {
+        if (\Piwigo\Config\Config::allowUserCustomization() or defined('IN_ADMIN')) {
             $int_pattern = '/^\d+$/';
             $nb_image_page = $_POST['nb_image_page'] ?? null;
             $nb_image_page_is_empty = $nb_image_page === null || $nb_image_page === '' || $nb_image_page === '0'
@@ -199,7 +199,7 @@ final class ProfileFormHandler
                                 Lang::buildArgs('Your username has been successfully changed to : %s', $username),
                             ];
 
-                            $gallery_title = is_string($conf['gallery_title']) ? $conf['gallery_title'] : '';
+                            $gallery_title = \Piwigo\Config\Config::galleryTitle();
                             new MailService()
                                 ->mail(
                                     $mail_address,
@@ -232,14 +232,14 @@ final class ProfileFormHandler
                 $activity_details_tables[] = 'users';
             }
 
-            if ((bool) $conf['allow_user_customization'] or defined('IN_ADMIN')) {
+            if (\Piwigo\Config\Config::allowUserCustomization() or defined('IN_ADMIN')) {
                 // update user "additional" informations (specific to Piwigo)
                 $fields = [
                     'nb_image_page', 'language',
                     'expand', 'show_nb_hits', 'recent_period', 'theme',
                 ];
 
-                if ((bool) $conf['activate_comments']) {
+                if (\Piwigo\Config\Config::activateComments()) {
                     $fields[] = 'show_nb_comments';
                 }
 
@@ -302,8 +302,8 @@ final class ProfileFormHandler
             [
                 $template_prefixe . 'USERNAME' => stripslashes(is_string($userdata['username']) ? $userdata['username'] : ''),
                 $template_prefixe . 'EMAIL' => @$userdata['email'],
-                $template_prefixe . 'ALLOW_USER_CUSTOMIZATION' => $conf['allow_user_customization'],
-                $template_prefixe . 'ACTIVATE_COMMENTS' => $conf['activate_comments'],
+                $template_prefixe . 'ALLOW_USER_CUSTOMIZATION' => \Piwigo\Config\Config::allowUserCustomization(),
+                $template_prefixe . 'ACTIVATE_COMMENTS' => \Piwigo\Config\Config::activateComments(),
                 $template_prefixe . 'NB_IMAGE_PAGE' => $userdata['nb_image_page'],
                 $template_prefixe . 'RECENT_PERIOD' => $userdata['recent_period'],
                 $template_prefixe . 'EXPAND' => (bool) $userdata['expand'] ? 'true' : 'false',
@@ -327,7 +327,7 @@ final class ProfileFormHandler
 
         $template->assign('language_options', $language_options);
 
-        $special_user = in_array($userdata['id'], [$conf['guest_id'], $conf['default_user_id']], true);
+        $special_user = in_array($userdata['id'], [\Piwigo\Config\Config::guestId(), \Piwigo\Config\Config::defaultUserId()], true);
         $template->assign('SPECIAL_USER', $special_user);
         $template->assign('IN_ADMIN', defined('IN_ADMIN'));
 
@@ -340,9 +340,9 @@ final class ProfileFormHandler
         $duration = [];
         $display_duration = [];
         $has_custom = false;
-        // $conf['api_key_duration'] is a plain list of day-count strings (plus
+        // \Piwigo\Config\Config::apiKeyDuration() is a plain list of day-count strings (plus
         // the literal 'custom' sentinel) -- see include/config_default.inc.php.
-        $api_key_duration = is_array($conf['api_key_duration']) ? array_filter($conf['api_key_duration'], is_string(...)) : [];
+        $api_key_duration = is_array(\Piwigo\Config\Config::apiKeyDuration()) ? array_filter(\Piwigo\Config\Config::apiKeyDuration(), is_string(...)) : [];
         foreach ($api_key_duration as $day) {
             if ($day === 'custom') {
                 $has_custom = true;

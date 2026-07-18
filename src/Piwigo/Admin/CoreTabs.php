@@ -129,13 +129,13 @@ final class CoreTabs
                     'caption' => '<span class="icon-block"></span>' . l10n('Lock'),
                     'url' => $link_start . 'cat_options&amp;section=visible',
                 ];
-                if ((bool) $conf['activate_comments']) {
+                if (\Piwigo\Config\Config::activateComments()) {
                     $sheets['comments'] = [
                         'caption' => '<span class="icon-chat"></span>' . l10n('Comments'),
                         'url' => $link_start . 'cat_options&amp;section=comments',
                     ];
                 }
-                if ((bool) $conf['allow_random_representative']) {
+                if (\Piwigo\Config\Config::allowRandomRepresentative()) {
                     $sheets['representative'] = [
                         'caption' => l10n('Representative'),
                         'url' => $link_start . 'cat_options&amp;section=representative',
@@ -236,7 +236,7 @@ final class CoreTabs
                     'caption' => '<span class="icon-menu"></span>' . l10n('List'),
                     'url' => $my_base_url . '&amp;tab=installed',
                 ];
-                if ((bool) $conf['enable_extensions_install']) {
+                if (\Piwigo\Config\Config::enableExtensionsInstall()) {
                     $sheets['update'] = [
                         'caption' => '<span class="icon-arrows-cw"></span>' . l10n('Check for updates'),
                         'url' => $my_base_url . '&amp;tab=update',
@@ -288,7 +288,7 @@ final class CoreTabs
                     'caption' => '<span class="icon-crop"></span>' . l10n('Center of interest'),
                     'url' => $admin_photo_base_url . '-coi',
                 ];
-                if ((bool) $conf['enable_formats']) {
+                if (\Piwigo\Config\Config::isFormatsEnabled()) {
                     $sheets['formats'] = [
                         'caption' => '<span class="icon-docs"></span>' . l10n('Formats'),
                         'url' => $admin_photo_base_url . '-formats',
@@ -305,7 +305,7 @@ final class CoreTabs
                     'caption' => '<span class="icon-network"></span>' . l10n('Applications'),
                     'url' => PhotosAddDirectPageRenderer::baseUrl() . '&amp;section=applications',
                 ];
-                if ((bool) $conf['enable_synchronization']) {
+                if (\Piwigo\Config\Config::enableSynchronization()) {
                     $sheets['ftp'] = [
                         'caption' => '<span class="icon-exchange"></span>' . l10n('FTP + Synchronization'),
                         'url' => PhotosAddDirectPageRenderer::baseUrl() . '&amp;section=ftp',
@@ -320,7 +320,7 @@ final class CoreTabs
                     'caption' => '<span class="icon-menu"></span>' . l10n('List'),
                     'url' => $my_base_url . '&amp;tab=installed',
                 ];
-                if ((bool) $conf['enable_extensions_install']) {
+                if (\Piwigo\Config\Config::enableExtensionsInstall()) {
                     $sheets['update'] = [
                         'caption' => '<span class="icon-arrows-cw"></span>' . l10n('Check for updates'),
                         'url' => $my_base_url . '&amp;tab=update',
@@ -350,7 +350,7 @@ final class CoreTabs
                     'caption' => '<span class="icon-menu"></span>' . l10n('List'),
                     'url' => $my_base_url . '&amp;tab=installed',
                 ];
-                if ((bool) $conf['enable_extensions_install']) {
+                if (\Piwigo\Config\Config::enableExtensionsInstall()) {
                     $sheets['update'] = [
                         'caption' => '<span class="icon-arrows-cw"></span>' . l10n('Check for updates'),
                         'url' => $my_base_url . '&amp;tab=update',
@@ -370,14 +370,14 @@ final class CoreTabs
                 /** @var string $my_base_url */
                 global $my_base_url;
 
-                if ((bool) $conf['enable_core_update']) {
+                if (\Piwigo\Config\Config::enableCoreUpdate()) {
                     $sheets['pwg'] = [
                         'caption' => l10n('Piwigo core'),
                         'url' => $my_base_url,
                     ];
                 }
 
-                if ((bool) $conf['enable_extensions_install']) {
+                if (\Piwigo\Config\Config::enableExtensionsInstall()) {
                     $sheets['ext'] = [
                         'caption' => l10n('Extensions'),
                         'url' => $my_base_url . '&amp;tab=ext',

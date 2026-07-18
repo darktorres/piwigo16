@@ -34,7 +34,7 @@ final class LanguagesNewPageRenderer
         global $conf, $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        if (! (bool) $conf['enable_extensions_install']) {
+        if (! \Piwigo\Config\Config::enableExtensionsInstall()) {
             die('Piwigo extensions install/update system is disabled');
         }
 
@@ -128,7 +128,7 @@ final class LanguagesNewPageRenderer
         $server_languages = $pem_catalog->getServerExtensions(ExtensionType::Language, $fs_language_ids, true);
 
         if ($server_languages !== null) {
-            // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url'])
+            // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl())
             // in one branch of include/common.inc.php, so PHPStan can't prove it's
             // a string across that file boundary -- narrow it once here (same
             // pattern as languages.class.php::get_server_languages()).

@@ -1,0 +1,27 @@
+{
+    "_hash": "ac6821f707c141bd870764ac837921c5e0416ca42a2f03e90b3cfc7895730af5",
+    "patches": {
+        "pestphp/pest-plugin-browser": [
+            {
+                "package": "pestphp/pest-plugin-browser",
+                "description": "Fix expectScreenshot() unconditionally failing when the tolerant threshold comparison actually passes (missing return after Page.php's foreach loop)",
+                "url": "patches/pest-plugin-browser-4.3.1-expect-screenshot-success-path.patch",
+                "sha256": "6a627675d0ef2aa8736eabddf68e7ebdf6c4b0b749aed01de39fd6cd43cce27a",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            },
+            {
+                "package": "pestphp/pest-plugin-browser",
+                "description": "Add Chromium launch flags for deterministic screenshot rendering on Linux (font hinting/LCD text/color profile) -- the plugin's own maintainers don't trust screenshot assertions on Linux/CI without this class of mitigation, see PR pestphp/pest-plugin-browser#175",
+                "url": "patches/pest-plugin-browser-4.3.1-deterministic-screenshot-flags.patch",
+                "sha256": "e689bb2a394cfd1831f18ac30d13efeea83a874c9af03fa598afeae598c5d3d3",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ]
+    }
+}

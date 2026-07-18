@@ -74,7 +74,7 @@ final class PictureCommentRenderer
         }
 
         if ($page['show_comments'] and isset($_POST['content'])) {
-            if (\Piwigo\Auth\AccessControl::isAGuest() and ! (bool) $conf['comments_forall']) {
+            if (\Piwigo\Auth\AccessControl::isAGuest() and ! \Piwigo\Config\Config::commentsForall()) {
                 die('Session expired');
             }
 
@@ -155,8 +155,7 @@ final class PictureCommentRenderer
         $start = $page['start'];
         $start = is_numeric($start) ? (int) $start : 0;
 
-        $nbCommentPage = $conf['nb_comment_page'];
-        $nbCommentPage = is_numeric($nbCommentPage) ? (int) $nbCommentPage : 0;
+        $nbCommentPage = \Piwigo\Config\Config::nbCommentPage();
 
         $navigationBar = (new \Piwigo\Core\PaginationService())->createNavigationBar(duplicate_picture_url([], ['start']), $nbComments, $start, $nbCommentPage, true);
 
@@ -174,7 +173,7 @@ final class PictureCommentRenderer
             if (is_string($getCommentsOrder) && $getCommentsOrder !== '' && $getCommentsOrder !== '0' && in_array(strtoupper($getCommentsOrder), ['ASC', 'DESC'], true)) {
                 SessionService::get()->setSessionVar('comments_order', $getCommentsOrder);
             }
-            $commentsOrder = SessionService::get()->getSessionVar('comments_order', $conf['comments_order']);
+            $commentsOrder = SessionService::get()->getSessionVar('comments_order', \Piwigo\Config\Config::commentsOrder());
             $commentsOrder = is_string($commentsOrder) ? $commentsOrder : 'ASC';
 
             $template->assign([
@@ -184,10 +183,9 @@ final class PictureCommentRenderer
                 'COMMENTS_ORDER_TITLE' => $commentsOrder === 'ASC' ? l10n('Show latest comments first') : l10n('Show oldest comments first'),
             ]);
 
-            // $conf['user_fields'] maps generic field names to actual DB
+            // \Piwigo\Config\Config::userFields() maps generic field names to actual DB
             // column names; it is always set by config_default.inc.php.
-            $userFields = $conf['user_fields'] ?? null;
-            $userFields = is_array($userFields) ? $userFields : [];
+            $userFields = \Piwigo\Config\Config::userFields();
             $userFieldEmail = $userFields['email'] ?? null;
             $userFieldEmail = is_string($userFieldEmail) ? $userFieldEmail : '';
             $userFieldId = $userFields['id'] ?? null;
@@ -285,7 +283,7 @@ final class PictureCommentRenderer
         if ($editCommentId !== null) {
             $showAddCommentForm = false;
         }
-        if (\Piwigo\Auth\AccessControl::isAGuest() and ! (bool) $conf['comments_forall']) {
+        if (\Piwigo\Auth\AccessControl::isAGuest() and ! \Piwigo\Config\Config::commentsForall()) {
             $showAddCommentForm = false;
         }
 
@@ -300,13 +298,13 @@ final class PictureCommentRenderer
                 'KEY' => $key,
                 'CONTENT' => '',
                 'SHOW_AUTHOR' => ! \Piwigo\Auth\AccessControl::isClassicUser(),
-                'AUTHOR_MANDATORY' => $conf['comments_author_mandatory'],
+                'AUTHOR_MANDATORY' => \Piwigo\Config\Config::commentsAuthorMandatory(),
                 'AUTHOR' => '',
                 'WEBSITE_URL' => '',
                 'SHOW_EMAIL' => ! \Piwigo\Auth\AccessControl::isClassicUser() or $userEmailEmpty,
-                'EMAIL_MANDATORY' => $conf['comments_email_mandatory'],
+                'EMAIL_MANDATORY' => \Piwigo\Config\Config::commentsEmailMandatory(),
                 'EMAIL' => '',
-                'SHOW_WEBSITE' => $conf['comments_enable_website'],
+                'SHOW_WEBSITE' => \Piwigo\Config\Config::commentsEnableWebsite(),
             ];
 
             if ($commentAction === 'reject') {

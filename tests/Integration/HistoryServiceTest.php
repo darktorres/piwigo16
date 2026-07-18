@@ -37,10 +37,8 @@ final class HistoryServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $GLOBALS['conf'] = [
-            'history_autopurge_keep_lines' => 0,
-            'history_autopurge_blocksize' => 50,
-        ];
+        Config::override('history_autopurge_keep_lines', 0);
+        Config::override('history_autopurge_blocksize', 50);
         $GLOBALS['logger'] = new Logger(['severity' => Logger::OFF]);
 
         $this->conn = DbConnection::build();
@@ -188,10 +186,7 @@ final class HistoryServiceTest extends IntegrationTestCase
 
     private function setConf(string $key, mixed $value): void
     {
-        /** @var array<string, mixed> $conf */
-        $conf = $GLOBALS['conf'];
-        $conf[$key] = $value;
-        $GLOBALS['conf'] = $conf;
+        Config::override($key, $value);
     }
 
     private function insertHistoryLine(int $userId, string $date, string $time): int

@@ -178,7 +178,7 @@ final class PluginsInstalledPageRenderer
             // under 'uri' (defaults to '', overwritten by a regex-extracted URI).
             $fs_plugin_uri = $fs_plugin['uri'] ?? '';
             $fs_plugin_uri = is_string($fs_plugin_uri) ? $fs_plugin_uri : '';
-            // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url'])
+            // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl())
             // in common.inc.php on one branch, so PHPStan infers the constant's
             // global type as mixed even though it's always a URL string at runtime.
             $pem_url = PEM_URL;
@@ -257,7 +257,7 @@ final class PluginsInstalledPageRenderer
                 'isWebmaster' => (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0,
                 'ADMIN_PAGE_TITLE' => l10n('Plugins'),
                 'view_selector' => (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('plugin-manager-view', 'classic'),
-                'CONF_ENABLE_EXTENSIONS_INSTALL' => $conf['enable_extensions_install'],
+                'CONF_ENABLE_EXTENSIONS_INSTALL' => \Piwigo\Config\Config::enableExtensionsInstall(),
             ]
         );
 

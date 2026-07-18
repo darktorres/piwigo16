@@ -87,8 +87,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // $page['errors']/['warnings']/['infos'] are always initialized to [] by
@@ -198,15 +196,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             'rating_score',
         ];
 
-        if (! isset($conf['filters_views'])) {
-            \Piwigo\Config\ConfigDb::confUpdateParam('filters_views', $conf['default_filters_views'], true);
+        if (! \Piwigo\Config\Config::has('filters_views')) {
+            \Piwigo\Config\ConfigDb::confUpdateParam('filters_views', \Piwigo\Config\Config::defaultFiltersViews(), true);
         }
 
-        $filters_views_raw = $conf['filters_views'];
-        $filters_views_unserialized = (is_array($filters_views_raw) or is_string($filters_views_raw))
-            ? \Piwigo\Core\ArrayHelper::safeUnserialize($filters_views_raw)
-            : [];
-        $filters_views_default = is_array($filters_views_unserialized) ? $filters_views_unserialized : [];
+        $filters_views_default = \Piwigo\Config\Config::filtersViews() ?? \Piwigo\Config\Config::defaultFiltersViews();
         $filters_names_checkboxes = array_values(array_diff(array_keys($filters_views_default), ['last_filters_conf']));
 
         // image order management
@@ -248,7 +242,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             switch ($page['section']) {
                 case 'main':
 
-                    if (! isset($conf['order_by_custom']) and ! isset($conf['order_by_inside_category_custom'])) {
+                    if (! \Piwigo\Config\Config::has('order_by_custom') and ! \Piwigo\Config\Config::has('order_by_inside_category_custom')) {
                         if (! empty($_POST['order_by'])) {
                             (new \Piwigo\Validation\InputValidator())->validate('order_by', $_POST, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
 
@@ -400,7 +394,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         $value = is_scalar($post_value) ? (string) $post_value : '';
 
                         if ($row['param'] == 'gallery_title') {
-                            if (! (bool) $conf['allow_html_descriptions']) {
+                            if (! \Piwigo\Config\Config::allowHtmlDescriptions()) {
                                 $value = strip_tags($value);
                             }
                         }
@@ -479,40 +473,39 @@ WHERE param = \'' . $row['param'] . '\'
                     $page['warnings'][] = l10n('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !');
                 }
 
-                if (isset($conf['order_by_custom']) or isset($conf['order_by_inside_category_custom'])) {
+                if (\Piwigo\Config\Config::has('order_by_custom') or \Piwigo\Config\Config::has('order_by_inside_category_custom')) {
                     $order_by = [''];
                     $template->assign('ORDER_BY_IS_CUSTOM', true);
                 } else {
                     $out = [];
-                    $conf_order_by_inside_category = $conf['order_by_inside_category'];
+                    $conf_order_by_inside_category = \Piwigo\Config\Config::all()['order_by_inside_category'] ?? null;
                     $order_by = trim(is_string($conf_order_by_inside_category) ? $conf_order_by_inside_category : '');
                     $order_by = str_replace('ORDER BY ', '', $order_by);
                     $order_by = explode(', ', $order_by);
                 }
 
-                $conf_gallery_title = $conf['gallery_title'];
-                $conf_page_banner = $conf['page_banner'];
-                $conf_email_admin_on_new_user = $conf['email_admin_on_new_user'];
-                $conf_email_admin_on_new_user_str = is_string($conf_email_admin_on_new_user) ? $conf_email_admin_on_new_user : '';
+                $conf_gallery_title = \Piwigo\Config\Config::galleryTitle();
+                $conf_page_banner = \Piwigo\Config\Config::pageBanner();
+                $conf_email_admin_on_new_user = \Piwigo\Config\Config::emailAdminOnNewUser();
                 $lang_day = \Piwigo\Core\Lang::days();
 
                 $template->assign(
                     'main',
                     [
-                        'CONF_GALLERY_TITLE' => htmlspecialchars(is_string($conf_gallery_title) ? $conf_gallery_title : ''),
-                        'CONF_PAGE_BANNER' => htmlspecialchars(is_string($conf_page_banner) ? $conf_page_banner : ''),
+                        'CONF_GALLERY_TITLE' => htmlspecialchars($conf_gallery_title),
+                        'CONF_PAGE_BANNER' => htmlspecialchars($conf_page_banner),
                         'week_starts_on_options' => [
                             'sunday' => $lang_day[0] ?? '',
                             'monday' => $lang_day[1] ?? '',
                         ],
-                        'week_starts_on_options_selected' => $conf['week_starts_on'],
-                        'mail_theme' => $conf['mail_theme'],
+                        'week_starts_on_options_selected' => \Piwigo\Config\Config::weekStartsOn(),
+                        'mail_theme' => \Piwigo\Config\Config::mailTheme(),
                         'mail_theme_options' => $mail_themes,
                         'order_by' => $order_by,
                         'order_by_options' => $sort_fields,
                         'email_admin_on_new_user' => $conf_email_admin_on_new_user != 'none',
                         'email_admin_on_new_user_filter' => in_array($conf_email_admin_on_new_user, ['none', 'all']) ? 'all' : 'group',
-                        'email_admin_on_new_user_filter_group' => ((bool) preg_match('/^group:(\d+)$/', $conf_email_admin_on_new_user_str, $matches)) ? $matches[1] : -1,
+                        'email_admin_on_new_user_filter_group' => ((bool) preg_match('/^group:(\d+)$/', $conf_email_admin_on_new_user, $matches)) ? $matches[1] : -1,
                     ]
                 );
 
@@ -536,7 +529,7 @@ WHERE param = \'' . $row['param'] . '\'
                     $template->append(
                         'main',
                         [
-                            $checkbox => $conf[$checkbox],
+                            $checkbox => \Piwigo\Config\Config::all()[$checkbox] ?? null,
                         ],
                         true
                     );
@@ -548,8 +541,8 @@ WHERE param = \'' . $row['param'] . '\'
                 $template->assign(
                     'comments',
                     [
-                        'NB_COMMENTS_PAGE' => $conf['nb_comment_page'],
-                        'comments_order' => $conf['comments_order'],
+                        'NB_COMMENTS_PAGE' => \Piwigo\Config\Config::nbCommentPage(),
+                        'comments_order' => \Piwigo\Config\Config::commentsOrder(),
                         'comments_order_options' => $comments_order,
                     ]
                 );
@@ -558,7 +551,7 @@ WHERE param = \'' . $row['param'] . '\'
                     $template->append(
                         'comments',
                         [
-                            $checkbox => $conf[$checkbox],
+                            $checkbox => \Piwigo\Config\Config::all()[$checkbox] ?? null,
                         ],
                         true
                     );
@@ -567,13 +560,7 @@ WHERE param = \'' . $row['param'] . '\'
 
             case 'default':
 
-                // $conf['guest_id'] is set as a PHP int literal in
-                // include/config_default.inc.php (never overridden from the DB
-                // config table, which only stores admin-editable params); guard
-                // rather than trust that invariant blindly since $conf is typed as
-                // array<string, mixed> here.
-                $conf_guest_id = $conf['guest_id'];
-                $guest_id = is_numeric($conf_guest_id) ? (int) $conf_guest_id : 0;
+                $guest_id = \Piwigo\Config\Config::guestId();
 
                 $edit_user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->buildUser($guest_id, false);
                 // P22: profile.php's own save_profile_from_post()/
@@ -604,21 +591,16 @@ WHERE param = \'' . $row['param'] . '\'
                     $template->append(
                         'display',
                         [
-                            $checkbox => $conf[$checkbox],
+                            $checkbox => \Piwigo\Config\Config::all()[$checkbox] ?? null,
                         ],
                         true
                     );
                 }
-                // config.value is stored as a serialized string (see the
-                // addslashes(serialize(...)) write-back for this same param
-                // earlier in this file); guard rather than trust that shape
-                // blindly since $conf is typed as array<string, mixed> here.
-                $conf_picture_informations = $conf['picture_informations'];
                 $template->append(
                     'display',
                     [
-                        'picture_informations' => is_string($conf_picture_informations) ? unserialize($conf_picture_informations) : [],
-                        'NB_CATEGORIES_PAGE' => $conf['nb_categories_page'],
+                        'picture_informations' => \Piwigo\Config\Config::pictureInformations(),
+                        'NB_CATEGORIES_PAGE' => \Piwigo\Config\Config::nbCategoriesPage(),
                     ],
                     true
                 );
@@ -634,9 +616,9 @@ WHERE param = \'' . $row['param'] . '\'
                     $template->assign(
                         'sizes',
                         [
-                            'original_resize_maxwidth' => $conf['original_resize_maxwidth'],
-                            'original_resize_maxheight' => $conf['original_resize_maxheight'],
-                            'original_resize_quality' => $conf['original_resize_quality'],
+                            'original_resize_maxwidth' => \Piwigo\Config\Config::originalResizeMaxwidth(),
+                            'original_resize_maxheight' => \Piwigo\Config\Config::originalResizeMaxheight(),
+                            'original_resize_quality' => \Piwigo\Config\Config::originalResizeQuality(),
                         ]
                     );
 
@@ -644,7 +626,7 @@ WHERE param = \'' . $row['param'] . '\'
                         $template->append(
                             'sizes',
                             [
-                                $checkbox => $conf[$checkbox],
+                                $checkbox => \Piwigo\Config\Config::all()[$checkbox] ?? null,
                             ],
                             true
                         );
@@ -660,7 +642,7 @@ WHERE param = \'' . $row['param'] . '\'
                         $tpl_var = [];
 
                         $tpl_var['must_square'] = ($type == ImageStdParams::SQUARE ? true : false);
-                        $tpl_var['must_enable'] = ($type == ImageStdParams::SQUARE || $type == ImageStdParams::THUMB || $type == $conf['derivative_default_size']) ? true : false;
+                        $tpl_var['must_enable'] = ($type == ImageStdParams::SQUARE || $type == ImageStdParams::THUMB || $type === \Piwigo\Config\Config::derivativeDefaultSize()) ? true : false;
 
                         if ((bool) ($params = $enabled[$type] ?? null)) {
                             $tpl_var['enabled'] = true;
@@ -760,19 +742,14 @@ WHERE param = \'' . $row['param'] . '\'
 
             case 'search':
 
-                $conf_filters_views_for_search = $conf['filters_views'];
-                $conf_filters_views_for_search = (is_array($conf_filters_views_for_search) or is_string($conf_filters_views_for_search))
-                    ? $conf_filters_views_for_search
-                    : [];
-
                 $template->assign(
                     'search',
                     [
-                        'filters_views' => \Piwigo\Core\ArrayHelper::safeUnserialize($conf_filters_views_for_search),
+                        'filters_views' => \Piwigo\Config\Config::filtersViews() ?? [],
                         'filters_names' => $filters_names_checkboxes,
                     ],
                 );
-                $template->assign('SHOW_FILTER_RATINGS', $conf['rate']);
+                $template->assign('SHOW_FILTER_RATINGS', \Piwigo\Config\Config::rateEnabled());
 
         }
 
@@ -826,10 +803,9 @@ WHERE param = \'' . $row['param'] . '\'
     private static function processSizes(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
@@ -911,7 +887,7 @@ WHERE param = \'' . $row['param'] . '\'
                 $pderivative['minh'] = $pderivative['minw'] = $pderivative['w'];
                 $pderivative['crop'] = 100;
             }
-            $pderivative['must_enable'] = ($type == ImageStdParams::SQUARE || $type == ImageStdParams::THUMB || $type == $conf['derivative_default_size']) ? true : false;
+            $pderivative['must_enable'] = ($type == ImageStdParams::SQUARE || $type == ImageStdParams::THUMB || $type === \Piwigo\Config\Config::derivativeDefaultSize()) ? true : false;
             $pderivative['enabled'] = isset($pderivative['enabled']) || $pderivative['must_enable'] ? true : false;
 
             if (isset($pderivative['crop'])) {

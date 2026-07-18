@@ -24,10 +24,16 @@ use Piwigo\Session\SessionService;
  * container, see config/container.php), takes a single param name instead
  * of a raw SQL condition, supports neither the $parser callable nor
  * objects, and never touches the legacy `$conf` global that virtually all
- * request code still reads. This class is the live `$conf`-global path
- * (boot-synced with Config:: since P23 batch 1; mid-request writes still
- * diverge -- a known, pre-existing gap, not widened here: legacy callers
- * behave exactly as before). Static methods (not instance) because real
+ * request code still reads. This class is the live `$conf`-global path;
+ * every method that mutates `$conf` (loadConfFromDb/confUpdateParam's
+ * $updateGlobal branch/confDeleteParam) also mirrors the change into
+ * Config::$data (P24 Track A batch A4) -- previously only $conf was kept
+ * current mid-request, so Config::xxx() accessors silently returned stale
+ * SCHEMA-default/env values for anything read between
+ * RequestBootstrap::connect()'s own loadConfFromDb() call and
+ * CommonBootstrap::run()'s later ConfigService::loadConfFromDb() merge
+ * (e.g. UserBootstrap::initialize()'s guest_id/apache_authentication/
+ * browser_language reads). Static methods (not instance) because real
  * callers span every layer plus root entry scripts (install.php runs
  * before any DI container can exist), same shape as Piwigo\Db\MysqliDb.
  *
@@ -96,6 +102,7 @@ SELECT param, value
                 continue;
             }
             $conf[$param] = $val;
+            Config::override($param, $val);
         }
 
         trigger_notify('load_conf', $condition);
@@ -162,6 +169,7 @@ INSERT INTO
             /** @var array<string, mixed> $conf */
             global $conf;
             $conf[$param] = $value;
+            Config::override($param, $value);
         }
     }
 
@@ -191,6 +199,7 @@ DELETE FROM ' . Tables::config() . '
 
         foreach ($params as $param) {
             unset($conf[$param]);
+            Config::delete($param);
         }
     }
 

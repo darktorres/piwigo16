@@ -32,7 +32,7 @@ final class ThemesNewPageRenderer
         global $conf, $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        if (! (bool) $conf['enable_extensions_install']) {
+        if (! \Piwigo\Config\Config::enableExtensionsInstall()) {
             die('Piwigo extensions install/update system is disabled');
         }
 

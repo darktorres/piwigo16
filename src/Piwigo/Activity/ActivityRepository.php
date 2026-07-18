@@ -149,7 +149,7 @@ final class ActivityRepository extends AbstractRepository
      * user's own username -- used only by the CSV export
      * (admin/user_activity.php's `type=download_logs`). $usernameColumn/
      * $idColumn are the configurable DB column names (see
-     * $conf['user_fields']), not user-controlled.
+     * \Piwigo\Config\Config::userFields()), not user-controlled.
      *
      * @return list<array{
      *   activity_id: int,

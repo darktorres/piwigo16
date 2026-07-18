@@ -52,7 +52,7 @@ final class PasswordServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $GLOBALS['conf'] = ['external_authentification' => false];
+        Config::override('external_authentification', false);
 
         $this->conn = DbConnection::build();
         $this->service = new PasswordService(new PasswordRepository($this->conn));

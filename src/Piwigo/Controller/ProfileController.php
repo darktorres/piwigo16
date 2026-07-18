@@ -68,9 +68,9 @@ final class ProfileController implements ControllerInterface
         ];
 
         // Get the Guest custom settings
-        // $conf['default_user_id'] is always an int (see
+        // \Piwigo\Config\Config::defaultUserId() is always an int (see
         // include/config_default.inc.php: derived from the int guest_id).
-        $default_user_id = is_numeric($conf['default_user_id']) ? (int) $conf['default_user_id'] : 0;
+        $default_user_id = is_numeric(\Piwigo\Config\Config::defaultUserId()) ? (int) \Piwigo\Config\Config::defaultUserId() : 0;
         $query = '
 SELECT ' . implode(',', $fields) . '
   FROM ' . Tables::userInfos() . '

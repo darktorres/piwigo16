@@ -29,7 +29,7 @@ final class NotificationByMailRepository extends AbstractRepository
 
     /**
      * $usernameField/$emailField/$idField are trusted admin-configured
-     * column names ($conf['user_fields'], not user input -- can't be bound
+     * column names (\Piwigo\Config\Config::userFields(), not user input -- can't be bound
      * as parameters anyway, SQL doesn't allow placeholders for
      * identifiers). $checkKeyList, by contrast, IS bound -- [SEC-18]-class
      * improvement over the original's unescaped `'\'' . $s . '\''`

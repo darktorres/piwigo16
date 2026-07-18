@@ -46,10 +46,9 @@ namespace {
     // is a classic user).
 
     // conf_get_param() -- P23 batch 8f-4: the function stub is gone.
-    // SearchService/SearchFilterRenderer now call
-    // Piwigo\Config\ConfigDb::confGetParam() directly, a real static
-    // method with the same pure `global $conf` read the old stub
-    // duplicated, so this isolated test needs no replacement at all.
+    // SearchService/SearchFilterRenderer now read Piwigo\Config\Config::
+    // accessors directly (Legacy Coupling Retirement Track A batch A4), so
+    // this isolated test seeds Config::override() below instead.
 
     if (! function_exists('safe_unserialize')) {
         // Copied verbatim from the legacy include/functions.inc.php
@@ -166,30 +165,28 @@ final class SearchServiceTest extends IntegrationTestCase
 
         CurrentUser::set(User::fromUserArray(self::realisticUserGlobal()));
         $GLOBALS['filter'] = [];
-        $GLOBALS['conf'] = [
-            'data_location' => '_data/search-service-test-cache/',
-            'default_filters_views' => '',
-            'filters_views' => serialize([
-                'expert' => ['access' => 'everybody'],
-                'words' => ['access' => 'everybody'],
-                'author' => ['access' => 'everybody'],
-                'file_type' => ['access' => 'everybody'],
-                'added_by' => ['access' => 'everybody'],
-                'album' => ['access' => 'everybody'],
-                'post_date' => ['access' => 'everybody'],
-                'creation_date' => ['access' => 'everybody'],
-                'ratio' => ['access' => 'everybody'],
-                'rating' => ['access' => 'everybody'],
-                'file_size' => ['access' => 'everybody'],
-                'height' => ['access' => 'everybody'],
-                'width' => ['access' => 'everybody'],
-                'tags' => ['access' => 'everybody'],
-            ]),
-            'order_by' => 'ORDER BY id ASC',
-            'calendar_datefield' => 'date_creation',
-            'quick_search_include_sub_albums' => false,
-            'rate' => true,
-        ];
+        Config::override('data_location', '_data/search-service-test-cache/');
+        Config::override('default_filters_views', '');
+        Config::override('filters_views', serialize([
+            'expert' => ['access' => 'everybody'],
+            'words' => ['access' => 'everybody'],
+            'author' => ['access' => 'everybody'],
+            'file_type' => ['access' => 'everybody'],
+            'added_by' => ['access' => 'everybody'],
+            'album' => ['access' => 'everybody'],
+            'post_date' => ['access' => 'everybody'],
+            'creation_date' => ['access' => 'everybody'],
+            'ratio' => ['access' => 'everybody'],
+            'rating' => ['access' => 'everybody'],
+            'file_size' => ['access' => 'everybody'],
+            'height' => ['access' => 'everybody'],
+            'width' => ['access' => 'everybody'],
+            'tags' => ['access' => 'everybody'],
+        ]));
+        Config::override('order_by', 'ORDER BY id ASC');
+        Config::override('calendar_datefield', 'date_creation');
+        Config::override('quick_search_include_sub_albums', false);
+        Config::override('rate', true);
 
         $this->service = new SearchService(
             $this->repo,

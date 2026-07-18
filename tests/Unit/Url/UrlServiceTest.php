@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
 use Piwigo\Html\HtmlService;
 use Piwigo\Url\UrlService;
 
@@ -19,12 +20,11 @@ beforeEach(function (): void {
     // runner's ambient $_SERVER happens to contain.
     unset($_SERVER['REDIRECT_SCRIPT_NAME'], $_SERVER['REDIRECT_URL'], $_SERVER['PATH_INFO']);
     $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
-    // getAbsoluteRootUrl()'s gallery_url/allowed_hosts reads go through the
-    // live $conf global, not Piwigo\Config\Config -- see UrlService's own
-    // configuredHost()/trustedHost() doc comments for why (Config::$data is
-    // never synced with the real, admin-configurable DB-persisted config
-    // table during a live request).
-    $GLOBALS['conf'] = ['url_port' => 'none'];
+    Config::override('url_port', 'none');
+});
+
+afterEach(function (): void {
+    Config::reset();
 });
 
 test('urlIsRemote is true for http and https URLs', function (): void {
@@ -165,7 +165,8 @@ test('getAbsoluteRootUrl trusts the Host header when allowed_hosts is unconfigur
 });
 
 test('getAbsoluteRootUrl uses gallery_url\'s host, ignoring the Host header entirely', function (): void {
-    $GLOBALS['conf'] = ['url_port' => 'none', 'gallery_url' => 'https://canonical.example.test/gallery/'];
+    Config::override('url_port', 'none');
+    Config::override('gallery_url', 'https://canonical.example.test/gallery/');
     $_SERVER['HTTP_HOST'] = 'evil.test';
     $service = new UrlService(new HtmlService());
 
@@ -173,14 +174,16 @@ test('getAbsoluteRootUrl uses gallery_url\'s host, ignoring the Host header enti
 });
 
 test('getAbsoluteRootUrl keeps gallery_url\'s configured port', function (): void {
-    $GLOBALS['conf'] = ['url_port' => 'none', 'gallery_url' => 'https://canonical.example.test:8080/gallery/'];
+    Config::override('url_port', 'none');
+    Config::override('gallery_url', 'https://canonical.example.test:8080/gallery/');
     $service = new UrlService(new HtmlService());
 
     expect($service->getAbsoluteRootUrl())->toBe('http://canonical.example.test:8080/piwigo/');
 });
 
 test('getAbsoluteRootUrl accepts a Host that matches the allowed_hosts list', function (): void {
-    $GLOBALS['conf'] = ['url_port' => 'none', 'allowed_hosts' => ['gallery.example.test']];
+    Config::override('url_port', 'none');
+    Config::override('allowed_hosts', ['gallery.example.test']);
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $service = new UrlService(new HtmlService());
 
@@ -188,7 +191,8 @@ test('getAbsoluteRootUrl accepts a Host that matches the allowed_hosts list', fu
 });
 
 test('getAbsoluteRootUrl [SEC-29] falls back to the first allowed host when Host is forged', function (): void {
-    $GLOBALS['conf'] = ['url_port' => 'none', 'allowed_hosts' => ['gallery.example.test', 'gallery-alt.example.test']];
+    Config::override('url_port', 'none');
+    Config::override('allowed_hosts', ['gallery.example.test', 'gallery-alt.example.test']);
     $_SERVER['HTTP_HOST'] = 'evil.test';
     $service = new UrlService(new HtmlService());
 
@@ -196,7 +200,8 @@ test('getAbsoluteRootUrl [SEC-29] falls back to the first allowed host when Host
 });
 
 test('getAbsoluteRootUrl [SEC-29] falls back for a forged X-Forwarded-Host too', function (): void {
-    $GLOBALS['conf'] = ['url_port' => 'none', 'allowed_hosts' => ['gallery.example.test']];
+    Config::override('url_port', 'none');
+    Config::override('allowed_hosts', ['gallery.example.test']);
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $_SERVER['HTTP_X_FORWARDED_HOST'] = 'evil.test';
     $service = new UrlService(new HtmlService());
@@ -205,14 +210,13 @@ test('getAbsoluteRootUrl [SEC-29] falls back for a forged X-Forwarded-Host too',
 });
 
 test('getAbsoluteRootUrl [SEC-29] reflects a real DB-persisted gallery_url the way load_conf_from_db() would set it', function (): void {
-    // Regression test for the Config::-accessor bug this file's own history
-    // records: MailService's build caught that Piwigo\Config\Config's typed
-    // accessors are never synced with the real config DB table on a live
-    // request (see load_conf_from_db(), include/functions.inc.php) -- only
-    // $conf is. Simulates exactly that: a raw array write to $conf, the
-    // same shape load_conf_from_db() itself produces, with no Config::
-    // involvement at all.
-    $GLOBALS['conf'] = ['url_port' => 'none', 'gallery_url' => 'https://real-admin-configured.example.test/'];
+    // Regression test for the historical Config::-accessor bug this file's
+    // own history records (see EphemeralKeyService's docblock for the
+    // mechanism and fix): a real DB-persisted gallery_url, simulated here
+    // via Config::override() the same way ConfigDb::loadConfFromDb() now
+    // populates Config::$data, must be reflected by getAbsoluteRootUrl().
+    Config::override('url_port', 'none');
+    Config::override('gallery_url', 'https://real-admin-configured.example.test/');
     $_SERVER['HTTP_HOST'] = 'evil.test';
     $service = new UrlService(new HtmlService());
 

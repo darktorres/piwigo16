@@ -40,7 +40,7 @@ final class ActivityServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $GLOBALS['conf'] = ['php_extension_in_urls' => false];
+        Config::override('php_extension_in_urls', false);
         $GLOBALS['user'] = ['id' => 1];
         unset($_REQUEST['method'], $_REQUEST['action'], $_GET['page'], $_POST['destination_tag'], $_SESSION['connected_with']);
         $_SERVER['SCRIPT_NAME'] = '/some/script.php';

@@ -289,6 +289,7 @@ SELECT id
 
             $page['upgrade_start'] = \Piwigo\Core\TimingHelper::getMoment();
             $conf['die_on_sql_error'] = false;
+            \Piwigo\Config\Config::override('die_on_sql_error', false);
             // P23 sub-batch 8g-4: the former `include install/upgrade_
             // <release>.php` (whose chain of scripts array_push()ed onto a
             // $mysql_changes local in THIS scope, harvested back via

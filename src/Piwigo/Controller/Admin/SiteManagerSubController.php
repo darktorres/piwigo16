@@ -61,7 +61,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         $template = \Piwigo\Template\CurrentTemplate::get();
         global $my_base_url;
 
-        if (! (bool) $conf['enable_synchronization']) {
+        if (! \Piwigo\Config\Config::enableSynchronization()) {
             die('synchronization is disabled');
         }
 

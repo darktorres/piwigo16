@@ -37,6 +37,12 @@ parameters:
 			path: src/Piwigo/Admin/AdminShell.php
 
 		-
+			rawMessage: 'Call to function is_numeric() with int<1, max> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Admin/AdminShell.php
+
+		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 2
@@ -71,6 +77,12 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: src/Piwigo/Admin/AlbumsPageRenderer.php
+
+		-
+			rawMessage: 'Call to function is_int() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Admin/BatchManager/FilterPanelRenderer.php
 
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
@@ -163,6 +175,30 @@ parameters:
 			path: src/Piwigo/Admin/ElementSetRanksPageRenderer.php
 
 		-
+			rawMessage: 'Call to function is_string() with null will always evaluate to false.'
+			identifier: function.impossibleType
+			count: 1
+			path: src/Piwigo/Admin/Extensions/CoreUpdateService.php
+
+		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Admin/Extensions/ExtensionLifecycle.php
+
+		-
+			rawMessage: 'Call to function in_array() with arguments string, array{} and true will always evaluate to false.'
+			identifier: function.impossibleType
+			count: 1
+			path: src/Piwigo/Admin/Extensions/ExtensionUpdateChecker.php
+
+		-
+			rawMessage: Unreachable statement - code above always terminates.
+			identifier: deadCode.unreachable
+			count: 1
+			path: src/Piwigo/Admin/Extensions/ExtensionUpdateChecker.php
+
+		-
 			rawMessage: 'Parameter #1 $callback of function array_map expects (callable(mixed): mixed)|null, Closure(array|bool|float|GMP|int|resource|SimpleXMLElement|string|null, int=): int given.'
 			identifier: argument.type
 			count: 1
@@ -193,7 +229,7 @@ parameters:
 			path: src/Piwigo/Admin/Image/image_ext_imagick.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 4
 			path: src/Piwigo/Admin/Image/image_ext_imagick.php
@@ -217,7 +253,7 @@ parameters:
 			path: src/Piwigo/Admin/Image/image_imagick.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Admin/Image/image_imagick.php
@@ -226,6 +262,12 @@ parameters:
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 5
+			path: src/Piwigo/Admin/Image/pwg_image.php
+
+		-
+			rawMessage: 'Call to function is_array() with list<string> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
 			path: src/Piwigo/Admin/Image/pwg_image.php
 
 		-
@@ -571,7 +613,7 @@ parameters:
 			path: src/Piwigo/Admin/Install/DbPatch/Patch125.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Admin/Install/DbPatch/Patch125.php
@@ -661,7 +703,7 @@ parameters:
 			path: src/Piwigo/Admin/Install/DbPatch/Patch153.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Admin/Install/DbPatch/Patch153.php
@@ -1075,6 +1117,18 @@ parameters:
 			path: src/Piwigo/Admin/Install/InstallWizard.php
 
 		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 4
+			path: src/Piwigo/Admin/Install/UpgradeFeedRunner.php
+
+		-
+			rawMessage: Result of || is always false.
+			identifier: booleanOr.alwaysFalse
+			count: 3
+			path: src/Piwigo/Admin/Install/UpgradeFeedRunner.php
+
+		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 24
@@ -1135,8 +1189,32 @@ parameters:
 			path: src/Piwigo/Admin/Install/UpgradeService.php
 
 		-
+			rawMessage: 'Call to function is_array() with array{id: string, username: string, password: string, email: string} will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Admin/Install/UpgradeService.php
+
+		-
 			rawMessage: 'Call to function is_bool() with true will always evaluate to true.'
 			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Admin/Install/UpgradeService.php
+
+		-
+			rawMessage: 'Call to function is_numeric() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Admin/Install/UpgradeService.php
+
+		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 4
+			path: src/Piwigo/Admin/Install/UpgradeService.php
+
+		-
+			rawMessage: Casting to int something that's already int.
+			identifier: cast.useless
 			count: 1
 			path: src/Piwigo/Admin/Install/UpgradeService.php
 
@@ -1159,15 +1237,33 @@ parameters:
 			path: src/Piwigo/Admin/Install/UpgradeService.php
 
 		-
+			rawMessage: 'Offset ''id'' on array{id: string, username: string, password: string, email: string} in isset() always exists and is not nullable.'
+			identifier: isset.offset
+			count: 1
+			path: src/Piwigo/Admin/Install/UpgradeService.php
+
+		-
+			rawMessage: 'Offset ''username'' on array{id: string, username: string, password: string, email: string} in isset() always exists and is not nullable.'
+			identifier: isset.offset
+			count: 1
+			path: src/Piwigo/Admin/Install/UpgradeService.php
+
+		-
 			rawMessage: Possibly invalid array key type string|false.
 			identifier: offsetAccess.invalidOffset
 			count: 1
 			path: src/Piwigo/Admin/Install/UpgradeService.php
 
 		-
+			rawMessage: Result of || is always false.
+			identifier: booleanOr.alwaysFalse
+			count: 3
+			path: src/Piwigo/Admin/Install/UpgradeService.php
+
+		-
 			rawMessage: Right side of && is always true.
 			identifier: booleanAnd.rightAlwaysTrue
-			count: 1
+			count: 3
 			path: src/Piwigo/Admin/Install/UpgradeService.php
 
 		-
@@ -1423,7 +1519,7 @@ parameters:
 			path: src/Piwigo/Admin/Integrity/c13y_internal.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Admin/Integrity/c13y_internal.php
@@ -1465,10 +1561,76 @@ parameters:
 			path: src/Piwigo/Admin/Integrity/check_integrity.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/Integrity/check_integrity.php
+
+		-
+			rawMessage: 'Call to function is_numeric() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Admin/Maintenance/FilesystemIntegrityChecker.php
+
+		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Admin/Maintenance/MaintenanceActionDispatcher.php
+
+		-
+			rawMessage: 'Offset ''id'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Admin/Maintenance/MaintenanceActionDispatcher.php
+
+		-
+			rawMessage: 'Call to function is_array() with null will always evaluate to false.'
+			identifier: function.impossibleType
+			count: 1
+			path: src/Piwigo/Admin/MaintenanceActionsPageRenderer.php
+
+		-
+			rawMessage: 'Call to function is_string() with array<mixed>|null will always evaluate to false.'
+			identifier: function.impossibleType
+			count: 1
+			path: src/Piwigo/Admin/MaintenanceActionsPageRenderer.php
+
+		-
+			rawMessage: Offset 3 on *NEVER* on left side of ?? always exists and is not nullable.
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Admin/MaintenanceActionsPageRenderer.php
+
+		-
+			rawMessage: 'Strict comparison using !== between null and null will always evaluate to false.'
+			identifier: notIdentical.alwaysFalse
+			count: 1
+			path: src/Piwigo/Admin/MaintenanceActionsPageRenderer.php
+
+		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Piwigo/Admin/MaintenanceSysPageRenderer.php
+
+		-
+			rawMessage: 'Offset ''id'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Admin/MaintenanceSysPageRenderer.php
+
+		-
+			rawMessage: 'Offset ''username'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Admin/MaintenanceSysPageRenderer.php
+
+		-
+			rawMessage: 'Call to function is_array() with list<string> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Piwigo/Admin/PhotosAddDirectPageRenderer.php
 
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
@@ -1489,10 +1651,52 @@ parameters:
 			path: src/Piwigo/Admin/PictureModifyPageRenderer.php
 
 		-
+			rawMessage: 'Call to function is_array() with array{id: string, username: string, password: string, email: string} will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Admin/PictureModifyPageRenderer.php
+
+		-
+			rawMessage: 'Call to function is_array() with list<string> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Admin/PictureModifyPageRenderer.php
+
+		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Piwigo/Admin/PictureModifyPageRenderer.php
+
+		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 5
 			path: src/Piwigo/Admin/PictureModifyPageRenderer.php
+
+		-
+			rawMessage: 'Offset ''id'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Admin/PictureModifyPageRenderer.php
+
+		-
+			rawMessage: 'Offset ''username'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Admin/PictureModifyPageRenderer.php
+
+		-
+			rawMessage: 'Call to function is_int() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Piwigo/Admin/PiwigoInfosSender.php
+
+		-
+			rawMessage: 'Call to function is_string() with *NEVER* will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Piwigo/Admin/PiwigoInfosSender.php
 
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
@@ -1504,6 +1708,12 @@ parameters:
 			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
 			identifier: equal.notAllowed
 			count: 1
+			path: src/Piwigo/Admin/PiwigoInfosSender.php
+
+		-
+			rawMessage: Result of || is always true.
+			identifier: booleanOr.alwaysTrue
+			count: 2
 			path: src/Piwigo/Admin/PiwigoInfosSender.php
 
 		-
@@ -1561,14 +1771,44 @@ parameters:
 			path: src/Piwigo/Admin/PluginMaintain.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: src/Piwigo/Admin/PluginMaintain.php
 
 		-
+			rawMessage: 'Call to function is_array() with list<int> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Admin/RatingUserPageRenderer.php
+
+		-
+			rawMessage: 'Call to function is_numeric() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Admin/RatingUserPageRenderer.php
+
+		-
+			rawMessage: Casting to int something that's already int.
+			identifier: cast.useless
+			count: 1
+			path: src/Piwigo/Admin/RatingUserPageRenderer.php
+
+		-
+			rawMessage: 'Call to function is_numeric() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Admin/StatsPageRenderer.php
+
+		-
 			rawMessage: 'Out of 3126 possible param types, only 2842 - 90.9 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
+			count: 1
+			path: src/Piwigo/Admin/StatsPageRenderer.php
+
+		-
+			rawMessage: 'Strict comparison using === between *NEVER* and ''all'' will always evaluate to false.'
+			identifier: identical.alwaysFalse
 			count: 1
 			path: src/Piwigo/Admin/StatsPageRenderer.php
 
@@ -1597,10 +1837,34 @@ parameters:
 			path: src/Piwigo/Admin/ThemeMaintain.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/ThemeMaintain.php
+
+		-
+			rawMessage: 'Call to function is_array() with list<string> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Admin/UpdatesExtPageRenderer.php
+
+		-
+			rawMessage: 'Offset ''languages''|''plugins''|''themes'' on array{plugins: list<string>, themes: list<string>, languages: list<string>} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Admin/UpdatesExtPageRenderer.php
+
+		-
+			rawMessage: 'Call to function is_array() with list<string> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Admin/Upload/UploadService.php
+
+		-
+			rawMessage: 'Call to function is_int() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Admin/UserListPageRenderer.php
 
 		-
 			rawMessage: 'Path in include() "./local/config/config.inc.php" is not a file or it does not exist.'
@@ -1619,6 +1883,18 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: src/Piwigo/Admin/UserPermPageRenderer.php
+
+		-
+			rawMessage: 'Call to function is_numeric() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Piwigo/Admin/languages.php
+
+		-
+			rawMessage: Casting to int something that's already int.
+			identifier: cast.useless
+			count: 2
+			path: src/Piwigo/Admin/languages.php
 
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
@@ -1645,13 +1921,13 @@ parameters:
 			path: src/Piwigo/Admin/languages.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Admin/languages.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/languages.php
@@ -1723,7 +1999,7 @@ parameters:
 			path: src/Piwigo/Admin/plugins.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 4
 			path: src/Piwigo/Admin/plugins.php
@@ -1747,10 +2023,22 @@ parameters:
 			path: src/Piwigo/Admin/tabsheet.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/tabsheet.php
+
+		-
+			rawMessage: 'Call to function is_numeric() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Piwigo/Admin/themes.php
+
+		-
+			rawMessage: Casting to int something that's already int.
+			identifier: cast.useless
+			count: 2
+			path: src/Piwigo/Admin/themes.php
 
 		-
 			rawMessage: Casting to string something that's already string.
@@ -1765,15 +2053,9 @@ parameters:
 			path: src/Piwigo/Admin/themes.php
 
 		-
-			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: src/Piwigo/Admin/themes.php
-
-		-
 			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
 			identifier: notEqual.notAllowed
-			count: 2
+			count: 3
 			path: src/Piwigo/Admin/themes.php
 
 		-
@@ -1807,7 +2089,7 @@ parameters:
 			path: src/Piwigo/Admin/themes.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/themes.php
@@ -1831,9 +2113,21 @@ parameters:
 			path: src/Piwigo/Admin/updates.php
 
 		-
+			rawMessage: 'Call to function is_string() with null will always evaluate to false.'
+			identifier: function.impossibleType
+			count: 1
+			path: src/Piwigo/Admin/updates.php
+
+		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 7
+			path: src/Piwigo/Admin/updates.php
+
+		-
+			rawMessage: Implicit array creation is not allowed - variable $conf does not exist.
+			identifier: variable.implicitArray
+			count: 1
 			path: src/Piwigo/Admin/updates.php
 
 		-
@@ -1873,7 +2167,7 @@ parameters:
 			path: src/Piwigo/Admin/updates.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 7
 			path: src/Piwigo/Admin/updates.php
@@ -1903,7 +2197,7 @@ parameters:
 			path: src/Piwigo/Auth/ApiKeyService.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 2
 			path: src/Piwigo/Auth/ApiKeyService.php
@@ -1912,6 +2206,18 @@ parameters:
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 2
+			path: src/Piwigo/Auth/AuthService.php
+
+		-
+			rawMessage: 'Call to function is_numeric() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Auth/AuthService.php
+
+		-
+			rawMessage: Casting to int something that's already int.
+			identifier: cast.useless
+			count: 1
 			path: src/Piwigo/Auth/AuthService.php
 
 		-
@@ -1949,6 +2255,18 @@ parameters:
 			identifier: nullCoalesce.variable
 			count: 1
 			path: src/Piwigo/Auth/AuthService.php
+
+		-
+			rawMessage: 'Call to function is_scalar() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Piwigo/Auth/EphemeralKeyService.php
+
+		-
+			rawMessage: Casting to string something that's already string.
+			identifier: cast.useless
+			count: 2
+			path: src/Piwigo/Auth/EphemeralKeyService.php
 
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
@@ -2017,6 +2335,30 @@ parameters:
 			path: src/Piwigo/Auth/PwgTOTP.php
 
 		-
+			rawMessage: 'Call to function is_int() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Bootstrap/PageTail.php
+
+		-
+			rawMessage: 'Call to function is_array() with list<string> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Bootstrap/RequestBootstrap.php
+
+		-
+			rawMessage: 'Call to function is_scalar() with non-empty-string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Bootstrap/RequestBootstrap.php
+
+		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 6
+			path: src/Piwigo/Bootstrap/RequestBootstrap.php
+
+		-
 			rawMessage: Cannot access an offset on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 3
@@ -2029,21 +2371,27 @@ parameters:
 			path: src/Piwigo/Bootstrap/RequestBootstrap.php
 
 		-
+			rawMessage: Casting to string something that's already string.
+			identifier: cast.useless
+			count: 1
+			path: src/Piwigo/Bootstrap/RequestBootstrap.php
+
+		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 4
 			path: src/Piwigo/Bootstrap/RequestBootstrap.php
 
 		-
-			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 3
+			rawMessage: If condition is always true.
+			identifier: if.alwaysTrue
+			count: 1
 			path: src/Piwigo/Bootstrap/RequestBootstrap.php
 
 		-
 			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
 			identifier: notEqual.notAllowed
-			count: 2
+			count: 3
 			path: src/Piwigo/Bootstrap/RequestBootstrap.php
 
 		-
@@ -2065,10 +2413,28 @@ parameters:
 			path: src/Piwigo/Bootstrap/RequestBootstrap.php
 
 		-
+			rawMessage: 'Parameter #2 $theme of class Piwigo\Template\Template constructor expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Bootstrap/RequestBootstrap.php
+
+		-
+			rawMessage: Result of || is always false.
+			identifier: booleanOr.alwaysFalse
+			count: 4
+			path: src/Piwigo/Bootstrap/RequestBootstrap.php
+
+		-
 			rawMessage: Right side of and is always true.
 			identifier: logicalAnd.rightAlwaysTrue
 			count: 2
 			path: src/Piwigo/Bootstrap/RequestBootstrap.php
+
+		-
+			rawMessage: 'Call to function is_scalar() with bool will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 3
+			path: src/Piwigo/Bootstrap/SessionBootstrap.php
 
 		-
 			rawMessage: Casting to bool something that's already true.
@@ -2089,7 +2455,7 @@ parameters:
 			path: src/Piwigo/Cache/PersistentCache.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 2
 			path: src/Piwigo/Cache/PersistentCache.php
@@ -2149,13 +2515,13 @@ parameters:
 			path: src/Piwigo/Calendar/CalendarBase.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 6
 			path: src/Piwigo/Calendar/CalendarBase.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Calendar/CalendarBase.php
@@ -2211,7 +2577,7 @@ parameters:
 		-
 			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
 			identifier: equal.notAllowed
-			count: 3
+			count: 2
 			path: src/Piwigo/Calendar/CalendarMonthly.php
 
 		-
@@ -2284,12 +2650,6 @@ parameters:
 			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
 			identifier: equal.notAllowed
 			count: 3
-			path: src/Piwigo/Calendar/CalendarWeekly.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
 			path: src/Piwigo/Calendar/CalendarWeekly.php
 
 		-
@@ -2425,6 +2785,36 @@ parameters:
 			path: src/Piwigo/Category/functions.php
 
 		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Comment/CommentService.php
+
+		-
+			rawMessage: 'Offset ''username'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Comment/CommentService.php
+
+		-
+			rawMessage: 'Method Piwigo\Config\Config::defaultFiltersViews() should return array<string, array{access: string, default: bool}> but returns array<mixed>.'
+			identifier: return.type
+			count: 1
+			path: src/Piwigo/Config/Config.php
+
+		-
+			rawMessage: 'Method Piwigo\Config\Config::updateNotifyLastNotification() should return array{version?: mixed, notified_on?: mixed}|null but returns array<mixed, mixed>.'
+			identifier: return.type
+			count: 1
+			path: src/Piwigo/Config/Config.php
+
+		-
+			rawMessage: 'Method Piwigo\Config\Config::updateNotifyLastNotification() should return array{version?: mixed, notified_on?: mixed}|null but returns array<mixed, mixed>|null.'
+			identifier: return.type
+			count: 1
+			path: src/Piwigo/Config/Config.php
+
+		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 3
@@ -2461,7 +2851,7 @@ parameters:
 			path: src/Piwigo/Config/ConfigDb.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Config/ConfigDb.php
@@ -2557,15 +2947,9 @@ parameters:
 			path: src/Piwigo/Controller/Admin/ConfigurationSubController.php
 
 		-
-			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: src/Piwigo/Controller/Admin/ConfigurationSubController.php
-
-		-
 			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
 			identifier: notEqual.notAllowed
-			count: 1
+			count: 2
 			path: src/Piwigo/Controller/Admin/ConfigurationSubController.php
 
 		-
@@ -2588,12 +2972,6 @@ parameters:
 
 		-
 			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: src/Piwigo/Controller/Admin/ConfigurationSubController.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and mixed is not allowed.'
 			identifier: equal.notAllowed
 			count: 2
 			path: src/Piwigo/Controller/Admin/ConfigurationSubController.php
@@ -2737,6 +3115,12 @@ parameters:
 			path: src/Piwigo/Controller/Admin/SiteUpdateSubController.php
 
 		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Piwigo/Controller/Admin/SiteUpdateSubController.php
+
+		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 4
@@ -2779,6 +3163,30 @@ parameters:
 			path: src/Piwigo/Controller/Admin/SiteUpdateSubController.php
 
 		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 3
+			path: src/Piwigo/Controller/CommentsController.php
+
+		-
+			rawMessage: 'Offset ''email'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Controller/CommentsController.php
+
+		-
+			rawMessage: 'Offset ''id'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Controller/CommentsController.php
+
+		-
+			rawMessage: 'Offset ''username'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Controller/CommentsController.php
+
+		-
 			rawMessage: 'Out of 3126 possible param types, only 2842 - 90.9 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
@@ -2789,6 +3197,66 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: src/Piwigo/Controller/CommentsController.php
+
+		-
+			rawMessage: 'Call to function is_array() with Piwigo\Config\NotificationConfig will always evaluate to false.'
+			identifier: function.impossibleType
+			count: 1
+			path: src/Piwigo/Controller/FeedController.php
+
+		-
+			rawMessage: 'Call to function is_int() with *NEVER* will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Controller/FeedController.php
+
+		-
+			rawMessage: 'Call to function is_string() with *NEVER* will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Controller/FeedController.php
+
+		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Controller/FeedController.php
+
+		-
+			rawMessage: Empty array passed to foreach.
+			identifier: foreach.emptyArray
+			count: 1
+			path: src/Piwigo/Controller/FeedController.php
+
+		-
+			rawMessage: If condition is always true.
+			identifier: if.alwaysTrue
+			count: 1
+			path: src/Piwigo/Controller/FeedController.php
+
+		-
+			rawMessage: Offset 'RSS' on *NEVER* on left side of ?? always exists and is not nullable.
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Controller/FeedController.php
+
+		-
+			rawMessage: Result of and is always false.
+			identifier: logicalAnd.alwaysFalse
+			count: 1
+			path: src/Piwigo/Controller/FeedController.php
+
+		-
+			rawMessage: Result of and is always true.
+			identifier: logicalAnd.alwaysTrue
+			count: 1
+			path: src/Piwigo/Controller/FeedController.php
+
+		-
+			rawMessage: Ternary operator condition is always false.
+			identifier: ternary.alwaysFalse
+			count: 1
+			path: src/Piwigo/Controller/FeedController.php
 
 		-
 			rawMessage: Binary operation "." between mixed and int results in an error.
@@ -2803,6 +3271,24 @@ parameters:
 			path: src/Piwigo/Controller/GalleryController.php
 
 		-
+			rawMessage: 'Call to function is_numeric() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Piwigo/Controller/GalleryController.php
+
+		-
+			rawMessage: Casting to int something that's already int.
+			identifier: cast.useless
+			count: 2
+			path: src/Piwigo/Controller/GalleryController.php
+
+		-
+			rawMessage: 'Offset ''order_by'' on non-empty-array<string, mixed> on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Controller/GalleryController.php
+
+		-
 			rawMessage: 'Parameter #1 $title of method Piwigo\Page\PageHeaderRenderer::render() expects string, mixed given.'
 			identifier: argument.type
 			count: 1
@@ -2811,6 +3297,18 @@ parameters:
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
+			count: 1
+			path: src/Piwigo/Controller/ImageDerivativeController.php
+
+		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 9
+			path: src/Piwigo/Controller/ImageDerivativeController.php
+
+		-
+			rawMessage: Casting to bool something that's already bool.
+			identifier: cast.useless
 			count: 1
 			path: src/Piwigo/Controller/ImageDerivativeController.php
 
@@ -2875,12 +3373,6 @@ parameters:
 			path: src/Piwigo/Controller/ImageDerivativeController.php
 
 		-
-			rawMessage: 'Loose comparison via "==" between mixed and false is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: src/Piwigo/Controller/ImageDerivativeController.php
-
-		-
 			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
 			identifier: equal.notAllowed
 			count: 2
@@ -2905,6 +3397,12 @@ parameters:
 			path: src/Piwigo/Controller/ImageDerivativeController.php
 
 		-
+			rawMessage: Result of || is always false.
+			identifier: booleanOr.alwaysFalse
+			count: 4
+			path: src/Piwigo/Controller/ImageDerivativeController.php
+
+		-
 			rawMessage: 'Parameter #1 $userId of method Piwigo\Auth\ApiKeyService::getAvailable() expects int, string given.'
 			identifier: argument.type
 			count: 1
@@ -2917,16 +3415,82 @@ parameters:
 			path: src/Piwigo/Controller/PictureController.php
 
 		-
-			rawMessage: 'Out of 3126 possible param types, only 2842 - 90.9 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 2
+			rawMessage: 'Call to function is_numeric() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Controller/ProfileController.php
+
+		-
+			rawMessage: Casting to int something that's already int.
+			identifier: cast.useless
+			count: 1
+			path: src/Piwigo/Controller/ProfileController.php
+
+		-
+			rawMessage: 'Call to function is_array() with array<string> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
 			path: src/Piwigo/Controller/ProfileFormHandler.php
 
 		-
 			rawMessage: 'Out of 3126 possible param types, only 2842 - 90.9 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 2
+			path: src/Piwigo/Controller/ProfileFormHandler.php
+
+		-
+			rawMessage: 'Call to function is_numeric() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Piwigo/Controller/TagsController.php
+
+		-
+			rawMessage: Casting to int something that's already int.
+			identifier: cast.useless
+			count: 2
+			path: src/Piwigo/Controller/TagsController.php
+
+		-
+			rawMessage: 'Out of 3126 possible param types, only 2842 - 90.9 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 2
 			path: src/Piwigo/Core/ArrayHelper.php
+
+		-
+			rawMessage: 'Strict comparison using === between non-empty-string and 0 will always evaluate to false.'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: src/Piwigo/Core/DeviceHelper.php
+
+		-
+			rawMessage: 'Strict comparison using === between non-empty-string and 0.0 will always evaluate to false.'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: src/Piwigo/Core/DeviceHelper.php
+
+		-
+			rawMessage: 'Strict comparison using === between non-falsy-string and array{} will always evaluate to false.'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: src/Piwigo/Core/DeviceHelper.php
+
+		-
+			rawMessage: 'Strict comparison using === between non-falsy-string and false will always evaluate to false.'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: src/Piwigo/Core/DeviceHelper.php
+
+		-
+			rawMessage: 'Strict comparison using === between string and null will always evaluate to false.'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: src/Piwigo/Core/DeviceHelper.php
+
+		-
+			rawMessage: 'Call to function is_array() with list<string> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Core/FilesystemHelper.php
 
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
@@ -2995,7 +3559,7 @@ parameters:
 			path: src/Piwigo/Core/Logger.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Core/Logger.php
@@ -3007,8 +3571,38 @@ parameters:
 			path: src/Piwigo/Core/Logger.php
 
 		-
+			rawMessage: Casting to bool something that's already bool.
+			identifier: cast.useless
+			count: 1
+			path: src/Piwigo/Core/PageFilterHelper.php
+
+		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Core/ThemeCatalog.php
+
+		-
+			rawMessage: 'Call to function is_scalar() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Csrf/CsrfService.php
+
+		-
+			rawMessage: Casting to string something that's already string.
+			identifier: cast.useless
+			count: 1
+			path: src/Piwigo/Csrf/CsrfService.php
+
+		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
+			count: 1
+			path: src/Piwigo/Db/MysqliDb.php
+
+		-
+			rawMessage: Casting to bool something that's already bool.
+			identifier: cast.useless
 			count: 1
 			path: src/Piwigo/Db/MysqliDb.php
 
@@ -3091,6 +3685,12 @@ parameters:
 			path: src/Piwigo/History/HistoryService.php
 
 		-
+			rawMessage: 'Call to function is_string() with list<string>|null will always evaluate to false.'
+			identifier: function.impossibleType
+			count: 1
+			path: src/Piwigo/History/HistoryService.php
+
+		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 1
@@ -3117,6 +3717,12 @@ parameters:
 		-
 			rawMessage: 'Binary operation "." between ''<a href="'' and mixed results in an error.'
 			identifier: binaryOp.invalid
+			count: 1
+			path: src/Piwigo/Html/HtmlService.php
+
+		-
+			rawMessage: 'Call to function is_array() with list<string> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
 			count: 1
 			path: src/Piwigo/Html/HtmlService.php
 
@@ -3187,12 +3793,6 @@ parameters:
 			path: src/Piwigo/Http/functions.php
 
 		-
-			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: src/Piwigo/Http/functions.php
-
-		-
 			rawMessage: 'Out of 3126 possible param types, only 2842 - 90.9 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 7
@@ -3241,7 +3841,7 @@ parameters:
 			path: src/Piwigo/Image/DerivativeImage.php
 
 		-
-			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			rawMessage: 'Loose comparison via "==" between int<min, -1>|int<1, max> and int is not allowed.'
 			identifier: equal.notAllowed
 			count: 1
 			path: src/Piwigo/Image/DerivativeImage.php
@@ -3283,13 +3883,13 @@ parameters:
 			path: src/Piwigo/Image/DerivativeImage.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: src/Piwigo/Image/DerivativeImage.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Image/DerivativeImage.php
@@ -3307,13 +3907,13 @@ parameters:
 			path: src/Piwigo/Image/DerivativeParams.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Image/DerivativeParams.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 4
 			path: src/Piwigo/Image/DerivativeParams.php
@@ -3337,7 +3937,7 @@ parameters:
 			path: src/Piwigo/Image/ImageRect.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 4
 			path: src/Piwigo/Image/ImageRect.php
@@ -3361,19 +3961,25 @@ parameters:
 			path: src/Piwigo/Image/ImageStdParams.php
 
 		-
+			rawMessage: Expression on left side of ?? is not nullable.
+			identifier: nullCoalesce.expr
+			count: 1
+			path: src/Piwigo/Image/ImageStdParams.php
+
+		-
 			rawMessage: 'Out of 3126 possible param types, only 2842 - 90.9 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 8
 			path: src/Piwigo/Image/ImageStdParams.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: src/Piwigo/Image/ImageStdParams.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 6
 			path: src/Piwigo/Image/ImageStdParams.php
@@ -3403,6 +4009,12 @@ parameters:
 			path: src/Piwigo/Image/SrcImage.php
 
 		-
+			rawMessage: 'Call to function is_array() with list<string> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Image/SrcImage.php
+
+		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 1
@@ -3427,13 +4039,13 @@ parameters:
 			path: src/Piwigo/Image/SrcImage.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Image/SrcImage.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 7
 			path: src/Piwigo/Image/WatermarkParams.php
@@ -3499,8 +4111,98 @@ parameters:
 			path: src/Piwigo/Mail/MailService.php
 
 		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Piwigo/Mail/MailService.php
+
+		-
+			rawMessage: Casting to bool something that's already bool.
+			identifier: cast.useless
+			count: 4
+			path: src/Piwigo/Mail/MailService.php
+
+		-
+			rawMessage: Casting to string something that's already string.
+			identifier: cast.useless
+			count: 4
+			path: src/Piwigo/Mail/MailService.php
+
+		-
+			rawMessage: 'Offset ''email'' on array{id: string, username: string, password: string, email: string} in isset() always exists and is not nullable.'
+			identifier: isset.offset
+			count: 1
+			path: src/Piwigo/Mail/MailService.php
+
+		-
+			rawMessage: 'Offset ''id'' on array{id: string, username: string, password: string, email: string} in isset() always exists and is not nullable.'
+			identifier: isset.offset
+			count: 1
+			path: src/Piwigo/Mail/MailService.php
+
+		-
+			rawMessage: 'Offset ''password'' on array{id: string, username: string, password: string, email: string} in isset() always exists and is not nullable.'
+			identifier: isset.offset
+			count: 1
+			path: src/Piwigo/Mail/MailService.php
+
+		-
+			rawMessage: 'Offset ''username'' on array{id: string, username: string, password: string, email: string} in isset() always exists and is not nullable.'
+			identifier: isset.offset
+			count: 1
+			path: src/Piwigo/Mail/MailService.php
+
+		-
+			rawMessage: Right side of && is always true.
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 4
+			path: src/Piwigo/Mail/MailService.php
+
+		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
+			count: 1
+			path: src/Piwigo/Mail/NotificationByMailSender.php
+
+		-
+			rawMessage: 'Call to function is_array() with Piwigo\Config\NotificationConfig will always evaluate to false.'
+			identifier: function.impossibleType
+			count: 1
+			path: src/Piwigo/Mail/NotificationByMailSender.php
+
+		-
+			rawMessage: 'Call to function is_int() with *NEVER* will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Mail/NotificationByMailSender.php
+
+		-
+			rawMessage: 'Call to function is_numeric() with float will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Mail/NotificationByMailSender.php
+
+		-
+			rawMessage: 'Call to function is_numeric() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Mail/NotificationByMailSender.php
+
+		-
+			rawMessage: 'Call to function is_string() with *NEVER* will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Mail/NotificationByMailSender.php
+
+		-
+			rawMessage: 'Call to function is_string() with non-falsy-string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Mail/NotificationByMailSender.php
+
+		-
+			rawMessage: Casting to float something that's already float.
+			identifier: cast.useless
 			count: 1
 			path: src/Piwigo/Mail/NotificationByMailSender.php
 
@@ -3508,6 +4210,18 @@ parameters:
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 2
+			path: src/Piwigo/Mail/NotificationByMailSender.php
+
+		-
+			rawMessage: Empty array passed to foreach.
+			identifier: foreach.emptyArray
+			count: 1
+			path: src/Piwigo/Mail/NotificationByMailSender.php
+
+		-
+			rawMessage: If condition is always true.
+			identifier: if.alwaysTrue
+			count: 1
 			path: src/Piwigo/Mail/NotificationByMailSender.php
 
 		-
@@ -3541,6 +4255,36 @@ parameters:
 			path: src/Piwigo/Mail/NotificationByMailSender.php
 
 		-
+			rawMessage: Offset 'NBM' on *NEVER* on left side of ?? always exists and is not nullable.
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Mail/NotificationByMailSender.php
+
+		-
+			rawMessage: Result of and is always false.
+			identifier: logicalAnd.alwaysFalse
+			count: 1
+			path: src/Piwigo/Mail/NotificationByMailSender.php
+
+		-
+			rawMessage: Result of and is always true.
+			identifier: logicalAnd.alwaysTrue
+			count: 1
+			path: src/Piwigo/Mail/NotificationByMailSender.php
+
+		-
+			rawMessage: Ternary operator condition is always false.
+			identifier: ternary.alwaysFalse
+			count: 1
+			path: src/Piwigo/Mail/NotificationByMailSender.php
+
+		-
+			rawMessage: 'Variable $nbmSendMailAs in isset() always exists and is not nullable.'
+			identifier: isset.variable
+			count: 1
+			path: src/Piwigo/Mail/NotificationByMailSender.php
+
+		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 2
@@ -3553,13 +4297,13 @@ parameters:
 			path: src/Piwigo/Menu/BlockManager.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/BlockManager.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Menu/BlockManager.php
@@ -3571,16 +4315,22 @@ parameters:
 			path: src/Piwigo/Menu/DisplayBlock.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/DisplayBlock.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 6
 			path: src/Piwigo/Menu/DisplayBlock.php
+
+		-
+			rawMessage: 'Call to function is_array() with array<mixed> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Menu/MenubarRenderer.php
 
 		-
 			rawMessage: 'Out of 3126 possible param types, only 2842 - 90.9 %% actually have it. Add more param types to get over 99 %%'
@@ -3589,10 +4339,40 @@ parameters:
 			path: src/Piwigo/Menu/RegisteredBlock.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/RegisteredBlock.php
+
+		-
+			rawMessage: Casting to bool something that's already bool.
+			identifier: cast.useless
+			count: 6
+			path: src/Piwigo/Metadata/MetadataService.php
+
+		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 3
+			path: src/Piwigo/Notification/NotificationByMailService.php
+
+		-
+			rawMessage: 'Offset ''email'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Notification/NotificationByMailService.php
+
+		-
+			rawMessage: 'Offset ''id'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Notification/NotificationByMailService.php
+
+		-
+			rawMessage: 'Offset ''username'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Notification/NotificationByMailService.php
 
 		-
 			rawMessage: 'Binary operation "." between ''<a href="'' and mixed results in an error.'
@@ -3625,10 +4405,64 @@ parameters:
 			path: src/Piwigo/Page/PageHeaderRenderer.php
 
 		-
+			rawMessage: 'Call to function is_int() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Permission/PermissionService.php
+
+		-
 			rawMessage: 'Parameter #1 $callback of function array_map expects (callable(mixed): mixed)|null, Closure(bool|float|GMP|int|resource|string|null): string given.'
 			identifier: argument.type
 			count: 1
 			path: src/Piwigo/Permission/PermissionService.php
+
+		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Piwigo/Picture/PictureCommentRenderer.php
+
+		-
+			rawMessage: 'Offset ''email'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Picture/PictureCommentRenderer.php
+
+		-
+			rawMessage: 'Offset ''id'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Picture/PictureCommentRenderer.php
+
+		-
+			rawMessage: 'Call to function is_array() with array<string, string> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Picture/PictureMetadataRenderer.php
+
+		-
+			rawMessage: 'Call to function is_array() with list<string> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Picture/PictureMetadataRenderer.php
+
+		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Piwigo/Picture/PictureMetadataRenderer.php
+
+		-
+			rawMessage: If condition is always true.
+			identifier: if.alwaysTrue
+			count: 1
+			path: src/Piwigo/Picture/PictureMetadataRenderer.php
+
+		-
+			rawMessage: Result of and is always true.
+			identifier: logicalAnd.alwaysTrue
+			count: 1
+			path: src/Piwigo/Picture/PictureMetadataRenderer.php
 
 		-
 			rawMessage: 'Loose comparison via "!=" between mixed and null is not allowed.'
@@ -3751,7 +4585,7 @@ parameters:
 			path: src/Piwigo/Search/QDateRangeScope.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Search/QExpression.php
@@ -3781,7 +4615,7 @@ parameters:
 			path: src/Piwigo/Search/QMultiToken.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Search/QMultiToken.php
@@ -3805,16 +4639,46 @@ parameters:
 			path: src/Piwigo/Search/QSearchScope.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Search/QSingleToken.php
+
+		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Piwigo/Search/SearchFilterRenderer.php
 
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 2
 			path: src/Piwigo/Search/SearchFilterRenderer.php
+
+		-
+			rawMessage: 'Offset ''id'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Search/SearchFilterRenderer.php
+
+		-
+			rawMessage: 'Offset ''username'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Search/SearchFilterRenderer.php
+
+		-
+			rawMessage: 'Call to function is_array() with array<mixed> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Search/SearchService.php
+
+		-
+			rawMessage: 'Call to function is_string() with *NEVER* will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Search/SearchService.php
 
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
@@ -3849,6 +4713,12 @@ parameters:
 		-
 			rawMessage: 'Parameter #2 $params of method Piwigo\Search\SearchService::queryImageIdsFor() expects list<mixed>, non-empty-array given.'
 			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Search/SearchService.php
+
+		-
+			rawMessage: Result of || is always true.
+			identifier: booleanOr.alwaysTrue
 			count: 1
 			path: src/Piwigo/Search/SearchService.php
 
@@ -3925,7 +4795,7 @@ parameters:
 			path: src/Piwigo/Template/Combinable.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Template/Combinable.php
@@ -3961,7 +4831,7 @@ parameters:
 			path: src/Piwigo/Template/FileCombiner.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Template/FileCombiner.php
@@ -3973,7 +4843,7 @@ parameters:
 			path: src/Piwigo/Template/PwgTemplateAdapter.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Template/Script.php
@@ -4015,7 +4885,7 @@ parameters:
 			path: src/Piwigo/Template/ScriptLoader.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Template/ScriptLoader.php
@@ -4027,8 +4897,32 @@ parameters:
 			path: src/Piwigo/Template/Template.php
 
 		-
+			rawMessage: 'Call to function is_int() with bool will always evaluate to false.'
+			identifier: function.impossibleType
+			count: 1
+			path: src/Piwigo/Template/Template.php
+
+		-
+			rawMessage: 'Call to function is_scalar() with bool will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Template/Template.php
+
+		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Template/Template.php
+
+		-
 			rawMessage: 'Call to static method display_debug() on an unknown class Smarty_Internal_Debug.'
 			identifier: class.notFound
+			count: 1
+			path: src/Piwigo/Template/Template.php
+
+		-
+			rawMessage: Casting to bool something that's already bool.
+			identifier: cast.useless
 			count: 1
 			path: src/Piwigo/Template/Template.php
 
@@ -4081,13 +4975,13 @@ parameters:
 			path: src/Piwigo/Template/Template.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 6
 			path: src/Piwigo/Template/Template.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 9
 			path: src/Piwigo/Template/Template.php
@@ -4099,9 +4993,33 @@ parameters:
 			path: src/Piwigo/Template/Template.php
 
 		-
+			rawMessage: 'Call to function is_array() with list<string> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Url/UrlService.php
+
+		-
+			rawMessage: 'Call to function is_scalar() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Url/UrlService.php
+
+		-
+			rawMessage: Casting to string something that's already string.
+			identifier: cast.useless
+			count: 1
+			path: src/Piwigo/Url/UrlService.php
+
+		-
 			rawMessage: 'Out of 3126 possible param types, only 2842 - 90.9 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 3
+			path: src/Piwigo/Url/UrlService.php
+
+		-
+			rawMessage: Ternary operator condition is always true.
+			identifier: ternary.alwaysTrue
+			count: 1
 			path: src/Piwigo/Url/UrlService.php
 
 		-
@@ -4363,15 +5281,75 @@ parameters:
 			path: src/Piwigo/Url/functions.php
 
 		-
+			rawMessage: 'Call to function is_array() with array{id: string, username: string, password: string, email: string} will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Users/UserRepository.php
+
+		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Users/UserRepository.php
+
+		-
+			rawMessage: 'Offset ''id'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Users/UserRepository.php
+
+		-
 			rawMessage: 'Parameter #1 $callback of function array_map expects (callable(mixed): mixed)|null, Closure(array|bool|float|GMP|int|resource|SimpleXMLElement|string|null, int=): int given.'
 			identifier: argument.type
 			count: 3
 			path: src/Piwigo/Users/UserRepository.php
 
 		-
+			rawMessage: Result of && is always true.
+			identifier: booleanAnd.alwaysTrue
+			count: 1
+			path: src/Piwigo/Users/UserRepository.php
+
+		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 6
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Call to function is_array() with array{id: string, username: string, password: string, email: string} will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Call to function is_array() with list<int> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Call to function is_scalar() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 3
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Call to function is_scalar() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: Casting to string something that's already string.
+			identifier: cast.useless
+			count: 2
 			path: src/Piwigo/Users/UserService.php
 
 		-
@@ -4419,13 +5397,7 @@ parameters:
 		-
 			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
 			identifier: equal.notAllowed
-			count: 1
-			path: src/Piwigo/Users/UserService.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and mixed is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
+			count: 2
 			path: src/Piwigo/Users/UserService.php
 
 		-
@@ -4441,8 +5413,20 @@ parameters:
 			path: src/Piwigo/Users/UserService.php
 
 		-
+			rawMessage: 'Offset ''id'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Users/UserService.php
+
+		-
 			rawMessage: 'Offset ''status'' might not exist on array{id: mixed, ...<string, mixed>}.'
 			identifier: offsetAccess.notFound
+			count: 1
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: Result of && is always true.
+			identifier: booleanAnd.alwaysTrue
 			count: 1
 			path: src/Piwigo/Users/UserService.php
 
@@ -4489,7 +5473,7 @@ parameters:
 			path: src/Piwigo/Ws/Protocol/PwgXmlWriter.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 5
 			path: src/Piwigo/Ws/Protocol/PwgXmlWriter.php
@@ -4498,6 +5482,18 @@ parameters:
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 7
+			path: src/Piwigo/Ws/PwgCategories.php
+
+		-
+			rawMessage: 'Call to function is_numeric() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 3
+			path: src/Piwigo/Ws/PwgCategories.php
+
+		-
+			rawMessage: Casting to int something that's already int.
+			identifier: cast.useless
+			count: 3
 			path: src/Piwigo/Ws/PwgCategories.php
 
 		-
@@ -4597,6 +5593,12 @@ parameters:
 			path: src/Piwigo/Ws/PwgCategories.php
 
 		-
+			rawMessage: 'Offset ''order_by'' on non-empty-array<string, mixed> on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 3
+			path: src/Piwigo/Ws/PwgCategories.php
+
+		-
 			rawMessage: 'Parameter #1 $array of function array_diff expects an array of values castable to string, array given.'
 			identifier: argument.type
 			count: 1
@@ -4639,18 +5641,6 @@ parameters:
 			path: src/Piwigo/Ws/PwgComments.php
 
 		-
-			rawMessage: 'Loose comparison via "==" between mixed and string|null is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: src/Piwigo/Ws/PwgComments.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and mixed is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: src/Piwigo/Ws/PwgComments.php
-
-		-
 			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
 			identifier: equal.notAllowed
 			count: 1
@@ -4659,6 +5649,30 @@ parameters:
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
+			count: 1
+			path: src/Piwigo/Ws/PwgCore.php
+
+		-
+			rawMessage: 'Call to function is_array() with list<string> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Ws/PwgCore.php
+
+		-
+			rawMessage: 'Call to function is_int() with int will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Ws/PwgCore.php
+
+		-
+			rawMessage: 'Call to function is_string() with int will always evaluate to false.'
+			identifier: function.impossibleType
+			count: 1
+			path: src/Piwigo/Ws/PwgCore.php
+
+		-
+			rawMessage: 'Cannot unset offset int on array<string, string>.'
+			identifier: unset.offset
 			count: 1
 			path: src/Piwigo/Ws/PwgCore.php
 
@@ -4711,18 +5725,6 @@ parameters:
 			path: src/Piwigo/Ws/PwgCore.php
 
 		-
-			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: src/Piwigo/Ws/PwgCore.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string|null and mixed is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: src/Piwigo/Ws/PwgCore.php
-
-		-
 			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
 			identifier: equal.notAllowed
 			count: 2
@@ -4762,6 +5764,18 @@ parameters:
 			rawMessage: 'Out of 3126 possible param types, only 2842 - 90.9 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 2
+			path: src/Piwigo/Ws/PwgCore.php
+
+		-
+			rawMessage: Result of || is always true.
+			identifier: booleanOr.alwaysTrue
+			count: 1
+			path: src/Piwigo/Ws/PwgCore.php
+
+		-
+			rawMessage: 'Strict comparison using !== between int and null will always evaluate to true.'
+			identifier: notIdentical.alwaysTrue
+			count: 1
 			path: src/Piwigo/Ws/PwgCore.php
 
 		-
@@ -4833,6 +5847,18 @@ parameters:
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
+			count: 2
+			path: src/Piwigo/Ws/PwgImages.php
+
+		-
+			rawMessage: 'Call to function is_array() with list<int> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Ws/PwgImages.php
+
+		-
+			rawMessage: 'Call to function is_array() with list<string> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
 			count: 2
 			path: src/Piwigo/Ws/PwgImages.php
 
@@ -4933,15 +5959,9 @@ parameters:
 			path: src/Piwigo/Ws/PwgImages.php
 
 		-
-			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 4
-			path: src/Piwigo/Ws/PwgImages.php
-
-		-
 			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
 			identifier: equal.notAllowed
-			count: 21
+			count: 25
 			path: src/Piwigo/Ws/PwgImages.php
 
 		-
@@ -4975,7 +5995,7 @@ parameters:
 			path: src/Piwigo/Ws/PwgImages.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Ws/PwgNamedArray.php
@@ -4993,7 +6013,7 @@ parameters:
 			path: src/Piwigo/Ws/PwgNamedStruct.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Ws/PwgNamedStruct.php
@@ -5029,6 +6049,12 @@ parameters:
 			path: src/Piwigo/Ws/PwgServer.php
 
 		-
+			rawMessage: 'Call to function is_array() with list<string> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Ws/PwgServer.php
+
+		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 2
@@ -5053,7 +6079,7 @@ parameters:
 			path: src/Piwigo/Ws/PwgServer.php
 
 		-
-			rawMessage: 'Out of 445 possible property types, only 353 - 79.3 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 447 possible property types, only 355 - 79.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Ws/PwgServer.php
@@ -5113,6 +6139,12 @@ parameters:
 			path: src/Piwigo/Ws/PwgUsers.php
 
 		-
+			rawMessage: 'Call to function is_string() with string will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 5
+			path: src/Piwigo/Ws/PwgUsers.php
+
+		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 17
@@ -5155,6 +6187,30 @@ parameters:
 			path: src/Piwigo/Ws/PwgUsers.php
 
 		-
+			rawMessage: 'Offset ''email'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Ws/PwgUsers.php
+
+		-
+			rawMessage: 'Offset ''id'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Piwigo/Ws/PwgUsers.php
+
+		-
+			rawMessage: 'Offset ''password'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Ws/PwgUsers.php
+
+		-
+			rawMessage: 'Offset ''username'' on array{id: string, username: string, password: string, email: string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Ws/PwgUsers.php
+
+		-
 			rawMessage: 'Parameter #2 of function sprintf is expected to be int by placeholder #1 ("%%u"), string given.'
 			identifier: argument.type
 			count: 2
@@ -5177,6 +6233,12 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: src/Piwigo/Ws/PwgUsers.php
+
+		-
+			rawMessage: 'Call to function is_array() with list<int> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Ws/WsDefaultMethods.php
 
 		-
 			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
@@ -6289,7 +7351,7 @@ parameters:
 			path: tests/Unit/Http/Middleware/ControllerInvokerMiddlewareTest.php
 
 		-
-			rawMessage: 'Out of 3750 possible return types, only 3696 - 98.5 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3765 possible return types, only 3711 - 98.5 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: tests/Unit/Http/Middleware/ControllerInvokerMiddlewareTest.php

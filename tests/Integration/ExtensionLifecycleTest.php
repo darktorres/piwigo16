@@ -150,16 +150,13 @@ namespace Piwigo\Tests\Integration {
             $this->repo = new ExtensionRepository($this->conn);
             $this->lifecycle = new ExtensionLifecycle($this->repo, new PemCatalog(new ZipExtractor()));
 
-            $GLOBALS['conf'] = [
-                'enable_extensions_install' => true,
-                'php_extension_in_urls' => false,
-                // P23 batch 8f-4: ThemeCatalog::checkThemeInstalled() (now
-                // called for real, see the MysqliDb::connect() note above)
-                // reads $conf['themes_dir'] with a direct array access --
-                // provide the production value so the real filesystem check
-                // runs instead of raising an undefined-array-key warning.
-                'themes_dir' => PHPWG_ROOT_PATH . 'themes',
-            ];
+            Config::override('enable_extensions_install', true);
+            Config::override('php_extension_in_urls', false);
+            // P23 batch 8f-4: ThemeCatalog::checkThemeInstalled() (now
+            // called for real, see the MysqliDb::connect() note above)
+            // reads Config::themesDir() -- provide the production value so
+            // the real filesystem check runs against the real themes/ dir.
+            Config::override('themes_dir', PHPWG_ROOT_PATH . 'themes');
             $GLOBALS['user'] = ['id' => 1];
             unset($_REQUEST['method'], $_REQUEST['action']);
             $_SERVER['SCRIPT_NAME'] = '/admin.php';
@@ -362,25 +359,23 @@ namespace Piwigo\Tests\Integration {
             // successful mobile-theme activate) is deliberately called
             // WITHOUT updateGlobal=true, matching themes.class.php's own
             // exact call shape -- it persists to the DB but never updates
-            // the live $conf array. This is a real, faithfully-preserved
-            // legacy quirk: the mobile-theme-uniqueness guard only actually
-            // takes effect on the NEXT request, once $conf gets freshly
-            // reloaded from the DB at bootstrap -- never within the same
-            // request/process that just activated the first mobile theme.
-            // Simulate that "next request" state directly rather than
-            // asserting a same-process guard that legacy code itself never
-            // provides.
+            // the live $conf global or Config::$data. This is a real,
+            // faithfully-preserved legacy quirk: the mobile-theme-uniqueness
+            // guard only actually takes effect on the NEXT request, once
+            // both get freshly reloaded from the DB at bootstrap -- never
+            // within the same request/process that just activated the
+            // first mobile theme. Simulate that "next request" state
+            // directly rather than asserting a same-process guard that
+            // legacy code itself never provides.
             $first = $this->themeId();
             $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $first, [
                 'version' => '1.0',
                 'name' => 'Mobile One',
                 'mobile' => true,
             ]);
-            $GLOBALS['conf'] = [
-                'enable_extensions_install' => true,
-                'php_extension_in_urls' => false,
-                'mobile_theme' => $first,
-            ];
+            Config::override('enable_extensions_install', true);
+            Config::override('php_extension_in_urls', false);
+            Config::override('mobile_theme', $first);
 
             $second = $this->themeId();
             $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $second, [

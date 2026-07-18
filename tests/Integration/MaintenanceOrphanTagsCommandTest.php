@@ -6,6 +6,8 @@ namespace Piwigo\Tests\Integration;
 
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Command\MaintenanceOrphanTagsCommand;
+use Piwigo\Config\Config;
+use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Symfony\Component\Console\Command\Command;
@@ -26,6 +28,10 @@ final class MaintenanceOrphanTagsCommandTest extends IntegrationTestCase
             $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
             self::$fixtureReady = true;
         }
+
+        Config::reset();
+        ConfigLoader::applyDefaults();
+        ConfigLoader::applyEnvOverrides();
     }
 
     public function test_deletes_an_orphan_tag_and_reports_the_count(): void

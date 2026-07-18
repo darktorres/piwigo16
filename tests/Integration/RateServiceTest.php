@@ -51,12 +51,10 @@ namespace Piwigo\Tests\Integration {
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
-            $GLOBALS['conf'] = [
-                'rate' => true,
-                'rate_anonymous' => true,
-                'rate_items' => [0, 1, 2, 3, 4, 5],
-                'guest_access' => true,
-            ];
+            Config::override('rate', true);
+            Config::override('rate_anonymous', true);
+            Config::override('rate_items', [0, 1, 2, 3, 4, 5]);
+            Config::override('guest_access', true);
             CurrentUser::set(User::fromUserArray(['id' => 3, 'status' => 'normal']));
             $_SERVER['REMOTE_ADDR'] = '10.20.30.40';
             unset($_COOKIE['pwg_anonymous_rater']);
@@ -187,17 +185,9 @@ namespace Piwigo\Tests\Integration {
             );
         }
 
-        /**
-         * $GLOBALS is untyped (values are `mixed`), so a nested write like
-         * `$GLOBALS['conf']['key'] = ...` can't be offset into directly --
-         * round-trip through a locally typed variable instead.
-         */
         private function setConf(string $key, mixed $value): void
         {
-            /** @var array<string, mixed> $conf */
-            $conf = $GLOBALS['conf'];
-            $conf[$key] = $value;
-            $GLOBALS['conf'] = $conf;
+            Config::override($key, $value);
         }
 
         private function fetchRate(int $elementId, int $userId): ?string

@@ -8,7 +8,6 @@ use Piwigo\Cache\CachePools;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\Logger;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -73,10 +72,7 @@ final readonly class CategoryCatsRenderer
      */
     public function render(string $section, ?array $category, int $startcat): void
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
         $template = $this->template;
 
         $conn = DbConnection::build();

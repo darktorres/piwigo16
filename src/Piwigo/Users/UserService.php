@@ -18,7 +18,6 @@ use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Logger;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\WsError;
 use Piwigo\Db\DbConnection;
@@ -560,10 +559,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function getUserData(int $userId, bool $useCache = false): array
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         // see validateMailAddress() for why this is string=>string
         /** @var array<string, string> $user_fields */

@@ -17,7 +17,6 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Logger;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
@@ -645,8 +644,7 @@ SELECT
      */
     public function extract_theme_files($action, $revision, $dest, ?string &$theme_id = null): string
     {
-        /** @var Logger $logger */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl()) in
         // one branch of include/common.inc.php, so PHPStan can't prove it's a

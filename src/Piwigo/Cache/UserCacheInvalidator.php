@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Cache;
 
-use Piwigo\Core\Logger;
 use Piwigo\Db\Tables;
 
 /**
@@ -24,10 +23,7 @@ final class UserCacheInvalidator
          * @var PersistentCache
          */
         global $persistent_cache;
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->info(__FUNCTION__ . ' called');
 

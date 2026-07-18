@@ -9,7 +9,6 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -325,10 +324,7 @@ final readonly class ImageService
      */
     public function emptyLounge(bool $invalidateUserCache = true): ?array
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         if (\Piwigo\Config\Config::has('empty_lounge_running')) {
             $emptyLoungeRunning = \Piwigo\Config\Config::emptyLoungeRunning();

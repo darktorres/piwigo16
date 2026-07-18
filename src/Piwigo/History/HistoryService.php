@@ -450,10 +450,7 @@ INSERT INTO ' . Tables::history() . '
      */
     public function autopurge(): void
     {
-        /**
-         * @var \Piwigo\Core\Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $keepLines = \Piwigo\Config\Config::historyAutopurgeKeepLines();
         if ($keepLines === 0) {

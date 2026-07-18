@@ -8,7 +8,6 @@ use Piwigo\Admin\tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
-use Piwigo\Core\Logger;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -99,12 +98,8 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
         $template = \Piwigo\Template\CurrentTemplate::get();
-        /**
-         * @var Logger $logger
-         * @var Template $template
-         */
 
         // +-----------------------------------------------------------------------+
         // | Check Access and exit when user status is not ok                      |

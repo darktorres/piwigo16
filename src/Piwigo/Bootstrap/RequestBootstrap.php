@@ -176,7 +176,6 @@ final class RequestBootstrap
          */
         global $user;
         global $persistent_cache;
-        global $logger;
 
         // P23 sub-batch 8g-6: the dynamic include of include/dblayer/
         // functions_<dblayer>.inc.php is gone -- the file's 45 facades died
@@ -246,7 +245,7 @@ final class RequestBootstrap
                 ->fatalError("Invalid \\Piwigo\Config\Config::dataLocation()/'log_dir' configuration: expected strings.");
         }
 
-        $logger = new Logger([
+        \Piwigo\Core\CurrentLogger::set(new Logger([
             'directory' => PHPWG_ROOT_PATH . $log_data_location . $log_dir,
             'severity' => \Piwigo\Config\Config::logLevel(),
             // we use an hashed filename to prevent direct file access, and we salt with
@@ -255,7 +254,7 @@ final class RequestBootstrap
             'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $db_password) . '.txt',
             'globPattern' => 'log_*.txt',
             'archiveDays' => \Piwigo\Config\Config::logArchiveDays(),
-        ]);
+        ]));
 
         if (! \Piwigo\Config\Config::checkUpgradeFeed()) {
             if (! \Piwigo\Config\Config::has('piwigo_db_version') or \Piwigo\Config\Config::piwigoDbVersion() !== \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)) {

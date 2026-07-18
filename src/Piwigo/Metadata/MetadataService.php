@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Metadata;
 
-use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -132,10 +131,7 @@ final readonly class MetadataService
      */
     public function getExifData(string $filename, array $map): array
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $result = [];
 

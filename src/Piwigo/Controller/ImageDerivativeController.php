@@ -44,16 +44,17 @@ use Piwigo\Session\SessionUserResolver;
  * deleted, not replaced: not firing plugin hooks here is achieved by not
  * registering any, which is the fast-bootstrap design itself.
  *
- * Globals: $prefixeTable and $logger deliberately stay real globals
- * (declared in every method that touches them) -- shared classes on this
- * exact path read them from global scope: MysqliDb::query() maintains
- * PageState's request-wide query counters and image_ext_imagick.php reads
- * $logger. $conf itself is not one of them any more (pwg_image and
- * ImageStdParams read Piwigo\Config\Config:: accessors, not a raw global
- * -- Legacy Coupling Retirement Track A gap-fill batch G2); the throwaway
- * $conf_unused local below only exists to satisfy Env::applyEnvToConf()'s
- * by-ref array parameter, which is how it fills $prefixeTable by
- * reference. The
+ * Globals: $prefixeTable deliberately stays a real global (declared in
+ * every method that touches it) -- MysqliDb::query() maintains PageState's
+ * request-wide query counters. $logger and $conf are not globals any more
+ * (Legacy Coupling Retirement Track A gap-fill batches G2/G5): pwg_image
+ * and ImageStdParams read Piwigo\Config\Config:: accessors instead of a
+ * raw $conf, and this controller's own Logger instance is published via
+ * Piwigo\Core\CurrentLogger::set() right after construction -- the same
+ * static accessor image_ext_imagick.php and every other shared consumer
+ * read from now. The throwaway $conf_unused local below only exists to
+ * satisfy Env::applyEnvToConf()'s by-ref array parameter, which is how it
+ * fills $prefixeTable by reference. The
  * rootPath/derivativePath/derivativeExt/derivativeType/coi/srcLocation/
  * srcPath/srcUrl/originalSize/rotationAngle/derivativeParams
  * scratch state below is this controller's own -- never read outside it
@@ -92,10 +93,6 @@ final class ImageDerivativeController
          * @var string
          */
         global $prefixeTable;
-        /**
-         * @var Logger
-         */
-        global $logger;
 
         // \Piwigo\Config\Config::dataLocation() needs narrowing here specifically (used
         // before Env::applyEnvToConf() below widens $conf_unused's per-key
@@ -146,6 +143,7 @@ final class ImageDerivativeController
             // (secret_key is in the database)
             'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $db_password) . '.txt',
         ]);
+        \Piwigo\Core\CurrentLogger::set($logger);
 
         $begin = $step = microtime(true);
         $timing = [];
@@ -513,8 +511,7 @@ SELECT *
 
     private function ierror(string $msg, int $code): never
     {
-        /** @var Logger $logger */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
         if ($code == 301 || $code == 302) {
             if (ob_get_length() !== false) {
                 ob_clean();

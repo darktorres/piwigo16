@@ -16,7 +16,6 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -714,8 +713,7 @@ DELETE FROM ' . Tables::plugins() . '
      */
     public function extract_plugin_files($action, $revision, $dest, ?string &$plugin_id = null): string
     {
-        /** @var Logger $logger */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         if ($archive = tempnam(PluginLoader::pluginsPath(), 'zip')) {
             // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl()) in

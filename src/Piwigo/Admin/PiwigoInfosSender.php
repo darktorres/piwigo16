@@ -11,7 +11,6 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ArrayHelper;
 use Piwigo\Core\ContainerDetector;
-use Piwigo\Core\Logger;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Db\DbConnection;
@@ -57,10 +56,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
     #[\Override]
     public function send(): void
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $startTime = TimingHelper::getMoment();
 
@@ -609,10 +605,7 @@ SELECT
 
     private function retryLater(int $waitTime): void
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         // let's fake a last_notice so that we only try 1 day later
         $existingLastNotice = \Piwigo\Config\Config::sendPiwigoInfosLastNotice() ?? null;

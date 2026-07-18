@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
-use Piwigo\Core\Logger;
-
 class image_ext_imagick implements imageInterface
 {
     public string $imagickdir = '';
@@ -203,8 +201,7 @@ class image_ext_imagick implements imageInterface
         // Set unconditionally by i.php / include/common.inc.php before any
         // code in this file runs (both entry points construct it during
         // bootstrap) — not a lazy-init global.
-        /** @var Logger $logger */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $this->add_command('interlace', 'line'); // progressive rendering
         // use 4:2:2 chroma subsampling (reduce file size by 20-30% with "almost" no human perception)

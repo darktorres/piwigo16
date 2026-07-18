@@ -22,7 +22,6 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
-use Piwigo\Core\Logger;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Db\DbConnection;
@@ -225,10 +224,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
      */
     private static function mergeChunks(string $output_filepath, string $original_sum, string $type): ?PwgError
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->debug('[merge_chunks] input parameter $output_filepath : ' . $output_filepath, 'WS');
 
@@ -1242,10 +1238,7 @@ UPDATE ' . Tables::imageCategory() . '
      */
     public static function addChunk(array $params, PwgServer $service): ?PwgError
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         foreach ($params as $param_key => $param_value) {
             if ($param_key == 'data') {
@@ -1300,10 +1293,7 @@ UPDATE ' . Tables::imageCategory() . '
      */
     public static function addFile(array $params, PwgServer $service): PwgError|bool|null
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 
@@ -1398,10 +1388,7 @@ SELECT
      */
     public static function add(array $params, PwgServer $service): PwgError|array
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         foreach ($params as $param_key => $param_value) {
             $logger->debug(sprintf(
@@ -1559,10 +1546,7 @@ SELECT id, name, permalink
      */
     public static function addSimple(array $params, PwgServer $service): PwgError|array
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         if (! isset($_FILES['image']) || ! is_array($_FILES['image'])) {
             return new PwgError(405, 'The image (file) is missing');
@@ -1934,10 +1918,7 @@ SELECT
          * @var array<string, mixed>
          */
         global $user;
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         // the username/password parameters have been used in include/user.inc.php
         // to authenticate the request (a much better time/place than here)
@@ -2214,10 +2195,7 @@ SELECT COUNT(*)
      */
     public static function exist(array $params, PwgServer $service): array
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 
@@ -2291,10 +2269,7 @@ SELECT id, file
      */
     public static function formatsSearchImage(array $params, PwgServer $service): array
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 
@@ -2519,8 +2494,7 @@ DELETE FROM ' . Tables::imageFormat() . '
      */
     public static function checkFiles(array $params, PwgServer $service): PwgError|array
     {
-        /** @var Logger $logger */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 

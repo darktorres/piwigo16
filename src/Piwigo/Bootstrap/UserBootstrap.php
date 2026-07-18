@@ -122,8 +122,7 @@ final class UserBootstrap
                 $_POST['pwg_token'] = $_GET['pwg_token'] = new \Piwigo\Csrf\CsrfService()->getToken();
 
                 // logger
-                /** @var Logger $logger */
-                global $logger;
+                $logger = \Piwigo\Core\CurrentLogger::get();
                 $logger->info('[api_key][pkid=' . explode(':', $auth_header)[0] . '][method=' . $_REQUEST['method'] . ']');
             }
         }

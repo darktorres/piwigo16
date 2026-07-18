@@ -64,12 +64,22 @@ abstract class IntegrationTestCase extends TestCase
         // setUp() calling CurrentUser::set() with a specific fixture user
         // right after parent::setUp() simply overwrites it.
         \Piwigo\Users\CurrentUser::attachGlobals();
+        // Piwigo\Core\CurrentLogger (Legacy Coupling Retirement Track A
+        // gap-fill batch G5) is the same shape of per-request singleton --
+        // tests that construct a domain service directly (not through a
+        // real HTTP request, so RequestBootstrap::connect() never runs)
+        // need a real instance too, or the first CurrentLogger::get() call
+        // throws. severity => OFF makes every log call an immediate no-op
+        // (Logger::log() checks severity() >= $level, and OFF is -1, below
+        // every real level), so this never touches the filesystem.
+        \Piwigo\Core\CurrentLogger::set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
     }
 
     #[\Override]
     protected function tearDown(): void
     {
         \Piwigo\Users\CurrentUser::reset();
+        \Piwigo\Core\CurrentLogger::reset();
         \Piwigo\Config\Config::reset();
         \Piwigo\Core\PageState::reset();
         parent::tearDown();

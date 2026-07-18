@@ -20,7 +20,6 @@ use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Core\DateHelper;
-use Piwigo\Core\Logger;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
@@ -1013,8 +1012,7 @@ SELECT
      */
     public static function createApiKey(array $params, PwgServer &$service): PwgError|array
     {
-        /** @var Logger $logger */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         if (AccessControl::isAGuest() or ! new ApiKeyService(new MailService())->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
@@ -1058,8 +1056,7 @@ SELECT
      */
     public static function revokeApiKey(array $params, PwgServer &$service): PwgError|string
     {
-        /** @var Logger $logger */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         if (AccessControl::isAGuest() or ! new ApiKeyService(new MailService())->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
@@ -1098,8 +1095,7 @@ SELECT
      */
     public static function editApiKey(array $params, PwgServer &$service): PwgError|string
     {
-        /** @var Logger $logger */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         if (AccessControl::isAGuest()) {
             return new PwgError(401, 'Acces Denied');

@@ -8,7 +8,6 @@ use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageRepository;
@@ -517,8 +516,7 @@ final readonly class TagService
             return;
         }
 
-        /** @var Logger $logger */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $taglistBefore = $this->getImageTagIds(array_keys($tagsOf));
         $logger->debug('taglist_before', $taglistBefore);

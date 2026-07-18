@@ -10,7 +10,6 @@ use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\Logger;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Db\DbConnection;
@@ -72,10 +71,7 @@ final readonly class SectionPopulator
          * @var array<string, mixed>
          */
         global $filter;
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
         global $persistent_cache;
         $template = $this->template;
 

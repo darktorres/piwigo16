@@ -8,7 +8,6 @@ use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Config\Config;
 use Piwigo\Core\Env;
-use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Http\HttpClientService;
@@ -26,12 +25,12 @@ use Piwigo\Ws\PwgServer;
 
 /**
  * Ported from admin/include/functions_upload.inc.php (22 free functions).
- * Behavior-preserving port -- global $logger reads stay inline (same
- * "keep legacy global reads inline" pattern as every P17-20 domain service;
- * $user reads retargeted onto Piwigo\Users\CurrentUser in Legacy Coupling
- * Retirement Track A batch A3; $conf reads retargeted onto Piwigo\Config\Config
- * in Legacy Coupling Retirement Track A gap-fill batch G2), except two real
- * fixes made during the port:
+ * Behavior-preserving port -- $user reads retargeted onto
+ * Piwigo\Users\CurrentUser in Legacy Coupling Retirement Track A batch A3;
+ * $conf reads retargeted onto Piwigo\Config\Config in Legacy Coupling
+ * Retirement Track A gap-fill batch G2; $logger reads retargeted onto
+ * Piwigo\Core\CurrentLogger in Legacy Coupling Retirement Track A gap-fill
+ * batch G5), except two real fixes made during the port:
  *
  * [SEC-21] addUploadedFile()'s SVG branch validated that the sniffed MIME
  * type matched the ".svg" extension, but never sanitized the SVG's own
@@ -204,10 +203,7 @@ final class UploadService
      */
     public function addUploadedFile(string $source_filepath, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null): int|string
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         if ($original_filename !== null) {
             $original_filename = htmlspecialchars($original_filename);
@@ -760,10 +756,7 @@ SELECT
 
     public static function uploadFilePdf(?string $representative_ext, string $file_path): ?string
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -816,10 +809,7 @@ SELECT
 
     public static function uploadFileHeic(?string $representative_ext, string $file_path): ?string
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -865,10 +855,7 @@ SELECT
 
     public static function uploadFileTiff(?string $representative_ext, string $file_path): ?string
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -930,10 +917,7 @@ SELECT
 
     public static function uploadFileVideo(?string $representative_ext, string $file_path): ?string
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1009,10 +993,7 @@ SELECT
 
     public static function uploadFilePsd(?string $representative_ext, string $file_path): ?string
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1071,10 +1052,7 @@ SELECT
 
     public static function uploadFileEps(?string $representative_ext, string $file_path): ?string
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1156,10 +1134,7 @@ SELECT
 
     private function needResize(string $image_filepath, int $max_width, int $max_height): bool
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $picture_ext = \Piwigo\Config\Config::pictureExtensions();
         if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($image_filepath)), $picture_ext, true)) {

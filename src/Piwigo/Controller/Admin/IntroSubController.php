@@ -13,7 +13,6 @@ use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\Env;
-use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Http\HttpClientService;
@@ -72,10 +71,7 @@ final class IntroSubController implements AdminSubControllerInterface
          * @var string
          */
         global $link_start;
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
         /**
          * @var array<string, mixed>
          */

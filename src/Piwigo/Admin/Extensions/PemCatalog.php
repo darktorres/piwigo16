@@ -268,8 +268,7 @@ final readonly class PemCatalog
      */
     public function extractArchive(ExtensionType $type, string $action, string $revision, string $dest): array
     {
-        /** @var Logger $logger */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $scanDirectory = $type->scanDirectory();
         $archive = tempnam($scanDirectory, 'zip');

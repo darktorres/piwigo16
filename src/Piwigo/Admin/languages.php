@@ -14,7 +14,6 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
-use Piwigo\Core\Logger;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
@@ -373,8 +372,7 @@ UPDATE ' . Tables::userInfos() . '
      */
     public function extract_language_files($action, $revision, $dest = '')
     {
-        /** @var Logger $logger */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl()) in
         // one branch of include/common.inc.php, so PHPStan can't prove it's a

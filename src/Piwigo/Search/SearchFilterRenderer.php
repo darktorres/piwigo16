@@ -9,7 +9,6 @@ use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Logger;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Db\DbConnection;
@@ -1281,10 +1280,7 @@ SELECT
      */
     private function getItemsForFilter(string $filterName, array &$page): false|array
     {
-        /**
-         * @var Logger
-         */
-        global $logger;
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         // $page['search_details'] is set (as
         // SearchService::getRegularSearchResults()'s return

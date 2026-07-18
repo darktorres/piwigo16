@@ -35,16 +35,17 @@ use Piwigo\Template\Template;
  */
 final class LanguagesInstalledPageRenderer
 {
-    public function render(): void
+    /**
+     * Legacy Coupling Retirement Track A batch A5.2f: $pageSlug is an
+     * explicit param instead of `global $page['page'];` -- the one real
+     * caller (LanguagesSubController) already knows its own fixed page
+     * slug statically (it's the only class registered for the
+     * 'languages' slug in config/admin_pages.php). Also drops a
+     * confirmed-dead `global $conf;` found incidentally (never
+     * referenced anywhere in this method).
+     */
+    public function render(string $pageSlug): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
@@ -55,12 +56,7 @@ final class LanguagesInstalledPageRenderer
             'languages' => 'languages_installed.tpl',
         ]);
 
-        // admin.php sets $page['page'] to the requested admin page slug (a string)
-        // before this renderer runs; narrow the mixed read-back from the
-        // array<string, mixed>-typed $page global before interpolating into the URL.
-        $page_id = $page['page'] ?? null;
-        $page_id = is_scalar($page_id) ? (string) $page_id : '';
-        $base_url = get_root_url() . 'admin.php?page=' . $page_id;
+        $base_url = get_root_url() . 'admin.php?page=' . $pageSlug;
 
         $extension_repository = new ExtensionRepository(DbConnection::build());
         $pem_catalog = new PemCatalog(new ZipExtractor());

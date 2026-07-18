@@ -87,7 +87,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
 
         if ($page['tab'] === 'ext') {
             new UpdatesExtPageRenderer()
-                ->render();
+                ->render('updates');
         } else {
             new UpdatesPwgPageRenderer()
                 ->render();

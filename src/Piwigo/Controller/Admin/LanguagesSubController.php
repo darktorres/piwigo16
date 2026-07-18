@@ -78,14 +78,14 @@ final class LanguagesSubController implements AdminSubControllerInterface
 
         if ($page['tab'] === 'update') {
             new UpdatesExtPageRenderer()
-                ->render();
+                ->render('languages');
             $template->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
         } elseif ($page['tab'] === 'new') {
             new LanguagesNewPageRenderer()
-                ->render();
+                ->render('languages');
         } else {
             new LanguagesInstalledPageRenderer()
-                ->render();
+                ->render('languages');
         }
     }
 }

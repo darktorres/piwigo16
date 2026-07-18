@@ -23,6 +23,6 @@ final class StatsSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new StatsPageRenderer()
-            ->render();
+            ->render('stats');
     }
 }

@@ -79,14 +79,14 @@ final class PluginsSubController implements AdminSubControllerInterface
 
         if ($page['tab'] === 'update') {
             new UpdatesExtPageRenderer()
-                ->render();
+                ->render('plugins');
             $template->assign('ADMIN_PAGE_TITLE', l10n('Plugins'));
         } elseif ($page['tab'] === 'new') {
             new PluginsNewPageRenderer()
-                ->render();
+                ->render('plugins');
         } else {
             new PluginsInstalledPageRenderer()
-                ->render();
+                ->render('plugins');
         }
     }
 }

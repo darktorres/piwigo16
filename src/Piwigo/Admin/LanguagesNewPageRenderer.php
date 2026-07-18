@@ -25,12 +25,18 @@ use Piwigo\Template\Template;
  */
 final class LanguagesNewPageRenderer
 {
-    public function render(): void
+    /**
+     * Legacy Coupling Retirement Track A batch A5.2f: $pageSlug is an
+     * explicit param instead of `global $page['page'];` -- the one real
+     * caller (LanguagesSubController) already knows its own fixed page
+     * slug statically (it's the only class registered for the
+     * 'languages' slug in config/admin_pages.php). `$page['tab']` stays
+     * on `global $page;` -- a separate, not-yet-retired cluster. Also
+     * drops a confirmed-dead `global $conf;` found incidentally (never
+     * referenced anywhere in this method).
+     */
+    public function render(string $pageSlug): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         /**
          * @var array<string, mixed>
          */
@@ -45,14 +51,12 @@ final class LanguagesNewPageRenderer
             'languages' => 'languages_new.tpl',
         ]);
 
-        // $page['page']/$page['tab'] are set as plain strings by admin.php's
-        // routing before this renderer runs; $page itself is only known as
-        // array<string, mixed>, so narrow the two offsets used here.
-        $page_page = $page['page'] ?? null;
-        $page_page = is_scalar($page_page) ? (string) $page_page : '';
+        // $page['tab'] is set as a plain string by LanguagesSubController's
+        // own routing before this renderer runs; $page itself is only known
+        // as array<string, mixed>, so narrow the offset used here.
         $page_tab = $page['tab'] ?? null;
         $page_tab = is_scalar($page_tab) ? (string) $page_tab : '';
-        $base_url = get_root_url() . 'admin.php?page=' . $page_page . '&tab=' . $page_tab;
+        $base_url = get_root_url() . 'admin.php?page=' . $pageSlug . '&tab=' . $page_tab;
 
         $extension_repository = new ExtensionRepository(DbConnection::build());
         $pem_catalog = new PemCatalog(new ZipExtractor());

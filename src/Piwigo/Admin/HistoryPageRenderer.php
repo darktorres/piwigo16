@@ -23,7 +23,18 @@ use Piwigo\Users\UserRepository;
  */
 final class HistoryPageRenderer
 {
-    public function render(): void
+    /**
+     * Legacy Coupling Retirement Track A batch A5.2f: $pageSlug is an
+     * explicit param instead of `global $page['page'];` -- the one real
+     * caller (HistorySubController) already knows its own fixed page
+     * slug statically (it's the only class registered for the
+     * 'history' slug in config/admin_pages.php); selects this page's
+     * own tab within the shared 'history' tabsheet group (see
+     * StatsPageRenderer, its sibling in that same group).
+     * `search`/`search_id`/`nb_lines`/`start` stay on `global $page;` --
+     * a separate, not-yet-retired cluster.
+     */
+    public function render(string $pageSlug): void
     {
         /**
          * @var array<string, mixed>
@@ -56,8 +67,7 @@ final class HistoryPageRenderer
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('history');
-        $page_tab = isset($page['page']) && is_string($page['page']) ? $page['page'] : '';
-        $tabsheet->select($page_tab);
+        $tabsheet->select($pageSlug);
         $tabsheet->assign();
 
         $template->assign(

@@ -216,9 +216,9 @@ final class AdminShell
             and is_string($_GET['page'])
             and (bool) preg_match('/^[a-z_]*$/', $_GET['page'])
             and array_key_exists($_GET['page'], $admin_pages)) {
-            $page['page'] = $_GET['page'];
+            $page_slug = $_GET['page'];
         } else {
-            $page['page'] = 'intro';
+            $page_slug = 'intro';
         }
 
         $link_start = PHPWG_ROOT_PATH . 'admin.php?page=';
@@ -331,7 +331,7 @@ SELECT COUNT(*)
         }
 
         // any photos with no md5sum ?
-        if (in_array($page['page'], ['site_update', 'batch_manager'])) {
+        if (in_array($page_slug, ['site_update', 'batch_manager'])) {
             $imageConn = \Piwigo\Db\DbConnection::build();
             $imageService = new \Piwigo\Image\ImageService(new \Piwigo\Image\ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)));
 
@@ -368,14 +368,14 @@ SELECT COUNT(*)
         // Only for pages witch change permissions
         if (
             in_array(
-                $page['page'],
+                $page_slug,
                 [
                     'site_manager', // delete site
                     'site_update',  // ?only POST
                 ]
             )
             or (! empty($_POST) and in_array(
-                $page['page'],
+                $page_slug,
                 [
                     'album',        // public/private; lock/unlock, permissions
                     'albums',
@@ -448,11 +448,6 @@ SELECT COUNT(*)
         // +-------------------------------------------------------------------+
 
         trigger_notify('loc_begin_admin_page');
-
-        // $page['page'] is always a valid admin page slug — set above to either
-        // the validated $_GET['page'] or the literal 'intro' fallback (both
-        // string), so this offset is always string here.
-        $page_slug = $page['page'];
 
         // SEC-19: sub-controllers read input from this PSR-7 request
         // (getQueryParams()/getParsedBody()), not $_GET/$_POST directly.

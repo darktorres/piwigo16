@@ -23,7 +23,15 @@ use Piwigo\Template\Template;
  */
 final class ThemesNewPageRenderer
 {
-    public function render(): void
+    /**
+     * Legacy Coupling Retirement Track A batch A5.2f: $pageSlug is an
+     * explicit param instead of `global $page['page'];` -- the one real
+     * caller (ThemesSubController) already knows its own fixed page
+     * slug statically (it's the only class registered for the 'themes'
+     * slug in config/admin_pages.php). `$page['tab']` stays on
+     * `global $page;` -- a separate, not-yet-retired cluster.
+     */
+    public function render(string $pageSlug): void
     {
         /**
          * @var array<string, mixed>
@@ -35,14 +43,12 @@ final class ThemesNewPageRenderer
             die('Piwigo extensions install/update system is disabled');
         }
 
-        // $page['page']/$page['tab'] are set as plain strings by admin.php's
+        // $page['tab'] is set as a plain string by ThemesSubController's own
         // routing before this renderer runs; $page itself is only known as
-        // array<string, mixed>, so narrow the two offsets used here.
-        $page_page = $page['page'] ?? null;
-        $page_page = is_scalar($page_page) ? (string) $page_page : '';
+        // array<string, mixed>, so narrow the offset used here.
         $page_tab = $page['tab'] ?? null;
         $page_tab = is_scalar($page_tab) ? (string) $page_tab : '';
-        $base_url = get_root_url() . 'admin.php?page=' . $page_page . '&tab=' . $page_tab;
+        $base_url = get_root_url() . 'admin.php?page=' . $pageSlug . '&tab=' . $page_tab;
 
         $pem_catalog = new PemCatalog(new ZipExtractor());
         $extension_scanner = new ExtensionScanner();

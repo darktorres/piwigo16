@@ -27,12 +27,17 @@ use Piwigo\Template\Template;
  */
 final class StatsPageRenderer
 {
-    public function render(): void
+    /**
+     * Legacy Coupling Retirement Track A batch A5.2f: $pageSlug is an
+     * explicit param instead of `global $page['page'];` -- the one real
+     * caller (StatsSubController) already knows its own fixed page slug
+     * statically (it's the only class registered for the 'stats' slug
+     * in config/admin_pages.php); selects this page's own tab within the
+     * shared 'history' tabsheet group (see HistoryPageRenderer, its
+     * sibling in that same group).
+     */
+    public function render(string $pageSlug): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -43,8 +48,7 @@ final class StatsPageRenderer
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('history');
-        $page_tab = isset($page['page']) && is_string($page['page']) ? $page['page'] : '';
-        $tabsheet->select($page_tab);
+        $tabsheet->select($pageSlug);
         $tabsheet->assign();
 
         $base_url = get_root_url() . 'admin.php?page=history';

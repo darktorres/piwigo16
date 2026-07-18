@@ -41,12 +41,15 @@ use Piwigo\Template\Template;
  */
 final class PluginsInstalledPageRenderer
 {
-    public function render(): void
+    /**
+     * Legacy Coupling Retirement Track A batch A5.2f: $pageSlug is an
+     * explicit param instead of `global $page['page'];` -- the one real
+     * caller (PluginsSubController) already knows its own fixed page
+     * slug statically (it's the only class registered for the 'plugins'
+     * slug in config/admin_pages.php).
+     */
+    public function render(string $pageSlug): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $template->set_filenames([
@@ -64,12 +67,7 @@ final class PluginsInstalledPageRenderer
             $show_details = false;
         }
 
-        // admin.php always populates $page['page'] with a string (either the
-        // validated $_GET['page'] or the 'intro' fallback) before this
-        // renderer runs, but the shared $page array is typed array<string, mixed>.
-        $page_page = $page['page'] ?? null;
-        $page_page = is_string($page_page) ? $page_page : '';
-        $base_url = get_root_url() . 'admin.php?page=' . $page_page;
+        $base_url = get_root_url() . 'admin.php?page=' . $pageSlug;
         $pwg_token = new \Piwigo\Csrf\CsrfService()
             ->getToken();
 

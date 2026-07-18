@@ -27,6 +27,6 @@ final class HistorySubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new HistoryPageRenderer()
-            ->render();
+            ->render('history');
     }
 }

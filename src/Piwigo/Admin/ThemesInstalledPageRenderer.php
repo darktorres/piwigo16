@@ -36,24 +36,22 @@ use Piwigo\Template\Template;
  */
 final class ThemesInstalledPageRenderer
 {
-    public function render(): void
+    /**
+     * Legacy Coupling Retirement Track A batch A5.2f: $pageSlug is an
+     * explicit param instead of `global $page['page'];` -- the one real
+     * caller (ThemesSubController) already knows its own fixed page
+     * slug statically (it's the only class registered for the 'themes'
+     * slug in config/admin_pages.php).
+     */
+    public function render(string $pageSlug): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
-        // admin.php always populates $page['page'] with a string (either the
-        // validated $_GET['page'] or the 'intro' fallback) before this
-        // renderer runs, but the shared $page array is typed array<string, mixed>.
-        $page_page = $page['page'] ?? null;
-        $page_page = is_string($page_page) ? $page_page : '';
-        $base_url = get_root_url() . 'admin.php?page=' . $page_page;
+        $base_url = get_root_url() . 'admin.php?page=' . $pageSlug;
 
         $extension_repository = new ExtensionRepository(DbConnection::build());
         $pem_catalog = new PemCatalog(new ZipExtractor());

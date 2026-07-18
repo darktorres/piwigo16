@@ -82,17 +82,17 @@ final class ThemesSubController implements AdminSubControllerInterface
 
         if ($page['tab'] === 'update') {
             new UpdatesExtPageRenderer()
-                ->render();
+                ->render('themes');
             $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
         } elseif ($page['tab'] === 'new') {
             new ThemesNewPageRenderer()
-                ->render();
+                ->render('themes');
         } elseif ($page['tab'] === 'standard_pages') {
             new ThemesStandardPagesPageRenderer()
                 ->render();
         } else {
             new ThemesInstalledPageRenderer()
-                ->render();
+                ->render('themes');
         }
     }
 }

@@ -31,12 +31,17 @@ use Piwigo\Template\Template;
  */
 final class UpdatesExtPageRenderer
 {
-    public function render(): void
+    /**
+     * Legacy Coupling Retirement Track A batch A5.2f: $pageSlug is an
+     * explicit param instead of `global $page['page'];` -- this class has
+     * 4 real callers (UpdatesSubController's own "ext" tab, and
+     * LanguagesSubController/ThemesSubController/PluginsSubController's
+     * own "update" tab), each of which already knows its own fixed page
+     * slug statically (config/admin_pages.php registers each of those 4
+     * controllers for exactly one slug), so each passes its own literal.
+     */
+    public function render(string $pageSlug): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Config\Config::enableExtensionsInstall()) {
@@ -49,10 +54,6 @@ final class UpdatesExtPageRenderer
 
         $updates_ignored = \Piwigo\Config\Config::updatesIgnored();
 
-        // $page['page'] is always set to a validated string page slug by admin.php
-        // before this renderer runs -- see the identical narrowing in admin.php.
-        $page_slug = is_string($page['page'] ?? null) ? $page['page'] : 'updates';
-
         // updates.class.php::__construct() restricts itself to a single type when
         // reached from that type's own page (?page=plugins&tab=update etc.), and
         // checks all 3 when reached from ?page=updates&tab=ext -- same selection
@@ -63,8 +64,8 @@ final class UpdatesExtPageRenderer
             ExtensionType::Theme->value => 'themes',
             ExtensionType::Language->value => 'languages',
         ];
-        $types_to_check = in_array($page_slug, $plural_by_type, true)
-            ? array_filter(ExtensionType::cases(), static fn (ExtensionType $type): bool => $plural_by_type[$type->value] === $page_slug)
+        $types_to_check = in_array($pageSlug, $plural_by_type, true)
+            ? array_filter(ExtensionType::cases(), static fn (ExtensionType $type): bool => $plural_by_type[$type->value] === $pageSlug)
             : ExtensionType::cases();
 
         $extension_update_checker = new ExtensionUpdateChecker(new ExtensionScanner(), new PemCatalog(new ZipExtractor()));
@@ -159,7 +160,7 @@ final class UpdatesExtPageRenderer
         $template->assign('UPDATES_EXTENSION', $updates_extension);
         $template->assign('SHOW_RESET', $show_reset);
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
-        $template->assign('EXT_TYPE', $page_slug === 'updates' ? 'extensions' : $page_slug);
+        $template->assign('EXT_TYPE', $pageSlug === 'updates' ? 'extensions' : $pageSlug);
         $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
         $template->set_filename('plugin_admin_content', 'updates_ext.tpl');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');

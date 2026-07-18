@@ -59,16 +59,24 @@ final readonly class CategoryCatsRenderer
         private TemplateInterface $template,
     ) {}
 
-    public function render(): void
+    /**
+     * Legacy Coupling Retirement Track A batch A5.2e: $section/$category/
+     * $startcat are explicit params instead of `global $page;` -- the one
+     * real caller (GalleryController) already has them from
+     * SectionContextRegistry::current(). Plain values rather than the
+     * SectionContext object itself: Category is L2aCoreDomain and Section
+     * is L2bExtendedDomain, so a SectionContext parameter here is a real
+     * `deptrac analyse` DependsOnDisallowedLayer violation (L2a may not
+     * depend on L2b), caught during A5.2e-8's verification gate.
+     *
+     * @param array<string, mixed>|null $category
+     */
+    public function render(string $section, ?array $category, int $startcat): void
     {
         /**
          * @var Logger
          */
         global $logger;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = $this->template;
 
         $conn = DbConnection::build();
@@ -82,7 +90,7 @@ final readonly class CategoryCatsRenderer
 
         $currentUser = \Piwigo\Users\CurrentUser::get();
         $userId = $currentUser->id;
-        $isRecentCats = $page['section'] === 'recent_cats';
+        $isRecentCats = $section === 'recent_cats';
 
         $tree = $treeCache->getForUser($currentUser->rawAttributes);
 
@@ -102,7 +110,7 @@ final readonly class CategoryCatsRenderer
                 return CategoryService::isRecentCategory($dateLast, $recentPeriod, $lastPhotoDate, $now);
             });
         } else {
-            $pageCategory = $page['category'] ?? null;
+            $pageCategory = $category;
             $targetId = null;
             if (is_array($pageCategory) && is_numeric($pageCategory['id'] ?? null)) {
                 $targetId = (int) $pageCategory['id'];
@@ -129,7 +137,6 @@ final readonly class CategoryCatsRenderer
         $totalCategories = count($filtered);
 
         $nbCategoriesPage = \Piwigo\Config\Config::nbCategoriesPage();
-        $startcat = is_numeric($page['startcat'] ?? null) ? (int) $page['startcat'] : 0;
 
         $pageRows = array_slice($filtered, $startcat, $nbCategoriesPage);
 

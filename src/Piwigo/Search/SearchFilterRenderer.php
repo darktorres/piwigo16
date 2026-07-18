@@ -17,6 +17,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Section\SectionContext;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 
@@ -41,10 +42,26 @@ final readonly class SearchFilterRenderer
         private TemplateInterface $template,
     ) {}
 
-    public function render(): void
+    /**
+     * Legacy Coupling Retirement Track A batch A5.2e: $sectionContext is an
+     * explicit param instead of `global $page;`. The rest of this method
+     * (and every private helper it calls) keeps treating `$page` as a
+     * plain local array shaped like the old global -- it's built once
+     * here from $sectionContext's own fields and mutates
+     * 'search_details' in place exactly as before, just no longer visible
+     * outside this call (nothing downstream ever read the mutated
+     * version).
+     */
+    public function render(SectionContext $sectionContext): void
     {
-        /** @var array<string, mixed> $page */
-        global $page;
+        $page = [
+            'section' => $sectionContext->section,
+            'search' => $sectionContext->search,
+            'search_details' => $sectionContext->searchDetails,
+            'items' => $sectionContext->items,
+            'start' => $sectionContext->start,
+            'chronology_field' => $sectionContext->chronologyField,
+        ];
         global $persistent_cache;
         $template = $this->template;
         if (! $persistent_cache instanceof PersistentCache) {
@@ -66,11 +83,14 @@ final readonly class SearchFilterRenderer
 
         $template->assign('display_filter', $filtersViews);
 
-        // we add isset($page['search_details']) in this condition because it
-        // only applies to regular search, not the legacy qsearch. As Piwigo
-        // 14 will still be able to show an old quicksearch result, we must
-        // check this condition too.
-        if ($page['section'] !== 'search' || ! isset($page['search_details']) || ! is_array($page['search_details'])) {
+        // we add the search_details emptiness check in this condition
+        // because it only applies to regular search, not the legacy
+        // qsearch (SectionContext::searchDetails stays [] whenever
+        // SectionPopulator's own search branch took the qsearch path
+        // instead -- see that class's search-section handling). As
+        // Piwigo 14 will still be able to show an old quicksearch
+        // result, we must check this condition too.
+        if ($page['section'] !== 'search' || $page['search_details'] === []) {
             return;
         }
 
@@ -92,8 +112,7 @@ final readonly class SearchFilterRenderer
 
         $langMonth = \Piwigo\Core\Lang::months();
 
-        $searchId = $page['search'] ?? null;
-        $searchId = (is_int($searchId) || is_string($searchId)) ? $searchId : '';
+        $searchId = $page['search'] ?? '';
         $searchConn = DbConnection::build();
         $searchService = new SearchService(
             new SearchRepository($searchConn),
@@ -102,7 +121,7 @@ final readonly class SearchFilterRenderer
             $this->mailer,
             $this->htmlRenderer,
         );
-        $mySearch = $searchService->getValidatedSearchArray($searchId);
+        $mySearch = $searchService->getValidatedSearchArray($searchId, $sectionContext->section);
         if (! is_array($mySearch)) {
             // get_search_array() only returns false when unserialize() fails
             // on malformed data; this method only runs for an
@@ -128,9 +147,8 @@ final readonly class SearchFilterRenderer
         // ONLY IF we have some filters filled
         if ((bool) $page['search_details']['has_filters_filled']) {
             $searchItems = [-1];
-            if (isset($page['items']) && is_array($page['items']) && $page['items'] !== []) {
-                /** @var list<int|string|float|bool> $searchItems */
-                $searchItems = array_values(array_filter($page['items'], is_scalar(...)));
+            if ($page['items'] !== []) {
+                $searchItems = $page['items'];
             }
 
             $searchItemsClause = 'image_id IN (' . implode(',', $searchItems) . ')';
@@ -181,7 +199,7 @@ final readonly class SearchFilterRenderer
                 return $ids;
             };
 
-            $otherFiltersItems = $this->getItemsForFilter('tags');
+            $otherFiltersItems = $this->getItemsForFilter('tags', $page);
             if ($otherFiltersItems === false) {
                 $filterTags = $tagService->getAvailableTags();
                 usort($filterTags, $this->htmlRenderer->tagAlphaCompare(...));
@@ -227,7 +245,7 @@ final readonly class SearchFilterRenderer
         }
 
         if (isset($searchFields['author']) and (bool) $displayFilters['author']['access']) {
-            $filterClause = $this->getClauseForFilter('author');
+            $filterClause = $this->getClauseForFilter('author', $page);
 
             $query = '
 SELECT
@@ -315,7 +333,8 @@ SELECT
                 ],
                 'LIST_DATE_POSTED',
                 'DATE_POSTED',
-                $template
+                $template,
+                $page
             );
         } elseif (isset($searchFields['date_posted'])) {
             unset($searchFields['date_posted']);
@@ -338,14 +357,15 @@ SELECT
                 ],
                 'LIST_DATE_CREATED',
                 'DATE_CREATED',
-                $template
+                $template,
+                $page
             );
         } elseif (isset($searchFields['date_created'])) {
             unset($searchFields['date_created']);
         }
 
         if (isset($searchFields['added_by']) and (bool) $displayFilters['added_by']['access']) {
-            $filterClause = $this->getClauseForFilter('added_by');
+            $filterClause = $this->getClauseForFilter('added_by', $page);
 
             $query = '
 SELECT
@@ -494,14 +514,19 @@ SELECT
         }
 
         if (isset($searchFields['filetypes']) and (bool) $displayFilters['file_type']['access']) {
-            $filterClause = $this->getClauseForFilter('filetypes');
+            $filterClause = $this->getClauseForFilter('filetypes', $page);
 
             // get all file extensions for this user in the gallery,
             // whatever the current filters
             $cacheKey = $persistent_cache->make_key('file_exts' . $userId . $userCacheUpdateTime);
             // Always a string here -- unconditionally set earlier in this
-            // method, before any branching.
-            $searchDetailsForbidden = $page['search_details']['forbidden'];
+            // method, before any branching; re-narrowed because the
+            // getClauseForFilter() by-ref call above widens $page's own
+            // per-key types back to the generic array<string, mixed> the
+            // parameter itself is typed as.
+            $searchDetailsRaw = $page['search_details'];
+            $searchDetailsForbiddenRaw = is_array($searchDetailsRaw) ? ($searchDetailsRaw['forbidden'] ?? null) : null;
+            $searchDetailsForbidden = is_string($searchDetailsForbiddenRaw) ? $searchDetailsForbiddenRaw : '';
             $allExtsQuery = '
 SELECT
     SUBSTRING_INDEX(path, ".", -1) AS ext,
@@ -556,7 +581,7 @@ SELECT
             $template->assign('SHOW_FILTER_RATINGS', true);
 
             if (isset($searchFields['ratings']) and (bool) $displayFilters['rating']['access']) {
-                $filterClause = $this->getClauseForFilter('ratings');
+                $filterClause = $this->getClauseForFilter('ratings', $page);
 
                 $cacheKey = $persistent_cache->make_key('filter_ratings' . $userId . $userCacheUpdateTime);
 
@@ -615,7 +640,7 @@ SELECT
 
         // For filesize
         if (isset($searchFields['filesize_min']) && isset($searchFields['filesize_max']) and (bool) $displayFilters['file_size']['access']) {
-            $filterClause = $this->getClauseForFilter('filesize');
+            $filterClause = $this->getClauseForFilter('filesize', $page);
 
             $filesizes = [];
 
@@ -676,7 +701,7 @@ SELECT
         }
 
         if (isset($searchFields['ratios']) and (bool) $displayFilters['ratio']['access']) {
-            $filterClause = $this->getClauseForFilter('ratios');
+            $filterClause = $this->getClauseForFilter('ratios', $page);
 
             $cacheKey = $persistent_cache->make_key('filter_ratios' . $userId . $userCacheUpdateTime);
 
@@ -743,7 +768,7 @@ SELECT
         }
 
         if (isset($searchFields['height_min']) and isset($searchFields['height_max']) and (bool) $displayFilters['height']['access']) {
-            $filterClause = $this->getClauseForFilter('height');
+            $filterClause = $this->getClauseForFilter('height', $page);
 
             $query = '
 SELECT
@@ -807,7 +832,7 @@ SELECT
         }
 
         if (isset($searchFields['width_min']) and isset($searchFields['width_max']) and (bool) $displayFilters['width']['access']) {
-            $filterClause = $this->getClauseForFilter('width');
+            $filterClause = $this->getClauseForFilter('width', $page);
 
             $query = '
 SELECT
@@ -1034,6 +1059,7 @@ SELECT
      * @param array<int, string> $langMonth
      * @param array<string, string> $labelForThreshold keyed by threshold id
      *   (e.g. '24h', '7d'), in display order
+     * @param array<string, mixed> $page see render()'s own docblock
      */
     private function renderDateFilter(
         PersistentCache $persistentCache,
@@ -1045,9 +1071,10 @@ SELECT
         array $labelForThreshold,
         string $listTemplateVar,
         string $counterTemplateVar,
-        TemplateInterface $template
+        TemplateInterface $template,
+        array $page
     ): void {
-        $filterClause = $this->getClauseForFilter($filterName);
+        $filterClause = $this->getClauseForFilter($filterName, $page);
         $cacheKey = $persistentCache->make_key('filter_' . $filterName . $userId . $userCacheUpdateTime);
         // we use persistent_cache only for fetching lines filtered only by
         // permissions
@@ -1197,13 +1224,18 @@ SELECT
      * Returns the SQL WHERE clause to be used to build filter values.
      *
      * @since 15
+     *
+     * @param array<string, mixed> $page see render()'s own docblock --
+     *   by-ref because getItemsForFilter() caches its computed
+     *   intersection back onto $page['search_details'] for later calls
+     *   within the same render() invocation to reuse (see that method's
+     *   own comment); losing that write-back across calls would still be
+     *   correct, just slower (a fresh array_intersect() per filter
+     *   instead of a cache hit).
      */
-    private function getClauseForFilter(string $filterName): string
+    private function getClauseForFilter(string $filterName, array &$page): string
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        $otherFiltersItems = $this->getItemsForFilter($filterName);
+        $otherFiltersItems = $this->getItemsForFilter($filterName, $page);
         if ($otherFiltersItems === false) {
             // $page['search_details'] is set (as
             // SearchService::getRegularSearchResults()'s return
@@ -1233,14 +1265,12 @@ SELECT
      *
      * @since 15
      *
+     * @param array<string, mixed> $page see getClauseForFilter()'s own
+     *   docblock for why this is by-ref
      * @return array<int, mixed>|false array of image_ids, or false
      */
-    private function getItemsForFilter(string $filterName): false|array
+    private function getItemsForFilter(string $filterName, array &$page): false|array
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         /**
          * @var Logger
          */

@@ -75,13 +75,37 @@ final readonly class HistoryService
 
     /**
      * Logs the visit into the history table.
+     *
+     * $section/$category/$tagIds are the caller's own gallery-navigation
+     * context (Legacy Coupling Retirement Track A batch A5.2e): this
+     * method has 3 mutually-exclusive real callers -- GalleryController/
+     * PictureController (a real SectionContext always exists, pass
+     * SectionContextRegistry::current()'s values), PwgCore::historyLog()
+     * (a WS method that never runs SectionPopulator, passes its own
+     * WS-param-derived values), and ActionController (no section context
+     * available at all, passes nothing) -- so these can't be read
+     * implicitly off a shared registry/global here without silently
+     * breaking the other two callers.
+     *
+     * @param array<string, mixed>|null $category
+     * @param list<int>|null $tagIds
      */
-    public function logVisit(?int $imageId = null, ?string $imageType = null, int|string|null $formatId = null): bool
-    {
+    public function logVisit(
+        ?int $imageId = null,
+        ?string $imageType = null,
+        int|string|null $formatId = null,
+        ?string $section = null,
+        ?array $category = null,
+        ?array $tagIds = null,
+    ): bool {
         /**
          * @var array<string, mixed>
          */
         global $conf;
+        // search_id/auth_key_id stay on the global $page bag for now --
+        // a separate, not-yet-retired cluster (Legacy Coupling
+        // Retirement Track A batch A5.2h), unrelated to the gallery-
+        // navigation-context values this signature change is scoped to.
         /**
          * @var array<string, mixed>
          */
@@ -114,14 +138,12 @@ UPDATE ' . Tables::userInfos() . '
             return false;
         }
 
-        $pageSection = $page['section'] ?? null;
-        $pageSection = is_string($pageSection) ? $pageSection : null;
+        $pageSection = $section;
 
         $tagsString = null;
         if ($pageSection === 'tags') {
-            $tagIds = $page['tag_ids'] ?? [];
-            $tagIds = is_array($tagIds) ? array_filter($tagIds, is_scalar(...)) : [];
-            $tagsString = implode(',', $tagIds);
+            $tagIdsForQuery = $tagIds ?? [];
+            $tagsString = implode(',', $tagIdsForQuery);
 
             if (strlen($tagsString) > 50) {
                 // we need to truncate, mysql won't accept a too long string
@@ -190,9 +212,8 @@ UPDATE ' . Tables::userInfos() . '
         // $user['id']/$page[...] are read from loosely-typed global bags fed by
         // DB rows (string|null) and session/config data (mixed); narrow each
         // to the scalar the column actually stores before splicing into SQL.
-        $category = $page['category'] ?? null;
-        $category = is_array($category) ? $category : [];
-        $categoryId = $category['id'] ?? null;
+        $categoryForQuery = $category ?? [];
+        $categoryId = $categoryForQuery['id'] ?? null;
         $categoryId = is_numeric($categoryId) ? (int) $categoryId : null;
         $searchId = $page['search_id'] ?? null;
         $searchId = is_numeric($searchId) ? (int) $searchId : null;

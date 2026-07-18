@@ -754,21 +754,22 @@ SELECT
     public static function historyLog(array $params, PwgServer &$service): void
     {
         global $logger;
-        /** @var array<string, mixed> $page */
-        global $page;
 
+        $section = null;
         if (! empty($params['section']) and in_array($params['section'], \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'section'))) {
-            $page['section'] = $params['section'];
+            $section = $params['section'];
         }
 
+        $category = null;
         if (! empty($params['cat_id'])) {
-            $page['category'] = [
+            $category = [
                 'id' => $params['cat_id'],
             ];
         }
 
+        $tagIds = null;
         if (! empty($params['tags_string']) and (bool) preg_match('/^\d+(,\d+)*$/', $params['tags_string'])) {
-            $page['tag_ids'] = explode(',', $params['tags_string']);
+            $tagIds = array_map(intval(...), explode(',', $params['tags_string']));
         }
 
         // when visiting a photo (which is currently, in version 14, the only event registered
@@ -782,7 +783,13 @@ SELECT
             $image_type = 'high';
         }
 
-        new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit(is_numeric($params['image_id']) ? (int) $params['image_id'] : null, $image_type);
+        new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit(
+            is_numeric($params['image_id']) ? (int) $params['image_id'] : null,
+            $image_type,
+            section: $section,
+            category: $category,
+            tagIds: $tagIds,
+        );
     }
 
     /**

@@ -82,6 +82,36 @@ abstract class CalendarBase
     public $calendar_levels;
 
     /**
+     * chronology field ('posted' or 'created'); set by CalendarRenderer
+     * before initialize() is called (Legacy Coupling Retirement Track A
+     * batch A5.2e: replaces a `global $page['chronology_field']` read).
+     *
+     * @var string
+     */
+    public $chronology_field = '';
+
+    /**
+     * mutable chronology-date state, narrowed in place by
+     * generate_category_content() and its build_*_calendar() helpers as
+     * the requested period gets resolved down to a single year/month/day
+     * (Legacy Coupling Retirement Track A batch A5.2e: replaces
+     * `global $page['chronology_date']` reads/writes).
+     *
+     * @var array<int, int|string>
+     */
+    public $chronology_date = [];
+
+    /**
+     * chronology view (CAL_VIEW_LIST or CAL_VIEW_CALENDAR); set by
+     * CalendarRenderer before generate_category_content() is called
+     * (Legacy Coupling Retirement Track A batch A5.2e: replaces a
+     * `global $page['chronology_view']` read).
+     *
+     * @var string
+     */
+    public $chronology_view = '';
+
+    /**
      * Generate navigation bars for category page.
      *
      * @return bool false indicates that thumbnails where not included
@@ -103,9 +133,7 @@ abstract class CalendarBase
      */
     public function initialize($inner_sql): void
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-        if ($page['chronology_field'] == 'posted') {
+        if ($this->chronology_field === 'posted') {
             $this->date_field = 'date_available';
         } else {
             $this->date_field = 'date_creation';
@@ -120,30 +148,17 @@ abstract class CalendarBase
      */
     public function get_display_name()
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $res = '';
 
         // level_separator is documented as a character string
         // (see config_default.inc.php); see the identical pattern in
         // include/section_init.inc.php and admin/cat_list.php.
         $level_separator = \Piwigo\Config\Config::levelSeparator();
-        // chronology_date is always an array by the time calendar classes
-        // run (see CalendarRenderer::render(),
-        // which sanitizes it before this is ever called); see the identical
-        // pattern in calendar_monthly.class.php.
-        $page_chronology_date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];
+        $page_chronology_date = $this->chronology_date;
 
         for ($i = 0; $i < count($page_chronology_date); $i++) {
             $res .= $level_separator;
-            $date_component = $page_chronology_date[$i];
-            $date_component = is_int($date_component) || is_string($date_component) ? (string) $date_component : '';
+            $date_component = (string) $page_chronology_date[$i];
             if (isset($page_chronology_date[$i + 1])) {
                 $chronology_date_slice = array_slice($page_chronology_date, 0, $i + 1);
                 $url = duplicate_index_url(
@@ -221,8 +236,6 @@ abstract class CalendarBase
         $show_empty = false,
         $labels = null
     ) {
-        global $page;
-
         $nav_bar_datas = [];
 
         if (\Piwigo\Config\Config::calendarShowEmpty() and $show_empty and ! empty($labels)) {
@@ -287,11 +300,6 @@ abstract class CalendarBase
      */
     protected function build_nav_bar($level, ?array $labels, \Piwigo\Core\TemplateInterface $template): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
-
         $query = '
 SELECT DISTINCT(' . $this->calendar_levels[$level]['sql'] . ') as period,
   COUNT(DISTINCT id) as nb_images' .
@@ -301,20 +309,14 @@ $this->get_date_where($level) . '
 
         $level_items = \Piwigo\Db\MysqliDb::query2Array($query, 'period', 'nb_images');
 
-        // chronology_date is always an array by the time calendar classes
-        // run (see CalendarRenderer::render(),
-        // which sanitizes it before initialize()/generate_category_content()
-        // are ever called); see the identical pattern in
-        // calendar_monthly.class.php.
-        $page_chronology_date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];
+        $page_chronology_date = $this->chronology_date;
 
         if (count($level_items) == 1 and
              count($page_chronology_date) < count($this->calendar_levels) - 1) {
             if (! isset($page_chronology_date[$level])) {
                 [$key] = array_keys($level_items);
-                assert(is_array($page['chronology_date']));
-                $page['chronology_date'][$level] = (int) $key;
-                $page_chronology_date = $page['chronology_date'];
+                $this->chronology_date[$level] = (int) $key;
+                $page_chronology_date = $this->chronology_date;
 
                 if ($level < count($page_chronology_date) and
                      $level != count($this->calendar_levels) - 1) {
@@ -323,12 +325,7 @@ $this->get_date_where($level) . '
             }
         }
 
-        $dates = [];
-        foreach ($page_chronology_date as $date_part) {
-            if (is_int($date_part) || is_string($date_part)) {
-                $dates[] = $date_part;
-            }
-        }
+        $dates = array_values($page_chronology_date);
         while ($level < count($dates)) {
             array_pop($dates);
         }
@@ -355,19 +352,12 @@ $this->get_date_where($level) . '
      */
     protected function build_next_prev(\Piwigo\Core\TemplateInterface $template): void
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
         $prev = $next = null;
-        if (empty($page['chronology_date'])) {
+        if (empty($this->chronology_date)) {
             return;
         }
 
-        // chronology_date is always an array by the time calendar classes
-        // run (see CalendarRenderer::render(),
-        // which sanitizes it before this is ever called); see the identical
-        // pattern in calendar_monthly.class.php.
-        $page_chronology_date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];
+        $page_chronology_date = $this->chronology_date;
 
         $sub_queries = [];
         $nb_elements = count($page_chronology_date);

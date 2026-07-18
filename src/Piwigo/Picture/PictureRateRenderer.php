@@ -17,12 +17,16 @@ use Piwigo\Db\Tables;
  */
 final class PictureRateRenderer
 {
-    public function render(): void
+    /**
+     * Legacy Coupling Retirement Track A batch A5.2e: $imageId is an
+     * explicit param instead of `global $page['image_id']` -- the one
+     * real caller (PictureController) already tracks it as its own local
+     * variable (possibly resolved/overwritten from a URL-supplied image
+     * file name before this call), so this reads that directly instead
+     * of a shared registry.
+     */
+    public function render(int $imageId): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
         // Set by picture.php/PictureController, right before this call.
         /**
@@ -65,10 +69,7 @@ SELECT COUNT(rate) AS count
         $user_rate = null;
         if (\Piwigo\Config\Config::rateAnonymous() or \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic)) {
             if ($rate_summary['count'] > 0) {
-                // $page['image_id'] is always numeric (int or numeric
-                // string) -- see the identical narrowing in picture.php.
-                $rate_image_id = $page['image_id'];
-                $rate_image_id = is_numeric($rate_image_id) ? (int) $rate_image_id : 0;
+                $rate_image_id = $imageId;
                 $rate_user_id = \Piwigo\Users\CurrentUser::get()->id;
 
                 $query = 'SELECT rate

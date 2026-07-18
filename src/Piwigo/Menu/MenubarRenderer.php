@@ -37,17 +37,32 @@ use Piwigo\Tag\TagService;
  */
 final class MenubarRenderer
 {
-    public function render(): void
+    /**
+     * Legacy Coupling Retirement Track A batch A5.2e: the gallery-
+     * navigation-context reads below (section/items/category/
+     * combined_categories/qsearch_details) come from
+     * SectionContextRegistry::current() instead of `global $page;` --
+     * nullable here (unlike GalleryController/PictureController's own
+     * guaranteed-non-null read) since this renderer is also called from
+     * 9 other, non-gallery controllers that never run
+     * SectionPopulator::populate() at all, matching every one of those
+     * keys' own former `?? null`/`isset()` fallback behavior.
+     *
+     * The categories-menu block also used to have
+     * CategoryService::getCategoriesMenu() write `count_categories` back
+     * onto the real global `$page['category']` for callers reading it
+     * later (see that method's own docblock) -- with no global left to
+     * write to, this method returns that value instead; every caller but
+     * GalleryController ignores it.
+     */
+    public function render(): mixed
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         /**
          * @var array<string, mixed>
          */
         global $filter;
         $template = \Piwigo\Template\CurrentTemplate::get();
+        $section_context = \Piwigo\Section\SectionContextRegistry::current();
 
         $conn = DbConnection::build();
         $tagService = new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
@@ -61,8 +76,8 @@ final class MenubarRenderer
         }
         $menu->prepare_display();
 
-        if (($page['section'] ?? null) === 'search' and isset($page['qsearch_details']) and is_array($page['qsearch_details'])) {
-            $qsearch_q = $page['qsearch_details']['q'] ?? '';
+        if ($section_context?->section === 'search' and $section_context->qsearchDetails !== []) {
+            $qsearch_q = $section_context->qsearchDetails['q'] ?? '';
             $qsearch_q = is_string($qsearch_q) ? $qsearch_q : '';
             $template->assign('QUERY_SEARCH', htmlspecialchars($qsearch_q));
         }
@@ -125,10 +140,13 @@ final class MenubarRenderer
             }
         }
 
+        $categoryCountCategories = null;
         if ($block !== null) {
+            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService());
+            $categoryCountCategories = $categoriesMenu['categoryCountCategories'];
             $block->data = [
                 'NB_PICTURE' => \Piwigo\Users\CurrentUser::get()->rawAttributes['nb_total_images'] ?? null,
-                'MENU_CATEGORIES' => $categoryService->getCategoriesMenu(new FilterService()),
+                'MENU_CATEGORIES' => $categoriesMenu['menu'],
                 'U_CATEGORIES' => make_index_url([
                     'section' => 'categories',
                 ]),
@@ -139,7 +157,7 @@ final class MenubarRenderer
         // ------------------------------------------------------------ related categories
         $block = $menu->get_block('mbRelatedCategories');
 
-        $page_items = $page['items'] ?? null;
+        $page_items = $section_context?->items;
 
         if (
             is_array($page_items)
@@ -148,14 +166,14 @@ final class MenubarRenderer
             and $page_items !== []
         ) {
             $exclude_cat_ids = [];
-            $page_category = $page['category'] ?? null;
-            $page_category_id = is_array($page_category) ? ($page_category['id'] ?? null) : null;
+            $page_category = $section_context->category;
+            $page_category_id = $page_category['id'] ?? null;
+            $combined_categories = $section_context->combinedCategories;
             if (is_int($page_category_id) or is_string($page_category_id)) {
                 $exclude_cat_ids = [$page_category_id];
-                $combined_categories = $page['combined_categories'] ?? null;
-                if (is_array($combined_categories)) {
+                if ($combined_categories !== null) {
                     foreach ($combined_categories as $cat) {
-                        $cat_id = is_array($cat) ? ($cat['id'] ?? null) : null;
+                        $cat_id = $cat['id'] ?? null;
                         if (is_int($cat_id) or is_string($cat_id)) {
                             $exclude_cat_ids[] = $cat_id;
                         }
@@ -163,13 +181,10 @@ final class MenubarRenderer
                 }
             }
 
-            $related_items = array_values(array_filter(
-                $page_items,
-                static fn (mixed $item): bool => is_int($item) or is_string($item)
-            ));
+            $related_items = $page_items;
 
             $block->data = [
-                'MENU_CATEGORIES' => $categoryService->getRelatedCategoriesMenuWithUrls($related_items, $exclude_cat_ids),
+                'MENU_CATEGORIES' => $categoryService->getRelatedCategoriesMenuWithUrls($related_items, $exclude_cat_ids, $page_category, $combined_categories),
             ];
 
             if (! self::emptyValue($block->data['MENU_CATEGORIES'])) {
@@ -365,6 +380,8 @@ final class MenubarRenderer
             $block->template = 'menubar_identification.tpl';
         }
         $menu->apply('MENUBAR', 'menubar.tpl');
+
+        return $categoryCountCategories;
     }
 
     /**

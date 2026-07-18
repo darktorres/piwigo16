@@ -665,25 +665,27 @@ final readonly class CategoryService
      * vast majority pure-read and never touching filtered-category data;
      * this is the one method that does).
      *
-     * @return array<int, array<string, mixed>>
+     * Legacy Coupling Retirement Track A batch A5.2e: $category is an
+     * explicit param instead of `global $page['category']`. This method
+     * also used to write `count_categories` back onto that same global
+     * array once it located the matching menu row (for the caller's own
+     * later `$page['category']['count_categories']` read) -- with no
+     * global left to mutate, that value comes back through the return
+     * shape instead.
+     *
+     * @param array<string, mixed>|null $category
+     * @return array{menu: array<int, array<string, mixed>>, categoryCountCategories: mixed}
      */
-    public function getCategoriesMenu(FilterUpdaterInterface $filterUpdater): array
+    public function getCategoriesMenu(?array $category, FilterUpdaterInterface $filterUpdater): array
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         /**
          * @var array<string, mixed>
          */
         global $filter;
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
-        // category currently displayed, if any; narrowed once here and reused
-        // at every nested-offset access site below (see fix pattern #4/#7)
-        $categoryPageRaw = $page['category'] ?? null;
-        /** @var array<string, mixed>|null $categoryPage */
-        $categoryPage = is_array($categoryPageRaw) ? $categoryPageRaw : null;
+        $categoryPage = $category;
+        $countCategories = null;
 
         // P23 batch 3b: findMenuCategories()'s SQL WHERE (structural id_uppercat
         // filter, or PermissionService::getSqlConditionFandF()'s
@@ -757,9 +759,7 @@ final readonly class CategoryService
             $categoryPageId = $categoryPage['id'] ?? null;
             $categoryPageIdStr = is_scalar($categoryPageId) ? (string) $categoryPageId : null;
             if ($categoryPage !== null && $categoryPageIdStr !== null && $categoryPageIdStr === $rowIdStr) { // save the number of subcats for later optim
-                if (is_array($page['category'] ?? null)) {
-                    $page['category']['count_categories'] = $row['count_categories'] ?? null;
-                }
+                $countCategories = $row['count_categories'] ?? null;
             }
         }
         usort($cats, self::compareByGlobalRank(...));
@@ -767,7 +767,10 @@ final readonly class CategoryService
         // Update filtered data
         $filterUpdater->updateCatsWithFilteredData($cats);
 
-        return $cats;
+        return [
+            'menu' => $cats,
+            'categoryCountCategories' => $countCategories,
+        ];
     }
 
     /**
@@ -858,15 +861,18 @@ final readonly class CategoryService
      * same-value pass-through -- so this is currently a no-op
      * difference). Re-verify once P31 wires real event handlers.
      *
+     * Legacy Coupling Retirement Track A batch A5.2e: $category/
+     * $combinedCategories are explicit params instead of
+     * `global $page['category']`/`['combined_categories']`.
+     *
      * @param  array<int, int|string>  $items
      * @param  array<int, int|string>  $excludedCatIds
+     * @param  array<string, mixed>|null  $category
+     * @param  list<array<string, mixed>>|null  $combinedCategories
      * @return list<array<string, mixed>>
      */
-    public function getRelatedCategoriesMenuWithUrls(array $items, array $excludedCatIds = []): array
+    public function getRelatedCategoriesMenuWithUrls(array $items, array $excludedCatIds = [], ?array $category = null, ?array $combinedCategories = null): array
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
         $cats = $this->getRelatedCategoriesMenu(
             array_values(array_map(intval(...), $items)),
             array_values(array_map(intval(...), $excludedCatIds))
@@ -878,12 +884,11 @@ final readonly class CategoryService
             }
 
             $urlParams = [];
-            if (isset($page['category'])) {
-                $urlParams['category'] = $page['category'];
+            if ($category !== null) {
+                $urlParams['category'] = $category;
 
                 $urlParams['combined_categories'] = [$cat];
-                $combinedCategories = $page['combined_categories'] ?? null;
-                if (is_array($combinedCategories)) {
+                if ($combinedCategories !== null) {
                     $urlParams['combined_categories'] = array_merge($combinedCategories, [$cat]);
                 }
             } else {

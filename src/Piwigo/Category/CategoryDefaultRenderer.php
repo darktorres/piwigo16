@@ -26,7 +26,23 @@ final readonly class CategoryDefaultRenderer
         private TemplateInterface $template,
     ) {}
 
-    public function render(): void
+    /**
+     * Legacy Coupling Retirement Track A batch A5.2e: $items/$start/
+     * $nbImagePage/$section are explicit params instead of `global $page;`
+     * -- the one real caller (GalleryController) already has them from
+     * SectionContextRegistry::current(). Plain values rather than the
+     * SectionContext object itself: Category is L2aCoreDomain and Section
+     * is L2bExtendedDomain, so a SectionContext parameter here is a real
+     * `deptrac analyse` DependsOnDisallowedLayer violation (L2a may not
+     * depend on L2b), caught during A5.2e-8's verification gate.
+     * cat_slideshow_url stays on `global $page;` (see the write below):
+     * it's produced here for GalleryController's own later read, after
+     * SectionContext was already built, so it's out of SectionContext's
+     * own scope (see that class's docblock).
+     *
+     * @param list<int|string> $items
+     */
+    public function render(array $items, int $start, int $nbImagePage, string $section): void
     {
         /**
          * @var array<string, mixed>
@@ -36,14 +52,7 @@ final readonly class CategoryDefaultRenderer
 
         $pictures = [];
 
-        $pageItems = $page['items'];
-        if (! is_array($pageItems)) {
-            $pageItems = [];
-        }
-        $pageStart = is_numeric($page['start'] ?? null) ? (int) $page['start'] : 0;
-        $pageNbImagePage = is_numeric($page['nb_image_page'] ?? null) ? (int) $page['nb_image_page'] : 0;
-
-        $selection = array_slice($pageItems, $pageStart, $pageNbImagePage);
+        $selection = array_slice($items, $start, $nbImagePage);
 
         $selection = trigger_change('loc_index_thumbnails_selection', $selection);
         if (! is_array($selection)) {
@@ -177,7 +186,7 @@ SELECT image_id, COUNT(*) AS nb_comments
                 $tplVar['NB_HITS'] = $row['hit'];
             }
 
-            switch ($page['section']) {
+            switch ($section) {
                 case 'best_rated':
                     $ratingScore = $row['rating_score'];
                     $name = '(' . (is_string($ratingScore) || is_int($ratingScore) ? $ratingScore : '') . ') ' . $name;

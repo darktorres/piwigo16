@@ -820,7 +820,7 @@ SELECT *
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid search_id input parameter.');
             }
 
-            $search_info = $searchService->getValidatedSearchInfo($params['search_id']);
+            $search_info = $searchService->getValidatedSearchInfo($params['search_id'], null);
             if (empty($search_info)) {
                 return new PwgError(WsError::INVALID_PARAM, 'This search does not exist.');
             }

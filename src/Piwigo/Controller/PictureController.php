@@ -35,6 +35,8 @@ use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
+use Piwigo\Section\SectionContext;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionPopulator;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagRepository;
@@ -65,7 +67,8 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * Like GalleryController, Piwigo\Section\SectionPopulator::populate() (P23
  * batch 4d) must run before check_status() -- check_restrictions() below
- * depends on $page['category'] already being populated.
+ * depends on SectionContextRegistry::current()->category already being
+ * populated.
  */
 final class PictureController implements ControllerInterface
 {
@@ -89,16 +92,21 @@ final class PictureController implements ControllerInterface
         global $url_self;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->saveEditContext();
+        // Legacy Coupling Retirement Track A batch A5.2e: populate() always
+        // calls SectionContextRegistry::set() as the very last thing it
+        // does, so this is guaranteed non-null by the time this controller
+        // (its one real caller besides GalleryController) runs -- a real
+        // guard, not dead code, since the type itself is nullable.
+        $section_context = SectionContextRegistry::current();
+        if (! $section_context instanceof SectionContext) {
+            throw new \RuntimeException('SectionContextRegistry::current() is null after SectionPopulator::populate()');
+        }
+
+        new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->saveEditContext($section_context->sectionUrl, $section_context->imageId);
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        // $page['category'] (see SectionPopulator::populate() /
-        // get_cat_info()) is set at most once, before this method runs,
-        // and is never reassigned below -- snapshot it locally once so
-        // every isset($page['category']) check below can be replaced with
-        // a real is_array() narrowing.
-        $page_category = (isset($page['category']) and is_array($page['category'])) ? $page['category'] : null;
+        $page_category = $section_context->category;
 
         // access authorization check
         if ($page_category !== null) {
@@ -110,24 +118,18 @@ final class PictureController implements ControllerInterface
             )->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0, new HtmlService());
         }
 
-        // $page['items'] (see SectionPopulator::populate()) is always a
-        // list of image ids (int or numeric string); mutated in place
-        // below (best_rated fallback) so it is kept as a local variable
-        // synced back into $page.
-        $page_items = $page['items'];
-        $items = [];
-        if (is_array($page_items)) {
-            foreach ($page_items as $page_item) {
-                if (is_int($page_item) || is_string($page_item)) {
-                    $items[] = $page_item;
-                }
-            }
-        }
-        $page['items'] = $items;
+        // $section_context->items is mutated in place below (best_rated
+        // fallback) so it is kept as a local variable -- SectionContext
+        // itself is a readonly snapshot, so the mutated list is
+        // re-registered via withItems() for downstream readers of
+        // SectionContextRegistry::current() (e.g. MenubarRenderer's
+        // related-categories block) to see, further down.
+        $items = $section_context->items;
         $rank_of = array_flip($items);
 
-        $image_id = $page['image_id'];
+        $image_id = $section_context->imageId;
         $image_id = is_numeric($image_id) ? (int) $image_id : 0;
+        $image_file = $section_context->imageFile;
 
         $currentUser = \Piwigo\Users\CurrentUser::get();
         $user_id = $currentUser->id;
@@ -142,11 +144,9 @@ SELECT id, file, level
             if ($image_id > 0) {
                 $query .= 'id = ' . $image_id;
             } else {// url given by file name
-                $page_image_file_check = $page['image_file'] ?? null;
-                assert(is_string($page_image_file_check) && $page_image_file_check !== '');
-                $page_image_file = $page['image_file'];
+                assert($image_file !== null && $image_file !== '');
                 $query .= 'file LIKE \'' .
-                  str_replace(['_', '%'], ['/_', '/%'], is_string($page_image_file) ? $page_image_file : '') .
+                  str_replace(['_', '%'], ['/_', '/%'], $image_file) .
                   '.%\' ESCAPE \'/\' LIMIT 1';
             }
             $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
@@ -167,8 +167,8 @@ SELECT id, file, level
             $row_id = $row['id'];
             assert(is_string($row_id)); // images.id is the NOT NULL primary key
             $image_id = (int) $row_id;
-            $page['image_id'] = $image_id;
-            $page['image_file'] = $row['file'];
+            $row_file = $row['file'];
+            $image_file = is_string($row_file) ? $row_file : null;
             if (! isset($rank_of[$image_id])) {// the image can still be non accessible (filter/cat perm) and/or not in the set
                 /** @var array<string, mixed> $filter */
                 global $filter;
@@ -181,7 +181,7 @@ SELECT id, file, level
                             duplicate_index_url()
                         );
                 }
-                $page_section = $page['section'];
+                $page_section = $section_context->section;
                 if ($page_section === 'categories' and $page_category === null) {// flat view - all items
                     new HtmlService()
                         ->accessDenied();
@@ -201,12 +201,13 @@ SELECT id
                         if ($page_section === 'best_rated') {
                             $rank_of[$image_id] = count($items);
                             $items[] = $image_id;
-                            $page['items'] = $items;
+                            $section_context = $section_context->withItems($items);
+                            SectionContextRegistry::set($section_context);
                         } else {
                             $url = make_picture_url(
                                 [
                                     'image_id' => $image_id,
-                                    'image_file' => $page['image_file'],
+                                    'image_file' => $image_file,
                                     'section' => 'categories',
                                     'flat' => true,
                                 ]
@@ -265,8 +266,7 @@ SELECT id
             $last_item = $items[$last_rank];
         }
 
-        $nb_image_page = $page['nb_image_page'];
-        $nb_image_page = is_numeric($nb_image_page) ? (int) $nb_image_page : 0;
+        $nb_image_page = $section_context->nbImagePage;
         $url_up = duplicate_index_url(
             [
                 'start' => floor($current_rank / $nb_image_page)
@@ -320,7 +320,7 @@ DELETE FROM ' . Tables::favorites() . '
 ;';
                     \Piwigo\Db\MysqliDb::query($query);
 
-                    if ($page['section'] === 'favorites') {
+                    if ($section_context->section === 'favorites') {
                         redirect($url_up);
                     } else {
                         redirect($url_self);
@@ -394,7 +394,7 @@ UPDATE ' . Tables::categories() . '
                             $comment_action = $commentService->updateComment(
                                 [
                                     'comment_id' => $_GET['comment_to_edit'],
-                                    'image_id' => $page['image_id'],
+                                    'image_id' => $image_id,
                                     'content' => $_POST['content'],
                                     'website_url' => @$_POST['website_url'],
                                 ],
@@ -493,6 +493,7 @@ UPDATE ' . Tables::categories() . '
         }
 
         $body = LegacyRenderCapture::capture(static function () use (
+            $section_context,
             $page_category,
             $items,
             $image_id,
@@ -719,8 +720,8 @@ SELECT *
                 ]);
             }
 
-            // $page['image_id'] is always in $ids (see the query above)
-            // and always hits the while loop's final `else { $i =
+            // $image_id is always in $ids (see the query above) and
+            // always hits the while loop's final `else { $i =
             // 'current'; }` branch
             assert(isset($picture['current']));
             $title = $picture['current']['TITLE'];
@@ -942,9 +943,9 @@ SELECT *
 
             $template->assign(
                 [
-                    'SECTION_TITLE' => $page['section_title'],
+                    'SECTION_TITLE' => $section_context->sectionTitle,
                     'PHOTO' => $title_nb,
-                    'IS_HOME' => ($page['section'] === 'categories' and $page_category === null),
+                    'IS_HOME' => ($section_context->section === 'categories' and $page_category === null),
 
                     'LEVEL_SEPARATOR' => \Piwigo\Config\Config::levelSeparator(),
 
@@ -1218,10 +1219,10 @@ SELECT id, name, permalink
             // +-------------------------------------------------------------+
 
             new PictureRateRenderer()
-                ->render();
+                ->render($image_id);
             if (\Piwigo\Config\Config::activateComments()) {
                 new PictureCommentRenderer()
-                    ->render($edit_comment);
+                    ->render($edit_comment, $image_id, $section_context->start);
             }
             if ((bool) $metadata_showable and SessionService::get()->getSessionVar('show_metadata') !== null) {
                 new PictureMetadataRenderer()
@@ -1232,9 +1233,6 @@ SELECT id, name, permalink
             $themeconf = $template->get_template_vars('themeconf');
             $themeconf = is_array($themeconf) ? $themeconf : [];
             if (\Piwigo\Config\Config::pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
-                if (! isset($page['start'])) {
-                    $page['start'] = 0;
-                }
                 new MenubarRenderer()
                     ->render();
             }
@@ -1257,7 +1255,13 @@ SELECT id, name, permalink
             }
             // -------------------------------------------------- log informations
             $current_image_id = $picture['current']['id'];
-            new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit(is_numeric($current_image_id) ? (int) $current_image_id : null, 'picture');
+            new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit(
+                is_numeric($current_image_id) ? (int) $current_image_id : null,
+                'picture',
+                section: $section_context->section,
+                category: $section_context->category,
+                tagIds: $section_context->tagIds,
+            );
             \Piwigo\Bootstrap\PageTail::render();
         });
 

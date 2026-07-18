@@ -36,16 +36,22 @@ use Piwigo\Session\SessionService;
  */
 final class PictureCommentRenderer
 {
-    public function render(?int $editCommentId): void
+    /**
+     * Legacy Coupling Retirement Track A batch A5.2e: $imageId/$start are
+     * explicit params instead of `global $page['image_id']`/`['start']`
+     * -- the one real caller (PictureController) already tracks $imageId
+     * as its own local variable, and $start is the confirmed-real
+     * collision with the gallery grid's own start offset (this file's
+     * comment-list pagination genuinely reuses the same value, see the
+     * nav-bar URL below stripping+reusing it), so both come from the
+     * caller directly rather than a registry read.
+     */
+    public function render(?int $editCommentId, int $imageId, int $start): void
     {
         /**
          * @var array<string, mixed>
          */
         global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
         /**
          * Set by PictureController, right before this call.
@@ -62,12 +68,6 @@ final class PictureCommentRenderer
         $commentService = new CommentService($commentRepository, new EphemeralKeyService(), new MailService(), new HtmlService());
 
         $commentAction = null;
-
-        // $page['image_id'] is int|numeric-string (include/section_init.inc.php
-        // sets it from a URL token via is_numeric(), possibly re-resolved by
-        // PictureController).
-        $imageId = $page['image_id'];
-        $imageId = is_numeric($imageId) ? (int) $imageId : 0;
 
         // the picture is commentable if it belongs at least to one category
         // which is commentable
@@ -155,12 +155,6 @@ final class PictureCommentRenderer
         $nbComments = $commentRepository->countForImage($imageId, $onlyValidated);
 
         // navigation bar creation
-        if (! isset($page['start'])) {
-            $page['start'] = 0;
-        }
-        $start = $page['start'];
-        $start = is_numeric($start) ? (int) $start : 0;
-
         $nbCommentPage = \Piwigo\Config\Config::nbCommentPage();
 
         $navigationBar = new \Piwigo\Core\PaginationService()

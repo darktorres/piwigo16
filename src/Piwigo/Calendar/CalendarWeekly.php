@@ -70,10 +70,7 @@ class CalendarWeekly extends CalendarBase
     #[\Override]
     public function generate_category_content(\Piwigo\Core\TemplateInterface $template): bool
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        $nb_date_parts = is_array($page['chronology_date']) ? count($page['chronology_date']) : 0;
+        $nb_date_parts = count($this->chronology_date);
         if ($nb_date_parts == 0) {
             $this->build_nav_bar(self::CYEAR, null, $template); // years
         }
@@ -95,33 +92,22 @@ class CalendarWeekly extends CalendarBase
     #[\Override]
     public function get_date_where($max_levels = 3): string
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        // chronology_date is always an array: set to [] by
-        // CalendarRenderer::render() and to a
-        // list of int|string tokens by the URL router (functions_url.inc.php)
-        // or feed.php/picture.php (same invariant documented in
-        // CalendarMonthly::get_date_where()).
-        $date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];
+        $date = $this->chronology_date;
         while (count($date) > $max_levels) {
             array_pop($date);
         }
         $res = '';
         if (isset($date[self::CYEAR]) and $date[self::CYEAR] !== 'any') {
             $y = $date[self::CYEAR];
-            $y = is_int($y) || is_string($y) ? $y : '';
             $res = " AND {$this->date_field} BETWEEN '{$y}-01-01' AND '{$y}-12-31 23:59:59'";
         }
 
         if (isset($date[self::CWEEK]) and $date[self::CWEEK] !== 'any') {
             $week = $date[self::CWEEK];
-            $week = is_int($week) || is_string($week) ? $week : '';
             $res .= ' AND ' . $this->calendar_levels[self::CWEEK]['sql'] . '=' . $week;
         }
         if (isset($date[self::CDAY]) and $date[self::CDAY] !== 'any') {
             $day = $date[self::CDAY];
-            $day = is_int($day) || is_string($day) ? $day : '';
             $res .= ' AND ' . $this->calendar_levels[self::CDAY]['sql'] . '=' . $day;
         }
         if (empty($res)) {

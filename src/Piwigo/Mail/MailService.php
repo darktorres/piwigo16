@@ -692,10 +692,6 @@ SELECT
          * @var array<string, mixed>
          */
         global $lang_info;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
 
         $confMail = $this->getMailConfiguration();
 

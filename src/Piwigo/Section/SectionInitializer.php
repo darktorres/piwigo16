@@ -8,7 +8,7 @@ use Piwigo\Core\HtmlRenderingInterface;
 
 /**
  * URL token parser: "category/12-name/start-24" -> a structured
- * SectionContext. Ported from the first half of
+ * SectionUrlParse. Ported from the first half of
  * include/section_init.inc.php (root_path/section_url computation,
  * tokenization, the picture-page image-id parsing, and the
  * parse_section_url() call/merge) -- the much larger second half of that
@@ -27,7 +27,7 @@ final readonly class SectionInitializer
         private HtmlRenderingInterface $htmlRenderer,
     ) {}
 
-    public function parse(): SectionContext
+    public function parse(): SectionUrlParse
     {
         /** @var array<string, mixed> $conf */
         global $conf;
@@ -119,7 +119,7 @@ final readonly class SectionInitializer
 
         $parsed = parse_section_url($tokens, $next_token);
 
-        return new SectionContext($root_path, $section_url, $tokens, $next_token, $image_id, $image_file, $parsed);
+        return new SectionUrlParse($root_path, $section_url, $tokens, $next_token, $image_id, $image_file, $parsed);
     }
 
     /**

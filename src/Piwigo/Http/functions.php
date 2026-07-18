@@ -73,7 +73,6 @@ if (! function_exists('redirect_html')) {
         /** @var array<string, mixed> $conf */
         global $conf;
         global $t2;
-        global $page;
         global $debug;
 
         // $template/$lang_info are genuinely not always set here: this function

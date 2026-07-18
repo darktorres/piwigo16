@@ -24,6 +24,8 @@ use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Search\SearchFilterRenderer;
+use Piwigo\Section\SectionContext;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionPopulator;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagRepository;
@@ -60,14 +62,6 @@ final class GalleryController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         new SectionPopulator(new MailService(), new HtmlService(), $template)
@@ -75,37 +69,31 @@ final class GalleryController implements ControllerInterface
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        // Real invariant: $page['items'] always holds a list of numeric
-        // image ids (array_from_query()/\Piwigo\Db\MysqliDb::query2Array() single-column
-        // results in SectionPopulator::populate()), possibly as numeric
-        // strings coming straight from the database.
-        $page_items = [];
-        if (is_array($page['items'])) {
-            foreach ($page['items'] as $page_item_id) {
-                if (is_numeric($page_item_id)) {
-                    $page_items[] = (int) $page_item_id;
-                }
-            }
+        // Legacy Coupling Retirement Track A batch A5.2e: populate() always
+        // calls SectionContextRegistry::set() as the very last thing it
+        // does, so this is guaranteed non-null by the time this controller
+        // (its one real caller besides PictureController) runs -- a real
+        // guard, not dead code, since the type itself is nullable.
+        $section_context = SectionContextRegistry::current();
+        if (! $section_context instanceof SectionContext) {
+            throw new \RuntimeException('SectionContextRegistry::current() is null after SectionPopulator::populate()');
         }
 
-        // Real invariant: $page['start'] is either the int 0 default set
-        // in SectionPopulator::populate(), or a numeric string captured
-        // from the URL (see the preg_match capture group in
-        // include/functions_url.inc.php).
-        $page_start = is_numeric($page['start']) ? (int) $page['start'] : 0;
+        $page_items = array_values(array_filter(array_map(
+            static fn (int|string $id): ?int => is_numeric($id) ? (int) $id : null,
+            $section_context->items
+        ), static fn (?int $id): bool => $id !== null));
 
-        // Real invariant: $page['nb_image_page'] comes from
-        // $user['nb_image_page'], a numeric value read from the database
-        // (see SectionPopulator::populate()).
-        $page_nb_image_page = is_numeric($page['nb_image_page']) ? (int) $page['nb_image_page'] : 0;
+        $page_start = $section_context->start;
+        $page_nb_image_page = $section_context->nbImagePage;
 
         // access authorization check
-        if (isset($page['category']) && is_array($page['category']) && is_numeric($page['category']['id'] ?? null)) {
+        if ($section_context->category !== null && is_numeric($section_context->category['id'] ?? null)) {
             $categoryConn = DbConnection::build();
             new CategoryService(
                 new CategoryRepository($categoryConn),
                 new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
-            )->checkRestrictions((int) $page['category']['id'], new HtmlService());
+            )->checkRestrictions((int) $section_context->category['id'], new HtmlService());
         }
         if ($page_start > 0 && $page_start >= count($page_items)) {
             new HtmlService()
@@ -114,11 +102,12 @@ final class GalleryController implements ControllerInterface
                 ]));
         }
 
-        $body = LegacyRenderCapture::capture(static function () use ($page_items, $page_start, $page_nb_image_page): void {
-            /**
-             * @var array<string, mixed>
-             */
-            global $conf;
+        $body = LegacyRenderCapture::capture(static function () use ($page_items, $page_start, $page_nb_image_page, $section_context): void {
+            // meta_robots (not yet part of SectionContext, see batch
+            // A5.2g)/body_id (this controller's own write)/
+            // cat_slideshow_url (written by CategoryDefaultRenderer::
+            // render(), called later in this same closure) are the only
+            // real remaining reasons this closure still needs the global.
             /**
              * @var array<string, mixed>
              */
@@ -172,7 +161,7 @@ final class GalleryController implements ControllerInterface
                 redirect(duplicate_index_url());
             }
 
-            if (isset($page['is_homepage']) and (bool) $page['is_homepage']) {
+            if ($section_context->isHomepage) {
                 $canonical_url = get_gallery_home_url();
             } else {
                 $start = $page_nb_image_page * round($page_start / $page_nb_image_page);
@@ -191,14 +180,14 @@ final class GalleryController implements ControllerInterface
             $template->assign('use_standard_pages', \Piwigo\Config\ConfigDb::confGetParam('use_standard_pages', false));
 
             // -------------------------------------------------- page title
-            $title = $page['title'];
-            $template_title = $page['section_title'];
+            $title = $section_context->title;
+            $template_title = $section_context->sectionTitle;
             $nb_items = count($page_items);
             $template->assign('TITLE', $template_title);
             $template->assign('NB_ITEMS', $nb_items);
 
             // -------------------------------------------------- menubar
-            new MenubarRenderer()
+            $categoryCountCategories = new MenubarRenderer()
                 ->render();
 
             $template->set_filename('index', 'index.tpl');
@@ -214,14 +203,14 @@ final class GalleryController implements ControllerInterface
             // ------------------------------------------------- template init
             $page['body_id'] = 'theCategoryPage';
 
-            if (isset($page['flat']) or isset($page['chronology_field'])) {
+            if ($section_context->flat or $section_context->chronologyField !== null) {
                 $template->assign(
                     'U_MODE_NORMAL',
                     duplicate_index_url([], ['chronology_field', 'start', 'flat'])
                 );
             }
 
-            if (\Piwigo\Config\Config::indexFlatIcon() and ! isset($page['flat']) and $page['section'] === 'categories') {
+            if (\Piwigo\Config\Config::indexFlatIcon() and ! $section_context->flat and $section_context->section === 'categories') {
                 $template->assign(
                     'U_MODE_FLAT',
                     duplicate_index_url([
@@ -230,7 +219,7 @@ final class GalleryController implements ControllerInterface
                 );
             }
 
-            if (! isset($page['chronology_field'])) {
+            if ($section_context->chronologyField === null) {
                 $chronology_params = [
                     'chronology_field' => 'created',
                     'chronology_style' => 'monthly',
@@ -250,7 +239,7 @@ final class GalleryController implements ControllerInterface
                     );
                 }
             } else {
-                if ($page['chronology_field'] === 'created') {
+                if ($section_context->chronologyField === 'created') {
                     $chronology_field = 'posted';
                 } else {
                     $chronology_field = 'created';
@@ -270,14 +259,14 @@ final class GalleryController implements ControllerInterface
             }
 
             new SearchFilterRenderer(new MailService(), new HtmlService(), $template)
-                ->render();
+                ->render($section_context);
 
-            if ($page['section'] === 'categories' and isset($page['category']) and is_array($page['category']) and ! isset($page['combined_categories'])) {
+            if ($section_context->section === 'categories' and $section_context->category !== null and $section_context->combinedCategories === null) {
                 $template->assign(
                     [
                         'SEARCH_IN_SET_BUTTON' => \Piwigo\Config\Config::indexSearchInSetButton(),
                         'SEARCH_IN_SET_ACTION' => \Piwigo\Config\Config::indexSearchInSetAction(),
-                        'SEARCH_IN_SET_URL' => get_root_url() . 'search.php?cat_id=' . (is_numeric($page['category']['id'] ?? null) ? (int) $page['category']['id'] : 0),
+                        'SEARCH_IN_SET_URL' => get_root_url() . 'search.php?cat_id=' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0),
                     ]
                 );
             }
@@ -288,19 +277,12 @@ final class GalleryController implements ControllerInterface
                 // possibility to combine them
                 //
                 // NB: the excluded tag ids intentionally come from
-                // $page['tag_ids'] (the tags currently being viewed,
-                // only set on the "tags" section), not from
+                // $section_context->tagIds (the tags currently being
+                // viewed, only set on the "tags" section), not from
                 // PageState::bodyData['tag_ids'] (a broader,
                 // always-present mirror of the same data used for
                 // JS/body attributes).
-                $excluded_tag_ids = [];
-                if (isset($page['tag_ids']) and is_array($page['tag_ids'])) {
-                    foreach ($page['tag_ids'] as $excluded_tag_id) {
-                        if (is_numeric($excluded_tag_id)) {
-                            $excluded_tag_ids[] = (int) $excluded_tag_id;
-                        }
-                    }
-                }
+                $excluded_tag_ids = $section_context->tagIds;
 
                 $tags = $tagService->getCommonTags(
                     $page_items,
@@ -311,7 +293,7 @@ final class GalleryController implements ControllerInterface
 
                 $tags = $tagService->addLevelToTags($tags);
 
-                $page_tags = is_array($page['tags']) ? $page['tags'] : [];
+                $page_tags = $section_context->tags;
 
                 $related_tags = [];
 
@@ -346,14 +328,7 @@ final class GalleryController implements ControllerInterface
 
                 $selected_related_tags_info = [];
 
-                // $page['tags'] is only known as mixed even though $page
-                // itself is typed -- narrow it once here and reuse the
-                // local var everywhere below. It is set in
-                // include/functions_url.inc.php to either [] or
-                // find_tags()'s list of tag rows (int-keyed, one assoc
-                // row per tag).
-                /** @var array<int, array<string, mixed>> $selectedTags */
-                $selectedTags = is_array($page['tags'] ?? null) ? $page['tags'] : [];
+                $selectedTags = $section_context->tags;
 
                 foreach ($selectedTags as $selectedTagKey => $selectedTag) {
                     $otherSelectedTags = $selectedTags;
@@ -397,10 +372,10 @@ final class GalleryController implements ControllerInterface
                 );
             }
 
-            if (isset($page['category']) and is_array($page['category']) and \Piwigo\Auth\AccessControl::isAdmin() and \Piwigo\Config\Config::indexEditIcon()) {
+            if ($section_context->category !== null and \Piwigo\Auth\AccessControl::isAdmin() and \Piwigo\Config\Config::indexEditIcon()) {
                 $template->assign(
                     'U_EDIT',
-                    get_root_url() . 'admin.php?page=album-' . (is_numeric($page['category']['id'] ?? null) ? (int) $page['category']['id'] : 0)
+                    get_root_url() . 'admin.php?page=album-' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0)
                 );
             }
 
@@ -413,18 +388,12 @@ final class GalleryController implements ControllerInterface
                 );
             }
 
-            if ($page['section'] === 'search' and $page_start === 0 and
-                ! isset($page['chronology_field']) and isset($page['qsearch_details'])) {
-                $matching_cats_no_images = [];
-                $matching_cats = [];
-                if (is_array($page['qsearch_details'])) {
-                    if (is_array($page['qsearch_details']['matching_cats_no_images'] ?? null)) {
-                        $matching_cats_no_images = array_values(array_filter($page['qsearch_details']['matching_cats_no_images'], is_array(...)));
-                    }
-                    if (is_array($page['qsearch_details']['matching_cats'] ?? null)) {
-                        $matching_cats = array_values(array_filter($page['qsearch_details']['matching_cats'], is_array(...)));
-                    }
-                }
+            if ($section_context->section === 'search' and $page_start === 0 and
+                $section_context->chronologyField === null and $section_context->qsearchDetails !== []) {
+                $qsearchDetails = $section_context->qsearchDetails;
+
+                $matching_cats_no_images = is_array($qsearchDetails['matching_cats_no_images'] ?? null) ? array_values(array_filter($qsearchDetails['matching_cats_no_images'], is_array(...))) : [];
+                $matching_cats = is_array($qsearchDetails['matching_cats'] ?? null) ? array_values(array_filter($qsearchDetails['matching_cats'], is_array(...))) : [];
                 /**
                  * @var array<int, array<string, mixed>> $matching_cats_no_images
                  * @var array<int, array<string, mixed>> $matching_cats
@@ -439,10 +408,7 @@ final class GalleryController implements ControllerInterface
                     $template->assign('category_search_results', $hints);
                 }
 
-                $matching_tags = [];
-                if (is_array($page['qsearch_details']) and is_array($page['qsearch_details']['matching_tags'] ?? null)) {
-                    $matching_tags = array_values(array_filter($page['qsearch_details']['matching_tags'], is_array(...)));
-                }
+                $matching_tags = is_array($qsearchDetails['matching_tags'] ?? null) ? array_values(array_filter($qsearchDetails['matching_tags'], is_array(...))) : [];
                 /** @var array<int, array<string, mixed>> $matching_tags */
                 foreach ($matching_tags as $tag) {
                     $tag['URL'] = make_index_url([
@@ -452,10 +418,10 @@ final class GalleryController implements ControllerInterface
                 }
 
                 if ($page_items === []) {
-                    $search_query = is_array($page['qsearch_details']) ? ($page['qsearch_details']['q'] ?? null) : null;
+                    $search_query = $qsearchDetails['q'] ?? null;
                     $template->append('no_search_results', htmlspecialchars(is_string($search_query) ? $search_query : ''));
                 } else {
-                    $unmatched_terms = is_array($page['qsearch_details']) ? ($page['qsearch_details']['unmatched_terms'] ?? null) : null;
+                    $unmatched_terms = $qsearchDetails['unmatched_terms'] ?? null;
                     if (is_array($unmatched_terms) && $unmatched_terms !== []) {
                         /** @var list<string> $unmatched_terms */
                         $unmatched_terms = array_values(array_filter($unmatched_terms, is_string(...)));
@@ -467,8 +433,8 @@ final class GalleryController implements ControllerInterface
             // image order
             if (\Piwigo\Config\Config::indexSortOrderInput()
                 and count($page_items) > 0
-                and $page['section'] !== 'most_visited'
-                and $page['section'] !== 'best_rated') {
+                and $section_context->section !== 'most_visited'
+                and $section_context->section !== 'best_rated') {
                 $preferred_image_orders = $categoryService->getPreferredImageOrders();
                 $order_idx = SessionService::get()->getSessionVar('image_order', 0);
 
@@ -511,30 +477,30 @@ final class GalleryController implements ControllerInterface
             }
 
             // category comment
-            $page_comment = $page['comment'] ?? null;
-            $page_comment_present = is_string($page_comment) && $page_comment !== '' && $page_comment !== '0';
-            if (($page_start === 0 or \Piwigo\Config\Config::albumDescriptionOnAllPages()) and ! isset($page['chronology_field']) and $page_comment_present) {
-                $template->assign('CONTENT_DESCRIPTION', $page['comment']);
+            $page_comment = $section_context->comment;
+            $page_comment_present = $page_comment !== '' && $page_comment !== '0';
+            if (($page_start === 0 or \Piwigo\Config\Config::albumDescriptionOnAllPages()) and $section_context->chronologyField === null and $page_comment_present) {
+                $template->assign('CONTENT_DESCRIPTION', $section_context->comment);
             }
 
-            if (isset($page['category']) and is_array($page['category']) and isset($page['category']['count_categories']) and $page['category']['count_categories'] === 0) {// count_categories might be computed by menubar - if the case unassign flat link if no sub albums
+            if ($section_context->category !== null and $categoryCountCategories === 0) {// count_categories might be computed by menubar - if the case unassign flat link if no sub albums
                 $template->clear_assign('U_MODE_FLAT');
             }
 
             // -------------------------------------------- main part : thumbnails
             if ($page_start === 0
-              and ! isset($page['flat'])
-              and ! isset($page['chronology_field'])
-              and ($page['section'] === 'recent_cats' or $page['section'] === 'categories')
-              and (! isset($page['category']) or ! is_array($page['category']) or ! isset($page['category']['count_categories']) or $page['category']['count_categories'] > 0)
+              and ! $section_context->flat
+              and $section_context->chronologyField === null
+              and ($section_context->section === 'recent_cats' or $section_context->section === 'categories')
+              and ($section_context->category === null or $categoryCountCategories === null or $categoryCountCategories > 0)
             ) {
                 new CategoryCatsRenderer(new FilterService(), new HtmlService(), $template)
-                    ->render();
+                    ->render($section_context->section, $section_context->category, $section_context->startcat);
             }
 
             if ($page_items !== []) {
                 new CategoryDefaultRenderer(new HtmlService(), $template)
-                    ->render();
+                    ->render($page_items, $page_start, $page_nb_image_page, $section_context->section);
 
                 if (\Piwigo\Config\Config::indexSizesIcon()) {
                     $url = add_url_params(
@@ -614,7 +580,11 @@ final class GalleryController implements ControllerInterface
             $template->pparse('index');
 
             // ------------------------------------------------ log informations
-            new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit();
+            new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit(
+                section: $section_context->section,
+                category: $section_context->category,
+                tagIds: $section_context->tagIds,
+            );
             \Piwigo\Bootstrap\PageTail::render();
         });
 

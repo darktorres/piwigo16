@@ -1042,25 +1042,24 @@ DELETE FROM ' . Tables::favorites() . '
      *
      * @since 16
      */
-    public function saveEditContext(): void
+    /**
+     * Legacy Coupling Retirement Track A batch A5.2e: $sectionUrl/
+     * $imageId are explicit params instead of `global $page['section_url']`/
+     * `['image_id']` -- the one real caller (PictureController) already
+     * has both from SectionContextRegistry::current() right after
+     * SectionPopulator::populate() runs.
+     */
+    public function saveEditContext(?string $sectionUrl, int|string|null $imageId): void
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        if (! AccessControl::isAdmin() or ! isset($page['section_url']) or ! isset($page['image_id'])) {
+        if (! AccessControl::isAdmin() or $sectionUrl === null or $imageId === null) {
             return;
         }
 
-        // $page['image_id'] is int|numeric-string (include/section_init.inc.php
-        // sets it from a URL token via is_numeric(), or the literal int 0),
-        // $page['section_url'] always a string.
-        $image_id = $page['image_id'];
-        if (! is_int($image_id) && ! (is_string($image_id) && is_numeric($image_id))) {
+        if (! is_int($imageId) && ! is_numeric($imageId)) {
             return;
         }
-        $image_id = (int) $image_id;
-        $section_url = $page['section_url'];
-        $section_url = is_string($section_url) ? $section_url : '';
+        $image_id = (int) $imageId;
+        $section_url = $sectionUrl;
 
         $edit_context = $_SESSION['edit_context'] ?? null;
         if (! is_array($edit_context)) {

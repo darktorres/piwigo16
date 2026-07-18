@@ -27,6 +27,19 @@ use Piwigo\Permission\PermissionService;
  * that {@see CalendarService}'s own docblock had already documented as
  * staying outside the DB-query-builder split. Single real caller:
  * `SectionPopulator::populate()`.
+ *
+ * Legacy Coupling Retirement Track A batch A5.2e: render() took explicit
+ * inputs and returns a {@see CalendarRenderResult} instead of reading/
+ * writing `global $page;` directly -- SectionPopulator calls this from
+ * *inside* its own section-context-building method, before any
+ * SectionContext exists yet to read via SectionContextRegistry (an
+ * "in-flight collaborator", not a downstream reader, per the batch's own
+ * adversarial-validation findings). CalendarBase/CalendarMonthly/
+ * CalendarWeekly got the same treatment (their own `global $page;` reads/
+ * writes of `chronology_field`/`chronology_date`/`chronology_view` became
+ * plain mutable instance properties on the calendar object, set by this
+ * class before calling into them) since they're called synchronously from
+ * within this method's own render chain and shared the identical coupling.
  */
 final readonly class CalendarRenderer
 {
@@ -35,14 +48,25 @@ final readonly class CalendarRenderer
         private TemplateInterface $template,
     ) {}
 
-    public function render(): void
-    {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
+    /**
+     * @param array<string, mixed>|null $category current category row
+     * @param list<int|string> $items current section item ids (only used
+     *   when $section !== 'categories'; the categories branch always
+     *   recomputes its own item list)
+     * @param list<int|string> $chronologyDate raw, unsanitized chronology
+     *   date tokens as parsed from the URL
+     */
+    public function render(
+        string $section,
+        ?array $category,
+        array $items,
+        string $chronologyField,
+        ?string $chronologyStyle,
+        ?string $chronologyView,
+        array $chronologyDate,
+        bool $superOrderBy,
+    ): CalendarRenderResult {
         global $persistent_cache;
-        global $filter;
         $template = $this->template;
         if (! $persistent_cache instanceof PersistentCache) {
             $this->htmlRenderer->fatalError('persistent cache not initialized');
@@ -52,29 +76,25 @@ final readonly class CalendarRenderer
         $conn = DbConnection::build();
         $calendarService = new CalendarService(new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)));
 
-        $section = is_string($page['section'] ?? null) ? $page['section'] : '';
-
         if ($section === 'categories') { // we will regenerate the items by including subcats elements
-            $page['items'] = [];
+            $items = [];
 
-            $page_category = $page['category'] ?? null;
-            $category_id = is_array($page_category) && isset($page_category['id'])
-                && (is_int($page_category['id']) || is_string($page_category['id']))
-                ? $page_category['id']
+            $category_id = isset($category['id'])
+                && (is_int($category['id']) || is_string($category['id']))
+                ? $category['id']
                 : null;
             $forbidden_categories = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
 
-            $inner_sql = $calendarService->buildInnerSql('categories', isset($page['category']), $category_id, $forbidden_categories, []);
+            $inner_sql = $calendarService->buildInnerSql('categories', $category !== null, $category_id, $forbidden_categories, []);
 
             if ($inner_sql === null) {
-                return; // nothing to do
+                return new CalendarRenderResult($items, '', $chronologyDate, $chronologyStyle, $chronologyView); // nothing to do
             }
         } else {
-            $items = is_array($page['items'] ?? null) ? array_values(array_filter($page['items'], is_scalar(...))) : [];
             $inner_sql = $calendarService->buildInnerSql('items', false, null, '', $items);
 
             if ($inner_sql === null) {
-                return; // nothing to do
+                return new CalendarRenderResult($items, '', $chronologyDate, $chronologyStyle, $chronologyView); // nothing to do
             }
         }
 
@@ -108,40 +128,37 @@ final readonly class CalendarRenderer
         $views = [CalendarBase::CAL_VIEW_LIST, CalendarBase::CAL_VIEW_CALENDAR];
 
         // Retrieve calendar field
-        $chronology_field = $page['chronology_field'] ?? null;
-        $chronology_field = is_string($chronology_field) ? $chronology_field : '';
-        isset($fields[$chronology_field]) or $this->htmlRenderer->fatalError('bad chronology field');
+        isset($fields[$chronologyField]) or $this->htmlRenderer->fatalError('bad chronology field');
 
         // Retrieve style
-        $chronology_style = $page['chronology_style'] ?? null;
-        $chronology_style = is_string($chronology_style) ? $chronology_style : null;
+        $chronology_style = $chronologyStyle;
         if ($chronology_style === null || ! isset($styles[$chronology_style])) {
             $chronology_style = 'monthly';
         }
-        $page['chronology_style'] = $chronology_style;
         $cal_style = $chronology_style;
         $classname = $styles[$cal_style]['classname'];
 
         $calendar = new $classname();
+        $calendar->chronology_field = $chronologyField;
 
         // Retrieve view
+        $chronology_view = $chronologyView;
 
-        if (! isset($page['chronology_view']) or
-             ! in_array($page['chronology_view'], $views)) {
-            $page['chronology_view'] = CalendarBase::CAL_VIEW_LIST;
+        if ($chronology_view === null or
+             ! in_array($chronology_view, $views)) {
+            $chronology_view = CalendarBase::CAL_VIEW_LIST;
         }
 
-        if ($page['chronology_view'] == CalendarBase::CAL_VIEW_CALENDAR and
+        if ($chronology_view == CalendarBase::CAL_VIEW_CALENDAR and
               ! $styles[$cal_style]['view_calendar']) {
 
-            $page['chronology_view'] = CalendarBase::CAL_VIEW_LIST;
+            $chronology_view = CalendarBase::CAL_VIEW_LIST;
         }
 
+        $calendar->chronology_view = $chronology_view;
+
         // perform a sanity check on $requested
-        $page_chronology_date = $page['chronology_date'] ?? null;
-        if (! is_array($page_chronology_date)) {
-            $page_chronology_date = [];
-        }
+        $page_chronology_date = $chronologyDate;
         while (count($page_chronology_date) > 3) {
             array_pop($page_chronology_date);
         }
@@ -149,7 +166,7 @@ final readonly class CalendarRenderer
         $any_count = 0;
         for ($i = 0; $i < count($page_chronology_date); $i++) {
             if ($page_chronology_date[$i] == 'any') {
-                if ($page['chronology_view'] == CalendarBase::CAL_VIEW_CALENDAR) {// we dont allow any in calendar view
+                if ($chronology_view == CalendarBase::CAL_VIEW_CALENDAR) {// we dont allow any in calendar view
                     while ($i < count($page_chronology_date)) {
                         array_pop($page_chronology_date);
                     }
@@ -168,20 +185,22 @@ final readonly class CalendarRenderer
         if ($any_count == 3) {
             array_pop($page_chronology_date);
         }
-        $page['chronology_date'] = $page_chronology_date;
+
+        $calendar->chronology_date = $page_chronology_date;
 
         $calendar->initialize($inner_sql);
 
         // echo ('<pre>'. var_export($calendar, true) . '</pre>');
 
+        $comment = '';
         $must_show_list = true; // true until calendar generates its own display
         if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'picture') { // basename without file extention
             if ($calendar->generate_category_content($template)) {
-                $page['items'] = [];
+                $items = [];
                 $must_show_list = false;
             }
 
-            $page['comment'] = '';
+            $comment = '';
             $template->assign('FILE_CHRONOLOGY_VIEW', 'month_calendar.tpl');
 
             foreach ($styles as $style => $style_data) {
@@ -205,7 +224,7 @@ final readonly class CalendarRenderer
                             ]
                         );
 
-                        if ($style == $cal_style and $view == $page['chronology_view']) {
+                        if ($style == $cal_style and $view == $chronology_view) {
                             $selected = true;
                         }
 
@@ -225,7 +244,7 @@ final readonly class CalendarRenderer
                 ['start', 'chronology_date']
             );
             $calendar_title = '<a href="' . $url . '">'
-                . $fields[$chronology_field]['label'] . '</a>';
+                . $fields[$chronologyField]['label'] . '</a>';
             $calendar_title .= $calendar->get_display_name();
             $template->assign(
                 'chronology',
@@ -239,7 +258,7 @@ final readonly class CalendarRenderer
             $conf_order_by = \Piwigo\Config\Config::all()['order_by'] ?? null;
             $conf_order_by = is_string($conf_order_by) ? $conf_order_by : '';
 
-            if (isset($page['super_order_by'])) {
+            if ($superOrderBy) {
                 $order_by = $conf_order_by;
             } else {
                 if (count($page_chronology_date) == 0
@@ -255,7 +274,7 @@ final readonly class CalendarRenderer
                 );
             }
 
-            if ($page['section'] == 'categories' && ! isset($page['category'])
+            if ($section === 'categories' && $category === null
               && (count($page_chronology_date) == 0
                     or ($page_chronology_date[0] == 'any' && count($page_chronology_date) == 1))
             ) {
@@ -266,17 +285,26 @@ final readonly class CalendarRenderer
 
             $cache_key_str = $cache_key ?? null;
 
-            if ($cache_key_str === null || ! $persistent_cache->get($cache_key_str, $page['items'])) {
-                $page['items'] = new CalendarRepository($conn)->findImageIds(
-                    $calendar->inner_sql,
-                    $calendar->get_date_where(),
-                    $order_by
-                );
+            if ($cache_key_str === null || ! $persistent_cache->get($cache_key_str, $items)) {
+                $items = new CalendarRepository($conn)
+                    ->findImageIds(
+                        $calendar->inner_sql,
+                        $calendar->get_date_where(),
+                        $order_by
+                    );
                 if ($cache_key_str !== null) {
-                    $persistent_cache->set($cache_key_str, $page['items']);
+                    $persistent_cache->set($cache_key_str, $items);
                 }
             }
         }
         \Piwigo\Core\TimingHelper::debug('end initialize_calendar');
+
+        // $items may have been widened back to mixed by PersistentCache::get()'s
+        // by-ref $value out-param above (a cache hit populates it from
+        // arbitrary stored data); re-narrow before handing it to the
+        // strictly-typed result object.
+        $items = is_array($items) ? array_values(array_filter($items, static fn (mixed $v): bool => is_int($v) || is_string($v))) : [];
+
+        return new CalendarRenderResult($items, $comment, $page_chronology_date, $chronology_style, $chronology_view);
     }
 }

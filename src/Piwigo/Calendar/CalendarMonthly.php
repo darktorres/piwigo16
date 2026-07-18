@@ -53,15 +53,10 @@ class CalendarMonthly extends CalendarBase
     #[\Override]
     public function generate_category_content(\Piwigo\Core\TemplateInterface $template): bool
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
-
-        $view_type = $page['chronology_view'];
+        $view_type = $this->chronology_view;
         if ($view_type == self::CAL_VIEW_CALENDAR) {
             $tpl_var = [];
-            $nb_date_parts = is_array($page['chronology_date']) ? count($page['chronology_date']) : 0;
+            $nb_date_parts = count($this->chronology_date);
             if ($nb_date_parts == 0) {// case A: no year given - display all years+months
                 if ($this->build_global_calendar($tpl_var)) {
                     $template->assign('chronology_calendar', $tpl_var);
@@ -71,8 +66,8 @@ class CalendarMonthly extends CalendarBase
 
             // build_global_calendar() may have just narrowed the current
             // selection down to a single year (see its own doc comment), so
-            // chronology_date must be re-read from $page, not cached above.
-            $nb_date_parts = is_array($page['chronology_date']) ? count($page['chronology_date']) : 0;
+            // chronology_date must be re-read, not cached above.
+            $nb_date_parts = count($this->chronology_date);
             if ($nb_date_parts == 1) {// case B: year given - display all days in given year
                 if ($this->build_year_calendar($tpl_var)) {
                     $template->assign('chronology_calendar', $tpl_var);
@@ -83,7 +78,7 @@ class CalendarMonthly extends CalendarBase
 
             // same reasoning: build_year_calendar() may have narrowed down
             // to a single month.
-            $nb_date_parts = is_array($page['chronology_date']) ? count($page['chronology_date']) : 0;
+            $nb_date_parts = count($this->chronology_date);
             if ($nb_date_parts == 2) {// case C: year+month given - display a nice month calendar
                 if ($this->build_month_calendar($tpl_var)) {
                     $template->assign('chronology_calendar', $tpl_var);
@@ -93,7 +88,7 @@ class CalendarMonthly extends CalendarBase
             }
         }
 
-        $nb_date_parts = is_array($page['chronology_date']) ? count($page['chronology_date']) : 0;
+        $nb_date_parts = count($this->chronology_date);
         if ($view_type == self::CAL_VIEW_LIST or $nb_date_parts == 3) {
             if ($nb_date_parts == 0) {
                 $this->build_nav_bar(self::CYEAR, null, $template); // years
@@ -102,9 +97,7 @@ class CalendarMonthly extends CalendarBase
                 $this->build_nav_bar(self::CMONTH, null, $template); // month
             }
             if ($nb_date_parts == 2) {
-                // $nb_date_parts can only be 2 if $page['chronology_date'] is
-                // already an array (see its computation above).
-                $chronology_date = $page['chronology_date'];
+                $chronology_date = $this->chronology_date;
                 $year = $chronology_date[self::CYEAR] ?? null;
                 $year = is_int($year) || is_string($year) ? $year : 0;
                 $month = $chronology_date[self::CMONTH] ?? null;
@@ -127,22 +120,13 @@ class CalendarMonthly extends CalendarBase
     #[\Override]
     public function get_date_where($max_levels = 3): string
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        // chronology_date is always an array: set to [] by
-        // CalendarRenderer::render() and to a
-        // list of int|string tokens by the URL router (functions_url.inc.php)
-        // or feed.php/picture.php (see get_all_days_in_month()'s own doc
-        // comment for the same invariant already documented in this class).
-        $date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];
+        $date = $this->chronology_date;
         while (count($date) > $max_levels) {
             array_pop($date);
         }
         $res = '';
         if (isset($date[self::CYEAR]) and $date[self::CYEAR] !== 'any') {
             $year = $date[self::CYEAR];
-            $year = is_int($year) || is_string($year) ? $year : '';
             $b = $year . '-';
             $e = $year . '-';
             if (isset($date[self::CMONTH]) and $date[self::CMONTH] !== 'any') {
@@ -167,7 +151,6 @@ class CalendarMonthly extends CalendarBase
                 // condition above, so it can never be true.
                 if (isset($date[self::CDAY]) and $date[self::CDAY] !== 'any') {
                     $day = $date[self::CDAY];
-                    $day = is_int($day) || is_string($day) ? $day : '';
                     $res .= ' AND ' . $this->calendar_levels[self::CDAY]['sql'] . '=' . $day;
                 }
             }
@@ -176,12 +159,10 @@ class CalendarMonthly extends CalendarBase
             $res = ' AND ' . $this->date_field . ' IS NOT NULL';
             if (isset($date[self::CMONTH]) and $date[self::CMONTH] !== 'any') {
                 $month = $date[self::CMONTH];
-                $month = is_int($month) || is_string($month) ? $month : '';
                 $res .= ' AND ' . $this->calendar_levels[self::CMONTH]['sql'] . '=' . $month;
             }
             if (isset($date[self::CDAY]) and $date[self::CDAY] !== 'any') {
                 $day = $date[self::CDAY];
-                $day = is_int($day) || is_string($day) ? $day : '';
                 $res .= ' AND ' . $this->calendar_levels[self::CDAY]['sql'] . '=' . $day;
             }
         }
@@ -231,10 +212,7 @@ class CalendarMonthly extends CalendarBase
      */
     protected function build_global_calendar(array &$tpl_var): bool
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        $page_chronology_date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];
+        $page_chronology_date = $this->chronology_date;
         assert(count($page_chronology_date) == 0);
         $query = '
   SELECT ' . \Piwigo\Db\MysqliDb::getDateYYYYMM($this->date_field) . ' as period,
@@ -265,8 +243,7 @@ class CalendarMonthly extends CalendarBase
         // echo ('<pre>'. var_export($items, true) . '</pre>');
         if (count($items) == 1) {// only one year exists so bail out to year view
             [$y] = array_keys($items);
-            assert(is_array($page['chronology_date']));
-            $page['chronology_date'][self::CYEAR] = $y;
+            $this->chronology_date[self::CYEAR] = $y;
             return false;
         }
 
@@ -305,10 +282,7 @@ class CalendarMonthly extends CalendarBase
      */
     protected function build_year_calendar(array &$tpl_var): bool
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        $page_chronology_date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];
+        $page_chronology_date = $this->chronology_date;
         assert(count($page_chronology_date) == 1);
         $query = 'SELECT ' . \Piwigo\Db\MysqliDb::getDateMMDD($this->date_field) . ' as period,
               COUNT(DISTINCT id) as count';
@@ -337,12 +311,12 @@ class CalendarMonthly extends CalendarBase
         }
         if (count($items) == 1) { // only one month exists so bail out to month view
             [$m] = array_keys($items);
-            $page['chronology_date'][self::CMONTH] = $m;
+            $this->chronology_date[self::CMONTH] = $m;
             return false;
         }
         $month_labels = \Piwigo\Core\Lang::months();
         $calendar_bars = [];
-        // $page['chronology_date'] is not mutated between the snapshot above
+        // $this->chronology_date is not mutated between the snapshot above
         // and here (the only mutation happens in the early-return branch
         // just above), so reusing the snapshot is equivalent to a fresh read.
         $year = $page_chronology_date[self::CYEAR] ?? null;
@@ -378,15 +352,10 @@ class CalendarMonthly extends CalendarBase
      */
     protected function build_month_calendar(array &$tpl_var): bool
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
-
         // self::CYEAR/self::CMONTH are never touched below (only self::CDAY is toggled, per
         // day, inside the loop), so a single snapshot taken here stays valid
         // for the rest of the method.
-        $page_chronology_date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];
+        $page_chronology_date = $this->chronology_date;
         $year = $page_chronology_date[self::CYEAR] ?? null;
         $year = is_int($year) || is_string($year) ? $year : 0;
         $month = $page_chronology_date[self::CMONTH] ?? null;
@@ -410,11 +379,7 @@ class CalendarMonthly extends CalendarBase
         }
 
         foreach ($items as $day => $data) {
-            // chronology_date is always an array here (see get_date_where()'s
-            // doc comment for the invariant); narrow it right before writing
-            // the per-day offset back to the real global.
-            assert(is_array($page['chronology_date']));
-            $page['chronology_date'][self::CDAY] = $day;
+            $this->chronology_date[self::CDAY] = $day;
             $query = '
   SELECT id, file,representative_ext,path,width,height,rotation, ' . \Piwigo\Db\MysqliDb::getDayOfWeek($this->date_field) . '-1 as dow';
             $query .= $this->inner_sql;
@@ -422,7 +387,7 @@ class CalendarMonthly extends CalendarBase
             $query .= '
     ORDER BY ' . \Piwigo\Db\MysqliDb::DB_RANDOM_FUNCTION . '()
     LIMIT 1';
-            unset($page['chronology_date'][self::CDAY]);
+            unset($this->chronology_date[self::CDAY]);
 
             $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
             // $day came from the grouped count query above, which only

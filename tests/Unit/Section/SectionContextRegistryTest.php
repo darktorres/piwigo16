@@ -18,7 +18,7 @@ test('current returns null before anything is set', function (): void {
 });
 
 test('set stores the context and current returns the same instance', function (): void {
-    $context = new SectionContext('../', '/category/1', ['category', '1'], 1, null, null, []);
+    $context = new SectionContext(section: 'categories', rootPath: '../');
 
     SectionContextRegistry::set($context);
 
@@ -26,8 +26,8 @@ test('set stores the context and current returns the same instance', function ()
 });
 
 test('set overwrites a previously stored context', function (): void {
-    $first = new SectionContext('../', '/category/1', ['category', '1'], 1, null, null, []);
-    $second = new SectionContext('../../', '/category/2', ['category', '2'], 1, null, null, []);
+    $first = new SectionContext(section: 'categories', rootPath: '../');
+    $second = new SectionContext(section: 'tags', rootPath: '../../');
 
     SectionContextRegistry::set($first);
     SectionContextRegistry::set($second);
@@ -36,7 +36,7 @@ test('set overwrites a previously stored context', function (): void {
 });
 
 test('reset clears the stored context', function (): void {
-    SectionContextRegistry::set(new SectionContext('../', '/category/1', ['category', '1'], 1, null, null, []));
+    SectionContextRegistry::set(new SectionContext(section: 'categories', rootPath: '../'));
 
     SectionContextRegistry::reset();
 

@@ -84,9 +84,21 @@ final readonly class SearchService
      * HistoryService::logVisit() to read later, when rendering the
      * "search" section.
      *
+     * Legacy Coupling Retirement Track A batch A5.2e: $section is an
+     * explicit param instead of `global $page['section']` -- this
+     * method's two real callers are SearchFilterRenderer::render()
+     * (passes SectionContext::section, always available there) and
+     * Ws\PwgImages::filteredSearchCreate() (a WS method that never runs
+     * SectionPopulator, passes null -- matching this gate's own original
+     * behavior there: `$page['section']` was never 'search' for a WS
+     * request either). search_id itself stays on `global $page;` for
+     * now (a separate, not-yet-retired cluster, Legacy Coupling
+     * Retirement Track A batch A5.2h) -- unrelated to the section value
+     * that only gates whether this write happens.
+     *
      * @return array<string, mixed>|null
      */
-    public function getValidatedSearchInfo(int|string $candidate): ?array
+    public function getValidatedSearchInfo(int|string $candidate, ?string $section): ?array
     {
         /** @var array<string, mixed> $page */
         global $page;
@@ -103,7 +115,7 @@ final readonly class SearchService
                 $this->htmlRenderer->fatalError('this search is not reachable with its id, need the search_uuid instead');
             }
 
-            if (isset($page['section']) and $page['section'] == 'search') {
+            if ($section === 'search') {
                 $page['search_id'] = $search['id'];
             }
         }
@@ -147,9 +159,9 @@ final readonly class SearchService
      *
      * @return array<string, mixed>|false
      */
-    public function getValidatedSearchArray(int|string $searchId): array|false
+    public function getValidatedSearchArray(int|string $searchId, ?string $section): array|false
     {
-        $search = $this->getValidatedSearchInfo($searchId);
+        $search = $this->getValidatedSearchInfo($searchId, $section);
         if (empty($search)) {
             $this->htmlRenderer->badRequest('this search identifier does not exist');
         }

@@ -61,9 +61,16 @@ interface HtmlRenderingInterface
 
     public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never;
 
-    public function getTagsContentTitle(): string;
+    /**
+     * @param list<array<string, mixed>> $tags
+     */
+    public function getTagsContentTitle(array $tags): string;
 
-    public function getCombinedCategoriesContentTitle(): string;
+    /**
+     * @param array<string, mixed>|null $category
+     * @param list<array<string, mixed>> $combinedCategories
+     */
+    public function getCombinedCategoriesContentTitle(?array $category, array $combinedCategories): string;
 
     public function setStatusHeader(int $code, string $text = ''): void;
 

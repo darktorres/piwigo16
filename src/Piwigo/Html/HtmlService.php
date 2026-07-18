@@ -425,15 +425,19 @@ SELECT id, name, permalink
 
     /**
      * Returns the breadcrumb to be displayed above thumbnails on tag page.
+     *
+     * Legacy Coupling Retirement Track A batch A5.2e: $tags is an
+     * explicit param instead of `global $page['tags']` -- the one real
+     * caller (SectionPopulator::populate()) calls this from within its
+     * own execution, before any SectionContext exists yet to read via
+     * SectionContextRegistry (an "in-flight collaborator", same shape as
+     * CalendarRenderer/SearchFilterRenderer's own params).
+     *
+     * @param list<array<string, mixed>> $tags
      */
     #[\Override]
-    public function getTagsContentTitle(): string
+    public function getTagsContentTitle(array $tags): string
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        $tags = is_array($page['tags'] ?? null) ? $page['tags'] : [];
-
         return '<a href="' . get_root_url() . 'tags.php" title="' . l10n('display available tags') . '">'
           . l10n(count($tags) > 1 ? 'Tags' : 'Tag')
           . '</a> ';
@@ -442,28 +446,29 @@ SELECT id, name, permalink
     /**
      * Returns the breadcrumb to be displayed above thumbnails on combined
      * categories page.
+     *
+     * Legacy Coupling Retirement Track A batch A5.2e: $category/
+     * $combinedCategories are explicit params instead of
+     * `global $page['category']`/`['combined_categories']` -- same
+     * in-flight-collaborator reasoning as getTagsContentTitle() above.
+     *
+     * @param array<string, mixed>|null $category
+     * @param list<array<string, mixed>> $combinedCategories
      */
     #[\Override]
-    public function getCombinedCategoriesContentTitle(): string
+    public function getCombinedCategoriesContentTitle(?array $category, array $combinedCategories): string
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
         $title = l10n('Albums') . ' ';
 
-        // Narrowed once here (fix pattern #7): $page is array<string, mixed>,
-        // so $page['combined_categories'] is still mixed even after $page is
-        // typed.
-        $combined_categories = is_array($page['combined_categories'] ?? null) ? $page['combined_categories'] : [];
         $is_first = true;
-        $all_categories = array_merge([$page['category']], $combined_categories);
-        foreach ($all_categories as $idx => $category) {
-            $category = is_array($category) ? $category : [];
-            /** @var array<string, mixed> $category */
+        $all_categories = array_merge([$category], $combinedCategories);
+        foreach ($all_categories as $idx => $loopCategory) {
+            $loopCategory = is_array($loopCategory) ? $loopCategory : [];
+            /** @var array<string, mixed> $loopCategory */
             $title .= $is_first ? '' : ' + ';
             $is_first = false;
 
-            $title .= $this->getCatDisplayName([$category]);
+            $title .= $this->getCatDisplayName([$loopCategory]);
 
             if (count($all_categories) > 1) { // should be always the case
                 $other_cats = $all_categories;

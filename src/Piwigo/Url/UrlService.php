@@ -13,6 +13,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 
@@ -43,10 +44,14 @@ final readonly class UrlService
      */
     public function getRootUrl(): string
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-        $root_path = $page['root_path'] ?? null;
-        if (! is_string($root_path) || $root_path === '') {
+        // Legacy Coupling Retirement Track A batch A5.2e: root_path comes
+        // from RootPathOverride when setMakeFullUrl() is active, else
+        // SectionContextRegistry::current() (was `global $page['root_path']`)
+        // -- nullable here (unlike GalleryController/PictureController's
+        // own guaranteed-non-null read) since this runs for non-gallery
+        // pages too, matching the original's own `?? null` fallback.
+        $root_path = RootPathOverride::current() ?? SectionContextRegistry::current()?->rootPath;
+        if ($root_path === null || $root_path === '') {
             $root_url = PHPWG_ROOT_PATH;
             if (str_starts_with($root_url, './')) {
                 return substr($root_url, 2);
@@ -252,7 +257,15 @@ final readonly class UrlService
     }
 
     /**
-     * Returns $page global array with key redefined and key removed.
+     * Returns the current gallery-navigation-context params (with key
+     * redefined and key removed) used to duplicate the current URL.
+     *
+     * Legacy Coupling Retirement Track A batch A5.2e: sourced from
+     * SectionContextRegistry::current()->toUrlParams() instead of a raw
+     * `global $page;` snapshot -- nullable-safe (falls back to an empty
+     * params array) since this runs for non-gallery pages too. root_path
+     * is overridden the same way getRootUrl() is, so a duplicated URL
+     * still gets the absolute path while setMakeFullUrl() is active.
      *
      * @param array<string, mixed> $redefined keys
      * @param array<int, string> $removed keys
@@ -260,10 +273,12 @@ final readonly class UrlService
      */
     public function paramsForDuplication(array $redefined, array $removed): array
     {
-        /** @var array<string, mixed> $page */
-        global $page;
+        $params = SectionContextRegistry::current()?->toUrlParams() ?? [];
 
-        $params = $page;
+        $rootPathOverride = RootPathOverride::current();
+        if ($rootPathOverride !== null) {
+            $params['root_path'] = $rootPathOverride;
+        }
 
         foreach ($removed as $param_key) {
             unset($params[$param_key]);
@@ -832,24 +847,7 @@ final readonly class UrlService
      */
     public function setMakeFullUrl(): void
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        if (! is_array($page['save_root_path'] ?? null)) {
-            $save_root_path = [];
-            if (isset($page['root_path'])) {
-                $save_root_path['path'] = $page['root_path'];
-            }
-            $save_root_path['count'] = 1;
-            $page['save_root_path'] = $save_root_path;
-            $page['root_path'] = $this->getAbsoluteRootUrl();
-        } else {
-            $save_root_path = $page['save_root_path'];
-            $count = $save_root_path['count'] ?? 0;
-            $count = is_scalar($count) ? (int) $count : 0;
-            $save_root_path['count'] = $count + 1;
-            $page['save_root_path'] = $save_root_path;
-        }
+        RootPathOverride::push($this->getAbsoluteRootUrl());
     }
 
     /**
@@ -857,25 +855,7 @@ final readonly class UrlService
      */
     public function unsetMakeFullUrl(): void
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        $save_root_path = $page['save_root_path'] ?? null;
-        if (is_array($save_root_path)) {
-            $count = $save_root_path['count'] ?? null;
-            if (is_int($count) && $count === 1) {
-                if (isset($save_root_path['path'])) {
-                    $page['root_path'] = $save_root_path['path'];
-                } else {
-                    unset($page['root_path']);
-                }
-                unset($page['save_root_path']);
-            } else {
-                $count_int = is_scalar($count) ? (int) $count : 0;
-                $save_root_path['count'] = $count_int - 1;
-                $page['save_root_path'] = $save_root_path;
-            }
-        }
+        RootPathOverride::pop();
     }
 
     /**

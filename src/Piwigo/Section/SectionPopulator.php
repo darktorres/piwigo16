@@ -76,12 +76,19 @@ final readonly class SectionPopulator
          * @var Logger
          */
         global $logger;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         global $persistent_cache;
         $template = $this->template;
+
+        // Legacy Coupling Retirement Track A batch A5.2e: $page is a local
+        // scratch array for this method's own body only (no longer
+        // `global $page;`) -- every line below already only touched it as
+        // if it were local; the only real change is that a SectionContext
+        // gets built from its final contents and registered at the end,
+        // instead of the array itself being visible to other code via the
+        // global. Matches 16.x-rewrite's own SectionInitializer::
+        // initialize(), this batch's reference implementation.
+        /** @var array<string, mixed> */
+        $page = [];
 
         // Legacy Coupling Retirement Track A batch A4: 'order_by' is
         // progressively narrowed/overridden by several of this method's
@@ -103,21 +110,29 @@ final readonly class SectionPopulator
         $page['items'] = [];
         $page['start'] = $page['startcat'] = 0;
 
-        $section_context = new SectionInitializer($this->htmlRenderer)
+        // Legacy Coupling Retirement Track A batch A5.2e: the real
+        // SectionContext (the full gallery-navigation-context value
+        // object) is built and registered at the very end of this method,
+        // once $page holds its final values -- registering this narrower
+        // URL-parse-only result here would leave a temporarily-wrong
+        // object in the registry for the rest of this method's own
+        // execution. No downstream code reads SectionContextRegistry::
+        // current() mid-request today (confirmed via a full-repo grep),
+        // so deferring the one real set() call to the end is safe.
+        $url_parse = new SectionInitializer($this->htmlRenderer)
             ->parse();
-        SectionContextRegistry::set($section_context);
 
-        $page['root_path'] = $section_context->rootPath;
-        $page['section_url'] = $section_context->sectionUrl;
-        if ($section_context->imageId !== null) {
-            $page['image_id'] = $section_context->imageId;
+        $page['root_path'] = $url_parse->rootPath;
+        $page['section_url'] = $url_parse->sectionUrl;
+        if ($url_parse->imageId !== null) {
+            $page['image_id'] = $url_parse->imageId;
         }
-        if ($section_context->imageFile !== null) {
-            $page['image_file'] = $section_context->imageFile;
+        if ($url_parse->imageFile !== null) {
+            $page['image_file'] = $url_parse->imageFile;
         }
-        $tokens = $section_context->tokens;
-        $next_token = $section_context->nextToken;
-        $page = array_merge($page, $section_context->parsed);
+        $tokens = $url_parse->tokens;
+        $next_token = $url_parse->nextToken;
+        $page = array_merge($page, $url_parse->parsed);
 
         if (! isset($page['section'])) {
             $page['section'] = 'categories';
@@ -241,7 +256,9 @@ final readonly class SectionPopulator
         // +-----------------------------------------------------------------------+
         if ($section === 'categories') {
             if (isset($page['combined_categories'])) {
-                $page['title'] = $this->htmlRenderer->getCombinedCategoriesContentTitle();
+                /** @var list<array<string, mixed>> $combined_categories_for_title */
+                $combined_categories_for_title = is_array($page['combined_categories']) ? array_values(array_filter($page['combined_categories'], is_array(...))) : [];
+                $page['title'] = $this->htmlRenderer->getCombinedCategoriesContentTitle($page_category, $combined_categories_for_title);
             } elseif ($page_category !== null) {
                 $upper_names_raw = $page_category['upper_names'] ?? null;
                 if (! is_array($upper_names_raw)) {
@@ -422,10 +439,12 @@ SELECT DISTINCT(image_id)
                     $this->htmlRenderer->accessDenied();
                 }
 
+                /** @var list<array<string, mixed>> $tags_raw */
+                $tags_raw = array_values(array_filter($tags_raw, is_array(...)));
                 $page = array_merge(
                     $page,
                     [
-                        'title' => $this->htmlRenderer->getTagsContentTitle(),
+                        'title' => $this->htmlRenderer->getTagsContentTitle($tags_raw),
                         'items' => $items,
                     ]
                 );
@@ -671,8 +690,32 @@ SELECT DISTINCT(id)
         // +-----------------------------------------------------------------------+
         if (isset($page['chronology_field'])) {
             unset($page['is_homepage']);
-            new CalendarRenderer($this->htmlRenderer, $this->template)
-                ->render();
+
+            $calendar_field = is_string($page['chronology_field']) ? $page['chronology_field'] : '';
+            $calendar_style = is_string($page['chronology_style'] ?? null) ? $page['chronology_style'] : null;
+            $calendar_view = is_string($page['chronology_view'] ?? null) ? $page['chronology_view'] : null;
+            $calendar_date_raw = is_array($page['chronology_date'] ?? null) ? $page['chronology_date'] : [];
+            $calendar_date = array_values(array_filter($calendar_date_raw, static fn (mixed $v): bool => is_int($v) || is_string($v)));
+            $calendar_items_raw = is_array($page['items'] ?? null) ? $page['items'] : [];
+            $calendar_items = array_values(array_filter($calendar_items_raw, static fn (mixed $v): bool => is_int($v) || is_string($v)));
+
+            $calendar_result = new CalendarRenderer($this->htmlRenderer, $this->template)
+                ->render(
+                    $section,
+                    $page_category,
+                    $calendar_items,
+                    $calendar_field,
+                    $calendar_style,
+                    $calendar_view,
+                    $calendar_date,
+                    isset($page['super_order_by']),
+                );
+
+            $page['items'] = $calendar_result->items;
+            $page['comment'] = $calendar_result->comment;
+            $page['chronology_date'] = $calendar_result->chronologyDate;
+            $page['chronology_style'] = $calendar_result->chronologyStyle;
+            $page['chronology_view'] = $calendar_result->chronologyView;
         }
 
         // title update
@@ -696,6 +739,21 @@ SELECT DISTINCT(id)
         // add meta robots noindex, nofollow to avoid unnecesary robot crawls
         $filter_enabled = (bool) ($filter['enabled'] ?? false);
         $page['meta_robots'] = self::computeMetaRobots($page, $filter_enabled);
+
+        // meta_robots is its own not-yet-retired cluster (Legacy Coupling
+        // Retirement Track A batch A5.2g, 7 files: PageHeaderRenderer,
+        // GalleryController, PictureController, PopuphelpController,
+        // AdminPopuphelpController, NotificationController, and this file)
+        // -- out of the B1 gallery-navigation-context cluster's own scope,
+        // so SectionContext doesn't carry it. GalleryController/
+        // PictureController still read it via their own `global $page;`,
+        // so the value computed above is also published onto the real
+        // global here until batch A5.2g's own retarget replaces this
+        // bridge.
+        if (! is_array($GLOBALS['page'] ?? null)) {
+            $GLOBALS['page'] = [];
+        }
+        $GLOBALS['page']['meta_robots'] = $page['meta_robots'];
 
         // see if we need a redirect because of a permalink
         if ($section === 'categories' and $page_category !== null and ! isset($page['combined_categories'])) {
@@ -776,7 +834,85 @@ SELECT DISTINCT(id)
         \Piwigo\Core\PageState::current()->bodyClasses = $body_classes;
         \Piwigo\Core\PageState::current()->bodyData = $body_data;
 
+        SectionContextRegistry::set(self::buildSectionContext($page));
+
         trigger_notify('loc_end_section_init');
+    }
+
+    /**
+     * Converts this method's own finished $page scratch array into the
+     * typed SectionContext value object distributed via
+     * SectionContextRegistry -- extracted as its own pure static method
+     * for the same reason as computeMetaRobots()/needsPermalinkRedirect()
+     * below (directly Unit-testable, no free-function/global dependency).
+     *
+     * @param  array<string, mixed>  $page
+     */
+    private static function buildSectionContext(array $page): SectionContext
+    {
+        $section = is_string($page['section'] ?? null) ? $page['section'] : 'categories';
+
+        $category = null;
+        if (isset($page['category']) and is_array($page['category'])) {
+            // Rows here always come from get_cat_info()'s own array<string, mixed>
+            // shape (see the identical $page_category narrowing earlier in
+            // populate()); array_filter(..., is_array(...)) below can only prove
+            // "is an array", not the string-keyed row shape, hence the same
+            // @var override this file already uses for $upper_names above.
+            /** @var array<string, mixed> $category */
+            $category = $page['category'];
+        }
+
+        $combinedCategories = null;
+        if (is_array($page['combined_categories'] ?? null)) {
+            /** @var list<array<string, mixed>> $combinedCategories */
+            $combinedCategories = array_values(array_filter($page['combined_categories'], is_array(...)));
+        }
+
+        $items = is_array($page['items'] ?? null) ? array_values(array_filter($page['items'], static fn (mixed $v): bool => is_int($v) || is_string($v))) : [];
+        /** @var list<array<string, mixed>> $tags */
+        $tags = is_array($page['tags'] ?? null) ? array_values(array_filter($page['tags'], is_array(...))) : [];
+        $tagIds = is_array($page['tag_ids'] ?? null) ? array_values(array_map(intval(...), array_filter($page['tag_ids'], is_numeric(...)))) : [];
+        $list = is_array($page['list'] ?? null) ? array_values(array_filter($page['list'], static fn (mixed $v): bool => is_int($v) || is_string($v))) : [];
+        $chronologyDate = is_array($page['chronology_date'] ?? null) ? array_values(array_filter($page['chronology_date'], static fn (mixed $v): bool => is_int($v) || is_string($v))) : [];
+
+        $imageId = $page['image_id'] ?? null;
+        $imageId = is_int($imageId) || is_string($imageId) ? $imageId : null;
+
+        /** @var array<string, mixed> $searchDetails */
+        $searchDetails = is_array($page['search_details'] ?? null) ? $page['search_details'] : [];
+        /** @var array<string, mixed> $qsearchDetails */
+        $qsearchDetails = is_array($page['qsearch_details'] ?? null) ? $page['qsearch_details'] : [];
+
+        return new SectionContext(
+            section: $section,
+            sectionUrl: is_string($page['section_url'] ?? null) ? $page['section_url'] : '',
+            rootPath: is_string($page['root_path'] ?? null) ? $page['root_path'] : '',
+            imageId: $imageId,
+            imageFile: is_string($page['image_file'] ?? null) ? $page['image_file'] : null,
+            items: $items,
+            start: is_numeric($page['start'] ?? null) ? (int) $page['start'] : 0,
+            startcat: is_numeric($page['startcat'] ?? null) ? (int) $page['startcat'] : 0,
+            nbImagePage: is_numeric($page['nb_image_page'] ?? null) ? (int) $page['nb_image_page'] : 0,
+            flat: isset($page['flat']),
+            isHomepage: isset($page['is_homepage']),
+            superOrderBy: isset($page['super_order_by']),
+            category: $category,
+            combinedCategories: $combinedCategories,
+            tags: $tags,
+            tagIds: $tagIds,
+            list: $list,
+            search: is_string($page['search'] ?? null) ? $page['search'] : null,
+            searchDetails: $searchDetails,
+            qsearchDetails: $qsearchDetails,
+            chronologyDate: $chronologyDate,
+            chronologyField: is_string($page['chronology_field'] ?? null) ? $page['chronology_field'] : null,
+            chronologyView: is_string($page['chronology_view'] ?? null) ? $page['chronology_view'] : null,
+            chronologyStyle: is_string($page['chronology_style'] ?? null) ? $page['chronology_style'] : null,
+            title: is_string($page['title'] ?? null) ? $page['title'] : '',
+            comment: is_string($page['comment'] ?? null) ? $page['comment'] : '',
+            sectionTitle: is_string($page['section_title'] ?? null) ? $page['section_title'] : '',
+        );
     }
 
     /**

@@ -142,7 +142,6 @@ final class RequestBootstrap
         \Piwigo\Auth\AccessControl::setHtmlRenderer(new HtmlService());
         \Piwigo\Core\FilesystemHelper::setHtmlRenderer(new HtmlService());
         Lang::setHtmlRenderer(new HtmlService());
-        \Piwigo\Db\MysqliDb::setHtmlRenderer(new HtmlService());
         \Piwigo\Validation\InputValidator::setHtmlRenderer(new HtmlService());
         \Piwigo\Image\SrcImage::setHtmlRenderer(new HtmlService());
         \Piwigo\Image\SrcImage::setImageRepository(new ImageRepository(DbConnection::build()));
@@ -215,33 +214,35 @@ final class RequestBootstrap
 
         \Piwigo\Cache\CurrentPersistentCache::set(new PersistentFileCache());
 
-        // Database connection
+        // Database connection. DbConnection::build() itself deliberately
+        // never touches the session-level ONLY_FULL_GROUP_BY server mode
+        // the legacy dblayer used to strip (see that factory's own
+        // docblock) -- every request path has run without it since the
+        // earlier domain migrations. Built eagerly (not left to DBAL's own
+        // lazy first-query connect) so an unreachable DB surfaces here as
+        // the same friendly fatalError() page the legacy connect used to
+        // produce, not a raw exception from whatever call happens to run
+        // first. Shared for every repository/service constructed for the
+        // rest of this method -- DbConnection::build() returns a fresh
+        // Connection on every call (no internal caching), so reusing this
+        // one avoids opening a separate physical DB connection per
+        // repository, matching the established pattern from the Search/
+        // Section/Category domain migrations.
+        $conn = DbConnection::build();
+        $db_password = \Piwigo\Config\Config::dbPassword();
         try {
-            $db_host = \Piwigo\Config\Config::dbHost();
-            $db_user = \Piwigo\Config\Config::dbUser();
-            $db_password = \Piwigo\Config\Config::dbPassword();
-            $db_base = \Piwigo\Config\Config::dbName();
-            if (! is_string($db_host) || ! is_string($db_user) || ! is_string($db_password) || ! is_string($db_base)) {
-                throw new \Exception("Invalid database configuration: \\Piwigo\Config\Config::dbHost(), 'db_user', 'db_password' and 'db_base' must be strings.");
-            }
-            \Piwigo\Db\MysqliDb::connect(
-                $db_host,
-                $db_user,
-                $db_password,
-                $db_base
-            );
+            $conn->getNativeConnection();
         } catch (\Exception $e) {
-            \Piwigo\Db\MysqliDb::myError(l10n($e->getMessage()), true);
+            new HtmlService()
+                ->fatalError(l10n($e->getMessage()));
         }
-
-        \Piwigo\Db\MysqliDb::checkCharset();
 
         // in Piwigo 15, configuration setting webmaster_id is moved from config files
         // to database. It may be undefined at some point, with Piwigo 15+ scripts and
         // a Piwigo 14 database schema not upgraded yet. Let's avoid any problem.
         $conf['webmaster_id'] ??= 1;
 
-        \Piwigo\Config\ConfigDb::loadConfFromDb();
+        \Piwigo\Config\ConfigDb::loadConfFromDb(conn: $conn);
 
         // \Piwigo\Config\Config::dataLocation()/'log_dir' lost their specific string types the same
         // way $conf['dblayer'] did above (see comment near the dblayer include); we
@@ -276,30 +277,22 @@ final class RequestBootstrap
         session_start();
         PluginLoader::loadPlugins();
 
-        // Shared for every repository/service constructed for the rest of
-        // this method -- DbConnection::build() returns a fresh Connection
-        // on every call (no internal caching), so constructing one here and
-        // reusing it avoids opening a separate physical DB connection per
-        // repository, matching the established pattern from the Search/
-        // Section/Category domain migrations.
-        $conn = DbConnection::build();
-
         if (! \Piwigo\Config\Config::has('piwigo_installed_version')) {
-            \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
+            \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', AppInfo::VERSION, conn: $conn);
         } elseif (\Piwigo\Config\Config::piwigoInstalledVersion() !== AppInfo::VERSION) {
             // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
             self::activityService($conn)->record('system', ActivitySystem::Core, 'autoupdate', [
                 'from_version' => \Piwigo\Config\Config::piwigoInstalledVersion(),
                 'to_version' => AppInfo::VERSION,
             ]);
-            \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
+            \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', AppInfo::VERSION, conn: $conn);
         }
 
         // Check if last major update conf is set if not set it
         if (! \Piwigo\Config\Config::has('last_major_update')) {
             $dbnow = $conn->fetchOne('SELECT NOW()');
             assert(is_string($dbnow));
-            \Piwigo\Config\ConfigDb::confUpdateParam('last_major_update', $dbnow, true);
+            \Piwigo\Config\ConfigDb::confUpdateParam('last_major_update', $dbnow, true, conn: $conn);
         }
 
         // 2022-02-25 due to escape on "rank" (becoming a mysql keyword in version 8), the (\Piwigo\Config\Config::all()['order_by'] ?? null) might
@@ -311,7 +304,7 @@ final class RequestBootstrap
             if ($order_by == 'ORDER BY ') {
                 $order_by = 'ORDER BY id ASC';
             }
-            \Piwigo\Config\ConfigDb::confUpdateParam('order_by', $order_by, true);
+            \Piwigo\Config\ConfigDb::confUpdateParam('order_by', $order_by, true, conn: $conn);
         }
 
         // users can have defined a custom order pattern, incompatible with GUI form.
@@ -564,7 +557,7 @@ final class RequestBootstrap
         if (! empty(\Piwigo\Config\Config::filterPages()) and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
             // Formerly a conditional `include PHPWG_ROOT_PATH .
             // 'include/filter.inc.php';` (deleted, P23 sub-batch 8f-5).
-            new FilterService()
+            new FilterService($conn)
                 ->initializeFromRequest();
         } else {
             $filter['enabled'] = false;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Url;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -32,10 +33,11 @@ use Piwigo\Tag\TagService;
  * (Piwigo\Core), same pattern as CategoryService/AuthService/CommentService/
  * UserService's own equivalent treatment.
  */
-final readonly class UrlService
+final class UrlService
 {
     public function __construct(
-        private HtmlRenderingInterface $htmlRenderer,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private ?Connection $conn = null,
     ) {}
 
     /**
@@ -944,6 +946,8 @@ SELECT
   WHERE user_id = ' . $user_id . '
 ';
 
-        return \Piwigo\Db\MysqliDb::query2Array($query, 'image_id', 'fake_value');
+        $rows = ($this->conn ??= DbConnection::build())->fetchAllAssociative($query);
+
+        return array_column($rows, 'fake_value', 'image_id');
     }
 }

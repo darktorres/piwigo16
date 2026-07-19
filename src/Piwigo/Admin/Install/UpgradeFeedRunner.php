@@ -27,13 +27,6 @@ use Piwigo\Db\DbConnection;
  * so run() itself only reads the PREFIX_TABLE constant the entry shell
  * already define()'d -- no $conf/$prefixeTable global needed here anymore
  * (Legacy Coupling Retirement Track A gap-fill batch G5).
- *
- * Still connects via the legacy MysqliDb:: global below -- DbPatchRegistry
- * ::make(...)->apply() dispatches into the 151 frozen DbPatch classes
- * (Phase 1j, not yet migrated), which still depend on that shared $mysqli
- * connection. Once it succeeds, a real DBAL Connection is additionally
- * built for this method's own retargeted queries (see
- * InstallService::installDbConnect()'s docblock for the same reasoning).
  */
 class UpgradeFeedRunner
 {
@@ -65,31 +58,22 @@ class UpgradeFeedRunner
         // +-------------------------------------------------------------------+
         // |                         Database connection                        |
         // +-------------------------------------------------------------------+
-        $conn = null;
+        $conn = DbConnection::build();
         try {
-            $db_host = \Piwigo\Config\Config::dbHost();
-            $db_user = \Piwigo\Config\Config::dbUser();
-            $db_password = \Piwigo\Config\Config::dbPassword();
-            $db_base = \Piwigo\Config\Config::dbName();
-            if (! is_string($db_host) || ! is_string($db_user) || ! is_string($db_password) || ! is_string($db_base)) {
-                throw new Exception("Invalid database configuration: \\Piwigo\Config\Config::dbHost(), 'db_user', 'db_password' and 'db_base' must be strings.");
-            }
-            \Piwigo\Db\MysqliDb::connect(
-                $db_host,
-                $db_user,
-                $db_password,
-                $db_base
-            );
-            $conn = DbConnection::build();
-        } catch (Exception $e) {
-            // Historical quirk preserved verbatim: the `true` is passed to
-            // l10n() as a (useless) sprintf argument, not to myError()'s
-            // $die parameter -- which defaults to true anyway, so the die
-            // behavior is the same as upgrade.php's connect error path.
-            \Piwigo\Db\MysqliDb::myError(l10n($e->getMessage(), true));
-        }
+            $conn->getNativeConnection();
 
-        \Piwigo\Db\MysqliDb::checkCharset();
+            $version = new \Piwigo\Db\DbInfo($conn)
+                ->version();
+            if (version_compare($version, \Piwigo\Db\SqlDialect::REQUIRED_MYSQL_VERSION, '<')) {
+                throw new Exception(sprintf('your MySQL version is too old, you have "%s" and you need at least "%s"', $version, \Piwigo\Db\SqlDialect::REQUIRED_MYSQL_VERSION));
+            }
+        } catch (Exception $e) {
+            // fatalError() is declared `: never` -- PHPStan proves this
+            // catch block never falls through, no fallback statement
+            // needed after it.
+            new \Piwigo\Html\HtmlService()
+                ->fatalError(l10n($e->getMessage()));
+        }
 
         // +-------------------------------------------------------------------+
         // |                              Upgrades                              |

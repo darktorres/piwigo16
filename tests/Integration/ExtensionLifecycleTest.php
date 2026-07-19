@@ -127,21 +127,6 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
-            // P23 batch 8f-4: the check_theme_installed()/conf_update_param()
-            // function-shadow stubs are gone -- ExtensionLifecycle and
-            // UserService now call real static methods
-            // (Piwigo\Config\ConfigDb::confUpdateParam(),
-            // Piwigo\Core\ThemeCatalog::checkThemeInstalled()/getPwgThemes())
-            // whose bodies run raw SQL through \Piwigo\Db\MysqliDb, a
-            // connection DBAL's own $this->conn below doesn't provide.
-            // Connect it for real so the genuine code paths execute against
-            // the same test database. Deliberately AFTER the
-            // resetDatabase()/loadFixture() block: dropping and recreating
-            // the schema would invalidate an already-selected default
-            // database on this session. Reconnecting per-test is safe --
-            // connect() replaces the shared global $mysqli handle.
-            \Piwigo\Db\MysqliDb::connect($this->dbHost, $this->dbUser, $this->dbPass, $this->dbName);
-
             Config::reset();
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
@@ -152,10 +137,10 @@ namespace Piwigo\Tests\Integration {
 
             Config::override('enable_extensions_install', true);
             Config::override('php_extension_in_urls', false);
-            // P23 batch 8f-4: ThemeCatalog::checkThemeInstalled() (now
-            // called for real, see the MysqliDb::connect() note above)
-            // reads Config::themesDir() -- provide the production value so
-            // the real filesystem check runs against the real themes/ dir.
+            // P23 batch 8f-4: ThemeCatalog::checkThemeInstalled() (called
+            // for real here) reads Config::themesDir() -- provide the
+            // production value so the real filesystem check runs against
+            // the real themes/ dir.
             Config::override('themes_dir', PHPWG_ROOT_PATH . 'themes');
             $GLOBALS['user'] = ['id' => 1];
             unset($_REQUEST['method'], $_REQUEST['action']);

@@ -106,7 +106,6 @@ $runner->loadLanguage();
 // class constants.
 
 $conn = UpgradeService::upgradeDbConnect();
-\Piwigo\Db\MysqliDb::checkCharset();
 
 $row = $conn->fetchNumeric('SELECT NOW();');
 assert($row !== false);

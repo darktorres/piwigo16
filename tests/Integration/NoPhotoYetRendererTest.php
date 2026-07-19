@@ -5,9 +5,10 @@ declare(strict_types=1);
 // P23 batch 8f-4: the conf_update_param() function stub is gone --
 // NoPhotoYetRenderer now calls Piwigo\Config\ConfigDb::confUpdateParam()
 // directly, a real static method a bare-function stub can no longer
-// intercept. setUp() below establishes the real MysqliDb connection to the
-// test database instead, so the genuine write path runs against the same
-// config table the old stand-in targeted through DBAL.
+// intercept. That method is DBAL-based (Legacy Coupling Retirement gap-fill,
+// ConfigDb.php migration), so the genuine write path runs against the same
+// config table via $this->conn below -- no separate MysqliDb connection
+// needed any more.
 
 namespace Piwigo\Tests\Integration {
 
@@ -51,14 +52,6 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         Config::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-
-        // P23 batch 8f-4: ConfigDb::confUpdateParam() (the real method
-        // NoPhotoYetRenderer now calls, replacing this file's former
-        // conf_update_param() stub) runs raw SQL through \Piwigo\Db\MysqliDb,
-        // a connection DBAL's own $this->conn below doesn't provide --
-        // connect it for real, after the fixture reset above (dropping the
-        // schema would invalidate an already-selected default database).
-        \Piwigo\Db\MysqliDb::connect($this->dbHost, $this->dbUser, $this->dbPass, $this->dbName);
 
         $this->conn = DbConnection::build();
         $this->renderer = new NoPhotoYetRenderer($this->conn);

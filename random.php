@@ -40,16 +40,18 @@ global $conf, $user;
 $top_number = is_numeric($conf['top_number'] ?? null) ? (int) $conf['top_number'] : 15;
 $nb_image_page = is_numeric($user['nb_image_page'] ?? null) ? (int) $user['nb_image_page'] : 15;
 
+$conn = \Piwigo\Db\DbConnection::build();
+
 $query = '
 SELECT id
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
-' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
+' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository($conn), new \Piwigo\Group\GroupRepository($conn))->getSqlConditionFandF([
     'forbidden_categories' => 'category_id',
     'visible_categories' => 'category_id',
     'visible_images' => 'id',
 ], 'WHERE') . '
-  ORDER BY ' . \Piwigo\Db\MysqliDb::DB_RANDOM_FUNCTION . '()
+  ORDER BY ' . \Piwigo\Db\SqlDialect::DB_RANDOM_FUNCTION . '()
   LIMIT ' . min(50, $top_number, $nb_image_page) . '
 ;';
 
@@ -58,5 +60,8 @@ SELECT id
 // +-----------------------------------------------------------------------+
 
 redirect(make_index_url([
-    'list' => \Piwigo\Db\MysqliDb::query2Array($query, null, 'id'),
+    'list' => array_map(
+        static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+        $conn->fetchFirstColumn($query)
+    ),
 ]));

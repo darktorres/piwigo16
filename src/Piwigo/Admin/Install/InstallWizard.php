@@ -271,8 +271,6 @@ class InstallWizard
             print_r($this->errors);
         }
 
-        \Piwigo\Db\MysqliDb::checkCharset();
-
         if (
             strlen($this->prefixeTable) > 20
             or (bool) preg_match('/^\d/', $this->prefixeTable)

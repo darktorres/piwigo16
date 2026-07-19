@@ -98,40 +98,27 @@ class InstallService
     }
 
     /**
-     * Connect to database during installation. Uses $_POST.
-     *
-     * Still connects via the legacy MysqliDb:: global -- the frozen
-     * install/db/*.php DbPatch classes reached later in the same request
-     * (via InstallService::activateCoreThemes()'s indirect callers and, for
-     * upgrades, VersionUpgrade/DbPatch::apply()) are Phase 1j's scope, not
-     * yet migrated, and still depend on that shared $mysqli global. Once
-     * the legacy connect succeeds, additionally builds a real DBAL
-     * Connection for this phase's own retargeted call sites --
+     * Connect to database during installation. Uses $_POST indirectly --
      * InstallWizard::boot() already calls Config::override('db_host', ...)
-     * etc. with these same $_POST values before this runs, so
-     * DbConnection::build() (which reads Config::db*()) resolves to the
-     * identical credentials.
+     * etc. with the submitted credentials before this runs, so
+     * DbConnection::build() (which reads Config::db*()) resolves to them
+     * directly; no local $_POST parsing needed here.
      *
      * @param array<int, string> $infos - populated with infos
      * @param array<int, string> $errors - populated with errors
      */
     public static function installDbConnect(array &$infos, array &$errors): ?Connection
     {
-        $dbhost = is_string($_POST['dbhost'] ?? null) ? $_POST['dbhost'] : '';
-        $dbuser = is_string($_POST['dbuser'] ?? null) ? $_POST['dbuser'] : '';
-        $dbpasswd = is_string($_POST['dbpasswd'] ?? null) ? $_POST['dbpasswd'] : '';
-        $dbname = is_string($_POST['dbname'] ?? null) ? $_POST['dbname'] : '';
-
         try {
-            \Piwigo\Db\MysqliDb::connect(
-                $dbhost,
-                $dbuser,
-                $dbpasswd,
-                $dbname
-            );
-            \Piwigo\Db\MysqliDb::checkVersion();
+            $conn = DbConnection::build();
+            $conn->getNativeConnection();
 
-            return DbConnection::build();
+            $version = new \Piwigo\Db\DbInfo($conn)->version();
+            if (version_compare($version, \Piwigo\Db\SqlDialect::REQUIRED_MYSQL_VERSION, '<')) {
+                throw new Exception(sprintf('your MySQL version is too old, you have "%s" and you need at least "%s"', $version, \Piwigo\Db\SqlDialect::REQUIRED_MYSQL_VERSION));
+            }
+
+            return $conn;
         } catch (Exception $e) {
             $errors[] = l10n($e->getMessage());
 

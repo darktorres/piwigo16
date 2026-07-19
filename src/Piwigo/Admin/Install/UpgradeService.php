@@ -359,41 +359,30 @@ SELECT id
     }
 
     /**
-     * Still connects via the legacy MysqliDb:: global -- the
-     * VersionUpgrade/DbPatch classes reached later in the same upgrade
-     * request are Phase 1j's scope, not yet migrated, and still depend on
-     * that shared $mysqli global. Once it succeeds, additionally builds
-     * and returns a real DBAL Connection for this class's own retargeted
-     * call sites (see InstallService::installDbConnect()'s docblock for
-     * the same reasoning -- upgrade.php seeds Config's db_* overrides from
-     * the same $config_file include this method itself reads from, ahead
-     * of this call).
+     * upgrade.php seeds Config's db_* overrides from the same
+     * $config_file include this method itself would have read from, ahead
+     * of this call, so DbConnection::build() (which reads Config::db*())
+     * resolves to the real submitted credentials.
      */
     public static function upgradeDbConnect(): Connection
     {
         try {
-            $db_host = \Piwigo\Config\Config::dbHost();
-            $db_user = \Piwigo\Config\Config::dbUser();
-            $db_password = \Piwigo\Config\Config::dbPassword();
-            $db_base = \Piwigo\Config\Config::dbName();
-            if (! is_string($db_host) || ! is_string($db_user) || ! is_string($db_password) || ! is_string($db_base)) {
-                throw new Exception("Invalid database configuration: \\Piwigo\Config\Config::dbHost(), 'db_user', 'db_password' and 'db_base' must be strings.");
-            }
-            \Piwigo\Db\MysqliDb::connect(
-                $db_host,
-                $db_user,
-                $db_password,
-                $db_base
-            );
-            \Piwigo\Db\MysqliDb::checkVersion();
+            $conn = DbConnection::build();
+            $conn->getNativeConnection();
 
-            return DbConnection::build();
+            $version = new \Piwigo\Db\DbInfo($conn)
+                ->version();
+            if (version_compare($version, \Piwigo\Db\SqlDialect::REQUIRED_MYSQL_VERSION, '<')) {
+                throw new Exception(sprintf('your MySQL version is too old, you have "%s" and you need at least "%s"', $version, \Piwigo\Db\SqlDialect::REQUIRED_MYSQL_VERSION));
+            }
+
+            return $conn;
         } catch (Exception $e) {
-            // myError(..., true) is declared `: void`, but PHPStan proves it
-            // never actually returns here (it always reaches the private
-            // fatalError()/never path) -- no fallback statement needed
-            // after it.
-            \Piwigo\Db\MysqliDb::myError(l10n($e->getMessage()), true);
+            // fatalError() is declared `: never` -- PHPStan proves this
+            // catch block never falls through, no fallback statement
+            // needed after it.
+            new \Piwigo\Html\HtmlService()
+                ->fatalError(l10n($e->getMessage()));
         }
     }
 }

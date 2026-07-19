@@ -34,7 +34,7 @@ backbone `P24` (Vite + TypeScript/frontend conversion, still
 `status: planned` there). The two plans are unrelated; don't conflate
 them when reading commit history or the replay manifest.
 
-## Progress log (updated 2026-07-18)
+## Progress log (updated 2026-07-19)
 
 - **Phase 1a (Category pilot) — DONE.** Commit `1e23646c6`. Resolved the
   SQL-dialect-fragment design question: `Piwigo\Db\SqlDialect`, a
@@ -711,6 +711,84 @@ them when reading commit history or the replay manifest.
   green (deptrac 0, ECS clean, PHPStan baseline regenerated — 3096
   errors, down from 3179, ratio drift only — Unit/Arch 604, Contract 93,
   Integration 620, Browser 64+1 skipped, Visual 32/32).
+
+- **Phase 1i/1j gap-closure: `ConfigDb.php`/`UserService.php` migration +
+  `MysqliDb::connect()` retirement. DONE, commits `94d5e6408` (ConfigDb/
+  UserService) + follow-up (connect retirement).** Triggered by
+  re-investigating Phase 1i's own "deferred" note now that 1j is done:
+  found two real, previously-unassigned blockers standing between the
+  install/upgrade dual-connection design and actually retiring
+  `MysqliDb::connect()`.
+  1. **`ConfigDb.php`** — a cross-cutting ~63-caller-file dependency, not
+     scoped to any Phase 1 sub-phase. Migrated `loadConfFromDb`/
+     `confUpdateParam`/`confDeleteParam`/`pwgIsDbconfWriteable` onto DBAL
+     with a lazy `?Connection $conn = null` default (matches the
+     `MailService`/`HtmlService` high-caller-count precedent). **Found and
+     fixed a real SQL-injection vulnerability while migrating**:
+     `confUpdateParam()`/`confDeleteParam()` did raw unescaped
+     string-splicing (`VALUES('$param','$dbValue')`, `WHERE param
+     IN(...)`) — parameterized both via DBAL bound params /
+     `ArrayParameterType::STRING`. This made several `MysqliDb::
+     realEscapeString()` calls feeding `confUpdateParam()` genuinely dead
+     (`Patch125.php`, `updates.php`, `ExtensionUpdateChecker.php`,
+     `PwgExtensions.php` x2) — removed.
+  2. **`UserService.php`** — 29 un-migrated `MysqliDb::` calls, a gap
+     never assigned to any Phase 1 sub-phase despite the class being
+     touched by several. Constructor now takes `Connection $conn`
+     directly (39 call sites across 32 files threaded via a reviewed
+     bracket-matching script; 2 files needed manual fixup where the
+     script's insertion produced a double-comma syntax error, caught via
+     a full `php -l` sweep, not just diff review).
+  With both resolved, re-audited the full reachable graph from
+  `InstallService`/`UpgradeService`/`UpgradeFeedRunner`/`RequestBootstrap`
+  and found two more, smaller live dependents outside Phase 1's own
+  domain list: `Filter/FilterService.php` (2 calls, lazy-optional
+  `?Connection` default) and `Url/UrlService.php` (1 call; un-readonly'd
+  just the new property since the class-level `readonly` modifier
+  otherwise blocks a lazy default and the real caller count — 17 in
+  `Url/functions.php` + ~26 Unit tests — ruled out a required param).
+  Both exercised on the **normal gallery request path**, not just
+  install/upgrade. With those migrated, retired `MysqliDb::connect()`/
+  `checkVersion()`/`checkCharset()`/`myError()` entirely from
+  `InstallService::installDbConnect()`, `UpgradeService::
+  upgradeDbConnect()`, `UpgradeFeedRunner::run()`, `InstallWizard.php`,
+  and `RequestBootstrap::connect()` (the normal per-request path) —
+  replaced with `DbConnection::build()` + `Connection::
+  getNativeConnection()` (the public entry point; `connect()` itself is
+  `protected`) for eager-connect-with-friendly-error, plus `DbInfo::
+  version()`/`SqlDialect::REQUIRED_MYSQL_VERSION` for the version check,
+  already proven in Phase 1j. **A real regression caught by the Visual
+  suite, not assumed away**: `it random matches its visual baseline`
+  failed with a solid-blank screenshot (67KB baseline vs 7KB actual) —
+  decoded and compared both PNGs, then read the Apache error log for the
+  actual fatal (`Call to a member function query() on null` inside
+  `MysqliDb::query()`, from `random.php:61`). Root cause: `random.php`
+  and `upgrade.php`, both **root-level entry scripts outside
+  `src/Piwigo/`**, still called `MysqliDb::query2Array()`/
+  `DB_RANDOM_FUNCTION`/`checkCharset()` directly — a real blind spot,
+  since every `MysqliDb::` sweep this whole gap-closure pass had run was
+  scoped to `src/`+`tests/` and never caught them. Fixed both (`random.php`
+  onto `SqlDialect::DB_RANDOM_FUNCTION` + `$conn->fetchFirstColumn()`;
+  `upgrade.php`'s dead `checkCharset()` call removed) after which a
+  repo-wide (not `src/`-scoped) grep confirmed the fix. Verified `upgrade.php`
+  couldn't be curl-smoke-tested directly (this sandbox has no legacy-format
+  `local/config/database.inc.php`), so `UpgradeService::upgradeDbConnect()`
+  was instead exercised directly against the live test DB via a throwaway
+  script (discarded after use) — connected, read the real MySQL version,
+  and called `checkUpgradeFeed()` successfully.
+  **Net effect: a repo-wide grep (`src/`, `tests/`, and every root-level
+  `*.php` entry script) now finds zero live callers of any `MysqliDb::`
+  method anywhere** — only a dormant, unregistered Rector rule
+  (`tools/rector-rules/QueryHashWrapperRector.php`) still names it in a
+  code-sample string. `MysqliDb.php` itself was deliberately left
+  untouched (deleting/reducing it is Phase 1k's own scope, not folded
+  into this gap-closure pass) — flagged as a near-trivial follow-up now
+  that every real dependent is gone. Full verification gate green
+  (deptrac 0, ECS clean, PHPStan baseline regenerated twice — 3067
+  errors both times, ratio drift only — Unit/Arch 604, Contract 93,
+  Integration 620, Browser 64+1 skipped, Visual 32/32 including the
+  fixed `random` page, plus the fixture-regen test itself: 134
+  assertions).
 
 ## What direct investigation found (the basis for phase sequencing)
 

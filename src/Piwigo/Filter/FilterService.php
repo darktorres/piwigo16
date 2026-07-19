@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Filter;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
@@ -23,6 +25,10 @@ use Piwigo\Session\SessionService;
  */
 final class FilterService implements FilterUpdaterInterface
 {
+    public function __construct(
+        private ?Connection $conn = null,
+    ) {}
+
     /**
      * Builds the request's $filter global — the top-level body of the
      * deleted include/filter.inc.php (P23 sub-batch 8f-5), ported verbatim.
@@ -121,7 +127,7 @@ final class FilterService implements FilterUpdaterInterface
                     'date' => date('Ymd'),
                 ];
 
-                $categoryConn = DbConnection::build();
+                $categoryConn = $this->conn ??= DbConnection::build();
                 // getComputedCategories() mutates its $userdata argument by
                 // reference (sets 'last_photo_date') -- pass the still-live
                 // legacy array (dual-write source of truth alongside
@@ -155,10 +161,13 @@ WHERE ';
                 $query .= '
   category_id  IN (' . $filter['visible_categories'] . ') and';
                 $query .= '
-    date_available >= ' . \Piwigo\Db\MysqliDb::getRecentPeriodExpression($filter_recent_period);
+    date_available >= ' . SqlDialect::getRecentPeriodExpression($filter_recent_period);
 
-                $visible_image_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
-                $filter['visible_images'] = implode(',', array_filter($visible_image_ids, is_string(...)));
+                $visible_image_ids = array_map(
+                    static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+                    $categoryConn->fetchFirstColumn($query)
+                );
+                $filter['visible_images'] = implode(',', $visible_image_ids);
 
                 if (empty($filter['visible_images'])) {
                     // Must be not empty

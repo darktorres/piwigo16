@@ -82,8 +82,7 @@ final class PwgGroups
         $name = strip_tags(stripslashes($params['name']));
 
         try {
-            $inserted_id = new GroupService(new GroupRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new AuditService(new AuditRepository(DbConnection::build())))
-                ->create($name, $params['is_default']);
+            $inserted_id = self::groupService()->create($name, $params['is_default']);
         } catch (InvalidArgumentException $e) {
             return new PwgError(WsError::INVALID_PARAM, $e->getMessage());
         }
@@ -114,8 +113,7 @@ final class PwgGroups
             return new PwgError(403, 'Invalid security token');
         }
 
-        $deleted_groups = new GroupService(new GroupRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new AuditService(new AuditRepository(DbConnection::build())))
-            ->delete($params['group_id']);
+        $deleted_groups = self::groupService()->delete($params['group_id']);
         if ($deleted_groups === false) {
             return new PwgError(500, 'There is no group to delete');
         }
@@ -152,8 +150,7 @@ final class PwgGroups
         }
 
         try {
-            new GroupService(new GroupRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new AuditService(new AuditRepository(DbConnection::build())))
-                ->update($params['group_id'], $updates);
+            self::groupService()->update($params['group_id'], $updates);
         } catch (InvalidArgumentException $e) {
             return new PwgError(WsError::INVALID_PARAM, $e->getMessage());
         }
@@ -179,8 +176,7 @@ final class PwgGroups
             return new PwgError(403, 'Invalid security token');
         }
 
-        $added = new GroupService(new GroupRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new AuditService(new AuditRepository(DbConnection::build())))
-            ->addMembers($params['group_id'], $params['user_id']);
+        $added = self::groupService()->addMembers($params['group_id'], $params['user_id']);
         if (! $added) {
             return new PwgError(WsError::INVALID_PARAM, 'This group does not exist.');
         }
@@ -211,8 +207,7 @@ final class PwgGroups
             'group_id' => $params['merge_group_id'],
         ]);
 
-        $merged = new GroupService(new GroupRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new AuditService(new AuditRepository(DbConnection::build())))
-            ->merge($params['destination_group_id'], $params['merge_group_id']);
+        $merged = self::groupService()->merge($params['destination_group_id'], $params['merge_group_id']);
         if (! $merged) {
             return new PwgError(WsError::INVALID_PARAM, 'All groups does not exist.');
         }
@@ -241,8 +236,7 @@ final class PwgGroups
         }
 
         try {
-            $inserted_id = new GroupService(new GroupRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new AuditService(new AuditRepository(DbConnection::build())))
-                ->duplicate($params['group_id'], $params['copy_name']);
+            $inserted_id = self::groupService()->duplicate($params['group_id'], $params['copy_name']);
         } catch (InvalidArgumentException $e) {
             return new PwgError(WsError::INVALID_PARAM, $e->getMessage());
         }
@@ -268,8 +262,7 @@ final class PwgGroups
             return new PwgError(403, 'Invalid security token');
         }
 
-        $removed = new GroupService(new GroupRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new AuditService(new AuditRepository(DbConnection::build())))
-            ->removeMembers($params['group_id'], $params['user_id']);
+        $removed = self::groupService()->removeMembers($params['group_id'], $params['user_id']);
         if (! $removed) {
             return new PwgError(WsError::INVALID_PARAM, 'This group does not exist.');
         }
@@ -277,5 +270,17 @@ final class PwgGroups
         return $service->invoke('pwg.groups.getList', [
             'group_id' => $params['group_id'],
         ]);
+    }
+
+    /**
+     * Constructed identically across add()/delete()/setInfo()/addUser()/
+     * merge()/duplicate()/deleteUser() -- all static methods, no shared
+     * instance state to inject into, same "private static helper"
+     * precedent as Bootstrap\RequestBootstrap::activityService() /
+     * PwgComments::commentService().
+     */
+    private static function groupService(): GroupService
+    {
+        return new GroupService(new GroupRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new AuditService(new AuditRepository(DbConnection::build())));
     }
 }

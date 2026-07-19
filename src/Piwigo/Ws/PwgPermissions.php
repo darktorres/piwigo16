@@ -13,6 +13,7 @@ namespace Piwigo\Ws;
 
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -46,6 +47,8 @@ final class PwgPermissions
             return new PwgError(WsError::INVALID_PARAM, 'Too many parameters, provide cat_id OR user_id OR group_id');
         }
 
+        $conn = DbConnection::build();
+
         $cat_filter = '';
         if (! empty($params['cat_id'])) {
             $cat_filter = 'WHERE cat_id IN(' . implode(',', $params['cat_id']) . ')';
@@ -59,9 +62,7 @@ SELECT user_id, cat_id
   FROM ' . Tables::userAccess() . '
   ' . $cat_filter . '
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach ($conn->fetchAllAssociative($query) as $row) {
             if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
                 continue;
             }
@@ -69,7 +70,7 @@ SELECT user_id, cat_id
             if (! isset($perms[$cat_id])) {
                 $perms[$cat_id]['id'] = $cat_id;
             }
-            $perms[$cat_id]['users'][] = intval($row['user_id']);
+            $perms[$cat_id]['users'][] = is_scalar($row['user_id']) ? intval($row['user_id']) : 0;
         }
 
         // indirect users
@@ -80,9 +81,7 @@ SELECT ug.user_id, ga.cat_id
     ON ug.group_id = ga.group_id
   ' . $cat_filter . '
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach ($conn->fetchAllAssociative($query) as $row) {
             if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
                 continue;
             }
@@ -90,7 +89,7 @@ SELECT ug.user_id, ga.cat_id
             if (! isset($perms[$cat_id])) {
                 $perms[$cat_id]['id'] = $cat_id;
             }
-            $perms[$cat_id]['users_indirect'][] = intval($row['user_id']);
+            $perms[$cat_id]['users_indirect'][] = is_scalar($row['user_id']) ? intval($row['user_id']) : 0;
         }
 
         // groups
@@ -99,9 +98,7 @@ SELECT group_id, cat_id
   FROM ' . Tables::groupAccess() . '
   ' . $cat_filter . '
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach ($conn->fetchAllAssociative($query) as $row) {
             if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
                 continue;
             }
@@ -109,7 +106,7 @@ SELECT group_id, cat_id
             if (! isset($perms[$cat_id])) {
                 $perms[$cat_id]['id'] = $cat_id;
             }
-            $perms[$cat_id]['groups'][] = intval($row['group_id']);
+            $perms[$cat_id]['groups'][] = is_scalar($row['group_id']) ? intval($row['group_id']) : 0;
         }
 
         // filter by group and user
@@ -164,6 +161,8 @@ SELECT group_id, cat_id
             return new PwgError(403, 'Invalid security token');
         }
 
+        $conn = DbConnection::build();
+
         if (! empty($params['group_id'])) {
             $cat_ids = get_uppercat_ids($params['cat_id']);
             if ($params['recursive']) {
@@ -176,7 +175,7 @@ SELECT id
   WHERE id IN (' . implode(',', $cat_ids) . ')
     AND status = \'private\'
 ;';
-            $private_cats = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
+            $private_cats = array_column($conn->fetchAllAssociative($query), 'id');
 
             $inserts = [];
             foreach ($private_cats as $cat_id) {
@@ -188,21 +187,21 @@ SELECT id
                 }
             }
 
-            \Piwigo\Db\MysqliDb::massInserts(
-                Tables::groupAccess(),
-                ['group_id', 'cat_id'],
-                $inserts,
-                [
-                    'ignore' => true,
-                ]
-            );
+            new BatchWriter($conn)
+                ->massInsert(
+                    Tables::groupAccess(),
+                    ['group_id', 'cat_id'],
+                    $inserts,
+                    [
+                        'ignore' => true,
+                    ]
+                );
         }
 
         if (! empty($params['user_id'])) {
             if ($params['recursive']) {
                 $_POST['apply_on_sub'] = true;
             }
-            $conn = DbConnection::build();
             new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
                 ->addPermissionOnCategory($params['cat_id'], $params['user_id']);
         }
@@ -229,6 +228,7 @@ SELECT id
             return new PwgError(403, 'Invalid security token');
         }
 
+        $conn = DbConnection::build();
         $cat_ids = get_subcat_ids($params['cat_id']);
 
         if (! empty($params['group_id'])) {
@@ -238,7 +238,7 @@ DELETE
   WHERE group_id IN (' . implode(',', $params['group_id']) . ')
     AND cat_id IN (' . implode(',', $cat_ids) . ')
 ;';
-            \Piwigo\Db\MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         if (! empty($params['user_id'])) {
@@ -248,7 +248,7 @@ DELETE
   WHERE user_id IN (' . implode(',', $params['user_id']) . ')
     AND cat_id IN (' . implode(',', $cat_ids) . ')
 ;';
-            \Piwigo\Db\MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         return $service->invoke('pwg.permissions.getList', [

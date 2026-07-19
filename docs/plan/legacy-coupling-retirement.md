@@ -673,6 +673,45 @@ them when reading commit history or the replay manifest.
   93, Integration 620, Browser 64+1 skipped, Visual 32/32, plus the
   fixture-regen test itself: 134 assertions).
 
+- **Phase 1j (the 156 frozen DbPatch/VersionUpgrade files). DONE, commit
+  `b8c064fbf`.** Real count 151 files (125 DbPatch + 26 VersionUpgrade);
+  148 needed `apply(): void` → `apply(Connection $conn): void`
+  (`DbPatchInterface`/`VersionUpgradeInterface`, `AbstractRangeVersion
+  Upgrade`'s shared range-family base, every concrete `PatchNNN`/
+  `UpgradeFrom_X_Y_Z` class — the 3 pure factory/collector classes,
+  `DbPatchRegistry`/`VersionUpgradeRegistry`/`DatabaseConfigChanges`,
+  have no `apply()` of their own and were untouched). Of 104 files with
+  real `MysqliDb::` calls: 83 were pure `query()`-only, handled via a
+  reviewed script (every occurrence confirmed byte-identical by grep
+  before running it — same "sed/perl only for byte-identical patterns,
+  reviewed after" standing exception this project has used before); 21
+  with `fetchAssoc`/`fetchRow`/`massInserts`/`massUpdates`/
+  `singleUpdate`/`realEscapeString`/`getDbVersion`/`numRows`/
+  `booleanToString`/`query2Array` hand-migrated individually. 23 internal
+  chain-call sites (`DbPatch->apply()`, `VersionUpgrade->apply()`
+  stepping to the next release) updated to pass `$conn` through, plus
+  the 2 external callers already `$conn`-aware from Phase 1i.
+  `die()`/`exit()` and `ConfigDb::` calls deliberately untouched, exactly
+  as this item's own original scope note specified.
+  **No existing test exercises `apply()` itself** — the Unit registry
+  test (`UpgradeRegistriesTest.php`) only checks `id()`/`description()`/
+  `versionFrom()` metadata, and a fresh install marks every patch
+  pre-applied without running it (`InstallWizard::performInstall()`'s own
+  ledger `INSERT`, seeding `UpgradeService::getAvailableUpgradeIds()`'s
+  full id list as already-done). Verified the connection-threading
+  mechanism for real regardless: a throwaway smoke script (discarded
+  after use, per this project's standing throwaway-script convention)
+  called `DbPatchRegistry::make('110')->apply($conn)` against the live
+  test DB — the real `$conn->fetchNumeric()`/`executeStatement()` calls
+  inside `Patch110` executed successfully end-to-end. (`Patch165`'s own
+  smoke-test run threw, but only inside `ConfigDb::confUpdateParam()`'s
+  own still-`MysqliDb::`-dependent internals — the same pre-existing,
+  out-of-scope `ConfigDb.php` gap flagged since Phase 1f step 1 — not a
+  regression from this phase's own changes.) Full verification gate
+  green (deptrac 0, ECS clean, PHPStan baseline regenerated — 3096
+  errors, down from 3179, ratio drift only — Unit/Arch 604, Contract 93,
+  Integration 620, Browser 64+1 skipped, Visual 32/32).
+
 ## What direct investigation found (the basis for phase sequencing)
 
 **DI infrastructure already exists and works — it's just unused.**
@@ -979,19 +1018,37 @@ conversion and DI/construction changes don't apply there the same way.
    Unit/Arch 604, Contract 93, Integration 620, Browser 64+1 skipped,
    Visual 32/32, plus the fixture-regen test itself: 134 assertions).
 10. **1j — The 156 frozen DbPatch/VersionUpgrade files: `MysqliDb::` swap
-    only.** Last and most mechanical once the pattern is proven
-    everywhere else; each still needs individual review since every one
-    is a historical, must-stay-byte-correct upgrade step. Included per
-    the user's explicit decision (previously deferred three separate
-    times, overridden now) — but that decision was specifically about
-    "no raw MysqliDb calls left anywhere," a pure execution-API swap
-    (same SQL, same result). It does not extend to these files' other
-    Phase-1-style fixes: 2 of them also have real `die()`/`exit()` calls
-    and 20 also call `ConfigDb::confGetParam()`/`confUpdateParam()`
-    directly (see Phase 5's own note on why that specific swap is a
-    data-semantics change, not just an API swap, for historical code) —
-    leave both untouched here, matching G3's original judgment call on
-    these files' `$conf` usage.
+    only. DONE, commit `b8c064fbf`.** Real count was 151 files (125
+    DbPatch + 26 VersionUpgrade); 148 needed the `apply(): void` →
+    `apply(Connection $conn): void` signature change (`DbPatchInterface`/
+    `VersionUpgradeInterface` themselves, `AbstractRangeVersionUpgrade`'s
+    shared range-family base, and every concrete `PatchNNN`/
+    `UpgradeFrom_X_Y_Z` class); `DbPatchRegistry`/`VersionUpgradeRegistry`/
+    `DatabaseConfigChanges` are pure factories/collectors with no `apply()`
+    of their own, untouched. 104 files had real `MysqliDb::` calls to
+    retarget (83 pure `query()`-only files handled via a reviewed script —
+    confirmed byte-identical across every occurrence by grep before
+    running it — 21 with `fetchAssoc`/`fetchRow`/`massInserts`/
+    `massUpdates`/`singleUpdate`/`realEscapeString`/`getDbVersion`/
+    `numRows`/`booleanToString`/`query2Array` hand-migrated individually,
+    same discipline as every prior phase). Every chain call
+    (`DbPatch->apply()`, `VersionUpgrade->apply()` stepping to the next
+    release) updated to pass `$conn` through — 23 such sites, plus the 2
+    external callers (`UpgradeFeedRunner`/`UpgradeRunner`, already
+    `$conn`-aware from Phase 1i). `die()`/`exit()` and `ConfigDb::` calls
+    deliberately untouched, exactly as this note originally scoped.
+    **No existing test exercises `apply()` itself** — the Unit registry
+    test only checks `id()`/`description()`/`versionFrom()` metadata, and
+    a fresh install marks every patch pre-applied without ever running it
+    (`performInstall()`'s own ledger `INSERT`) — verified the
+    connection-threading mechanism for real via a throwaway smoke script
+    calling `Patch110::apply($conn)` against the live test DB (real DBAL
+    `fetchNumeric()`/`executeStatement()` calls succeeded end-to-end),
+    then discarded it, per this project's standing throwaway-script
+    convention. Full verification gate green (deptrac 0, ECS clean,
+    PHPStan baseline regenerated — 3096 errors, down from 3179, ratio
+    drift only — Unit/Arch 604, Contract 93, Integration 620, Browser
+    64+1 skipped, Visual 32/32).
 11. **1k — Close-out.** Delete `MysqliDb.php` (or reduce to whatever
     proves genuinely irreducible during 1i), add Arch tests locking in
     the new baseline (no `MysqliDb::` references, no un-injected manual

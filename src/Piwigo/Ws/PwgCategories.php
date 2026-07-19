@@ -20,7 +20,9 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -45,6 +47,29 @@ final class PwgCategories
     }
 
     /**
+     * Constructed identically 5 times across getImages()/getList() --
+     * including once inside getList()'s per-category while loop -- takes
+     * the caller's own $conn instead of building a fresh one per call,
+     * same "shared connection passed in" precedent as
+     * Ws\PwgTags::activityService(Connection $conn).
+     */
+    private static function permissionService(Connection $conn): PermissionService
+    {
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+    }
+
+    /**
+     * Constructed identically 4 times across setInfo()/setRepresentative()/
+     * deleteRepresentative()/refreshRepresentative() -- none inside a loop,
+     * so (unlike permissionService() above) this builds its own connection
+     * per call, same shape as Ws\PwgComments::commentService().
+     */
+    private static function activityService(): ActivityService
+    {
+        return new ActivityService(new ActivityRepository(DbConnection::build()));
+    }
+
+    /**
      * API method
      * Returns images per category
      *
@@ -57,6 +82,7 @@ final class PwgCategories
      */
     public static function getImages(array $params, PwgServer &$service): PwgError|array
     {
+        $conn = DbConnection::build();
 
         $params['cat_id'] = array_unique($params['cat_id']);
 
@@ -67,7 +93,7 @@ SELECT id
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $params['cat_id']) . ')
 ;';
-            $db_cat_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
+            $db_cat_ids = array_map(intval(...), array_filter(array_column($conn->fetchAllAssociative($query), 'id'), is_numeric(...)));
             $missing_cat_ids = array_diff($params['cat_id'], $db_cat_ids);
 
             if (count($missing_cat_ids) > 0) {
@@ -83,7 +109,7 @@ SELECT id
         $where_clauses = [];
         foreach ($params['cat_id'] as $cat_id) {
             if ($params['recursive']) {
-                $where_clauses[] = 'uppercats ' . \Piwigo\Db\MysqliDb::DB_REGEX_OPERATOR . ' \'(^|,)' . $cat_id . '(,|$)\'';
+                $where_clauses[] = 'uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' \'(^|,)' . $cat_id . '(,|$)\'';
             } else {
                 $where_clauses[] = 'id=' . $cat_id;
             }
@@ -91,7 +117,7 @@ SELECT id
         if (! empty($where_clauses)) {
             $where_clauses = ['(' . implode("\n    OR ", $where_clauses) . ')'];
         }
-        $where_clauses[] = new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))->getSqlConditionFandF([
+        $where_clauses[] = self::permissionService($conn)->getSqlConditionFandF([
             'forbidden_categories' => 'id',
         ], null, true);
 
@@ -102,11 +128,10 @@ SELECT
   FROM ' . Tables::categories() . '
   WHERE ' . implode("\n    AND ", $where_clauses) . '
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
 
         $cats = [];
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-            $row['id'] = (int) $row['id'];
+        foreach ($conn->fetchAllAssociative($query) as $row) {
+            $row['id'] = is_numeric($row['id']) ? (int) $row['id'] : 0;
             $cats[$row['id']] = $row;
         }
 
@@ -114,7 +139,7 @@ SELECT
         if (! empty($cats)) {
             $where_clauses = WsHelper::stdImageSqlFilter($params, 'i.');
             $where_clauses[] = 'category_id IN (' . implode(',', array_keys($cats)) . ')';
-            $where_clauses[] = new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))->getSqlConditionFandF([
+            $where_clauses[] = self::permissionService($conn)->getSqlConditionFandF([
                 'visible_images' => 'i.id',
             ], null, true);
 
@@ -122,6 +147,7 @@ SELECT
             if (empty($order_by)
                   and count($params['cat_id']) == 1
                   and isset($cats[$params['cat_id'][0]]['image_order'])
+                  and is_string($cats[$params['cat_id'][0]]['image_order'])
             ) {
                 $order_by = $cats[$params['cat_id'][0]]['image_order'];
             }
@@ -138,38 +164,44 @@ SELECT SQL_CALC_FOUND_ROWS i.*
   LIMIT ' . $params['per_page'] . '
   OFFSET ' . ($params['per_page'] * $params['page']) . '
 ;';
-            $result = \Piwigo\Db\MysqliDb::query($query);
+            // Fetched eagerly (rather than a lazy mysqli-style cursor) so the
+            // SELECT FOUND_ROWS() below -- which reads THIS query's stats on
+            // the SAME connection/session -- can safely run right after,
+            // matching the established "one shared $conn for a
+            // SQL_CALC_FOUND_ROWS/FOUND_ROWS() pair" pattern.
+            $rows = $conn->fetchAllAssociative($query);
 
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+            foreach ($rows as $image_row) {
                 // id is images.id, a NOT NULL primary key -- verified against
-                // install/piwigo_structure-mysql.sql.
-                assert(is_string($row['id']));
-                $image_ids[] = $row['id'];
+                // install/piwigo_structure-mysql.sql. Native int under DBAL
+                // (vs. guaranteed string under legacy mysqli), so cast
+                // instead of asserting string.
+                assert(is_numeric($image_row['id']));
+                $image_row_id = (int) $image_row['id'];
+                $image_ids[] = $image_row_id;
 
                 $image = [];
-                $image['is_favorite'] = isset($favorite_ids[$row['id']]);
+                $image['is_favorite'] = isset($favorite_ids[$image_row_id]);
                 foreach (['id', 'width', 'height', 'hit'] as $k) {
-                    if (isset($row[$k])) {
-                        $image[$k] = (int) $row[$k];
+                    if (isset($image_row[$k])) {
+                        $image[$k] = is_numeric($image_row[$k]) ? (int) $image_row[$k] : 0;
                     }
                 }
                 foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
-                    $image[$k] = $row[$k];
+                    $image[$k] = $image_row[$k];
                 }
 
                 $rendered_name = trigger_change('render_element_name', $image['name'], __FUNCTION__);
                 $image['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
                 $image['comment'] = trigger_change('render_element_description', $image['comment'], __FUNCTION__);
 
-                $image = array_merge($image, WsHelper::stdGetUrls($row));
+                $image = array_merge($image, WsHelper::stdGetUrls($image_row));
 
                 $images[] = $image;
             }
 
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT FOUND_ROWS()'));
-            assert($row !== null);
-            [$total_images] = $row;
-            $total_images = (int) $total_images;
+            $total_images_result = $conn->fetchOne('SELECT FOUND_ROWS()');
+            $total_images = is_numeric($total_images_result) ? (int) $total_images_result : 0;
 
             // let's take care of adding the related albums to each photo
             if (count($image_ids) > 0) {
@@ -182,17 +214,18 @@ SELECT
     category_id
   FROM ' . Tables::imageCategory() . '
   WHERE image_id IN (' . implode(',', $image_ids) . ')
-    AND ' . new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))->getSqlConditionFandF([
+    AND ' . self::permissionService($conn)->getSqlConditionFandF([
                     'forbidden_categories' => 'category_id',
                 ], null, true) . '
 ;';
-                $result = \Piwigo\Db\MysqliDb::query($query);
                 $categories_of_image = [];
-                while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-                    $category_ids[] = $row['category_id'];
+                foreach ($conn->fetchAllAssociative($query) as $image_category_row) {
                     // image_id/category_id are NOT NULL columns of image_category
                     // -- verified against install/piwigo_structure-mysql.sql.
-                    $categories_of_image[(int) $row['image_id']][] = (int) $row['category_id'];
+                    $row_image_id = is_numeric($image_category_row['image_id']) ? (int) $image_category_row['image_id'] : 0;
+                    $row_category_id = is_numeric($image_category_row['category_id']) ? (int) $image_category_row['category_id'] : 0;
+                    $category_ids[] = $row_category_id;
+                    $categories_of_image[$row_image_id][] = $row_category_id;
                 }
 
                 $details_for_category = [];
@@ -206,7 +239,7 @@ SELECT
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
-                    $details_for_category = \Piwigo\Db\MysqliDb::query2Array($query, 'id');
+                    $details_for_category = array_column($conn->fetchAllAssociative($query), null, 'id');
                 }
 
                 foreach ($images as $idx => $img) {
@@ -311,7 +344,7 @@ SELECT
                 $where[] = 'id_uppercat IS NULL';
             }
         } elseif ($params['cat_id'] > 0) {
-            $where[] = 'uppercats ' . \Piwigo\Db\MysqliDb::DB_REGEX_OPERATOR . ' \'(^|,)' .
+            $where[] = 'uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' \'(^|,)' .
               $params['cat_id'] . '(,|$)\'';
         }
 
@@ -326,7 +359,7 @@ SELECT
             // categories that are either locked or private and not permitted
             //
             // calculate_permissions does not consider empty categories as forbidden
-            $forbidden_categories = new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))->getForbiddenCategories($user_id, $currentUser->status->value);
+            $forbidden_categories = self::permissionService($categoryConn)->getForbiddenCategories($user_id, $currentUser->status->value);
             $where[] = 'id NOT IN (' . $forbidden_categories . ')';
             $join_type = 'LEFT';
         }
@@ -346,7 +379,7 @@ SELECT SQL_CALC_FOUND_ROWS
 
         if (isset($params['search']) and $params['search'] != '') {
             $query .= '
-    AND name LIKE \'%' . \Piwigo\Db\MysqliDb::realEscapeString($params['search']) . '%\'';
+    AND name LIKE ' . $categoryConn->quote('%' . $params['search'] . '%');
             if (! isset($params['limit'])) {
                 $query .= ' LIMIT ' . (is_numeric(\Piwigo\Config\Config::linkedAlbumSearchLimit()) ? (int) \Piwigo\Config\Config::linkedAlbumSearchLimit() : 0);
             }
@@ -360,12 +393,13 @@ SELECT SQL_CALC_FOUND_ROWS
 
         $query .= '
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
+        // Fetched eagerly so the SELECT FOUND_ROWS() below -- which reads
+        // THIS query's stats on the SAME connection/session -- can safely
+        // run right after, same pattern as getImages() above.
+        $rows = $categoryConn->fetchAllAssociative($query);
 
         if (isset($params['limit'])) {
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT FOUND_ROWS()'));
-            assert($row !== null);
-            [$result_count] = $row;
+            $result_count = $categoryConn->fetchOne('SELECT FOUND_ROWS()');
             $result_count = is_numeric($result_count) ? (int) $result_count : 0;
             if ($params['cat_id'] > 0) {
                 --$result_count;
@@ -384,20 +418,25 @@ SELECT SQL_CALC_FOUND_ROWS
         // management of the album thumbnail -- stops here
 
         $cats = [];
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach ($rows as $row) {
             $row['url'] = make_index_url(
                 [
                     'category' => $row,
                 ]
             );
             foreach (['id', 'nb_images', 'total_nb_images', 'nb_categories'] as $key) {
-                $row[$key] = (int) $row[$key];
+                $row[$key] = is_numeric($row[$key]) ? (int) $row[$key] : 0;
             }
 
+            // uppercats is a NOT NULL column of the categories table --
+            // verified against install/piwigo_structure-mysql.sql. Asserted
+            // here (unconditionally) rather than only inside the
+            // $params['fullname'] branch below, since it's also read
+            // further down outside that branch (the representative-picture
+            // LIKE query).
+            assert(is_string($row['uppercats']));
+
             if ($params['fullname']) {
-                // uppercats is a NOT NULL column of the categories table --
-                // verified against install/piwigo_structure-mysql.sql.
-                assert(is_string($row['uppercats']));
                 $row['name'] = strip_tags(new HtmlService()->getCatDisplayNameCache($row['uppercats'], null));
             } else {
                 $row['name_raw'] = $row['name'];
@@ -446,24 +485,28 @@ SELECT representative_picture_id
     ON id=cat_id AND user_id=' . $user_id . '
   WHERE uppercats LIKE \'' . $row['uppercats'] . ',%\'
     AND representative_picture_id IS NOT NULL
-        ' . new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))->getSqlConditionFandF([
+        ' . self::permissionService($categoryConn)->getSqlConditionFandF([
                         'visible_categories' => 'id',
                     ], "\n  AND") . '
-  ORDER BY ' . \Piwigo\Db\MysqliDb::DB_RANDOM_FUNCTION . '()
+  ORDER BY ' . SqlDialect::DB_RANDOM_FUNCTION . '()
   LIMIT 1
 ;';
-                    $subresult = \Piwigo\Db\MysqliDb::query($query);
+                    $subrow_image_id = $categoryConn->fetchOne($query);
 
-                    if (\Piwigo\Db\MysqliDb::numRows($subresult) > 0) {
-                        $subrow = \Piwigo\Db\MysqliDb::fetchRow($subresult);
-                        assert($subrow !== null);
-                        [$image_id] = $subrow;
+                    if ($subrow_image_id !== false) {
+                        $image_id = $subrow_image_id;
                     }
                 }
             }
 
-            if (isset($image_id)) {
-                if (\Piwigo\Config\Config::representativeCacheOnSubcats() and $row['user_representative_picture_id'] != $image_id) {
+            // $image_id can come from a DB column (mixed under DBAL) or
+            // getRandomImageInCategory()'s ?int -- normalize to a definite
+            // int here, once, since it's always an images.id PK regardless
+            // of source.
+            if (isset($image_id) && is_numeric($image_id)) {
+                $image_id = (int) $image_id;
+
+                if (\Piwigo\Config\Config::representativeCacheOnSubcats() and $row['user_representative_picture_id'] !== $image_id) {
                     $user_representative_updates_for[$row['id']] = $image_id;
                 }
 
@@ -492,13 +535,11 @@ SELECT id, path, representative_ext, level
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $image_ids) . ')
 ;';
-            $result = \Piwigo\Db\MysqliDb::query($query);
-
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+            foreach ($categoryConn->fetchAllAssociative($query) as $row) {
                 if ($row['level'] <= $currentUser->level) {
                     // id is images.id, a NOT NULL primary key -- verified
                     // against install/piwigo_structure-mysql.sql.
-                    $thumbnail_src_of[(int) $row['id']] = DerivativeImage::url($params['thumbnail_size'], $row);
+                    $thumbnail_src_of[is_numeric($row['id']) ? (int) $row['id'] : 0] = DerivativeImage::url($params['thumbnail_size'], $row);
                 } else {
                     // problem: we must not display the thumbnail of a photo which has a
                     // higher privacy level than user privacy level
@@ -508,7 +549,7 @@ SELECT id, path, representative_ext, level
                     // * register it at user_representative_picture_id
                     // * set it as the representative_picture_id for the category
                     foreach ($categories as &$category) {
-                        if ($row['id'] == $category['representative_picture_id']) {
+                        if (is_numeric($row['id']) and (int) $row['id'] === $category['representative_picture_id']) {
                             // searching a random representant among elements in sub-categories
                             $image_id = $categoryService->getRandomImageInCategory($category);
 
@@ -535,10 +576,8 @@ SELECT id, path, representative_ext
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $new_image_ids) . ')
 ;';
-                $result = \Piwigo\Db\MysqliDb::query($query);
-
-                while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-                    $thumbnail_src_of[(int) $row['id']] = DerivativeImage::url($params['thumbnail_size'], $row);
+                foreach ($categoryConn->fetchAllAssociative($query) as $row) {
+                    $thumbnail_src_of[is_numeric($row['id']) ? (int) $row['id'] : 0] = DerivativeImage::url($params['thumbnail_size'], $row);
                 }
             }
         }
@@ -557,23 +596,23 @@ SELECT id, path, representative_ext
                 ];
             }
 
-            \Piwigo\Db\MysqliDb::massUpdates(
-                Tables::userCacheCategories(),
-                [
-                    'primary' => ['user_id', 'cat_id'],
-                    'update' => ['user_representative_picture_id'],
-                ],
-                $updates
-            );
+            new BatchWriter($categoryConn)
+                ->massUpdate(
+                    Tables::userCacheCategories(),
+                    [
+                        'primary' => ['user_id', 'cat_id'],
+                        'update' => ['user_representative_picture_id'],
+                    ],
+                    $updates
+                );
         }
 
         foreach ($cats as &$cat) {
             foreach ($categories as $category) {
-                if ($category['id'] == $cat['id']
+                if ($category['id'] === $cat['id']
                   and isset($category['representative_picture_id'])
-                  and is_numeric($category['representative_picture_id'])
                 ) {
-                    $cat['tn_url'] = $thumbnail_src_of[(int) $category['representative_picture_id']] ?? null;
+                    $cat['tn_url'] = $thumbnail_src_of[$category['representative_picture_id']] ?? null;
                 }
             }
             // we don't want them in the output
@@ -609,6 +648,7 @@ SELECT id, path, representative_ext
      */
     public static function getAdminList(array $params, PwgServer &$service): array
     {
+        $conn = DbConnection::build();
 
         if (! isset($params['additional_output'])) {
             $params['additional_output'] = '';
@@ -620,7 +660,7 @@ SELECT category_id, COUNT(*) AS counter
   FROM ' . Tables::imageCategory() . '
   GROUP BY category_id
 ;';
-        $nb_images_of = \Piwigo\Db\MysqliDb::query2Array($query, 'category_id', 'counter');
+        $nb_images_of = array_column($conn->fetchAllAssociative($query), 'counter', 'category_id');
 
         // pwg_db_real_escape_string
 
@@ -636,7 +676,7 @@ SELECT category_id, COUNT(*) AS counter
                 $where[] = 'id_uppercat IS NULL';
             }
         } elseif ($params['cat_id'] > 0) {
-            $where[] = 'uppercats ' . \Piwigo\Db\MysqliDb::DB_REGEX_OPERATOR . ' \'(^|,)' .
+            $where[] = 'uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' \'(^|,)' .
               $params['cat_id'] . '(,|$)\'';
         }
 
@@ -647,24 +687,29 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
 
         if (isset($params['search']) and $params['search'] != '') {
             $query .= '
-  AND name LIKE \'%' . \Piwigo\Db\MysqliDb::realEscapeString($params['search']) . '%\'
+  AND name LIKE ' . $conn->quote('%' . $params['search'] . '%') . '
   LIMIT ' . (is_numeric(\Piwigo\Config\Config::linkedAlbumSearchLimit()) ? (int) \Piwigo\Config\Config::linkedAlbumSearchLimit() : 0);
         }
 
         $query .= '
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
+        // Fetched eagerly so the SELECT FOUND_ROWS() below -- which reads
+        // THIS query's stats on the SAME connection/session -- can safely
+        // run right after, same pattern as getImages()/getList() above.
+        $rows = $conn->fetchAllAssociative($query);
 
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT FOUND_ROWS()'));
-        assert($row !== null);
-        [$counter] = $row;
+        $counter = $conn->fetchOne('SELECT FOUND_ROWS()');
 
         $cats = [];
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach ($rows as $row) {
             // id/uppercats are NOT NULL columns of the categories table --
-            // verified against install/piwigo_structure-mysql.sql.
+            // verified against install/piwigo_structure-mysql.sql. Native
+            // int under DBAL (vs. guaranteed string under legacy mysqli),
+            // so is_int()||is_string() instead of asserting string -- both
+            // are valid array-key types (unlike is_numeric(), which also
+            // allows float).
             $id = $row['id'];
-            assert(is_string($id));
+            assert(is_int($id) || is_string($id));
             $row['nb_images'] = $nb_images_of[$id] ?? 0;
 
             assert(is_string($row['uppercats']));
@@ -717,12 +762,13 @@ SELECT
   GROUP BY id_uppercat
 ';
 
-                $nb_subcats_of = \Piwigo\Db\MysqliDb::query2Array($query, 'id_uppercat', 'nb_subcats');
+                $nb_subcats_of = array_column($conn->fetchAllAssociative($query), 'nb_subcats', 'id_uppercat');
             }
 
             foreach ($cats as $idx => $cat) {
                 $cat_id = $cat['id'];
-                $cats[$idx]['nb_categories'] = is_numeric($cat_id) ? intval($nb_subcats_of[(int) $cat_id] ?? 0) : 0;
+                $nb_subcats_value = is_numeric($cat_id) ? ($nb_subcats_of[(int) $cat_id] ?? 0) : 0;
+                $cats[$idx]['nb_categories'] = is_numeric($nb_subcats_value) ? (int) $nb_subcats_value : 0;
             }
         }
 
@@ -801,13 +847,15 @@ SELECT
      */
     public static function setRank(array $params, PwgServer &$service): ?PwgError
     {
+        $conn = DbConnection::build();
+
         // does the category really exist?
         $query = '
 SELECT id, id_uppercat, `rank`
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $params['category_id']) . ')
 ;';
-        $categories = \Piwigo\Db\MysqliDb::query2Array($query);
+        $categories = $conn->fetchAllAssociative($query);
 
         if (count($categories) == 0) {
             return new PwgError(404, 'category_id not found');
@@ -824,11 +872,11 @@ SELECT id, id_uppercat, `rank`
             $query = '
 SELECT id
   FROM ' . Tables::categories() . '
-  WHERE id_uppercat ' . (empty($category['id_uppercat']) ? 'IS NULL' : '= ' . $category['id_uppercat']) . '
+  WHERE id_uppercat ' . (empty($category['id_uppercat']) ? 'IS NULL' : '= ' . (is_scalar($category['id_uppercat']) ? $category['id_uppercat'] : '')) . '
   ORDER BY `id` ASC
 ;';
 
-            $cat_asc = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
+            $cat_asc = array_map(intval(...), array_filter(array_column($conn->fetchAllAssociative($query), 'id'), is_numeric(...)));
 
             if (strcmp(implode(',', $cat_asc), implode(',', $order_new_by_id)) !== 0) {
                 return new PwgError(WsError::INVALID_PARAM, 'you need to provide all sub-category ids for a given category');
@@ -839,12 +887,12 @@ SELECT id
             $query = '
 SELECT id
   FROM ' . Tables::categories() . '
-  WHERE id_uppercat ' . (empty($category['id_uppercat']) ? 'IS NULL' : '= ' . $category['id_uppercat']) . '
+  WHERE id_uppercat ' . (empty($category['id_uppercat']) ? 'IS NULL' : '= ' . (is_scalar($category['id_uppercat']) ? $category['id_uppercat'] : '')) . '
     AND id != ' . $params['category_id'] . '
   ORDER BY `rank` ASC
 ;';
 
-            $order_old = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
+            $order_old = array_column($conn->fetchAllAssociative($query), 'id');
             $order_new = [];
             $was_inserted = false;
             $i = 1;
@@ -862,8 +910,7 @@ SELECT id
             }
         }
         // set the global rank
-        $categoryConn = DbConnection::build();
-        self::categoryService($categoryConn)->saveCategoriesOrder($order_new);
+        self::categoryService($conn)->saveCategoriesOrder($order_new);
 
         return null;
     }
@@ -888,20 +935,21 @@ SELECT id
             return new PwgError(403, 'Invalid security token');
         }
 
+        $categoryConn = DbConnection::build();
+
         // does the category really exist?
         $query = '
 SELECT *
   FROM ' . Tables::categories() . '
   WHERE id = ' . $params['category_id'] . '
 ;';
-        $categories = \Piwigo\Db\MysqliDb::query2Array($query);
+        $categories = $categoryConn->fetchAllAssociative($query);
         if (count($categories) == 0) {
             return new PwgError(404, 'category_id not found');
         }
 
         $category = $categories[0];
 
-        $categoryConn = DbConnection::build();
         $categoryService = self::categoryService($categoryConn);
 
         if (! empty($params['status'])) {
@@ -909,7 +957,7 @@ SELECT *
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid status, only public/private');
             }
 
-            if ($params['status'] != $category['status']) {
+            if ($params['status'] !== $category['status']) {
                 $categoryService->setCatStatus([$params['category_id']], $params['status']);
             }
         }
@@ -924,7 +972,7 @@ SELECT *
             }
         }
 
-        if (! empty($params['visible']) and ($params['visible'] != $category['visible'])) {
+        if (! empty($params['visible']) and ($params['visible'] !== $category['visible'])) {
             $categoryService->setCatVisible([$params['category_id']], $params['visible']);
         }
 
@@ -946,21 +994,22 @@ UPDATE ' . Tables::categories() . '
   SET commentable = \'' . $params['commentable'] . '\'
   WHERE id IN (' . implode(',', $subcats) . ')
 ;';
-                \Piwigo\Db\MysqliDb::query($query);
+                $categoryConn->executeStatement($query);
             }
         }
 
         if ($perform_update) {
-            \Piwigo\Db\MysqliDb::singleUpdate(
-                Tables::categories(),
-                $update,
-                [
-                    'id' => $update['id'],
-                ]
-            );
+            new BatchWriter($categoryConn)
+                ->singleUpdate(
+                    Tables::categories(),
+                    $update,
+                    [
+                        'id' => $update['id'],
+                    ]
+                );
         }
 
-        new ActivityService(new ActivityRepository(DbConnection::build()))->record('album', $params['category_id'], 'edit', [
+        self::activityService()->record('album', $params['category_id'], 'edit', [
             'fields' => implode(',', array_keys($update)),
         ]);
 
@@ -977,16 +1026,17 @@ UPDATE ' . Tables::categories() . '
      */
     public static function setRepresentative(array $params, PwgServer &$service): ?PwgError
     {
+        $conn = DbConnection::build();
+
         // does the category really exist?
         $query = '
 SELECT COUNT(*)
   FROM ' . Tables::categories() . '
   WHERE id = ' . $params['category_id'] . '
 ;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$count] = $row;
-        if ($count == 0) {
+        $count = $conn->fetchOne($query);
+        $count = is_numeric($count) ? (int) $count : 0;
+        if ($count === 0) {
             return new PwgError(404, 'category_id not found');
         }
 
@@ -996,10 +1046,9 @@ SELECT COUNT(*)
   FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$count] = $row;
-        if ($count == 0) {
+        $count = $conn->fetchOne($query);
+        $count = is_numeric($count) ? (int) $count : 0;
+        if ($count === 0) {
             return new PwgError(404, 'image_id not found');
         }
 
@@ -1009,16 +1058,16 @@ UPDATE ' . Tables::categories() . '
   SET representative_picture_id = ' . $params['image_id'] . '
   WHERE id = ' . $params['category_id'] . '
 ;';
-        \Piwigo\Db\MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = '
 UPDATE ' . Tables::userCacheCategories() . '
   SET user_representative_picture_id = NULL
   WHERE cat_id = ' . $params['category_id'] . '
 ;';
-        \Piwigo\Db\MysqliDb::query($query);
+        $conn->executeStatement($query);
 
-        new ActivityService(new ActivityRepository(DbConnection::build()))->record('album', $params['category_id'], 'edit', [
+        self::activityService()->record('album', $params['category_id'], 'edit', [
             'image_id' => $params['image_id'],
         ]);
 
@@ -1036,6 +1085,7 @@ UPDATE ' . Tables::userCacheCategories() . '
      */
     public static function deleteRepresentative(array $params, PwgServer &$service): ?PwgError
     {
+        $conn = DbConnection::build();
 
         // does the category really exist?
         $query = '
@@ -1043,8 +1093,7 @@ SELECT id
   FROM ' . Tables::categories() . '
   WHERE id = ' . $params['category_id'] . '
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-        if (\Piwigo\Db\MysqliDb::numRows($result) == 0) {
+        if ($conn->fetchOne($query) === false) {
             return new PwgError(404, 'category_id not found');
         }
 
@@ -1053,11 +1102,10 @@ SELECT COUNT(*)
   FROM ' . Tables::imageCategory() . '
   WHERE category_id = ' . $params['category_id'] . '
 ;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$nb_images] = $row;
+        $nb_images = $conn->fetchOne($query);
+        $nb_images = is_numeric($nb_images) ? (int) $nb_images : 0;
 
-        if (! \Piwigo\Config\Config::allowRandomRepresentative() and $nb_images != 0) {
+        if (! \Piwigo\Config\Config::allowRandomRepresentative() and $nb_images !== 0) {
             return new PwgError(401, 'not permitted');
         }
 
@@ -1066,9 +1114,9 @@ UPDATE ' . Tables::categories() . '
   SET representative_picture_id = NULL
   WHERE id = ' . $params['category_id'] . '
 ;';
-        \Piwigo\Db\MysqliDb::query($query);
+        $conn->executeStatement($query);
 
-        new ActivityService(new ActivityRepository(DbConnection::build()))->record('album', $params['category_id'], 'edit');
+        self::activityService()->record('album', $params['category_id'], 'edit');
 
         return null;
     }
@@ -1084,6 +1132,7 @@ UPDATE ' . Tables::categories() . '
      */
     public static function refreshRepresentative(array $params, PwgServer &$service): PwgError|array
     {
+        $categoryConn = DbConnection::build();
 
         // does the category really exist?
         $query = '
@@ -1091,8 +1140,7 @@ SELECT id
   FROM ' . Tables::categories() . '
   WHERE id = ' . $params['category_id'] . '
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-        if (\Piwigo\Db\MysqliDb::numRows($result) == 0) {
+        if ($categoryConn->fetchOne($query) === false) {
             return new PwgError(404, 'category_id not found');
         }
 
@@ -1103,19 +1151,17 @@ SELECT
   WHERE category_id = ' . $params['category_id'] . '
   LIMIT 1
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-        $has_images = \Piwigo\Db\MysqliDb::numRows($result) > 0 ? true : false;
+        $has_images = $categoryConn->fetchOne($query) !== false;
 
         if (! $has_images) {
             return new PwgError(401, 'not permitted');
         }
 
-        $categoryConn = DbConnection::build();
         $categoryService = self::categoryService($categoryConn);
 
         $categoryService->setRandomRepresentant([$params['category_id']]);
 
-        new ActivityService(new ActivityRepository(DbConnection::build()))->record('album', $params['category_id'], 'edit');
+        self::activityService()->record('album', $params['category_id'], 'edit');
 
         // return url of the new representative
         $query = '
@@ -1123,16 +1169,19 @@ SELECT *
   FROM ' . Tables::categories() . '
   WHERE id = ' . $params['category_id'] . '
 ;';
-        $category = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
+        $category = $categoryConn->fetchAssociative($query);
         // the category's existence was already verified above, and nothing
         // in between could have deleted it
         assert(is_array($category));
 
         // set_random_representant() is expected to have populated
         // representative_picture_id above, but it's not a NOT NULL column, so
-        // guard for real instead of assuming the update landed.
+        // guard for real instead of assuming the update landed. Native
+        // int|string under DBAL (vs. guaranteed string under legacy
+        // mysqli) -- getCategoryRepresentantProperties() itself accepts
+        // int|string, so narrow to that instead of forcing string.
         $representative_picture_id = $category['representative_picture_id'];
-        if (! is_string($representative_picture_id)) {
+        if (! is_int($representative_picture_id) && ! is_string($representative_picture_id)) {
             return new PwgError(500, 'unable to determine a new representative picture for this category');
         }
 
@@ -1152,6 +1201,8 @@ SELECT *
      */
     public static function delete(array $params, PwgServer &$service): ?PwgError
     {
+        $categoryConn = DbConnection::build();
+
         if (new CsrfService()->getToken() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -1196,16 +1247,13 @@ SELECT id
   WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
         // id is a NOT NULL primary key -- verified against
-        // install/piwigo_structure-mysql.sql. \Piwigo\Db\MysqliDb::query2Array() is used directly
-        // (rather than the deprecated array_from_query() wrapper) so the return
-        // type stays precise enough to narrow.
-        $category_ids = array_map(intval(...), array_filter(\Piwigo\Db\MysqliDb::query2Array($query, null, 'id'), is_numeric(...)));
+        // install/piwigo_structure-mysql.sql.
+        $category_ids = array_map(intval(...), array_filter(array_column($categoryConn->fetchAllAssociative($query), 'id'), is_numeric(...)));
 
         if (count($category_ids) == 0) {
             return null;
         }
 
-        $categoryConn = DbConnection::build();
         $categoryService = self::categoryService($categoryConn);
         $categoryService->deleteCategories(
             $category_ids,
@@ -1232,6 +1280,8 @@ SELECT id
      */
     public static function move(array $params, PwgServer &$service): PwgError|array
     {
+        $categoryConn = DbConnection::build();
+
         if (new CsrfService()->getToken() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -1269,12 +1319,13 @@ SELECT id, name, dir, uppercats
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach ($categoryConn->fetchAllAssociative($query) as $row) {
             // id is a NOT NULL primary key -- verified against
             // install/piwigo_structure-mysql.sql.
-            $categories_in_db[(int) $row['id']] = $row;
-            $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', (string) $row['uppercats']), 0, -1));
+            $row_id = is_numeric($row['id']) ? (int) $row['id'] : 0;
+            $categories_in_db[$row_id] = $row;
+            $row_uppercats = is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '';
+            $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', $row_uppercats), 0, -1));
 
             // we break on error at first physical category detected
             if (! empty($row['dir'])) {
@@ -1283,14 +1334,14 @@ SELECT id, name, dir, uppercats
                     $row['name'],
                     'ws_categories_move'
                 );
-                $row['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
+                $row_name = strip_tags(is_string($rendered_name) ? $rendered_name : '');
 
                 return new PwgError(
                     403,
                     sprintf(
                         'Category %s (%u) is not a virtual category, you cannot move it',
-                        $row['name'],
-                        $row['id']
+                        $row_name,
+                        $row_id
                     )
                 );
             }
@@ -1322,7 +1373,6 @@ SELECT id, name, dir, uppercats
         $pageState->infos = [];
         $pageState->errors = [];
 
-        $categoryConn = DbConnection::build();
         self::categoryService($categoryConn)->moveCategories(
             $category_ids,
             new ActivityService(new ActivityRepository($categoryConn)),
@@ -1346,18 +1396,17 @@ SELECT id, name, dir, uppercats
     FROM ' . Tables::categories() . '
     WHERE id IN (' . implode(',', $category_ids) . ')
   ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
         $cat_display_name = '';
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach ($categoryConn->fetchAllAssociative($query) as $uppercats_row) {
             // uppercats is a NOT NULL column of the categories table --
             // verified against install/piwigo_structure-mysql.sql.
-            assert(is_string($row['uppercats']));
+            assert(is_string($uppercats_row['uppercats']));
             $cat_display_name = new HtmlService()
                 ->getCatDisplayNameCache(
-                    $row['uppercats'],
+                    $uppercats_row['uppercats'],
                     'admin.php?page=album-'
                 );
-            $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', $row['uppercats']), 0, -1));
+            $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', $uppercats_row['uppercats']), 0, -1));
         }
 
         $query = '
@@ -1368,7 +1417,7 @@ SELECT
   GROUP BY category_id
 ;';
 
-        $nb_photos_in = \Piwigo\Db\MysqliDb::query2Array($query, 'category_id', 'nb_photos');
+        $nb_photos_in = array_column($categoryConn->fetchAllAssociative($query), 'nb_photos', 'category_id');
 
         $update_cats = [];
         foreach (array_unique($update_cat_ids) as $update_cat) {
@@ -1404,6 +1453,7 @@ SELECT
      */
     public static function calculateOrphans(array $param, PwgServer &$service): array
     {
+        $conn = DbConnection::build();
 
         $category_id = $param['category_id'][0];
 
@@ -1415,9 +1465,8 @@ SELECT DISTINCT
   WHERE
     category_id = ' . $category_id . '
   LIMIT 1';
-        $result = \Piwigo\Db\MysqliDb::query($query);
         $category = [];
-        $category['has_images'] = \Piwigo\Db\MysqliDb::numRows($result) > 0 ? true : false;
+        $category['has_images'] = $conn->fetchOne($query) !== false;
 
         // number of sub-categories
         $subcat_ids = get_subcat_ids([$category_id]);
@@ -1433,7 +1482,7 @@ SELECT DISTINCT
   WHERE
     category_id IN (' . implode(',', $subcat_ids) . ')
   ;';
-        $image_ids_recursive = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
+        $image_ids_recursive = array_map(intval(...), array_filter(array_column($conn->fetchAllAssociative($query), 'image_id'), is_numeric(...)));
 
         $category['nb_images_recursive'] = count($image_ids_recursive);
 
@@ -1459,7 +1508,7 @@ SELECT DISTINCT
       (' . implode(',', $image_ids_recursive) . ')
   ;';
 
-                $image_ids_associated_outside = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
+                $image_ids_associated_outside = array_map(intval(...), array_filter(array_column($conn->fetchAllAssociative($query), 'image_id'), is_numeric(...)));
                 $category['nb_images_associated_outside'] = count($image_ids_associated_outside);
 
                 $image_ids_becoming_orphan = array_diff($image_ids_recursive, $image_ids_associated_outside);
@@ -1468,8 +1517,10 @@ SELECT DISTINCT
             // else it's better to avoid sending a huge SQL request, we compute the orphan list with PHP
             else {
                 // image_id is a NOT NULL column of image_category -- verified
-                // against install/piwigo_structure-mysql.sql.
-                $image_ids_recursive_keys = array_flip(array_filter($image_ids_recursive, is_string(...)));
+                // against install/piwigo_structure-mysql.sql. $image_ids_recursive
+                // is already list<int> (cast at extraction above), safe to
+                // flip directly.
+                $image_ids_recursive_keys = array_flip($image_ids_recursive);
 
                 $query = '
   SELECT
@@ -1481,11 +1532,11 @@ SELECT DISTINCT
     NOT IN
       (' . implode(',', $subcat_ids) . ')
   ;';
-                $image_ids_associated_outside = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
+                $image_ids_associated_outside = array_map(intval(...), array_filter(array_column($conn->fetchAllAssociative($query), 'image_id'), is_numeric(...)));
                 $image_ids_not_orphan = [];
 
                 foreach ($image_ids_associated_outside as $image_id) {
-                    if (is_string($image_id) && isset($image_ids_recursive_keys[$image_id])) {
+                    if (isset($image_ids_recursive_keys[$image_id])) {
                         $image_ids_not_orphan[] = $image_id;
                     }
                 }

@@ -579,6 +579,52 @@ them when reading commit history or the replay manifest.
   **Phase 1g (Controller) is now fully complete — all 60 files across
   10 sub-batches DI+DBAL migrated.**
 
+- **Phase 1h (Admin's real domain). DONE, commit `163ca21a4`.** 81 files
+  (237 total under `src/Piwigo/Admin/` minus the 156-file frozen
+  `Install/` subtree, out of scope). Reused P23 batch 6's own proven
+  sub-groupings, split into 18 sub-batches: small admin pages,
+  stats/history, user/group management, photo/picture management,
+  photos-add, album/category management, batch manager, maintenance,
+  languages/themes/plugins/updates, the `Extensions/`/`Image/`/
+  `Integrity/`/`Upload/` subdirectories, and misc top-level utility files
+  (`AdminShell`/`AdminUiHelper`/`CoreTabs`/etc). Migrated everything
+  first, verified once at the end (user direction, same mode as 1g steps
+  3-10). Same connection-consolidation/private-static-helper discipline
+  as every prior sub-phase; `MysqliDb::realEscapeString()` verified
+  individually per call rather than batch-converted — two confirmed
+  still load-bearing (`Extensions/ExtensionUpdateChecker.php`,
+  `updates.php`, both feeding `ConfigDb::confUpdateParam()`, which is
+  itself still raw-SQL-splicing internally and out of this phase's
+  scope) and left untouched. `die()`/`exit()` converted to
+  `HtmlService::fatalError()` in 10+ files; deliberately left untouched
+  in `Upload/UploadService.php` and `Image/*.php` — confirmed real
+  callers include `Ws/PwgImages.php` (needs a JSON error response) and
+  `Job/BatchUploadJob.php` (background job, no HTTP response at all),
+  matching the established `ImageDerivativeController` precedent.
+  One comprehensive gate found ~120 real PHPStan errors (DBAL
+  mixed/native-int row values leaking into string/array-key contexts,
+  fixed via `is_scalar()`/`is_int()`/`is_string()` guards, never
+  suppressed) plus **2 real runtime bugs found via VR/Browser, not
+  assumed**: `AlbumsPageRenderer::assocToOrderedTree()` emitted a raw
+  native-int category id into the client-side tree JSON — `albums.js`'s
+  `open_nodes.includes(node_id)` does strict JS equality against a
+  `data-id` DOM attribute (always a string), so the toggler-collapse
+  interaction silently broke; fixed by reusing the already
+  string-normalized `$cat_id` local instead of the raw row value.
+  `UserListPageRenderer.php`'s registration-dates query
+  (`SELECT DISTINCT month(...)/year(...) ... ORDER BY registration_date`)
+  ordered by a column outside its own SELECT list — silently tolerated
+  by legacy mysqli, a hard error under DBAL's connection (real HTTP 500,
+  caught by a blank-screenshot Visual Regression failure, decoded and
+  pixel-compared rather than dismissed as a flake); fixed by ordering on
+  the SELECTed aliases instead. Full verification gate green after both
+  fixes (deptrac 0, ECS clean, PHPStan baseline regenerated — clean
+  diff, ratio drift only — Unit/Arch 604, Contract 93, Integration 620,
+  Browser 64+1 skipped, Visual 32/32).
+
+  **Phase 1h (Admin) is now fully complete — all 81 files across 18
+  sub-batches DI+DBAL migrated.**
+
 ## What direct investigation found (the basis for phase sequencing)
 
 **DI infrastructure already exists and works — it's just unused.**
@@ -815,13 +861,33 @@ conversion and DI/construction changes don't apply there the same way.
    broke once its `$GLOBALS` bridge started receiving native ints from
    a migrated query).
 8. **1h — Admin's real domain (81 files: 237 total minus the 156-file
-   frozen Install set).** By far the largest single domain; reuse P23
-   batch 6's own proven sub-groupings (user/group management, photo/
-   picture management, batch manager, maintenance, languages/themes/
-   plugins/updates, site management/permalinks, dashboard, configuration,
-   notification-by-mail, site-update, plus the `Extensions/`/`Image/`/
-   `Integrity/`/`Maintenance/`/`Upload/` subdirectories) rather than
-   re-deriving a new breakdown from scratch.
+   frozen Install set). DONE, 1 commit** (`163ca21a4`) — see Progress log
+   above. Reused P23 batch 6's own proven sub-groupings, split into 18
+   sub-batches: small admin pages, stats/history, user/group management,
+   photo/picture management, photos-add, album/category management,
+   batch manager, maintenance, languages/themes/plugins/updates, the
+   `Extensions/`/`Image/`/`Integrity/`/`Upload/` subdirectories, and misc
+   top-level utility files (AdminShell/AdminUiHelper/CoreTabs/etc). (The
+   P23 batch 6 groupings for site management/permalinks/dashboard/
+   configuration/notification-by-mail/site-update live under
+   `Controller\Admin\`, not `Admin\` — already done in Phase 1g, out of
+   this phase's own scope.) Migrated everything first, verified once at
+   the end (user direction, same mode as 1g steps 3-10). One comprehensive
+   gate found ~120 real PHPStan type errors (DBAL mixed/native-int row
+   values leaking into string/array-key contexts) plus 2 real runtime
+   bugs: `AlbumsPageRenderer`'s tree JSON leaking a native int category id
+   broke `albums.js`'s strict-equality `open_nodes.includes()` toggle
+   state (caught by a real browser interaction test, not just a
+   screenshot diff); `UserListPageRenderer`'s `SELECT DISTINCT ... ORDER
+   BY registration_date` (ordering by a column outside its own SELECT
+   list) is silently accepted by mysqli but rejected outright by DBAL's
+   connection — a real HTTP 500 caught by a blank-page Visual Regression
+   failure, fixed by ordering on the SELECTed aliases instead. `die()`
+   calls in `Upload/UploadService.php` and `Image/*.php` deliberately left
+   untouched — confirmed real WS-API and background-job (`Job\
+   BatchUploadJob`) callers with no HTML response pipeline to route a
+   `HtmlService::fatalError()` through, matching `ImageDerivativeController`'s
+   established exception.
 9. **1i — Install/Upgrade orchestration** (`InstallService`,
    `InstallWizard`, `UpgradeRunner`, `UpgradeService`,
    `UpgradeFeedRunner` — the orchestration classes, not the frozen

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Permission;
 
-use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 
 /**
@@ -276,15 +275,11 @@ final readonly class PermissionService
             $catIds = array_merge($catIds, get_subcat_ids($categoryIds));
         }
 
-        // get_uppercat_ids()/get_subcat_ids() return int elements --
-        // normalize for implode()'s strict array<string> param.
-        $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', array_map(strval(...), $catIds)) . ')
-    AND status = \'private\'
-;';
-        $privateCats = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
+        $catIdsForQuery = array_values(array_map(
+            static fn (mixed $catId): int => is_numeric($catId) ? (int) $catId : 0,
+            $catIds
+        ));
+        $privateCats = $this->repo->findPrivateCategoryIdsAmong($catIdsForQuery);
 
         if (count($privateCats) === 0) {
             return;
@@ -300,13 +295,6 @@ SELECT id
             }
         }
 
-        \Piwigo\Db\MysqliDb::massInserts(
-            Tables::userAccess(),
-            ['user_id', 'cat_id'],
-            $inserts,
-            [
-                'ignore' => true,
-            ]
-        );
+        $this->repo->massInsertUserAccess($inserts);
     }
 }

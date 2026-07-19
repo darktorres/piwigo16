@@ -91,6 +91,47 @@ final class PermissionRepository extends AbstractRepository
     }
 
     /**
+     * Which of $catIds are private categories -- addPermissionOnCategory()'s
+     * own "only private categories need explicit user_access rows" filter.
+     *
+     * @param  list<int>  $catIds
+     * @return list<int>
+     */
+    public function findPrivateCategoryIdsAmong(array $catIds): array
+    {
+        if ($catIds === []) {
+            return [];
+        }
+
+        $ids = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from(Tables::categories())
+            ->where('id IN (:catIds)')
+            ->andWhere('status = :status')
+            ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
+            ->setParameter('status', 'private')
+            ->executeQuery()
+            ->fetchFirstColumn();
+
+        return self::toIntList($ids);
+    }
+
+    /**
+     * @param  list<array{user_id: int, cat_id: int}>  $inserts
+     */
+    public function massInsertUserAccess(array $inserts): void
+    {
+        if ($inserts === []) {
+            return;
+        }
+
+        $this->batchWriter()
+            ->massInsert(Tables::userAccess(), ['user_id', 'cat_id'], $inserts, [
+                'ignore' => true,
+            ]);
+    }
+
+    /**
      * @param list<mixed> $values
      * @return list<int>
      */

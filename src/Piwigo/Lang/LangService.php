@@ -6,7 +6,7 @@ namespace Piwigo\Lang;
 
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
 
 /**
  * Thin object-oriented facade over Lang/Translator for constructor
@@ -65,23 +65,10 @@ final readonly class LangService
      */
     public static function getLanguages(): array
     {
-        $query = '
-SELECT id, name
-  FROM ' . Tables::languages() . '
-  ORDER BY name ASC
-;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-
         $languages = [];
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-            $id = $row['id'];
-            $name = $row['name'];
-            if (! is_string($id) || ! is_string($name)) {
-                continue;
-            }
-
-            if (is_dir(PHPWG_ROOT_PATH . 'language/' . $id)) {
-                $languages[$id] = $name;
+        foreach (new LangRepository(DbConnection::build())->findAll() as $row) {
+            if (is_dir(PHPWG_ROOT_PATH . 'language/' . $row['id'])) {
+                $languages[$row['id']] = $row['name'];
             }
         }
 

@@ -25,6 +25,7 @@ final readonly class SectionInitializer
 {
     public function __construct(
         private HtmlRenderingInterface $htmlRenderer,
+        private SectionRepository $repo,
     ) {}
 
     public function parse(): SectionUrlParse
@@ -45,16 +46,16 @@ final readonly class SectionInitializer
             foreach (array_keys($_GET) as $key) {
                 // PHP auto-casts a purely-numeric query-string key (e.g.
                 // "?1") to a real int array key -- a bare numeric token
-                // (no id-name suffix) crashed \Piwigo\Db\MysqliDb::realEscapeString()
-                // below with a TypeError (?string required), found live via
-                // picture.php?1. Cast back to the string this variable was
-                // always meant to hold.
+                // (no id-name suffix) crashed the original mysqli-based
+                // escaping call with a TypeError (?string required), found
+                // live via picture.php?1. Cast back to the string this
+                // variable was always meant to hold.
                 $rewritten = (string) $key;
                 break;
             }
 
             // the $_GET keys are not protected in include/common.inc.php, only the values
-            $rewritten = \Piwigo\Db\MysqliDb::realEscapeString($rewritten);
+            $rewritten = $this->repo->escapeToken($rewritten);
             $root_path = PHPWG_ROOT_PATH;
         }
 
@@ -62,12 +63,6 @@ final readonly class SectionInitializer
             $root_path = substr($root_path, 2);
         }
 
-        // $_SERVER['PATH_INFO']/$_GET keys are usually strings, but PHP allows
-        // array-valued query-string keys (e.g. ?foo[]=1) — not a valid section
-        // URL, degrade to an empty path rather than crash
-        if (! is_string($rewritten)) {
-            $rewritten = '';
-        }
         $section_url = $rewritten;
 
         // deleting first "/" if displayed

@@ -5,19 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Search;
 
 use Piwigo\Cache\PersistentCache;
-use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
-use Piwigo\Core\MailerInterface;
 use Piwigo\Core\TemplateInterface;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Section\SectionContext;
-use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 
 /**
@@ -36,9 +30,13 @@ use Piwigo\Tag\TagService;
 final readonly class SearchFilterRenderer
 {
     public function __construct(
-        private MailerInterface $mailer,
         private HtmlRenderingInterface $htmlRenderer,
         private TemplateInterface $template,
+        private SearchRepository $repo,
+        private SearchService $searchService,
+        private TagService $tagService,
+        private CategoryRepository $categoryRepo,
+        private PermissionService $permissionService,
     ) {}
 
     /**
@@ -74,8 +72,7 @@ final readonly class SearchFilterRenderer
             $this->htmlRenderer->fatalError('persistent cache not initialized');
         }
 
-        $tagConn = DbConnection::build();
-        $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+        $tagService = $this->tagService;
 
         $filtersViewsRaw = \Piwigo\Config\Config::filtersViews() ?? \Piwigo\Config\Config::defaultFiltersViews();
 
@@ -119,16 +116,8 @@ final readonly class SearchFilterRenderer
         $langMonth = \Piwigo\Core\Lang::months();
 
         $searchId = $page['search'] ?? '';
-        $searchConn = DbConnection::build();
-        $searchService = new SearchService(
-            new SearchRepository($searchConn),
-            new PermissionService(new PermissionRepository($searchConn), new GroupRepository($searchConn)),
-            new PersistentFileCache(),
-            $this->mailer,
-            $this->htmlRenderer,
-        );
         $resolvedSearchId = null;
-        $mySearch = $searchService->getValidatedSearchArray($searchId, $sectionContext->section, $resolvedSearchId);
+        $mySearch = $this->searchService->getValidatedSearchArray($searchId, $sectionContext->section, $resolvedSearchId);
         if (! is_array($mySearch)) {
             // get_search_array() only returns false when unserialize() fails
             // on malformed data; this method only runs for an
@@ -144,7 +133,7 @@ final readonly class SearchFilterRenderer
         /** @var array<string, mixed> $searchFields */
         $searchFields = &$mySearch['fields'];
 
-        $page['search_details']['forbidden'] = new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
+        $page['search_details']['forbidden'] = $this->permissionService->getSqlConditionFandF([
             'forbidden_categories' => 'category_id',
             'visible_categories' => 'category_id',
             'visible_images' => 'id',
@@ -271,18 +260,18 @@ SELECT
                 $cacheKey = $persistent_cache->make_key('filter_author_rows' . $userId . $userCacheUpdateTime);
                 $filterRows = null;
                 if (! $persistent_cache->get($cacheKey, $filterRows)) {
-                    $filterRows = \Piwigo\Db\MysqliDb::query2Array($query);
+                    $filterRows = $this->repo->queryRows($query);
                     $persistent_cache->set($cacheKey, $filterRows);
                 }
             } else {
-                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query);
+                $filterRows = $this->repo->queryRows($query);
             }
 
             if (! is_array($filterRows)) {
                 // the persistent cache should only ever hold what
-                // \Piwigo\Db\MysqliDb::query2Array() just produced above; re-run the query if a
-                // corrupted entry slipped through.
-                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query);
+                // SearchRepository::queryRows() just produced above; re-run
+                // the query if a corrupted entry slipped through.
+                $filterRows = $this->repo->queryRows($query);
             }
 
             // the persistent cache stores this row set as plain mixed data,
@@ -391,18 +380,18 @@ SELECT
                 $cacheKey = $persistent_cache->make_key('filter_added_by_rows' . $userId . $userCacheUpdateTime);
                 $filterRows = null;
                 if (! $persistent_cache->get($cacheKey, $filterRows)) {
-                    $filterRows = \Piwigo\Db\MysqliDb::query2Array($query);
+                    $filterRows = $this->repo->queryRows($query);
                     $persistent_cache->set($cacheKey, $filterRows);
                 }
             } else {
-                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query);
+                $filterRows = $this->repo->queryRows($query);
             }
 
             if (! is_array($filterRows)) {
                 // the persistent cache should only ever hold what
-                // \Piwigo\Db\MysqliDb::query2Array() just produced above; re-run the query if a
-                // corrupted entry slipped through.
-                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query);
+                // SearchRepository::queryRows() just produced above; re-run
+                // the query if a corrupted entry slipped through.
+                $filterRows = $this->repo->queryRows($query);
             }
 
             // the persistent cache stores this row set as plain mixed data,
@@ -440,7 +429,7 @@ SELECT
   FROM ' . Tables::users() . '
   WHERE ' . $userFieldId . ' IN (' . implode(',', $userIds) . ')
 ;';
-                $usernameOf = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'username');
+                $usernameOf = $this->repo->queryKeyedColumn($query, 'id', 'username');
 
                 foreach (array_keys($addedBy) as $addedByIdx) {
                     $addedById = $addedBy[$addedByIdx]['added_by_id'] ?? null;
@@ -490,9 +479,7 @@ SELECT
     INNER JOIN ' . Tables::userCacheCategories() . ' ON id = cat_id AND user_id = ' . $userId . '
   WHERE id IN (' . implode(',', $catWords) . ')
 ;';
-                $result = \Piwigo\Db\MysqliDb::query($query);
-
-                while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+                foreach ($this->repo->queryRows($query) as $row) {
                     if ($row['id'] === null || $row['uppercats'] === null) {
                         continue;
                     }
@@ -546,15 +533,15 @@ SELECT
 ;';
             $allExts = null;
             if (! $persistent_cache->get($cacheKey, $allExts)) {
-                $allExts = \Piwigo\Db\MysqliDb::query2Array($allExtsQuery, 'ext', 'counter');
+                $allExts = $this->repo->queryKeyedColumn($allExtsQuery, 'ext', 'counter');
                 $persistent_cache->set($cacheKey, $allExts);
             }
 
             if (! is_array($allExts)) {
                 // the persistent cache should only ever hold what
-                // \Piwigo\Db\MysqliDb::query2Array() just produced above; re-run the query if a
-                // corrupted entry slipped through.
-                $allExts = \Piwigo\Db\MysqliDb::query2Array($allExtsQuery, 'ext', 'counter');
+                // SearchRepository::queryKeyedColumn() just produced above;
+                // re-run the query if a corrupted entry slipped through.
+                $allExts = $this->repo->queryKeyedColumn($allExtsQuery, 'ext', 'counter');
             }
 
             if ((bool) preg_match('/^image_id IN/', $filterClause)) {
@@ -568,7 +555,7 @@ SELECT
   GROUP BY ext
   ORDER BY counter DESC
 ;';
-                $filteredExts = \Piwigo\Db\MysqliDb::query2Array($query, 'ext', 'counter');
+                $filteredExts = $this->repo->queryKeyedColumn($query, 'ext', 'counter');
 
                 $exts = [];
                 foreach ($allExts as $ext => $counter) {
@@ -604,7 +591,7 @@ SELECT
     JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filterClause;
 
-                    $filterRows = \Piwigo\Db\MysqliDb::query2Array($query);
+                    $filterRows = $this->repo->queryRows($query);
 
                     $ratings = array_fill(0, 6, 0);
 
@@ -659,8 +646,7 @@ SELECT
     JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filterClause . '
 ;';
-            $result = \Piwigo\Db\MysqliDb::query($query);
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+            foreach ($this->repo->queryRows($query) as $row) {
                 if (! is_numeric($row['filesize'])) {
                     continue;
                 }
@@ -728,7 +714,7 @@ SELECT
     AND height IS NOT NULL
 ;';
 
-                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query);
+                $filterRows = $this->repo->queryRows($query);
 
                 $ratios = [
                     'Portrait' => 0,
@@ -794,18 +780,18 @@ SELECT
                 $cacheKey = $persistent_cache->make_key('filter_height_rows' . $userId . $userCacheUpdateTime);
                 $filterRows = null;
                 if (! $persistent_cache->get($cacheKey, $filterRows)) {
-                    $filterRows = \Piwigo\Db\MysqliDb::query2Array($query, null, 'height');
+                    $filterRows = $this->repo->queryColumn($query, 'height');
                     $persistent_cache->set($cacheKey, $filterRows);
                 }
             } else {
-                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query, null, 'height');
+                $filterRows = $this->repo->queryColumn($query, 'height');
             }
 
             if (! is_array($filterRows)) {
                 // the persistent cache should only ever hold what
-                // \Piwigo\Db\MysqliDb::query2Array() just produced above; re-run the query if a
-                // corrupted entry slipped through.
-                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query, null, 'height');
+                // SearchRepository::queryColumn() just produced above;
+                // re-run the query if a corrupted entry slipped through.
+                $filterRows = $this->repo->queryColumn($query, 'height');
             }
 
             // the persistent cache stores this row set as plain mixed data,
@@ -858,18 +844,18 @@ SELECT
                 $cacheKey = $persistent_cache->make_key('filter_width_rows' . $userId . $userCacheUpdateTime);
                 $filterRows = null;
                 if (! $persistent_cache->get($cacheKey, $filterRows)) {
-                    $filterRows = \Piwigo\Db\MysqliDb::query2Array($query, null, 'width');
+                    $filterRows = $this->repo->queryColumn($query, 'width');
                     $persistent_cache->set($cacheKey, $filterRows);
                 }
             } else {
-                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query, null, 'width');
+                $filterRows = $this->repo->queryColumn($query, 'width');
             }
 
             if (! is_array($filterRows)) {
                 // the persistent cache should only ever hold what
-                // \Piwigo\Db\MysqliDb::query2Array() just produced above; re-run the query if a
-                // corrupted entry slipped through.
-                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query, null, 'width');
+                // SearchRepository::queryColumn() just produced above;
+                // re-run the query if a corrupted entry slipped through.
+                $filterRows = $this->repo->queryColumn($query, 'width');
             }
 
             // the persistent cache stores this row set as plain mixed data,
@@ -966,8 +952,7 @@ SELECT
             return;
         }
 
-        $repo = new CategoryRepository(DbConnection::build());
-        $cats = $repo->findFullCategoriesByIds($allowedCatIds);
+        $cats = $this->categoryRepo->findFullCategoriesByIds($allowedCatIds);
         usort($cats, $this->htmlRenderer->nameCompare(...));
 
         $albumsFound = [];
@@ -1036,9 +1021,7 @@ SELECT
             return;
         }
 
-        $tagConn = DbConnection::build();
-        $tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
-            ->getAvailableTags($tagIds);
+        $tags = $this->tagService->getAvailableTags($tagIds);
         usort($tags, $this->htmlRenderer->tagAlphaCompare(...));
         $tagsFound = [];
         foreach ($tags as $tag) {
@@ -1107,7 +1090,7 @@ SELECT
 SELECT
     ' . implode(",\n    ", $intervalExprs) . '
 ;';
-            $thresholds = \Piwigo\Db\MysqliDb::query2Array($query)[0];
+            $thresholds = $this->repo->queryRows($query)[0];
 
             $query = '
 SELECT
@@ -1121,8 +1104,7 @@ SELECT
             $listOfDates = [];
             $preCounters = [];
 
-            $result = \Piwigo\Db\MysqliDb::query($query);
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+            foreach ($this->repo->queryRows($query) as $row) {
                 $date = $row['date'] ?? null;
                 if (! is_string($date) || $date === '') {
                     continue;
@@ -1301,8 +1283,8 @@ SELECT
         if (! isset($filterCache[$cacheKey])) {
             $functionStart = \Piwigo\Core\TimingHelper::getMoment();
 
-            // every entry of $imageIdsForFilter is either a \Piwigo\Db\MysqliDb::query2Array() id
-            // list (list<string|null>) or, for 'expert', the already-narrowed
+            // every entry of $imageIdsForFilter is either a SearchRepository
+            // id list (list<string|null>) or, for 'expert', the already-narrowed
             // result of SearchService::getQuickSearchResults() — normalize
             // each to a plain string-id list here so array_intersect() below
             // has an unambiguous element type (same normalization as

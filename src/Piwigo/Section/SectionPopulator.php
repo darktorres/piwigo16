@@ -5,24 +5,15 @@ declare(strict_types=1);
 namespace Piwigo\Section;
 
 use Piwigo\Cache\PersistentCache;
-use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Calendar\CalendarRenderer;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\MailerInterface;
 use Piwigo\Core\TemplateInterface;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionService;
-use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
@@ -60,9 +51,14 @@ use Piwigo\Users\UserService;
 final readonly class SectionPopulator
 {
     public function __construct(
-        private MailerInterface $mailer,
         private HtmlRenderingInterface $htmlRenderer,
         private TemplateInterface $template,
+        private SectionRepository $repo,
+        private CategoryService $categoryService,
+        private PermissionService $permissionService,
+        private TagService $tagService,
+        private SearchService $searchService,
+        private UserService $userService,
     ) {}
 
     public function populate(): void
@@ -115,7 +111,7 @@ final readonly class SectionPopulator
         // execution. No downstream code reads SectionContextRegistry::
         // current() mid-request today (confirmed via a full-repo grep),
         // so deferring the one real set() call to the end is safe.
-        $url_parse = new SectionInitializer($this->htmlRenderer)
+        $url_parse = new SectionInitializer($this->htmlRenderer, $this->repo)
             ->parse();
 
         $page['root_path'] = $url_parse->rootPath;
@@ -199,11 +195,7 @@ final readonly class SectionPopulator
             // int, but that isn't visible through the session accessor's signature
             $image_order_id = is_numeric($image_order_id) ? (int) $image_order_id : -1;
 
-            $categoryConn = DbConnection::build();
-            $orders = new CategoryService(
-                new CategoryRepository($categoryConn),
-                new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
-            )->getPreferredImageOrders();
+            $orders = $this->categoryService->getPreferredImageOrders();
 
             // the current session stored image_order might be not compatible with
             // current image set, for example if the current image_order is the rank
@@ -223,7 +215,7 @@ final readonly class SectionPopulator
             }
         }
 
-        $forbidden = new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
+        $forbidden = $this->permissionService->getSqlConditionFandF([
             'forbidden_categories' => 'category_id',
             'visible_categories' => 'category_id',
             'visible_images' => 'id',
@@ -296,11 +288,7 @@ final readonly class SectionPopulator
                     }
                 }
 
-                $categoryConn = DbConnection::build();
-                $page['items'] = new CategoryService(
-                    new CategoryRepository($categoryConn),
-                    new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
-                )->getImageIdsForCategories($cat_ids);
+                $page['items'] = $this->categoryService->getImageIdsForCategories($cat_ids);
             } elseif (
                 // startcat defaults to 0 above, and may be overwritten by a
                 // real 'startcat-N' URL token during parse_well_known_params_url()
@@ -331,12 +319,12 @@ SELECT id
   FROM ' . Tables::categories() . '
   WHERE
     uppercats LIKE \'' . $uppercats . ',%\' '
-    . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
+    . $this->permissionService->getSqlConditionFandF([
         'forbidden_categories' => 'id',
         'visible_categories' => 'id',
     ], "\n  AND");
 
-                        $subcat_ids_raw = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
+                        $subcat_ids_raw = $this->repo->queryColumn($query);
                         $subcat_ids = array_values(array_filter($subcat_ids_raw, is_string(...)));
                         $cat_id = $page_category['id'] ?? null;
                         if (is_scalar($cat_id)) {
@@ -344,7 +332,7 @@ SELECT id
                         }
                         $where_sql = 'category_id IN (' . implode(',', $subcat_ids) . ')';
                         // remove categories from forbidden because just checked above
-                        $forbidden = new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
+                        $forbidden = $this->permissionService->getSqlConditionFandF([
                             'visible_images' => 'id',
                         ], 'AND');
                     } else {
@@ -374,17 +362,27 @@ SELECT id
 
                 if ($cache_key_str === null || ! $persistent_cache->get($cache_key_str, $page['items'])) {
                     // main query
+                    // `SELECT DISTINCT(image_id) ... ORDER BY <col not in
+                    // select>` is invalid under ONLY_FULL_GROUP_BY --
+                    // Piwigo\Db\DbConnection deliberately doesn't strip that
+                    // sql_mode the way the legacy dblayer does (see its own
+                    // docblock), so `GROUP BY id` (images' own primary key,
+                    // functionally dependent) replaces DISTINCT(image_id)
+                    // here, same fix as CalendarRepository::findImageIds()/
+                    // SearchService::getQuickSearchResultsNoCache() -- `id`
+                    // and `image_id` are equal per the JOIN condition.
                     $query = '
-SELECT DISTINCT(image_id)
+SELECT id
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::images() . ' ON id = image_id
   WHERE
     ' . $where_sql . '
 ' . $forbidden . '
+  GROUP BY id
   ' . $order_by . '
 ;';
 
-                    $page['items'] = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
+                    $page['items'] = $this->repo->queryColumn($query);
 
                     if ($cache_key_str !== null) {
                         $persistent_cache->set($cache_key_str, $page['items']);
@@ -421,9 +419,7 @@ SELECT DISTINCT(image_id)
                 }
                 $page['tag_ids'] = $tag_ids;
 
-                $tagConn = DbConnection::build();
-                $items = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
-                    ->getImageIdsForTags($tag_ids);
+                $items = $this->tagService->getImageIdsForTags($tag_ids);
 
                 if (count($items) === 0) {
                     $remote_addr = $_SERVER['REMOTE_ADDR'];
@@ -456,14 +452,7 @@ SELECT DISTINCT(image_id)
                 $search_id = is_string($page['search']) ? $page['search'] : '';
                 $search_super_order_by = $page['super_order_by'] ?? null;
                 $search_super_order_by = is_bool($search_super_order_by) ? $search_super_order_by : null;
-                $searchConn = DbConnection::build();
-                $search_result = new SearchService(
-                    new SearchRepository($searchConn),
-                    new PermissionService(new PermissionRepository($searchConn), new GroupRepository($searchConn)),
-                    new PersistentFileCache(),
-                    $this->mailer,
-                    $this->htmlRenderer,
-                )->getSearchResults($search_id, $search_super_order_by);
+                $search_result = $this->searchService->getSearchResults($search_id, $search_super_order_by);
 
                 // save the details of the query search
                 if (isset($search_result['qs'])) {
@@ -487,7 +476,7 @@ SELECT DISTINCT(image_id)
             // |                           favorite section                            |
             // +-----------------------------------------------------------------------+
             elseif ($section === 'favorites') {
-                new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $this->htmlRenderer)->checkUserFavorites();
+                $this->userService->checkUserFavorites();
 
                 $page = array_merge(
                     $page,
@@ -505,7 +494,7 @@ SELECT DISTINCT(image_id)
 DELETE FROM ' . Tables::favorites() . '
   WHERE user_id = ' . $user_id_sql . '
 ;';
-                    \Piwigo\Db\MysqliDb::query($query);
+                    $this->repo->executeStatement($query);
                     redirect(make_index_url([
                         'section' => 'favorites',
                     ]));
@@ -515,7 +504,7 @@ SELECT image_id
   FROM ' . Tables::favorites() . '
     INNER JOIN ' . Tables::images() . ' ON image_id = id
   WHERE user_id = ' . $user_id_sql . '
-' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
+' . $this->permissionService->getSqlConditionFandF([
                         'visible_images' => 'id',
                     ], 'AND') . '
   ' . $order_by . '
@@ -523,7 +512,7 @@ SELECT image_id
                     $page = array_merge(
                         $page,
                         [
-                            'items' => \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id'),
+                            'items' => $this->repo->queryColumn($query),
                         ]
                     );
 
@@ -556,14 +545,20 @@ SELECT image_id
                     );
                 }
 
+                // GROUP BY id (images' own primary key), not DISTINCT --
+                // same ONLY_FULL_GROUP_BY fix as the categories-section
+                // query above; $order_by orders by date_available, images'
+                // own column, so `id` is a full functional-dependency key
+                // for it.
                 $query = '
-SELECT DISTINCT(id)
+SELECT id
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE '
-  . new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $this->htmlRenderer)->getRecentPhotosSql('date_available') . '
-  ' . $forbidden
-  . $order_by . '
+  . $this->userService->getRecentPhotosSql('date_available') . '
+  ' . $forbidden . '
+  GROUP BY id
+  ' . $order_by . '
 ;';
 
                 $page = array_merge(
@@ -573,7 +568,7 @@ SELECT DISTINCT(id)
                             'start' => 0,
                         ]) . '">'
                                     . l10n('Recent photos') . '</a>',
-                        'items' => \Piwigo\Db\MysqliDb::query2Array($query, null, 'id'),
+                        'items' => $this->repo->queryColumn($query),
                     ]
                 );
             }
@@ -600,12 +595,15 @@ SELECT DISTINCT(id)
 
                 $top_number = \Piwigo\Config\Config::topNumber();
 
+                // GROUP BY id, same ONLY_FULL_GROUP_BY fix as above --
+                // $order_by orders by hit/id, both images' own columns.
                 $query = '
-SELECT DISTINCT(id)
+SELECT id
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE hit > 0
     ' . $forbidden . '
+    GROUP BY id
     ' . $order_by . '
   LIMIT ' . $top_number . '
 ;';
@@ -617,7 +615,7 @@ SELECT DISTINCT(id)
                             'start' => 0,
                         ]) . '">'
                                     . $top_number . ' ' . l10n('Most visited') . '</a>',
-                        'items' => \Piwigo\Db\MysqliDb::query2Array($query, null, 'id'),
+                        'items' => $this->repo->queryColumn($query),
                     ]
                 );
             }
@@ -630,12 +628,16 @@ SELECT DISTINCT(id)
 
                 $top_number = \Piwigo\Config\Config::topNumber();
 
+                // GROUP BY id, same ONLY_FULL_GROUP_BY fix as above --
+                // $order_by orders by rating_score/id, both images' own
+                // columns.
                 $query = '
-SELECT DISTINCT(id)
+SELECT id
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE rating_score IS NOT NULL
     ' . $forbidden . '
+    GROUP BY id
     ' . $order_by . '
   LIMIT ' . $top_number . '
 ;';
@@ -646,7 +648,7 @@ SELECT DISTINCT(id)
                             'start' => 0,
                         ]) . '">'
                                     . $top_number . ' ' . l10n('Best rated') . '</a>',
-                        'items' => \Piwigo\Db\MysqliDb::query2Array($query, null, 'id'),
+                        'items' => $this->repo->queryColumn($query),
                     ]
                 );
             }
@@ -659,12 +661,15 @@ SELECT DISTINCT(id)
                 assert(isset($page['list']));
                 $list_ids_raw = is_array($page['list']) ? array_filter($page['list'], is_scalar(...)) : [];
                 $list_ids = array_map(strval(...), $list_ids_raw);
+                // GROUP BY id, same ONLY_FULL_GROUP_BY fix as above --
+                // $order_by orders by images' own columns.
                 $query = '
-SELECT DISTINCT(id)
+SELECT id
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE image_id IN (' . implode(',', $list_ids) . ')
     ' . $forbidden . '
+  GROUP BY id
   ' . $order_by . '
 ;';
 
@@ -675,7 +680,7 @@ SELECT DISTINCT(id)
                             'start' => 0,
                         ]) . '">'
                                     . l10n('Random photos') . '</a>',
-                        'items' => \Piwigo\Db\MysqliDb::query2Array($query, null, 'id'),
+                        'items' => $this->repo->queryColumn($query),
                     ]
                 );
             }
@@ -751,11 +756,7 @@ SELECT DISTINCT(id)
 
             if (self::needsPermalinkRedirect($category_permalink, $category_url_style, $hit_by_cat_url_name, $hit_by_cat_permalink, $expected_cat_url_name)) {
                 $redirect_category_id = $page_category['id'] ?? null;
-                $categoryConn = DbConnection::build();
-                new CategoryService(
-                    new CategoryRepository($categoryConn),
-                    new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
-                )->checkRestrictions(is_numeric($redirect_category_id) ? (int) $redirect_category_id : 0, $this->htmlRenderer);
+                $this->categoryService->checkRestrictions(is_numeric($redirect_category_id) ? (int) $redirect_category_id : 0, $this->htmlRenderer);
                 $redirect_url = \Piwigo\Core\PageFilterHelper::scriptBasename() === 'picture' ? duplicate_picture_url() : duplicate_index_url();
 
                 if (! headers_sent()) { // this is a permanent redirection

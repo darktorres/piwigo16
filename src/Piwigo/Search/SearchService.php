@@ -39,12 +39,25 @@ use Piwigo\Users\UserService;
  */
 final readonly class SearchService
 {
+    /**
+     * $tagService/$userService/$preferencesService are optional-with-
+     * lazy-default (same reasoning as Mail\MailService's own
+     * $webmasterMailProvider): this class has external construction sites
+     * across Search/Section (fixed in the same pass as this constructor
+     * change) plus several not-yet-migrated Controller/Ws/Admin call sites
+     * (out of this phase's domain scope) that would otherwise all need a
+     * simultaneous edit for a dependency only reached on the tags/
+     * default-language/saveSearch paths.
+     */
     public function __construct(
         private SearchRepository $repo,
         private PermissionService $permissionService,
         private PersistentFileCache $cache,
         private MailerInterface $mailer,
         private HtmlRenderingInterface $htmlRenderer,
+        private ?TagService $tagService = null,
+        private ?UserService $userService = null,
+        private ?\Piwigo\Users\PreferencesService $preferencesService = null,
     ) {}
 
     public static function getSearchIdPattern(int|string $candidate): ?string
@@ -419,7 +432,7 @@ final readonly class SearchService
         $tagsMode = is_array($tagsField) && is_string($tagsField['mode'] ?? null) ? $tagsField['mode'] : 'AND';
         if (isset($searchFields['tags']) && $tagsWords !== [] && (bool) ($displayFilters['tags']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            $tagService = new TagService(new TagRepository(DbConnection::build()), $this->permissionService, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())));
+            $tagService = $this->tagService ?? new TagService(new TagRepository(DbConnection::build()), $this->permissionService, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())));
             $imageIdsForFilter['tags'] = array_values(array_map(intval(...), array_filter($tagService->getImageIdsForTags($tagsWords, $tagsMode), is_numeric(...))));
         }
 
@@ -681,8 +694,8 @@ final readonly class SearchService
 
             if (! $useFt) {
                 // getDbVersion() is a property read on the already-connected
-                // mysqli handle, not a query -- no memoization needed.
-                $dbVersion = \Piwigo\Db\MysqliDb::getDbVersion();
+                // driver handle, not a query -- no memoization needed.
+                $dbVersion = $this->repo->getDbVersion();
                 $useRegexpICU = preg_match('/mariadb/i', $dbVersion) !== 1 && version_compare($dbVersion, '8.0.4', '>');
 
                 $pre = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_BEGIN)) ? '' : ($useRegexpICU ? '\\\\b' : '[[:<:]]');
@@ -1140,7 +1153,8 @@ final readonly class SearchService
         $expression = new QExpression($q, $scopes);
 
         $inflector = null;
-        $langCode = substr(new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $this->htmlRenderer)->getDefaultLanguage(), 0, 2);
+        $userService = $this->userService ?? new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $this->htmlRenderer);
+        $langCode = substr($userService->getDefaultLanguage(), 0, 2);
         $className = '\\Piwigo\\Search\\Inflector\\Inflector_' . $langCode;
         if (class_exists($className)) {
             $inflector = new $className();
@@ -1329,7 +1343,8 @@ final readonly class SearchService
 
         if (! \Piwigo\Auth\AccessControl::isAGuest() && ! \Piwigo\Auth\AccessControl::isGeneric()) {
             $rulesFields = $rules['fields'] ?? [];
-            new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->updateParam('gallery_search_filters', array_keys(is_array($rulesFields) ? $rulesFields : []));
+            $preferencesService = $this->preferencesService ?? new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()));
+            $preferencesService->updateParam('gallery_search_filters', array_keys(is_array($rulesFields) ? $rulesFields : []));
         }
 
         $url = make_index_url([

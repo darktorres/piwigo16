@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Category\CategoryRepository;
@@ -26,13 +27,18 @@ use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Search\SearchFilterRenderer;
+use Piwigo\Search\SearchRepository;
+use Piwigo\Search\SearchService;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionPopulator;
+use Piwigo\Section\SectionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -69,8 +75,17 @@ final class GalleryController implements ControllerInterface
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        new SectionPopulator(new MailService(), new HtmlService(), $template)
-            ->populate();
+        $sectionConn = DbConnection::build();
+        new SectionPopulator(
+            new HtmlService(),
+            $template,
+            new SectionRepository($sectionConn),
+            new CategoryService(new CategoryRepository($sectionConn), new PermissionService(new PermissionRepository($sectionConn), new GroupRepository($sectionConn))),
+            new PermissionService(new PermissionRepository($sectionConn), new GroupRepository($sectionConn)),
+            new TagService(new TagRepository($sectionConn), new PermissionService(new PermissionRepository($sectionConn), new GroupRepository($sectionConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($sectionConn))),
+            new SearchService(new SearchRepository($sectionConn), new PermissionService(new PermissionRepository($sectionConn), new GroupRepository($sectionConn)), new PersistentFileCache(), new MailService(), new HtmlService()),
+            new UserService(new UserRepository($sectionConn), new GroupRepository($sectionConn), new MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($sectionConn)), new HtmlService()),
+        )->populate();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
@@ -251,8 +266,15 @@ final class GalleryController implements ControllerInterface
                 }
             }
 
-            $resolved_search_id = new SearchFilterRenderer(new MailService(), new HtmlService(), $template)
-                ->render($section_context);
+            $resolved_search_id = new SearchFilterRenderer(
+                new HtmlService(),
+                $template,
+                new SearchRepository($tagConn),
+                new SearchService(new SearchRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new PersistentFileCache(), new MailService(), new HtmlService(), $tagService),
+                $tagService,
+                new CategoryRepository($tagConn),
+                new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)),
+            )->render($section_context);
 
             if ($section_context->section === 'categories' and $section_context->category !== null and $section_context->combinedCategories === null) {
                 $template->assign(

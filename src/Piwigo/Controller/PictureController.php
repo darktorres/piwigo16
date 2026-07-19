@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -35,13 +36,18 @@ use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
+use Piwigo\Search\SearchRepository;
+use Piwigo\Search\SearchService;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionPopulator;
+use Piwigo\Section\SectionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -75,8 +81,17 @@ final class PictureController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        new SectionPopulator(new MailService(), new HtmlService(), \Piwigo\Template\CurrentTemplate::get())
-            ->populate();
+        $sectionConn = DbConnection::build();
+        new SectionPopulator(
+            new HtmlService(),
+            \Piwigo\Template\CurrentTemplate::get(),
+            new SectionRepository($sectionConn),
+            new CategoryService(new CategoryRepository($sectionConn), new PermissionService(new PermissionRepository($sectionConn), new GroupRepository($sectionConn))),
+            new PermissionService(new PermissionRepository($sectionConn), new GroupRepository($sectionConn)),
+            new TagService(new TagRepository($sectionConn), new PermissionService(new PermissionRepository($sectionConn), new GroupRepository($sectionConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($sectionConn))),
+            new SearchService(new SearchRepository($sectionConn), new PermissionService(new PermissionRepository($sectionConn), new GroupRepository($sectionConn)), new PersistentFileCache(), new MailService(), new HtmlService()),
+            new UserService(new UserRepository($sectionConn), new GroupRepository($sectionConn), new MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($sectionConn)), new HtmlService()),
+        )->populate();
 
         /**
          * @var string

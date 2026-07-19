@@ -129,4 +129,74 @@ final class SearchRepository extends AbstractRepository
 
         return is_string($row) ? $row : '';
     }
+
+    /**
+     * Real MySQL server version -- a property read on the already-connected
+     * driver handle under mysqli, unaffected by the DBAL native-int/float
+     * casting difference documented on the methods below (server version is
+     * a string on every driver).
+     */
+    public function getDbVersion(): string
+    {
+        return $this->conn->getServerVersion();
+    }
+
+    /**
+     * Generic free-form-SQL row executor for SearchFilterRenderer's own
+     * dynamically-assembled filter queries (custom SELECT lists, JOINs,
+     * GROUP BY/ORDER BY -- not expressible through findRowsByClause()'s
+     * fixed "SELECT * FROM X WHERE Y" shape). Every value is cast the same
+     * way {@see \Piwigo\Db\MysqliDb::fetchAssoc()} always did, so this is a
+     * behavior-preserving 1:1 API swap -- callers written against the old
+     * MysqliDb::query()+fetchAssoc()/query2Array() string|null contract
+     * need no changes, sidestepping the native-int-vs-string DBAL
+     * regression class this migration has hit before (see
+     * AbstractRepository-based methods elsewhere that intentionally cast to
+     * `int` instead -- those are fresh typed contracts, not a mimicked
+     * legacy shape).
+     *
+     * @return list<array<string, string|null>>
+     */
+    public function queryRows(string $sql): array
+    {
+        return array_map(
+            static fn (array $row): array => array_map(
+                static fn (mixed $value): ?string => is_scalar($value) ? (string) $value : null,
+                $row
+            ),
+            $this->conn->executeQuery($sql)
+                ->fetchAllAssociative()
+        );
+    }
+
+    /**
+     * Same shape as {@see \Piwigo\Db\MysqliDb::query2Array()} with both a
+     * key and a value column name.
+     *
+     * @return array<string, string|null>
+     */
+    public function queryKeyedColumn(string $sql, string $keyColumn, string $valueColumn): array
+    {
+        $result = [];
+        foreach ($this->queryRows($sql) as $row) {
+            $key = $row[$keyColumn] ?? '';
+            $result[$key] = $row[$valueColumn] ?? null;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Same shape as {@see \Piwigo\Db\MysqliDb::query2Array()} with only a
+     * value column name.
+     *
+     * @return list<string|null>
+     */
+    public function queryColumn(string $sql, string $column): array
+    {
+        return array_map(
+            static fn (array $row): ?string => $row[$column] ?? null,
+            $this->queryRows($sql)
+        );
+    }
 }

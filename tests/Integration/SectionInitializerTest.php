@@ -11,21 +11,26 @@ namespace Piwigo\Tests\Integration {
 
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
 use Piwigo\Section\SectionInitializer;
+use Piwigo\Section\SectionRepository;
 
 /**
  * Forces the $_SERVER['PATH_INFO'] branch (question_mark_in_urls=false)
- * throughout -- the alternative $_GET-key branch calls
- * \Piwigo\Db\MysqliDb::realEscapeString(), which needs a legacy `global $mysqli`
- * connection this isolated test process never bootstraps. Never exercises
- * the "invalid/missing picture identifier" branches (bad_request() is
- * exit-triggering), same "don't stub/exercise what would kill the test"
- * reasoning used throughout this suite.
+ * throughout -- the alternative $_GET-key branch's escaping now goes
+ * through SectionRepository (a real DBAL Connection, built here same as
+ * every other repository-backed Integration test), so it no longer needs
+ * the legacy `global $mysqli` avoidance this test used to require. Still
+ * never exercises the "invalid/missing picture identifier" branches
+ * (bad_request() is exit-triggering), same "don't stub/exercise what would
+ * kill the test" reasoning used throughout this suite.
  */
 final class SectionInitializerTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
+
+    private SectionRepository $repo;
 
     #[\Override]
     protected function setUp(): void
@@ -46,6 +51,8 @@ final class SectionInitializerTest extends IntegrationTestCase
         Config::override('question_mark_in_urls', false);
 
         unset($_SERVER['SCRIPT_NAME'], $_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
+
+        $this->repo = new SectionRepository(DbConnection::build());
     }
 
     #[\Override]
@@ -59,7 +66,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1';
 
-        $context = new SectionInitializer(new HtmlService())
+        $context = new SectionInitializer(new HtmlService(), $this->repo)
             ->parse();
 
         self::assertSame('../../', $context->rootPath);
@@ -71,7 +78,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1/start-20';
 
-        $context = new SectionInitializer(new HtmlService())
+        $context = new SectionInitializer(new HtmlService(), $this->repo)
             ->parse();
 
         self::assertSame('../../../', $context->rootPath);
@@ -81,7 +88,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1';
 
-        $context = new SectionInitializer(new HtmlService())
+        $context = new SectionInitializer(new HtmlService(), $this->repo)
             ->parse();
 
         self::assertNull($context->imageId);
@@ -93,7 +100,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
         $_SERVER['PATH_INFO'] = '/42';
 
-        $context = new SectionInitializer(new HtmlService())
+        $context = new SectionInitializer(new HtmlService(), $this->repo)
             ->parse();
 
         self::assertSame('42', $context->imageId);
@@ -106,7 +113,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
         $_SERVER['PATH_INFO'] = '/42-my-photo';
 
-        $context = new SectionInitializer(new HtmlService())
+        $context = new SectionInitializer(new HtmlService(), $this->repo)
             ->parse();
 
         self::assertSame('42', $context->imageId);
@@ -121,7 +128,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         // happened rather than this being a hardcoded default.
         $_SERVER['PATH_INFO'] = '/most_visited';
 
-        $context = new SectionInitializer(new HtmlService())
+        $context = new SectionInitializer(new HtmlService(), $this->repo)
             ->parse();
 
         self::assertSame('most_visited', $context->parsed['section'] ?? null);

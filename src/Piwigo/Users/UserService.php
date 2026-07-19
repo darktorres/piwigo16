@@ -327,19 +327,29 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         $availablePermissionLevels = \Piwigo\Config\Config::availablePermissionLevels();
-        $webmasterId = \Piwigo\Config\Config::has('webmaster_id') && is_scalar(\Piwigo\Config\Config::webmasterId()) ? (string) \Piwigo\Config\Config::webmasterId() : null;
-        $guestId = \Piwigo\Config\Config::has('guest_id') && is_scalar(\Piwigo\Config\Config::guestId()) ? (string) \Piwigo\Config\Config::guestId() : null;
-        $defaultUserId = \Piwigo\Config\Config::has('default_user_id') && is_scalar(\Piwigo\Config\Config::defaultUserId()) ? (string) \Piwigo\Config\Config::defaultUserId() : null;
+        // Config::webmasterId()/guestId()/defaultUserId() are declared
+        // non-nullable `int` with their own safe hardcoded fallback
+        // defaults (2/1/guest_id respectively, matching config_default.
+        // inc.php) -- gating on Config::has() first was wrong: on any
+        // no-boot request path (e.g. install.php, which never runs
+        // Kernel::boot()/ConfigLoader) these keys are never explicitly
+        // loaded into Config's backing store, so has() is false and every
+        // user silently fell through to 'normal' status, including the
+        // webmaster and guest accounts install.php itself just created.
+        // Found live via a real fixture-regen run, not assumed.
+        $webmasterId = (string) \Piwigo\Config\Config::webmasterId();
+        $guestId = (string) \Piwigo\Config\Config::guestId();
+        $defaultUserId = (string) \Piwigo\Config\Config::defaultUserId();
 
         foreach ($userIds as $userId) {
             $level = $defaultUser['level'] ?? 0;
             $userIdStr = (string) $userId;
-            if ($webmasterId !== null && $userIdStr === $webmasterId) {
+            if ($userIdStr === $webmasterId) {
                 $status = 'webmaster';
                 $level = is_array($availablePermissionLevels) && $availablePermissionLevels !== []
                     ? max($availablePermissionLevels)
                     : 0;
-            } elseif (($guestId !== null && $userIdStr === $guestId) || ($defaultUserId !== null && $userIdStr === $defaultUserId)) {
+            } elseif ($userIdStr === $guestId || $userIdStr === $defaultUserId) {
                 $status = 'guest';
             } else {
                 $status = 'normal';

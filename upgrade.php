@@ -105,11 +105,11 @@ $runner->loadLanguage();
 // ConfigDb:: directly, and the facade file's define()s became MysqliDb
 // class constants.
 
-UpgradeService::upgradeDbConnect();
+$conn = UpgradeService::upgradeDbConnect();
 \Piwigo\Db\MysqliDb::checkCharset();
 
-$row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT NOW();'));
-assert($row !== null);
+$row = $conn->fetchNumeric('SELECT NOW();');
+assert($row !== false);
 [$dbnow] = $row;
 // Read at include time by the frozen install/upgrade_X.Y.Z.php scripts --
 // must stay a real global constant (SEC-60 keeps the define() here).
@@ -120,14 +120,14 @@ define('CURRENT_DATE', $dbnow);
 // +-----------------------------------------------------------------------+
 
 // May exit(): remote sites are refused, an up-to-date DB short-circuits.
-$current_release = $runner->prepare();
+$current_release = $runner->prepare($conn);
 
 // Check access rights (webmaster session, or POSTed admin/webmaster
 // credentials -- the auth gate, ported verbatim). The define() itself must
 // live here: SEC-60 forbids define() in src/Piwigo, and the frozen
 // install/upgrade_X.Y.Z.php scripts die('Hacking attempt!') unless
 // PHPWG_IN_UPGRADE is a real defined constant when they are included.
-if (UpgradeService::checkUpgradeAccessRights($current_release)) {
+if (UpgradeService::checkUpgradeAccessRights($conn, $current_release)) {
     define('PHPWG_IN_UPGRADE', true);
 }
 
@@ -137,7 +137,7 @@ if (UpgradeService::checkUpgradeAccessRights($current_release)) {
 
 if ((isset($_POST['submit']) or isset($_GET['now']))
   and UpgradeService::checkUpgrade()) {
-    $runner->performUpgrade();
+    $runner->performUpgrade($conn);
 } else {
     // Deliberately only defined on this branch, exactly like the former
     // top-level code: during an actual upgrade launch the frozen

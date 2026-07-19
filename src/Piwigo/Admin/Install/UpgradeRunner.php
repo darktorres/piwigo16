@@ -11,12 +11,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\languages;
 use Piwigo\Admin\updates;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Logger;
 use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
@@ -63,6 +65,30 @@ class UpgradeRunner
      */
     public function loadLanguage(): void
     {
+        // This request never goes through Kernel::boot()/
+        // CommonBootstrap::run(), so CurrentUser is never guest-
+        // initialized either -- same latent crash as
+        // InstallWizard::boot()'s own attachGlobals() call (see its
+        // docblock): UpgradeService::deactivateNonStandardThemes() can
+        // reach `new themes()`'s missing-screenshot fallback, which reads
+        // CurrentUser. Idempotent, so calling it this early (before the DB
+        // connection) is safe.
+        \Piwigo\Users\CurrentUser::attachGlobals();
+
+        // Same no-boot gap, CurrentLogger this time -- same construction
+        // recipe as RequestBootstrap::connect()'s own site. No DB access
+        // needed, just Config reads (already valid from database.inc.php,
+        // included by the upgrade.php entry shell before this runs) --
+        // direct calls, so their declared `string` return types are
+        // already certain, no is_string() re-guard needed.
+        \Piwigo\Core\CurrentLogger::set(new Logger([
+            'directory' => PHPWG_ROOT_PATH . \Piwigo\Config\Config::dataLocation() . \Piwigo\Config\Config::logDir(),
+            'severity' => \Piwigo\Config\Config::logLevel(),
+            'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Config\Config::dbPassword()) . '.txt',
+            'globPattern' => 'log_*.txt',
+            'archiveDays' => \Piwigo\Config\Config::logArchiveDays(),
+        ]));
+
         $languages = new languages('utf-8');
         if (isset($_GET['language'])) {
             $language = is_string($_GET['language']) ? strip_tags($_GET['language']) : '';
@@ -112,7 +138,7 @@ class UpgradeRunner
      * @return string the detected current release, for the entry shell's
      *                checkUpgradeAccessRights() call
      */
-    public function prepare(): string
+    public function prepare(Connection $conn): string
     {
         global $template;
 
@@ -139,8 +165,7 @@ class UpgradeRunner
         $has_remote_site = false;
 
         $query = 'SELECT galleries_url FROM ' . Tables::sites() . ';';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach ($conn->fetchAllAssociative($query) as $row) {
             $galleries_url = $row['galleries_url'] ?? null;
             if (is_string($galleries_url) && url_is_remote($galleries_url)) {
                 $has_remote_site = true;
@@ -168,8 +193,8 @@ class UpgradeRunner
         // |                            upgrade choice                          |
         // +-------------------------------------------------------------------+
 
-        $tables = UpgradeService::getTables();
-        $columns_of = UpgradeService::getColumnsOf($tables);
+        $tables = UpgradeService::getTables($conn);
+        $columns_of = UpgradeService::getColumnsOf($conn, $tables);
 
         // find the current release
         if (! in_array('param', $columns_of[PREFIX_TABLE . 'config'])) {
@@ -217,7 +242,10 @@ class UpgradeRunner
 SELECT id
   FROM ' . PREFIX_TABLE . 'upgrade
 ;';
-            $applied_upgrades = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
+            // Loose in_array() below tolerates either native int or string
+            // ids from the DBAL fetch, same as it always tolerated mysqli's
+            // all-string rows -- no explicit per-element cast needed.
+            $applied_upgrades = $conn->fetchFirstColumn($query);
 
             if (! in_array(159, $applied_upgrades)) {
                 $current_release = '2.10.0';
@@ -273,7 +301,7 @@ SELECT id
      * UserCacheInvalidator::invalidate() reads (Legacy Coupling
      * Retirement Track A gap-fill batch G5).
      */
-    public function performUpgrade(): void
+    public function performUpgrade(Connection $conn): void
     {
         global $template;
 
@@ -317,8 +345,8 @@ SELECT id
             }
 
             // Deactivate non standard extensions
-            UpgradeService::deactivateNonStandardPlugins();
-            UpgradeService::deactivateNonStandardThemes();
+            UpgradeService::deactivateNonStandardPlugins($conn);
+            UpgradeService::deactivateNonStandardThemes($conn);
             UpgradeService::deactivateTemplates();
 
             $upgrade_end = \Piwigo\Core\TimingHelper::getMoment();
@@ -361,7 +389,7 @@ REPLACE INTO ' . Tables::plugins() . '
   (id, state)
   VALUES (\'TakeATour\', \'active\')
 ;';
-                    \Piwigo\Db\MysqliDb::query($query);
+                    $conn->executeStatement($query);
 
                     // we need the secret key for get_pwg_token()
                     \Piwigo\Config\ConfigDb::loadConfFromDb();

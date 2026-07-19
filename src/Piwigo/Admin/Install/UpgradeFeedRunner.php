@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install;
 
 use Exception;
+use Piwigo\Core\Logger;
+use Piwigo\Db\DbConnection;
 
 /**
  * upgrade_feed.php's orchestration, ported verbatim from that script's
@@ -25,14 +27,45 @@ use Exception;
  * so run() itself only reads the PREFIX_TABLE constant the entry shell
  * already define()'d -- no $conf/$prefixeTable global needed here anymore
  * (Legacy Coupling Retirement Track A gap-fill batch G5).
+ *
+ * Still connects via the legacy MysqliDb:: global below -- DbPatchRegistry
+ * ::make(...)->apply() dispatches into the 151 frozen DbPatch classes
+ * (Phase 1j, not yet migrated), which still depend on that shared $mysqli
+ * connection. Once it succeeds, a real DBAL Connection is additionally
+ * built for this method's own retargeted queries (see
+ * InstallService::installDbConnect()'s docblock for the same reasoning).
  */
 class UpgradeFeedRunner
 {
     public function run(): void
     {
+        // This request never goes through Kernel::boot()/
+        // CommonBootstrap::run(), so CurrentUser is never guest-
+        // initialized either -- same latent crash as
+        // InstallWizard::boot()'s own attachGlobals() call (see its
+        // docblock). DbPatchRegistry::make(...)->apply() below dispatches
+        // into frozen patch classes (Phase 1j) whose reach isn't fully
+        // audited here; attachGlobals() is cheap, safe, and idempotent, so
+        // it's applied uniformly across all 3 no-boot entry points rather
+        // than only where a crash was actually reproduced.
+        \Piwigo\Users\CurrentUser::attachGlobals();
+
+        // Same reasoning, CurrentLogger this time -- same construction
+        // recipe as RequestBootstrap::connect()'s own site. Direct
+        // Config:: calls, so their declared `string` return types are
+        // already certain, no is_string() re-guard needed.
+        \Piwigo\Core\CurrentLogger::set(new Logger([
+            'directory' => PHPWG_ROOT_PATH . \Piwigo\Config\Config::dataLocation() . \Piwigo\Config\Config::logDir(),
+            'severity' => \Piwigo\Config\Config::logLevel(),
+            'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Config\Config::dbPassword()) . '.txt',
+            'globPattern' => 'log_*.txt',
+            'archiveDays' => \Piwigo\Config\Config::logArchiveDays(),
+        ]));
+
         // +-------------------------------------------------------------------+
         // |                         Database connection                        |
         // +-------------------------------------------------------------------+
+        $conn = null;
         try {
             $db_host = \Piwigo\Config\Config::dbHost();
             $db_user = \Piwigo\Config\Config::dbUser();
@@ -47,6 +80,7 @@ class UpgradeFeedRunner
                 $db_password,
                 $db_base
             );
+            $conn = DbConnection::build();
         } catch (Exception $e) {
             // Historical quirk preserved verbatim: the `true` is passed to
             // l10n() as a (useless) sprintf argument, not to myError()'s
@@ -66,7 +100,10 @@ class UpgradeFeedRunner
 SELECT id
   FROM ' . PREFIX_TABLE . 'upgrade
 ;';
-        $applied = array_filter(\Piwigo\Db\MysqliDb::query2Array($query, null, 'id'), is_string(...));
+        $applied = array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            $conn->fetchFirstColumn($query)
+        );
 
         // retrieve existing upgrades
         $existing = UpgradeService::getAvailableUpgradeIds();
@@ -97,7 +134,7 @@ INSERT INTO ' . PREFIX_TABLE . 'upgrade
   VALUES
   (\'' . $upgrade_id . '\', NOW(), \'' . $upgrade_description . '\')
 ;';
-            \Piwigo\Db\MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         echo '</pre>';

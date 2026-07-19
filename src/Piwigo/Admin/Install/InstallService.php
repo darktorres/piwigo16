@@ -11,9 +11,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install;
 
+use Doctrine\DBAL\Connection;
 use Exception;
 use Piwigo\Admin\plugins;
 use Piwigo\Admin\themes;
+use Piwigo\Db\DbConnection;
 use RuntimeException;
 
 /**
@@ -36,7 +38,7 @@ class InstallService
      * useful when the SQL file contains generic words. Drop table queries are
      * not executed.
      */
-    public static function executeSqlfile(string $filepath, string $replaced, string $replacing, string $dblayer): void
+    public static function executeSqlfile(Connection $conn, string $filepath, string $replaced, string $replacing, string $dblayer): void
     {
         $sql_lines = file($filepath);
         if ($sql_lines === false) {
@@ -61,7 +63,7 @@ class InstallService
                             $query = $matches[1] . ' DEFAULT CHARACTER SET utf8;';
                         }
                     }
-                    \Piwigo\Db\MysqliDb::query($query);
+                    $conn->executeStatement($query);
                 }
                 $query = '';
             }
@@ -98,10 +100,22 @@ class InstallService
     /**
      * Connect to database during installation. Uses $_POST.
      *
+     * Still connects via the legacy MysqliDb:: global -- the frozen
+     * install/db/*.php DbPatch classes reached later in the same request
+     * (via InstallService::activateCoreThemes()'s indirect callers and, for
+     * upgrades, VersionUpgrade/DbPatch::apply()) are Phase 1j's scope, not
+     * yet migrated, and still depend on that shared $mysqli global. Once
+     * the legacy connect succeeds, additionally builds a real DBAL
+     * Connection for this phase's own retargeted call sites --
+     * InstallWizard::boot() already calls Config::override('db_host', ...)
+     * etc. with these same $_POST values before this runs, so
+     * DbConnection::build() (which reads Config::db*()) resolves to the
+     * identical credentials.
+     *
      * @param array<int, string> $infos - populated with infos
      * @param array<int, string> $errors - populated with errors
      */
-    public static function installDbConnect(array &$infos, array &$errors): void
+    public static function installDbConnect(array &$infos, array &$errors): ?Connection
     {
         $dbhost = is_string($_POST['dbhost'] ?? null) ? $_POST['dbhost'] : '';
         $dbuser = is_string($_POST['dbuser'] ?? null) ? $_POST['dbuser'] : '';
@@ -116,8 +130,12 @@ class InstallService
                 $dbname
             );
             \Piwigo\Db\MysqliDb::checkVersion();
+
+            return DbConnection::build();
         } catch (Exception $e) {
             $errors[] = l10n($e->getMessage());
+
+            return null;
         }
     }
 

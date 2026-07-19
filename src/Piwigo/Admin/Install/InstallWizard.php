@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Admin\languages;
 use Piwigo\Auth\CookieService;
@@ -19,6 +20,8 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Logger;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
@@ -78,6 +81,11 @@ class InstallWizard
 
     private languages $languages;
 
+    /**
+     * Built by analyzeForm() -> InstallService::installDbConnect(); non-null once hasErrors() is false.
+     */
+    private ?Connection $conn = null;
+
     private string $language = 'en_UK';
 
     private Template $template;
@@ -95,7 +103,7 @@ class InstallWizard
         // in this request, same pattern as feed.php/i.php/common.inc.php.
         $conf_data_location = $conf['data_location'] ?? null;
         if (! is_string($conf_data_location)) {
-            die("Invalid \$conf['data_location'] configuration: expected a string.");
+            throw new \LogicException("Invalid \$conf['data_location'] configuration: expected a string.");
         }
         $this->confDataLocation = $conf_data_location;
 
@@ -151,6 +159,36 @@ class InstallWizard
         Config::override('db_password', $this->dbpasswd);
         Config::override('db_base', $this->dbname);
 
+        // Same reasoning again, different dependency: this request never
+        // goes through Kernel::boot()/CommonBootstrap::run(), so
+        // CurrentUser is never guest-initialized either. Found live (real
+        // fixture-regen run, not assumed): InstallService::
+        // activateCoreThemes() -> new themes() -> get_fs_themes()'s
+        // missing-screenshot fallback -> PreferencesService::getParam() ->
+        // CurrentUser::get() -> uncaught "CurrentUser not initialised".
+        // attachGlobals() is exactly the safe guest default this no-boot
+        // path needs (idempotent; a later real CurrentUser::set() in
+        // render() is never clobbered by this).
+        \Piwigo\Users\CurrentUser::attachGlobals();
+
+        // Same no-boot gap, third dependency: CurrentLogger. Found live one
+        // step later than CurrentUser (render()'s UserService::buildUser()
+        // -> getUserData() -> CurrentLogger::get()). Same construction
+        // recipe as RequestBootstrap::connect()'s (the normal request
+        // pipeline's own site) -- no DB access needed, just Config reads
+        // already valid this early (db_password was just overridden
+        // above). Unlike RequestBootstrap's equivalent site, these Config::
+        // calls are direct (no by-ref Env::applyEnvToConf() narrowing loss
+        // in between), so their declared `string` return types are already
+        // certain -- no is_string() re-guard needed.
+        \Piwigo\Core\CurrentLogger::set(new Logger([
+            'directory' => PHPWG_ROOT_PATH . Config::dataLocation() . Config::logDir(),
+            'severity' => Config::logLevel(),
+            'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . Config::dbPassword()) . '.txt',
+            'globPattern' => 'log_*.txt',
+            'archiveDays' => Config::logArchiveDays(),
+        ]));
+
         // dblayer
         if (! extension_loaded('mysqli')) {
             new HtmlService()
@@ -169,7 +207,8 @@ class InstallWizard
 
         // Is Piwigo already installed ?
         if (file_exists(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . Env::testModeInstalledStamp())) {
-            die('Piwigo is already installed');
+            new HtmlService()
+                ->fatalError('Piwigo is already installed');
         }
 
         $this->languages = new languages('utf-8');
@@ -226,7 +265,7 @@ class InstallWizard
      */
     public function analyzeForm(): void
     {
-        InstallService::installDbConnect($this->infos, $this->errors);
+        $this->conn = InstallService::installDbConnect($this->infos, $this->errors);
 
         if (count($this->errors) > 0) {
             print_r($this->errors);
@@ -278,6 +317,14 @@ class InstallWizard
     {
         /** @var array<string, mixed> $conf */
         global $conf;
+
+        // Only called by the entry shell after hasErrors() is false, which
+        // means analyzeForm() -> InstallService::installDbConnect() already
+        // built this successfully.
+        $conn = $this->conn;
+        if (! $conn instanceof Connection) {
+            throw new \LogicException('performInstall() called before a successful analyzeForm() connection.');
+        }
 
         $this->step = 2;
 
@@ -377,6 +424,7 @@ define(\'DB_COLLATE\', \'\');
 
         // tables creation, based on piwigo_structure.sql
         InstallService::executeSqlfile(
+            $conn,
             PHPWG_ROOT_PATH . 'install/piwigo_structure-mysql.sql',
             DEFAULT_PREFIX_TABLE,
             $this->prefixeTable,
@@ -384,6 +432,7 @@ define(\'DB_COLLATE\', \'\');
         );
         // We fill the tables with basic informations
         InstallService::executeSqlfile(
+            $conn,
             PHPWG_ROOT_PATH . 'install/config.sql',
             DEFAULT_PREFIX_TABLE,
             $this->prefixeTable,
@@ -394,7 +443,7 @@ define(\'DB_COLLATE\', \'\');
 INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
    VALUES (\'secret_key\',\'' . sha1(random_bytes(1000)) . '\',
    \'a secret key specific to the gallery for internal use\');';
-        \Piwigo\Db\MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION));
         \Piwigo\Config\ConfigDb::confUpdateParam('gallery_title', \Piwigo\Db\MysqliDb::realEscapeString(l10n('Just another Piwigo gallery')));
@@ -423,14 +472,16 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             'id' => 1,
             'galleries_url' => PHPWG_ROOT_PATH . 'galleries/',
         ];
-        \Piwigo\Db\MysqliDb::massInserts(Tables::sites(), array_keys($insert), [$insert]);
+        new BatchWriter($conn)
+            ->massInsert(Tables::sites(), array_keys($insert), [$insert]);
 
         // webmaster admin user
         $inserts = [
             [
                 'id' => 1, // must be the same value as webmaster_id in config.sql
                 'username' => $this->adminName,
-                'password' => new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build()))->hash($this->adminPass1),
+                'password' => new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn))
+                    ->hash($this->adminPass1),
                 'mail_address' => $this->adminMail,
             ],
             [
@@ -438,17 +489,19 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
                 'username' => 'guest',
             ],
         ];
-        \Piwigo\Db\MysqliDb::massInserts(Tables::users(), array_keys($inserts[0]), $inserts);
+        new BatchWriter($conn)
+            ->massInsert(Tables::users(), array_keys($inserts[0]), $inserts);
 
-        new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->createUserInfos([1, 2], [
-            'language' => $this->language,
-        ]);
+        new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService())
+            ->createUserInfos([1, 2], [
+                'language' => $this->language,
+            ]);
 
         // Available upgrades must be ignored after a fresh installation. To
         // make PWG avoid upgrading, we must tell it upgrades have already been
         // made.
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT NOW();'));
-        assert($row !== null);
+        $row = $conn->fetchNumeric('SELECT NOW();');
+        assert($row !== false);
         // Former top-level code define()d CURRENT_DATE from this value;
         // SEC-60 forbids define() in src/Piwigo and nothing else on the
         // install path ever reads that constant (its only real readers are
@@ -463,11 +516,12 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
                 'description' => 'upgrade included in installation',
             ];
         }
-        \Piwigo\Db\MysqliDb::massInserts(
-            Tables::upgrade(),
-            array_keys($datas[0]),
-            $datas
-        );
+        new BatchWriter($conn)
+            ->massInsert(
+                Tables::upgrade(),
+                array_keys($datas[0]),
+                $datas
+            );
     }
 
     /**
@@ -518,9 +572,17 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
         if ($this->step == 1) {
             $template->assign('install', true);
         } else {
-            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Core, 'install', [
-                'version' => AppInfo::VERSION,
-            ]);
+            // Only reached once performInstall() (step 2) already ran
+            // successfully with this same connection.
+            $conn = $this->conn;
+            if (! $conn instanceof Connection) {
+                throw new \LogicException('render() reached step 2 before a successful analyzeForm() connection.');
+            }
+
+            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn))
+                ->record('system', ActivitySystem::Core, 'install', [
+                    'version' => AppInfo::VERSION,
+                ]);
             $this->infos[] = l10n('Congratulations, Piwigo installation is completed');
 
             // The former top-level code wrapped everything below in
@@ -558,13 +620,15 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
 
             // we don't load user cache because since Piwigo 15.4.0 the calculation of user
             // cache requires $logger which is not instanciated
-            $user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->buildUser(1, false);
+            $user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService())
+                ->buildUser(1, false);
             // build_user() returns array<string, mixed>; the 'id' key we just set
             // to the literal user id 1 doesn't retain that literal type through
             // the return, so narrow to what log_user() actually accepts.
             $login_user_id = $user['id'];
             $login_user_id = is_int($login_user_id) || (is_string($login_user_id) && is_numeric($login_user_id)) ? $login_user_id : false;
-            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->logUser($login_user_id, false);
+            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())
+                ->logUser($login_user_id, false);
             $_SESSION['connected_with'] = 'pwg_ui';
 
             // Same reason: narrow 'preferences' to array without discarding
@@ -598,7 +662,8 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             // RequestBootstrap/UserBootstrap's own sync calls.
             \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
 
-            new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->save();
+            new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository($conn))
+                ->save();
 
             // email notification
             if (isset($_POST['send_credentials_by_mail'])) {

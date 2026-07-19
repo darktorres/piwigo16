@@ -549,7 +549,7 @@ final class RequestBootstrap
             // check_upgrade_feed() (migrated to a real class, P23 sub-batch
             // 8f-6; the legacy file now only carries frozen-script
             // delegates this path doesn't need).
-            if (\Piwigo\Admin\Install\UpgradeService::checkUpgradeFeed()) {
+            if (\Piwigo\Admin\Install\UpgradeService::checkUpgradeFeed($conn)) {
                 $pageState->addHeaderMessage('Some database upgrades are missing, '
                   . '<a href="' . get_absolute_root_url(false) . 'upgrade_feed.php">upgrade now</a>');
             }

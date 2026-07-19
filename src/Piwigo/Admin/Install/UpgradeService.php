@@ -11,9 +11,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install;
 
+use Doctrine\DBAL\Connection;
 use Exception;
 use Piwigo\Admin\themes;
 use Piwigo\Core\AppInfo;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
 /**
@@ -59,17 +61,14 @@ class UpgradeService
      *
      * @return array<int, string>
      */
-    public static function getTables(): array
+    public static function getTables(Connection $conn): array
     {
         $tables = [];
 
         $query = '
 SHOW TABLES
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchRow($result))) {
-            $table_name = $row[0];
+        foreach ($conn->fetchFirstColumn($query) as $table_name) {
             if (! is_string($table_name)) {
                 continue;
             }
@@ -87,7 +86,7 @@ SHOW TABLES
      * @param array<int, string> $tables
      * @return array<string, array<int, string>>
      */
-    public static function getColumnsOf(array $tables): array
+    public static function getColumnsOf(Connection $conn, array $tables): array
     {
         $columns_of = [];
 
@@ -95,12 +94,9 @@ SHOW TABLES
             $query = '
 DESC `' . $table . '`
 ;';
-            $result = \Piwigo\Db\MysqliDb::query($query);
-
             $columns_of[$table] = [];
 
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchRow($result))) {
-                $column_name = $row[0];
+            foreach ($conn->fetchFirstColumn($query) as $column_name) {
                 if (! is_string($column_name)) {
                     continue;
                 }
@@ -112,7 +108,7 @@ DESC `' . $table . '`
     }
 
     // Deactivate all non-standard plugins
-    public static function deactivateNonStandardPlugins(): void
+    public static function deactivateNonStandardPlugins(Connection $conn): void
     {
         $standard_plugins = [
             'AdminTools',
@@ -128,11 +124,10 @@ WHERE state = \'active\'
 AND id NOT IN (\'' . implode('\',\'', $standard_plugins) . '\')
 ;';
 
-        $result = \Piwigo\Db\MysqliDb::query($query);
-        $plugins = [];
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-            $plugins[] = $row['id'];
-        }
+        $plugins = array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            $conn->fetchFirstColumn($query)
+        );
 
         if (! empty($plugins)) {
             $query = '
@@ -140,7 +135,7 @@ UPDATE ' . PREFIX_TABLE . 'plugins
 SET state=\'inactive\'
 WHERE id IN (\'' . implode('\',\'', $plugins) . '\')
 ;';
-            \Piwigo\Db\MysqliDb::query($query);
+            $conn->executeStatement($query);
 
             \Piwigo\Core\PageState::current()->addInfo(l10n('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:')
                                 . '<p><i>' . implode(', ', $plugins) . '</i></p>');
@@ -148,7 +143,7 @@ WHERE id IN (\'' . implode('\',\'', $plugins) . '\')
     }
 
     // Deactivate all non-standard themes
-    public static function deactivateNonStandardThemes(): void
+    public static function deactivateNonStandardThemes(Connection $conn): void
     {
         $standard_themes = [
             'modus',
@@ -163,12 +158,11 @@ SELECT
   FROM ' . PREFIX_TABLE . 'themes
   WHERE id NOT IN (\'' . implode("','", $standard_themes) . '\')
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
         $theme_ids = [];
         $theme_names = [];
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-            $theme_ids[] = $row['id'];
-            $theme_names[] = $row['name'];
+        foreach ($conn->fetchAllAssociative($query) as $row) {
+            $theme_ids[] = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $theme_names[] = is_scalar($row['name']) ? (string) $row['name'] : '';
         }
 
         if (! empty($theme_ids)) {
@@ -177,7 +171,7 @@ DELETE
   FROM ' . PREFIX_TABLE . 'themes
   WHERE id IN (\'' . implode("','", $theme_ids) . '\')
 ;';
-            \Piwigo\Db\MysqliDb::query($query);
+            $conn->executeStatement($query);
 
             \Piwigo\Core\PageState::current()->addInfo(l10n('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:')
                                 . '<p><i>' . implode(', ', $theme_names) . '</i></p>');
@@ -190,9 +184,8 @@ SELECT theme
   FROM ' . PREFIX_TABLE . 'user_infos
   WHERE user_id = ' . $default_user_id . '
 ;';
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-            assert($row !== null);
-            [$default_theme] = $row;
+            $default_theme = $conn->fetchOne($query);
+            $default_theme = is_scalar($default_theme) ? (string) $default_theme : '';
 
             // if the default theme has just been deactivated, let's set another core theme as default
             if (in_array($default_theme, $theme_ids)) {
@@ -203,10 +196,8 @@ SELECT
   FROM ' . PREFIX_TABLE . 'themes
   WHERE id = \'' . AppInfo::DEFAULT_TEMPLATE . '\'
 ;';
-                $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-                assert($row !== null);
-                [$counter] = $row;
-                if ($counter < 1) {
+                $counter = $conn->fetchOne($query);
+                if (! is_int($counter) || $counter < 1) {
                     // we need to activate theme first
                     $themes = new themes();
                     $themes->perform_action('activate', AppInfo::DEFAULT_TEMPLATE);
@@ -218,7 +209,7 @@ UPDATE ' . PREFIX_TABLE . 'user_infos
   SET theme = \'' . AppInfo::DEFAULT_TEMPLATE . '\'
   WHERE user_id = ' . $default_user_id . '
 ;';
-                \Piwigo\Db\MysqliDb::query($query);
+                $conn->executeStatement($query);
             }
         }
     }
@@ -244,7 +235,7 @@ UPDATE ' . PREFIX_TABLE . 'user_infos
      * @return bool true when the requester is authorized to run the upgrade
      *              (webmaster session, or valid admin/webmaster credentials)
      */
-    public static function checkUpgradeAccessRights(string $current_release): bool
+    public static function checkUpgradeAccessRights(Connection $conn, string $current_release): bool
     {
         if (version_compare($current_release, '2.0', '>=') and isset($_COOKIE[session_name()])) {
             // Check if user is already connected as webmaster
@@ -256,10 +247,9 @@ SELECT status
   FROM ' . Tables::userInfos() . '
   WHERE user_id = ' . (int) $pwg_uid . '
 ;';
-                \Piwigo\Db\MysqliDb::query($query);
-
-                $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
-                if (isset($row['status']) and $row['status'] == 'webmaster') {
+                $row = $conn->fetchAssociative($query);
+                $status = $row !== false ? ($row['status'] ?? null) : null;
+                if (is_string($status) && $status === 'webmaster') {
                     return true;
                 }
             }
@@ -276,21 +266,20 @@ SELECT status
             return false;
         }
 
-        if (function_exists('get_magic_quotes_gpc') && ! @get_magic_quotes_gpc()) {
-            $username = \Piwigo\Db\MysqliDb::realEscapeString($username) ?? $username;
-        }
-
         if (version_compare($current_release, '2.0', '<')) {
             // mb_convert_encoding() always returns a string given a string input.
             $username = mb_convert_encoding($username, 'ISO-8859-1', 'UTF-8');
             $password = mb_convert_encoding($password, 'ISO-8859-1', 'UTF-8');
         }
 
+        // Parameterized below (DBAL binds $username), so the former
+        // MysqliDb::realEscapeString() call ahead of this block is gone --
+        // dead once the query it protected is no longer string-spliced.
         if (version_compare($current_release, '1.5', '<')) {
             $query = '
 SELECT password, status
 FROM ' . Tables::users() . '
-WHERE username = \'' . $username . '\'
+WHERE username = :username
 ;';
         } else {
             // \Piwigo\Config\Config::userFields() maps generic field names to table specific
@@ -304,16 +293,21 @@ SELECT u.password, ui.status
 FROM ' . Tables::users() . ' AS u
 INNER JOIN ' . Tables::userInfos() . ' AS ui
 ON u.' . $id_field . '=ui.user_id
-WHERE ' . $username_field . '=\'' . $username . '\'
+WHERE ' . $username_field . '=:username
 ;';
         }
-        $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
+        $row = $conn->fetchAssociative($query, [
+            'username' => $username,
+        ]);
+        $stored_password = is_array($row) && isset($row['password']) && is_string($row['password']) ? $row['password'] : null;
+        $stored_status = is_array($row) ? ($row['status'] ?? null) : null;
+        $stored_status = is_string($stored_status) ? $stored_status : null;
 
-        if (! is_array($row) or ! isset($row['password'])) {
+        if ($stored_password === null) {
             \Piwigo\Core\PageState::current()->addError(l10n('Invalid password!'));
-        } elseif (! new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build()))->verify($password, $row['password'])) {
+        } elseif (! new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn))->verify($password, $stored_password)) {
             \Piwigo\Core\PageState::current()->addError(l10n('Invalid password!'));
-        } elseif ($row['status'] != 'admin' and $row['status'] != 'webmaster') {
+        } elseif ($stored_status !== 'admin' and $stored_status !== 'webmaster') {
             \Piwigo\Core\PageState::current()->addError(l10n('You do not have access rights to run upgrade'));
         } else {
             return true;
@@ -345,14 +339,17 @@ WHERE ' . $username_field . '=\'' . $username . '\'
     /**
      * returns true if there are available upgrade files
      */
-    public static function checkUpgradeFeed(): bool
+    public static function checkUpgradeFeed(Connection $conn): bool
     {
         // retrieve already applied upgrades
         $query = '
 SELECT id
   FROM ' . Tables::upgrade() . '
 ;';
-        $applied = array_filter(\Piwigo\Db\MysqliDb::query2Array($query, null, 'id'), is_string(...));
+        $applied = array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            $conn->fetchFirstColumn($query)
+        );
 
         // retrieve existing upgrades
         $existing = self::getAvailableUpgradeIds();
@@ -361,9 +358,19 @@ SELECT id
         return count(array_diff($existing, $applied)) > 0;
     }
 
-    public static function upgradeDbConnect(): void
+    /**
+     * Still connects via the legacy MysqliDb:: global -- the
+     * VersionUpgrade/DbPatch classes reached later in the same upgrade
+     * request are Phase 1j's scope, not yet migrated, and still depend on
+     * that shared $mysqli global. Once it succeeds, additionally builds
+     * and returns a real DBAL Connection for this class's own retargeted
+     * call sites (see InstallService::installDbConnect()'s docblock for
+     * the same reasoning -- upgrade.php seeds Config's db_* overrides from
+     * the same $config_file include this method itself reads from, ahead
+     * of this call).
+     */
+    public static function upgradeDbConnect(): Connection
     {
-
         try {
             $db_host = \Piwigo\Config\Config::dbHost();
             $db_user = \Piwigo\Config\Config::dbUser();
@@ -379,7 +386,13 @@ SELECT id
                 $db_base
             );
             \Piwigo\Db\MysqliDb::checkVersion();
+
+            return DbConnection::build();
         } catch (Exception $e) {
+            // myError(..., true) is declared `: void`, but PHPStan proves it
+            // never actually returns here (it always reaches the private
+            // fatalError()/never path) -- no fallback statement needed
+            // after it.
             \Piwigo\Db\MysqliDb::myError(l10n($e->getMessage()), true);
         }
     }

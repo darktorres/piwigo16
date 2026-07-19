@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
@@ -31,13 +32,22 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class SearchController implements ControllerInterface
 {
+    private static function permissionService(Connection $conn): PermissionService
+    {
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        $searchConn = DbConnection::build();
+        // A single connection for the whole request -- mirrors the
+        // legacy single-global-mysqli-connection model this migration
+        // restores, and avoids the needless-reconnection pattern found
+        // in earlier construction-chain debt (Phase 1d finding).
+        $conn = DbConnection::build();
         $searchService = new SearchService(
-            new SearchRepository($searchConn),
-            new PermissionService(new PermissionRepository($searchConn), new GroupRepository($searchConn)),
+            new SearchRepository($conn),
+            self::permissionService($conn),
             new PersistentFileCache(),
             new MailService(),
             new HtmlService(),
@@ -102,7 +112,8 @@ final class SearchController implements ControllerInterface
         if (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric() or ! (bool) $last_filters_conf) {
             $fields = $default_fields;
         } else {
-            $raw_fields = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('gallery_search_filters', $default_fields);
+            $raw_fields = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository($conn))
+                ->getParam('gallery_search_filters', $default_fields);
             $fields = is_array($raw_fields) ? $raw_fields : $default_fields;
         }
 
@@ -149,7 +160,7 @@ SELECT
   WHERE id = ' . $cat_id . '
     AND id NOT IN (' . $forbidden_categories_csv . ')
 ;';
-            $found_categories = \Piwigo\Db\MysqliDb::query2Array($query);
+            $found_categories = $conn->fetchAllAssociative($query);
             if ($found_categories === []) {
                 new HtmlService()
                     ->pageNotFound(l10n('Requested album does not exist'));
@@ -165,8 +176,7 @@ SELECT
             ];
         }
 
-        $tagConn = DbConnection::build();
-        $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+        $tagService = new TagService(new TagRepository($conn), self::permissionService($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)));
 
         if (count($tagService->getAvailableTags()) > 0) {
             $tag_ids = [];
@@ -198,7 +208,7 @@ SELECT
     id
   FROM ' . Tables::images() . ' AS i
     JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  ' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
+  ' . self::permissionService($conn)->getSqlConditionFandF([
                 'forbidden_categories' => 'category_id',
                 'visible_categories' => 'category_id',
                 'visible_images' => 'id',
@@ -206,7 +216,7 @@ SELECT
     AND author IS NOT NULL
     LIMIT 1
 ;';
-            $first_author = \Piwigo\Db\MysqliDb::query2Array($query);
+            $first_author = $conn->fetchAllAssociative($query);
 
             if (count($first_author) > 0) {
                 $search['fields']['author'] = [

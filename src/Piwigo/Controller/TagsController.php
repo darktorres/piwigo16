@@ -36,7 +36,9 @@ final class TagsController implements ControllerInterface
         $displayModeParam = $request->getQueryParams()['display_mode'] ?? null;
 
         $body = LegacyRenderCapture::capture(static function () use ($displayModeParam): void {
-            global $title;
+            // $title is set and read entirely within this closure (passed
+            // straight into PageHeaderRenderer::render() below) -- no
+            // other file reads $GLOBALS['title']. Plain local, not global.
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('Tags');
@@ -62,8 +64,8 @@ final class TagsController implements ControllerInterface
 
             $template->assign('display_mode', $display_mode);
 
-            $tagConn = DbConnection::build();
-            $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+            $conn = DbConnection::build();
+            $tagService = new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)));
 
             // find all tags available for the current user
             $tags = $tagService->getAvailableTags();

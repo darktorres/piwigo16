@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use DateTimeImmutable;
+use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\DbConnection;
@@ -35,6 +36,11 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class FeedController implements ControllerInterface
 {
+    private static function userService(Connection $conn): \Piwigo\Users\UserService
+    {
+        return new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService());
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
@@ -78,7 +84,7 @@ final class FeedController implements ControllerInterface
             $feed_last_check = $feed_row['lastCheck'];
             $user_id_before = is_numeric($user['id']) ? (int) $user['id'] : null;
             if ($feed_row['userId'] !== $user_id_before) { // new user
-                $user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->buildUser($feed_row['userId'], true);
+                $user = self::userService($conn)->buildUser($feed_row['userId'], true);
                 // The feed is per-user-token, so this request's "current user"
                 // genuinely becomes the feed owner, not the real session user
                 // -- sync CurrentUser too (dual-write, matching
@@ -91,7 +97,7 @@ final class FeedController implements ControllerInterface
             $image_only = true;
             if (! \Piwigo\Auth\AccessControl::isAGuest()) {// auto session was created - so switch to guest
                 $guest_id = \Piwigo\Config\Config::guestId();
-                $user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->buildUser($guest_id, true);
+                $user = self::userService($conn)->buildUser($guest_id, true);
                 \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
             }
         }
@@ -99,9 +105,7 @@ final class FeedController implements ControllerInterface
         // Check the status now after the user has been loaded
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT NOW();'));
-        assert($row !== null);
-        [$dbnow] = $row;
+        $dbnow = $conn->fetchOne('SELECT NOW();');
         // NOW() is a MySQL builtin that always returns a valid non-null
         // datetime value, never a nullable column read.
         assert(is_string($dbnow));
@@ -235,7 +239,7 @@ final class FeedController implements ControllerInterface
         // to).
         $data_location = \Piwigo\Config\Config::dataLocation();
         if (! is_string($data_location)) {
-            die("Invalid \\Piwigo\Config\Config::dataLocation() configuration: expected a string.");
+            $htmlRenderer->fatalError("Invalid \\Piwigo\Config\Config::dataLocation() configuration: expected a string.");
         }
 
         $fileName = PHPWG_ROOT_PATH . $data_location . 'tmp';

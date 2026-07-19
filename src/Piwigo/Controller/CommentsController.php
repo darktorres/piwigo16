@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -12,6 +13,7 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -39,10 +41,21 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class CommentsController implements ControllerInterface
 {
+    private static function permissionService(Connection $conn): PermissionService
+    {
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
+
+        // A single connection for the whole request -- mirrors the
+        // legacy single-global-mysqli-connection model this migration
+        // restores, and avoids the needless-reconnection pattern found
+        // in earlier construction-chain debt (Phase 1d finding).
+        $conn = DbConnection::build();
 
         if (! \Piwigo\Config\Config::activateComments()) {
             new HtmlService()
@@ -98,15 +111,15 @@ final class CommentsController implements ControllerInterface
         $since_options = [
             1 => [
                 'label' => l10n('today'),
-                'clause' => 'date > ' . \Piwigo\Db\MysqliDb::getRecentPeriodExpression(1),
+                'clause' => 'date > ' . SqlDialect::getRecentPeriodExpression(1),
             ],
             2 => [
                 'label' => l10n('last %d days', 7),
-                'clause' => 'date > ' . \Piwigo\Db\MysqliDb::getRecentPeriodExpression(7),
+                'clause' => 'date > ' . SqlDialect::getRecentPeriodExpression(7),
             ],
             3 => [
                 'label' => l10n('last %d days', 30),
-                'clause' => 'date > ' . \Piwigo\Db\MysqliDb::getRecentPeriodExpression(30),
+                'clause' => 'date > ' . SqlDialect::getRecentPeriodExpression(30),
             ],
             4 => [
                 'label' => l10n('the beginning'),
@@ -244,7 +257,7 @@ final class CommentsController implements ControllerInterface
             $whereClauses[] = 'validated=\'true\'';
         }
 
-        $whereClauses[] = new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
+        $whereClauses[] = self::permissionService($conn)->getSqlConditionFandF([
             'forbidden_categories' => 'category_id',
             'visible_categories' => 'category_id',
             'visible_images' => 'ic.image_id',
@@ -258,7 +271,7 @@ final class CommentsController implements ControllerInterface
         $action = null;
         $edit_comment = null;
 
-        $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService());
+        $commentService = new CommentService(new CommentRepository($conn), new EphemeralKeyService(), new MailService(), new HtmlService());
 
         $actions = ['delete', 'validate', 'edit'];
         foreach ($actions as $loop_action) {
@@ -351,6 +364,7 @@ final class CommentsController implements ControllerInterface
         }
 
         $body = LegacyRenderCapture::capture(static function () use (
+            $conn,
             $url_self,
             $since,
             $since_options,
@@ -365,7 +379,9 @@ final class CommentsController implements ControllerInterface
             $whereClauses,
             $edit_comment
         ): void {
-            global $title;
+            // $title is set and read entirely within this closure (passed
+            // straight into PageHeaderRenderer::render() below) -- no
+            // other file reads $GLOBALS['title']. Plain local, not global.
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             // +---------------------------------------------------------------+
@@ -400,15 +416,14 @@ final class CommentsController implements ControllerInterface
             $query = '
 SELECT id, name, uppercats, global_rank
   FROM ' . Tables::categories() . '
-' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
+' . self::permissionService($conn)->getSqlConditionFandF([
                 'forbidden_categories' => 'id',
                 'visible_categories' => 'id',
             ], 'WHERE') . '
 ;';
-            $categoryConn = DbConnection::build();
             new CategoryService(
-                new CategoryRepository($categoryConn),
-                new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+                new CategoryRepository($conn),
+                self::permissionService($conn)
             )->displaySelectCatWrapper($query, [@$_GET['cat']], $blockname, new HtmlService(), $template, true);
 
             // Filter on recent comments...
@@ -456,10 +471,22 @@ SELECT id, name, uppercats, global_rank
 
             $where_clauses = $whereClauses;
 
+            // ANY_VALUE(ic.category_id): category_id comes from the JOINed
+            // image_category table, not functionally dependent on the
+            // GROUP BY column (comment_id) -- Piwigo\Db\DbConnection
+            // doesn't strip ONLY_FULL_GROUP_BY the way the legacy mysqli
+            // connection did (same class of issue as
+            // Ws\PwgComments::getCommentsDateRange()'s own ANY_VALUE(author)
+            // fix), so this query (already GROUP BY comment_id, unchanged
+            // from the original) needs an explicit "any value is fine, same
+            // as the old driver's own permissive default" opt-out to keep
+            // selecting exactly one arbitrary category per comment, matching
+            // the original grouping/row-count exactly rather than splitting
+            // groups by adding category_id to GROUP BY.
             $query = '
 SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
        com.image_id,
-       ic.category_id,
+       ANY_VALUE(ic.category_id) AS category_id,
        com.author,
        com.author_id,
        u.' . $email_field . ' AS user_email,
@@ -483,17 +510,21 @@ SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
             }
             $query .= '
 ;';
-            $result = \Piwigo\Db\MysqliDb::query($query);
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+            foreach ($conn->fetchAllAssociative($query) as $row) {
                 $comments[] = $row;
-                $element_ids[] = $row['image_id'];
-                $category_ids[] = $row['category_id'];
+                $row_image_id = $row['image_id'];
+                $row_category_id = $row['category_id'];
+                // image_category.image_id / .category_id are both NOT NULL
+                // columns.
+                assert(is_scalar($row_image_id) && is_scalar($row_category_id));
+                $element_ids[] = (string) $row_image_id;
+                $category_ids[] = (string) $row_category_id;
             }
-            $count_row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT FOUND_ROWS()'));
-            assert($count_row !== null);
-            [$counter] = $count_row;
-            // FOUND_ROWS() always returns a single non-null numeric value
-            assert($counter !== null);
+            // FOUND_ROWS() reflects the immediately-preceding query on the
+            // SAME connection/session -- both share $conn, no intervening
+            // query in between.
+            $counter_raw = $conn->fetchOne('SELECT FOUND_ROWS()');
+            $counter = is_numeric($counter_raw) ? (int) $counter_raw : 0;
 
             $url = PHPWG_ROOT_PATH . 'comments.php'
               . get_query_string_diff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
@@ -516,24 +547,25 @@ SELECT *
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $element_ids) . ')
 ;';
-                $elements = \Piwigo\Db\MysqliDb::query2Array($query, 'id');
+                $elements = array_column($conn->fetchAllAssociative($query), null, 'id');
 
                 // retrieving category informations
                 $query = 'SELECT id, name, permalink, uppercats
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $category_ids) . ')';
-                $categories = \Piwigo\Db\MysqliDb::query2Array($query, 'id');
+                $categories = array_column($conn->fetchAllAssociative($query), null, 'id');
 
                 foreach ($comments as $comment) {
-                    $image_id = $comment['image_id'];
+                    $image_id_raw = $comment['image_id'];
                     // comments.image_id / image_category.image_id are both
-                    // NOT NULL columns; the driver still returns every
-                    // value as string|null.
-                    assert($image_id !== null);
+                    // NOT NULL columns.
+                    assert(is_scalar($image_id_raw));
+                    $image_id = (string) $image_id_raw;
 
-                    $category_id = $comment['category_id'];
+                    $category_id_raw = $comment['category_id'];
                     // image_category.category_id is a NOT NULL column
-                    assert($category_id !== null);
+                    assert(is_scalar($category_id_raw));
+                    $category_id = (string) $category_id_raw;
 
                     $element_name = $elements[$image_id]['name'] ?? null;
                     if (is_string($element_name) && $element_name !== '' && $element_name !== '0') {
@@ -541,7 +573,7 @@ SELECT *
                     } else {
                         $file = $elements[$image_id]['file'];
                         // images.file is a NOT NULL column
-                        assert($file !== null);
+                        assert(is_string($file));
                         $name = \Piwigo\Core\StringHelper::getNameFromFile($file);
                     }
 
@@ -568,7 +600,7 @@ SELECT *
 
                     $date = $comment['date'];
                     // comments.date is a NOT NULL column
-                    assert($date !== null);
+                    assert(is_string($date));
 
                     $author_id = $comment['author_id'];
                     // comments.author_id is nullable in schema; a NULL
@@ -610,7 +642,8 @@ SELECT *
                             ]
                         );
 
-                        if ($edit_comment !== null and is_numeric($edit_comment) and (string) $comment['comment_id'] === (string) $edit_comment) {
+                        $comment_id_str = is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '';
+                        if ($edit_comment !== null and is_numeric($edit_comment) and $comment_id_str === (string) $edit_comment) {
                             $tpl_comment['IN_EDIT'] = true;
                             $key = new \Piwigo\Auth\EphemeralKeyService()
                                 ->generate(2, $image_id);

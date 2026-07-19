@@ -208,9 +208,53 @@ them when reading commit history or the replay manifest.
   Zero manual `new *Repository(`/`new *Service(` chains found anywhere in
   the domain (matches the original table's very low "New-chains: 1").
   Commit `456241849`.
-- **Next up: Phase 1f** (Ws, 24 files, 308 call sites, 9 `MysqliDb::`
-  files — needs its own multi-batch breakdown by WS resource area) — not
-  yet started.
+- **Phase 1f (Ws) — IN PROGRESS, sub-batch 1 of ~7 done (infrastructure +
+  Comments).** 24 files/12396 lines total, by far the largest domain in
+  this plan — confirmed needs the multi-batch breakdown the plan already
+  anticipated. Sub-batch 1 investigated the small/shared files first:
+  `WsInitializer`/`PwgError`/`PwgServer` needed no real changes (`PwgServer`'s
+  `die(0)` is its own protocol-level "malformed response format, dump
+  diagnostics, halt" primitive, structurally analogous to `HtmlService::
+  fatalError()`'s own internal `die(0)` — not a drop-in replacement,
+  different content-type/status/message shape, correctly left alone).
+  `WsHelper.php`'s 3 `MysqliDb::DB_RANDOM_FUNCTION` hits were a constant
+  reference, not a query — trivial rename onto the already-migrated
+  `SqlDialect::DB_RANDOM_FUNCTION` (Phase 1a); its `global $service;`/
+  `exit;` WS-error-termination pattern re-confirmed legitimate (same
+  shape as `UserBootstrap`'s own, Phase 1d).
+  **Real, previously-unlisted gap found:** `PwgExtensions.php`'s 2
+  `MysqliDb::realEscapeString()` calls are genuinely still required —
+  traced the value into `ConfigDb::confUpdateParam()`, which still builds
+  raw string-interpolated `INSERT ... VALUES('...','...')` SQL with zero
+  escaping of its own (`MysqliDb::query()`, not yet retargeted). Removing
+  the caller's pre-escaping would be a real SQL-injection regression.
+  `ConfigDb.php`'s own internal `MysqliDb::` usage isn't assigned to any
+  numbered Phase 1 sub-phase in this plan (Config domain has no 1a-1j
+  slot) — flagging as a real, confirmed gap in the plan itself, not
+  fixing it here (would ripple into ~50 other `ConfigDb::` callers this
+  phase doesn't own). `PwgComments.php` fully migrated: 5 `MysqliDb::`
+  calls onto `DbConnection` (search term escaping via `Connection::
+  quote()`, SEC-18-style, matching `SearchRepository::quote()`'s
+  precedent), 2 repeated `CommentService` chains collapsed into a private
+  static helper (`RequestBootstrap::activityService()`'s own precedent,
+  adapted). Caught 3 real PHPStan errors from DBAL's wider `mixed` row
+  type (stripslashes()/string-concat/loose-`==` on unnarrowed row
+  values) — fixed with `is_string()`/`is_scalar()` guards, matching the
+  Phase 1e finding. **Caught a real HTTP 500 via Contract tests** (not
+  PHPStan/Unit): a `GROUP BY author_id` query selecting the
+  non-functionally-dependent `author` column hit
+  `sql_mode=only_full_group_by` under DBAL (same root cause as the
+  Phase 1c/1e `DISTINCT`+`ORDER BY` bugs, different shape) — fixed with
+  `ANY_VALUE(author)`, preserving the exact original arbitrary-value-per-
+  group semantics rather than changing grouping granularity by adding
+  `author` to `GROUP BY`. Commit `b4120fb90`.
+  Remaining sub-batches (by WS resource area, largest/most complex
+  last): Permissions+Groups, Tags, Users, Core, Categories, Images (3034
+  lines, the biggest single file in the plan) — `WsDefaultMethods.php`
+  (2357 lines) confirmed clean already (pure method-registration table,
+  zero MysqliDb/globals/die-exit/manual-chains), `Protocol/*` encoders +
+  `PwgNamedArray`/`PwgNamedStruct`/`PwgRequestHandler` not yet checked
+  but absent from every grep so far, likely clean too.
 
 ## What direct investigation found (the basis for phase sequencing)
 

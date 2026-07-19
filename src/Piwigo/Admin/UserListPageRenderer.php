@@ -33,7 +33,8 @@ final class UserListPageRenderer
             new GroupRepository($conn),
             new MailService(),
             new ActivityService(new ActivityRepository($conn)),
-            new HtmlService()
+            new HtmlService(),
+            $conn
         );
     }
 

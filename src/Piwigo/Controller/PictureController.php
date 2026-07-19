@@ -101,7 +101,7 @@ final class PictureController implements ControllerInterface
 
     private static function userService(Connection $conn): UserService
     {
-        return new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), self::activityService($conn), new HtmlService());
+        return new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), self::activityService($conn), new HtmlService(), $conn);
     }
 
     private static function imageService(Connection $conn): ImageService

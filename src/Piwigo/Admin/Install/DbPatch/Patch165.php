@@ -43,7 +43,7 @@ final class Patch165 implements DbPatchInterface
             $new_value = 'none';
         }
 
-        ConfigDb::confUpdateParam('email_admin_on_new_user', $new_value);
+        ConfigDb::confUpdateParam('email_admin_on_new_user', $new_value, conn: $conn);
 
         echo "\n"
         . $this->description()

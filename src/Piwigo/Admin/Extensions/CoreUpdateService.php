@@ -199,7 +199,7 @@ final readonly class CoreUpdateService
 
         $notifyConn = \Piwigo\Db\DbConnection::build();
         new MailService()
-            ->switchLangTo(new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($notifyConn), new \Piwigo\Group\GroupRepository($notifyConn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($notifyConn)), new HtmlService())->getDefaultLanguage());
+            ->switchLangTo(new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($notifyConn), new \Piwigo\Group\GroupRepository($notifyConn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($notifyConn)), new HtmlService(), $notifyConn)->getDefaultLanguage());
 
         $content = l10n('Hello,');
         $content .= "\n\n" . l10n(

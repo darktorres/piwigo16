@@ -34,7 +34,7 @@ final class Patch115 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('comments_order', 'ASC');
+        ConfigDb::confUpdateParam('comments_order', 'ASC', conn: $conn);
 
         echo "\n"
         . $this->description()

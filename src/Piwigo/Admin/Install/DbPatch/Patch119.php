@@ -49,7 +49,7 @@ final class Patch119 implements DbPatchInterface
             unlink($derivative_conf_file);
         }
 
-        ConfigDb::confUpdateParam('derivatives', '');
+        ConfigDb::confUpdateParam('derivatives', '', conn: $conn);
 
         echo "\n"
         . $this->description()

@@ -97,7 +97,7 @@ final class UserPermPageRenderer
             [
                 'TITLE' => l10n(
                     'Manage permissions for user "%s"',
-                    new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), $htmlRenderer)
+                    new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), $htmlRenderer, $conn)
                         ->getUsername($user_id)
                 ),
                 'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),

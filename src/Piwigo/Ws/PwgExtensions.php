@@ -305,7 +305,7 @@ final class PwgExtensions
             }
             \Piwigo\Config\Config::override('updates_ignored', $updates_ignored);
 
-            \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($updates_ignored)));
+            \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', serialize($updates_ignored));
             unset($_SESSION['extensions_need_update']);
             return true;
         }
@@ -320,7 +320,7 @@ final class PwgExtensions
         }
 
         \Piwigo\Config\Config::override('updates_ignored', $updates_ignored);
-        \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($updates_ignored)));
+        \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', serialize($updates_ignored));
         unset($_SESSION['extensions_need_update']);
         return true;
     }

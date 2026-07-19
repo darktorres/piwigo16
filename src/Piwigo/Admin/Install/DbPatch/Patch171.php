@@ -39,7 +39,7 @@ final class Patch171 implements DbPatchInterface
 
         // If the webmaster_id has been modified, it must be present in local/config/config.inc.php
         // so we retrieve it and insert it into the database.
-        ConfigDb::confUpdateParam('webmaster_id', $conf['webmaster_id'] ?? 1);
+        ConfigDb::confUpdateParam('webmaster_id', $conf['webmaster_id'] ?? 1, conn: $conn);
 
         echo "\n" . $this->description() . "\n";
     }

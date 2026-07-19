@@ -271,7 +271,7 @@ class updates
             $notifyConn = \Piwigo\Db\DbConnection::build();
             // send email
             new MailService()
-                ->switchLangTo(new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($notifyConn), new \Piwigo\Group\GroupRepository($notifyConn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($notifyConn)), new HtmlService())->getDefaultLanguage());
+                ->switchLangTo(new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($notifyConn), new \Piwigo\Group\GroupRepository($notifyConn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($notifyConn)), new HtmlService(), $notifyConn)->getDefaultLanguage());
 
             $content = l10n('Hello,');
             $content .= "\n\n" . l10n(
@@ -489,7 +489,7 @@ class updates
             $updates_ignored[$type] = $ignore_list;
         }
         \Piwigo\Config\Config::override('updates_ignored', $updates_ignored);
-        \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($updates_ignored)));
+        \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', serialize($updates_ignored));
     }
 
     // Check if extension have been upgraded since last check

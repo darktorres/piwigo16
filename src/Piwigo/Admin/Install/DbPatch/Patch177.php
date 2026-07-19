@@ -41,7 +41,7 @@ final class Patch177 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::loadConfFromDb();
+        ConfigDb::loadConfFromDb(conn: $conn);
 
         // get default sizes from derivative_std_params
         $default_sizes = ImageStdParams::get_default_sizes();

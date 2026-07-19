@@ -34,7 +34,7 @@ final class Patch142 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('comments_enable_website', 'true');
+        ConfigDb::confUpdateParam('comments_enable_website', 'true', conn: $conn);
 
         echo "\n" . $this->description() . "\n";
     }

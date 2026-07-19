@@ -198,7 +198,7 @@ SELECT
                         $user_args['auth_key'] = $authkey['auth_key'];
                     }
 
-                    $user_language = is_string($u['language']) ? $u['language'] : new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), new HtmlService())->getDefaultLanguage();
+                    $user_language = is_string($u['language']) ? $u['language'] : new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), new HtmlService(), $conn)->getDefaultLanguage();
                     $user_email = is_string($u['email']) ? $u['email'] : '';
 
                     new MailService()

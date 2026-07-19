@@ -34,8 +34,8 @@ final class Patch167 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('index_search_in_set_button', true);
-        ConfigDb::confUpdateParam('index_search_in_set_action', true);
+        ConfigDb::confUpdateParam('index_search_in_set_button', true, conn: $conn);
+        ConfigDb::confUpdateParam('index_search_in_set_action', true, conn: $conn);
 
         echo "\n" . $this->description() . "\n";
     }

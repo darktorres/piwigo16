@@ -38,8 +38,8 @@ final class Patch130 implements DbPatchInterface
         $query = 'ALTER TABLE `' . Tables::comments() . '` ADD `email` varchar(255) default NULL;';
         $conn->executeStatement($query);
 
-        ConfigDb::confUpdateParam('comments_author_mandatory', 'false');
-        ConfigDb::confUpdateParam('comments_email_mandatory', 'false');
+        ConfigDb::confUpdateParam('comments_author_mandatory', 'false', conn: $conn);
+        ConfigDb::confUpdateParam('comments_email_mandatory', 'false', conn: $conn);
 
         echo "\n" . $this->description() . "\n";
     }

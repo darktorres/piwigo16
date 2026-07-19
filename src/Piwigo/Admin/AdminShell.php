@@ -155,7 +155,7 @@ final class AdminShell
                 new MailService(),
                 new ActivityService(new ActivityRepository($conn)),
                 new HtmlService()
-            )->syncUsers();
+            , $conn)->syncUsers();
         }
 
         // +-------------------------------------------------------------------+

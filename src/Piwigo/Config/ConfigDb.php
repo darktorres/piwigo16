@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Session\SessionService;
 
@@ -12,10 +15,17 @@ use Piwigo\Session\SessionService;
  * P23 batch 8f-4: the 5 legacy config free functions
  * (include/functions.inc.php's load_conf_from_db()/conf_update_param()/
  * conf_delete_param()/conf_get_param()/pwg_is_dbconf_writeable(), file now
- * deleted) migrated verbatim as static methods -- raw MysqliDb SQL and the
- * legacy `$conf` global semantics deliberately preserved, matching this
- * batch's refactor-only rule (the 8f-2 MysqliDb precedent: "migrate to OOP
- * only, later phases modify behavior").
+ * deleted) migrated as static methods, the legacy `$conf` global semantics
+ * preserved. DI+DBAL migration (Legacy Coupling Retirement, post-Phase 1j):
+ * every DB-touching method takes an optional trailing `?Connection $conn`
+ * (lazy-optional-default, matching the established high-caller-count-class
+ * pattern used elsewhere -- MailService/HtmlService -- since real callers
+ * span all ~63 files across the whole app; `$conn ??= DbConnection::build()`
+ * keeps every existing caller working unchanged). `confUpdateParam()`'s
+ * INSERT ... ON DUPLICATE KEY UPDATE and `confDeleteParam()`'s DELETE ...
+ * IN(...) are now bound parameters -- the former raw string-splice was a
+ * real SQL-injection surface for any caller passing user-influenced
+ * $param/$value, not just an execution-API detail.
  *
  * Deliberately NOT folded into Piwigo\Config\ConfigService, whose
  * similarly-named instance methods are a different, non-interchangeable
@@ -70,33 +80,35 @@ final class ConfigDb
      *
      * @param string $condition SQL condition
      */
-    public static function loadConfFromDb(string $condition = '', bool $dieOnConditionWithNoResult = true): void
+    public static function loadConfFromDb(string $condition = '', bool $dieOnConditionWithNoResult = true, ?Connection $conn = null): void
     {
         /** @var array<string, mixed> $conf */
         global $conf;
+
+        $conn ??= DbConnection::build();
 
         $query = '
 SELECT param, value
  FROM ' . Tables::config() . '
  ' . (! empty($condition) ? 'WHERE ' . $condition : '') . '
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
+        $rows = $conn->fetchAllAssociative($query);
 
-        if ((\Piwigo\Db\MysqliDb::numRows($result) == 0) and ! empty($condition) and $dieOnConditionWithNoResult) {
+        if (count($rows) === 0 and ! empty($condition) and $dieOnConditionWithNoResult) {
             self::fatalError('No configuration data');
         }
 
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach ($rows as $row) {
             $val = $row['value'] ?? '';
             // If the field is true or false, the variable is transformed into a boolean value.
-            if ($val == 'true') {
+            if (is_scalar($val) && (string) $val === 'true') {
                 $val = true;
-            } elseif ($val == 'false') {
+            } elseif (is_scalar($val) && (string) $val === 'false') {
                 $val = false;
             }
-            // config.param is `varchar(40) NOT NULL` in the schema, but the
-            // fetch helper's return type is nullable per-column; guard rather
-            // than trust it blindly since it feeds an array key.
+            // config.param is `varchar(40) NOT NULL` in the schema, but a
+            // mixed row value isn't trusted blindly since it feeds an array
+            // key.
             $param = $row['param'] ?? null;
             if (! is_string($param)) {
                 continue;
@@ -113,20 +125,23 @@ SELECT param, value
      *
      * @since 14
      */
-    public static function pwgIsDbconfWriteable(): bool
+    public static function pwgIsDbconfWriteable(?Connection $conn = null): bool
     {
+        $conn ??= DbConnection::build();
+
         [$param, $value] = ['pwg_is_dbconf_writeable_' . SessionService::get()->generateKey(12), date('c') . ' ' . SessionService::get()->generateKey(20)];
 
-        self::confUpdateParam($param, $value);
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT value FROM ' . Tables::config() . ' WHERE param = \'' . $param . '\''));
-        assert($row !== null);
-        [$dbvalue] = $row;
+        self::confUpdateParam($param, $value, false, null, $conn);
+        $row = $conn->fetchAssociative('SELECT value FROM ' . Tables::config() . ' WHERE param = :param', [
+            'param' => $param,
+        ]);
+        $dbvalue = $row !== false && is_scalar($row['value']) ? (string) $row['value'] : null;
 
-        if ($dbvalue != $value) {
+        if ($dbvalue !== $value) {
             return false;
         }
 
-        self::confDeleteParam($param);
+        self::confDeleteParam($param, $conn);
         return true;
     }
 
@@ -138,19 +153,21 @@ SELECT param, value
      * @param ?callable $parser function to apply to the value before save in database
      * (eg: serialize, json_encode) will not be applied to *$conf* if *$parser* is *true*
      */
-    public static function confUpdateParam(string $param, $value, $updateGlobal = false, $parser = null): void
+    public static function confUpdateParam(string $param, $value, $updateGlobal = false, $parser = null, ?Connection $conn = null): void
     {
+        $conn ??= DbConnection::build();
+
         if ($parser != null) {
             $dbValue = call_user_func($parser, $value);
         } elseif (is_array($value) || is_object($value)) {
             $dbValue = addslashes(serialize($value));
         } else {
-            $dbValue = \Piwigo\Db\MysqliDb::booleanToString($value);
+            $dbValue = SqlDialect::booleanToString($value);
         }
 
-        // call_user_func() and \Piwigo\Db\MysqliDb::booleanToString() are both typed mixed in/out;
-        // a custom $parser or an untouched non-scalar $value could still hand
-        // back something that isn't safe to splice into SQL as-is.
+        // call_user_func() and SqlDialect::booleanToString() are both typed
+        // mixed in/out; a custom $parser or an untouched non-scalar $value
+        // could still hand back something that isn't a bindable scalar.
         if (! is_scalar($dbValue) && $dbValue !== null) {
             $dbValue = addslashes(serialize($dbValue));
         }
@@ -158,11 +175,15 @@ SELECT param, value
         $query = '
 INSERT INTO
   ' . Tables::config() . ' (param, value)
-  VALUES(\'' . $param . '\', \'' . $dbValue . '\')
-  ON DUPLICATE KEY UPDATE value = \'' . $dbValue . '\'
+  VALUES(:param, :value)
+  ON DUPLICATE KEY UPDATE value = :value2
 ;';
 
-        \Piwigo\Db\MysqliDb::query($query);
+        $conn->executeStatement($query, [
+            'param' => $param,
+            'value' => $dbValue,
+            'value2' => $dbValue,
+        ]);
 
         if ($updateGlobal) {
             /** @var array<string, mixed> $conf */
@@ -178,7 +199,7 @@ INSERT INTO
      *
      * @param string|string[] $params
      */
-    public static function confDeleteParam($params): void
+    public static function confDeleteParam($params, ?Connection $conn = null): void
     {
         /** @var array<string, mixed> $conf */
         global $conf;
@@ -190,11 +211,13 @@ INSERT INTO
             return;
         }
 
-        $query = '
-DELETE FROM ' . Tables::config() . '
-  WHERE param IN(\'' . implode('\',\'', $params) . '\')
-;';
-        \Piwigo\Db\MysqliDb::query($query);
+        $conn ??= DbConnection::build();
+
+        $conn->createQueryBuilder()
+            ->delete(Tables::config())
+            ->where('param IN (:params)')
+            ->setParameter('params', $params, \Doctrine\DBAL\ArrayParameterType::STRING)
+            ->executeStatement();
 
         foreach ($params as $param) {
             unset($conf[$param]);

@@ -109,7 +109,7 @@ final class GalleryController implements ControllerInterface
             self::permissionService($conn),
             self::tagService($conn),
             new SearchService(new SearchRepository($conn), self::permissionService($conn), new PersistentFileCache(), new MailService(), new HtmlService()),
-            new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), self::activityService($conn), new HtmlService()),
+            new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), self::activityService($conn), new HtmlService(), $conn),
         )->populate();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);

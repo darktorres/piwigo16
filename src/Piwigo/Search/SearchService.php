@@ -1153,7 +1153,7 @@ final readonly class SearchService
         $expression = new QExpression($q, $scopes);
 
         $inflector = null;
-        $userService = $this->userService ?? new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $this->htmlRenderer);
+        $userService = $this->userService ?? new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $this->htmlRenderer, DbConnection::build());
         $langCode = substr($userService->getDefaultLanguage(), 0, 2);
         $className = '\\Piwigo\\Search\\Inflector\\Inflector_' . $langCode;
         if (class_exists($className)) {

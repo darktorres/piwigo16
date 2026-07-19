@@ -122,7 +122,7 @@ final readonly class ExtensionUpdateChecker
         }
 
         \Piwigo\Config\Config::override('updates_ignored', $updatesIgnored);
-        \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($updatesIgnored)));
+        \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', serialize($updatesIgnored));
     }
 
     /**

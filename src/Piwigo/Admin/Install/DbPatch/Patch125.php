@@ -14,7 +14,6 @@ namespace Piwigo\Admin\Install\DbPatch;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\ConfigDb;
 use Piwigo\Db\BatchWriter;
-use Piwigo\Db\MysqliDb;
 
 /**
  * Former install/db/125-database.php (P23 sub-batch 8g-2). The original
@@ -63,14 +62,14 @@ final class Patch125 implements DbPatchInterface
 
         $dbconf = [];
         $conf_orig = $conf;
-        ConfigDb::loadConfFromDb();
+        ConfigDb::loadConfFromDb(conn: $conn);
         $dbconf = $conf;
         $conf = $conf_orig;
 
         $banner_orig = $dbconf['page_banner'];
         $banner_new = $this->replaceHotlinks($dbconf['page_banner']);
         if ($banner_orig != $banner_new) {
-            ConfigDb::confUpdateParam('page_banner', MysqliDb::realEscapeString($banner_new));
+            ConfigDb::confUpdateParam('page_banner', $banner_new, conn: $conn);
         }
 
         //

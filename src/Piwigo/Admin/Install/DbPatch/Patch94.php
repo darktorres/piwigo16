@@ -19,7 +19,7 @@ use Piwigo\Db\Tables;
 /**
  * Former install/db/94-database.php (P23 sub-batch 8g-1). The
  * $conf_orig swap operates on the true global (declared below), and the
- * bare load_conf_from_db() call became ConfigDb::loadConfFromDb() --
+ * bare load_conf_from_db() call became ConfigDb::loadConfFromDb(conn: $conn) --
  * identical semantics, both mutate global $conf. The long-dropped
  * 'waiting' table has no Tables:: accessor; its name is built from
  * $prefixeTable exactly as the original's PREFIX_TABLE concatenation did.
@@ -54,7 +54,7 @@ final class Patch94 implements DbPatchInterface
 
         // upload_user_access
         $conf_orig = $conf;
-        ConfigDb::loadConfFromDb();
+        ConfigDb::loadConfFromDb(conn: $conn);
         $user_upload_conf['upload_user_access'] = $conf['upload_user_access'];
         $conf = $conf_orig;
 

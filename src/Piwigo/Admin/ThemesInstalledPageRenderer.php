@@ -86,7 +86,7 @@ final class ThemesInstalledPageRenderer
         $fs_themes = $extension_scanner->scan(ExtensionType::Theme);
         uasort($fs_themes, new HtmlService()->nameCompare(...));
 
-        $default_theme = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService())
+        $default_theme = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), $conn)
             ->getDefaultTheme();
 
         $db_theme_ids = array_keys($extension_repository->findAll(ExtensionType::Theme));

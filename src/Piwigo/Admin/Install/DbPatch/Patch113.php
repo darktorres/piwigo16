@@ -34,10 +34,10 @@ final class Patch113 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('original_resize', 'false');
-        ConfigDb::confUpdateParam('original_resize_maxwidth', 2016);
-        ConfigDb::confUpdateParam('original_resize_maxheight', 2016);
-        ConfigDb::confUpdateParam('original_resize_quality', 95);
+        ConfigDb::confUpdateParam('original_resize', 'false', conn: $conn);
+        ConfigDb::confUpdateParam('original_resize_maxwidth', 2016, conn: $conn);
+        ConfigDb::confUpdateParam('original_resize_maxheight', 2016, conn: $conn);
+        ConfigDb::confUpdateParam('original_resize_quality', 95, conn: $conn);
 
         echo "\n"
         . $this->description()

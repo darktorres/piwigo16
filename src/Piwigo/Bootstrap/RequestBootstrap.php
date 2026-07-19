@@ -417,6 +417,7 @@ final class RequestBootstrap
             new MailService(),
             self::activityService($conn),
             new HtmlService(),
+            $conn,
         ));
         Lang::load('common.lang');
         if (\Piwigo\Auth\AccessControl::isAdmin() || (defined('IN_ADMIN') and IN_ADMIN)) {

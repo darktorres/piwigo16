@@ -36,7 +36,7 @@ final class Patch170 implements DbPatchInterface
     {
         // we set it to false in this upgrade script, as opposed to the default value
         // for a new installation, because it was the default behavior before Piwigo 14
-        ConfigDb::confUpdateParam('upload_detect_duplicate', false);
+        ConfigDb::confUpdateParam('upload_detect_duplicate', false, conn: $conn);
 
         echo "\n" . $this->description() . "\n";
     }

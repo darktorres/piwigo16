@@ -54,7 +54,8 @@ final class PictureModifyPageRenderer
             new GroupRepository($conn),
             new MailService(),
             new ActivityService(new ActivityRepository($conn)),
-            new HtmlService()
+            new HtmlService(),
+            $conn
         );
     }
 

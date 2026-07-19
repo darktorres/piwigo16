@@ -34,8 +34,8 @@ final class Patch157 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('show_mobile_app_banner_in_admin', true);
-        ConfigDb::confUpdateParam('show_mobile_app_banner_in_gallery', false);
+        ConfigDb::confUpdateParam('show_mobile_app_banner_in_admin', true, conn: $conn);
+        ConfigDb::confUpdateParam('show_mobile_app_banner_in_gallery', false, conn: $conn);
 
         echo "\n" . $this->description() . "\n";
     }

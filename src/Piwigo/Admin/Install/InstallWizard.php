@@ -293,7 +293,7 @@ class InstallWizard
         if (empty($this->adminMail)) {
             $this->errors[] = l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         } else {
-            $error_mail_address = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->validateMailAddress(null, $this->adminMail);
+            $error_mail_address = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), \Piwigo\Db\DbConnection::build())->validateMailAddress(null, $this->adminMail);
             if (! empty($error_mail_address)) {
                 $this->errors[] = $error_mail_address;
             }
@@ -445,19 +445,20 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
    \'a secret key specific to the gallery for internal use\');';
         $conn->executeStatement($query);
 
-        \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION));
-        \Piwigo\Config\ConfigDb::confUpdateParam('gallery_title', \Piwigo\Db\MysqliDb::realEscapeString(l10n('Just another Piwigo gallery')));
+        \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION), conn: $conn);
+        \Piwigo\Config\ConfigDb::confUpdateParam('gallery_title', l10n('Just another Piwigo gallery'), conn: $conn);
 
         \Piwigo\Config\ConfigDb::confUpdateParam(
             'page_banner',
-            '<h1>%gallery_title%</h1>' . "\n\n<p>" . \Piwigo\Db\MysqliDb::realEscapeString(l10n('Welcome to my photo gallery')) . '</p>'
+            '<h1>%gallery_title%</h1>' . "\n\n<p>" . l10n('Welcome to my photo gallery') . '</p>',
+            conn: $conn
         );
 
         // fill languages table, only activate the current language
         $this->languages->perform_action('activate', $this->language);
 
         // fill $conf global array
-        \Piwigo\Config\ConfigDb::loadConfFromDb();
+        \Piwigo\Config\ConfigDb::loadConfFromDb(conn: $conn);
 
         // PWG_CHARSET (required for building the fs_themes array in the
         // themes class) is guaranteed defined here: the entry shell
@@ -492,7 +493,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
         new BatchWriter($conn)
             ->massInsert(Tables::users(), array_keys($inserts[0]), $inserts);
 
-        new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService())
+        new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), $conn)
             ->createUserInfos([1, 2], [
                 'language' => $this->language,
             ]);
@@ -620,7 +621,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
 
             // we don't load user cache because since Piwigo 15.4.0 the calculation of user
             // cache requires $logger which is not instanciated
-            $user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService())
+            $user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), $conn)
                 ->buildUser(1, false);
             // build_user() returns array<string, mixed>; the 'id' key we just set
             // to the literal user id 1 doesn't retain that literal type through

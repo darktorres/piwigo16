@@ -35,7 +35,7 @@ final class Patch175 implements DbPatchInterface
     public function apply(Connection $conn): void
     {
         // Force use of standard pages on update
-        ConfigDb::confUpdateParam('use_standard_pages', true);
+        ConfigDb::confUpdateParam('use_standard_pages', true, conn: $conn);
 
         echo "\n" . $this->description() . "\n";
     }

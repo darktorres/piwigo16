@@ -87,7 +87,7 @@ final class IdentificationController implements ControllerInterface
 
                 $conn = \Piwigo\Db\DbConnection::build();
                 if (\Piwigo\Config\Config::insensitiveCaseLogon()) {
-                    $username = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService())
+                    $username = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), $conn)
                         ->searchCaseUsername($username);
                 }
 

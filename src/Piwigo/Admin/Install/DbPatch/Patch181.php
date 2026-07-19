@@ -41,7 +41,7 @@ final class Patch181 implements DbPatchInterface
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        ConfigDb::loadConfFromDb();
+        ConfigDb::loadConfFromDb(conn: $conn);
 
         // if the filters_views is not already registered in the config table, no need
         // to update it because it will be initialized with all filters
@@ -50,7 +50,7 @@ final class Patch181 implements DbPatchInterface
 
             if (! isset($conf['filters_views']['expert'])) {
                 $conf['filters_views']['expert'] = $conf['default_filters_views']['expert'];
-                ConfigDb::confUpdateParam('filters_views', $conf['filters_views']);
+                ConfigDb::confUpdateParam('filters_views', $conf['filters_views'], conn: $conn);
             }
         }
 

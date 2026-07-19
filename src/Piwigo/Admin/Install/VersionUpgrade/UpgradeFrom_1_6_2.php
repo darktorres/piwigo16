@@ -304,7 +304,7 @@ UPDATE ' . $prefixeTable . 'comments
             $conn->executeStatement($query);
         }
 
-        ConfigDb::loadConfFromDb();
+        ConfigDb::loadConfFromDb(conn: $conn);
 
         $query = '
 UPDATE ' . Tables::userInfos() . "

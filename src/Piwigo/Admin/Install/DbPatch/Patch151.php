@@ -34,8 +34,8 @@ final class Patch151 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('index_sizes_icon', 'true');
-        ConfigDb::confUpdateParam('picture_sizes_icon', 'true');
+        ConfigDb::confUpdateParam('index_sizes_icon', 'true', conn: $conn);
+        ConfigDb::confUpdateParam('picture_sizes_icon', 'true', conn: $conn);
 
         echo "\n" . $this->description() . "\n";
     }

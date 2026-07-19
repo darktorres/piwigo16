@@ -261,7 +261,7 @@ SELECT id
                 $current_release = '15.0.0';
             } else {
                 // confirm that the database is in the same version as source code files
-                \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION));
+                \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION), conn: $conn);
 
                 header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
                 echo 'No upgrade required, the database structure is up to date';
@@ -321,10 +321,10 @@ SELECT id
                 ->apply($conn);
             $mysql_changes = \Piwigo\Admin\Install\DbPatch\DatabaseConfigChanges::drain();
 
-            \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION));
+            \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION), conn: $conn);
 
             // Conf delete param on last major update for whats new popin to be displayed when changing major version
-            \Piwigo\Config\ConfigDb::confDeleteParam('last_major_update');
+            \Piwigo\Config\ConfigDb::confDeleteParam('last_major_update', $conn);
 
             // Something to add in database.inc.php? (install/upgrade_*.php
             // scripts may push onto $mysql_changes)
@@ -347,7 +347,7 @@ SELECT id
             // Deactivate non standard extensions
             UpgradeService::deactivateNonStandardPlugins($conn);
             UpgradeService::deactivateNonStandardThemes($conn);
-            UpgradeService::deactivateTemplates();
+            UpgradeService::deactivateTemplates($conn);
 
             $upgrade_end = \Piwigo\Core\TimingHelper::getMoment();
 
@@ -392,7 +392,7 @@ REPLACE INTO ' . Tables::plugins() . '
                     $conn->executeStatement($query);
 
                     // we need the secret key for get_pwg_token()
-                    \Piwigo\Config\ConfigDb::loadConfFromDb();
+                    \Piwigo\Config\ConfigDb::loadConfFromDb(conn: $conn);
 
                     $template->assign(
                         [

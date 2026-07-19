@@ -61,6 +61,7 @@ final class UserBootstrap
             new \Piwigo\Mail\MailService(),
             new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)),
             new HtmlService(),
+            $conn,
         );
 
         $guest_id_int = \Piwigo\Config\Config::guestId();

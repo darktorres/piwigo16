@@ -34,11 +34,11 @@ final class Patch152 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('index_edit_icon', 'true');
-        ConfigDb::confUpdateParam('index_caddie_icon', 'true');
-        ConfigDb::confUpdateParam('picture_edit_icon', 'true');
-        ConfigDb::confUpdateParam('picture_caddie_icon', 'true');
-        ConfigDb::confUpdateParam('picture_representative_icon', 'true');
+        ConfigDb::confUpdateParam('index_edit_icon', 'true', conn: $conn);
+        ConfigDb::confUpdateParam('index_caddie_icon', 'true', conn: $conn);
+        ConfigDb::confUpdateParam('picture_edit_icon', 'true', conn: $conn);
+        ConfigDb::confUpdateParam('picture_caddie_icon', 'true', conn: $conn);
+        ConfigDb::confUpdateParam('picture_representative_icon', 'true', conn: $conn);
 
         echo "\n" . $this->description() . "\n";
     }

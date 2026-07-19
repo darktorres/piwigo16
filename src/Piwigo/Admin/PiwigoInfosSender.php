@@ -352,7 +352,7 @@ SELECT
         $piwigoInfos['general_stats']['nb_private_themes'] = count(array_keys($privateThemes));
         $piwigoInfos['general_stats']['nb_themes'] = $piwigoInfos['general_stats']['nb_private_themes'] + count($piwigoInfos['themes']);
 
-        $defaultTheme = new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), new HtmlService())
+        $defaultTheme = new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), new HtmlService(), $conn)
             ->getDefaultTheme();
         if (isset($privateThemes[$defaultTheme])) {
             $defaultTheme = 'private theme';
@@ -384,7 +384,7 @@ SELECT
         }
         $piwigoInfos['themes_usage'] = $themesUsage;
 
-        $piwigoInfos['general_stats']['default_language'] = new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), new HtmlService())->getDefaultLanguage();
+        $piwigoInfos['general_stats']['default_language'] = new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), new HtmlService(), $conn)->getDefaultLanguage();
 
         $query = '
 SELECT

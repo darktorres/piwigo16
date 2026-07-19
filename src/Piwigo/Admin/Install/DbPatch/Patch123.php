@@ -48,7 +48,7 @@ final class Patch123 implements DbPatchInterface
 
         $dbconf = [];
         $conf_orig = $conf;
-        ConfigDb::loadConfFromDb();
+        ConfigDb::loadConfFromDb(conn: $conn);
         $dbconf = $conf;
         $conf = $conf_orig;
 
@@ -58,28 +58,30 @@ final class Patch123 implements DbPatchInterface
 
         if ($dbconf['upload_form_hd_keep']) {
             if ($dbconf['upload_form_hd_resize']) {
-                ConfigDb::confUpdateParam('original_resize', 'true');
-                ConfigDb::confUpdateParam('original_resize_maxwidth', $dbconf['upload_form_hd_maxwidth']);
-                ConfigDb::confUpdateParam('original_resize_maxheight', $dbconf['upload_form_hd_maxheight']);
-                ConfigDb::confUpdateParam('original_resize_quality', $dbconf['upload_form_hd_quality']);
+                ConfigDb::confUpdateParam('original_resize', 'true', conn: $conn);
+                ConfigDb::confUpdateParam('original_resize_maxwidth', $dbconf['upload_form_hd_maxwidth'], conn: $conn);
+                ConfigDb::confUpdateParam('original_resize_maxheight', $dbconf['upload_form_hd_maxheight'], conn: $conn);
+                ConfigDb::confUpdateParam('original_resize_quality', $dbconf['upload_form_hd_quality'], conn: $conn);
             }
         } else {
             // The user has decided to remove the high quality. In Piwigo 2.4, this
             // setting does not exists anymore, but we can simulate it by an original
             // resize with 2.3 websize dimensions
-            ConfigDb::confUpdateParam('original_resize', 'true');
+            ConfigDb::confUpdateParam('original_resize', 'true', conn: $conn);
 
             ConfigDb::confUpdateParam(
                 'original_resize_maxwidth',
-                is_numeric($dbconf['upload_form_websize_maxwidth']) ? $dbconf['upload_form_websize_maxwidth'] : 800
+                is_numeric($dbconf['upload_form_websize_maxwidth']) ? $dbconf['upload_form_websize_maxwidth'] : 800,
+                conn: $conn
             );
 
             ConfigDb::confUpdateParam(
                 'original_resize_maxheight',
-                is_numeric($dbconf['upload_form_websize_maxheight']) ? $dbconf['upload_form_websize_maxheight'] : 600
+                is_numeric($dbconf['upload_form_websize_maxheight']) ? $dbconf['upload_form_websize_maxheight'] : 600,
+                conn: $conn
             );
 
-            ConfigDb::confUpdateParam('original_resize_quality', $dbconf['upload_form_hd_quality']);
+            ConfigDb::confUpdateParam('original_resize_quality', $dbconf['upload_form_hd_quality'], conn: $conn);
         }
 
         $types = ImageStdParams::get_default_sizes();

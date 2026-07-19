@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
@@ -21,7 +22,8 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\WsError;
-use Piwigo\Db\DbConnection;
+use Piwigo\Db\BatchWriter;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
@@ -54,6 +56,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         private MailerInterface $mailer,
         private ActivityLoggerInterface $activityLogger,
         private HtmlRenderingInterface $htmlRenderer,
+        private Connection $conn,
     ) {}
 
     /**
@@ -261,7 +264,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $user_fields = \Piwigo\Config\Config::userFields();
         $userId = $this->repo->insertUser([
             $user_fields['username'] => $login,
-            $user_fields['password'] => new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build()))->hash($password),
+            $user_fields['password'] => new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($this->conn))->hash($password),
             $user_fields['email'] => $mailAddress,
         ]);
 
@@ -499,7 +502,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             Lang::buildArgs('Password: %s', str_repeat('*', $length)),
             Lang::buildArgs('Email: %s', $mailAddress),
             Lang::buildArgs('', ''),
-            Lang::buildArgs('If you think you\'ve received this email in error, please contact us at %s', new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())->getWebmasterMailAddress()),
+            Lang::buildArgs('If you think you\'ve received this email in error, please contact us at %s', new \Piwigo\Users\UserRepository($this->conn)->getWebmasterMailAddress()),
         ];
 
         $gallery_title = \Piwigo\Config\Config::galleryTitle();
@@ -588,8 +591,8 @@ SELECT ';
   FROM ' . Tables::users() . '
   WHERE ' . $user_fields['id'] . ' = \'' . $userId . '\'';
 
-        $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
-        if ($row === false || $row === null) {
+        $row = $this->conn->fetchAssociative($query);
+        if ($row === false) {
             throw new \Exception('UserService::getUserData(): no such user_id ' . $userId);
         }
 
@@ -604,9 +607,9 @@ SELECT
   WHERE ui.user_id = ' . $userId . '
   GROUP BY ui.user_id
 ;';
-            $counter_row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-            $counter = $counter_row !== null ? $counter_row[0] : 0;
-            if ($counter != 1) {
+            $counter_row = $this->conn->fetchNumeric($query);
+            $counter = $counter_row !== false && is_numeric($counter_row[0]) ? (int) $counter_row[0] : 0;
+            if ($counter !== 1) {
                 $this->createUserInfos([$userId]);
             }
         }
@@ -623,9 +626,8 @@ SELECT
   WHERE ui.user_id = ' . $userId . '
 ;';
 
-        $result = \Piwigo\Db\MysqliDb::query($query);
-        $user_infos_row = \Piwigo\Db\MysqliDb::fetchAssoc($result);
-        if ($user_infos_row === false || $user_infos_row === null) {
+        $user_infos_row = $this->conn->fetchAssociative($query);
+        if ($user_infos_row === false) {
             throw new \Exception('UserService::getUserData(): user_infos fetch failed for user_id ' . $userId);
         }
 
@@ -634,9 +636,9 @@ SELECT
 
         foreach ($userdata as &$value) {
             // If the field is true or false, the variable is transformed into a boolean value.
-            if ($value == 'true') {
+            if (is_scalar($value) && (string) $value === 'true') {
                 $value = true;
-            } elseif ($value == 'false') {
+            } elseif (is_scalar($value) && (string) $value === 'false') {
                 $value = false;
             }
         }
@@ -675,8 +677,8 @@ SELECT
   FROM ' . Tables::userCache() . '
   WHERE user_id=' . $userId . '
 ;';
-                        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-                        assert($row !== null);
+                        $row = $this->conn->fetchNumeric($query);
+                        assert($row !== false);
                         [$nb_cache_lines] = $row;
 
                         $logger_msg = $logger_msg_prefix . 'user_cache generation waiting k=' . $k . ' ';
@@ -718,10 +720,9 @@ SELECT
                 $status = $userdata['status'];
                 assert(is_string($status));
 
-                $categoryConn = DbConnection::build();
                 $forbidden_categories = new PermissionService(
-                    new PermissionRepository($categoryConn),
-                    new GroupRepository($categoryConn)
+                    new PermissionRepository($this->conn),
+                    new GroupRepository($this->conn)
                 )->getForbiddenCategories($userId, $status);
                 $userdata['forbidden_categories'] = $forbidden_categories;
 
@@ -735,10 +736,13 @@ SELECT DISTINCT(id)
   FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
   WHERE category_id NOT IN (' . $forbidden_categories . ')
     AND level>' . $level;
-                $forbidden_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
+                $forbidden_ids = array_map(
+                    static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+                    array_column($this->conn->fetchAllAssociative($query), 'id')
+                );
 
                 if (empty($forbidden_ids)) {
-                    $forbidden_ids[] = 0;
+                    $forbidden_ids[] = '0';
                 }
                 $image_access_type = 'NOT IN'; // TODO maybe later
                 $userdata['image_access_type'] = $image_access_type;
@@ -750,10 +754,10 @@ SELECT COUNT(DISTINCT(image_id)) as total
   FROM ' . Tables::imageCategory() . '
   WHERE category_id NOT IN (' . $forbidden_categories . ')
     AND image_id ' . $image_access_type . ' (' . $image_access_list . ')';
-                $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-                assert($row !== null);
+                $row = $this->conn->fetchNumeric($query);
+                assert($row !== false);
                 [$nb_total_images] = $row;
-                assert($nb_total_images !== null);
+                $nb_total_images = is_scalar($nb_total_images) ? (string) $nb_total_images : '0';
                 $userdata['nb_total_images'] = $nb_total_images;
 
                 // now we update user cache categories
@@ -764,8 +768,8 @@ SELECT COUNT(DISTINCT(image_id)) as total
                 // subsequent read below goes through a freshly-narrowed
                 // local variable instead of re-reading $userdata.
                 $user_cache_cats = new CategoryService(
-                    new CategoryRepository($categoryConn),
-                    new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+                    new CategoryRepository($this->conn),
+                    new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn))
                 )->getComputedCategories($userdata, null);
                 if (! AccessControl::isAdmin($status)) { // for non admins we forbid categories with no image (feature 1053)
                     $forbidden_ids = [];
@@ -794,39 +798,40 @@ SELECT COUNT(DISTINCT(image_id)) as total
                 $query = '
 DELETE FROM ' . Tables::userCacheCategories() . '
   WHERE user_id = ' . $userId;
-                \Piwigo\Db\MysqliDb::query($query);
+                $this->conn->executeStatement($query);
 
                 // Due to concurrency issues, we ask MySQL to ignore errors on
                 // insert. This may happen when cache needs refresh and that Piwigo is
                 // called "very simultaneously".
-                \Piwigo\Db\MysqliDb::massInserts(
-                    Tables::userCacheCategories(),
-                    [
-                        'user_id', 'cat_id',
-                        'date_last', 'max_date_last', 'nb_images', 'count_images', 'nb_categories', 'count_categories',
-                    ],
-                    // \Piwigo\Db\MysqliDb::massInserts() only reads values (row shape/data), never
-                    // this array's own keys -- CategoryService::
-                    // getComputedCategories() keys by cat_id (int|string, a
-                    // raw DB fetch value) for the removeComputedCategory()
-                    // lookups above, not relevant here
-                    array_values($user_cache_cats),
-                    [
-                        'ignore' => true,
-                    ]
-                );
+                new BatchWriter($this->conn)
+                    ->massInsert(
+                        Tables::userCacheCategories(),
+                        [
+                            'user_id', 'cat_id',
+                            'date_last', 'max_date_last', 'nb_images', 'count_images', 'nb_categories', 'count_categories',
+                        ],
+                        // BatchWriter::massInsert() only reads values (row shape/data), never
+                        // this array's own keys -- CategoryService::
+                        // getComputedCategories() keys by cat_id (int|string, a
+                        // raw DB fetch value) for the removeComputedCategory()
+                        // lookups above, not relevant here
+                        array_values($user_cache_cats),
+                        [
+                            'ignore' => true,
+                        ]
+                    );
 
                 // update user cache
                 $query = '
 DELETE FROM ' . Tables::userCache() . '
   WHERE user_id = ' . $userId;
-                \Piwigo\Db\MysqliDb::query($query);
+                $this->conn->executeStatement($query);
 
-                // \Piwigo\Db\MysqliDb::booleanToString() only returns non-string when its input
+                // SqlDialect::booleanToString() only returns non-string when its input
                 // isn't a bool (@return mixed in
                 // dblayer/functions_mysqli.inc.php); $need_update is always a
                 // real bool here, so the result is guaranteed to be a string.
-                $need_update_str = \Piwigo\Db\MysqliDb::booleanToString($need_update);
+                $need_update_str = SqlDialect::booleanToString($need_update);
                 assert(is_string($need_update_str));
 
                 // for the same reason as user_cache_categories, we ignore error on
@@ -842,7 +847,7 @@ INSERT IGNORE INTO ' . Tables::userCache() . '
   . $forbidden_categories . '\',' . $nb_total_images . ',' .
   (empty($last_photo_date) ? 'NULL' : '\'' . $last_photo_date . '\'') .
   ',\'' . $image_access_type . '\',\'' . $image_access_list . '\')';
-                \Piwigo\Db\MysqliDb::query($query);
+                $this->conn->executeStatement($query);
 
                 \Piwigo\Core\UniqueExecLock::ends($cache_generation_token_name);
                 $logger->info($logger_msg_prefix . 'user_cache generated, executed in ' . \Piwigo\Core\TimingHelper::getElapsedTime($user_cache_generation_start_time, \Piwigo\Core\TimingHelper::getMoment()));
@@ -877,21 +882,27 @@ SELECT DISTINCT f.image_id
   FROM ' . Tables::favorites() . ' AS f INNER JOIN ' . Tables::imageCategory() . ' AS ic
     ON f.image_id = ic.image_id
   WHERE f.user_id = ' . $user_id_str . '
-  ' . new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))->getSqlConditionFandF(
+  ' . new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn))->getSqlConditionFandF(
             [
                 'forbidden_categories' => 'ic.category_id',
             ],
             'AND'
         ) . '
 ;';
-        $authorizeds = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
+        $authorizeds = array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            array_column($this->conn->fetchAllAssociative($query), 'image_id')
+        );
 
         $query = '
 SELECT image_id
   FROM ' . Tables::favorites() . '
   WHERE user_id = ' . $user_id_str . '
 ;';
-        $favorites = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
+        $favorites = array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            array_column($this->conn->fetchAllAssociative($query), 'image_id')
+        );
 
         $to_deletes = array_diff($favorites, $authorizeds);
         if (count($to_deletes) > 0) {
@@ -900,7 +911,7 @@ DELETE FROM ' . Tables::favorites() . '
   WHERE image_id IN (' . implode(',', $to_deletes) . ')
     AND user_id = ' . $user_id_str . '
 ;';
-            \Piwigo\Db\MysqliDb::query($query);
+            $this->conn->executeStatement($query);
         }
     }
 
@@ -1034,8 +1045,8 @@ DELETE FROM ' . Tables::favorites() . '
         $last_photo_date = is_string($last_photo_date) ? $last_photo_date : '';
 
         return $dbField . '>=LEAST('
-          . \Piwigo\Db\MysqliDb::getRecentPeriodExpression($recent_period)
-          . ',' . \Piwigo\Db\MysqliDb::getRecentPeriodExpression(1, $last_photo_date) . ')';
+          . SqlDialect::getRecentPeriodExpression($recent_period)
+          . ',' . SqlDialect::getRecentPeriodExpression(1, $last_photo_date) . ')';
     }
 
     /**
@@ -1216,7 +1227,10 @@ SELECT
   FROM ' . Tables::userInfos() . '
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-                    $admin_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id');
+                    $admin_ids = array_map(
+                        static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+                        array_column($this->conn->fetchAllAssociative($query), 'user_id')
+                    );
 
                     $current_user_id_str = (string) CurrentUser::get()->id;
 
@@ -1235,7 +1249,7 @@ SELECT
 
                 $password_param = $params['password'];
                 assert(is_string($password_param));
-                $updates[$user_fields['password']] = new PasswordService(new PasswordRepository(DbConnection::build()))->hash($password_param);
+                $updates[$user_fields['password']] = new PasswordService(new PasswordRepository($this->conn))->hash($password_param);
             }
         }
 
@@ -1277,7 +1291,7 @@ SELECT
   FROM ' . Tables::userInfos() . '
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-                $protected_users = array_merge($protected_users, \Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id'));
+                $protected_users = array_merge($protected_users, array_column($this->conn->fetchAllAssociative($query), 'user_id'));
             }
 
             // status update query is separated from the rest as not applying to the same
@@ -1337,35 +1351,36 @@ SELECT
         }
 
         if (! empty($params['expand']) or @$params['expand'] === false) {
-            $updates_infos['expand'] = \Piwigo\Db\MysqliDb::booleanToString($params['expand']);
+            $updates_infos['expand'] = SqlDialect::booleanToString($params['expand']);
         }
 
         if (! empty($params['show_nb_comments']) or @$params['show_nb_comments'] === false) {
-            $updates_infos['show_nb_comments'] = \Piwigo\Db\MysqliDb::booleanToString($params['show_nb_comments']);
+            $updates_infos['show_nb_comments'] = SqlDialect::booleanToString($params['show_nb_comments']);
         }
 
         if (! empty($params['show_nb_hits']) or @$params['show_nb_hits'] === false) {
-            $updates_infos['show_nb_hits'] = \Piwigo\Db\MysqliDb::booleanToString($params['show_nb_hits']);
+            $updates_infos['show_nb_hits'] = SqlDialect::booleanToString($params['show_nb_hits']);
         }
 
         if (! empty($params['enabled_high']) or @$params['enabled_high'] === false) {
-            $updates_infos['enabled_high'] = \Piwigo\Db\MysqliDb::booleanToString($params['enabled_high']);
+            $updates_infos['enabled_high'] = SqlDialect::booleanToString($params['enabled_high']);
         }
 
         // perform updates
-        \Piwigo\Db\MysqliDb::singleUpdate(
-            Tables::users(),
-            $updates,
-            [
-                $user_fields['id'] => $user_ids[0],
-            ]
-        );
+        new BatchWriter($this->conn)
+            ->singleUpdate(
+                Tables::users(),
+                $updates,
+                [
+                    $user_fields['id'] => $user_ids[0],
+                ]
+            );
 
         $authService = new AuthService(
-            new AuthRepository(DbConnection::build()),
+            new AuthRepository($this->conn),
             $this->activityLogger,
             $this->htmlRenderer,
-            new PasswordService(new PasswordRepository(DbConnection::build())),
+            new PasswordService(new PasswordRepository($this->conn)),
             new CookieService(),
         );
 
@@ -1383,7 +1398,7 @@ UPDATE ' . Tables::userInfos() . ' SET
     status = "' . $update_status . '"
   WHERE user_id IN(' . implode(',', array_map(strval(...), $user_ids_for_status)) . ')
 ;';
-            \Piwigo\Db\MysqliDb::query($query);
+            $this->conn->executeStatement($query);
 
             // we delete sessions, ie disconnect, for users if status becomes "guest".
             // It's like deactivating the user.
@@ -1412,7 +1427,7 @@ UPDATE ' . Tables::userInfos() . ' SET ';
             $query .= '
   WHERE user_id IN(' . implode(',', array_map(strval(...), $user_ids)) . ')
 ;';
-            \Piwigo\Db\MysqliDb::query($query);
+            $this->conn->executeStatement($query);
         }
 
         // manage association to groups
@@ -1430,7 +1445,7 @@ DELETE
   FROM ' . Tables::userGroup() . '
   WHERE user_id IN (' . implode(',', array_map(strval(...), $user_ids)) . ')
 ;';
-            \Piwigo\Db\MysqliDb::query($query);
+            $this->conn->executeStatement($query);
 
             // we remove all provided groups that do not really exist
             $query = '
@@ -1439,7 +1454,7 @@ SELECT
   FROM `' . Tables::groups() . '`
   WHERE id IN (' . implode(',', array_map(strval(...), $group_ids_param)) . ')
 ;';
-            $group_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
+            $group_ids = array_column($this->conn->fetchAllAssociative($query), 'id');
 
             // if only -1 (a group id that can't exist) is in the list, then no
             // group is associated
@@ -1456,7 +1471,8 @@ SELECT
                     }
                 }
 
-                \Piwigo\Db\MysqliDb::massInserts(Tables::userGroup(), array_keys($inserts[0]), $inserts);
+                new BatchWriter($this->conn)
+                    ->massInsert(Tables::userGroup(), array_keys($inserts[0]), $inserts);
             }
         }
 

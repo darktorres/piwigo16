@@ -20,7 +20,7 @@ use Piwigo\Db\Tables;
 /**
  * Former install/db/104-database.php (P23 sub-batch 8g-2). The bare
  * load_conf_from_db()/boolean_to_string() calls became
- * ConfigDb::loadConfFromDb()/MysqliDb::booleanToString().
+ * ConfigDb::loadConfFromDb(conn: $conn)/MysqliDb::booleanToString().
  */
 final class Patch104 implements DbPatchInterface
 {
@@ -42,7 +42,7 @@ final class Patch104 implements DbPatchInterface
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        ConfigDb::loadConfFromDb();
+        ConfigDb::loadConfFromDb(conn: $conn);
 
         $upload_form_config = [
             'websize_resize' => true,

@@ -93,7 +93,7 @@ final class RegisterController implements ControllerInterface
             // "someone tried to register your username" email instead of
             // the requester ever seeing an error here).
             $conn = DbConnection::build();
-            $registration_result = new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService())
+            $registration_result = new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), $conn)
                 ->registerUser(
                     $post_login,
                     $post_password,

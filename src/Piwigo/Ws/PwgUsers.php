@@ -50,7 +50,7 @@ final class PwgUsers
 {
     private static function userService(): UserService
     {
-        return new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new MailService(), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService());
+        return new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new MailService(), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService(), DbConnection::build());
     }
 
     /**

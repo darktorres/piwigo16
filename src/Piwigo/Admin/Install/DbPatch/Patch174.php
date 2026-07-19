@@ -36,7 +36,7 @@ final class Patch174 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('secret_key', sha1(random_bytes(1000)), true);
+        ConfigDb::confUpdateParam('secret_key', sha1(random_bytes(1000)), true, conn: $conn);
 
         echo "\n" . $this->description() . "\n";
     }

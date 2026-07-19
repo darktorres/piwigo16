@@ -34,7 +34,7 @@ final class Patch138 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('mail_theme', 'clear');
+        ConfigDb::confUpdateParam('mail_theme', 'clear', conn: $conn);
 
         echo "\n" . $this->description() . "\n";
     }

@@ -109,7 +109,7 @@ namespace Piwigo\Tests\Integration {
             Config::override('available_permission_levels', [0, 1, 2, 4, 8]);
 
             $this->conn = DbConnection::build();
-            $this->service = new UserService(new UserRepository($this->conn), new GroupRepository($this->conn), new MailService(), new ActivityService(new ActivityRepository($this->conn)), new HtmlService());
+            $this->service = new UserService(new UserRepository($this->conn), new GroupRepository($this->conn), new MailService(), new ActivityService(new ActivityRepository($this->conn)), new HtmlService(), $this->conn);
         }
 
         public function test_validate_mail_address_accepts_an_unused_address(): void

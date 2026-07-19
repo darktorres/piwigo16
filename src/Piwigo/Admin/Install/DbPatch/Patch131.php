@@ -34,7 +34,7 @@ final class Patch131 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('nb_categories_page', '50');
+        ConfigDb::confUpdateParam('nb_categories_page', '50', conn: $conn);
 
         echo "\n" . $this->description() . "\n";
     }

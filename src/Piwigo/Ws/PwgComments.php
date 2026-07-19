@@ -48,6 +48,7 @@ final class PwgComments
      */
     public static function getList(array $params, PwgServer &$service): PwgError|array
     {
+        $conn = DbConnection::build();
 
         if (! \Piwigo\Config\Config::activateComments()) {
             return new PwgError(403, 'Comments are disabled');
@@ -96,7 +97,12 @@ final class PwgComments
         // reset all filters during search
         if (! empty($params['search'])) {
             $where_clauses = ['1=1'];
-            $where_clauses[] = 'content LIKE "%' . \Piwigo\Db\MysqliDb::realEscapeString($params['search']) . '%"';
+            // [SEC-18] real DBAL driver escaping via Connection::quote()
+            // (includes its own surrounding quotes), replacing the
+            // original's MysqliDb::realEscapeString() -- same "free-text
+            // term spliced into a larger hand-built WHERE fragment"
+            // rationale as Search\SearchRepository::quote().
+            $where_clauses[] = 'content LIKE ' . $conn->quote('%' . $params['search'] . '%');
         }
 
         // summary
@@ -109,7 +115,7 @@ FROM ' . Tables::comments() . '
 WHERE ' . implode(' AND ', $where_clauses) . '
 ;';
 
-        $summary = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
+        $summary = $conn->fetchAssociative($query);
         if (! is_array($summary)) {
             return new PwgError(500, 'Unable to compute comments summary');
         }
@@ -160,15 +166,15 @@ SELECT
   ORDER BY c.date DESC, c.id DESC
   LIMIT ' . $params['per_page'] * $params['page'] . ', ' . $params['per_page'] . '
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-
         $list = [];
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach ($conn->fetchAllAssociative($query) as $row) {
+
+            $row_image_id = $row['image_id'];
 
             $medium_derivative = DerivativeImage::get_one(
                 ImageStdParams::MEDIUM,
                 [
-                    'id' => $row['image_id'],
+                    'id' => $row_image_id,
                     'path' => $row['path'],
                     'representative_ext' => $row['representative_ext'],
                 ]
@@ -178,22 +184,26 @@ SELECT
             assert($medium_derivative instanceof DerivativeImage);
             $medium = $medium_derivative->get_url();
 
+            $row_author = is_string($row['author']) ? $row['author'] : null;
             if (empty($row['author_id']) or (is_numeric($row['author_id']) and (int) $row['author_id'] === \Piwigo\Config\Config::guestId())) {
-                $author_name = $row['author'];
+                $author_name = $row_author;
             } else {
-                $author_name = stripslashes($row['username'] ?? $row['author'] ?? l10n('guest'));
+                $row_username = $row['username'] ?? null;
+                $author_name = stripslashes((is_string($row_username) ? $row_username : null) ?? $row_author ?? l10n('guest'));
             }
 
-            // date/date_available are NOT NULL columns but the driver still
-            // types every fetched value as string|null; format_date()'s
-            // phpDoc param forbids null, so fall back to false (its "no date"
-            // sentinel) if that ever isn't the case.
+            // date/date_available are NOT NULL DATETIME columns -- always
+            // string under both the legacy mysqli driver and DBAL (native
+            // int/float casting only applies to INT/DECIMAL/FLOAT columns,
+            // never temporal ones); format_date()'s phpDoc param forbids
+            // null, so fall back to false (its "no date" sentinel) if that
+            // ever isn't the case.
             $comment_date = is_string($row['date']) ? $row['date'] : false;
             $comment_date_available = is_string($row['date_available']) ? $row['date_available'] : false;
 
             $list[] = [
                 'id' => $row['id'],
-                'admin_link' => get_root_url() . 'admin.php?page=photo-' . $row['image_id'],
+                'admin_link' => get_root_url() . 'admin.php?page=photo-' . (is_scalar($row_image_id) ? $row_image_id : ''),
                 'medium_url' => $medium,
                 'file' => $row['file'],
                 'image_date_available' => \Piwigo\Core\DateHelper::formatDate($comment_date_available, ['day_name', 'day', 'month', 'year', 'time']),
@@ -202,7 +212,7 @@ SELECT
                 'date' => \Piwigo\Core\DateHelper::formatDate($comment_date, ['day_name', 'day', 'month', 'year', 'time']),
                 'content' => trigger_change('render_comment_content', $row['content']),
                 'raw_content' => $row['content'],
-                'is_pending' => ($row['validated'] == 'false'),
+                'is_pending' => is_string($row['validated']) && $row['validated'] === 'false',
             ];
         }
 
@@ -215,15 +225,24 @@ FROM ' . Tables::comments() . '
 WHERE ' . implode(' AND ', $where_clauses) . '
 ;';
 
-        $dates = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
+        $dates = $conn->fetchAssociative($query);
         if (! is_array($dates)) {
             return new PwgError(500, 'Unable to compute comments date range');
         }
 
         unset($where_clauses['author_id']);
+        // ANY_VALUE(author): `author` isn't functionally dependent on the
+        // GROUP BY column (author_id) -- Piwigo\Db\DbConnection doesn't
+        // strip ONLY_FULL_GROUP_BY the way the legacy mysqli connection
+        // did, so this query (already GROUP BY author_id, unchanged from
+        // the original) needs an explicit "any value is fine, same as the
+        // old driver's own permissive default" opt-out to keep selecting
+        // exactly one arbitrary author name per author_id, matching the
+        // original grouping/row-count exactly rather than splitting groups
+        // by adding author to GROUP BY.
         $query = '
 SELECT
-  author,
+  ANY_VALUE(author) AS author,
   author_id,
   count(*) as nb_authors
 FROM ' . Tables::comments() . '
@@ -231,7 +250,7 @@ WHERE ' . implode(' AND ', $where_clauses) . '
 GROUP BY author_id
 ;';
 
-        $nb_authors_in = \Piwigo\Db\MysqliDb::query2Array($query);
+        $nb_authors_in = $conn->fetchAllAssociative($query);
 
         return [
             'summary' => $summary,
@@ -265,8 +284,7 @@ GROUP BY author_id
         }
 
         $params['comment_id'] = array_unique($params['comment_id']);
-        new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService())
-            ->deleteComment($params['comment_id']);
+        self::commentService()->deleteComment($params['comment_id']);
         return 'Comment successfully deleted';
     }
 
@@ -286,8 +304,18 @@ GROUP BY author_id
         }
 
         $params['comment_id'] = array_unique($params['comment_id']);
-        new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService())
-            ->validateComment($params['comment_id']);
+        self::commentService()->validateComment($params['comment_id']);
         return 'Comment successfully validated';
+    }
+
+    /**
+     * Constructed identically in delete()/validate() -- both static
+     * methods, no shared instance state to inject into, same
+     * "private static helper" precedent as
+     * Bootstrap\RequestBootstrap::activityService().
+     */
+    private static function commentService(): CommentService
+    {
+        return new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService());
     }
 }

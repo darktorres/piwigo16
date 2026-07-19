@@ -208,8 +208,8 @@ them when reading commit history or the replay manifest.
   Zero manual `new *Repository(`/`new *Service(` chains found anywhere in
   the domain (matches the original table's very low "New-chains: 1").
   Commit `456241849`.
-- **Phase 1f (Ws) — IN PROGRESS, sub-batch 1 of ~7 done (infrastructure +
-  Comments).** 24 files/12396 lines total, by far the largest domain in
+- **Phase 1f (Ws) — IN PROGRESS, sub-batch 2 of ~7 done (Permissions +
+  Groups).** 24 files/12396 lines total, by far the largest domain in
   this plan — confirmed needs the multi-batch breakdown the plan already
   anticipated. Sub-batch 1 investigated the small/shared files first:
   `WsInitializer`/`PwgError`/`PwgServer` needed no real changes (`PwgServer`'s
@@ -248,11 +248,35 @@ them when reading commit history or the replay manifest.
   `ANY_VALUE(author)`, preserving the exact original arbitrary-value-per-
   group semantics rather than changing grouping granularity by adding
   `author` to `GROUP BY`. Commit `b4120fb90`.
+  Sub-batch 2 (Permissions+Groups): `PwgPermissions.php` fully migrated
+  — 3 `SELECT`+loop queries onto `$conn->fetchAllAssociative()`,
+  `MysqliDb::query2Array($query, null, 'id')` onto the equivalent
+  `array_column($conn->fetchAllAssociative($query), 'id')` (the
+  `key_name === null` branch of `query2Array()` is exactly
+  `array_column`), `MysqliDb::massInserts()` onto
+  `BatchWriter::massInsert()` (same class Phase 1a/1b already
+  established for ~20 other call sites), 2 raw `DELETE` queries onto
+  `$conn->executeStatement()`. Fixed 3 PHPStan errors:
+  `intval(mixed)` isn't accepted by PHPStan's stub for DBAL's wider row
+  type, guarded with `is_scalar(...) ? intval(...) : 0`.
+  `PwgGroups.php` had zero `MysqliDb::` calls but the exact "same recipe
+  repeated" anti-pattern this whole plan targets: `new GroupService(new
+  GroupRepository(...), new ActivityService(...), new AuditService(...))`
+  repeated 7 times across `add`/`delete`/`setInfo`/`addUser`/`merge`/
+  `duplicate`/`deleteUser` — collapsed into a private static
+  `groupService()` helper (same shape as
+  `RequestBootstrap::activityService()`/`PwgComments::commentService()`,
+  now established 3 times). Left the single-occurrence
+  `new GroupRepository(...)` in `getList()` and the single-occurrence
+  `new AuditService(...)` audit-record call in `add()` alone, matching
+  the "don't touch non-repeated chains" precedent from
+  `NotificationByMailSender.php` (Phase 1a/1b/1c gap-closure). Commit
+  `2f4ff6e3e`.
   Remaining sub-batches (by WS resource area, largest/most complex
-  last): Permissions+Groups, Tags, Users, Core, Categories, Images (3034
-  lines, the biggest single file in the plan) — `WsDefaultMethods.php`
-  (2357 lines) confirmed clean already (pure method-registration table,
-  zero MysqliDb/globals/die-exit/manual-chains), `Protocol/*` encoders +
+  last): Tags, Users, Core, Categories, Images (3034 lines, the biggest
+  single file in the plan) — `WsDefaultMethods.php` (2357 lines)
+  confirmed clean already (pure method-registration table, zero
+  MysqliDb/globals/die-exit/manual-chains), `Protocol/*` encoders +
   `PwgNamedArray`/`PwgNamedStruct`/`PwgRequestHandler` not yet checked
   but absent from every grep so far, likely clean too.
 

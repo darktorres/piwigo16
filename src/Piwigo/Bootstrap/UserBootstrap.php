@@ -46,18 +46,21 @@ final class UserBootstrap
          * @var array<string, mixed>
          */
         global $user;
-        // Set by Piwigo\Ws\WsInitializer::init(), called conditionally below
-        // (it publishes the shared PwgServer to $GLOBALS['service'] itself,
-        // preserving the deleted include/ws_init.inc.php's top-level
-        // global-scope contract).
-        global $service;
 
+        $conn = DbConnection::build();
         $authService = new AuthService(
-            new AuthRepository(DbConnection::build()),
-            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())),
+            new AuthRepository($conn),
+            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)),
             new HtmlService(),
-            new PasswordService(new PasswordRepository(DbConnection::build())),
+            new PasswordService(new PasswordRepository($conn)),
             new CookieService(),
+        );
+        $userService = new \Piwigo\Users\UserService(
+            new \Piwigo\Users\UserRepository($conn),
+            new \Piwigo\Group\GroupRepository($conn),
+            new \Piwigo\Mail\MailService(),
+            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)),
+            new HtmlService(),
         );
 
         $guest_id_int = \Piwigo\Config\Config::guestId();
@@ -95,8 +98,8 @@ final class UserBootstrap
             $remote_user = self::resolveApacheRemoteUser($_SERVER);
 
             if ($remote_user !== null) {
-                if (! (bool) ($user['id'] = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getUserId($remote_user))) {
-                    $user['id'] = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())
+                if (! (bool) ($user['id'] = $userService->getUserId($remote_user))) {
+                    $user['id'] = $userService
                         ->registerUser($remote_user, '', '', false)['userId'] ?? false;
                 }
             }
@@ -104,7 +107,7 @@ final class UserBootstrap
 
         // automatic login by authentication key
         if (isset($_GET['auth'])) {
-            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->authKeyLogin($_GET['auth']);
+            $authService->authKeyLogin($_GET['auth']);
         }
 
         // HTTP_AUTHORIZATION api_key
@@ -116,11 +119,25 @@ final class UserBootstrap
             and isset($_REQUEST['method'])
             and is_string($_REQUEST['method'])
         ) {
-            $auth_header = \Piwigo\Db\MysqliDb::realEscapeString($_SERVER['HTTP_X_PIWIGO_API']) ?? null;
+            // $_SERVER['HTTP_X_PIWIGO_API'] is already known non-empty by the
+            // enclosing condition; AuthRepository::findAuthKeyDetails() (what
+            // authKeyLogin() below ultimately calls) uses a real bound DBAL
+            // parameter, so the real_escape_string()-style pre-escaping this
+            // line used to apply was dead weight even before the DBAL
+            // migration -- the regex authKeyLogin() itself validates this
+            // against ([a-z0-9]/pkid-.../ only) can't contain anything
+            // needing SQL escaping in the first place.
+            $auth_header = $_SERVER['HTTP_X_PIWIGO_API'];
 
             if ((bool) $auth_header) {
-                $authenticate = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->authKeyLogin($auth_header, true);
+                $authenticate = $authService->authKeyLogin($auth_header, true);
                 if (! $authenticate) {
+                    // WsInitializer::init() already publishes the shared
+                    // PwgServer to $GLOBALS['service'] itself as its own side
+                    // effect (preserving the deleted include/ws_init.inc.php
+                    // top-level global-scope contract) -- this assignment is
+                    // a plain local read of its return value, not a second
+                    // publication, so it doesn't need `global $service;`.
                     $service = \Piwigo\Ws\WsInitializer::init();
                     $service->sendResponse(new PwgError(401, 'Invalid api_key'));
                     exit;
@@ -173,7 +190,7 @@ final class UserBootstrap
         // guest_id fallback already used earlier in this file.
         $user_id_int = is_numeric($user['id']) ? (int) $user['id'] : $guest_id_int;
 
-        $user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->buildUser($user_id_int, $user_use_cache);
+        $user = $userService->buildUser($user_id_int, $user_use_cache);
         // Legacy Coupling Retirement Track A batch A3: sync CurrentUser here,
         // not only in RequestBootstrap::connect() after this method returns
         // -- AccessControl::isAGuest()/isGeneric() right below already read
@@ -186,7 +203,7 @@ final class UserBootstrap
         // CurrentUser in their own setUp(), masking the gap).
         \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
 
-        if (\Piwigo\Config\Config::browserLanguage() and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric()) and (bool) ($language = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getBrowserLanguage())) {
+        if (\Piwigo\Config\Config::browserLanguage() and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric()) and (bool) ($language = $userService->getBrowserLanguage())) {
             $user['language'] = $language;
             if (is_string($language)) {
                 \Piwigo\Users\CurrentUser::updateLanguage($language);

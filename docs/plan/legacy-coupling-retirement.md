@@ -143,9 +143,49 @@ them when reading commit history or the replay manifest.
   verifying it's truly dead needs tracing Bootstrap's execution order,
   Phase 1d's own territory, not a quick grep. Left untouched; worth
   revisiting once 1d is underway. Commit `412ff004e`.
-- **Next up: Phase 1d** (Bootstrap, 9 files/51 call sites — the
-  widest-blast-radius single sub-phase, see its own note above) — not yet
-  started.
+- **Phase 1d (Bootstrap) — DONE.** All 9 files re-investigated directly
+  (`RequestPipeline`/`CommonBootstrap`/`CliBootstrap`/`AdminDispatcher`/
+  `PageTail`/`SentryBootstrap`/`SessionBootstrap` needed zero changes —
+  already container-resolved or zero-arg-only). `UserBootstrap`/
+  `RequestBootstrap` had the real debt: 2 genuine `MysqliDb::` calls
+  retargeted (a bare `SELECT NOW()` onto `Connection::fetchOne()`; a
+  `singleUpdate()` onto a new `ApiKeyRepository::updateLastNotifiedOn()`
+  method) — the other `MysqliDb::` hits in `RequestBootstrap::connect()`
+  (`connect`/`checkCharset`/`myError`/`setHtmlRenderer`) are the literal
+  mysqli connection bootstrap itself, structurally necessary until
+  `MysqliDb.php` is retired at 1k, correctly left alone. Found and fixed
+  a real, non-cosmetic issue: `DbConnection::build()` returns a **fresh**
+  `Connection` on every call (no internal caching) — `RequestBootstrap::
+  finalize()` alone had 11 separate calls, meaning up to 11 needless
+  physical DB connections on every single request; consolidated to one
+  `$conn` per method, reused throughout (same pattern as `configure()`'s
+  connect()/checkCharset() already used, now applied consistently). Also
+  eliminated real repeated-construction waste in `UserBootstrap::
+  initialize()` (the exact same `AuthService`/`UserService` chain
+  constructed fresh 3x/4x within one method) by hoisting each to a single
+  local variable built once. Two additional small, carefully-verified
+  fixes: `UserBootstrap`'s `global $service;` was redundant (confirmed
+  `Ws\WsInitializer::init()` already writes `$GLOBALS['service']` as its
+  own side effect, independent of this method's own local reassignment)
+  demoted to a plain local; `MysqliDb::realEscapeString()` on the
+  `HTTP_X_PIWIGO_API` header was dead pre-escaping (confirmed
+  `AuthRepository::findAuthKeyDetails()`, what it ultimately feeds,
+  already uses a bound DBAL parameter, and the value is regex-validated
+  to `[a-z0-9]`/`pkid-...` shapes that can't contain anything needing SQL
+  escaping in the first place) — same "defensive cast tied to a legacy
+  nullable return type" pattern as `SectionInitializer.php` in 1c.
+  `$conf`/`$user`/`$t2`/`$template`/`$filter` globals all confirmed
+  genuinely necessary (these files ARE the bootstrap-owned seeding/
+  dual-write-bridge points, not leftover debt) — left untouched, matching
+  the same reasoning already applied to Search/Section's `$page`/
+  `$template` in 1c. The 4 remaining `die()`/`exit()` calls
+  (WS-response-then-terminate in `UserBootstrap`, install-redirect +
+  gallery-locked-maintenance-page in `RequestBootstrap`) were each
+  individually investigated and confirmed structurally necessary
+  (matching the plan's own "not bootstrap-time code that's fine as-is"
+  carve-out for 1d) — not silently skipped. Commit TBD.
+- **Next up: Phase 1e** (Core, 46 files, mostly infrastructure — low
+  construction density but 6 `MysqliDb::` call sites) — not yet started.
 
 ## What direct investigation found (the basis for phase sequencing)
 
@@ -337,15 +377,13 @@ conversion and DI/construction changes don't apply there the same way.
    `SectionUrlParse`/`RandomIndexRedirectResolver` needed no changes at all
    (clean already); `SectionPopulator`/`SectionInitializer` were the only
    Section files with real `MysqliDb::`/manual-chain debt.
-4. **1d — Bootstrap (9 files, 51 call sites — confirmed genuine manual
-   construction by reading `RequestBootstrap.php`/`UserBootstrap.php`
-   directly, not bootstrap-time code that's fine as-is).** This is the
-   request-construction root that runs on every single request — do this
-   only after 1a-1c prove the pattern on lower-traffic-risk domains
-   first, since a mistake here has the widest blast radius of any single
-   file in the plan (not because other domains structurally depend on
-   Bootstrap's own construction — they don't; `CategoryRepository` etc.
-   are independently constructed and don't reach into Bootstrap).
+4. **1d — Bootstrap (9 files. DONE.)** See Progress log above. 7 of the 9
+   files needed zero changes (already container-resolved or zero-arg-only
+   construction); `UserBootstrap.php`/`RequestBootstrap.php` had the real
+   debt (2 genuine `MysqliDb::` calls, repeated-construction waste,
+   redundant global, dead pre-escaping) — full verification gate
+   including Contract/Integration/Browser/Visual all green, confirming
+   the widest-blast-radius sub-phase landed safely.
 5. **1e — Core (46 files, mostly infrastructure).** Low construction
    density (`newchains=1`) but still has 6 `MysqliDb::` call sites.
    **Correction from an earlier draft**: the 15 static-singleton classes

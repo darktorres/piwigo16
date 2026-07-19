@@ -89,6 +89,25 @@ final class ApiKeyRepository extends AbstractRepository
     }
 
     /**
+     * Records that the auth key's near-expiration notification email was
+     * just sent -- Legacy Coupling Retirement: DI+DBAL migration Phase 1d,
+     * retargeted from RequestBootstrap::finalize()'s own former
+     * `MysqliDb::singleUpdate()` call.
+     */
+    public function updateLastNotifiedOn(string $authKey, int $userId, string $lastNotifiedOn): void
+    {
+        $this->conn->createQueryBuilder()
+            ->update(Tables::userAuthKeys())
+            ->set('last_notified_on', ':lastNotifiedOn')
+            ->where('auth_key = :authKey')
+            ->andWhere('user_id = :userId')
+            ->setParameter('lastNotifiedOn', $lastNotifiedOn)
+            ->setParameter('authKey', $authKey)
+            ->setParameter('userId', $userId)
+            ->executeStatement();
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function findByUser(int $userId): array

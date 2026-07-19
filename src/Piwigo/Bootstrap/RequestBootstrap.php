@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\PluginLoader;
@@ -26,7 +27,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\StringHelper;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -276,11 +276,19 @@ final class RequestBootstrap
         session_start();
         PluginLoader::loadPlugins();
 
+        // Shared for every repository/service constructed for the rest of
+        // this method -- DbConnection::build() returns a fresh Connection
+        // on every call (no internal caching), so constructing one here and
+        // reusing it avoids opening a separate physical DB connection per
+        // repository, matching the established pattern from the Search/
+        // Section/Category domain migrations.
+        $conn = DbConnection::build();
+
         if (! \Piwigo\Config\Config::has('piwigo_installed_version')) {
             \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         } elseif (\Piwigo\Config\Config::piwigoInstalledVersion() !== AppInfo::VERSION) {
             // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
-            new ActivityService(new ActivityRepository(DbConnection::build()))->record('system', ActivitySystem::Core, 'autoupdate', [
+            self::activityService($conn)->record('system', ActivitySystem::Core, 'autoupdate', [
                 'from_version' => \Piwigo\Config\Config::piwigoInstalledVersion(),
                 'to_version' => AppInfo::VERSION,
             ]);
@@ -289,9 +297,8 @@ final class RequestBootstrap
 
         // Check if last major update conf is set if not set it
         if (! \Piwigo\Config\Config::has('last_major_update')) {
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT NOW();'));
-            assert($row !== null);
-            [$dbnow] = $row;
+            $dbnow = $conn->fetchOne('SELECT NOW()');
+            assert(is_string($dbnow));
             \Piwigo\Config\ConfigDb::confUpdateParam('last_major_update', $dbnow, true);
         }
 
@@ -324,7 +331,7 @@ final class RequestBootstrap
         }
 
         if (\Piwigo\Core\LoungeMaintenance::needsEmptying()) {
-            new ImageService(new ImageRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())))
+            new ImageService(new ImageRepository($conn), self::activityService($conn))
                 ->emptyLounge();
         }
 
@@ -398,12 +405,17 @@ final class RequestBootstrap
         global $template;
         global $filter;
 
+        // Shared for every repository/service constructed for the rest of
+        // this method -- same "one Connection per method, not per
+        // repository" reasoning as connect() above.
+        $conn = DbConnection::build();
+
         // language files
         Lang::setDefaultLanguageProvider(new UserService(
-            new UserRepository(DbConnection::build()),
-            new GroupRepository(DbConnection::build()),
+            new UserRepository($conn),
+            new GroupRepository($conn),
             new MailService(),
-            new ActivityService(new ActivityRepository(DbConnection::build())),
+            self::activityService($conn),
             new HtmlService(),
         ));
         Lang::load('common.lang');
@@ -452,19 +464,18 @@ final class RequestBootstrap
             $notify_username = is_string($notify_username) ? $notify_username : '';
             $notify_email = $user['email'];
             $notify_email = is_string($notify_email) ? $notify_email : '';
-            $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService(), new \Piwigo\Auth\ApiKeyRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())))
+            $apiKeyRepo = new \Piwigo\Auth\ApiKeyRepository($conn);
+            $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)))
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
 
             if ($is_mail_send) {
-                \Piwigo\Db\MysqliDb::singleUpdate(
-                    Tables::userAuthKeys(),
-                    [
-                        'last_notified_on' => $notify_api_key_expiration['dbnow'],
-                    ],
-                    [
-                        'user_id' => $user['id'],
-                        'auth_key' => $notify_api_key_expiration['auth_key'],
-                    ],
+                $notify_dbnow = $notify_api_key_expiration['dbnow'];
+                $notify_auth_key = $notify_api_key_expiration['auth_key'];
+                $notify_user_id = $user['id'];
+                $apiKeyRepo->updateLastNotifiedOn(
+                    is_string($notify_auth_key) ? $notify_auth_key : '',
+                    is_numeric($notify_user_id) ? (int) $notify_user_id : 0,
+                    is_string($notify_dbnow) ? $notify_dbnow : '',
                 );
             }
 
@@ -477,7 +488,8 @@ final class RequestBootstrap
             // comes from the equally-untyped global $user['preferences'][$param]),
             // so its return is inferred as mixed; narrow to the same 'clear'
             // fallback already passed as the default value.
-            $admin_theme = new \Piwigo\Users\PreferencesService(new UserRepository(DbConnection::build()))->getParam('admin_theme', 'clear');
+            $admin_theme = new \Piwigo\Users\PreferencesService(new UserRepository($conn))
+                ->getParam('admin_theme', 'clear');
             $admin_theme = is_string($admin_theme) ? $admin_theme : 'clear';
             $template = new Template(PHPWG_ROOT_PATH . 'admin/themes', $admin_theme);
         } else { // Classic template
@@ -509,7 +521,7 @@ final class RequestBootstrap
             // Formerly include/no_photo_yet.inc.php, a seam of exactly this
             // one call (deleted, P23 sub-batch 8f-5). render() exits itself
             // when it decides to take over the page.
-            new NoPhotoYetRenderer(DbConnection::build())
+            new NoPhotoYetRenderer($conn)
                 ->render();
         }
 
@@ -587,7 +599,7 @@ final class RequestBootstrap
         // (unlike UploadService's static upload_file handlers below), hence the
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
-        add_event_handler('user_comment_check', new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService())->checkForSpam(...));
+        add_event_handler('user_comment_check', new CommentService(new CommentRepository($conn), new EphemeralKeyService(), new MailService(), new HtmlService())->checkForSpam(...));
         // Relocated from include/functions_user.inc.php (deleted, P23 batch 8d) --
         // same reasoning as user_comment_check above: every real caller of
         // AuthService::tryLogUser() now constructs AuthService directly instead of
@@ -595,10 +607,10 @@ final class RequestBootstrap
         // always executes. pwgLogin() is a bound instance method, same
         // first-class-callable shape as checkForSpam() above.
         add_event_handler('try_log_user', new AuthService(
-            new AuthRepository(DbConnection::build()),
-            new ActivityService(new ActivityRepository(DbConnection::build())),
+            new AuthRepository($conn),
+            self::activityService($conn),
             new HtmlService(),
-            new PasswordService(new PasswordRepository(DbConnection::build())),
+            new PasswordService(new PasswordRepository($conn)),
             new CookieService(),
         )->pwgLogin(...));
         // Relocated from admin/include/functions_upload.inc.php (deleted in P23
@@ -626,6 +638,19 @@ final class RequestBootstrap
             add_event_handler('get_src_image_url', new HtmlService()->getSrcImageUrlProtectionHandler(...));
         }
         trigger_notify('init');
+    }
+
+    /**
+     * Constructed identically at 4 call sites across connect()/finalize()
+     * (each a static method with no shared instance state to inject into)
+     * -- same "inline-construct a one-off dependency behind a named method"
+     * precedent as Tag\TagService::newImageService()/Image\ImageService::
+     * categoryService(), applied here to eliminate the literal duplicated
+     * construction chain rather than to avoid a constructor-param ripple.
+     */
+    private static function activityService(Connection $conn): ActivityService
+    {
+        return new ActivityService(new ActivityRepository($conn));
     }
 
     /**

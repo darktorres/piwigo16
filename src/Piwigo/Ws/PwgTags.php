@@ -11,11 +11,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -36,6 +38,18 @@ final class PwgTags
     {
         $conn = DbConnection::build();
         return new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)), new ActivityService(new ActivityRepository(DbConnection::build())));
+    }
+
+    /**
+     * Constructed repeatedly across add()/rename()/duplicate()/merge()
+     * (including inside per-image loops in duplicate()/merge()) -- takes
+     * the caller's own $conn instead of building a fresh one per call,
+     * same "shared connection passed in" precedent as
+     * Bootstrap\RequestBootstrap::activityService(Connection $conn).
+     */
+    private static function activityService(Connection $conn): ActivityService
+    {
+        return new ActivityService(new ActivityRepository($conn));
     }
 
     /**
@@ -156,6 +170,8 @@ final class PwgTags
         $count_set = count($image_ids);
         $image_ids = array_slice($image_ids, $params['per_page'] * $params['page'], $params['per_page']);
 
+        $conn = DbConnection::build();
+
         $image_tag_map = [];
         // build list of image ids with associated tags per image
         if (! empty($image_ids) and ! $params['tag_mode_and']) {
@@ -166,11 +182,9 @@ SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
     AND image_id IN (' . implode(',', $image_ids) . ')
   GROUP BY image_id
 ;';
-            $result = \Piwigo\Db\MysqliDb::query($query);
-
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-                $row['image_id'] = (int) $row['image_id'];
-                $image_tag_map[$row['image_id']] = explode(',', (string) $row['tag_ids']);
+            foreach ($conn->fetchAllAssociative($query) as $row) {
+                $row['image_id'] = is_numeric($row['image_id']) ? (int) $row['image_id'] : 0;
+                $image_tag_map[$row['image_id']] = explode(',', is_scalar($row['tag_ids']) ? (string) $row['tag_ids'] : '');
             }
         }
 
@@ -184,9 +198,8 @@ SELECT *
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $image_ids) . ')
 ;';
-            $result = \Piwigo\Db\MysqliDb::query($query);
 
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+            foreach ($conn->fetchAllAssociative($query) as $row) {
                 if (! is_numeric($row['id'])) {
                     continue;
                 }
@@ -198,7 +211,7 @@ SELECT *
 
                 foreach (['id', 'width', 'height', 'hit'] as $k) {
                     if (isset($row[$k])) {
-                        $image[$k] = (int) $row[$k];
+                        $image[$k] = is_numeric($row[$k]) ? (int) $row[$k] : 0;
                     }
                 }
                 foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
@@ -270,22 +283,24 @@ SELECT *
      */
     public static function add(array $params, PwgServer &$service): PwgError|array
     {
+        $conn = DbConnection::build();
+
         $creation_output = self::tagService()->createTag($params['name']);
 
         if (isset($creation_output['error'])) {
             return new PwgError(WsError::INVALID_PARAM, $creation_output['error']);
         }
 
-        new ActivityService(new ActivityRepository(DbConnection::build()))->record('tag', $creation_output['id'], 'add');
+        self::activityService($conn)->record('tag', $creation_output['id'], 'add');
 
         $query = '
 SELECT name, url_name
 FROM `' . Tables::tags() . '`
 WHERE id = ' . $creation_output['id'] . ';';
 
-        $new_tag = \Piwigo\Db\MysqliDb::query2Array($query);
-        $new_tag_name = $new_tag[0]['name'] ?? null;
-        $new_tag_url_name = $new_tag[0]['url_name'] ?? null;
+        $new_tag = $conn->fetchAssociative($query);
+        $new_tag_name = $new_tag !== false ? ($new_tag['name'] ?? null) : null;
+        $new_tag_url_name = $new_tag !== false ? ($new_tag['url_name'] ?? null) : null;
 
         return [
             'info' => $creation_output['info'],
@@ -315,10 +330,9 @@ SELECT COUNT(*)
   FROM `' . Tables::tags() . '`
   WHERE id in (' . implode(',', $params['tag_id']) . ')
 ;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$count] = $row;
-        if ($count != count($params['tag_id'])) {
+        $count = DbConnection::build()->fetchOne($query);
+        $count = is_numeric($count) ? (int) $count : 0;
+        if ($count !== count($params['tag_id'])) {
             return new PwgError(WsError::INVALID_PARAM, 'All tags does not exist.');
         }
 
@@ -351,6 +365,7 @@ SELECT COUNT(*)
             return new PwgError(403, 'Invalid security token');
         }
 
+        $conn = DbConnection::build();
         $tag_id = $params['tag_id'];
         $tag_name = strip_tags(stripslashes($params['new_name']));
 
@@ -360,10 +375,9 @@ SELECT COUNT(*)
   FROM `' . Tables::tags() . '`
   WHERE id = ' . $tag_id . '
 ;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$count] = $row;
-        if ($count == 0) {
+        $count = $conn->fetchOne($query);
+        $count = is_numeric($count) ? (int) $count : 0;
+        if ($count === 0) {
             return new PwgError(WsError::INVALID_PARAM, 'This tag does not exist.');
         }
 
@@ -372,7 +386,7 @@ SELECT name
   FROM ' . Tables::tags() . '
   WHERE id != ' . $tag_id . '
 ;';
-        $existing_names = \Piwigo\Db\MysqliDb::query2Array($query, null, 'name');
+        $existing_names = array_column($conn->fetchAllAssociative($query), 'name');
 
         $update = [];
 
@@ -380,22 +394,27 @@ SELECT name
             return new PwgError(WsError::INVALID_PARAM, 'This name is already token');
         }
         if (! empty($tag_name)) {
+            // realEscapeString() dropped: BatchWriter::singleUpdate() below
+            // parameterizes $update['name'] instead of interpolating it,
+            // same "dead pre-escaping" rationale as
+            // Bootstrap\UserBootstrap's HTTP_X_PIWIGO_API fix (Phase 1d).
             $update = [
-                'name' => \Piwigo\Db\MysqliDb::realEscapeString($tag_name),
+                'name' => $tag_name,
                 'url_name' => trigger_change('render_tag_url', $tag_name),
             ];
 
         }
 
-        new ActivityService(new ActivityRepository(DbConnection::build()))->record('tag', $tag_id, 'edit');
+        self::activityService($conn)->record('tag', $tag_id, 'edit');
 
-        \Piwigo\Db\MysqliDb::singleUpdate(
-            Tables::tags(),
-            $update,
-            [
-                'id' => $tag_id,
-            ]
-        );
+        new BatchWriter($conn)
+            ->singleUpdate(
+                Tables::tags(),
+                $update,
+                [
+                    'id' => $tag_id,
+                ]
+            );
 
         $query = '
 SELECT
@@ -406,7 +425,8 @@ SELECT
   WHERE id = ' . $tag_id . '
 ;';
 
-        $tag = \Piwigo\Db\MysqliDb::query2Array($query)[0];
+        $tag = $conn->fetchAssociative($query);
+        assert($tag !== false);
         $tag['raw_name'] = $tag['name'];
         $tag['name'] = trigger_change('render_tag_name', $tag['raw_name'], $tag);
         $tag['alt_names'] = trigger_change('get_tag_alt_names', [], $tag['raw_name']);
@@ -428,6 +448,7 @@ SELECT
             return new PwgError(403, 'Invalid security token');
         }
 
+        $conn = DbConnection::build();
         $tag_id = $params['tag_id'];
         $copy_name = $params['copy_name'];
 
@@ -437,10 +458,9 @@ SELECT COUNT(*)
   FROM `' . Tables::tags() . '`
   WHERE id = ' . $tag_id . '
 ;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$count] = $row;
-        if ($count == 0) {
+        $count = $conn->fetchOne($query);
+        $count = is_numeric($count) ? (int) $count : 0;
+        if ($count === 0) {
             return new PwgError(WsError::INVALID_PARAM, 'This tag does not exist.');
         }
 
@@ -449,23 +469,23 @@ SELECT COUNT(*)
   FROM `' . Tables::tags() . '`
   WHERE name = "' . $copy_name . '"
 ;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$count] = $row;
-        if ($count != 0) {
+        $count = $conn->fetchOne($query);
+        $count = is_numeric($count) ? (int) $count : 0;
+        if ($count !== 0) {
             return new PwgError(WsError::INVALID_PARAM, 'This name is already taken.');
         }
 
-        \Piwigo\Db\MysqliDb::singleInsert(
-            Tables::tags(),
-            [
-                'name' => $copy_name,
-                'url_name' => trigger_change('render_tag_url', $copy_name),
-            ]
-        );
-        $destination_tag_id = \Piwigo\Db\MysqliDb::insertId();
+        new BatchWriter($conn)
+            ->singleInsert(
+                Tables::tags(),
+                [
+                    'name' => $copy_name,
+                    'url_name' => trigger_change('render_tag_url', $copy_name),
+                ]
+            );
+        $destination_tag_id = (int) $conn->lastInsertId();
 
-        new ActivityService(new ActivityRepository(DbConnection::build()))->record('tag', $destination_tag_id, 'add', [
+        self::activityService($conn)->record('tag', $destination_tag_id, 'add', [
             'action' => 'duplicate',
             'source_tag' => $tag_id,
         ]);
@@ -475,8 +495,8 @@ SELECT image_id
   FROM ' . Tables::imageTag() . '
   WHERE tag_id = ' . $tag_id . '
 ;';
-        $destination_tag_image_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
-        $destination_tag_image_ids = array_values(array_filter($destination_tag_image_ids, is_string(...)));
+        $destination_tag_image_ids = array_column($conn->fetchAllAssociative($query), 'image_id');
+        $destination_tag_image_ids = array_values(array_map(intval(...), array_filter($destination_tag_image_ids, is_numeric(...))));
 
         $inserts = [];
 
@@ -485,17 +505,18 @@ SELECT image_id
                 'tag_id' => $destination_tag_id,
                 'image_id' => $image_id,
             ];
-            new ActivityService(new ActivityRepository(DbConnection::build()))->record('photo', $image_id, 'edit', [
+            self::activityService($conn)->record('photo', $image_id, 'edit', [
                 'add-tag' => $destination_tag_id,
             ]);
         }
 
         if (count($inserts) > 0) {
-            \Piwigo\Db\MysqliDb::massInserts(
-                Tables::imageTag(),
-                array_keys($inserts[0]),
-                $inserts
-            );
+            new BatchWriter($conn)
+                ->massInsert(
+                    Tables::imageTag(),
+                    array_keys($inserts[0]),
+                    $inserts
+                );
         }
 
         return [
@@ -522,6 +543,7 @@ SELECT image_id
             return new PwgError(403, 'Invalid security token');
         }
 
+        $conn = DbConnection::build();
         $all_tags = $params['merge_tag_id'];
         array_push($all_tags, $params['destination_tag_id']);
 
@@ -533,16 +555,11 @@ SELECT COUNT(*)
   FROM `' . Tables::tags() . '`
   WHERE id in (' . implode(',', $all_tags) . ')
 ;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$count] = $row;
-        if ($count != count($all_tags)) {
+        $count = $conn->fetchOne($query);
+        $count = is_numeric($count) ? (int) $count : 0;
+        if ($count !== count($all_tags)) {
             return new PwgError(WsError::INVALID_PARAM, 'All tags does not exist.');
         }
-
-        $image_in_merge_tags = [];
-        $image_in_dest = [];
-        $image_to_add = [];
 
         $query = '
 SELECT DISTINCT(image_id)
@@ -550,7 +567,7 @@ SELECT DISTINCT(image_id)
   WHERE
     tag_id IN (' . implode(',', $merge_tag) . ')
 ;';
-        $image_in_merge_tags = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
+        $image_in_merge_tags = array_values(array_map(intval(...), array_filter(array_column($conn->fetchAllAssociative($query), 'image_id'), is_numeric(...))));
 
         $query = '
 SELECT image_id
@@ -558,10 +575,9 @@ SELECT image_id
   WHERE tag_id = ' . $params['destination_tag_id'] . '
 ;';
 
-        $image_in_dest = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
+        $image_in_dest = array_values(array_map(intval(...), array_filter(array_column($conn->fetchAllAssociative($query), 'image_id'), is_numeric(...))));
 
-        $image_to_add = array_diff($image_in_merge_tags, $image_in_dest);
-        $image_to_add = array_values(array_filter($image_to_add, is_string(...)));
+        $image_to_add = array_values(array_diff($image_in_merge_tags, $image_in_dest));
 
         $inserts = [];
         foreach ($image_to_add as $image) {
@@ -571,18 +587,19 @@ SELECT image_id
             ];
         }
 
-        \Piwigo\Db\MysqliDb::massInserts(
-            Tables::imageTag(),
-            ['tag_id', 'image_id'],
-            $inserts,
-            [
-                'ignore' => true,
-            ]
-        );
+        new BatchWriter($conn)
+            ->massInsert(
+                Tables::imageTag(),
+                ['tag_id', 'image_id'],
+                $inserts,
+                [
+                    'ignore' => true,
+                ]
+            );
 
-        new ActivityService(new ActivityRepository(DbConnection::build()))->record('tag', $params['destination_tag_id'], 'edit');
+        self::activityService($conn)->record('tag', $params['destination_tag_id'], 'edit');
         foreach ($image_to_add as $image_id) {
-            new ActivityService(new ActivityRepository(DbConnection::build()))->record('photo', $image_id, 'edit', [
+            self::activityService($conn)->record('photo', $image_id, 'edit', [
                 'tag-add' => $params['destination_tag_id'],
             ]);
         }

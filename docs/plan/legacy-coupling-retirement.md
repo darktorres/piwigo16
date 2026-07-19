@@ -208,8 +208,8 @@ them when reading commit history or the replay manifest.
   Zero manual `new *Repository(`/`new *Service(` chains found anywhere in
   the domain (matches the original table's very low "New-chains: 1").
   Commit `456241849`.
-- **Phase 1f (Ws) — IN PROGRESS, sub-batch 2 of ~7 done (Permissions +
-  Groups).** 24 files/12396 lines total, by far the largest domain in
+- **Phase 1f (Ws) — IN PROGRESS, sub-batch 3 of ~7 done (Tags).** 24
+  files/12396 lines total, by far the largest domain in
   this plan — confirmed needs the multi-batch breakdown the plan already
   anticipated. Sub-batch 1 investigated the small/shared files first:
   `WsInitializer`/`PwgError`/`PwgServer` needed no real changes (`PwgServer`'s
@@ -272,13 +272,42 @@ them when reading commit history or the replay manifest.
   the "don't touch non-repeated chains" precedent from
   `NotificationByMailSender.php` (Phase 1a/1b/1c gap-closure). Commit
   `2f4ff6e3e`.
+  Sub-batch 3 (Tags): `PwgTags.php` fully migrated — all 20
+  `MysqliDb::` calls retargeted, the widest variety of DBAL swaps seen
+  in this phase so far: `query()`+while-loop onto
+  `fetchAllAssociative()`+`foreach`, `query2Array()` (both the
+  no-key/no-value full-row form and the `key_name===null` single-column
+  form) onto `fetchAllAssociative()`/`array_column()`,
+  `fetchRow(query())` `COUNT(*)` checks onto `fetchOne()`,
+  `singleInsert()`/`singleUpdate()`/`massInserts()` onto `BatchWriter`,
+  `insertId()` onto `Connection::lastInsertId()`. Dropped one dead
+  `realEscapeString()` pre-escaping call feeding straight into
+  `BatchWriter::singleUpdate()`'s own parameterization (same "dead
+  pre-escaping" pattern as `UserBootstrap`'s HTTP_X_PIWIGO_API fix,
+  Phase 1d). The repeated `new ActivityService(new
+  ActivityRepository(DbConnection::build()))` chain (6 call sites,
+  2 inside per-image `foreach` loops in `duplicate()`/`merge()`)
+  collapsed into a private static `activityService(Connection $conn)`
+  helper that takes the caller's own connection — avoiding N fresh
+  connections per loop iteration, not just N constructions; same
+  "connection passed in, not rebuilt" precedent as
+  `RequestBootstrap::activityService()`. Fixed 11 real PHPStan errors:
+  `is_numeric()` guards before `(int)` casts on now-`mixed` row values;
+  `is_numeric()`+`intval()` narrowing before both
+  `ActivityService::record()`'s `int|string` param and `array_diff()`
+  (which needs string-castable list values — `array_column()` alone
+  only yields `list<mixed>`); strict `!==`/`===` in place of the
+  original loose `!=`/`==` once `COUNT(*)` results are cast to `int`
+  (PHPStan disallows loose comparison between `mixed`/`string|null` and
+  `int`). Commit `e5a270c64`.
   Remaining sub-batches (by WS resource area, largest/most complex
-  last): Tags, Users, Core, Categories, Images (3034 lines, the biggest
-  single file in the plan) — `WsDefaultMethods.php` (2357 lines)
-  confirmed clean already (pure method-registration table, zero
-  MysqliDb/globals/die-exit/manual-chains), `Protocol/*` encoders +
-  `PwgNamedArray`/`PwgNamedStruct`/`PwgRequestHandler` not yet checked
-  but absent from every grep so far, likely clean too.
+  last): Users (1168 lines, 16 `MysqliDb::` calls — next up), Core,
+  Categories, Images (3034 lines, the biggest single file in the plan)
+  — `WsDefaultMethods.php` (2357 lines) confirmed clean already (pure
+  method-registration table, zero MysqliDb/globals/die-exit/manual-
+  chains), `Protocol/*` encoders + `PwgNamedArray`/`PwgNamedStruct`/
+  `PwgRequestHandler` not yet checked but absent from every grep so
+  far, likely clean too.
 
 ## What direct investigation found (the basis for phase sequencing)
 

@@ -118,7 +118,7 @@ final readonly class SearchService
     {
         $clausePattern = self::getSearchIdPattern($candidate);
         if ($clausePattern === null) {
-            die('Invalid search identifier');
+            $this->htmlRenderer->fatalError('Invalid search identifier');
         }
 
         $search = $this->getSearchInfo($candidate);

@@ -72,6 +72,7 @@ final class MailService implements MailerInterface
     public function __construct(
         private readonly ?WebmasterMailProviderInterface $webmasterMailProvider = null,
         private readonly ?MailRecipientRepository $mailRecipientRepo = null,
+        private readonly ?\Piwigo\Auth\AuthService $authService = null,
     ) {}
 
     private function webmasterMailAddress(): string
@@ -91,6 +92,28 @@ final class MailService implements MailerInterface
     {
         return $this->mailRecipientRepo
             ?? new MailRecipientRepository(\Piwigo\Db\DbConnection::build());
+    }
+
+    /**
+     * Optional-with-lazy-default, same reasoning as
+     * $webmasterMailProvider above -- ~98 `new MailService()` construction
+     * sites, only mailGroup() reaches this. Unlike UserService (which
+     * genuinely can't be a constructor dependency here -- UserService
+     * constructor-depends on MailerInterface, i.e. this class, a real
+     * cycle), AuthService doesn't depend back on MailerInterface, so this
+     * is just the usual high-caller-count lazy-default, not a circular-
+     * dependency workaround.
+     */
+    private function authService(): \Piwigo\Auth\AuthService
+    {
+        return $this->authService
+            ?? new \Piwigo\Auth\AuthService(
+                new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()),
+                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())),
+                new HtmlService(),
+                new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())),
+                new \Piwigo\Auth\CookieService(),
+            );
     }
 
     /**
@@ -575,7 +598,8 @@ final class MailService implements MailerInterface
                 $uStatus = $u['status'];
                 $uEmail = $u['email'];
 
-                $authkey = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->createUserAuthKey((int) $uUserId, $uStatus);
+                $authkey = $this->authService()
+                    ->createUserAuthKey((int) $uUserId, $uStatus);
 
                 $userTpl = $tpl;
 

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Mail;
 
 use Piwigo\Db\Tables;
-use Piwigo\Html\HtmlService;
 use Piwigo\Notification\NotificationByMailService;
 use Piwigo\Notification\NotificationService;
 use Piwigo\Template\Template;
@@ -88,6 +87,8 @@ final class NotificationByMailSender
         private readonly NotificationByMailService $notificationByMailService,
         private readonly NotificationService $notificationService,
         private readonly \Piwigo\Db\BatchWriter $batchWriter,
+        private readonly \Piwigo\Users\UserService $userService,
+        private readonly \Piwigo\Auth\AuthService $authService,
     ) {
         // \Piwigo\Config\Config::nbmMaxTreatmentTimeoutPercent()/'nbm_treatment_timeout_default'
         // are always numeric (config_default.inc.php: 0.8 and 20
@@ -154,7 +155,7 @@ final class NotificationByMailSender
         $this->saveCurrentUser = \Piwigo\Users\CurrentUser::get();
         $userLanguage = $this->saveCurrentUser->language;
         new MailService()
-            ->switchLangTo($userLanguage !== '' ? $userLanguage : new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultLanguage());
+            ->switchLangTo($userLanguage !== '' ? $userLanguage : $this->userService->getDefaultLanguage());
 
         $this->isToSendMail = $isToSendMail;
 
@@ -225,12 +226,12 @@ final class NotificationByMailSender
         // numeric value.
         $nbmUserIdRaw = $nbmUser['user_id'];
         assert(is_string($nbmUserIdRaw) && is_numeric($nbmUserIdRaw));
-        $user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->buildUser((int) $nbmUserIdRaw, true);
+        $user = $this->userService->buildUser((int) $nbmUserIdRaw, true);
         \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
 
         $currentUserLanguage = \Piwigo\Users\CurrentUser::get()->language;
         new MailService()
-            ->switchLangTo($currentUserLanguage !== '' ? $currentUserLanguage : new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultLanguage());
+            ->switchLangTo($currentUserLanguage !== '' ? $currentUserLanguage : $this->userService->getDefaultLanguage());
 
         if ($isActionSend) {
             $emailFormat = $this->emailFormat ?? new MailService()
@@ -553,7 +554,7 @@ final class NotificationByMailSender
                             // non-null numeric DB value.
                             $nbmUserIdRaw = $nbmUser['user_id'];
                             assert(is_string($nbmUserIdRaw) && is_numeric($nbmUserIdRaw));
-                            $authKey = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->createUserAuthKey((int) $nbmUserIdRaw, $nbmUser['status']);
+                            $authKey = $this->authService->createUserAuthKey((int) $nbmUserIdRaw, $nbmUser['status']);
 
                             if ($authKey !== false and is_string($authKey['auth_key'])) {
                                 $auth = $authKey['auth_key'];

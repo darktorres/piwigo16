@@ -59,15 +59,7 @@ class LocalSiteReader
      */
     public function open(): bool
     {
-        /** @var list<array<string, string>> $errors */
-        global $errors;
-
         if (! is_dir($this->site_url)) {
-            $errors[] = [
-                'path' => $this->site_url,
-                'type' => 'PWG-ERROR-NO-FS',
-            ];
-
             return false;
         }
 

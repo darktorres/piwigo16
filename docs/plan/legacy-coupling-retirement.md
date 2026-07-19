@@ -106,7 +106,43 @@ them when reading commit history or the replay manifest.
   under DBAL; fixed with the same established `GROUP BY id` swap. Found
   by decoding and pixel-diffing the failing screenshots (not
   pattern-matched as "flaky") — all 4 showed an identical "Internal
-  Server Error" page. Commit TBD.
+  Server Error" page. Commit `1d1fd7663`.
+- **1a/1b/1c gap-closure audit — DONE.** User-directed: "check if 1a/1b/1c
+  are truly complete... don't assume." Direct re-investigation (grep/read
+  only) found `MysqliDb::` retargeting 100% complete everywhere, but the
+  "combined fix" mandate's other two parts (raw globals, `die()`/`exit()`)
+  were essentially untouched in every sub-phase — confirmed by
+  cross-referencing the pre-Phase-1 domain table's own Globals/DieExit
+  counts against current grep results, which matched almost exactly
+  (nothing had been resolved). Most of that gap turned out to be
+  correctly-unresolvable-yet (a global like `$filter`/`$picture` is
+  shared live state also written by an untouched domain — e.g. Picture's
+  globals are written by `Controller/PictureController.php`, Phase 1g,
+  which itself still has a real `MysqliDb::query2Array()` call) or
+  already a documented, deliberate deferral (`PictureCommentRenderer`'s 2
+  `die()` calls, explicitly flagged in commit `699a5fc64`'s own message
+  pending an `ExceptionHandlerMiddleware`-propagation investigation;
+  `Lang/functions.php`'s `$lang` bridge, explicitly Phase 4's own scope).
+  5 genuine, self-contained gaps got fixed: dead `global $errors;` write
+  in `Site\LocalSiteReader::open()`; 3x-repeated `new UserService(...)` +
+  1x `new AuthService(...)` chains in `Mail\NotificationByMailSender`
+  (neither circularly blocked, unlike `MailService`'s own 2 `UserService`
+  chains, correctly left alone — `UserService` constructor-depends on
+  `MailerInterface` == `MailService`, a real cycle); the matching 1x
+  `AuthService` chain in `MailService` itself, given an optional-lazy-
+  default param matching the `$webmasterMailProvider` precedent since
+  `AuthService` doesn't share that cycle; `Search\SearchService`'s 1
+  `die()` call (my own miss from the 1c work above), swapped for the
+  already-injected `$this->htmlRenderer->fatalError()`. **Caught and
+  reverted a near-miss during this pass**: `Auth\AuthService`'s 2
+  `global $user;` declarations looked identically dead at first grep
+  (matching the exact pattern that made `Site`'s `$errors` a clean fix),
+  but a closer read found `logUser()` genuinely reads/writes `$user['id']`
+  for `trigger_notify()`/`activityLogger->record()`, and `authKeyLogin()`'s
+  write is reached from `Bootstrap/UserBootstrap.php`'s own login flow —
+  verifying it's truly dead needs tracing Bootstrap's execution order,
+  Phase 1d's own territory, not a quick grep. Left untouched; worth
+  revisiting once 1d is underway. Commit TBD.
 - **Next up: Phase 1d** (Bootstrap, 9 files/51 call sites — the
   widest-blast-radius single sub-phase, see its own note above) — not yet
   started.

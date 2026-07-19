@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -18,6 +22,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Mail\MailService;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionRepository;
@@ -26,6 +31,7 @@ use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 /**
  * Ported from admin/picture_modify.php (the "properties" tab of the "photo"
@@ -41,6 +47,26 @@ use Piwigo\Users\UserRepository;
  */
 final class PictureModifyPageRenderer
 {
+    private static function userService(Connection $conn): UserService
+    {
+        return new UserService(
+            new UserRepository($conn),
+            new GroupRepository($conn),
+            new MailService(),
+            new ActivityService(new ActivityRepository($conn)),
+            new HtmlService()
+        );
+    }
+
+    private static function tagService(Connection $conn): TagService
+    {
+        return new TagService(
+            new TagRepository($conn),
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
+            new ActivityService(new ActivityRepository($conn))
+        );
+    }
+
     public function render(): void
     {
         /**
@@ -53,8 +79,8 @@ final class PictureModifyPageRenderer
         global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $imageConn = DbConnection::build();
-        $imageService = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)));
+        $conn = DbConnection::build();
+        $imageService = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)));
         $htmlRenderer = new HtmlService();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -87,7 +113,7 @@ SELECT id
   FROM ' . Tables::categories() . '
   WHERE representative_picture_id = ' . $image_id . '
 ;';
-        $represented_albums_raw = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
+        $represented_albums_raw = array_column($conn->fetchAllAssociative($query), 'id');
         $represented_albums = [];
         foreach ($represented_albums_raw as $represented_album_value) {
             if (is_numeric($represented_album_value)) {
@@ -112,7 +138,7 @@ SELECT id
             // 2. else use the first reachable linked category
             // 3. redirect to gallery root
 
-            if ((bool) ($custom_context = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getEditContext($image_id))) {
+            if ((bool) ($custom_context = self::userService($conn)->getEditContext($image_id))) {
                 // considering we have a context available, we fake one to build the url
                 // and we replace it with the context found in the session for this image_id
                 redirect(str_replace('list/1,2', $custom_context, make_index_url([
@@ -131,7 +157,8 @@ SELECT id
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(new HtmlService());
 
-            new MetadataService(new MetadataRepository(DbConnection::build()))->syncMetadata([$image_id]);
+            new MetadataService(new MetadataRepository($conn))
+                ->syncMetadata([$image_id]);
             \Piwigo\Core\PageState::current()->addInfo(l10n('Metadata synchronized from file'));
         }
 
@@ -171,17 +198,17 @@ SELECT id
             }
 
             /** @var array<string, mixed> $data */
-            \Piwigo\Db\MysqliDb::singleUpdate(
-                Tables::images(),
-                $data,
-                [
-                    'id' => $image_id,
-                ]
-            );
+            new BatchWriter($conn)
+                ->singleUpdate(
+                    Tables::images(),
+                    $data,
+                    [
+                        'id' => $image_id,
+                    ]
+                );
 
             // time to deal with tags
-            $tagConn = DbConnection::build();
-            $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+            $tagService = self::tagService($conn);
 
             $tag_ids = [];
             $raw_tags_post = $_POST['tags'] ?? null;
@@ -231,10 +258,9 @@ SELECT id
 
             $no_longer_thumbnail_for = array_diff($represented_albums, $represent_categories);
             if (count($no_longer_thumbnail_for) > 0) {
-                $representantConn = DbConnection::build();
                 new CategoryService(
-                    new CategoryRepository($representantConn),
-                    new PermissionService(new PermissionRepository($representantConn), new GroupRepository($representantConn))
+                    new CategoryRepository($conn),
+                    new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
                 )->setRandomRepresentant($no_longer_thumbnail_for);
             }
 
@@ -245,7 +271,7 @@ UPDATE ' . Tables::categories() . '
   SET representative_picture_id = ' . $image_id . '
   WHERE id IN (' . implode(',', $new_thumbnail_for) . ')
 ;';
-                \Piwigo\Db\MysqliDb::query($query);
+                $conn->executeStatement($query);
             }
 
             $represented_albums = $represent_categories;
@@ -256,7 +282,8 @@ UPDATE ' . Tables::categories() . '
                 ]
             );
 
-            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('photo', $image_id, 'edit');
+            new ActivityService(new ActivityRepository($conn))
+                ->record('photo', $image_id, 'edit');
 
             // refresh page cache
             $page['image'] = $imageService->getImageInfos($image_id, $htmlRenderer, true);
@@ -271,8 +298,7 @@ SELECT
     JOIN ' . Tables::tags() . ' AS t ON t.id = it.tag_id
   WHERE image_id = ' . $image_id . '
 ;';
-        $tagConn = DbConnection::build();
-        $tag_selection = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+        $tag_selection = self::tagService($conn)
             ->getTagList($query, $htmlRenderer);
 
         // getImageInfos($image_id, $htmlRenderer, true) fatal_errors (never returns) when the
@@ -287,7 +313,8 @@ SELECT
 
         $storage_category_id = null;
         if (! empty($row['storage_category_id'])) {
-            $storage_category_id = $row['storage_category_id'];
+            $raw_storage_category_id = $row['storage_category_id'];
+            $storage_category_id = (is_int($raw_storage_category_id) || is_string($raw_storage_category_id)) ? (string) $raw_storage_category_id : null;
         }
 
         $image_file = $row['file'];
@@ -365,7 +392,8 @@ SELECT
         $uf_username = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : '';
         $uf_id = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : '';
         $row_added_by = is_numeric($row['added_by']) ? (int) $row['added_by'] : 0;
-        $added_by_username = new UserRepository(DbConnection::build())->findUsernameById($row_added_by, $uf_id, $uf_username);
+        $added_by_username = new UserRepository($conn)
+            ->findUsernameById($row_added_by, $uf_id, $uf_username);
         if ($added_by_username !== null) {
             $row['added_by'] = $added_by_username;
         }
@@ -392,13 +420,11 @@ SELECT
   FROM ' . Tables::rate() . '
   WHERE element_id = ' . $image_id . '
 ;';
-            $rate_row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-            // \Piwigo\Db\MysqliDb::query() can return false (and \Piwigo\Db\MysqliDb::fetchRow() then null) on a
-            // SQL error when \Piwigo\Config\Config::dieOnSqlError() is off; a COUNT(*) query
-            // always yields exactly one row otherwise, so this guard -- not
-            // assert(), which is a no-op under this app's zend.assertions=-1 -- is
-            // what actually protects the list-destructure below.
-            if ($rate_row !== null) {
+            $rate_row = $conn->fetchNumeric($query);
+            // a COUNT(*) query always yields exactly one row; this guard is what
+            // actually protects the list-destructure below (not assert(), which is
+            // a no-op under this app's zend.assertions=-1).
+            if ($rate_row !== false) {
                 [$row['nb_rates']] = $rate_row;
 
                 $intro_vars['stats'] .= ', ' . sprintf(l10n('Rated %d times, score : %.2f'), is_numeric($row['nb_rates']) ? (int) $row['nb_rates'] : 0, is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
@@ -411,14 +437,15 @@ SELECT *
   FROM ' . Tables::imageFormat() . '
   WHERE image_id = ' . $row_id_str . '
 ;';
-        $formats = \Piwigo\Db\MysqliDb::query2Array($query);
+        $formats = $conn->fetchAllAssociative($query);
 
         if (! empty($formats)) {
             $format_strings = [];
 
             foreach ($formats as $format) {
+                $format_ext = is_scalar($format['ext']) ? (string) $format['ext'] : '';
                 $format_filesize = is_numeric($format['filesize']) ? (float) $format['filesize'] : 0.0;
-                $format_strings[] = sprintf('%s (%.2fMB)', $format['ext'], $format_filesize / 1024);
+                $format_strings[] = sprintf('%s (%.2fMB)', $format_ext, $format_filesize / 1024);
             }
 
             $intro_vars['formats'] = l10n('Formats: %s', implode(', ', $format_strings));
@@ -449,14 +476,13 @@ SELECT category_id, uppercats, dir
       ON c.id = ic.category_id
   WHERE image_id = ' . $image_id . '
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-
         $related_categories = [];
         $related_categories_ids = [];
 
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-            $row_category_id = is_string($row['category_id']) ? $row['category_id'] : '';
-            $row_uppercats = is_string($row['uppercats']) ? $row['uppercats'] : '';
+        foreach ($conn->fetchAllAssociative($query) as $cat_row) {
+            $raw_row_category_id = $cat_row['category_id'];
+            $row_category_id = (is_int($raw_row_category_id) || is_string($raw_row_category_id)) ? (string) $raw_row_category_id : '';
+            $row_uppercats = is_string($cat_row['uppercats']) ? $cat_row['uppercats'] : '';
 
             $name =
               $htmlRenderer->getCatDisplayNameCache(
@@ -484,15 +510,15 @@ SELECT category_id, uppercats, dir
         // 2. else if user level is higher than image level, randomly find an authorized category
         // 3. else no jumpto link
 
-        // re-derived from $page['image'] rather than $row: the categories while()
-        // loop above reassigns the local $row variable, so it no longer holds the
-        // image row by this point.
+        // re-derived from $page['image'] rather than $row: $row still holds the
+        // image row at this point, but its 'level' value may be stale after the
+        // POST-handling branch above already reassigned $page['image'].
         $image_level = 0;
         if (is_array($page['image']) && is_numeric($page['image']['level'] ?? null)) {
             $image_level = (int) $page['image']['level'];
         }
 
-        if ((bool) ($custom_context = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getEditContext($image_id))) {
+        if ((bool) ($custom_context = self::userService($conn)->getEditContext($image_id))) {
             $template->assign('U_JUMPTO', make_picture_url([
                 'image_id' => $image_id,
             ]) . '/' . $custom_context);
@@ -503,16 +529,23 @@ SELECT category_id
   WHERE image_id = ' . $image_id . '
 ;';
 
-            // array_from_query() is deprecated and returns array<int|string, mixed>;
-            // \Piwigo\Db\MysqliDb::query2Array() is its typed replacement, giving list<string|null> here
-            // since only the 'category_id' column is selected.
-            $authorized_category_ids = array_filter(\Piwigo\Db\MysqliDb::query2Array($query, null, 'category_id'), is_string(...));
+            // array_column() over the fetched rows gives list<mixed> here since
+            // only the 'category_id' column is selected; drop non-scalar rows then
+            // stringify, since DBAL can hand back native ints for this column.
+            $authorized_category_ids = array_map(
+                strval(...),
+                array_filter(
+                    array_column($conn->fetchAllAssociative($query), 'category_id'),
+                    static fn (mixed $v): bool => is_int($v) || is_string($v)
+                )
+            );
 
             $authorizeds = array_diff(
                 $authorized_category_ids,
                 explode(
                     ',',
-                    new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getForbiddenCategories(\Piwigo\Users\CurrentUser::get()->id, \Piwigo\Users\CurrentUser::get()->status->value)
+                    new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+                        ->getForbiddenCategories(\Piwigo\Users\CurrentUser::get()->id, \Piwigo\Users\CurrentUser::get()->status->value)
                 )
             );
 
@@ -541,7 +574,7 @@ SELECT id
     INNER JOIN ' . Tables::imageCategory() . ' ON id = category_id
   WHERE image_id = ' . $image_id . '
 ;';
-        $associated_albums = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
+        $associated_albums = array_column($conn->fetchAllAssociative($query), 'id');
 
         $template->assign([
             'associated_albums' => $associated_albums,

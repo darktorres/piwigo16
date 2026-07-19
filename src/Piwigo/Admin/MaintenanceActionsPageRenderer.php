@@ -11,6 +11,7 @@ use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbInfo;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\Template;
 
@@ -72,11 +73,12 @@ final class MaintenanceActionsPageRenderer
         }
         $purge_urls[l10n(ImageStdParams::CUSTOM)] = ImageStdParams::CUSTOM;
 
+        $conn = DbConnection::build();
         $php_current_timestamp = date('Y-m-d H:i:s');
-        $db_version = \Piwigo\Db\MysqliDb::getDbVersion();
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT now();'));
-        assert($row !== null);
-        [$db_current_date] = $row;
+        $db_version = new DbInfo($conn)
+            ->version();
+        $row = $conn->fetchNumeric('SELECT now();');
+        $db_current_date = $row !== false ? $row[0] : null;
 
         // \Piwigo\Config\Config::cacheSizes() is a serialized 4-row [name, value] list produced by
         // ws_getCacheSize() (cache_size, msizes, tsizes, last_date_calc); row 3's
@@ -177,7 +179,7 @@ final class MaintenanceActionsPageRenderer
             );
         }
 
-        $db_maintenance = new DbMaintenanceRepository(DbConnection::build());
+        $db_maintenance = new DbMaintenanceRepository($conn);
         $nb_lounge = $db_maintenance->countLoungeItems();
 
         if ($nb_lounge > 0) {

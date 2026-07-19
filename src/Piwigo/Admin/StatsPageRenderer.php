@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use DateInterval;
 use DateTime;
+use Doctrine\DBAL\Connection;
 use InvalidArgumentException;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\DbConnection;
@@ -42,7 +43,9 @@ final class StatsPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        new HistoryService(new HistoryRepository(DbConnection::build()))->summarize();
+        $conn = DbConnection::build();
+        new HistoryService(new HistoryRepository($conn))
+            ->summarize();
 
         $template->set_filename('stats', 'stats.tpl');
 
@@ -66,7 +69,7 @@ final class StatsPageRenderer
         $first_date = new DateTime();
         $last_hours = self::setMissingValues(
             'hour',
-            self::getLast(72, 'hour'),
+            self::getLast($conn, 72, 'hour'),
             $first_date->sub(new DateInterval('P3D')),
             $actual_date
         );
@@ -74,7 +77,7 @@ final class StatsPageRenderer
         $first_date = new DateTime();
         $last_days = self::setMissingValues(
             'day',
-            self::getLast(90, 'day'),
+            self::getLast($conn, 90, 'day'),
             $first_date->sub(new DateInterval('P90D')),
             $actual_date
         );
@@ -82,21 +85,21 @@ final class StatsPageRenderer
         $first_date = new DateTime();
         $last_months = self::setMissingValues(
             'month',
-            self::getLast(60, 'month'),
+            self::getLast($conn, 60, 'month'),
             $first_date->sub(new DateInterval('P60M')),
             $actual_date
         );
 
-        if (count(self::getLast(60, 'year')) > 1) {
+        if (count(self::getLast($conn, 60, 'year')) > 1) {
             $last_years = self::setMissingValues(
                 'year',
-                self::getLast(60, 'year')
+                self::getLast($conn, 60, 'year')
             );
         } else {
             $last_year_date = new DateTime();
             $last_years = self::setMissingValues(
                 'year',
-                self::getLast(60, 'year'),
+                self::getLast($conn, 60, 'year'),
                 $last_year_date->sub(new DateInterval('P1Y')),
                 new DateTime()
             );
@@ -123,8 +126,8 @@ final class StatsPageRenderer
         }
 
         $template->assign([
-            'compareYears' => self::getMonthOfLastYears($stat_compare_year_displayed),
-            'monthStats' => self::getMonthStats(),
+            'compareYears' => self::getMonthOfLastYears($conn, $stat_compare_year_displayed),
+            'monthStats' => self::getMonthStats($conn),
             'lastHours' => $last_hours,
             'lastDays' => $last_days,
             'lastMonths' => $last_months,
@@ -140,9 +143,9 @@ final class StatsPageRenderer
     /**
      * Get the last unit of time for years, months, days and hours.
      *
-     * @return list<array<string, string|null>>
+     * @return list<array<string, mixed>>
      */
-    private static function getLast(int $last_number = 60, string $type = 'year'): array
+    private static function getLast(Connection $conn, int $last_number = 60, string $type = 'year'): array
     {
         $query = '
 SELECT
@@ -198,10 +201,8 @@ SELECT
 ;';
         }
 
-        $result = \Piwigo\Db\MysqliDb::query($query);
-
         $output = [];
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach ($conn->fetchAllAssociative($query) as $row) {
             $output[] = $row;
         }
 
@@ -212,7 +213,7 @@ SELECT
      * @param int|'all' $last
      * @return float[]|int[]
      */
-    private static function getMonthOfLastYears($last = 'all'): array
+    private static function getMonthOfLastYears(Connection $conn, $last = 'all'): array
     {
         $query = '
 SELECT
@@ -233,18 +234,18 @@ ORDER BY
             $limit = ($last - 1) * 12 + $date->format('n') - 1;
             $query .=
 ' LIMIT ' . $limit;
-            $result = \Piwigo\Db\MysqliDb::query2Array($query . ';');
+            $result = $conn->fetchAllAssociative($query . ';');
             $lastDate = $date->sub(new DateInterval('P' . ($last - 1) . 'Y' . ($date->format('n') - 1) . 'M'));
             return self::setMissingValues('month', $result, $lastDate, new DateTime());
         }
 
-        if (count(\Piwigo\Db\MysqliDb::query2Array($query . ';')) > 1) {
-            return self::setMissingValues('month', \Piwigo\Db\MysqliDb::query2Array($query . ';'));
+        if (count($conn->fetchAllAssociative($query . ';')) > 1) {
+            return self::setMissingValues('month', $conn->fetchAllAssociative($query . ';'));
         } else {
             $last_year_date = new DateTime();
             return self::setMissingValues(
                 'month',
-                \Piwigo\Db\MysqliDb::query2Array($query . ';'),
+                $conn->fetchAllAssociative($query . ';'),
                 $last_year_date->sub(new DateInterval('P1Y')),
                 new DateTime()
             );
@@ -254,7 +255,7 @@ ORDER BY
     /**
      * @return array<string, mixed>
      */
-    private static function getMonthStats(): array
+    private static function getMonthStats(Connection $conn): array
     {
         $result = [];
         $date = new DateTime();
@@ -285,7 +286,7 @@ ORDER BY
   month DESC
 ;';
 
-        foreach (\Piwigo\Db\MysqliDb::query2Array($query) as $value) {
+        foreach ($conn->fetchAllAssociative($query) as $value) {
             $date = self::getDateObject($value);
             @$months[$date->format('Y/m/1')][] = $value;
         }
@@ -327,9 +328,8 @@ ORDER BY
   month DESC
 ;';
 
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$result['avg']] = $row;
+        $row = $conn->fetchNumeric($query);
+        $result['avg'] = is_array($row) ? $row[0] : null;
 
         return $result;
     }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
@@ -12,6 +14,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
+use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Users\UserRepository;
@@ -33,10 +36,10 @@ final class UserPermPageRenderer
 
         $htmlRenderer = new HtmlService();
 
-        $categoryConn = DbConnection::build();
+        $conn = DbConnection::build();
         $categoryService = new CategoryService(
-            new CategoryRepository($categoryConn),
-            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+            new CategoryRepository($conn),
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
         );
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -64,12 +67,12 @@ final class UserPermPageRenderer
         if (isset($_GET['user_id']) and is_numeric($_GET['user_id'])) {
             $user_id = (int) $_GET['user_id'];
         } else {
-            die('user_id URL parameter is missing');
+            $htmlRenderer->fatalError('user_id URL parameter is missing');
         }
 
         $permission_service = new PermissionService(
-            new PermissionRepository(DbConnection::build()),
-            new GroupRepository(DbConnection::build())
+            new PermissionRepository($conn),
+            new GroupRepository($conn)
         );
 
         if (isset($_POST['falsify'])
@@ -94,7 +97,8 @@ final class UserPermPageRenderer
             [
                 'TITLE' => l10n(
                     'Manage permissions for user "%s"',
-                    new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $htmlRenderer)->getUsername($user_id)
+                    new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), $htmlRenderer)
+                        ->getUsername($user_id)
                 ),
                 'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
                 'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
@@ -117,18 +121,20 @@ SELECT DISTINCT cat_id, c.uppercats, c.global_rank
       ON c.id = ga.cat_id
   WHERE ug.user_id = ' . $user_id . '
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
+        $group_rows = $conn->fetchAllAssociative($query);
 
-        if (\Piwigo\Db\MysqliDb::numRows($result) > 0) {
+        if (count($group_rows) > 0) {
             $cats = [];
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+            foreach ($group_rows as $row) {
                 $cats[] = $row;
-                $group_authorized[] = $row['cat_id'];
+                if (is_int($row['cat_id']) || is_string($row['cat_id'])) {
+                    $group_authorized[] = (string) $row['cat_id'];
+                }
             }
             usort($cats, CategoryService::compareByGlobalRank(...));
 
             foreach ($cats as $category) {
-                if ($category['uppercats'] === null) {
+                if ($category['uppercats'] === null || ! is_string($category['uppercats'])) {
                     continue;
                 }
 
@@ -153,10 +159,11 @@ SELECT id,name,uppercats,global_rank
 ;';
         $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', $htmlRenderer, $template);
 
-        $result = \Piwigo\Db\MysqliDb::query($query_true);
         $authorized_ids = [];
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-            $authorized_ids[] = $row['id'];
+        foreach ($conn->fetchAllAssociative($query_true) as $row) {
+            if (is_int($row['id']) || is_string($row['id'])) {
+                $authorized_ids[] = (string) $row['id'];
+            }
         }
 
         $query_false = '

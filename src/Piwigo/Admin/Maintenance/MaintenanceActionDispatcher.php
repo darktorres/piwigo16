@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Maintenance;
 
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Auth\CookieService;
 use Piwigo\Cache\UserCacheInvalidator;
@@ -65,7 +67,8 @@ final class MaintenanceActionDispatcher
         $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
 
         $register_activity = true;
-        $db_maintenance = new DbMaintenanceRepository(DbConnection::build());
+        $conn = DbConnection::build();
+        $db_maintenance = new DbMaintenanceRepository($conn);
 
         switch ($action) {
             case 'phpinfo':
@@ -79,9 +82,10 @@ final class MaintenanceActionDispatcher
             case 'lock_gallery':
 
                 \Piwigo\Config\ConfigDb::confUpdateParam('gallery_locked', 'true');
-                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Core, 'maintenance', [
-                    'maintenance_action' => $action,
-                ]);
+                new ActivityService(new ActivityRepository($conn))
+                    ->record('system', ActivitySystem::Core, 'maintenance', [
+                        'maintenance_action' => $action,
+                    ]);
                 redirect(get_root_url() . 'admin.php?page=maintenance');
 
                 // no break
@@ -89,19 +93,19 @@ final class MaintenanceActionDispatcher
 
                 \Piwigo\Config\ConfigDb::confUpdateParam('gallery_locked', 'false');
                 $_SESSION['page_infos'] = [l10n('Gallery unlocked')];
-                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Core, 'maintenance', [
-                    'maintenance_action' => $action,
-                ]);
+                new ActivityService(new ActivityRepository($conn))
+                    ->record('system', ActivitySystem::Core, 'maintenance', [
+                        'maintenance_action' => $action,
+                    ]);
                 redirect(get_root_url() . 'admin.php?page=maintenance');
 
                 // no break
             case 'categories':
 
                 FilesystemIntegrityChecker::imagesIntegrity();
-                $categoriesConn = DbConnection::build();
                 $categoriesService = new CategoryService(
-                    new CategoryRepository($categoriesConn),
-                    new PermissionService(new PermissionRepository($categoriesConn), new GroupRepository($categoriesConn))
+                    new CategoryRepository($conn),
+                    new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
                 );
                 $categoriesService->checkCategoriesIntegrity();
                 $categoriesService->updateUppercats();
@@ -114,12 +118,11 @@ final class MaintenanceActionDispatcher
             case 'images':
 
                 FilesystemIntegrityChecker::imagesIntegrity();
-                $imagesConn = DbConnection::build();
                 new CategoryService(
-                    new CategoryRepository($imagesConn),
-                    new PermissionService(new PermissionRepository($imagesConn), new GroupRepository($imagesConn))
+                    new CategoryRepository($conn),
+                    new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
                 )->updatePath();
-                new RateService(new RateRepository(DbConnection::build()), new CookieService())
+                new RateService(new RateRepository($conn), new CookieService())
                     ->updateRatingScore();
                 UserCacheInvalidator::invalidate();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Update photos information'), l10n('action successfully performed.')));
@@ -127,8 +130,7 @@ final class MaintenanceActionDispatcher
 
             case 'delete_orphan_tags':
 
-                $tagConn = DbConnection::build();
-                new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+                new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)), new ActivityService(new ActivityRepository($conn)))
                     ->deleteOrphanTags();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Delete orphan tags'), l10n('action successfully performed.')));
                 break;
@@ -173,7 +175,8 @@ final class MaintenanceActionDispatcher
 
             case 'database':
 
-                \Piwigo\Db\MysqliDb::doMaintenanceAllTables();
+                $db_maintenance->repairOptimizeAllTables();
+                \Piwigo\Core\PageState::current()->addInfo(l10n('All optimizations have been successfully completed.'));
                 break;
 
             case 'c13y':
@@ -185,8 +188,7 @@ final class MaintenanceActionDispatcher
 
             case 'empty_lounge':
 
-                $imageConn = DbConnection::build();
-                $rows = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+                $rows = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)))
                     ->emptyLounge();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
                 break;
@@ -274,9 +276,10 @@ final class MaintenanceActionDispatcher
         }
 
         if ($register_activity) {
-            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Core, 'maintenance', [
-                'maintenance_action' => $action,
-            ]);
+            new ActivityService(new ActivityRepository($conn))
+                ->record('system', ActivitySystem::Core, 'maintenance', [
+                    'maintenance_action' => $action,
+                ]);
         }
     }
 }

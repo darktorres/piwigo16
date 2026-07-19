@@ -26,6 +26,7 @@ final class PictureCoiPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();
+        $conn = DbConnection::build();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -54,21 +55,23 @@ final class PictureCoiPageRenderer
                   . DerivativeUrlCodec::fractionToChar($to_fraction($_POST['r'] ?? null))
                   . DerivativeUrlCodec::fractionToChar($to_fraction($_POST['b'] ?? null));
             }
-            new ImageRepository(DbConnection::build())->updateCoi($image_id, $coi);
+            new ImageRepository($conn)
+                ->updateCoi($image_id, $coi);
         }
 
         $query = 'SELECT * FROM ' . Tables::images() . ' WHERE id=' . $image_id;
-        $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
-        if (! is_array($row)) {
+        $row = $conn->fetchAssociative($query);
+        if ($row === false) {
             $htmlRenderer->pageNotFound('Requested photo does not exist');
         }
 
         if (isset($_POST['submit'])) {
+            $row_path = is_scalar($row['path']) ? (string) $row['path'] : '';
             $derivative_infos = [
-                'path' => (string) $row['path'],
+                'path' => $row_path,
             ];
-            if (isset($row['representative_ext']) && $row['representative_ext'] !== '' && $row['representative_ext'] !== '0') {
-                $derivative_infos['representative_ext'] = $row['representative_ext'];
+            if (isset($row['representative_ext']) && $row['representative_ext'] !== '' && $row['representative_ext'] !== '0' && is_scalar($row['representative_ext'])) {
+                $derivative_infos['representative_ext'] = (string) $row['representative_ext'];
             }
 
             foreach (ImageStdParams::get_defined_type_map() as $params) {
@@ -95,12 +98,13 @@ final class PictureCoiPageRenderer
             'U_IMG' => DerivativeImage::url(ImageStdParams::LARGE, $row),
         ];
 
-        if (isset($row['coi']) && $row['coi'] !== '' && $row['coi'] !== '0') {
+        $row_coi = is_string($row['coi'] ?? null) ? $row['coi'] : '';
+        if ($row_coi !== '' && $row_coi !== '0') {
             $tpl_var['coi'] = [
-                'l' => DerivativeUrlCodec::charToFraction($row['coi'][0]),
-                't' => DerivativeUrlCodec::charToFraction($row['coi'][1]),
-                'r' => DerivativeUrlCodec::charToFraction($row['coi'][2]),
-                'b' => DerivativeUrlCodec::charToFraction($row['coi'][3]),
+                'l' => DerivativeUrlCodec::charToFraction($row_coi[0]),
+                't' => DerivativeUrlCodec::charToFraction($row_coi[1]),
+                'r' => DerivativeUrlCodec::charToFraction($row_coi[2]),
+                'b' => DerivativeUrlCodec::charToFraction($row_coi[3]),
             ];
         }
 

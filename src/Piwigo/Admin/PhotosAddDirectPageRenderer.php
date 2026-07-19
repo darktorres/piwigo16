@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Core\Env;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -16,6 +20,8 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserRepository;
 
 /**
  * Ported from admin/photos_add_direct.php (the "direct" tab of the
@@ -53,6 +59,7 @@ final class PhotosAddDirectPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();
+        $conn = DbConnection::build();
 
         $user_id = \Piwigo\Users\CurrentUser::get()->id;
 
@@ -70,7 +77,7 @@ final class PhotosAddDirectPageRenderer
 DELETE FROM ' . Tables::caddie() . '
   WHERE user_id = ' . $user_id . '
 ;';
-            \Piwigo\Db\MysqliDb::query($query);
+            $conn->executeStatement($query);
 
             $inserts = [];
             $batch_param = $_GET['batch'];
@@ -80,16 +87,17 @@ DELETE FROM ' . Tables::caddie() . '
                     'element_id' => $image_id,
                 ];
             }
-            \Piwigo\Db\MysqliDb::massInserts(
-                Tables::caddie(),
-                array_keys($inserts[0]),
-                $inserts
-            );
+            new BatchWriter($conn)
+                ->massInsert(
+                    Tables::caddie(),
+                    array_keys($inserts[0]),
+                    $inserts
+                );
 
             redirect(get_root_url() . 'admin.php?page=batch_manager&filter=prefilter-caddie');
         }
 
-        if ((bool) new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('promote-mobile-apps', true)) {
+        if ((bool) new PreferencesService(new UserRepository($conn))->getParam('promote-mobile-apps', true)) {
             $query = '
 SELECT registration_date
   FROM ' . Tables::userInfos() . '
@@ -97,24 +105,22 @@ SELECT registration_date
   ORDER BY user_id ASC
   LIMIT 1
 ;';
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-            $register_date = $row !== null ? $row[0] : null;
+            $row = $conn->fetchNumeric($query);
+            $register_date = $row !== false ? $row[0] : null;
 
             $query = '
 SELECT COUNT(*)
   FROM ' . Tables::categories() . '
 ;';
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-            assert($row !== null);
-            [$nb_cats] = $row;
+            $row = $conn->fetchNumeric($query);
+            $nb_cats = $row !== false ? $row[0] : 0;
 
             $query = '
 SELECT COUNT(*)
   FROM ' . Tables::images() . '
 ;';
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-            assert($row !== null);
-            [$nb_images] = $row;
+            $row = $conn->fetchNumeric($query);
+            $nb_images = $row !== false ? $row[0] : 0;
 
             // To see the mobile app promote, the account must have 2 weeks
             // ancient, 3 albums created and 30 photos uploaded. Anchored on
@@ -124,7 +130,8 @@ SELECT COUNT(*)
             // this project's admin pages.
             $two_weeks_ago = (clone Env::now())
                 ->modify('-2 weeks');
-            $template->assign('PROMOTE_MOBILE_APPS', (strtotime((string) $register_date) < $two_weeks_ago->getTimestamp() and $nb_cats >= 3 and $nb_images >= 30));
+            $register_date_str = is_scalar($register_date) ? (string) $register_date : '';
+            $template->assign('PROMOTE_MOBILE_APPS', (strtotime($register_date_str) < $two_weeks_ago->getTimestamp() and $nb_cats >= 3 and $nb_images >= 30));
         } else {
             $template->assign('PROMOTE_MOBILE_APPS', false);
         }
@@ -147,8 +154,7 @@ SELECT COUNT(*)
                 ->validate('formats', $_GET, false, ValidationPattern::ID, false);
 
             $formats_id_param = $_GET['formats'];
-            $imageConn = DbConnection::build();
-            $formats_original_info = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+            $formats_original_info = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)))
                 ->getImageInfos(is_int($formats_id_param) || is_string($formats_id_param) ? $formats_id_param : '', $htmlRenderer);
             if ((bool) $formats_original_info) {
                 $src_image = new SrcImage($formats_original_info);
@@ -166,16 +172,17 @@ SELECT *
   FROM ' . Tables::imageFormat() . '
   WHERE image_id = ' . $formats_image_id . '
 ;';
-                $formats = \Piwigo\Db\MysqliDb::query2Array($query);
+                $formats = $conn->fetchAllAssociative($query);
 
                 if (! empty($formats)) {
                     $format_strings = [];
                     $formats_exts = [];
 
                     foreach ($formats as $format) {
+                        $format_ext = is_scalar($format['ext']) ? (string) $format['ext'] : '';
                         $format_filesize = is_numeric($format['filesize']) ? ((float) $format['filesize']) / 1024 : 0.0;
-                        $format_strings[] = sprintf('%s (%.2fMB)', $format['ext'], $format_filesize);
-                        $formats_exts[] = strtolower((string) $format['ext']);
+                        $format_strings[] = sprintf('%s (%.2fMB)', $format_ext, $format_filesize);
+                        $formats_exts[] = strtolower($format_ext);
                     }
 
                     $formats_original_info['formats'] = l10n('Formats: %s', implode(', ', $format_strings));
@@ -199,7 +206,7 @@ SELECT *
         // |                             prepare form                          |
         // +-------------------------------------------------------------------+
 
-        $this->prepareUploadForm();
+        $this->prepareUploadForm($conn);
 
         // +-------------------------------------------------------------------+
         // |                           sending html code                       |
@@ -233,7 +240,7 @@ SELECT *
      * render(), unlike the shared admin/include/*.inc.php files this
      * project has kept as real includes elsewhere.
      */
-    private function prepareUploadForm(): void
+    private function prepareUploadForm(Connection $conn): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -337,13 +344,11 @@ SELECT id, uppercats
   FROM ' . Tables::categories() . '
   WHERE id = ' . ($album_id ?? 0) . '
 ;';
-            $result = \Piwigo\Db\MysqliDb::query($query);
-            if ($album_id !== null && \Piwigo\Db\MysqliDb::numRows($result) === 1) {
+            $rows = $conn->fetchAllAssociative($query);
+            if ($album_id !== null && count($rows) === 1) {
                 $selected_category = [$album_id];
 
-                $cat = \Piwigo\Db\MysqliDb::fetchAssoc($result);
-                // the num_rows === 1 check above guarantees a row is available
-                assert(is_array($cat));
+                $cat = $rows[0];
                 $uppercats = $cat['uppercats'];
                 // uppercats is a NOT NULL varchar column (install/piwigo_structure-mysql.sql)
                 assert(is_string($uppercats));
@@ -362,11 +367,9 @@ SELECT category_id, c.uppercats
   LIMIT 1
 ;
 ';
-            $result = \Piwigo\Db\MysqliDb::query($query);
-            if (\Piwigo\Db\MysqliDb::numRows($result) > 0) {
-                $row = \Piwigo\Db\MysqliDb::fetchAssoc($result);
-                // the num_rows > 0 check above guarantees a row is available
-                assert(is_array($row));
+            $rows = $conn->fetchAllAssociative($query);
+            if (count($rows) > 0) {
+                $row = $rows[0];
                 $selected_category = [$row['category_id']];
                 $uppercats = $row['uppercats'];
                 // uppercats is a NOT NULL varchar column (install/piwigo_structure-mysql.sql)
@@ -385,9 +388,8 @@ SELECT
     COUNT(*)
   FROM ' . Tables::categories() . '
 ;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$nb_albums] = $row;
+        $row = $conn->fetchNumeric($query);
+        $nb_albums = $row !== false ? $row[0] : 0;
         $template->assign('NB_ALBUMS', $nb_albums);
 
         // image level options

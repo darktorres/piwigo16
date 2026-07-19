@@ -6,6 +6,7 @@ namespace Piwigo\Admin\Extensions;
 
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Html\HtmlService;
 
 /**
@@ -187,13 +188,13 @@ final class ExtensionScanner
             $theme['parent'] = $val[1];
         }
         if ((bool) preg_match('/["\']activable["\'].*?(true|false)/i', $data, $val)) {
-            $theme['activable'] = \Piwigo\Db\MysqliDb::getBoolean($val[1]);
+            $theme['activable'] = SqlDialect::getBoolean($val[1]);
         }
         if ((bool) preg_match('/["\']mobile["\'].*?(true|false)/i', $data, $val)) {
-            $theme['mobile'] = \Piwigo\Db\MysqliDb::getBoolean($val[1]);
+            $theme['mobile'] = SqlDialect::getBoolean($val[1]);
         }
         if ((bool) preg_match('/["\']use_standard_pages["\'].*?(true|false)/i', $data, $val)) {
-            $theme['use_standard_pages'] = \Piwigo\Db\MysqliDb::getBoolean($val[1]);
+            $theme['use_standard_pages'] = SqlDialect::getBoolean($val[1]);
         }
 
         $screenshotPath = $path . '/screenshot.png';

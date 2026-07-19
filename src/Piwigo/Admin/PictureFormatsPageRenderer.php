@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
@@ -29,12 +30,13 @@ final class PictureFormatsPageRenderer
         // narrowing before it's used in SQL/URL concatenation below.
         $image_id = is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0;
 
+        $conn = DbConnection::build();
         $query = '
 SELECT *
   FROM ' . Tables::images() . '
   WHERE id = ' . $image_id . '
 ;';
-        $images = \Piwigo\Db\MysqliDb::query2Array($query);
+        $images = $conn->fetchAllAssociative($query);
         $image = $images[0];
 
         $query = '
@@ -44,13 +46,15 @@ SELECT
   WHERE image_id = ' . $image_id . '
 ;';
 
-        $formats = \Piwigo\Db\MysqliDb::query2Array($query);
+        $formats = $conn->fetchAllAssociative($query);
 
         foreach ($formats as &$format) {
-            $format['download_url'] = 'action.php?format=' . $format['format_id'] . '&amp;download';
+            $format_id_str = is_scalar($format['format_id']) ? (string) $format['format_id'] : '';
+            $format['download_url'] = 'action.php?format=' . $format_id_str . '&amp;download';
 
-            $format['label'] = strtoupper((string) $format['ext']);
-            $lang_key = 'format ' . strtoupper((string) $format['ext']);
+            $format_ext = is_scalar($format['ext']) ? (string) $format['ext'] : '';
+            $format['label'] = strtoupper($format_ext);
+            $lang_key = 'format ' . strtoupper($format_ext);
             $lang_label = \Piwigo\Core\Lang::has($lang_key) ? \Piwigo\Core\Lang::t($lang_key) : null;
             if ($lang_label !== null) {
                 $format['label'] = $lang_label;

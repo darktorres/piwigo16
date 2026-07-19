@@ -71,7 +71,8 @@ final class PluginsInstalledPageRenderer
         $pwg_token = new \Piwigo\Csrf\CsrfService()
             ->getToken();
 
-        $extension_repository = new ExtensionRepository(DbConnection::build());
+        $conn = DbConnection::build();
+        $extension_repository = new ExtensionRepository($conn);
         $pem_catalog = new PemCatalog(new ZipExtractor());
         $fs_plugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin);
@@ -255,7 +256,8 @@ final class PluginsInstalledPageRenderer
                 'max_inactive_before_hide' => isset($_GET['show_inactive']) ? 999 : 8,
                 'isWebmaster' => (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0,
                 'ADMIN_PAGE_TITLE' => l10n('Plugins'),
-                'view_selector' => new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('plugin-manager-view', 'classic'),
+                'view_selector' => new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository($conn))
+                    ->getParam('plugin-manager-view', 'classic'),
                 'CONF_ENABLE_EXTENSIONS_INSTALL' => \Piwigo\Config\Config::enableExtensionsInstall(),
             ]
         );

@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
@@ -30,6 +31,7 @@ final class ExtendForTemplatesPageRenderer
     public function render(): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
+        $conn = DbConnection::build();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -73,7 +75,7 @@ SELECT permalink
 ';
 
         /* Add active permalinks */
-        $permalinks = \Piwigo\Db\MysqliDb::query2Array($query, null, 'permalink');
+        $permalinks = array_column($conn->fetchAllAssociative($query), 'permalink');
         $relevant_parameters = array_merge($relevant_parameters, $permalinks);
 
         /* Link all supported templates to their respective handle */
@@ -158,9 +160,8 @@ SELECT permalink
 UPDATE ' . Tables::config() . '
   SET value = \'' . str_replace("\'", "''", $serialized_extents) . '\'
 WHERE param = \'extents_for_templates\';';
-            if ((bool) \Piwigo\Db\MysqliDb::query($query)) {
-                \Piwigo\Core\PageState::current()->addInfo(l10n('Templates configuration has been recorded.'));
-            }
+            $conn->executeStatement($query);
+            \Piwigo\Core\PageState::current()->addInfo(l10n('Templates configuration has been recorded.'));
         }
 
         /* Clearing (remove old extents, add new ones) */

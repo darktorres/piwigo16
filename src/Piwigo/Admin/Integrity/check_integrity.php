@@ -13,6 +13,7 @@ namespace Piwigo\Admin\Integrity;
 
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Core\AppInfo;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
 class check_integrity
@@ -190,7 +191,7 @@ class check_integrity
                     if ((bool) $c13y['ignored']) {
                         $c13y_display['show_ignore_msg'] = true;
                     } else {
-                        die('$c13y[\'ignored\'] cannot be false');
+                        throw new \LogicException('$c13y[\'ignored\'] cannot be false');
                     }
                 } else {
                     if (! empty($c13y['correction_fct'])) {
@@ -272,7 +273,7 @@ class check_integrity
         $conf_c13y_ignore['version'] = AppInfo::VERSION;
         $conf_c13y_ignore['list'] = $conf_ignore_list;
         $query = 'update ' . Tables::config() . ' set value =\'' . serialize($conf_c13y_ignore) . '\'where param = \'c13y_ignore\';';
-        \Piwigo\Db\MysqliDb::query($query);
+        DbConnection::build()->executeStatement($query);
     }
 
     /**

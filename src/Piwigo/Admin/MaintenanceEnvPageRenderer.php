@@ -7,6 +7,8 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Core\AppInfo;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbInfo;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\Template;
 
@@ -59,11 +61,12 @@ final class MaintenanceEnvPageRenderer
         }
         $purge_urls[l10n(ImageStdParams::CUSTOM)] = sprintf($url_format, 'derivatives') . '&amp;type=' . ImageStdParams::CUSTOM;
 
+        $conn = DbConnection::build();
         $php_current_timestamp = date('Y-m-d H:i:s');
-        $db_version = \Piwigo\Db\MysqliDb::getDbVersion();
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT now();'));
-        assert($row !== null);
-        [$db_current_date] = $row;
+        $db_version = new DbInfo($conn)
+            ->version();
+        $row = $conn->fetchNumeric('SELECT now();');
+        $db_current_date = $row !== false ? $row[0] : null;
 
         [$container_name, $container_version] = \Piwigo\Core\ContainerDetector::detect();
 

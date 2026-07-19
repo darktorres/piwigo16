@@ -11,12 +11,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
+use Piwigo\Mail\MailService;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 class languages
 {
@@ -43,6 +51,17 @@ class languages
         $this->get_fs_languages($target_charset);
     }
 
+    private static function userService(Connection $conn): UserService
+    {
+        return new UserService(
+            new UserRepository($conn),
+            new GroupRepository($conn),
+            new MailService(),
+            new ActivityService(new ActivityRepository($conn)),
+            new HtmlService()
+        );
+    }
+
     /**
      * Perform requested actions
      * @param string $action - action
@@ -52,13 +71,15 @@ class languages
     public function perform_action($action, $language_id): array
     {
         if (! \Piwigo\Config\Config::enableExtensionsInstall() and $action == 'delete') {
-            die('Piwigo extensions install/update/delete system is disabled');
+            new HtmlService()
+                ->fatalError('Piwigo extensions install/update/delete system is disabled');
         }
 
         if (isset($this->db_languages[$language_id])) {
             $crt_db_language = $this->db_languages[$language_id];
         }
 
+        $conn = DbConnection::build();
         $errors = [];
 
         switch ($action) {
@@ -85,7 +106,7 @@ INSERT INTO ' . Tables::languages() . '
          \'' . $fs_version . '\',
          \'' . $fs_name . '\')
 ;';
-                \Piwigo\Db\MysqliDb::query($query);
+                $conn->executeStatement($query);
                 break;
 
             case 'deactivate':
@@ -94,7 +115,7 @@ INSERT INTO ' . Tables::languages() . '
                     break;
                 }
 
-                if ($language_id == new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultLanguage()) {
+                if ($language_id == self::userService($conn)->getDefaultLanguage()) {
                     $errors[] = 'CANNOT DEACTIVATE - LANGUAGE IS DEFAULT LANGUAGE';
                     break;
                 }
@@ -104,7 +125,7 @@ DELETE
   FROM ' . Tables::languages() . '
   WHERE id= \'' . $language_id . '\'
 ;';
-                \Piwigo\Db\MysqliDb::query($query);
+                $conn->executeStatement($query);
                 break;
 
             case 'delete':
@@ -120,10 +141,10 @@ DELETE
                 // Set default language to user who are using this language
                 $query = '
 UPDATE ' . Tables::userInfos() . '
-  SET language = \'' . new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultLanguage() . '\'
+  SET language = \'' . self::userService($conn)->getDefaultLanguage() . '\'
   WHERE language = \'' . $language_id . '\'
 ;';
-                \Piwigo\Db\MysqliDb::query($query);
+                $conn->executeStatement($query);
 
                 FilesystemHelper::deltree(PHPWG_ROOT_PATH . 'language/' . $language_id, PHPWG_ROOT_PATH . 'language/trash');
                 break;
@@ -139,7 +160,7 @@ UPDATE ' . Tables::userInfos() . '
   SET language = \'' . $language_id . '\'
   WHERE user_id IN (' . $default_user_id . ', ' . $guest_id . ')
 ;';
-                \Piwigo\Db\MysqliDb::query($query);
+                $conn->executeStatement($query);
                 break;
         }
         return $errors;
@@ -241,11 +262,10 @@ UPDATE ' . Tables::userInfos() . '
     FROM ' . Tables::languages() . '
     ORDER BY name ASC
   ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
 
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach (DbConnection::build()->fetchAllAssociative($query) as $row) {
             // 'id' is the languages table's primary key (NOT NULL); guard it
-            // anyway since \Piwigo\Db\MysqliDb::fetchAssoc() types every column string|null.
+            // anyway since a fetched row types every column mixed.
             $id = $row['id'];
             if (! is_string($id)) {
                 continue;

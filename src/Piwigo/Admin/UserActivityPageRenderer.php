@@ -56,7 +56,8 @@ final class UserActivityPageRenderer
         /** @var array<string, string> $user_fields */
         $user_fields = \Piwigo\Config\Config::userFields();
 
-        $activity_service = new ActivityService(new ActivityRepository(DbConnection::build()));
+        $conn = DbConnection::build();
+        $activity_service = new ActivityService(new ActivityRepository($conn));
 
         if (isset($_GET['type']) && $_GET['type'] === 'download_logs') {
             $output_lines = [];
@@ -116,7 +117,7 @@ final class UserActivityPageRenderer
       ' . $user_fields['username'] . ' AS username
     FROM ' . Tables::users() . '
     WHERE ' . $user_fields['id'] . ' IN (' . implode(',', array_keys($nb_lines_for_user)) . ');';
-            $username_of = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'username');
+            $username_of = array_column($conn->fetchAllAssociative($query), 'username', 'id');
         } else {
             // no activity lines at all: skip the lookup query rather than
             // re-running the stale $query from above (previously left in place
@@ -144,9 +145,8 @@ SELECT COUNT(*)
   FROM ' . Tables::users() . '
 ;';
 
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$nb_users] = $row;
+        $row = $conn->fetchNumeric($query);
+        $nb_users = is_array($row) ? $row[0] : 0;
         $template->assign('nb_users', $nb_users);
 
         $min_date = $activity_service->getMinOccuredOn();
@@ -185,7 +185,7 @@ SELECT
   FROM ' . $filter_table . '
   WHERE id = ' . $filter_value . '
 ;';
-                $rows = \Piwigo\Db\MysqliDb::query2Array($query);
+                $rows = $conn->fetchAllAssociative($query);
 
                 if (count($rows) === 0) {
                     new HtmlService()

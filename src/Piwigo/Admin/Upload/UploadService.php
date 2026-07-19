@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Upload;
 
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Config\Config;
 use Piwigo\Core\Env;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeImage;
@@ -140,7 +144,7 @@ final class UploadService
 
                 $updates[] = [
                     'param' => $field,
-                    'value' => \Piwigo\Db\MysqliDb::booleanToString($value),
+                    'value' => SqlDialect::booleanToString($value),
                 ];
             } elseif ($upload_form_config[$field]['can_be_null'] and self::isFalsy($value)) {
                 $updates[] = [
@@ -180,7 +184,7 @@ final class UploadService
         }
 
         if (count($errors) === 0) {
-            \Piwigo\Db\MysqliDb::massUpdates(
+            new BatchWriter(DbConnection::build())->massUpdate(
                 Tables::config(),
                 [
                     'primary' => ['param'],
@@ -204,6 +208,7 @@ final class UploadService
     public function addUploadedFile(string $source_filepath, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null): int|string
     {
         $logger = \Piwigo\Core\CurrentLogger::get();
+        $conn = DbConnection::build();
 
         if ($original_filename !== null) {
             $original_filename = htmlspecialchars($original_filename);
@@ -223,14 +228,15 @@ SELECT
   FROM ' . Tables::images() . '
   WHERE md5sum = \'' . $md5sum . '\'
 ;';
-            $images_found = \Piwigo\Db\MysqliDb::query2Array($query);
+            $images_found = $conn->fetchAllAssociative($query);
 
             if (count($images_found) > 0) {
                 $found_id = $images_found[0]['id'];
-                if (! is_string($found_id) || ! is_numeric($found_id)) {
+                if (! is_numeric($found_id)) {
                     // id is the table's NOT NULL auto-increment primary key,
-                    // so it is always a numeric string here; this guard only
-                    // exists to give PHPStan a real narrowing.
+                    // so it is always numeric here (native int under DBAL,
+                    // numeric string under mysqli); this guard only exists to
+                    // give PHPStan a real narrowing.
                     throw new \Exception(__METHOD__ . '(): unexpected non-numeric image id while checking for duplicates');
                 }
                 $image_id = (int) $found_id;
@@ -255,9 +261,8 @@ SELECT
   FROM ' . Tables::images() . '
   WHERE id = ' . $image_id . '
 ;';
-            $result = \Piwigo\Db\MysqliDb::query($query);
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-                $file_path = $row['path'];
+            foreach ($conn->fetchAllAssociative($query) as $row) {
+                $file_path = is_string($row['path']) ? $row['path'] : null;
             }
 
             if (! isset($file_path)) {
@@ -265,8 +270,7 @@ SELECT
             }
 
             // delete all physical files related to the photo (thumbnail, web site, HD)
-            $imageConn = DbConnection::build();
-            new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+            new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)))
                 ->deleteElementFiles([$image_id]);
         } else {
             // this photo is new
@@ -443,7 +447,7 @@ SELECT
 
         if (isset($image_id)) {
             $update = [
-                'file' => \Piwigo\Db\MysqliDb::realEscapeString($original_filename ?? basename($file_path)),
+                'file' => $original_filename ?? basename($file_path),
                 'filesize' => $file_infos['filesize'],
                 'width' => $file_infos['width'],
                 'height' => $file_infos['height'],
@@ -456,20 +460,17 @@ SELECT
                 $update['level'] = $level;
             }
 
-            \Piwigo\Db\MysqliDb::singleUpdate(
-                Tables::images(),
-                $update,
-                [
-                    'id' => $image_id,
-                ]
-            );
+            new BatchWriter($conn)
+                ->singleUpdate(
+                    Tables::images(),
+                    $update,
+                    [
+                        'id' => $image_id,
+                    ]
+                );
         } else {
             // database registration
-            // \Piwigo\Db\MysqliDb::realEscapeString() only returns null for a null input,
-            // and basename() never returns null, so the ?? fallback rules
-            // that out.
-            $file = \Piwigo\Db\MysqliDb::realEscapeString($original_filename ?? basename($file_path));
-            assert($file !== null);
+            $file = $original_filename ?? basename($file_path);
             $insert = [
                 'file' => $file,
                 'name' => \Piwigo\Core\StringHelper::getNameFromFile($file),
@@ -499,10 +500,12 @@ SELECT
                 $insert['representative_ext'] = $representative_ext;
             }
 
-            \Piwigo\Db\MysqliDb::singleInsert(Tables::images(), $insert);
+            new BatchWriter($conn)
+                ->singleInsert(Tables::images(), $insert);
 
-            $image_id = \Piwigo\Db\MysqliDb::insertId();
-            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('photo', $image_id, 'add');
+            $image_id = $conn->lastInsertId();
+            new ActivityService(new ActivityRepository($conn))
+                ->record('photo', $image_id, 'add');
         }
 
         $this->addUploadedFileAddToCategories($image_id, $categories);
@@ -511,7 +514,8 @@ SELECT
         if (\Piwigo\Config\Config::useExif() and ! function_exists('exif_read_data')) {
             \Piwigo\Config\Config::override('use_exif', false);
         }
-        new MetadataService(new MetadataRepository(DbConnection::build()))->syncMetadata([(int) $image_id]);
+        new MetadataService(new MetadataRepository($conn))
+            ->syncMetadata([(int) $image_id]);
 
         // cache a derivative
         $query = '
@@ -522,8 +526,8 @@ SELECT
   FROM ' . Tables::images() . '
   WHERE id = ' . $image_id . '
 ;';
-        $image_infos = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
-        if (! is_array($image_infos)) {
+        $image_infos = $conn->fetchAssociative($query);
+        if ($image_infos === false) {
             throw new \Exception(__METHOD__ . '(): image #' . $image_id . ' not found right after being saved');
         }
         $src_image = new SrcImage($image_infos);
@@ -558,9 +562,8 @@ SELECT
 
         if (! \Piwigo\Config\Config::loungeActive()) {
             // check if we need to use the lounge from now
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT COUNT(*) FROM ' . Tables::images() . ';'));
-            assert($row !== null);
-            [$nb_photos] = $row;
+            $row = DbConnection::build()->fetchNumeric('SELECT COUNT(*) FROM ' . Tables::images() . ';');
+            $nb_photos = $row !== false ? $row[0] : 0;
             if ($nb_photos >= \Piwigo\Config\Config::loungeActivateThreshold()) {
                 \Piwigo\Config\ConfigDb::confUpdateParam('lounge_active', true, true);
             }
@@ -568,7 +571,7 @@ SELECT
 
         if (isset($categories) and count($categories) > 0) {
             $imageConn = DbConnection::build();
-            $imageService = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)));
+            $imageService = new ImageService(new ImageRepository($imageConn), new ActivityService(new ActivityRepository($imageConn)));
 
             if (\Piwigo\Config\Config::loungeActive()) {
                 // fillLounge() requires int keys for $categories; a WS param
@@ -669,20 +672,22 @@ SELECT
             die('[' . __METHOD__ . '] unexpected format extension "' . $format_ext . '" (authorized extensions: ' . implode(', ', $authorized_format_exts) . ')');
         }
 
+        $conn = DbConnection::build();
         $query = '
 SELECT
     path
   FROM ' . Tables::images() . '
   WHERE id = ' . $format_of . '
 ;';
-        $images = \Piwigo\Db\MysqliDb::query2Array($query);
+        $images = $conn->fetchAllAssociative($query);
 
         if (! isset($images[0])) {
             die('[' . __METHOD__ . '] this photo does not exist in the database');
         }
 
-        $format_path = dirname((string) $images[0]['path']) . '/pwg_format/';
-        $format_path .= \Piwigo\Core\StringHelper::getFilenameWoExtension(basename((string) $images[0]['path']));
+        $image_0_path = is_scalar($images[0]['path']) ? (string) $images[0]['path'] : '';
+        $format_path = dirname($image_0_path) . '/pwg_format/';
+        $format_path .= \Piwigo\Core\StringHelper::getFilenameWoExtension(basename($image_0_path));
         $format_path .= '.' . $format_ext;
 
         $this->prepareDirectory(dirname($format_path));
@@ -721,7 +726,7 @@ SELECT
   AND ext = "' . $format_ext . '"
 ;';
 
-        $formats = \Piwigo\Db\MysqliDb::query2Array($query);
+        $formats = $conn->fetchAllAssociative($query);
         if ((bool) $formats) {
             $set_fields = [
                 'filesize' => $file_infos['filesize'],
@@ -731,20 +736,23 @@ SELECT
                 'image_id' => $format_of,
                 'ext' => $format_ext,
             ];
-            \Piwigo\Db\MysqliDb::singleUpdate(Tables::imageFormat(), $set_fields, $where_fields);
+            new BatchWriter($conn)
+                ->singleUpdate(Tables::imageFormat(), $set_fields, $where_fields);
             $format_id = $formats[0]['format_id'];
             $add_status = 'update';
         } else {
-            \Piwigo\Db\MysqliDb::singleInsert(Tables::imageFormat(), $insert);
-            $format_id = \Piwigo\Db\MysqliDb::insertId();
+            new BatchWriter($conn)
+                ->singleInsert(Tables::imageFormat(), $insert);
+            $format_id = $conn->lastInsertId();
             $add_status = 'add';
         }
 
-        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('photo', $format_of, 'edit', [
-            'action' => 'add format',
-            'format_ext' => $format_ext,
-            'format_id' => $format_id,
-        ]);
+        new ActivityService(new ActivityRepository($conn))
+            ->record('photo', $format_of, 'edit', [
+                'action' => 'add format',
+                'format_ext' => $format_ext,
+                'format_id' => $format_id,
+            ]);
 
         $format_infos = $insert;
         $format_infos['format_id'] = $format_id;

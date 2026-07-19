@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
 use Piwigo\Category\CategoryRepository;
@@ -26,14 +29,19 @@ use Piwigo\Permission\PermissionService;
  */
 final class GroupPermPageRenderer
 {
+    private static function auditService(Connection $conn): AuditService
+    {
+        return new AuditService(new AuditRepository($conn));
+    }
+
     public function render(): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $categoryConn = DbConnection::build();
+        $conn = DbConnection::build();
         $categoryService = new CategoryService(
-            new CategoryRepository($categoryConn),
-            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+            new CategoryRepository($conn),
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
         );
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -77,7 +85,7 @@ final class GroupPermPageRenderer
 
         $group_id = (int) $_GET['group_id'];
 
-        $group_service = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new AuditService(new AuditRepository(DbConnection::build())));
+        $group_service = new GroupService(new GroupRepository($conn), new ActivityService(new ActivityRepository($conn)), self::auditService($conn));
 
         // [SEC-57] actor for either branch below
         $actor_id = \Piwigo\Users\CurrentUser::get()->id;
@@ -90,7 +98,7 @@ final class GroupPermPageRenderer
             $subcat_ids = array_map(intval(...), $subcats);
             $group_service->removeAccess($group_id, $subcat_ids);
 
-            new AuditService(new AuditRepository(DbConnection::build()))
+            self::auditService($conn)
                 ->record($actor_id, 'permission_revoke', 'group', $group_id, [
                     'category_ids' => $subcat_ids,
                 ], null);
@@ -105,9 +113,10 @@ SELECT id
   WHERE id IN (' . implode(',', $uppercats) . ')
   AND status = \'private\'
 ;';
-            $result = \Piwigo\Db\MysqliDb::query($query);
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-                $private_uppercats[] = $row['id'];
+            foreach ($conn->fetchAllAssociative($query) as $row) {
+                if (is_int($row['id']) || is_string($row['id'])) {
+                    $private_uppercats[] = (string) $row['id'];
+                }
             }
 
             // GroupService::addAccess() itself skips categories the group is
@@ -116,7 +125,7 @@ SELECT id
             $private_uppercat_ids = array_map(intval(...), $private_uppercats);
             $group_service->addAccess($group_id, $private_uppercat_ids);
 
-            new AuditService(new AuditRepository(DbConnection::build()))
+            self::auditService($conn)
                 ->record($actor_id, 'permission_grant', 'group', $group_id, null, [
                     'category_ids' => $private_uppercat_ids,
                 ]);
@@ -133,7 +142,8 @@ SELECT id
             [
                 'TITLE' => l10n(
                     'Manage permissions for group "%s"',
-                    new GroupRepository(DbConnection::build())->findName($group_id) ?? false
+                    new GroupRepository($conn)
+                        ->findName($group_id) ?? false
                 ),
                 'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
                 'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
@@ -153,10 +163,11 @@ SELECT id,name,uppercats,global_rank
 ;';
         $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', new HtmlService(), $template);
 
-        $result = \Piwigo\Db\MysqliDb::query($query_true);
         $authorized_ids = [];
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-            $authorized_ids[] = $row['id'];
+        foreach ($conn->fetchAllAssociative($query_true) as $row) {
+            if (is_int($row['id']) || is_string($row['id'])) {
+                $authorized_ids[] = (string) $row['id'];
+            }
         }
 
         $query_false = '

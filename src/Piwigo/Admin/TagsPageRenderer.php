@@ -31,7 +31,7 @@ final class TagsPageRenderer
         $tabsheet->assign();
 
         $tagConn = DbConnection::build();
-        $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+        $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($tagConn)));
 
         if (($_GET['action'] ?? null) === 'delete_orphans') {
             new \Piwigo\Csrf\CsrfService()
@@ -108,25 +108,25 @@ final class TagsPageRenderer
 SELECT tag_id, COUNT(image_id) AS counter
   FROM ' . Tables::imageTag() . '
   GROUP BY tag_id';
-        $tag_counters = \Piwigo\Db\MysqliDb::query2Array($query, 'tag_id', 'counter');
+        $tag_counters = array_column($tagConn->fetchAllAssociative($query), 'counter', 'tag_id');
 
         // all tags
         $query = '
 SELECT name, id, url_name
   FROM ' . Tables::tags() . '
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
         $all_tags = [];
-        while ((bool) ($tag = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach ($tagConn->fetchAllAssociative($query) as $tag) {
             $raw_name = $tag['name'];
             $tag['raw_name'] = $raw_name;
+            $raw_name_str = is_scalar($raw_name) ? (string) $raw_name : '';
             $rendered_name = trigger_change('render_tag_name', $raw_name, $tag);
-            $rendered_name = is_string($rendered_name) ? $rendered_name : ($raw_name ?? '');
+            $rendered_name = is_string($rendered_name) ? $rendered_name : $raw_name_str;
             $tag['name'] = $rendered_name;
 
             $tag_id = $tag['id'];
             $counter = 0;
-            if (is_string($tag_id) && isset($tag_counters[$tag_id])) {
+            if ((is_int($tag_id) || is_string($tag_id)) && isset($tag_counters[$tag_id])) {
                 $tag_counter_value = $tag_counters[$tag_id];
                 if (is_numeric($tag_counter_value)) {
                     $counter = intval($tag_counter_value);

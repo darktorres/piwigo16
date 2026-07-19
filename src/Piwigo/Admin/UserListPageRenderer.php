@@ -4,9 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
+use Piwigo\Mail\MailService;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 /**
  * Ported from admin/user_list.php (page slug "user_list") -- add users and
@@ -16,9 +26,26 @@ use Piwigo\Html\HtmlService;
  */
 final class UserListPageRenderer
 {
+    private static function userService(Connection $conn): UserService
+    {
+        return new UserService(
+            new UserRepository($conn),
+            new GroupRepository($conn),
+            new MailService(),
+            new ActivityService(new ActivityRepository($conn)),
+            new HtmlService()
+        );
+    }
+
+    private static function preferencesService(Connection $conn): PreferencesService
+    {
+        return new PreferencesService(new UserRepository($conn));
+    }
+
     public function render(): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
+        $conn = DbConnection::build();
 
         new \Piwigo\Validation\InputValidator()
             ->validate('group', $_GET, false, ValidationPattern::ID);
@@ -50,11 +77,9 @@ SELECT id, name, COUNT(ug.user_id) as nb_users_of
   GROUP BY name
   ORDER BY name ASC
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach ($conn->fetchAllAssociative($query) as $row) {
             $group_id = $row['id'];
-            if (! is_string($group_id)) {
+            if (! is_int($group_id) && ! is_string($group_id)) {
                 continue;
             }
             $groups[$group_id] = $row['name'];
@@ -67,19 +92,24 @@ SELECT id, name, COUNT(ug.user_id) as nb_users_of
 
         $template->assign('groups_for_filter', $groups_for_filter);
 
+        // ORDER BY registration_year, registration_month (the SELECTed
+        // aliases), not the raw registration_date column -- Piwigo\Db\
+        // DbConnection doesn't accept a DISTINCT query's ORDER BY
+        // referencing a column absent from its own SELECT list the way the
+        // legacy mysqli connection did (same class of strictness gap as
+        // CommentsController's own ONLY_FULL_GROUP_BY fix).
         $query = '
 SELECT DISTINCT
       month(registration_date) as registration_month,
       year(registration_date) as registration_year
 FROM ' . Tables::userInfos() . '
-ORDER BY registration_date
+ORDER BY registration_year, registration_month
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-
         $register_dates = [];
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach ($conn->fetchAllAssociative($query) as $row) {
             $registration_month = is_numeric($row['registration_month']) ? (int) $row['registration_month'] : 0;
-            $register_dates[] = $row['registration_year'] . '-' . sprintf('%02u', $registration_month);
+            $registration_year = is_scalar($row['registration_year']) ? (string) $row['registration_year'] : '';
+            $register_dates[] = $registration_year . '-' . sprintf('%02u', $registration_month);
         }
 
         $template->assign('register_dates', implode(',', $register_dates));
@@ -96,7 +126,7 @@ ORDER BY registration_date
             'user_list' => 'user_list.tpl',
         ]);
 
-        $default_user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultUserInfo(true);
+        $default_user = self::userService($conn)->getDefaultUserInfo(true);
         if (! is_array($default_user)) {
             new HtmlService()
                 ->fatalError('Default user not found');
@@ -126,7 +156,10 @@ SELECT
   FROM ' . Tables::userInfos() . '
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-            $admin_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id');
+            $admin_ids = array_map(
+                static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+                array_column($conn->fetchAllAssociative($query), 'user_id')
+            );
 
             $protected_users = array_merge($protected_users, $admin_ids);
 
@@ -145,7 +178,7 @@ SELECT
     WHERE ' . $user_fields['id'] . ' = ' . $webmaster_id . '
 ;';
 
-        $owner_username = \Piwigo\Db\MysqliDb::query2Array($query, null, 'username');
+        $owner_username = array_column($conn->fetchAllAssociative($query), 'username');
 
         // protected_users/password_protected_users mix CurrentUser::get()->id, several $conf
         // ids (already normalized to int above) and $admin_ids (query2array
@@ -162,9 +195,9 @@ SELECT
                 'NB_IMAGE_PAGE' => $default_user['nb_image_page'],
                 'RECENT_PERIOD' => $default_user['recent_period'],
                 'theme_options' => \Piwigo\Core\ThemeCatalog::getPwgThemes(),
-                'theme_selected' => new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultTheme(),
+                'theme_selected' => self::userService($conn)->getDefaultTheme(),
                 'language_options' => \Piwigo\Lang\LangService::getLanguages(),
-                'language_selected' => new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultLanguage(),
+                'language_selected' => self::userService($conn)->getDefaultLanguage(),
                 'association_options' => $groups,
                 'protected_users' => implode(',', array_unique($protected_users)),
                 'password_protected_users' => implode(',', array_unique($password_protected_users)),
@@ -184,7 +217,7 @@ SELECT
 
         // Status options
         $label_of_status = [];
-        foreach (\Piwigo\Db\MysqliDb::getEnums(Tables::userInfos(), 'status') as $status) {
+        foreach (new DbInfo($conn)->getEnums(Tables::userInfos(), 'status') as $status) {
             $label_of_status[$status] = l10n('user_status_' . $status);
         }
 
@@ -197,9 +230,8 @@ SELECT
   GROUP BY status
 ';
 
-        $result = \Piwigo\Db\MysqliDb::query($query);
         $nb_users_by_status = [];
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach ($conn->fetchAllAssociative($query) as $row) {
             $status = $row['status'];
             if (! is_string($status)) {
                 continue;
@@ -245,9 +277,8 @@ SELECT
   GROUP BY level
 ';
 
-        $result = \Piwigo\Db\MysqliDb::query($query);
         $nb_users_by_level = $level_options;
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach ($conn->fetchAllAssociative($query) as $row) {
             $level = $row['level'];
             if (! is_numeric($level)) {
                 continue;
@@ -268,27 +299,27 @@ SELECT id, name, is_default
   FROM `' . Tables::groups() . '`
   ORDER BY name ASC
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-
         $groups_arr_id = [];
         $groups_arr_name = [];
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-            $groups_arr_name[] = '"' . \Piwigo\Db\MysqliDb::realEscapeString($row['name']) . '"';
-            $groups_arr_id[] = $row['id'];
+        foreach ($conn->fetchAllAssociative($query) as $row) {
+            $groups_arr_name[] = '"' . addslashes(is_scalar($row['name']) ? (string) $row['name'] : '') . '"';
+            if (is_int($row['id']) || is_string($row['id'])) {
+                $groups_arr_id[] = (string) $row['id'];
+            }
         }
 
         $template->assign('groups_arr_id', implode(',', $groups_arr_id));
         $template->assign('groups_arr_name', implode(',', $groups_arr_name));
         $template->assign('guest_id', $guest_id);
 
-        $template->assign('view_selector', new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('user-manager-view', 'line'));
+        $template->assign('view_selector', self::preferencesService($conn)->getParam('user-manager-view', 'line'));
 
-        if (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('user-manager-view', 'line') === 'line') {
+        if (self::preferencesService($conn)->getParam('user-manager-view', 'line') === 'line') {
             // Show 5 users by default
-            $template->assign('pagination', new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('user-manager-pagination', 5));
+            $template->assign('pagination', self::preferencesService($conn)->getParam('user-manager-pagination', 5));
         } else {
             // Show 10 users by default
-            $template->assign('pagination', new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('user-manager-pagination', 10));
+            $template->assign('pagination', self::preferencesService($conn)->getParam('user-manager-pagination', 10));
         }
 
         if ((bool) self::webmasterIdIsLocal()) {

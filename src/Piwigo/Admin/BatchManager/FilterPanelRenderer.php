@@ -46,6 +46,8 @@ final class FilterPanelRenderer
         array $catElementsId,
         int $pageStart,
     ): void {
+        $conn = DbConnection::build();
+
         /** @var array<string, mixed> $bulk_manager_filter */
         $bulk_manager_filter = isset($_SESSION['bulk_manager_filter']) && is_array($_SESSION['bulk_manager_filter']) ? $_SESSION['bulk_manager_filter'] : [];
 
@@ -176,8 +178,7 @@ SELECT
   WHERE id IN (' . implode(',', $filter_tags_ids) . ')
 ;';
 
-            $tagConn = DbConnection::build();
-            $filter_tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+            $filter_tags = new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)))
                 ->getTagList($query, new HtmlService());
         }
 
@@ -216,7 +217,7 @@ SELECT
     )
 ;';
 
-            $associated_categories = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'id');
+            $associated_categories = array_column($conn->fetchAllAssociative($query), 'id', 'id');
         }
 
         $template->assign('associated_categories', $associated_categories);

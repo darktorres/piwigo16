@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -51,6 +55,15 @@ use Piwigo\Template\Template;
  */
 final class BatchManagerGlobalPageRenderer
 {
+    private static function tagService(Connection $conn): TagService
+    {
+        return new TagService(
+            new TagRepository($conn),
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
+            new ActivityService(new ActivityRepository($conn))
+        );
+    }
+
     /**
      * @param array<mixed> $catElementsId
      * @param ?list<string> $duplicatesOnFields
@@ -58,6 +71,7 @@ final class BatchManagerGlobalPageRenderer
     public function render(array $catElementsId, int $pageStart, ?array $duplicatesOnFields = null): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
+        $conn = DbConnection::build();
 
         if (count($_POST) > 0) {
             new \Piwigo\Csrf\CsrfService()
@@ -157,9 +171,8 @@ final class BatchManagerGlobalPageRenderer
             $action = is_string($_POST['selectAction'] ?? null) ? $_POST['selectAction'] : '';
             $redirect = false;
 
-            $tagConn = DbConnection::build();
-            $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
-            $imageService = new ImageService(new ImageRepository($tagConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+            $tagService = self::tagService($conn);
+            $imageService = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)));
 
             if ($action === 'remove_from_caddie') {
                 $current_user_id = \Piwigo\Users\CurrentUser::get()->id;
@@ -169,7 +182,7 @@ DELETE
   WHERE element_id IN (' . implode(',', $collection) . ')
     AND user_id = ' . $current_user_id . '
 ;';
-                \Piwigo\Db\MysqliDb::query($query);
+                $conn->executeStatement($query);
 
                 // remove from caddie action available only in caddie so reload content
                 $redirect = true;
@@ -202,7 +215,7 @@ DELETE
   WHERE image_id IN (' . implode(',', $collection) . ')
     AND tag_id IN (' . implode(',', $del_tags) . ')
 ;';
-                    \Piwigo\Db\MysqliDb::query($query);
+                    $conn->executeStatement($query);
 
                     $taglist_after = $tagService->getImageTagIds($collection);
                     $images_to_update = $tagService->compareImageTagLists($taglist_before, $taglist_after);
@@ -305,18 +318,20 @@ DELETE
                     ];
                 }
 
-                \Piwigo\Db\MysqliDb::massUpdates(
-                    Tables::images(),
-                    [
-                        'primary' => ['id'],
-                        'update' => ['author'],
-                    ],
-                    $datas
-                );
+                new BatchWriter($conn)
+                    ->massUpdate(
+                        Tables::images(),
+                        [
+                            'primary' => ['id'],
+                            'update' => ['author'],
+                        ],
+                        $datas
+                    );
 
-                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('photo', $collection, 'edit', [
-                    'action' => 'author',
-                ]);
+                new ActivityService(new ActivityRepository($conn))
+                    ->record('photo', $collection, 'edit', [
+                        'action' => 'author',
+                    ]);
             }
 
             // title
@@ -333,18 +348,20 @@ DELETE
                     ];
                 }
 
-                \Piwigo\Db\MysqliDb::massUpdates(
-                    Tables::images(),
-                    [
-                        'primary' => ['id'],
-                        'update' => ['name'],
-                    ],
-                    $datas
-                );
+                new BatchWriter($conn)
+                    ->massUpdate(
+                        Tables::images(),
+                        [
+                            'primary' => ['id'],
+                            'update' => ['name'],
+                        ],
+                        $datas
+                    );
 
-                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('photo', $collection, 'edit', [
-                    'action' => 'title',
-                ]);
+                new ActivityService(new ActivityRepository($conn))
+                    ->record('photo', $collection, 'edit', [
+                        'action' => 'title',
+                    ]);
             }
 
             // date_creation
@@ -363,18 +380,20 @@ DELETE
                     ];
                 }
 
-                \Piwigo\Db\MysqliDb::massUpdates(
-                    Tables::images(),
-                    [
-                        'primary' => ['id'],
-                        'update' => ['date_creation'],
-                    ],
-                    $datas
-                );
+                new BatchWriter($conn)
+                    ->massUpdate(
+                        Tables::images(),
+                        [
+                            'primary' => ['id'],
+                            'update' => ['date_creation'],
+                        ],
+                        $datas
+                    );
 
-                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('photo', $collection, 'edit', [
-                    'action' => 'date_creation',
-                ]);
+                new ActivityService(new ActivityRepository($conn))
+                    ->record('photo', $collection, 'edit', [
+                        'action' => 'date_creation',
+                    ]);
             }
 
             // privacy_level
@@ -387,18 +406,20 @@ DELETE
                     ];
                 }
 
-                \Piwigo\Db\MysqliDb::massUpdates(
-                    Tables::images(),
-                    [
-                        'primary' => ['id'],
-                        'update' => ['level'],
-                    ],
-                    $datas
-                );
+                new BatchWriter($conn)
+                    ->massUpdate(
+                        Tables::images(),
+                        [
+                            'primary' => ['id'],
+                            'update' => ['level'],
+                        ],
+                        $datas
+                    );
 
-                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('photo', $collection, 'edit', [
-                    'action' => 'privacy_level',
-                ]);
+                new ActivityService(new ActivityRepository($conn))
+                    ->record('photo', $collection, 'edit', [
+                        'action' => 'privacy_level',
+                    ]);
 
                 if (isset($bulk_manager_filter['level'])) {
                     if ($_POST['level'] < $bulk_manager_filter['level']) {
@@ -443,10 +464,10 @@ DELETE
             } elseif ($action === 'delete_derivatives' && isset($_POST['del_derivatives_type']) && is_array($_POST['del_derivatives_type']) && count($_POST['del_derivatives_type']) > 0) {
                 $query = 'SELECT path,representative_ext FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $collection) . ')';
-                $result = \Piwigo\Db\MysqliDb::query($query);
-                while ((bool) ($info = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+                foreach ($conn->fetchAllAssociative($query) as $info) {
+                    $info_path = $info['path'];
                     $derivative_infos = [
-                        'path' => (string) $info['path'],
+                        'path' => is_scalar($info_path) ? (string) $info_path : '',
                     ];
                     if (is_string($info['representative_ext'] ?? null) && $info['representative_ext'] !== '') {
                         $derivative_infos['representative_ext'] = $info['representative_ext'];
@@ -506,8 +527,7 @@ DELETE
 
         if (count($cat_elements_id) > 0) {
             // remove tags
-            $tagConn = DbConnection::build();
-            $template->assign('associated_tags', new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+            $template->assign('associated_tags', self::tagService($conn)
                 ->getCommonTags($cat_elements_id, -1, new HtmlService()));
         }
 
@@ -628,11 +648,9 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
   ' . $order_by . '
   LIMIT ' . $nb_images . ' OFFSET ' . $page_start . '
 ;';
-            $result = \Piwigo\Db\MysqliDb::query($query);
-
             $thumb_params = ImageStdParams::get_by_type(ImageStdParams::SQUARE);
             // template thumbnail initialization
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+            foreach ($conn->fetchAllAssociative($query) as $row) {
                 $nb_thumbs_page++;
                 $src_image = new SrcImage($row);
 
@@ -640,12 +658,15 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
                     ->renderElementName($row);
                 $row_file = is_string($row['file']) ? $row['file'] : '';
                 if ($ttitle !== \Piwigo\Core\StringHelper::getNameFromFile($row_file)) {
-                    $ttitle .= ' (' . $row['file'] . ')';
+                    $ttitle .= ' (' . $row_file . ')';
                 }
 
                 $row_filesize = is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0;
-                $ttitle .= '<br>' . $row['width'] . '&times;' . $row['height'] . ' pixels, ' . sprintf('%.2f', $row_filesize / 1024) . 'MB';
+                $row_width = is_scalar($row['width']) ? (string) $row['width'] : '';
+                $row_height = is_scalar($row['height']) ? (string) $row['height'] : '';
+                $ttitle .= '<br>' . $row_width . '&times;' . $row_height . ' pixels, ' . sprintf('%.2f', $row_filesize / 1024) . 'MB';
 
+                $row_id = is_scalar($row['id']) ? (string) $row['id'] : '';
                 $template->append(
                     'thumbnails',
                     array_merge(
@@ -654,7 +675,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
                             'thumb' => new DerivativeImage($thumb_params, $src_image),
                             'TITLE' => $ttitle,
                             'FILE_SRC' => DerivativeImage::url(ImageStdParams::LARGE, $src_image),
-                            'U_EDIT' => get_root_url() . 'admin.php?page=photo-' . $row['id'],
+                            'U_EDIT' => get_root_url() . 'admin.php?page=photo-' . $row_id,
                         ]
                     )
                 );

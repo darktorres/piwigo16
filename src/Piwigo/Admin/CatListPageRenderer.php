@@ -103,9 +103,8 @@ final class CatListPageRenderer
 SELECT COUNT(*)
   FROM ' . Tables::categories() . '
 ;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$nb_cats] = $row;
+        $row = $categoryConn->fetchNumeric($query);
+        $nb_cats = $row !== false ? $row[0] : 0;
         $template->assign(
             [
                 'nb_cats' => $nb_cats,
@@ -209,8 +208,8 @@ SELECT id, name, permalink, dir, `rank`, status
         $query .= '
   ORDER BY `rank` ASC
 ;';
-        $categories = \Piwigo\Db\MysqliDb::query2Array($query, 'id');
-        /** @var array<int|string, array<string, string|null>> $categories */
+        $categories = array_column($categoryConn->fetchAllAssociative($query), null, 'id');
+        /** @var array<int|string, array<string, mixed>> $categories */
 
         // get the categories containing images directly
         $categories_with_images = [];
@@ -227,7 +226,7 @@ SELECT
 ;';
             // WHERE category_id IN ('.implode(',', array_keys($categories)).')
 
-            $nb_photos_in = \Piwigo\Db\MysqliDb::query2Array($query, 'category_id', 'nb_photos');
+            $nb_photos_in = array_column($categoryConn->fetchAllAssociative($query), 'nb_photos', 'category_id');
 
             $query = '
 SELECT
@@ -235,7 +234,7 @@ SELECT
     uppercats
   FROM ' . Tables::categories() . '
 ;';
-            $all_categories = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'uppercats');
+            $all_categories = array_column($categoryConn->fetchAllAssociative($query), 'uppercats', 'id');
             $subcats_of = [];
 
             foreach ($all_categories as $id => $uppercats) {
@@ -272,9 +271,9 @@ SELECT
 
         foreach ($categories as $category) {
             // 'id' is the Tables::categories() primary key (NOT NULL, auto-increment) --
-            // it is always a numeric string here; this is a real guard, not dead
-            // code, since \Piwigo\Db\MysqliDb::query2Array()'s return type is generically string|null
-            // for every column.
+            // always numeric here (native int under DBAL, numeric string under
+            // mysqli); this is a real guard, not dead code, since the row's return
+            // type is generically mixed for every column.
             if (! is_numeric($category['id'])) {
                 continue;
             }

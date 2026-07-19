@@ -179,13 +179,16 @@ final class PluginLoader
             // update database (only on production). We want to avoid registering an "auto" to "auto" update,
             // which happens for each "version=auto" plugin on each page load.
             if ($new_version != $old_version) {
-                new PluginRepository(DbConnection::build())->updateVersion($plugin_id, $fs_version);
+                $conn = DbConnection::build();
+                new PluginRepository($conn)
+                    ->updateVersion($plugin_id, $fs_version);
 
-                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Plugin, 'autoupdate', [
-                    'plugin_id' => $plugin_id,
-                    'from_version' => $old_version,
-                    'to_version' => $new_version,
-                ]);
+                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn))
+                    ->record('system', ActivitySystem::Plugin, 'autoupdate', [
+                        'plugin_id' => $plugin_id,
+                        'from_version' => $old_version,
+                        'to_version' => $new_version,
+                    ]);
             }
         }
     }

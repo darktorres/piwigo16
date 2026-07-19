@@ -4,13 +4,24 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Auth\AuthRepository;
+use Piwigo\Auth\AuthService;
+use Piwigo\Auth\CookieService;
+use Piwigo\Auth\PasswordRepository;
+use Piwigo\Auth\PasswordService;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 /**
  * Ported from admin/album_notification.php (the "notification" tab of the
@@ -38,6 +49,7 @@ final class AlbumNotificationPageRenderer
          */
         global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
+        $conn = DbConnection::build();
 
         // +-------------------------------------------------------------------+
         // |                       variable initialization                     |
@@ -74,11 +86,9 @@ SELECT id, file, path, representative_ext
   WHERE id = ' . $category['representative_picture_id'] . '
 ;';
 
-                $result = \Piwigo\Db\MysqliDb::query($query);
-                if (\Piwigo\Db\MysqliDb::numRows($result) > 0) {
-                    $element = \Piwigo\Db\MysqliDb::fetchAssoc($result);
-                    // the num_rows > 0 check above guarantees a row is available
-                    assert(is_array($element));
+                $img_rows = $conn->fetchAllAssociative($query);
+                if (count($img_rows) > 0) {
+                    $element = $img_rows[0];
 
                     $img = [
                         'link' => make_picture_url(
@@ -148,7 +158,7 @@ SELECT
     JOIN ' . Tables::users() . ' AS u ON u.' . $user_field_id . ' = ui.user_id
   WHERE ui.user_id IN (' . implode(',', $post_user_ids) . ')
 ;';
-                $users = \Piwigo\Db\MysqliDb::query2Array($query);
+                $users = $conn->fetchAllAssociative($query);
                 $usernames = [];
 
                 foreach ($users as $u) {
@@ -159,9 +169,12 @@ SELECT
                         continue;
                     }
 
-                    $usernames[] = $u['username'];
+                    $u_username = is_string($u['username']) ? $u['username'] : '';
+                    $usernames[] = $u_username;
 
-                    $authkey = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->createUserAuthKey((int) $u['user_id'], $u['status']);
+                    $u_status = is_string($u['status']) ? $u['status'] : null;
+                    $authkey = new AuthService(new AuthRepository($conn), new ActivityService(new ActivityRepository($conn)), new HtmlService(), new PasswordService(new PasswordRepository($conn)), new CookieService())
+                        ->createUserAuthKey((int) $u['user_id'], $u_status);
 
                     $user_tpl = $tpl;
 
@@ -185,7 +198,7 @@ SELECT
                         $user_args['auth_key'] = $authkey['auth_key'];
                     }
 
-                    $user_language = is_string($u['language']) ? $u['language'] : new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultLanguage();
+                    $user_language = is_string($u['language']) ? $u['language'] : new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), new HtmlService())->getDefaultLanguage();
                     $user_email = is_string($u['email']) ? $u['email'] : '';
 
                     new MailService()
@@ -222,8 +235,8 @@ SELECT
   FROM `' . Tables::groups() . '`
   WHERE id = ' . $group_id . '
 ;';
-                $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-                $group_name = $row !== null ? $row[0] : null;
+                $row = $conn->fetchNumeric($query);
+                $group_name = $row !== false ? $row[0] : null;
 
                 $template->assign(
                     [
@@ -284,7 +297,7 @@ SELECT
     id AS group_id
   FROM `' . Tables::groups() . '`
 ;';
-        $all_group_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'group_id');
+        $all_group_ids = array_column($conn->fetchAllAssociative($query), 'group_id');
         // group_ids stays [] (rather than undefined) when the gallery has no
         // groups at all, so the "private album" branch below can safely read it
         // unconditionally instead of guarding on definedness.
@@ -302,7 +315,7 @@ SELECT
   FROM ' . Tables::groupAccess() . '
   WHERE cat_id = ' . $category['id'] . '
 ;';
-                $group_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'group_id');
+                $group_ids = array_column($conn->fetchAllAssociative($query), 'group_id');
             } else {
                 $group_ids = $all_group_ids;
             }
@@ -313,12 +326,12 @@ SELECT
     id,
     name
   FROM `' . Tables::groups() . '`
-  WHERE id IN (' . implode(',', array_filter($group_ids, is_string(...))) . ')
+  WHERE id IN (' . implode(',', array_filter($group_ids, static fn (mixed $v): bool => is_int($v) || is_string($v))) . ')
   ORDER BY name ASC
 ;';
                 $template->assign(
                     'group_mail_options',
-                    \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'name')
+                    array_column($conn->fetchAllAssociative($query), 'name', 'id')
                 );
             }
         }
@@ -332,7 +345,10 @@ SELECT
   FROM ' . Tables::userInfos() . '
   WHERE status != \'guest\'
 ;';
-        $all_user_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id');
+        $all_user_ids = array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            array_column($conn->fetchAllAssociative($query), 'user_id')
+        );
 
         if ($category['status'] === 'private') {
             $user_ids_access_indirect = [];
@@ -342,9 +358,12 @@ SELECT
 SELECT
     user_id
   FROM ' . Tables::userGroup() . '
-  WHERE group_id IN (' . implode(',', array_filter($group_ids, is_string(...))) . ')
+  WHERE group_id IN (' . implode(',', array_filter($group_ids, static fn (mixed $v): bool => is_int($v) || is_string($v))) . ')
 ';
-                $user_ids_access_indirect = \Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id');
+                $user_ids_access_indirect = array_map(
+                    static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+                    array_column($conn->fetchAllAssociative($query), 'user_id')
+                );
             }
 
             $query = '
@@ -353,7 +372,10 @@ SELECT
   FROM ' . Tables::userAccess() . '
   WHERE cat_id = ' . $category['id'] . '
 ;';
-            $user_ids_access_direct = \Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id');
+            $user_ids_access_direct = array_map(
+                static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+                array_column($conn->fetchAllAssociative($query), 'user_id')
+            );
 
             $user_ids_access = array_unique(array_merge($user_ids_access_direct, $user_ids_access_indirect));
 
@@ -375,7 +397,7 @@ SELECT
   WHERE ' . $user_field_id . ' IN (' . implode(',', $user_ids) . ')
 ;';
 
-            $users = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'username');
+            $users = array_column($conn->fetchAllAssociative($query), 'username', 'id');
 
             $template->assign('user_options', $users);
         }

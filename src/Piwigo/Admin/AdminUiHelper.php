@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\StringHelper;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
 /**
@@ -152,6 +153,7 @@ final class AdminUiHelper
             '_hash' => md5(get_absolute_root_url()),
         ];
 
+        $conn = DbConnection::build();
         foreach ($requested as $item) {
             $query = '
 SELECT CONCAT(
@@ -161,9 +163,7 @@ SELECT CONCAT(
   )
   FROM `' . $tables[$item] . '`
 ;';
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-            assert($row !== null);
-            $cache_key = $row[0];
+            $cache_key = $conn->fetchOne($query);
             assert(is_string($cache_key));
             $keys[$item] = $cache_key;
         }

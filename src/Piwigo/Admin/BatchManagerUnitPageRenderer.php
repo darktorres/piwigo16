@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -50,6 +54,15 @@ use Piwigo\Template\Template;
  */
 final class BatchManagerUnitPageRenderer
 {
+    private static function tagService(Connection $conn): TagService
+    {
+        return new TagService(
+            new TagRepository($conn),
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
+            new ActivityService(new ActivityRepository($conn))
+        );
+    }
+
     /**
      * @param array<mixed> $catElementsId
      */
@@ -62,6 +75,7 @@ final class BatchManagerUnitPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();
+        $conn = DbConnection::build();
 
         trigger_notify('loc_begin_element_set_unit');
 
@@ -84,36 +98,34 @@ SELECT id, date_creation
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $collection) . ')
 ;';
-            $result = \Piwigo\Db\MysqliDb::query($query);
+            $tagService = self::tagService($conn);
 
-            $tagConn = DbConnection::build();
-            $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
-
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+            foreach ($conn->fetchAllAssociative($query) as $row) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this
-                // guard only defends against the generic string|null element type
-                // \Piwigo\Db\MysqliDb::fetchAssoc() carries for every column.
-                if ($row['id'] === null) {
+                // guard only defends against the generic mixed element type a
+                // fetched row carries for every column.
+                if ($row['id'] === null || ! is_scalar($row['id'])) {
                     continue;
                 }
+                $row_id_str = (string) $row['id'];
                 $image_id = (int) $row['id'];
 
                 $data = [];
 
                 $data['id'] = $row['id'];
-                $data['name'] = $_POST['name-' . $row['id']];
-                $data['author'] = $_POST['author-' . $row['id']];
-                $data['level'] = $_POST['level-' . $row['id']];
+                $data['name'] = $_POST['name-' . $row_id_str];
+                $data['author'] = $_POST['author-' . $row_id_str];
+                $data['level'] = $_POST['level-' . $row_id_str];
 
                 if (\Piwigo\Config\Config::allowHtmlDescriptions()) {
-                    $data['comment'] = @$_POST['description-' . $row['id']];
+                    $data['comment'] = @$_POST['description-' . $row_id_str];
                 } else {
-                    $description_post = $_POST['description-' . $row['id']] ?? null;
+                    $description_post = $_POST['description-' . $row_id_str] ?? null;
                     $data['comment'] = strip_tags(is_string($description_post) ? $description_post : '');
                 }
 
-                if (($_POST['date_creation-' . $row['id']] ?? '') !== '') {
-                    $data['date_creation'] = $_POST['date_creation-' . $row['id']];
+                if (($_POST['date_creation-' . $row_id_str] ?? '') !== '') {
+                    $data['date_creation'] = $_POST['date_creation-' . $row_id_str];
                 } else {
                     $data['date_creation'] = null;
                 }
@@ -122,7 +134,7 @@ SELECT id, date_creation
 
                 // tags management
                 $tag_ids = [];
-                $raw_tags_post = $_POST['tags-' . $row['id']] ?? null;
+                $raw_tags_post = $_POST['tags-' . $row_id_str] ?? null;
                 if ($raw_tags_post !== null && $raw_tags_post !== '' && $raw_tags_post !== '0' && $raw_tags_post !== []) {
                     if (is_array($raw_tags_post)) {
                         $tag_ids = $tagService->getTagIds(array_filter($raw_tags_post, is_string(...)));
@@ -133,14 +145,15 @@ SELECT id, date_creation
                 $tagService->setTags($tag_ids, $image_id);
             }
 
-            \Piwigo\Db\MysqliDb::massUpdates(
-                Tables::images(),
-                [
-                    'primary' => ['id'],
-                    'update' => ['name', 'author', 'level', 'comment', 'date_creation'],
-                ],
-                $datas
-            );
+            new BatchWriter($conn)
+                ->massUpdate(
+                    Tables::images(),
+                    [
+                        'primary' => ['id'],
+                        'update' => ['name', 'author', 'level', 'comment', 'date_creation'],
+                    ],
+                    $datas
+                );
 
             \Piwigo\Core\PageState::current()->addInfo(l10n('Photo informations updated'));
             UserCacheInvalidator::invalidate();
@@ -294,9 +307,11 @@ SELECT *
   ' . $order_by . '
   LIMIT ' . $page_nb_images . ' OFFSET ' . $page_start . '
 ;';
-            // $result = \Piwigo\Db\MysqliDb::query($query);
-            $images = \Piwigo\Db\MysqliDb::query2Array($query);
-            $added_by_ids = array_unique(array_column($images, 'added_by'));
+            $images = $conn->fetchAllAssociative($query);
+            $added_by_ids = array_unique(array_map(strval(...), array_filter(
+                array_column($images, 'added_by'),
+                static fn (mixed $v): bool => is_int($v) || is_string($v)
+            )));
             // Defaults to empty so the read inside the foreach loop below is always
             // a real array, whether or not $added_by_ids was non-empty (the
             // foreach loop only ever runs when $images -- and therefore
@@ -312,38 +327,41 @@ SELECT
   FROM ' . Tables::users() . '
   WHERE ' . $user_fields['id'] . ' IN ( ' . implode(',', $added_by_ids) . ' )
 ;';
-                $added_by_username_of = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'username');
+                $added_by_username_of = array_column($conn->fetchAllAssociative($query), 'username', 'id');
             }
 
             // NOTE (pre-existing bug, not fixed here): $row is not defined by a
             // per-image loop at this point -- it is whatever the earlier
-            // "unit mode form submission" while-loop (above) left behind (or
+            // "unit mode form submission" foreach (above) left behind (or
             // undefined, if that block didn't run), not the current image's
             // row. $storage_category_id is therefore effectively always null in
             // practice, and the STORAGE_CATEGORY highlighting below never
-            // triggers for the correct album. The isset()/is_array() guards here
-            // only preserve the current (buggy) runtime behavior for PHPStan.
+            // triggers for the correct album. The isset() guard here only
+            // preserves the current (buggy) runtime behavior for PHPStan
+            // (is_array($row) is now provably redundant: the only assignment
+            // site is a foreach over fetchAllAssociative() rows, always arrays).
             $storage_category_id = null;
-            if (isset($row) && is_array($row)
+            if (isset($row)
                 && is_string($row['storage_category_id'] ?? null)
                 && $row['storage_category_id'] !== ''
                 && $row['storage_category_id'] !== '0') {
                 $storage_category_id = $row['storage_category_id'];
             }
 
-            $tagConn = DbConnection::build();
-            $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
-            $imageService = new ImageService(new ImageRepository($tagConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+            $tagService = self::tagService($conn);
+            $imageService = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)));
 
             foreach ($images as $row) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this
-                // guard only defends against the generic string|null element type
-                // \Piwigo\Db\MysqliDb::query2Array() carries for every column.
-                if ($row['id'] === null) {
+                // guard only defends against the generic mixed element type a
+                // fetched row carries for every column.
+                if ($row['id'] === null || (! is_int($row['id']) && ! is_string($row['id']))) {
                     continue;
                 }
+                $row_id = $row['id'];
+                $row_id_str = (string) $row_id;
 
-                $element_ids[] = $row['id'];
+                $element_ids[] = $row_id;
 
                 $src_image = new SrcImage($row);
 
@@ -355,7 +373,7 @@ SELECT
     name
   FROM ' . Tables::imageTag() . ' AS it
     JOIN ' . Tables::tags() . ' AS t ON t.id = it.tag_id
-  WHERE image_id = ' . $row['id'] . '
+  WHERE image_id = ' . $row_id_str . '
 ;';
 
                 $tag_selection = $tagService->getTagList($query, $htmlRenderer);
@@ -363,9 +381,10 @@ SELECT
                 $row_file = is_string($row['file']) ? $row['file'] : '';
                 $legend = $htmlRenderer->renderElementName($row);
                 if ($legend !== \Piwigo\Core\StringHelper::getNameFromFile($row_file)) {
-                    $legend .= ' (' . $row['file'] . ')';
+                    $legend .= ' (' . $row_file . ')';
                 }
-                $extTab = explode('.', (string) $row['path']);
+                $row_path = is_scalar($row['path']) ? (string) $row['path'] : '';
+                $extTab = explode('.', $row_path);
 
                 // represent
 
@@ -376,27 +395,28 @@ SELECT
       FROM ' . Tables::imageCategory() . ' AS ic
         INNER JOIN ' . Tables::categories() . ' AS c
           ON c.id = ic.category_id
-      WHERE image_id = ' . $row['id'] . '
+      WHERE image_id = ' . $row_id_str . '
     ;';
 
-                $sub_result = \Piwigo\Db\MysqliDb::query($query);
                 $related_categories = [];
                 $related_category_ids = [];
                 $media = [
-                    'image' => $imageService->getImageInfos($row['id'], $htmlRenderer, true),
+                    'image' => $imageService->getImageInfos($row_id, $htmlRenderer, true),
                 ];
                 // die_on_missing=true means getImageInfos() only returns null via
                 // a fatal_error() path that never returns.
                 assert($media['image'] !== null);
 
-                while ((bool) ($item = \Piwigo\Db\MysqliDb::fetchAssoc($sub_result))) {
+                foreach ($conn->fetchAllAssociative($query) as $item) {
                     // Tables::imageCategory()/Tables::categories().category_id/uppercats are
-                    // NOT NULL; this guard only defends against the generic
-                    // string|null element type \Piwigo\Db\MysqliDb::fetchAssoc() carries for
-                    // every column.
-                    if ($item['category_id'] === null || $item['uppercats'] === null) {
+                    // NOT NULL; this guard only defends against the generic mixed
+                    // element type a fetched row carries for every column.
+                    if ($item['category_id'] === null || $item['uppercats'] === null
+                        || (! is_int($item['category_id']) && ! is_string($item['category_id']))
+                        || ! is_string($item['uppercats'])) {
                         continue;
                     }
+                    $item_category_id = $item['category_id'];
 
                     $name =
                       $htmlRenderer->getCatDisplayNameCache(
@@ -404,15 +424,15 @@ SELECT
                           get_root_url() . 'admin.php?page=album-'
                       );
 
-                    if ($item['category_id'] === $storage_category_id) {
+                    if ($item_category_id === $storage_category_id) {
                         $template->assign('STORAGE_CATEGORY', $name);
                     }
 
-                    $related_categories[$item['category_id']] = [
+                    $related_categories[$item_category_id] = [
                         'name' => $name,
-                        'unlinkable' => $item['category_id'] !== $storage_category_id,
+                        'unlinkable' => $item_category_id !== $storage_category_id,
                     ];
-                    $related_category_ids[] = $item['category_id'];
+                    $related_category_ids[] = $item_category_id;
                 }
 
                 // jump to link
@@ -421,14 +441,25 @@ SELECT
                 $query = '
     SELECT category_id
     FROM ' . Tables::imageCategory() . '
-    WHERE image_id = ' . $row['id'] . '
+    WHERE image_id = ' . $row_id_str . '
     ;';
                 $currentUser = \Piwigo\Users\CurrentUser::get();
+                // array_column() over the fetched rows gives list<mixed> here since
+                // only the 'category_id' column is selected; drop non-scalar rows
+                // then stringify, since DBAL can hand back native ints for this
+                // column (mysqli always gave a numeric string).
                 $authorizeds = array_diff(
-                    array_filter(\Piwigo\Db\MysqliDb::query2Array($query, null, 'category_id'), is_string(...)),
+                    array_map(
+                        strval(...),
+                        array_filter(
+                            array_column($conn->fetchAllAssociative($query), 'category_id'),
+                            static fn (mixed $v): bool => is_int($v) || is_string($v)
+                        )
+                    ),
                     explode(
                         ',',
-                        new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getForbiddenCategories($currentUser->id, $currentUser->status->value)
+                        new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+                            ->getForbiddenCategories($currentUser->id, $currentUser->status->value)
                     )
                 );
 
@@ -441,20 +472,23 @@ SELECT
                 $cat_names_raw = \Piwigo\Core\ProcessCache::get('cat_names');
                 $cat_names = is_array($cat_names_raw) ? $cat_names_raw : [];
 
-                if (isset($row['cat_id'])
-                and in_array($row['cat_id'], $authorizeds, true)) {
+                $row_cat_id_raw = $row['cat_id'] ?? null;
+                $row_cat_id = (is_int($row_cat_id_raw) || is_string($row_cat_id_raw)) ? (string) $row_cat_id_raw : null;
+
+                if ($row_cat_id !== null
+                and in_array($row_cat_id, $authorizeds, true)) {
                     $url_img = make_picture_url(
                         [
-                            'image_id' => $row['id'],
+                            'image_id' => $row_id,
                             'image_file' => $image_file,
-                            'category' => $cat_names[$row['cat_id']],
+                            'category' => $cat_names[$row_cat_id],
                         ]
                     );
                 } else {
                     foreach ($authorizeds as $category) {
                         $url_img = make_picture_url(
                             [
-                                'image_id' => $row['id'], // utile ?
+                                'image_id' => $row_id, // utile ?
                                 'image_file' => $image_file,
                                 'category' => $cat_names[$category],
                             ]
@@ -462,48 +496,55 @@ SELECT
                         break;
                     }
                 }
-                $admin_photo_base_url = get_root_url() . 'admin.php?page=photo-' . $row['id'];
+                $admin_photo_base_url = get_root_url() . 'admin.php?page=photo-' . $row_id_str;
                 $admin_url_start = $admin_photo_base_url . '-properties';
-                $admin_url_start .= isset($row['cat_id']) ? '&amp;cat_id=' . $row['cat_id'] : '';
-                $selected_level = $row['level'] ?? $row['level'];
+                $admin_url_start .= $row_cat_id !== null ? '&amp;cat_id=' . $row_cat_id : '';
+                $selected_level = $row['level'] ?? null;
                 $row_filesize = is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0;
                 $row_date_available = is_string($row['date_available']) ? $row['date_available'] : '';
+                $row_width = is_scalar($row['width'] ?? null) ? (string) $row['width'] : '';
+                $row_height = is_scalar($row['height'] ?? null) ? (string) $row['height'] : '';
+                $row_name = is_scalar($row['name'] ?? null) ? (string) $row['name'] : '';
+                $row_author = is_scalar($row['author'] ?? null) ? (string) $row['author'] : '';
+                $row_comment = is_scalar($row['comment'] ?? null) ? (string) $row['comment'] : '';
+                $row_added_by_raw = $row['added_by'] ?? null;
+                $row_added_by = (is_int($row_added_by_raw) || is_string($row_added_by_raw)) ? $row_added_by_raw : null;
 
                 $template->append(
                     'elements',
                     array_merge(
                         $row,
                         [
-                            'ID' => $row['id'],
+                            'ID' => $row_id,
                             'TN_SRC' => DerivativeImage::url(ImageStdParams::MEDIUM, $src_image),
                             'FILE_SRC' => DerivativeImage::url(ImageStdParams::LARGE, $src_image),
                             'LEGEND' => $legend,
-                            'U_EDIT' => get_root_url() . 'admin.php?page=photo-' . $row['id'],
-                            'NAME' => htmlspecialchars($row['name'] ?? ''),
-                            'AUTHOR' => htmlspecialchars($row['author'] ?? ''),
+                            'U_EDIT' => get_root_url() . 'admin.php?page=photo-' . $row_id_str,
+                            'NAME' => htmlspecialchars($row_name),
+                            'AUTHOR' => htmlspecialchars($row_author),
                             'LEVEL' => ($row['level'] ?? '') !== '' && $row['level'] !== '0' ? $row['level'] : '0',
-                            'DESCRIPTION' => htmlspecialchars($row['comment'] ?? ''),
+                            'DESCRIPTION' => htmlspecialchars($row_comment),
                             'DATE_CREATION' => $row['date_creation'],
                             'TAGS' => $tag_selection,
                             'is_svg' => (strtoupper(end($extTab)) === 'SVG'),
                             'TITLE' => $htmlRenderer->renderElementName($row),
-                            'DIMENSIONS' => @$row['width'] . 'x' . @$row['height'] . ' px',
-                            'FORMAT' => ($row['width'] >= $row['height']) ? 1 : 0, // 0:horizontal, 1:vertical
+                            'DIMENSIONS' => $row_width . 'x' . $row_height . ' px',
+                            'FORMAT' => ($row_width >= $row_height) ? 1 : 0, // 0:horizontal, 1:vertical
                             'FILESIZE' => l10n('%.2f MB', $row_filesize / 1024),
                             'REGISTRATION_DATE' => \Piwigo\Core\DateHelper::formatDate($row_date_available),
                             'EXT' => l10n('%s file type', end($extTab)),
                             'POST_DATE' => l10n('Added on %s', \Piwigo\Core\DateHelper::formatDate($row_date_available, ['day', 'month', 'year'])),
                             'AGE' => l10n(ucfirst(\Piwigo\Core\DateHelper::timeSince($row_date_available, 'year'))),
-                            'ADDED_BY' => l10n('Added by %s', is_string($row['added_by']) ? ($added_by_username_of[$row['added_by']] ?? l10n('N/A')) : l10n('N/A')),
+                            'ADDED_BY' => l10n('Added by %s', $row_added_by !== null ? ($added_by_username_of[$row_added_by] ?? l10n('N/A')) : l10n('N/A')),
                             'STATS' => l10n('Visited %d times', $row['hit']),
                             'FILE' => l10n('%s', $row['file']),
                             'related_categories' => $related_categories,
                             'related_category_ids' => json_encode($related_category_ids),
                             'U_JUMPTO' => (isset($url_img) and $currentUser->level >= $media['image']['level']) ? $url_img : null,
                             'tag_selection' => $tag_selection,
-                            'U_DOWNLOAD' => 'action.php?id=' . $row['id'] . '&amp;part=e&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken() . '&amp;download',
-                            'U_HISTORY' => get_root_url() . 'admin.php?page=history&amp;filter_image_id=' . $row['id'],
-                            'U_ACTIVITY' => get_root_url() . 'admin.php?page=user_activity&photo=' . $row['id'],
+                            'U_DOWNLOAD' => 'action.php?id=' . $row_id_str . '&amp;part=e&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken() . '&amp;download',
+                            'U_HISTORY' => get_root_url() . 'admin.php?page=history&amp;filter_image_id=' . $row_id_str,
+                            'U_ACTIVITY' => get_root_url() . 'admin.php?page=user_activity&photo=' . $row_id_str,
                             'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                             'U_SYNC' => $admin_url_start . '&amp;sync_metadata=1',
                             'PATH' => $row['path'],

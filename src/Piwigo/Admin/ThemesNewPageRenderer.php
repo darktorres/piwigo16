@@ -37,7 +37,8 @@ final class ThemesNewPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Config\Config::enableExtensionsInstall()) {
-            die('Piwigo extensions install/update system is disabled');
+            new \Piwigo\Html\HtmlService()
+                ->fatalError('Piwigo extensions install/update system is disabled');
         }
 
         $base_url = get_root_url() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;

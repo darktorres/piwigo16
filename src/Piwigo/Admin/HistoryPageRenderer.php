@@ -8,6 +8,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Env;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
 use Piwigo\Users\UserRepository;
 
@@ -48,8 +49,9 @@ final class HistoryPageRenderer
          */
         global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
+        $conn = DbConnection::build();
 
-        $types = array_merge(['none'], \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'image_type'));
+        $types = array_merge(['none'], new DbInfo($conn)->getEnums(Tables::history(), 'image_type'));
 
         $display_thumbnails = [
             'no_display_thumbnail' => l10n('No display'),
@@ -133,7 +135,7 @@ final class HistoryPageRenderer
             /** @var array<string, string> $user_fields */
             $user_fields = \Piwigo\Config\Config::userFields();
 
-            $form_param['user_name'] = new UserRepository(DbConnection::build())
+            $form_param['user_name'] = new UserRepository($conn)
                 ->findUsernameById($form_param['user_id'], $user_fields['id'], $user_fields['username']);
             $form_param['user_id'] = $form_param['user_name'] === null ? -1 : $form_param['user_id'];
         }

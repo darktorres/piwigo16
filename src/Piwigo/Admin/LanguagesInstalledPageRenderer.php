@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionLifecycle;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
@@ -11,8 +14,12 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Db\DbConnection;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
+use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 /**
  * Ported from admin/languages_installed.php (the "installed" tab of the
@@ -35,6 +42,17 @@ use Piwigo\Template\Template;
  */
 final class LanguagesInstalledPageRenderer
 {
+    private static function userService(Connection $conn): UserService
+    {
+        return new UserService(
+            new UserRepository($conn),
+            new GroupRepository($conn),
+            new MailService(),
+            new ActivityService(new ActivityRepository($conn)),
+            new HtmlService()
+        );
+    }
+
     /**
      * Legacy Coupling Retirement Track A batch A5.2f: $pageSlug is an
      * explicit param instead of `global $page['page'];` -- the one real
@@ -58,7 +76,8 @@ final class LanguagesInstalledPageRenderer
 
         $base_url = get_root_url() . 'admin.php?page=' . $pageSlug;
 
-        $extension_repository = new ExtensionRepository(DbConnection::build());
+        $conn = DbConnection::build();
+        $extension_repository = new ExtensionRepository($conn);
         $pem_catalog = new PemCatalog(new ZipExtractor());
         $extension_scanner = new ExtensionScanner();
         $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog);
@@ -97,7 +116,7 @@ final class LanguagesInstalledPageRenderer
         // +-----------------------------------------------------------------------+
         // |                     start template output                             |
         // +-----------------------------------------------------------------------+
-        $default_language = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultLanguage();
+        $default_language = self::userService($conn)->getDefaultLanguage();
 
         $tpl_languages = [];
 
@@ -148,7 +167,7 @@ final class LanguagesInstalledPageRenderer
         );
 
         foreach ($missing_language_ids as $language_id) {
-            $extension_repository->reassignUsersFromLanguage($language_id, new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultLanguage());
+            $extension_repository->reassignUsersFromLanguage($language_id, self::userService($conn)->getDefaultLanguage());
             $extension_repository->delete(ExtensionType::Language, $language_id);
         }
 

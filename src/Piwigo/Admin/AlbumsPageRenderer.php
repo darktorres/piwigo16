@@ -11,6 +11,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
@@ -67,14 +68,15 @@ final class AlbumsPageRenderer
         // tabsheet block below (P23 batch 6j-1 fix).
         global $my_base_url;
 
+        $conn = DbConnection::build();
+
         $query = '
 SELECT
     COUNT(*)
   FROM ' . Tables::categories() . '
 ;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$albums_counter] = $row;
+        $row = $conn->fetchNumeric($query);
+        $albums_counter = $row !== false ? $row[0] : 0;
 
         new \Piwigo\Validation\InputValidator()
             ->validate('parent_id', $_GET, false, ValidationPattern::ID);
@@ -94,9 +96,8 @@ SELECT
 SELECT COUNT(*)
   FROM ' . Tables::categories() . '
 ;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$nb_cats] = $row;
+        $row = $conn->fetchNumeric($query);
+        $nb_cats = $row !== false ? $row[0] : 0;
         $template->assign(
             [
                 'nb_cats' => $nb_cats,
@@ -124,7 +125,8 @@ SELECT COUNT(*)
 
             $post_order = $_POST['order'] ?? null;
             if (! is_string($post_order) || ! in_array($post_order, $sort_orders)) {
-                die('Invalid sort order');
+                new HtmlService()
+                    ->fatalError('Invalid sort order');
             }
             new \Piwigo\Validation\InputValidator()
                 ->validate('id', $_POST, false, '/^-?\d+$/');
@@ -141,12 +143,16 @@ SELECT id
   WHERE id_uppercat ' .
               (($post_id === '-1') ? 'IS NULL' : '= ' . $post_id) . '
 ;';
-            $category_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
-            // 'id' is Tables::categories()'s primary key column, always a numeric
-            // string per this driver's string|null fetch convention -- filter out
-            // the (never-actually-occurring) null case so downstream implode()/
-            // get_subcat_ids() calls get values castable to string.
-            $category_ids = array_values(array_filter($category_ids, is_string(...)));
+            $category_ids_raw = array_column($conn->fetchAllAssociative($query), 'id');
+            // 'id' is Tables::categories()'s primary key column, always populated
+            // per this driver's fetch convention (native int under DBAL, numeric
+            // string under mysqli) -- filter out non-scalar values then stringify
+            // so downstream implode()/get_subcat_ids() calls get values castable
+            // to string.
+            $category_ids = array_values(array_map(
+                strval(...),
+                array_filter($category_ids_raw, static fn (mixed $v): bool => is_int($v) || is_string($v))
+            ));
 
             if (isset($_POST['recursiveAutoOrder'])) {
                 $category_ids = get_subcat_ids($category_ids);
@@ -170,23 +176,23 @@ SELECT id, name, id_uppercat
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
-            $result = \Piwigo\Db\MysqliDb::query($query);
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-                /** @var array<string, string|null> $row */
-                $rendered_name = trigger_change('render_category_name', $row['name'], 'admin_cat_list');
-                $row['name'] = is_string($rendered_name) ? $rendered_name : $row['name'];
+            foreach ($conn->fetchAllAssociative($query) as $cat_row) {
+                $rendered_name = trigger_change('render_category_name', $cat_row['name'], 'admin_cat_list');
+                $cat_row['name'] = is_string($rendered_name) ? $rendered_name : $cat_row['name'];
 
                 if ($order_by_date) {
                     // id is Tables::categories()'s NOT NULL primary key.
-                    assert($row['id'] !== null);
-                    $sort[] = $ref_dates[$row['id']];
+                    $cat_row_id = $cat_row['id'];
+                    assert(is_int($cat_row_id) || is_string($cat_row_id));
+                    $sort[] = $ref_dates[$cat_row_id];
                 } else {
-                    $sort[] = \Piwigo\Core\StringHelper::removeAccents((string) $row['name']);
+                    $cat_row_name = $cat_row['name'];
+                    $sort[] = \Piwigo\Core\StringHelper::removeAccents(is_scalar($cat_row_name) ? (string) $cat_row_name : '');
                 }
 
                 $categories[] = [
-                    'id' => $row['id'],
-                    'id_uppercat' => $row['id_uppercat'],
+                    'id' => $cat_row['id'],
+                    'id_uppercat' => $cat_row['id_uppercat'],
                 ];
             }
 
@@ -197,10 +203,9 @@ SELECT id, name, id_uppercat
                 $categories
             );
 
-            $categoryConn = DbConnection::build();
             new CategoryService(
-                new CategoryRepository($categoryConn),
-                new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+                new CategoryRepository($conn),
+                new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
             )->saveCategoriesOrder($categories);
 
             $open_cat = $_POST['id'];
@@ -233,7 +238,7 @@ SELECT id,name,`rank`,status, visible, uppercats, lastmodified
   FROM ' . Tables::categories() . '
 ;';
 
-        $allAlbum = \Piwigo\Db\MysqliDb::query2Array($query);
+        $allAlbum = $conn->fetchAllAssociative($query);
 
         // Make an id tree
         $associatedTree = [];
@@ -244,7 +249,8 @@ SELECT id,name,`rank`,status, visible, uppercats, lastmodified
             // value (trigger_change()'s return) into one offset of a generic
             // array<string, string|null> would otherwise widen every other key's
             // inferred type to mixed for the rest of this iteration.
-            $parents = explode(',', (string) $album['uppercats']);
+            $album_uppercats = $album['uppercats'];
+            $parents = explode(',', is_scalar($album_uppercats) ? (string) $album_uppercats : '');
             $the_place = &$associatedTree[strval($parents[0])];
             if (! is_array($the_place)) {
                 // Matches PHP's own null-to-array autovivification on the offset
@@ -267,7 +273,8 @@ SELECT id,name,`rank`,status, visible, uppercats, lastmodified
 
             $rendered_name = trigger_change('render_category_name', $album['name'], 'admin_cat_list');
             $album['name'] = is_string($rendered_name) ? $rendered_name : $album['name'];
-            $album['lastmodified'] = \Piwigo\Core\DateHelper::timeSince((string) $album['lastmodified'], 'year');
+            $album_lastmodified = $album['lastmodified'];
+            $album['lastmodified'] = \Piwigo\Core\DateHelper::timeSince(is_scalar($album_lastmodified) ? (string) $album_lastmodified : '', 'year');
 
             $the_place['cat'] = $album;
         }
@@ -288,7 +295,7 @@ SELECT
   GROUP BY category_id
 ;';
 
-        $nb_photos_in = \Piwigo\Db\MysqliDb::query2Array($query, 'category_id', 'nb_photos');
+        $nb_photos_in = array_column($conn->fetchAllAssociative($query), 'nb_photos', 'category_id');
 
         $query = '
 SELECT
@@ -296,12 +303,13 @@ SELECT
     uppercats
   FROM ' . Tables::categories() . '
 ;';
-        $all_categories = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'uppercats');
+        $all_categories = array_column($conn->fetchAllAssociative($query), 'uppercats', 'id');
 
         $subcats_of = [];
 
         foreach ($all_categories as $id => $uppercats) {
-            foreach (array_slice(explode(',', (string) $uppercats), 0, -1) as $uppercat_id) {
+            $uppercats_str = is_scalar($uppercats) ? (string) $uppercats : '';
+            foreach (array_slice(explode(',', $uppercats_str), 0, -1) as $uppercat_id) {
                 @$subcats_of[$uppercat_id][] = $id;
             }
         }
@@ -310,10 +318,10 @@ SELECT
         foreach ($subcats_of as $cat_id => $subcat_ids) {
             $nb_photos = 0;
             foreach ($subcat_ids as $id) {
-                if (isset($nb_photos_in[$id])) {
-                    // COUNT(*) always yields a numeric string per this driver's
-                    // string|null fetch convention (see \Piwigo\Db\MysqliDb::query2Array()); cast so the
-                    // accumulator stays a provably-int running total.
+                if (isset($nb_photos_in[$id]) && is_numeric($nb_photos_in[$id])) {
+                    // COUNT(*) always yields a numeric value (native int under
+                    // DBAL, numeric string under mysqli); cast so the accumulator
+                    // stays a provably-int running total.
                     $nb_photos += (int) $nb_photos_in[$id];
                 }
             }
@@ -381,18 +389,27 @@ SELECT
                 // system, so skip defensively instead of trusting it blindly.
                 continue;
             }
-            /** @var array<string, string|null> $cat_row */
+            /** @var array<string, mixed> $cat_row */
             $cat_row = $cat['cat'];
             // 'id' is the category primary key (NOT NULL in schema); narrow
             // once here since it's reused below as an array key, which
-            // requires a non-null type.
-            $cat_id = is_string($cat_row['id']) ? $cat_row['id'] : '';
+            // requires a non-null type. DBAL can hand back a native int for
+            // this column (mysqli always gave a numeric string), so accept
+            // both.
+            $cat_row_id = $cat_row['id'];
+            $cat_id = (is_int($cat_row_id) || is_string($cat_row_id)) ? (string) $cat_row_id : '';
 
             $orderedCat = [];
             $orderedCat['rank'] = $cat_row['rank'];
             $orderedCat['name'] = $cat_row['name'];
             $orderedCat['status'] = $cat_row['status'];
-            $orderedCat['id'] = $cat_row['id'];
+            // admin/themes/default/js/albums.js embeds this tree as JSON and
+            // later compares node ids against the DOM's `data-id` attribute
+            // (always a string, per jQuery's .attr()) via a strict-equality
+            // Array.includes() -- a native int here (DBAL) instead of the
+            // pre-migration numeric string (mysqli) breaks that comparison,
+            // so keep it a string across the DBAL migration.
+            $orderedCat['id'] = $cat_id;
             $orderedCat['visible'] = $cat_row['visible'];
             $orderedCat['uppercats'] = $cat_row['uppercats'];
             $orderedCat['nb_images'] = $nb_photos_in[$cat_id] ?? 0;

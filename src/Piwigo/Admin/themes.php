@@ -11,15 +11,25 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
+use Piwigo\Mail\MailService;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 class themes
 {
@@ -104,6 +114,17 @@ class themes
         return is_string($name) ? $name : $theme_id;
     }
 
+    private static function userService(Connection $conn): UserService
+    {
+        return new UserService(
+            new UserRepository($conn),
+            new GroupRepository($conn),
+            new MailService(),
+            new ActivityService(new ActivityRepository($conn)),
+            new HtmlService()
+        );
+    }
+
     /**
      * Perform requested actions
      * @param string $action - action
@@ -114,13 +135,15 @@ class themes
     {
 
         if (! \Piwigo\Config\Config::enableExtensionsInstall() and $action == 'delete') {
-            die('Piwigo extensions install/update/delete system is disabled');
+            new HtmlService()
+                ->fatalError('Piwigo extensions install/update/delete system is disabled');
         }
 
         if (isset($this->db_themes_by_id[$theme_id])) {
             $crt_db_theme = $this->db_themes_by_id[$theme_id];
         }
 
+        $conn = DbConnection::build();
         $errors = [];
         $activity_details = [
             'theme_id' => $theme_id,
@@ -168,7 +191,7 @@ INSERT INTO ' . Tables::themes() . '
          \'' . $fs_version . '\',
          \'' . $fs_name . '\')
 ;';
-                    \Piwigo\Db\MysqliDb::query($query);
+                    $conn->executeStatement($query);
 
                     $activity_details['version'] = $fs_version;
 
@@ -190,7 +213,7 @@ INSERT INTO ' . Tables::themes() . '
                     break;
                 }
 
-                if ($theme_id == new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultTheme()) {
+                if ($theme_id == self::userService($conn)->getDefaultTheme()) {
                     // find a random theme to replace
                     $new_theme = null;
 
@@ -199,13 +222,11 @@ SELECT id
   FROM ' . Tables::themes() . '
   WHERE id != \'' . $theme_id . '\'
 ;';
-                    $result = \Piwigo\Db\MysqliDb::query($query);
-                    if (\Piwigo\Db\MysqliDb::numRows($result) == 0) {
+                    $rows = $conn->fetchAllAssociative($query);
+                    if (count($rows) === 0) {
                         $new_theme = 'default';
                     } else {
-                        $row = \Piwigo\Db\MysqliDb::fetchRow($result);
-                        assert($row !== null);
-                        [$new_theme] = $row;
+                        $new_theme = $rows[0]['id'];
                         if (! is_string($new_theme)) {
                             $new_theme = 'default';
                         }
@@ -222,7 +243,7 @@ DELETE
   FROM ' . Tables::themes() . '
   WHERE id= \'' . $theme_id . '\'
 ;';
-                \Piwigo\Db\MysqliDb::query($query);
+                $conn->executeStatement($query);
 
                 if ((bool) $this->fs_themes[$theme_id]['mobile']) {
                     \Piwigo\Config\ConfigDb::confUpdateParam('mobile_theme', '');
@@ -260,7 +281,8 @@ DELETE
                 break;
         }
 
-        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Theme, $action, $activity_details);
+        new ActivityService(new ActivityRepository($conn))
+            ->record('system', ActivitySystem::Theme, $action, $activity_details);
 
         return $errors;
     }
@@ -309,8 +331,10 @@ DELETE
 
     public function set_default_theme(string $theme_id): void
     {
+        $conn = DbConnection::build();
+
         // first we need to know which users are using the current default theme
-        $default_theme = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultTheme();
+        $default_theme = self::userService($conn)->getDefaultTheme();
 
         $query = '
 SELECT
@@ -318,12 +342,11 @@ SELECT
   FROM ' . Tables::userInfos() . '
   WHERE theme = \'' . $default_theme . '\'
 ;';
-        // array_from_query() returns array<int|string, mixed>; only scalar
-        // user_id values are ever selected by the query above, but narrow
-        // defensively rather than trusting it, same as elsewhere in this
-        // file (e.g. get_children_themes()).
+        // only scalar user_id values are ever selected by the query above,
+        // but narrow defensively rather than trusting it, same as elsewhere
+        // in this file (e.g. get_children_themes()).
         $user_ids_str = [];
-        foreach (\Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id') as $query_user_id) {
+        foreach (array_column($conn->fetchAllAssociative($query), 'user_id') as $query_user_id) {
             if (is_scalar($query_user_id)) {
                 $user_ids_str[] = (string) $query_user_id;
             }
@@ -350,11 +373,11 @@ UPDATE ' . Tables::userInfos() . '
   SET theme = \'' . $theme_id . '\'
   WHERE user_id IN (' . implode(',', $user_ids) . ')
 ;';
-        \Piwigo\Db\MysqliDb::query($query);
+        $conn->executeStatement($query);
     }
 
     /**
-     * @return array<int, array<string, string|null>>
+     * @return array<int, array<string, mixed>>
      */
     public function get_db_themes(string $id = ''): array
     {
@@ -372,12 +395,7 @@ SELECT
   WHERE ' . implode(' AND ', $clauses);
         }
 
-        $result = \Piwigo\Db\MysqliDb::query($query);
-        $themes = [];
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-            $themes[] = $row;
-        }
-        return $themes;
+        return DbConnection::build()->fetchAllAssociative($query);
     }
 
     /**
@@ -444,13 +462,13 @@ SELECT
                         $theme['parent'] = $val[1];
                     }
                     if ((bool) preg_match('/["\']activable["\'].*?(true|false)/i', $theme_data, $val)) {
-                        $theme['activable'] = \Piwigo\Db\MysqliDb::getBoolean($val[1]);
+                        $theme['activable'] = SqlDialect::getBoolean($val[1]);
                     }
                     if ((bool) preg_match('/["\']mobile["\'].*?(true|false)/i', $theme_data, $val)) {
-                        $theme['mobile'] = \Piwigo\Db\MysqliDb::getBoolean($val[1]);
+                        $theme['mobile'] = SqlDialect::getBoolean($val[1]);
                     }
                     if ((bool) preg_match('/["\']use_standard_pages["\'].*?(true|false)/i', $theme_data, $val)) {
-                        $theme['use_standard_pages'] = \Piwigo\Db\MysqliDb::getBoolean($val[1]);
+                        $theme['use_standard_pages'] = SqlDialect::getBoolean($val[1]);
                     }
 
                     // screenshot
@@ -458,7 +476,7 @@ SELECT
                     if (file_exists($screenshot_path)) {
                         $theme['screenshot'] = $screenshot_path;
                     } else {
-                        $admin_theme = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('admin_theme', 'clear');
+                        $admin_theme = new PreferencesService(new UserRepository(DbConnection::build()))->getParam('admin_theme', 'clear');
                         $theme['screenshot'] =
                           PHPWG_ROOT_PATH . 'admin/themes/'
                           . (is_string($admin_theme) ? $admin_theme : 'clear')

@@ -11,10 +11,21 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Core\AppInfo;
+use Piwigo\Db\BatchWriter;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbInfo;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
+use Piwigo\Mail\MailService;
 use Piwigo\Session\SessionService;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 class c13y_internal
 {
@@ -23,6 +34,17 @@ class c13y_internal
         add_event_handler('list_check_integrity', $this->c13y_version(...));
         add_event_handler('list_check_integrity', $this->c13y_exif(...));
         add_event_handler('list_check_integrity', $this->c13y_user(...));
+    }
+
+    private static function userService(Connection $conn): UserService
+    {
+        return new UserService(
+            new UserRepository($conn),
+            new GroupRepository($conn),
+            new MailService(),
+            new ActivityService(new ActivityRepository($conn)),
+            new HtmlService()
+        );
     }
 
     /**
@@ -43,8 +65,8 @@ class c13y_internal
 
         $check_list[] = [
             'type' => 'MySQL',
-            'current' => \Piwigo\Db\MysqliDb::getDbVersion(),
-            'required' => \Piwigo\Db\MysqliDb::REQUIRED_MYSQL_VERSION,
+            'current' => new DbInfo(DbConnection::build())->version(),
+            'required' => SqlDialect::REQUIRED_MYSQL_VERSION,
         ];
 
         foreach ($check_list as $elem) {
@@ -135,9 +157,8 @@ class c13y_internal
 
         $status = [];
 
-        $result = \Piwigo\Db\MysqliDb::query($query);
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-            if (! is_string($row['id'])) {
+        foreach (DbConnection::build()->fetchAllAssociative($query) as $row) {
+            if (! is_int($row['id']) && ! is_string($row['id'])) {
                 continue;
             }
 
@@ -154,7 +175,7 @@ class c13y_internal
                         'action' => 'creation',
                     ]
                 );
-            } elseif (! empty($data['status']) and $status[$id] != $data['status']) {
+            } elseif (! empty($data['status']) and (is_scalar($status[$id]) ? (string) $status[$id] : '') !== $data['status']) {
                 $c13y->add_anomaly(
                     l10n($data['l10n_bad_status']),
                     'c13y_correction_user',
@@ -185,6 +206,7 @@ class c13y_internal
         $webmaster_id = \Piwigo\Config\Config::webmasterId();
 
         $result = false;
+        $conn = DbConnection::build();
 
         if (! empty($id)) {
             switch ($action) {
@@ -204,7 +226,7 @@ class c13y_internal
                     if (isset($name)) {
                         $name_ok = false;
                         while (! $name_ok) {
-                            $name_ok = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getUserId($name) === false);
+                            $name_ok = (self::userService($conn)->getUserId($name) === false);
                             if (! $name_ok) {
                                 $name .= SessionService::get()->generateKey(1);
                             }
@@ -217,9 +239,10 @@ class c13y_internal
                                 'password' => $password,
                             ],
                         ];
-                        \Piwigo\Db\MysqliDb::massInserts(Tables::users(), array_keys($inserts[0]), $inserts);
+                        new BatchWriter($conn)
+                            ->massInsert(Tables::users(), array_keys($inserts[0]), $inserts);
 
-                        new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->createUserInfos($id);
+                        self::userService($conn)->createUserInfos($id);
 
                         \Piwigo\Core\PageState::current()->addInfo(sprintf(l10n('User "%s" created with "%s" like password'), $name, $password));
 
@@ -242,16 +265,17 @@ class c13y_internal
                                 'status' => $status,
                             ],
                         ];
-                        \Piwigo\Db\MysqliDb::massUpdates(
-                            Tables::userInfos(),
-                            [
-                                'primary' => ['user_id'],
-                                'update' => ['status'],
-                            ],
-                            $updates
-                        );
+                        new BatchWriter($conn)
+                            ->massUpdate(
+                                Tables::userInfos(),
+                                [
+                                    'primary' => ['user_id'],
+                                    'update' => ['status'],
+                                ],
+                                $updates
+                            );
 
-                        \Piwigo\Core\PageState::current()->addInfo(sprintf(l10n('Status of user "%s" updated'), new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getUsername($id)));
+                        \Piwigo\Core\PageState::current()->addInfo(sprintf(l10n('Status of user "%s" updated'), self::userService($conn)->getUsername($id)));
 
                         $result = true;
                     }

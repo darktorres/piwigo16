@@ -7,6 +7,7 @@ namespace Piwigo\Admin\BatchManager;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 
 /**
@@ -85,7 +86,7 @@ final readonly class FilterResolver
 
     /**
      * Images added on the same day as the most recently added image --
-     * "day" per \Piwigo\Db\MysqliDb::getRecentPeriodExpression()'s own DB-specific
+     * "day" per \Piwigo\Db\SqlDialect::getRecentPeriodExpression()'s own DB-specific
      * date arithmetic (kept as-is: not parameterizable SQL text, and
      * already correct/tested).
      *
@@ -104,7 +105,7 @@ final readonly class FilterResolver
         }
 
         $sql = 'SELECT id FROM ' . Tables::images()
-            . ' WHERE date_available BETWEEN ' . \Piwigo\Db\MysqliDb::getRecentPeriodExpression(1, $lastDate) . ' AND :last_date';
+            . ' WHERE date_available BETWEEN ' . SqlDialect::getRecentPeriodExpression(1, $lastDate) . ' AND :last_date';
 
         return $this->fetchIntColumnSql($sql, [
             'last_date' => $lastDate,

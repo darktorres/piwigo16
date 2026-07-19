@@ -11,17 +11,27 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Bootstrap\AdminDispatcher;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RequestFactory;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
+use Piwigo\Mail\MailService;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 /**
  * The admin.php page-shell orchestration (P23 batch 10): access check,
@@ -43,6 +53,7 @@ final class AdminShell
     public function run(): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
+        $conn = DbConnection::build();
 
         add_event_handler('tabsheet_before_select', CoreTabs::addCoreTabs(...));
 
@@ -102,7 +113,8 @@ final class AdminShell
         // theme changer
         if (isset($_GET['change_theme'])) {
             $admin_themes = ['roma', 'clear'];
-            $admin_theme_param = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('admin_theme', 'clear');
+            $admin_theme_param = new PreferencesService(new UserRepository($conn))
+                ->getParam('admin_theme', 'clear');
             $admin_theme_array = [is_string($admin_theme_param) ? $admin_theme_param : 'clear'];
             $result = array_diff(
                 $admin_themes,
@@ -113,7 +125,8 @@ final class AdminShell
                 $result
             );
 
-            new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->updateParam('admin_theme', $new_admin_theme);
+            new PreferencesService(new UserRepository($conn))
+                ->updateParam('admin_theme', $new_admin_theme);
 
             $url_params = [];
             foreach (['page', 'tab', 'section'] as $url_param) {
@@ -136,12 +149,11 @@ final class AdminShell
 
         // sync_user() is only useful when external authentication is activated
         if (\Piwigo\Config\Config::externalAuthentification()) {
-            $syncUsersConn = \Piwigo\Db\DbConnection::build();
-            new \Piwigo\Users\UserService(
-                new \Piwigo\Users\UserRepository($syncUsersConn),
-                new \Piwigo\Group\GroupRepository($syncUsersConn),
-                new \Piwigo\Mail\MailService(),
-                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($syncUsersConn)),
+            new UserService(
+                new UserRepository($conn),
+                new GroupRepository($conn),
+                new MailService(),
+                new ActivityService(new ActivityRepository($conn)),
                 new HtmlService()
             )->syncUsers();
         }
@@ -286,9 +298,8 @@ SELECT COUNT(*)
   FROM ' . Tables::comments() . '
   WHERE validated=\'false\'
 ;';
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-            assert($row !== null);
-            [$nb_comments] = $row;
+            $row = $conn->fetchNumeric($query);
+            $nb_comments = $row !== false ? $row[0] : 0;
 
             if ($nb_comments > 0) {
                 $template->assign('NB_PENDING_COMMENTS', $nb_comments);
@@ -303,9 +314,8 @@ SELECT COUNT(*)
   FROM ' . Tables::caddie() . '
   WHERE user_id = ' . $user_id . '
 ;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$nb_photos_in_caddie] = $row;
+        $row = $conn->fetchNumeric($query);
+        $nb_photos_in_caddie = $row !== false ? $row[0] : 0;
 
         if ($nb_photos_in_caddie > 0) {
             $template->assign(
@@ -325,8 +335,7 @@ SELECT COUNT(*)
 
         // any photos with no md5sum ?
         if (in_array($page_slug, ['site_update', 'batch_manager'])) {
-            $imageConn = \Piwigo\Db\DbConnection::build();
-            $imageService = new \Piwigo\Image\ImageService(new \Piwigo\Image\ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)));
+            $imageService = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)));
 
             $nb_no_md5sum = count($imageService->getPhotosNoMd5sum());
 
@@ -338,13 +347,11 @@ SELECT COUNT(*)
         // only calculate number of orphans on all pages if the number of images is "not huge"
         $nb_orphans = 0;
 
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT COUNT(*) FROM ' . Tables::images()));
-        assert($row !== null);
-        [$nb_photos_total_raw] = $row;
+        $row = $conn->fetchNumeric('SELECT COUNT(*) FROM ' . Tables::images());
+        $nb_photos_total_raw = $row !== false ? $row[0] : 0;
         $nb_photos_total = is_numeric($nb_photos_total_raw) ? (int) $nb_photos_total_raw : 0;
         if ($nb_photos_total < 100000) { // 100k is already a big gallery
-            $imageConn = \Piwigo\Db\DbConnection::build();
-            $nb_orphans_raw = new \Piwigo\Image\ImageService(new \Piwigo\Image\ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+            $nb_orphans_raw = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)))
                 ->countOrphans();
             $nb_orphans = is_numeric($nb_orphans_raw) ? (int) $nb_orphans_raw : 0;
         }
@@ -390,9 +397,10 @@ SELECT COUNT(*)
 
         $whats_new_major_version = \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION);
 
-        if ((bool) new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('show_whats_new_' . $whats_new_major_version, true) and \Piwigo\Config\ConfigDb::pwgIsDbconfWriteable()) {
+        if ((bool) new PreferencesService(new UserRepository($conn))->getParam('show_whats_new_' . $whats_new_major_version, true) and \Piwigo\Config\ConfigDb::pwgIsDbconfWriteable()) {
             if (\Piwigo\Users\CurrentUser::get()->rawAttributes['registration_date'] > \Piwigo\Config\Config::lastMajorUpdate()) {
-                new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->updateParam('show_whats_new_' . $whats_new_major_version, false);
+                new PreferencesService(new UserRepository($conn))
+                    ->updateParam('show_whats_new_' . $whats_new_major_version, false);
             } else {
                 // purge old whats_new_*
                 $user_preferences = \Piwigo\Users\CurrentUser::get()->preferences;
@@ -405,7 +413,8 @@ SELECT COUNT(*)
                 }
 
                 if (count($userprefs_params_to_delete) > 0) {
-                    new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->deleteParam($userprefs_params_to_delete);
+                    new PreferencesService(new UserRepository($conn))
+                        ->deleteParam($userprefs_params_to_delete);
                 }
 
                 $show_whats_new = true;

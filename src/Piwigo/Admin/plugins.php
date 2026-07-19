@@ -129,13 +129,15 @@ class plugins
     {
 
         if (! \Piwigo\Config\Config::enableExtensionsInstall() and $action == 'delete') {
-            die('Piwigo extensions install/update/delete system is disabled');
+            new HtmlService()
+                ->fatalError('Piwigo extensions install/update/delete system is disabled');
         }
 
         if (isset($this->db_plugins_by_id[$plugin_id])) {
             $crt_db_plugin = $this->db_plugins_by_id[$plugin_id];
         }
 
+        $conn = DbConnection::build();
         $activity_details = [
             'plugin_id' => $plugin_id,
         ];
@@ -158,7 +160,7 @@ class plugins
 INSERT INTO ' . Tables::plugins() . ' (id,version)
   VALUES (\'' . $plugin_id . '\', \'' . $fs_version . '\')
 ;';
-                    \Piwigo\Db\MysqliDb::query($query);
+                    $conn->executeStatement($query);
                 } else {
                     $activity_details['result'] = 'error';
                 }
@@ -188,7 +190,7 @@ UPDATE ' . Tables::plugins() . '
   SET version=\'' . $new_version . '\'
   WHERE id=\'' . $plugin_id . '\'
 ;';
-                        \Piwigo\Db\MysqliDb::query($query);
+                        $conn->executeStatement($query);
                     }
                 } else {
                     $activity_details['result'] = 'error';
@@ -199,7 +201,8 @@ UPDATE ' . Tables::plugins() . '
             case 'activate':
                 if (! isset($crt_db_plugin)) {
                     $errors = $this->perform_action('install', $plugin_id);
-                    $matching_db_plugins = new PluginRepository(DbConnection::build())->getDbPlugins('', $plugin_id);
+                    $matching_db_plugins = new PluginRepository($conn)
+                        ->getDbPlugins('', $plugin_id);
                     [$crt_db_plugin] = $matching_db_plugins;
                     \Piwigo\Config\ConfigDb::loadConfFromDb();
                 } elseif ($crt_db_plugin['state'] == 'active') {
@@ -220,7 +223,7 @@ UPDATE ' . Tables::plugins() . '
   SET state=\'active\'
   WHERE id=\'' . $plugin_id . '\'
 ;';
-                    \Piwigo\Db\MysqliDb::query($query);
+                    $conn->executeStatement($query);
                 } else {
                     $activity_details['result'] = 'error';
                 }
@@ -237,7 +240,7 @@ UPDATE ' . Tables::plugins() . '
   SET state=\'inactive\'
   WHERE id=\'' . $plugin_id . '\'
 ;';
-                \Piwigo\Db\MysqliDb::query($query);
+                $conn->executeStatement($query);
 
                 $plugin_maintain = self::build_maintain_class($plugin_id);
                 $plugin_maintain->deactivate();
@@ -267,7 +270,7 @@ UPDATE ' . Tables::plugins() . '
 DELETE FROM ' . Tables::plugins() . '
   WHERE id=\'' . $plugin_id . '\'
 ;';
-                \Piwigo\Db\MysqliDb::query($query);
+                $conn->executeStatement($query);
 
                 $plugin_maintain = self::build_maintain_class($plugin_id);
                 $plugin_maintain->uninstall();
@@ -297,7 +300,8 @@ DELETE FROM ' . Tables::plugins() . '
                 break;
         }
 
-        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Plugin, $action, $activity_details);
+        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn))
+            ->record('system', ActivitySystem::Plugin, $action, $activity_details);
 
         return $errors;
     }

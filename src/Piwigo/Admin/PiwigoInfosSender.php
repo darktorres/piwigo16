@@ -14,6 +14,7 @@ use Piwigo\Core\ContainerDetector;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -42,9 +43,6 @@ use Piwigo\Users\UserService;
  * that interface instead; include/page_tail.php passes the concrete
  * instance. See TelemetrySenderInterface's own docblock.
  *
- * \Piwigo\Db\MysqliDb::getDbVersion() (functions_mysqli.inc.php, batch 8f relocate-only)
- * stays a bare free-function call -- a class-extraction pass doesn't also
- * chase down every transitive not-yet-migrated dependency.
  * get_graphics_library()/get_pwg_general_statitics()/get_installation_date()
  * were migrated onto pwg_image::get_graphics_library()/
  * InstallationStats::getGeneralStatistics()/getInstallationDate(), and
@@ -107,9 +105,9 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
             return;
         }
 
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT now();'));
-        assert($row !== null);
-        [$dbCurrentDate] = $row;
+        $conn = DbConnection::build();
+        $row = $conn->fetchNumeric('SELECT now();');
+        $dbCurrentDate = $row !== false ? $row[0] : null;
 
         if (! \Piwigo\Config\Config::has('send_piwigo_infos_origin_hash')) {
             \Piwigo\Config\ConfigDb::confUpdateParam('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
@@ -125,7 +123,8 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
                 'os_version' => PHP_OS,
                 'container_type' => $containerType,
                 'container_version' => $containerVersion,
-                'db_version' => \Piwigo\Db\MysqliDb::getDbVersion(),
+                'db_version' => new DbInfo($conn)
+                    ->version(),
                 'php_datetime' => date('Y-m-d H:i:s'),
                 'db_datetime' => $dbCurrentDate,
                 'graphics_library' => pwg_image::get_graphics_library(),
@@ -153,7 +152,7 @@ SELECT
   FROM `' . Tables::images() . '`
   WHERE storage_category_id IS NOT NULL
 ;';
-            if (\Piwigo\Db\MysqliDb::query2Array($query, null, 'counter')[0] > 0) {
+            if (array_column($conn->fetchAllAssociative($query), 'counter')[0] > 0) {
                 // slow SQL query, but necessary if you have files added by sync
                 $query = '
 SELECT
@@ -163,13 +162,17 @@ SELECT
   FROM `' . Tables::images() . '`
   GROUP BY add_method
 ;';
-                $filesAddedBy = \Piwigo\Db\MysqliDb::query2Array($query, 'add_method');
+                $filesAddedBy = array_column($conn->fetchAllAssociative($query), null, 'add_method');
 
                 $piwigoInfos['general_stats']['nb_photos_synced'] = $filesAddedBy['sync']['nb_files'];
                 $piwigoInfos['general_stats']['last_photo_synced'] = $filesAddedBy['sync']['last_added_on'];
 
                 $methodOfLastPhoto = 'sync';
-                if (isset($filesAddedBy['api']) and strtotime((string) $filesAddedBy['api']['last_added_on']) > strtotime((string) $filesAddedBy['sync']['last_added_on'])) {
+                $apiLastAdded = $filesAddedBy['api']['last_added_on'] ?? null;
+                $syncLastAdded = $filesAddedBy['sync']['last_added_on'] ?? null;
+                $apiLastAddedStr = is_scalar($apiLastAdded) ? (string) $apiLastAdded : '';
+                $syncLastAddedStr = is_scalar($syncLastAdded) ? (string) $syncLastAdded : '';
+                if (isset($filesAddedBy['api']) and strtotime($apiLastAddedStr) > strtotime($syncLastAddedStr)) {
                     $methodOfLastPhoto = 'api';
                 }
                 $piwigoInfos['general_stats']['last_photo'] = $filesAddedBy[$methodOfLastPhoto]['last_added_on'];
@@ -182,7 +185,7 @@ SELECT
   ORDER BY id DESC
   LIMIT 1
 ;';
-                $images = \Piwigo\Db\MysqliDb::query2Array($query);
+                $images = $conn->fetchAllAssociative($query);
                 if (count($images) > 0) {
                     $piwigoInfos['general_stats']['last_photo'] = $images[0]['date_available'];
                 }
@@ -196,7 +199,7 @@ SELECT
   FROM `' . Tables::images() . '`
   GROUP BY ext
 ;';
-            $piwigoInfos['file_extensions'] = \Piwigo\Db\MysqliDb::query2Array($query, 'ext');
+            $piwigoInfos['file_extensions'] = array_column($conn->fetchAllAssociative($query), null, 'ext');
         }
 
         // $conf['pem_plugins_category'] = 12;
@@ -349,7 +352,8 @@ SELECT
         $piwigoInfos['general_stats']['nb_private_themes'] = count(array_keys($privateThemes));
         $piwigoInfos['general_stats']['nb_themes'] = $piwigoInfos['general_stats']['nb_private_themes'] + count($piwigoInfos['themes']);
 
-        $defaultTheme = new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new MailService(), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService())->getDefaultTheme();
+        $defaultTheme = new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), new HtmlService())
+            ->getDefaultTheme();
         if (isset($privateThemes[$defaultTheme])) {
             $defaultTheme = 'private theme';
         }
@@ -364,7 +368,7 @@ SELECT
   GROUP BY theme
   ORDER BY theme
 ;';
-        $themesUsed = \Piwigo\Db\MysqliDb::query2Array($query, 'theme', 'theme_counter');
+        $themesUsed = array_column($conn->fetchAllAssociative($query), 'theme_counter', 'theme');
         // built as a separate local accumulator (rather than mutating
         // $piwigoInfos directly with a dynamic key) so PHPStan keeps tracking
         // a precise array<string, int> type instead of widening the whole
@@ -380,7 +384,7 @@ SELECT
         }
         $piwigoInfos['themes_usage'] = $themesUsage;
 
-        $piwigoInfos['general_stats']['default_language'] = new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new MailService(), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService())->getDefaultLanguage();
+        $piwigoInfos['general_stats']['default_language'] = new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), new HtmlService())->getDefaultLanguage();
 
         $query = '
 SELECT
@@ -390,7 +394,7 @@ SELECT
   GROUP BY language
   ORDER BY language
 ;';
-        $piwigoInfos['languages_usage'] = \Piwigo\Db\MysqliDb::query2Array($query, 'language', 'language_counter');
+        $piwigoInfos['languages_usage'] = array_column($conn->fetchAllAssociative($query), 'language_counter', 'language');
 
         $piwigoInfos['activities'] = [];
         $piwigoInfos['general_stats']['nb_activities'] = 0;
@@ -404,7 +408,7 @@ SELECT
   WHERE object != \'system\'
   GROUP BY object, action
 ;';
-        $activities = \Piwigo\Db\MysqliDb::query2Array($query);
+        $activities = $conn->fetchAllAssociative($query);
         // 'activities' is heterogeneous by design: every object except 'system'
         // (queried here, WHERE object != 'system') stores a flat action=>counter
         // map; 'system' (queried below) stores an extra label-bucketing level.
@@ -444,7 +448,7 @@ SELECT
   WHERE object = \'system\'
   GROUP BY object, object_id, action
 ;';
-        $activities = \Piwigo\Db\MysqliDb::query2Array($query);
+        $activities = $conn->fetchAllAssociative($query);
         /** @var array<string, array<string, array<string, string|null>>> $piwigoActivitiesSystem */
         $piwigoActivitiesSystem = [];
         foreach ($activities as $activity) {
@@ -473,7 +477,7 @@ SELECT
     AND action IN (\'update\', \'autoupdate\')
   ORDER BY activity_id ASC
 ;';
-        $updates = \Piwigo\Db\MysqliDb::query2Array($query);
+        $updates = $conn->fetchAllAssociative($query);
         foreach ($updates as $update) {
             $updateDetails = $update['details'];
             if (! is_string($updateDetails)) {
@@ -514,7 +518,7 @@ SELECT
   WHERE user_agent NOT LIKE \'Mozilla/5%\'
   GROUP BY user_agent
 ;';
-        $activities = \Piwigo\Db\MysqliDb::query2Array($query);
+        $activities = $conn->fetchAllAssociative($query);
         $apps = [];
 
         $appsPattern = [
@@ -532,8 +536,9 @@ SELECT
         ];
 
         foreach ($activities as $activity) {
+            $activity_user_agent = is_scalar($activity['user_agent']) ? (string) $activity['user_agent'] : '';
             foreach ($appsPattern as $appName => $pattern) {
-                if ((bool) preg_match($pattern, (string) $activity['user_agent'])) {
+                if ((bool) preg_match($pattern, $activity_user_agent)) {
                     // $apps is written with a dynamic ($appName) key, so PHPStan
                     // can't track a precise per-key value type for it and every
                     // read below comes back mixed; narrow explicitly instead of

@@ -6,6 +6,7 @@ namespace Piwigo\Admin\Maintenance;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Piwigo\Config\Config;
 use Piwigo\Db\Tables;
 
 /**
@@ -87,6 +88,49 @@ final readonly class DbMaintenanceRepository
             ->executeStatement();
 
         return count($orphanTagIds);
+    }
+
+    /**
+     * Repairs, re-orders (by primary key), and optimizes every table with
+     * this install's own DB prefix -- ported from
+     * \Piwigo\Db\MysqliDb::doMaintenanceAllTables(), the "database" action's
+     * only real caller (confirmed via a direct grep; not reused elsewhere).
+     * Table/column names come from `SHOW TABLES`/`DESC`, never user input,
+     * so splicing them into raw SQL here matches the original's own
+     * approach (none of these 4 statement kinds are parameterizable SQL
+     * identifiers anyway).
+     *
+     * The original tracked a running boolean across all 3 mutating
+     * statements (mysqli_query() returns false on failure when
+     * \Piwigo\Config\Config::dieOnSqlError() is off) to pick a
+     * success/error message. DBAL has no such "off" mode -- a failed
+     * statement throws instead -- so completing this method without an
+     * exception already means every step succeeded; no return value
+     * needed.
+     */
+    public function repairOptimizeAllTables(): void
+    {
+        $allTables = array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            $this->conn->fetchFirstColumn('SHOW TABLES LIKE \'' . Config::dbPrefix() . '%\'')
+        );
+
+        $this->conn->executeStatement('REPAIR TABLE ' . implode(', ', $allTables));
+
+        foreach ($allTables as $tableName) {
+            $allPrimaryKey = [];
+            foreach ($this->conn->fetchAllAssociative('DESC ' . $tableName . ';') as $column) {
+                if (($column['Key'] ?? null) === 'PRI' && is_scalar($column['Field'])) {
+                    $allPrimaryKey[] = (string) $column['Field'];
+                }
+            }
+
+            if ($allPrimaryKey !== []) {
+                $this->conn->executeStatement('ALTER TABLE ' . $tableName . ' ORDER BY ' . implode(', ', $allPrimaryKey) . ';');
+            }
+        }
+
+        $this->conn->executeStatement('OPTIMIZE TABLE ' . implode(', ', $allTables));
     }
 
     public function countLoungeItems(): int

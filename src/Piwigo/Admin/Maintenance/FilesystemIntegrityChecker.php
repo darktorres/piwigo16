@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Maintenance;
 
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
 /**
@@ -40,6 +41,8 @@ final class FilesystemIntegrityChecker
         $page[__FUNCTION__ . '_already_called'] = true;
         \Piwigo\Config\ConfigDb::confUpdateParam('fs_quick_check_last_check', date('c'));
 
+        $conn = DbConnection::build();
+
         $query = '
 SELECT
     id
@@ -48,7 +51,10 @@ SELECT
     AND path LIKE \'./upload/%\'
   LIMIT 5000
 ;';
-        $issue1827_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
+        $issue1827_ids = array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            array_column($conn->fetchAllAssociative($query), 'id')
+        );
         shuffle($issue1827_ids);
         $issue1827_ids = array_slice($issue1827_ids, 0, 50);
 
@@ -58,7 +64,10 @@ SELECT
   FROM ' . Tables::images() . '
   LIMIT 5000
 ;';
-        $random_image_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
+        $random_image_ids = array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            array_column($conn->fetchAllAssociative($query), 'id')
+        );
         shuffle($random_image_ids);
         $random_image_ids = array_slice($random_image_ids, 0, 50);
 
@@ -75,7 +84,7 @@ SELECT
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $fs_quick_check_ids) . ')
 ;';
-        $fsqc_paths = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'path');
+        $fsqc_paths = array_column($conn->fetchAllAssociative($query), 'path', 'id');
 
         foreach ($fsqc_paths as $id => $path) {
             // path is a NOT NULL column in the images table.
@@ -102,7 +111,7 @@ SELECT
   GROUP BY path
   HAVING COUNT(*) > 1
 ;';
-        $duplicate_paths = \Piwigo\Db\MysqliDb::query2Array($query);
+        $duplicate_paths = $conn->fetchAllAssociative($query);
 
         if (count($duplicate_paths) > 0) {
             $template = \Piwigo\Template\CurrentTemplate::get();
@@ -120,6 +129,8 @@ SELECT
 
     public static function imagesIntegrity(): void
     {
+        $conn = DbConnection::build();
+
         $query = '
 SELECT
     image_id
@@ -127,7 +138,10 @@ SELECT
     LEFT JOIN ' . Tables::images() . ' ON id = image_id
   WHERE id IS NULL
 ;';
-        $orphan_image_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
+        $orphan_image_ids = array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            array_column($conn->fetchAllAssociative($query), 'image_id')
+        );
 
         if (count($orphan_image_ids) > 0) {
             $query = '
@@ -135,7 +149,7 @@ DELETE
   FROM ' . Tables::imageCategory() . '
   WHERE image_id IN (' . implode(',', $orphan_image_ids) . ')
 ;';
-            \Piwigo\Db\MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
     }
 }

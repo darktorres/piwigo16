@@ -47,6 +47,7 @@ final class ElementSetRanksPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();
+        $conn = DbConnection::build();
 
         $sort_fields = [
             '' => '',
@@ -88,8 +89,7 @@ final class ElementSetRanksPageRenderer
                 $rank_of_image = array_filter($_POST['rank_of_image'], is_numeric(...));
                 asort($rank_of_image, SORT_NUMERIC);
 
-                $imageConn = DbConnection::build();
-                new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+                new ImageService(new ImageRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)))
                     ->saveImagesOrder(
                         (int) $category_id,
                         array_map(intval(...), array_keys($rank_of_image))
@@ -146,8 +146,8 @@ SELECT *
   FROM ' . Tables::categories() . '
   WHERE id = ' . $category_id . '
 ;';
-        $category = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
-        if (! is_array($category) || ! is_string($category['uppercats'] ?? null)) {
+        $category = $conn->fetchAssociative($query);
+        if ($category === false || ! is_string($category['uppercats'] ?? null)) {
             $htmlRenderer->pageNotFound('Requested album does not exist');
         }
 
@@ -190,12 +190,12 @@ SELECT
   WHERE category_id = ' . $category_id . '
   ORDER BY `rank`
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-        if (\Piwigo\Db\MysqliDb::numRows($result) > 0) {
+        $thumbnail_rows = $conn->fetchAllAssociative($query);
+        if (count($thumbnail_rows) > 0) {
             // template thumbnail initialization
             $current_rank = 1;
             $derivativeParams = ImageStdParams::get_by_type(ImageStdParams::SQUARE);
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+            foreach ($thumbnail_rows as $row) {
                 $derivative = new DerivativeImage($derivativeParams, new SrcImage($row));
 
                 if (! empty($row['name'])) {
@@ -220,7 +220,8 @@ SELECT
         // image order management
         $template->assign('image_order_options', $sort_fields);
 
-        $image_order = explode(',', $category['image_order'] ?? '');
+        $category_image_order = $category['image_order'] ?? '';
+        $image_order = explode(',', is_scalar($category_image_order) ? (string) $category_image_order : '');
 
         for ($i = 0; $i < 3; $i++) { // 3 fields
             if (isset($image_order[$i])) {

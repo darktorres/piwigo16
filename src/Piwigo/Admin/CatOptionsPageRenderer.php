@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -26,12 +29,22 @@ use Piwigo\Permission\PermissionService;
  */
 final class CatOptionsPageRenderer
 {
+    private static function activityService(Connection $conn): ActivityService
+    {
+        return new ActivityService(new ActivityRepository($conn));
+    }
+
+    private static function categoryService(Connection $conn): CategoryService
+    {
+        return new CategoryService(
+            new CategoryRepository($conn),
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+        );
+    }
+
     public function render(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
+        $conn = DbConnection::build();
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -60,7 +73,7 @@ final class CatOptionsPageRenderer
 
             $section_param = $_GET['section'] ?? '';
             new CategoryAdminService()
-                ->setCategoryOption($cat_true, is_string($section_param) ? $section_param : '', false, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())));
+                ->setCategoryOption($cat_true, is_string($section_param) ? $section_param : '', false, self::activityService($conn));
         } elseif (isset($_POST['trueify'])
                  and isset($_POST['cat_false'])
                  and is_array($_POST['cat_false'])
@@ -74,7 +87,7 @@ final class CatOptionsPageRenderer
 
             $section_param = $_GET['section'] ?? '';
             new CategoryAdminService()
-                ->setCategoryOption($cat_false, is_string($section_param) ? $section_param : '', true, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())));
+                ->setCategoryOption($cat_false, is_string($section_param) ? $section_param : '', true, self::activityService($conn));
         }
 
         $template->set_filenames(
@@ -88,7 +101,6 @@ final class CatOptionsPageRenderer
         if (! is_string($section) or ! in_array($section, ['comments', 'visible', 'status', 'representative'], true)) {
             $section = 'status';
         }
-        $page['section'] = $section;
         $base_url = PHPWG_ROOT_PATH . 'admin.php?page=cat_options&amp;section=';
 
         $template->assign(
@@ -184,11 +196,7 @@ SELECT DISTINCT id,name,uppercats,global_rank
                 'L_CAT_OPTIONS_FALSE' => $l_false,
             ]
         );
-        $categoryConn = DbConnection::build();
-        $categoryService = new CategoryService(
-            new CategoryRepository($categoryConn),
-            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
-        );
+        $categoryService = self::categoryService($conn);
         $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', new HtmlService(), $template);
         $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', new HtmlService(), $template);
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());

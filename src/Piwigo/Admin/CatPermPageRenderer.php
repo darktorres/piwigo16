@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
@@ -36,6 +37,7 @@ final class CatPermPageRenderer
          */
         global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
+        $conn = DbConnection::build();
 
         // +-------------------------------------------------------------------+
         // |                       variable initialization                     |
@@ -119,7 +121,7 @@ SELECT id, name
   FROM `' . Tables::groups() . '`
   ORDER BY name ASC
 ;';
-        $groups = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'name');
+        $groups = array_column($conn->fetchAllAssociative($query), 'name', 'id');
         $template->assign('groups', $groups);
 
         // groups granted to access the category
@@ -132,7 +134,7 @@ SELECT group_id
         // narrow to the real int ids (DB values are string|null per this driver,
         // group_id is a NOT NULL numeric column)
         $group_granted_ids = [];
-        foreach (\Piwigo\Db\MysqliDb::query2Array($query, null, 'group_id') as $raw_group_id) {
+        foreach (array_column($conn->fetchAllAssociative($query), 'group_id') as $raw_group_id) {
             if (is_numeric($raw_group_id)) {
                 $group_granted_ids[] = (int) $raw_group_id;
             }
@@ -154,7 +156,7 @@ SELECT ' . $user_field_id . ' AS id,
        ' . $user_field_username . ' AS username
   FROM ' . Tables::users() . '
 ;';
-        $users = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'username');
+        $users = array_column($conn->fetchAllAssociative($query), 'username', 'id');
         $template->assign('users', $users);
 
         $query = '
@@ -166,7 +168,7 @@ SELECT user_id
         // narrow to the real int ids (DB values are string|null per this driver,
         // user_id is a NOT NULL numeric column)
         $user_granted_direct_ids = [];
-        foreach (\Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id') as $raw_user_id) {
+        foreach (array_column($conn->fetchAllAssociative($query), 'user_id') as $raw_user_id) {
             if (is_numeric($raw_user_id)) {
                 $user_granted_direct_ids[] = (int) $raw_user_id;
             }
@@ -182,18 +184,22 @@ SELECT user_id, group_id
   FROM ' . Tables::userGroup() . '
   WHERE group_id IN (' . implode(',', $group_granted_ids) . ')
 ';
-            $result = \Piwigo\Db\MysqliDb::query($query);
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-                // group_id/user_id are NOT NULL numeric columns; this driver
-                // returns every column as string|null, so guard before using
-                // group_id as an array key and collecting user_id
-                if (! is_string($row['group_id']) || ! is_string($row['user_id'])) {
+            foreach ($conn->fetchAllAssociative($query) as $row) {
+                // group_id/user_id are NOT NULL numeric columns; DBAL can hand
+                // back a native int for either (mysqli always gave a numeric
+                // string), so accept both before using group_id as an array key
+                // and collecting user_id.
+                $row_group_id = $row['group_id'];
+                $row_user_id = $row['user_id'];
+                if ((! is_int($row_group_id) && ! is_string($row_group_id)) || (! is_int($row_user_id) && ! is_string($row_user_id))) {
                     continue;
                 }
-                if (! isset($granted_groups[$row['group_id']])) {
-                    $granted_groups[$row['group_id']] = [];
+                $row_group_id = (int) $row_group_id;
+                $row_user_id = (int) $row_user_id;
+                if (! isset($granted_groups[$row_group_id])) {
+                    $granted_groups[$row_group_id] = [];
                 }
-                $granted_groups[$row['group_id']][] = $row['user_id'];
+                $granted_groups[$row_group_id][] = $row_user_id;
             }
 
             $user_granted_by_group_ids = [];

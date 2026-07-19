@@ -208,8 +208,8 @@ them when reading commit history or the replay manifest.
   Zero manual `new *Repository(`/`new *Service(` chains found anywhere in
   the domain (matches the original table's very low "New-chains: 1").
   Commit `456241849`.
-- **Phase 1f (Ws) — IN PROGRESS, sub-batch 5 of ~7 done (Core).** 24
-  files/12396 lines total, by far the largest domain in
+- **Phase 1f (Ws) — IN PROGRESS, sub-batch 6 of ~7 done (Categories).**
+  24 files/12396 lines total, by far the largest domain in
   this plan — confirmed needs the multi-batch breakdown the plan already
   anticipated. Sub-batch 1 investigated the small/shared files first:
   `WsInitializer`/`PwgError`/`PwgServer` needed no real changes (`PwgServer`'s
@@ -391,13 +391,44 @@ them when reading commit history or the replay manifest.
   concatenation/casts, `===` in place of a loose `==` PHPStan now flags,
   and explicit `(string)` casts before using row values as array keys.
   Commit `e1ef1a062`.
-  Remaining sub-batches (by WS resource area, largest/most complex
-  last): Categories, Images (3034 lines, the biggest single file in the
-  plan) — `WsDefaultMethods.php` (2357 lines) confirmed clean already
-  (pure method-registration table, zero MysqliDb/globals/die-exit/
-  manual-chains), `Protocol/*` encoders + `PwgNamedArray`/
-  `PwgNamedStruct`/`PwgRequestHandler` not yet checked but absent from
-  every grep so far, likely clean too.
+  Sub-batch 6 (Categories): `PwgCategories.php` (1508 lines, 62
+  `MysqliDb::` calls — the widest-scale single-file migration in this
+  phase by call count) fully migrated. Every pattern established in
+  prior Phase 1f sub-batches got reused: `query()`+loop onto
+  `fetchAllAssociative()`+`foreach`, all 3 `query2Array()` forms onto
+  `array_column()`, `fetchRow(query())` `COUNT(*)`/single-value checks
+  onto `fetchOne()`, `realEscapeString()` onto `Connection::quote()`,
+  `singleUpdate()`/`massUpdates()` onto `BatchWriter`, `numRows()>0`/
+  `==0` checks onto `fetchOne() !== false`/`=== false`,
+  `DB_REGEX_OPERATOR`/`DB_RANDOM_FUNCTION` onto `SqlDialect`. Three
+  `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` pairs (in `getImages()`,
+  `getList()`, `getAdminList()`) each kept on their own single shared
+  connection, matching the Phase 1f step 4 precedent. Two more repeated
+  construction chains collapsed: `PermissionService` (5 call sites, one
+  inside `getList()`'s per-category loop) into
+  `permissionService(Connection $conn)`; `ActivityService` (4 call
+  sites, none looped) into `activityService()`.
+  The bulk of the follow-up work was systematic `mixed`-row narrowing
+  across this file's many per-row loops — `getList()`'s ~200-line
+  category-processing loop and `calculateOrphans()`'s orphan-computation
+  logic needed the most of it. Two variants of the by-now-familiar
+  "`(int)` cast on `mixed`" issue recurred: PHPStan rejects a bare
+  `(int)`/`(string)` cast on a `mixed` value even when the cast is
+  already present in the code (not just when adding a new one) — every
+  single cast in this file needed an explicit `is_numeric()`/
+  `is_scalar()` guard first, no exceptions. Also hit (for the first
+  time this phase) `is_numeric()` alone being insufficient for an
+  array-key guard, since it allows `float` (not a valid PHP array key
+  type) — fixed with `is_int($x) || is_string($x)` instead. Renamed
+  several loop variables that collided with earlier same-named
+  variables still in scope (PHPStan's "foreach overwrites $row" check,
+  now hit 4 times across this phase). Commit `115193ef6`.
+  Remaining sub-batches: Images (3034 lines, the biggest single file in
+  the plan — final sub-batch of this phase) — `WsDefaultMethods.php`
+  (2357 lines) confirmed clean already (pure method-registration table,
+  zero MysqliDb/globals/die-exit/manual-chains), `Protocol/*` encoders +
+  `PwgNamedArray`/`PwgNamedStruct`/`PwgRequestHandler` not yet checked
+  but absent from every grep so far, likely clean too.
 
 ## What direct investigation found (the basis for phase sequencing)
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryDefaultRenderer;
@@ -70,21 +71,45 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class GalleryController implements ControllerInterface
 {
+    private static function permissionService(Connection $conn): PermissionService
+    {
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+    }
+
+    private static function categoryService(Connection $conn): CategoryService
+    {
+        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
+    }
+
+    private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
+    {
+        return new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn));
+    }
+
+    private static function tagService(Connection $conn): TagService
+    {
+        return new TagService(new TagRepository($conn), self::permissionService($conn), self::activityService($conn));
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $sectionConn = DbConnection::build();
+        // A single connection for the whole request -- mirrors the
+        // legacy single-global-mysqli-connection model this migration
+        // restores, and avoids the needless-reconnection pattern found
+        // in earlier construction-chain debt (Phase 1d finding).
+        $conn = DbConnection::build();
         new SectionPopulator(
             new HtmlService(),
             $template,
-            new SectionRepository($sectionConn),
-            new CategoryService(new CategoryRepository($sectionConn), new PermissionService(new PermissionRepository($sectionConn), new GroupRepository($sectionConn))),
-            new PermissionService(new PermissionRepository($sectionConn), new GroupRepository($sectionConn)),
-            new TagService(new TagRepository($sectionConn), new PermissionService(new PermissionRepository($sectionConn), new GroupRepository($sectionConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($sectionConn))),
-            new SearchService(new SearchRepository($sectionConn), new PermissionService(new PermissionRepository($sectionConn), new GroupRepository($sectionConn)), new PersistentFileCache(), new MailService(), new HtmlService()),
-            new UserService(new UserRepository($sectionConn), new GroupRepository($sectionConn), new MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($sectionConn)), new HtmlService()),
+            new SectionRepository($conn),
+            self::categoryService($conn),
+            self::permissionService($conn),
+            self::tagService($conn),
+            new SearchService(new SearchRepository($conn), self::permissionService($conn), new PersistentFileCache(), new MailService(), new HtmlService()),
+            new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), self::activityService($conn), new HtmlService()),
         )->populate();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
@@ -109,11 +134,7 @@ final class GalleryController implements ControllerInterface
 
         // access authorization check
         if ($section_context->category !== null && is_numeric($section_context->category['id'] ?? null)) {
-            $categoryConn = DbConnection::build();
-            new CategoryService(
-                new CategoryRepository($categoryConn),
-                new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
-            )->checkRestrictions((int) $section_context->category['id'], new HtmlService());
+            self::categoryService($conn)->checkRestrictions((int) $section_context->category['id'], new HtmlService());
         }
         if ($page_start > 0 && $page_start >= count($page_items)) {
             new HtmlService()
@@ -122,13 +143,14 @@ final class GalleryController implements ControllerInterface
                 ]));
         }
 
-        $body = LegacyRenderCapture::capture(static function () use ($page_items, $page_start, $page_nb_image_page, $section_context): void {
-            global $title;
+        $body = LegacyRenderCapture::capture(static function () use ($conn, $page_items, $page_start, $page_nb_image_page, $section_context): void {
+            // $title is set and read entirely within this closure (passed
+            // straight into PageHeaderRenderer::render() below) -- no
+            // other file reads $GLOBALS['title']. Plain local, not global.
             $template = \Piwigo\Template\CurrentTemplate::get();
 
-            $tagConn = DbConnection::build();
-            $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
-            $categoryService = new CategoryService(new CategoryRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)));
+            $tagService = self::tagService($conn);
+            $categoryService = self::categoryService($conn);
 
             trigger_notify('loc_begin_index');
 
@@ -269,11 +291,11 @@ final class GalleryController implements ControllerInterface
             $resolved_search_id = new SearchFilterRenderer(
                 new HtmlService(),
                 $template,
-                new SearchRepository($tagConn),
-                new SearchService(new SearchRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new PersistentFileCache(), new MailService(), new HtmlService(), $tagService),
+                new SearchRepository($conn),
+                new SearchService(new SearchRepository($conn), self::permissionService($conn), new PersistentFileCache(), new MailService(), new HtmlService(), $tagService),
                 $tagService,
-                new CategoryRepository($tagConn),
-                new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)),
+                new CategoryRepository($conn),
+                self::permissionService($conn),
             )->render($section_context);
 
             if ($section_context->section === 'categories' and $section_context->category !== null and $section_context->combinedCategories === null) {
@@ -513,10 +535,10 @@ final class GalleryController implements ControllerInterface
                     new FilterService(),
                     new HtmlService(),
                     $template,
-                    new CategoryRepository($tagConn),
+                    new CategoryRepository($conn),
                     $categoryService,
-                    new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)),
-                    new ImageRepository($tagConn)
+                    self::permissionService($conn),
+                    new ImageRepository($conn)
                 )->render($section_context->section, $section_context->category, $section_context->startcat);
             }
 
@@ -525,8 +547,8 @@ final class GalleryController implements ControllerInterface
                 $slideshow_url = new CategoryDefaultRenderer(
                     new HtmlService(),
                     $template,
-                    new ImageRepository($tagConn),
-                    new CommentRepository($tagConn)
+                    new ImageRepository($conn),
+                    new CommentRepository($conn)
                 )->render($page_items, $page_start, $page_nb_image_page, $section_context->section);
 
                 if (\Piwigo\Config\Config::indexSizesIcon()) {
@@ -606,12 +628,13 @@ final class GalleryController implements ControllerInterface
             $template->pparse('index');
 
             // ------------------------------------------------ log informations
-            new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit(
-                section: $section_context->section,
-                category: $section_context->category,
-                tagIds: $section_context->tagIds,
-                searchId: $resolved_search_id,
-            );
+            new HistoryService(new HistoryRepository($conn))
+                ->logVisit(
+                    section: $section_context->section,
+                    category: $section_context->category,
+                    tagIds: $section_context->tagIds,
+                    searchId: $resolved_search_id,
+                );
             \Piwigo\Bootstrap\PageTail::render();
         });
 

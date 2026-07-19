@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Cache\PersistentFileCache;
@@ -78,19 +79,58 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class PictureController implements ControllerInterface
 {
+    private static function permissionService(Connection $conn): PermissionService
+    {
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+    }
+
+    private static function categoryService(Connection $conn): CategoryService
+    {
+        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
+    }
+
+    private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
+    {
+        return new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn));
+    }
+
+    private static function tagService(Connection $conn): TagService
+    {
+        return new TagService(new TagRepository($conn), self::permissionService($conn), self::activityService($conn));
+    }
+
+    private static function userService(Connection $conn): UserService
+    {
+        return new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), self::activityService($conn), new HtmlService());
+    }
+
+    private static function imageService(Connection $conn): ImageService
+    {
+        return new ImageService(new ImageRepository($conn), self::activityService($conn));
+    }
+
+    private static function commentService(Connection $conn): CommentService
+    {
+        return new CommentService(new CommentRepository($conn), new EphemeralKeyService(), new MailService(), new HtmlService());
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        $sectionConn = DbConnection::build();
+        // A single connection for the whole request -- mirrors the
+        // legacy single-global-mysqli-connection model this migration
+        // restores, and avoids the needless-reconnection pattern found
+        // in earlier construction-chain debt (Phase 1d finding).
+        $conn = DbConnection::build();
         new SectionPopulator(
             new HtmlService(),
             \Piwigo\Template\CurrentTemplate::get(),
-            new SectionRepository($sectionConn),
-            new CategoryService(new CategoryRepository($sectionConn), new PermissionService(new PermissionRepository($sectionConn), new GroupRepository($sectionConn))),
-            new PermissionService(new PermissionRepository($sectionConn), new GroupRepository($sectionConn)),
-            new TagService(new TagRepository($sectionConn), new PermissionService(new PermissionRepository($sectionConn), new GroupRepository($sectionConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($sectionConn))),
-            new SearchService(new SearchRepository($sectionConn), new PermissionService(new PermissionRepository($sectionConn), new GroupRepository($sectionConn)), new PersistentFileCache(), new MailService(), new HtmlService()),
-            new UserService(new UserRepository($sectionConn), new GroupRepository($sectionConn), new MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($sectionConn)), new HtmlService()),
+            new SectionRepository($conn),
+            self::categoryService($conn),
+            self::permissionService($conn),
+            self::tagService($conn),
+            new SearchService(new SearchRepository($conn), self::permissionService($conn), new PersistentFileCache(), new MailService(), new HtmlService()),
+            self::userService($conn),
         )->populate();
 
         /**
@@ -109,7 +149,7 @@ final class PictureController implements ControllerInterface
             throw new \RuntimeException('SectionContextRegistry::current() is null after SectionPopulator::populate()');
         }
 
-        new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->saveEditContext($section_context->sectionUrl, $section_context->imageId);
+        self::userService($conn)->saveEditContext($section_context->sectionUrl, $section_context->imageId);
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
@@ -118,11 +158,7 @@ final class PictureController implements ControllerInterface
         // access authorization check
         if ($page_category !== null) {
             $category_id = $page_category['id'] ?? null;
-            $categoryConn = DbConnection::build();
-            new CategoryService(
-                new CategoryRepository($categoryConn),
-                new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
-            )->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0, new HtmlService());
+            self::categoryService($conn)->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0, new HtmlService());
         }
 
         // $section_context->items is mutated in place below (best_rated
@@ -156,8 +192,8 @@ SELECT id, file, level
                   str_replace(['_', '%'], ['/_', '/%'], $image_file) .
                   '.%\' ESCAPE \'/\' LIMIT 1';
             }
-            $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
-            if ($row === false || $row === null) {// element does not exist
+            $row = $conn->fetchAssociative($query);
+            if ($row === false) {// element does not exist
                 new HtmlService()
                     ->pageNotFound(
                         'The requested image does not exist',
@@ -197,11 +233,11 @@ SELECT id, file, level
 SELECT id
   FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
   WHERE id=' . $image_id
-                      . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
+                      . self::permissionService($conn)->getSqlConditionFandF([
                           'forbidden_categories' => 'category_id',
                       ], ' AND') . '
   LIMIT 1';
-                    if (\Piwigo\Db\MysqliDb::numRows(\Piwigo\Db\MysqliDb::query($query)) === 0) {
+                    if ($conn->fetchOne($query) === false) {
                         new HtmlService()
                             ->accessDenied();
                     } else {
@@ -313,7 +349,7 @@ INSERT INTO ' . Tables::favorites() . '
   VALUES
   (' . $image_id . ',' . $user_id . ')
 ;';
-                    \Piwigo\Db\MysqliDb::query($query);
+                    $conn->executeStatement($query);
 
                     redirect($url_self);
 
@@ -325,7 +361,7 @@ DELETE FROM ' . Tables::favorites() . '
   WHERE user_id = ' . $user_id . '
     AND image_id = ' . $image_id . '
 ;';
-                    \Piwigo\Db\MysqliDb::query($query);
+                    $conn->executeStatement($query);
 
                     if ($section_context->section === 'favorites') {
                         redirect($url_up);
@@ -344,8 +380,8 @@ UPDATE ' . Tables::categories() . '
   SET representative_picture_id = ' . $image_id . '
   WHERE id = ' . $representative_category_id . '
 ;';
-                        \Piwigo\Db\MysqliDb::query($query);
-                        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('album', $representative_category_id, 'edit', [
+                        $conn->executeStatement($query);
+                        self::activityService($conn)->record('album', $representative_category_id, 'edit', [
                             'action' => $_GET['action'],
                             'image_id' => $image_id,
                         ]);
@@ -368,14 +404,14 @@ UPDATE ' . Tables::categories() . '
                     if (! is_int($rate) and ! is_string($rate)) {
                         $rate = null;
                     }
-                    new RateService(new RateRepository(DbConnection::build()), new CookieService())
+                    new RateService(new RateRepository($conn), new CookieService())
                         ->rate($image_id, $rate);
                     redirect($url_self);
 
                     // no break
                 case 'edit_comment':
 
-                    $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService());
+                    $commentService = self::commentService($conn);
                     new \Piwigo\Validation\InputValidator()
                         ->validate('comment_to_edit', $_GET, false, ValidationPattern::ID);
                     // check_input_parameter() validated this against
@@ -450,7 +486,7 @@ UPDATE ' . Tables::categories() . '
                     new \Piwigo\Csrf\CsrfService()
                         ->checkOrFail(new HtmlService());
 
-                    $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService());
+                    $commentService = self::commentService($conn);
 
                     new \Piwigo\Validation\InputValidator()
                         ->validate('comment_to_delete', $_GET, false, ValidationPattern::ID);
@@ -476,7 +512,7 @@ UPDATE ' . Tables::categories() . '
                     new \Piwigo\Csrf\CsrfService()
                         ->checkOrFail(new HtmlService());
 
-                    $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService());
+                    $commentService = self::commentService($conn);
 
                     new \Piwigo\Validation\InputValidator()
                         ->validate('comment_to_validate', $_GET, false, ValidationPattern::ID);
@@ -500,6 +536,7 @@ UPDATE ' . Tables::categories() . '
         }
 
         $body = LegacyRenderCapture::capture(static function () use (
+            $conn,
             $section_context,
             $page_category,
             $items,
@@ -513,7 +550,6 @@ UPDATE ' . Tables::categories() . '
             $url_up,
             $edit_comment
         ): void {
-            global $title;
             /**
              * @var string
              */
@@ -526,14 +562,15 @@ UPDATE ' . Tables::categories() . '
              * @var list<array<string, string|null>>
              */
             global $related_categories;
-            /**
-             * @var int|string|null
-             */
-            global $refresh;
-            /**
-             * @var string|null
-             */
-            global $url_link;
+            // $title/$refresh/$url_link are set and read entirely within
+            // this closure (passed straight into PageHeaderRenderer::
+            // render() below) -- confirmed via grep that no other file
+            // reads $GLOBALS['title']/['refresh']/['url_link'], unlike
+            // $url_self/$picture/$related_categories which are real
+            // bridges to PictureCommentRenderer/PictureRateRenderer/
+            // PictureMetadataRenderer. Plain locals, not globals.
+            $refresh = null;
+            $url_link = null;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             // ---------- incrementation of the number of hits
@@ -554,7 +591,8 @@ UPDATE ' . Tables::categories() . '
 
             // don't increment if adding a comment
             if ((bool) trigger_change('allow_increment_element_hit_count', $inc_hit_count, $image_id)) {
-                new ImageRepository(DbConnection::build())->incrementVisitCounter($image_id);
+                new ImageRepository($conn)
+                    ->incrementVisitCounter($image_id);
             }
 
             // -------------------------------------------------- related categories
@@ -563,17 +601,13 @@ SELECT id,uppercats,commentable,visible,status,global_rank
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::categories() . ' ON category_id = id
   WHERE image_id = ' . $image_id . '
-' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
+' . self::permissionService($conn)->getSqlConditionFandF([
                 'forbidden_categories' => 'id',
                 'visible_categories' => 'id',
             ], 'AND') . '
 ;';
-            $related_categories = \Piwigo\Db\MysqliDb::query2Array($query);
-            // array_from_query() with no $fieldname argument delegates
-            // straight to \Piwigo\Db\MysqliDb::query2Array($query) -- its own @return docblock
-            // (array<int|string, mixed>) is looser than \Piwigo\Db\MysqliDb::query2Array()'s
-            // precise conditional return type.
             /** @var list<array<string, string|null>> $related_categories */
+            $related_categories = $conn->fetchAllAssociative($query);
             usort($related_categories, CategoryService::compareByGlobalRank(...));
             // ---------------------- first, prev, current, next & last picture management
             $picture = [];
@@ -594,16 +628,16 @@ SELECT *
   WHERE id IN (' . implode(',', $ids) . ')
 ;';
 
-            $result = \Piwigo\Db\MysqliDb::query($query);
-
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-                if ($previous_item !== null and (string) $row['id'] === (string) $previous_item) {
+            foreach ($conn->fetchAllAssociative($query) as $row) {
+                $row_id_raw = $row['id'];
+                $row_id_str = is_scalar($row_id_raw) ? (string) $row_id_raw : '';
+                if ($previous_item !== null and $row_id_str === (string) $previous_item) {
                     $i = 'previous';
-                } elseif ($next_item !== null and (string) $row['id'] === (string) $next_item) {
+                } elseif ($next_item !== null and $row_id_str === (string) $next_item) {
                     $i = 'next';
-                } elseif ($first_item !== null and (string) $row['id'] === (string) $first_item) {
+                } elseif ($first_item !== null and $row_id_str === (string) $first_item) {
                     $i = 'first';
-                } elseif ($last_item !== null and (string) $row['id'] === (string) $last_item) {
+                } elseif ($last_item !== null and $row_id_str === (string) $last_item) {
                     $i = 'last';
                 } else {
                     $i = 'current';
@@ -614,11 +648,9 @@ SELECT *
 
                 // Writing computed keys (src_image, derivatives, ...) back
                 // into $row widens PHPStan's inferred value type for every
-                // key in this array (it was array<string, string|null>
-                // from \Piwigo\Db\MysqliDb::fetchAssoc()) to a shared union across all
-                // of them -- narrow explicitly at each still-scalar column
-                // read below instead of casting the widened union
-                // directly.
+                // key in this array to a shared union across all of them --
+                // narrow explicitly at each still-scalar column read below
+                // instead of casting the widened union directly.
                 $row_path = $row['path'];
                 assert(is_string($row_path)); // images.path is NOT NULL
                 $row['path_ext'] = strtolower(\Piwigo\Core\StringHelper::getExtension($row_path));
@@ -681,9 +713,9 @@ SELECT *
                 ]);
 
                 $get_slideshow = $_GET['slideshow'];
-                $slideshow_params = new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))
+                $slideshow_params = self::imageService($conn)
                     ->decodeSlideshowParams(is_string($get_slideshow) ? $get_slideshow : null);
-                $slideshow_url_params['slideshow'] = new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))->encodeSlideshowParams($slideshow_params);
+                $slideshow_url_params['slideshow'] = self::imageService($conn)->encodeSlideshowParams($slideshow_params);
 
                 if ((bool) $slideshow_params['play']) {
                     $id_pict_redirect = '';
@@ -757,9 +789,9 @@ SELECT *
             /**
              * trigger_change() (src/Piwigo/PluginConfig/functions.php) is
              * only typed to return mixed -- restate the shape plugins are
-             * expected to preserve: one images-table row
-             * (\Piwigo\Db\MysqliDb::fetchAssoc(), string|null columns) per navigation
-             * slot, plus the computed fields set on $row above.
+             * expected to preserve: one images-table row (string|null
+             * columns) per navigation slot, plus the computed fields set
+             * on $row above.
              *
              * @var array<string, array{
              *     id: string,
@@ -816,7 +848,7 @@ SELECT *
   FROM ' . Tables::imageFormat() . '
   WHERE image_id = ' . $picture['current']['id'] . '
 ;';
-                    $formats = \Piwigo\Db\MysqliDb::query2Array($query);
+                    $formats = $conn->fetchAllAssociative($query);
 
                     // let's add the original as a format among others. It
                     // will just have a specific download URL
@@ -831,12 +863,11 @@ SELECT *
 
                     foreach ($formats as &$format) {
                         // array_unshift() above prepends a differently-
-                        // shaped literal (only
-                        // download_url/ext/filesize) onto the
-                        // \Piwigo\Db\MysqliDb::query2Array() rows
-                        // (format_id/image_id/ext/filesize), so PHPStan
-                        // can no longer track a precise per-key type for
-                        // $format -- narrow explicitly.
+                        // shaped literal (only download_url/ext/filesize)
+                        // onto the fetchAllAssociative() rows (format_id/
+                        // image_id/ext/filesize), so PHPStan can no longer
+                        // track a precise per-key type for $format --
+                        // narrow explicitly.
                         if (! isset($format['download_url'])) {
                             $format_id = $format['format_id'];
                             $format['download_url'] = 'action.php?format=' . (is_scalar($format_id) ? $format_id : '') . '&amp;download';
@@ -881,7 +912,7 @@ SELECT *
                           add_url_params(
                               $picture['current']['url'],
                               [
-                                  'slideshow' => new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))
+                                  'slideshow' => self::imageService($conn)
                                       ->encodeSlideshowParams(
                                           array_merge(
                                               $slideshow_params,
@@ -904,7 +935,7 @@ SELECT *
                     $slideshow_period_step = \Piwigo\Config\Config::slideshowPeriodStep();
                     $new_period = $current_period + ((($op === 'dec') ? -1 : 1) * $slideshow_period_step);
                     $new_slideshow_params =
-                      new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))
+                      self::imageService($conn)
                           ->correctSlideshowParams(
                               array_merge(
                                   $slideshow_params,
@@ -920,7 +951,7 @@ SELECT *
                               add_url_params(
                                   $picture['current']['url'],
                                   [
-                                      'slideshow' => new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))
+                                      'slideshow' => self::imageService($conn)
                                           ->encodeSlideshowParams($new_slideshow_params),
                                   ]
                               );
@@ -1000,11 +1031,12 @@ SELECT COUNT(*) AS nb_fav
   WHERE image_id = ' . $image_id . '
     AND user_id = ' . $user_id . '
 ;';
-                $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
-                if ($row === false || $row === null) {
+                $row = $conn->fetchAssociative($query);
+                if ($row === false) {
                     throw new \Exception('picture.php: favorite-count aggregate query returned no row');
                 }
-                $is_favorite = (int) $row['nb_fav'] !== 0;
+                $nb_fav = $row['nb_fav'];
+                $is_favorite = (is_numeric($nb_fav) ? (int) $nb_fav : 0) !== 0;
 
                 $template->assign(
                     'favorite',
@@ -1098,8 +1130,7 @@ SELECT COUNT(*) AS nb_fav
             $template->assign('display_info', \Piwigo\Config\Config::pictureInformations());
 
             // related tags
-            $tagConn = DbConnection::build();
-            $tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+            $tags = self::tagService($conn)
                 ->getCommonTags([$image_id], -1, new HtmlService());
             if ($tags !== []) {
                 foreach ($tags as $tag) {
@@ -1152,12 +1183,8 @@ SELECT COUNT(*) AS nb_fav
 SELECT id, name, permalink
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $ids) . ')';
-                // hash_from_query()'s own @return docblock
-                // (array<int|string, mixed>) is looser than
-                // \Piwigo\Db\MysqliDb::query2Array()'s precise conditional return type, which
-                // it delegates to with a non-null $keyname.
                 /** @var array<int|string, array<string, string|null>> $cat_map */
-                $cat_map = \Piwigo\Db\MysqliDb::query2Array($query, 'id');
+                $cat_map = array_column($conn->fetchAllAssociative($query), null, 'id');
                 foreach ($related_categories as $category) {
                     $cats = [];
                     foreach (explode(',', (string) $category['uppercats']) as $id) {
@@ -1172,7 +1199,7 @@ SELECT id, name, permalink
                 $template->assign(
                     [
                         'PDF_VIEWER_FILESIZE_THRESHOLD' => $pdf_viewer_filesize_threshold * 1024,
-                        'PDF_NB_PAGES' => new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))
+                        'PDF_NB_PAGES' => self::imageService($conn)
                             ->countPdfPages($picture['current']['path']),
                     ]
                 );
@@ -1217,7 +1244,7 @@ SELECT id, name, permalink
             // |                          sub pages                           |
             // +-------------------------------------------------------------+
 
-            new PictureRateRenderer(new RateRepository(DbConnection::build()))
+            new PictureRateRenderer(new RateRepository($conn))
                 ->render($image_id);
             if (\Piwigo\Config\Config::activateComments()) {
                 new PictureCommentRenderer()
@@ -1254,13 +1281,14 @@ SELECT id, name, permalink
             }
             // -------------------------------------------------- log informations
             $current_image_id = $picture['current']['id'];
-            new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit(
-                is_numeric($current_image_id) ? (int) $current_image_id : null,
-                'picture',
-                section: $section_context->section,
-                category: $section_context->category,
-                tagIds: $section_context->tagIds,
-            );
+            new HistoryService(new HistoryRepository($conn))
+                ->logVisit(
+                    is_numeric($current_image_id) ? (int) $current_image_id : null,
+                    'picture',
+                    section: $section_context->section,
+                    category: $section_context->category,
+                    tagIds: $section_context->tagIds,
+                );
             \Piwigo\Bootstrap\PageTail::render();
         });
 

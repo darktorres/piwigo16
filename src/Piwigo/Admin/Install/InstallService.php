@@ -113,7 +113,8 @@ class InstallService
             $conn = DbConnection::build();
             $conn->getNativeConnection();
 
-            $version = new \Piwigo\Db\DbInfo($conn)->version();
+            $version = new \Piwigo\Db\DbInfo($conn)
+                ->version();
             if (version_compare($version, \Piwigo\Db\SqlDialect::REQUIRED_MYSQL_VERSION, '<')) {
                 throw new Exception(sprintf('your MySQL version is too old, you have "%s" and you need at least "%s"', $version, \Piwigo\Db\SqlDialect::REQUIRED_MYSQL_VERSION));
             }

@@ -790,6 +790,31 @@ them when reading commit history or the replay manifest.
   fixed `random` page, plus the fixture-regen test itself: 134
   assertions).
 
+- **Phase 1k (Close-out), part 1: `MysqliDb.php` deletion. DONE.** With
+  the prior gap-closure pass leaving zero live callers repo-wide, verified
+  exhaustively before deleting: no dynamic/reflection calls
+  (`MysqliDb::class`, string class names), no DI container registration,
+  no deptrac/PHPStan/ECS/Rector config references, no dedicated Unit test
+  file, no Arch test enumerating `Piwigo\Db\` classes, and the class
+  itself has no interface/inheritance coupling (`final class MysqliDb`,
+  standalone). Deleted the 973-line file, ran `composer dump-autoload`,
+  regenerated the PHPStan baseline (3067 → 3049, the drop being the
+  file's own now-gone internal suppressions). Full verification gate
+  green (deptrac 0, ECS clean — caught 2 files whose ECS fixes from the
+  prior commit's pre-commit hook never got restaged, a real lefthook
+  gotcha: `ecs --fix` in a pre-commit hook rewrites the working tree but
+  `git commit` already snapshotted the index, so the fix silently lands
+  as an uncommitted diff after the commit completes unless something
+  re-adds it — Unit/Arch 604, Contract 93, Integration 620, Browser
+  64+1 skipped, Visual 32/32). Still open: the Arch tests locking in the
+  new baseline (manual-DI-chain + `die()`/`exit()` allowlists) — scoped
+  but not yet built, see the checklist item above for the raw counts
+  found (49 `die()`/`exit()` sites, 768 manual `new *Repository(`/
+  `new *Service(` construction sites in `src/Piwigo/`, the overwhelming
+  majority almost certainly legitimate) and why encoding either as an
+  automated Arch test needs its own dedicated scoping pass rather than a
+  quick mechanical add-on.
+
 ## What direct investigation found (the basis for phase sequencing)
 
 **DI infrastructure already exists and works — it's just unused.**
@@ -1127,9 +1152,10 @@ conversion and DI/construction changes don't apply there the same way.
     PHPStan baseline regenerated — 3096 errors, down from 3179, ratio
     drift only — Unit/Arch 604, Contract 93, Integration 620, Browser
     64+1 skipped, Visual 32/32).
-11. **1k — Close-out.** Delete `MysqliDb.php` (or reduce to whatever
-    proves genuinely irreducible during 1i), add Arch tests locking in
-    the new baseline (no `MysqliDb::` references, no un-injected manual
+11. **1k — Close-out.** `MysqliDb.php` deletion DONE (see Progress log
+    below) — turned out fully irreducible-to-zero, not merely reducible;
+    every real dependent across the gap-closure pass was gone. Still open:
+    add Arch tests locking in the new baseline (no un-injected manual
     `new *Repository(`/`new *Service(` chains where a constructor
     parameter would do, no bare `die()`/`exit()` outside a documented
     allowlist — matching the existing "no `define()` calls" precedent in

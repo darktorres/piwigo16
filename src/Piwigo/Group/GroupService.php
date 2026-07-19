@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Group;
 
-use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ActivityLoggerInterface;
-use Piwigo\Db\DbConnection;
 
 /**
  * Group domain business logic: creation/rename/deletion, membership
@@ -27,6 +25,7 @@ final readonly class GroupService
     public function __construct(
         private GroupRepository $repo,
         private ActivityLoggerInterface $activityLogger,
+        private AuditService $auditService,
     ) {}
 
     /**
@@ -272,7 +271,7 @@ final readonly class GroupService
 
         // [SEC-57] one row per group actually deleted
         $actorId = \Piwigo\Users\CurrentUser::get()->id;
-        $audit = new AuditService(new AuditRepository(DbConnection::build()));
+        $audit = $this->auditService;
         foreach ($deleted as $deletedId => $deletedName) {
             $audit->record($actorId, 'delete', 'group', $deletedId, [
                 'name' => $deletedName,

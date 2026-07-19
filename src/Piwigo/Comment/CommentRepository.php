@@ -238,6 +238,44 @@ final class CommentRepository extends AbstractRepository implements CommentCount
     }
 
     /**
+     * Distinct comment count for the given permission/validation condition
+     * fragments -- CommentService::getNbAvailableComments()'s own
+     * PermissionService::getSqlConditionFandF() output, already trusted SQL
+     * (built server-side from permission ids, not user input), spliced
+     * verbatim as raw WHERE fragments -- matches the original's own string
+     * concatenation.
+     *
+     * @param  list<string>  $whereClauses
+     */
+    public function countAvailableWithConditions(array $whereClauses): int
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('COUNT(DISTINCT com.id)')
+            ->from(Tables::imageCategory(), 'ic')
+            ->join('ic', Tables::comments(), 'com', 'ic.image_id = com.image_id');
+
+        foreach ($whereClauses as $clause) {
+            $qb->andWhere($clause);
+        }
+
+        $value = $qb->executeQuery()
+            ->fetchOne();
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    public function saveNbAvailableComments(int $userId, int $count): void
+    {
+        $this->conn->createQueryBuilder()
+            ->update(Tables::userCache())
+            ->set('nb_available_comments', ':count')
+            ->where('user_id = :userId')
+            ->setParameter('count', $count)
+            ->setParameter('userId', $userId)
+            ->executeStatement();
+    }
+
+    /**
      * Number of comments on a single image (the picture page's comment
      * count), optionally restricted to validated ones (non-admin viewers).
      */

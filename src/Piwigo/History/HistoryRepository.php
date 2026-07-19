@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\History;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Core\Env;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 
@@ -354,5 +355,110 @@ final class HistoryRepository extends AbstractRepository
 
         return $qb->executeQuery()
             ->fetchAllAssociative();
+    }
+
+    public function updateLastVisitNow(int $userId): void
+    {
+        // Env::now() rather than SQL's NOW() -- matches
+        // SessionRepository/CommentRepository's own established reasoning
+        // (invisible to PIWIGO_TEST_NOW). `lastmodified = lastmodified` is
+        // a deliberate self-assignment (see Auth\AuthRepository::
+        // saveLastVisitFromHistory()'s own docblock for why).
+        $this->conn->createQueryBuilder()
+            ->update(Tables::userInfos())
+            ->set('last_visit', ':now')
+            ->set('lastmodified', 'lastmodified')
+            ->where('user_id = :userId')
+            ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
+            ->setParameter('userId', $userId)
+            ->executeStatement();
+    }
+
+    /**
+     * Parses the `history`.`section` column's current ENUM options
+     * (`enum('blue','green','black')` -> `['blue', 'green', 'black']`),
+     * matching the original MysqliDb::getEnums()'s own `DESC` + string-parse
+     * approach -- no cross-driver-portable DBAL equivalent exists for
+     * reading a live ENUM definition.
+     *
+     * @return list<string>
+     */
+    public function getSectionEnumOptions(): array
+    {
+        $rows = $this->conn->executeQuery('DESC ' . Tables::history())->fetchAllAssociative();
+
+        foreach ($rows as $row) {
+            if (($row['Field'] ?? null) === 'section') {
+                $type = is_string($row['Type'] ?? null) ? $row['Type'] : '';
+                $options = explode(',', substr($type, 5, -1));
+
+                return array_map(static fn (string $option): string => str_replace('\'', '', $option), $options);
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Widens the `section` column's ENUM definition to include every
+     * option in $options -- $options is always either DB-introspected
+     * values (getSectionEnumOptions()'s own output) or a single new value
+     * already regex-validated by the caller (HistoryService::logVisit(),
+     * `/^[a-zA-Z0-9_-]+$/`), never raw user input, matching the original's
+     * own trust boundary for this DDL statement.
+     *
+     * @param  list<string>  $options
+     */
+    public function alterSectionEnum(array $options): void
+    {
+        $enumList = implode(',', array_map(static fn (string $option): string => "'" . $option . "'", array_unique($options)));
+
+        $this->conn->executeStatement(
+            'ALTER TABLE ' . Tables::history() . ' CHANGE section section enum(' . $enumList . ') DEFAULT NULL'
+        );
+    }
+
+    /**
+     * @param array{
+     *   userId: int, ip: string, section: ?string, categoryId: ?int,
+     *   searchId: ?int, imageId: ?int, imageType: ?string,
+     *   formatId: int|string|null, authKeyId: ?int, tagsString: ?string,
+     * } $data
+     */
+    public function insert(array $data): int
+    {
+        $now = Env::now();
+
+        $this->conn->createQueryBuilder()
+            ->insert(Tables::history())
+            ->values([
+                'date' => ':date',
+                'time' => ':time',
+                'user_id' => ':userId',
+                'IP' => ':ip',
+                'section' => ':section',
+                'category_id' => ':categoryId',
+                'search_id' => ':searchId',
+                'image_id' => ':imageId',
+                'image_type' => ':imageType',
+                'format_id' => ':formatId',
+                'auth_key_id' => ':authKeyId',
+                'tag_ids' => ':tagsString',
+            ])
+            ->setParameter('date', $now->format('Y-m-d'))
+            ->setParameter('time', $now->format('H:i:s'))
+            ->setParameter('userId', $data['userId'])
+            ->setParameter('ip', $data['ip'])
+            ->setParameter('section', $data['section'])
+            ->setParameter('categoryId', $data['categoryId'])
+            ->setParameter('searchId', $data['searchId'])
+            ->setParameter('imageId', $data['imageId'])
+            ->setParameter('imageType', $data['imageType'])
+            ->setParameter('formatId', $data['formatId'])
+            ->setParameter('authKeyId', $data['authKeyId'])
+            ->setParameter('tagsString', $data['tagsString'])
+            ->executeStatement();
+
+        return (int) $this->conn->lastInsertId();
     }
 }

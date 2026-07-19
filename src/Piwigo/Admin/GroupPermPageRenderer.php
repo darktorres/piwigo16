@@ -77,7 +77,7 @@ final class GroupPermPageRenderer
 
         $group_id = (int) $_GET['group_id'];
 
-        $group_service = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+        $group_service = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new AuditService(new AuditRepository(DbConnection::build())));
 
         // [SEC-57] actor for either branch below
         $actor_id = \Piwigo\Users\CurrentUser::get()->id;

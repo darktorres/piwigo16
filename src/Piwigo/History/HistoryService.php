@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\History;
 
 use Piwigo\Auth\AccessControl;
-use Piwigo\Db\Tables;
 
 /**
  * History domain business logic: page-view search/filtering, the
@@ -14,14 +13,13 @@ use Piwigo\Db\Tables;
  * injection, same shape as PermalinkService).
  *
  * P23 batch 8d: isLoggingAllowed()/logVisit() (ported from
- * include/functions.inc.php's do_log()/pwg_log()) still call the bare
- * \Piwigo\Db\MysqliDb::query()/\Piwigo\Db\MysqliDb::insertId()/\Piwigo\Db\MysqliDb::getEnums() free functions internally --
- * functions_mysqli.inc.php's real DBAL migration is a separate,
- * later-tracked project step (see this whole migration's finding 2),
- * not something a pure class-extraction pass rewrites. AccessControl
+ * include/functions.inc.php's do_log()/pwg_log()). AccessControl
  * (Piwigo\Auth, L2aCoreDomain) is a safe dependency from here
  * (L2bExtendedDomain) -- RateService/CommentService/SearchService already
- * establish the same precedent.
+ * establish the same precedent. logVisit()'s former bare
+ * MysqliDb::query()/::insertId()/::getEnums() calls now go through
+ * HistoryRepository (Legacy Coupling Retirement: DI+DBAL migration,
+ * Phase 1b).
  *
  * `history_remove_summarized_column()` (originally called from
  * history_autopurge()) is deliberately NOT ported: it exists to
@@ -120,13 +118,7 @@ final readonly class HistoryService
         $userId = $currentUser->id;
 
         if ((bool) $updateLastVisit) {
-            $query = '
-UPDATE ' . Tables::userInfos() . '
-  SET last_visit = NOW(),
-      lastmodified = lastmodified
-  WHERE user_id = ' . $userId . '
-';
-            \Piwigo\Db\MysqliDb::query($query);
+            $this->repo->updateLastVisitNow($userId);
         }
 
         if (! $this->isLoggingAllowed($imageId, $imageType)) {
@@ -166,13 +158,13 @@ UPDATE ' . Tables::userInfos() . '
         if ($pageSection !== null) {
             // set cache if not available
             if (! \Piwigo\Config\Config::has('history_sections_cache')) {
-                \Piwigo\Config\ConfigDb::confUpdateParam('history_sections_cache', \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'section'), true);
+                \Piwigo\Config\ConfigDb::confUpdateParam('history_sections_cache', $this->repo->getSectionEnumOptions(), true);
             }
 
             $cachedSections = \Piwigo\Config\Config::historySectionsCache();
             $cachedSections = is_string($cachedSections) || is_array($cachedSections) ? \Piwigo\Core\ArrayHelper::safeUnserialize($cachedSections) : null;
             if (! is_array($cachedSections)) {
-                $cachedSections = \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'section');
+                $cachedSections = $this->repo->getSectionEnumOptions();
             }
 
             $historySectionsCache = [];
@@ -190,14 +182,14 @@ UPDATE ' . Tables::userInfos() . '
             ) {
                 $section = $pageSection;
             } elseif ((bool) preg_match('/^[a-zA-Z0-9_-]+$/', $pageSection)) {
-                $historySections = \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'section');
+                $historySections = $this->repo->getSectionEnumOptions();
                 $historySections[] = $pageSection;
 
                 // alter history table structure, to include a new section
-                \Piwigo\Db\MysqliDb::query('ALTER TABLE ' . Tables::history() . ' CHANGE section section enum(\'' . implode("','", array_unique($historySections)) . '\') DEFAULT NULL;');
+                $this->repo->alterSectionEnum($historySections);
 
                 // and refresh cache
-                \Piwigo\Config\ConfigDb::confUpdateParam('history_sections_cache', \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'section'), true);
+                \Piwigo\Config\ConfigDb::confUpdateParam('history_sections_cache', $this->repo->getSectionEnumOptions(), true);
 
                 $section = $pageSection;
             }
@@ -211,41 +203,18 @@ UPDATE ' . Tables::userInfos() . '
         $categoryId = is_numeric($categoryId) ? (int) $categoryId : null;
         $authKeyId = \Piwigo\Core\PageState::current()->authKeyId;
 
-        $query = '
-INSERT INTO ' . Tables::history() . '
-  (
-    date,
-    time,
-    user_id,
-    IP,
-    section,
-    category_id,
-    search_id,
-    image_id,
-    image_type,
-    format_id,
-    auth_key_id,
-    tag_ids
-  )
-  VALUES
-  (
-    CURRENT_DATE,
-    CURRENT_TIME,
-    ' . $userId . ',
-    \'' . $ip . '\',
-    ' . ($section !== null ? "'" . $section . "'" : 'NULL') . ',
-    ' . ($categoryId ?? 'NULL') . ',
-    ' . ($searchId ?? 'NULL') . ',
-    ' . ($imageId ?? 'NULL') . ',
-    ' . ($imageType !== null ? "'" . $imageType . "'" : 'NULL') . ',
-    ' . ($formatId ?? 'NULL') . ',
-    ' . ($authKeyId ?? 'NULL') . ',
-    ' . ($tagsString !== null ? "'" . $tagsString . "'" : 'NULL') . '
-  )
-;';
-        \Piwigo\Db\MysqliDb::query($query);
-
-        $historyId = (int) \Piwigo\Db\MysqliDb::insertId();
+        $historyId = $this->repo->insert([
+            'userId' => $userId,
+            'ip' => $ip,
+            'section' => $section,
+            'categoryId' => $categoryId,
+            'searchId' => $searchId,
+            'imageId' => $imageId,
+            'imageType' => $imageType,
+            'formatId' => $formatId,
+            'authKeyId' => $authKeyId,
+            'tagsString' => $tagsString,
+        ]);
         if ($historyId % 1000 == 0) {
             $this->summarize(50000);
         }

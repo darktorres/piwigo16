@@ -10,7 +10,6 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -71,28 +70,11 @@ final readonly class CommentService
                     'forbidden_images' => 'ic.image_id',
                 ], '', true);
 
-            $query = '
-SELECT COUNT(DISTINCT(com.id))
-  FROM ' . Tables::imageCategory() . ' AS ic
-    INNER JOIN ' . Tables::comments() . ' AS com
-    ON ic.image_id = com.image_id
-  WHERE ' . implode('
-    AND ', $where);
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-            assert($row !== null);
-            [$nbAvailableComments] = $row;
+            $nbAvailableComments = new CommentRepository(DbConnection::build())->countAvailableWithConditions($where);
             $currentUser = $currentUser->withRawAttribute('nb_available_comments', $nbAvailableComments);
             \Piwigo\Users\CurrentUser::set($currentUser);
 
-            \Piwigo\Db\MysqliDb::singleUpdate(
-                Tables::userCache(),
-                [
-                    'nb_available_comments' => $nbAvailableComments,
-                ],
-                [
-                    'user_id' => $currentUser->id,
-                ]
-            );
+            new CommentRepository(DbConnection::build())->saveNbAvailableComments($currentUser->id, $nbAvailableComments);
         }
         $nb_available_comments = $currentUser->rawAttributes['nb_available_comments'];
         return is_numeric($nb_available_comments) ? (int) $nb_available_comments : 0;

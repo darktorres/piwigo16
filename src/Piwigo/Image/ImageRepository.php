@@ -399,6 +399,36 @@ SELECT *
     }
 
     /**
+     * ImageDerivativeController (i.php)'s own source-file-to-image-row
+     * lookup.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findByPath(string $path): ?array
+    {
+        $row = $this->conn->createQueryBuilder()
+            ->select('*')
+            ->from(Tables::images())
+            ->where('path = :path')
+            ->setParameter('path', $path)
+            ->executeQuery()
+            ->fetchAssociative();
+
+        return $row === false ? null : $row;
+    }
+
+    public function updateRotation(int $imageId, int $rotationCode): void
+    {
+        $this->conn->createQueryBuilder()
+            ->update(Tables::images())
+            ->set('rotation', ':rotation')
+            ->where('id = :id')
+            ->setParameter('rotation', $rotationCode)
+            ->setParameter('id', $imageId)
+            ->executeStatement();
+    }
+
+    /**
      * @param  list<int|string>  $ids
      * @return array<string, array<string, mixed>> keyed by image id
      */

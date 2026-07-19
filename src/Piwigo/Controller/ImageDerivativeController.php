@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
@@ -11,9 +13,10 @@ use Piwigo\Core\Env;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\MysqliDb;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeUrlCodec;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Permission\ImageVisibilityChecker;
@@ -28,10 +31,18 @@ use Piwigo\Session\SessionUserResolver;
  * FAST-BOOTSTRAP CONTRACT (hard requirement, not a transition state): this
  * controller serves derivative images WITHOUT the full common.inc.php
  * request pipeline -- no plugin loading, no user/session bootstrap, no
- * template, minimal DB work (legacy MysqliDb for the image/permission
- * lookups this file has always done, plus one DBAL connection solely for
- * the SessionRepository composite-key session lookup). Do not route this
- * through RequestBootstrap.
+ * template. Do not route this through RequestBootstrap. This is a
+ * request-shape decision (this endpoint genuinely needs none of that),
+ * independent of the DB layer: all DB work here goes through one shared
+ * DBAL Connection (image/permission/session lookups alike) --
+ * previously this file also kept a separate legacy-mysqli connection for
+ * the image/permission lookups specifically to avoid the DI-container
+ * construction cost on this endpoint's per-request PHP-FPM hot path;
+ * that reasoning no longer applies once the app runs under FrankenPHP
+ * workers (the container is built once per worker, not per request), so
+ * Legacy Coupling Retirement: DI+DBAL migration retargeted those two
+ * calls onto the same Connection/QueryBuilder pattern used everywhere
+ * else in this codebase.
  *
  * Note on plugin events: the old i.php carried a local no-op
  * trigger_notify() stub so that pwg_image's constructor (which fires
@@ -52,9 +63,13 @@ use Piwigo\Session\SessionUserResolver;
  * static accessor image_ext_imagick.php and every other shared consumer
  * read from now; and every real $prefixeTable read here was already the
  * same value as Piwigo\Config\Config::dbPrefix() (both trace back to the
- * same PIWIGO_DB_PREFIX env var / 'piwigo_' default), so reads were
- * retargeted there directly -- MysqliDb::query() still maintains
- * PageState's request-wide query counters, unrelated to any of these. The
+ * same PIWIGO_DB_PREFIX env var / 'piwigo_' default) -- now moot anyway,
+ * since Tables::config()/Tables::images() (used by the DBAL queries
+ * below) resolve the same prefix internally. PageState's request-wide
+ * query counters, previously maintained by every MysqliDb::query() call
+ * on this path, are not replicated by the DBAL Connection -- this
+ * endpoint never renders a page with the debug footer that stat feeds,
+ * so nothing ever read it here. The
  * throwaway $conf_unused/$prefixeTable_unused locals below only exist to
  * satisfy Env::applyEnvToConf()'s by-ref parameters. The
  * rootPath/derivativePath/derivativeExt/derivativeType/coi/srcLocation/
@@ -75,7 +90,7 @@ final class ImageDerivativeController
 
     private ?string $derivativeType = null;
 
-    private mixed $coi = null;
+    private ?string $coi = null;
 
     private string $srcLocation = '';
 
@@ -153,12 +168,11 @@ final class ImageDerivativeController
         // specific string types the same way described above (see the
         // comment near the Logger construction); 'db_password' was already
         // re-narrowed there and is reused as-is since nothing reassigns it
-        // in between.
-        // P23 sub-batch 8g-6: the include of the frozen dblayer facade file
-        // is gone -- its DB_ENGINE/REQUIRED_MYSQL_VERSION/
-        // MASS_UPDATES_SKIP_EMPTY define()s became MysqliDb class constants,
-        // so the fast path no longer loads any legacy file for them.
-
+        // in between. DbConnection::build() reads these same Config::
+        // accessors internally, so they're not passed explicitly, but the
+        // fail-fast friendly-500 guard on a misconfigured install is kept
+        // exactly as before rather than letting an invalid config surface
+        // as a raw, uncaught Doctrine exception instead.
         $db_host = \Piwigo\Config\Config::dbHost();
         $db_user = \Piwigo\Config\Config::dbUser();
         $db_base = \Piwigo\Config\Config::dbName();
@@ -166,29 +180,26 @@ final class ImageDerivativeController
             $this->ierror("Invalid \\Piwigo\Config\Config::dbHost()/'db_user'/'db_base' configuration: expected strings.", 500);
         }
 
+        $conn = DbConnection::build();
+        $imageRepo = new ImageRepository($conn);
+
         try {
-            MysqliDb::connect(
-                $db_host,
-                $db_user,
-                $db_password,
-                $db_base
-            );
+            $configRows = $conn->createQueryBuilder()
+                ->select('param', 'value')
+                ->from(Tables::config())
+                ->where('param IN (:params)')
+                ->setParameter('params', ['derivatives', 'disabled_derivatives'], ArrayParameterType::STRING)
+                ->executeQuery()
+                ->fetchAllAssociative();
         } catch (\Exception $e) {
             $logger->error($e->getMessage(), 'i.php');
+            $configRows = [];
         }
-        MysqliDb::checkCharset();
 
-        $query = '
-SELECT param, value
-  FROM ' . \Piwigo\Config\Config::dbPrefix() . 'config
-  WHERE param IN (\'derivatives\', \'disabled_derivatives\')
-;';
-
-        $result = MysqliDb::query($query);
-        while ((bool) ($row = MysqliDb::fetchAssoc($result))) {
+        foreach ($configRows as $row) {
             // 'param' is the config table's primary key column (never NULL in
-            // practice), but MysqliDb::fetchAssoc() types every column as
-            // string|null, so an array key still needs narrowing.
+            // practice), but is only provably `mixed` from DBAL's own row
+            // type, so an array key still needs narrowing.
             if (! is_string($row['param'])) {
                 continue;
             }
@@ -223,14 +234,8 @@ SELECT param, value
             && ! str_contains($this->srcLocation, 'themes/')
             && ! str_contains($this->srcLocation, 'plugins/')) {
             try {
-                $query = '
-SELECT *
-  FROM ' . \Piwigo\Config\Config::dbPrefix() . 'images
-  WHERE path=\'' . addslashes($this->srcLocation) . '\'
-;';
-
-                $row = MysqliDb::fetchAssoc(MysqliDb::query($query));
-                if (! (bool) $row) {
+                $row = $imageRepo->findByPath($this->srcLocation);
+                if ($row === null) {
                     $this->ierror('Db file path not found', 404);
                 }
 
@@ -239,12 +244,13 @@ SELECT *
                 if ($image_id === null) {
                     $this->ierror('Invalid image id in database', 500);
                 }
-                $this->checkDerivativePermission($image_id);
+                $this->checkDerivativePermission($conn, $image_id);
 
                 if (isset($row['width'])) {
                     $this->originalSize = [$row['width'], $row['height']];
                 }
-                $this->coi = $row['coi'];
+                $rowCoi = $row['coi'];
+                $this->coi = is_string($rowCoi) ? $rowCoi : null;
 
                 if (! isset($row['rotation'])) {
                     // get_rotation_angle() returns null for "no EXIF
@@ -253,27 +259,18 @@ SELECT *
                     // same thing as an explicit 0 (no rotation).
                     $this->rotationAngle = pwg_image::get_rotation_angle($this->srcPath) ?? 0;
 
-                    MysqliDb::singleUpdate(
-                        \Piwigo\Config\Config::dbPrefix() . 'images',
-                        [
-                            'rotation' => pwg_image::get_rotation_code_from_angle($this->rotationAngle),
-                        ],
-                        [
-                            'id' => $row['id'],
-                        ]
-                    );
+                    $imageRepo->updateRotation($image_id, pwg_image::get_rotation_code_from_angle($this->rotationAngle));
                 } else {
-                    // get_rotation_angle_from_code()'s docblock confirms
-                    // (empirically, against the real DB) that this driver's
-                    // fetch_assoc() always returns a numeric string here; guard
-                    // it explicitly rather than casting, since a cast alone
-                    // wouldn't satisfy the numeric-string contract.
-                    // isset($row['rotation']) above already narrows this to string.
+                    // get_rotation_angle_from_code() accepts int|string; the
+                    // `rotation` column is a native DBAL int once retargeted
+                    // off the legacy driver's own always-string fetch mode --
+                    // still guarded explicitly rather than trusted, since
+                    // isset() alone doesn't prove the numeric shape.
                     $rotation = $row['rotation'];
                     if (! is_numeric($rotation)) {
                         $this->ierror('Invalid rotation value in database', 500);
                     }
-                    $this->rotationAngle = pwg_image::get_rotation_angle_from_code($rotation);
+                    $this->rotationAngle = pwg_image::get_rotation_angle_from_code((int) $rotation);
                 }
             } catch (\Exception $e) {
                 $logger->error($e->getMessage(), 'i.php');
@@ -281,7 +278,6 @@ SELECT *
         } else {
             $this->rotationAngle = 0;
         }
-        MysqliDb::close();
 
         $need_generate = false;
         $derivative_mtime = @filemtime($this->derivativePath);
@@ -472,12 +468,12 @@ SELECT *
      * query for the session's pwg_uid -> 1 query for the already-computed
      * user_cache.forbidden_categories, never recomputing permissions live
      * in this fast path). The visibility decision itself lives in
-     * Piwigo\Permission\ImageVisibilityChecker (legacy mysqli layer, already
-     * connected); the session lookup in Piwigo\Session\SessionUserResolver
-     * (a second, DBAL-only connection is opened just for it, since
-     * SessionRepository has no legacy-layer equivalent).
+     * Piwigo\Permission\ImageVisibilityChecker, the session lookup in
+     * Piwigo\Session\SessionUserResolver -- both share this controller's
+     * one Connection now (previously 2 separate connections: legacy
+     * mysqli for the former, a second DBAL connection for the latter).
      */
-    private function checkDerivativePermission(int $imageId): void
+    private function checkDerivativePermission(Connection $conn, int $imageId): void
     {
         $guestId = \Piwigo\Config\Config::guestId();
         $userId = $guestId;
@@ -486,7 +482,7 @@ SELECT *
         if (is_string($sessionName) && $sessionName !== '') {
             $cookieValue = $_COOKIE[$sessionName] ?? null;
             if (is_string($cookieValue) && $cookieValue !== '') {
-                $resolved = new SessionUserResolver(new SessionRepository(DbConnection::build()))
+                $resolved = new SessionUserResolver(new SessionRepository($conn))
                     ->resolveLoggedUserId(
                         $cookieValue,
                         (bool) (\Piwigo\Config\Config::sessionUseIpAddress()),
@@ -497,7 +493,7 @@ SELECT *
             }
         }
 
-        if (! new ImageVisibilityChecker(\Piwigo\Config\Config::dbPrefix())->isVisibleToUser($imageId, $userId)) {
+        if (! new ImageVisibilityChecker($conn)->isVisibleToUser($imageId, $userId)) {
             $this->ierror('Forbidden', 403);
         }
     }
@@ -703,8 +699,8 @@ SELECT *
         }
 
         // $this->originalSize is only ever set (see serve()'s flow) from a
-        // DB row's width/height columns, which MysqliDb::fetchAssoc() types
-        // as numeric strings; guard the shape and coerce rather than trust it.
+        // DB row's width/height columns (native ints under DBAL); guard the
+        // shape and coerce rather than trust it regardless.
         $original_size = $this->originalSize;
         if (! is_array($original_size)
             || ! isset($original_size[0], $original_size[1])

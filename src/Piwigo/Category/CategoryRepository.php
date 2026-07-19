@@ -64,6 +64,29 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
+     * Every category's id/name/permalink, unfiltered -- HtmlService::
+     * getCatDisplayNameCache()'s own breadcrumb-rendering cache warm-up.
+     *
+     * @return array<int, array{id: int, name: string, permalink: ?string}> keyed by id
+     */
+    public function findAllIdNamePermalink(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id', 'name', 'permalink')
+            ->from(Tables::categories())
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        $byId = [];
+        foreach ($rows as $row) {
+            /** @var array{id: int, name: string, permalink: ?string} $row */
+            $byId[$row['id']] = $row;
+        }
+
+        return $byId;
+    }
+
+    /**
      * Every category whose `uppercats` path (a comma-separated ancestor id
      * list, e.g. "1,4,9") contains any of $ids -- the REGEXP matches an id
      * bounded by string-start/comma on either side, same operator the

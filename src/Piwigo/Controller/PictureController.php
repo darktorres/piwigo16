@@ -1202,7 +1202,7 @@ SELECT id, name, permalink
             // |                          sub pages                           |
             // +-------------------------------------------------------------+
 
-            new PictureRateRenderer()
+            new PictureRateRenderer(new RateRepository(DbConnection::build()))
                 ->render($image_id);
             if (\Piwigo\Config\Config::activateComments()) {
                 new PictureCommentRenderer()

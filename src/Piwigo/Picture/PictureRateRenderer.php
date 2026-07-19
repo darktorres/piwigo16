@@ -5,18 +5,21 @@ declare(strict_types=1);
 namespace Piwigo\Picture;
 
 use Piwigo\Core\AccessLevel;
-use Piwigo\Db\Tables;
+use Piwigo\Rate\RateRepository;
 
 /**
  * Renders the picture page's rating summary + rate form. Ported from
- * include/picture_rate.inc.php -- real rate-summary/user's-own-rate SQL,
- * not yet delegated to RateService/RateRepository (out of this fold's
- * scope; matches PictureMetadataRenderer/PictureCommentRenderer's own
- * "plain global-function/global-variable reads" shape, no constructor
- * deps).
+ * include/picture_rate.inc.php. Constructor-injects RateRepository
+ * (Legacy Coupling Retirement: DI+DBAL migration, Phase 1b) -- only 1
+ * real caller (PictureController), unlike PictureMetadataRenderer/
+ * PictureCommentRenderer's own "no constructor deps" shape.
  */
 final class PictureRateRenderer
 {
+    public function __construct(
+        private readonly RateRepository $repo,
+    ) {}
+
     /**
      * Legacy Coupling Retirement Track A batch A5.2e: $imageId is an
      * explicit param instead of `global $page['image_id']` -- the one
@@ -49,20 +52,13 @@ final class PictureRateRenderer
         ];
         if ($rate_summary['score'] != null) {
             // images.id is the NOT NULL primary key, always a numeric string
-            // once fetched (see \Piwigo\Db\MysqliDb::fetchAssoc()'s return type and the
-            // matching assert in picture.php).
+            // once fetched (see the matching assert in picture.php).
             $picture_current_id = $picture['current']['id'];
-            assert(is_string($picture_current_id));
+            assert(is_numeric($picture_current_id));
 
-            $query = '
-SELECT COUNT(rate) AS count
-     , ROUND(AVG(rate),2) AS average
-  FROM ' . Tables::rate() . '
-  WHERE element_id = ' . $picture_current_id . '
-;';
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-            assert($row !== null);
-            [$rate_summary['count'], $rate_summary['average']] = $row;
+            $summary = $this->repo->findRateSummaryForElement((int) $picture_current_id);
+            $rate_summary['count'] = $summary['count'];
+            $rate_summary['average'] = $summary['average'];
         }
         $template->assign('rate_summary', $rate_summary);
 
@@ -72,11 +68,7 @@ SELECT COUNT(rate) AS count
                 $rate_image_id = $imageId;
                 $rate_user_id = \Piwigo\Users\CurrentUser::get()->id;
 
-                $query = 'SELECT rate
-      FROM ' . Tables::rate() . '
-      WHERE element_id = ' . $rate_image_id . '
-      AND user_id = ' . $rate_user_id;
-
+                $anonymous_id = null;
                 if (! \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic)) {
                     $remote_addr = $_SERVER['REMOTE_ADDR'] ?? '';
                     $remote_addr = is_string($remote_addr) ? $remote_addr : '';
@@ -85,15 +77,9 @@ SELECT COUNT(rate) AS count
                         array_pop($ip_components);
                     }
                     $anonymous_id = implode('.', $ip_components);
-                    $query .= ' AND anonymous_id = \'' . $anonymous_id . '\'';
                 }
 
-                $result = \Piwigo\Db\MysqliDb::query($query);
-                if (\Piwigo\Db\MysqliDb::numRows($result) > 0) {
-                    $row = \Piwigo\Db\MysqliDb::fetchAssoc($result);
-                    assert(is_array($row));
-                    $user_rate = $row['rate'];
-                }
+                $user_rate = $this->repo->findUserRate($rate_image_id, $rate_user_id, $anonymous_id);
             }
 
             $template->assign(

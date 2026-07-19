@@ -479,4 +479,60 @@ final class RateRepository extends AbstractRepository
             'date' => is_string($row['date']) ? $row['date'] : '',
         ];
     }
+
+    /**
+     * Picture page's rating-summary widget: count + average rate for a
+     * single image.
+     *
+     * @return array{count: int, average: ?float}
+     */
+    public function findRateSummaryForElement(int $elementId): array
+    {
+        $row = $this->conn->createQueryBuilder()
+            ->select('COUNT(rate) AS count', 'ROUND(AVG(rate), 2) AS average')
+            ->from(Tables::rate())
+            ->where('element_id = :elementId')
+            ->setParameter('elementId', $elementId)
+            ->executeQuery()
+            ->fetchAssociative();
+
+        if ($row === false) {
+            return [
+                'count' => 0,
+                'average' => null,
+            ];
+        }
+
+        return [
+            'count' => is_numeric($row['count']) ? (int) $row['count'] : 0,
+            'average' => is_numeric($row['average']) ? (float) $row['average'] : null,
+        ];
+    }
+
+    /**
+     * The current user's own rate for a single image. $anonymousId is only
+     * applied for non-classic (guest) users -- matches the original's own
+     * conditional `AND anonymous_id = ...` clause, always additionally
+     * filtered by $userId regardless.
+     */
+    public function findUserRate(int $elementId, int $userId, ?string $anonymousId): ?int
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('rate')
+            ->from(Tables::rate())
+            ->where('element_id = :elementId')
+            ->andWhere('user_id = :userId')
+            ->setParameter('elementId', $elementId)
+            ->setParameter('userId', $userId);
+
+        if ($anonymousId !== null) {
+            $qb->andWhere('anonymous_id = :anonymousId')
+                ->setParameter('anonymousId', $anonymousId);
+        }
+
+        $value = $qb->executeQuery()
+            ->fetchOne();
+
+        return is_numeric($value) ? (int) $value : null;
+    }
 }

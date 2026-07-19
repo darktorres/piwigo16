@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Html;
 
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\RegisteredBlock;
@@ -14,11 +15,16 @@ use Piwigo\Template\Template;
 /**
  * HTML rendering helpers, error pages, and status/header utilities.
  *
- * Injects nothing -- same "no constructor deps" shape as Piwigo\Url\
- * UrlService (its P17 sibling namespace): the remaining bare calls
- * (trigger_change(), get_cat_info(), get_root_url()/add_url_params(),
- * l10n()) are all settled composer-autoloaded utilities, not unmigrated
- * legacy.
+ * Takes only an optional, lazy-defaulted CategoryRepository -- same
+ * "no *required* constructor deps" shape as Piwigo\Url\UrlService (its
+ * P17 sibling namespace): the remaining bare calls (trigger_change(),
+ * get_cat_info(), get_root_url()/add_url_params(), l10n()) are all
+ * settled composer-autoloaded utilities, not unmigrated legacy. This
+ * class has 83 real `new HtmlService()` construction sites, so
+ * getCatDisplayNameCache()'s own CategoryRepository need (Legacy
+ * Coupling Retirement: DI+DBAL migration, Phase 1b) follows
+ * MailService::$webmasterMailProvider's established lazy-default
+ * pattern rather than a required param.
  *
  * Implements HtmlRenderingInterface (P23 batch 8f-3) so L1/L2a/L2b classes
  * that can't depend on this L3Presentation class directly can depend on
@@ -26,6 +32,16 @@ use Piwigo\Template\Template;
  */
 final class HtmlService implements HtmlRenderingInterface
 {
+    public function __construct(
+        private readonly ?CategoryRepository $categoryRepo = null,
+    ) {}
+
+    private function categoryRepo(): CategoryRepository
+    {
+        return $this->categoryRepo
+            ?? new CategoryRepository(DbConnection::build());
+    }
+
     /**
      * Generates breadcrumb from categories list.
      * Categories string returned contains categories as given in the input
@@ -103,11 +119,7 @@ final class HtmlService implements HtmlRenderingInterface
         }
 
         if (! \Piwigo\Core\ProcessCache::has('cat_names')) {
-            $query = '
-SELECT id, name, permalink
-  FROM ' . Tables::categories() . '
-;';
-            \Piwigo\Core\ProcessCache::set('cat_names', \Piwigo\Db\MysqliDb::query2Array($query, 'id'));
+            \Piwigo\Core\ProcessCache::set('cat_names', $this->categoryRepo()->findAllIdNamePermalink());
         }
         // Narrowed once here (fix pattern #7): ProcessCache::get() returns
         // mixed, proving the key exists does not prove the stored value is

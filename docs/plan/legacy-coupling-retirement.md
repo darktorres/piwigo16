@@ -207,7 +207,7 @@ them when reading commit history or the replay manifest.
   re-confirmed as legitimate, already-documented exceptions, not gaps.
   Zero manual `new *Repository(`/`new *Service(` chains found anywhere in
   the domain (matches the original table's very low "New-chains: 1").
-  Commit TBD.
+  Commit `456241849`.
 - **Next up: Phase 1f** (Ws, 24 files, 308 call sites, 9 `MysqliDb::`
   files — needs its own multi-batch breakdown by WS resource area) — not
   yet started.

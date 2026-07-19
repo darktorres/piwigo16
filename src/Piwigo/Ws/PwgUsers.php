@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
@@ -25,7 +26,10 @@ use Piwigo\Core\DateHelper;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbInfo;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -50,6 +54,31 @@ final class PwgUsers
     }
 
     /**
+     * Constructed repeatedly across getList()/getAuthKey()/
+     * generatePasswordLink() -- including once inside getList()'s
+     * per-user foreach loop -- takes the caller's own $conn instead of
+     * building a fresh one per call, same "shared connection passed in"
+     * precedent as Ws\PwgTags::activityService(Connection $conn) /
+     * Bootstrap\RequestBootstrap::activityService(Connection $conn).
+     */
+    private static function authService(Connection $conn): AuthService
+    {
+        return new AuthService(new AuthRepository($conn), new ActivityService(new ActivityRepository($conn)), new HtmlService(), new PasswordService(new PasswordRepository($conn)), new CookieService());
+    }
+
+    /**
+     * Constructed identically 8 times across createApiKey()/
+     * revokeApiKey()/editApiKey()/getApiKey() -- none inside a loop, so
+     * (unlike authService() above) this builds its own connection per
+     * call, same shape as PwgComments::commentService()/
+     * PwgGroups::groupService().
+     */
+    private static function apiKeyService(): ApiKeyService
+    {
+        return new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())));
+    }
+
+    /**
      * API method
      * Returns a list of users
      *
@@ -70,6 +99,12 @@ final class PwgUsers
      */
     public static function getList(array $params, PwgServer &$service): PwgError|array
     {
+        // Shared across every query in this method, including the
+        // SELECT SQL_CALC_FOUND_ROWS.../SELECT FOUND_ROWS() pair below --
+        // FOUND_ROWS() reflects the immediately-preceding query on the
+        // SAME connection/session, so this must stay one connection for
+        // the whole method, not DbConnection::build() per query.
+        $conn = DbConnection::build();
 
         // \Piwigo\Config\Config::userFields() maps generic field names to table-specific DB
         // column names (see Piwigo\Users\UserService for the same pattern);
@@ -98,20 +133,20 @@ final class PwgUsers
         }
 
         if (! empty($params['username'])) {
-            $where_clauses[] = 'u.' . $user_field_username . ' LIKE \'' . \Piwigo\Db\MysqliDb::realEscapeString($params['username']) . '\'';
+            $where_clauses[] = 'u.' . $user_field_username . ' LIKE ' . $conn->quote($params['username']);
         }
 
         $filtered_groups = [];
         if (! empty($params['filter'])) {
-            $filter_query = 'SELECT id FROM `' . Tables::groups() . '` WHERE name LIKE \'%' . \Piwigo\Db\MysqliDb::realEscapeString($params['filter']) . '%\';';
-            $filtered_groups_res = \Piwigo\Db\MysqliDb::query($filter_query);
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($filtered_groups_res))) {
-                $filtered_groups[] = $row['id'];
+            $filter_like = $conn->quote('%' . $params['filter'] . '%');
+            $filter_query = 'SELECT id FROM `' . Tables::groups() . '` WHERE name LIKE ' . $filter_like . ';';
+            foreach ($conn->fetchAllAssociative($filter_query) as $row) {
+                if (is_scalar($row['id'])) {
+                    $filtered_groups[] = (string) $row['id'];
+                }
             }
-            $filter_where_clause = '(u.' . $user_field_username . ' LIKE \'%' .
-            \Piwigo\Db\MysqliDb::realEscapeString($params['filter']) . '%\' OR '
-            . 'u.' . $user_field_email . ' LIKE \'%' .
-            \Piwigo\Db\MysqliDb::realEscapeString($params['filter']) . '%\'';
+            $filter_where_clause = '(u.' . $user_field_username . ' LIKE ' . $filter_like . ' OR '
+            . 'u.' . $user_field_email . ' LIKE ' . $filter_like;
 
             if (! empty($filtered_groups)) {
                 $filter_where_clause .= 'OR ug.group_id IN (' . implode(',', $filtered_groups) . ')';
@@ -155,7 +190,7 @@ final class PwgUsers
         }
 
         if (! empty($params['status'])) {
-            $params['status'] = array_intersect($params['status'], \Piwigo\Db\MysqliDb::getEnums(Tables::userInfos(), 'status'));
+            $params['status'] = array_intersect($params['status'], new DbInfo($conn)->getEnums(Tables::userInfos(), 'status'));
             if (count($params['status']) > 0) {
                 $where_clauses[] = 'ui.status IN("' . implode('","', $params['status']) . '")';
             }
@@ -289,24 +324,21 @@ SELECT DISTINCT ';
     ;';
         }
         $users = [];
-        $result = \Piwigo\Db\MysqliDb::query($query);
+        $rows = $conn->fetchAllAssociative($query);
         $total_count = 0;
 
         /* GET THE RESULT OF SQL_CALC_FOUND_ROWS if display total_count is requested */
         if (isset($display_flags['total_count'])) {
-            $total_count_query_result = \Piwigo\Db\MysqliDb::query('SELECT FOUND_ROWS();');
-            $row = \Piwigo\Db\MysqliDb::fetchRow($total_count_query_result);
-            assert($row !== null);
-            [$total_count] = $row;
-            $total_count = (int) $total_count;
+            $total_count_result = $conn->fetchOne('SELECT FOUND_ROWS();');
+            $total_count = is_numeric($total_count_result) ? (int) $total_count_result : 0;
         }
         // Extracted once (instead of re-checking isset($display_flags['groups'])
         // both inside this loop and again below it) because PHPStan's loop-body
         // type narrowing otherwise mis-infers the offset as unconditionally
         // present after the loop.
         $want_groups = isset($display_flags['groups']);
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-            $row['id'] = intval($row['id']);
+        foreach ($rows as $row) {
+            $row['id'] = is_numeric($row['id']) ? (int) $row['id'] : 0;
             if ($want_groups) {
                 $row['groups'] = []; // will be filled later
             }
@@ -321,11 +353,10 @@ SELECT DISTINCT ';
   FROM ' . Tables::userGroup() . '
   WHERE user_id IN (' . implode(',', array_keys($users)) . ')
 ;';
-                $result = \Piwigo\Db\MysqliDb::query($query);
                 // a dedicated $group_row (instead of reusing $row from the loop
                 // above, which iterates a differently-shaped result set) keeps
                 // PHPStan's per-loop type inference precise.
-                while ((bool) ($group_row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+                foreach ($conn->fetchAllAssociative($query) as $group_row) {
                     $group_user_id = is_numeric($group_row['user_id']) ? (int) $group_row['user_id'] : null;
                     $group_id = is_numeric($group_row['group_id']) ? (int) $group_row['group_id'] : null;
                     if ($group_user_id === null || $group_id === null || ! isset($users[$group_user_id]) || ! is_array($users[$group_user_id]['groups'] ?? null)) {
@@ -352,8 +383,8 @@ SELECT DISTINCT ';
                     $last_visit = is_string($cur_user['last_visit']) ? $cur_user['last_visit'] : null;
                     $users[$cur_user_id]['last_visit'] = $last_visit;
 
-                    if (! \Piwigo\Db\MysqliDb::getBoolean($cur_user['last_visit_from_history']) and empty($last_visit)) {
-                        $last_visit = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService(), new PasswordService(new PasswordRepository(DbConnection::build())), new CookieService())->getUserLastVisitFromHistory($cur_user_id, true);
+                    if (! SqlDialect::getBoolean($cur_user['last_visit_from_history']) and empty($last_visit)) {
+                        $last_visit = self::authService($conn)->getUserLastVisitFromHistory($cur_user_id, true);
                         $users[$cur_user_id]['last_visit'] = $last_visit;
                     }
 
@@ -482,7 +513,7 @@ SELECT DISTINCT ';
             return new PwgError(403, 'Invalid security token');
         }
 
-        $authkey = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService(), new PasswordService(new PasswordRepository(DbConnection::build())), new CookieService())->createUserAuthKey($params['user_id']);
+        $authkey = self::authService(DbConnection::build())->createUserAuthKey($params['user_id']);
 
         if ($authkey === false) {
             return new PwgError(WsError::INVALID_PARAM, 'invalid user_id');
@@ -522,16 +553,15 @@ SELECT
   FROM ' . Tables::userInfos() . '
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-            $protected_users = array_merge($protected_users, \Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id'));
+            $protected_users = array_merge($protected_users, array_column(DbConnection::build()->fetchAllAssociative($query), 'user_id'));
         }
 
         // protect some users
         // array_diff() requires every element to be string-castable;
-        // \Piwigo\Db\MysqliDb::query2Array()'s list<string|null> return (key_name=null,
-        // value_name='user_id') can contain null for a NULL user_id column, and
-        // $protected_users' $conf-sourced entries are still `mixed` even after
-        // typing $conf above, so filter down to scalars (int/string) before
-        // diffing.
+        // array_column()'s list<mixed> return can contain null for a NULL
+        // user_id column, and $protected_users' $conf-sourced entries are
+        // still `mixed` even after typing $conf above, so filter down to
+        // scalars (int/string) before diffing.
         $protected_users = array_filter($protected_users, is_scalar(...));
         $params['user_id'] = array_diff($params['user_id'], $protected_users);
 
@@ -660,9 +690,7 @@ SELECT ' . $user_field_password . ' AS password
   FROM ' . Tables::users() . '
   WHERE ' . $user_field_id . ' = \'' . $current_user_id . '\'
 ;';
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-            assert($row !== null);
-            [$current_password] = $row;
+            $current_password = DbConnection::build()->fetchOne($query);
             $current_password = is_string($current_password) ? $current_password : '';
 
             // $params['password'] is declared string via this function's own
@@ -752,23 +780,24 @@ SELECT COUNT(*)
   FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$count] = $row;
-        if ($count == 0) {
+        $conn = DbConnection::build();
+        $count = $conn->fetchOne($query);
+        $count = is_numeric($count) ? (int) $count : 0;
+        if ($count === 0) {
             return new PwgError(404, 'image_id not found');
         }
 
-        \Piwigo\Db\MysqliDb::singleInsert(
-            Tables::favorites(),
-            [
-                'image_id' => $params['image_id'],
-                'user_id' => \Piwigo\Users\CurrentUser::get()->id,
-            ],
-            [
-                'ignore' => true,
-            ]
-        );
+        new BatchWriter($conn)
+            ->singleInsert(
+                Tables::favorites(),
+                [
+                    'image_id' => $params['image_id'],
+                    'user_id' => \Piwigo\Users\CurrentUser::get()->id,
+                ],
+                [
+                    'ignore' => true,
+                ]
+            );
 
         return true;
     }
@@ -792,10 +821,10 @@ SELECT COUNT(*)
   FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$count] = $row;
-        if ($count == 0) {
+        $conn = DbConnection::build();
+        $count = $conn->fetchOne($query);
+        $count = is_numeric($count) ? (int) $count : 0;
+        if ($count === 0) {
             return new PwgError(404, 'image_id not found');
         }
 
@@ -807,7 +836,7 @@ DELETE
     AND image_id = ' . $params['image_id'] . '
 ;';
 
-        \Piwigo\Db\MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         return true;
     }
@@ -849,13 +878,12 @@ SELECT
     ' . $order_by . '
 ;';
         $images = [];
-        $result = \Piwigo\Db\MysqliDb::query($query);
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach (DbConnection::build()->fetchAllAssociative($query) as $row) {
             $image = [];
 
             foreach (['id', 'width', 'height', 'hit'] as $k) {
                 if (isset($row[$k])) {
-                    $image[$k] = (int) $row[$k];
+                    $image[$k] = is_numeric($row[$k]) ? (int) $row[$k] : 0;
                 }
             }
 
@@ -923,14 +951,15 @@ SELECT
             return new PwgError(403, 'You cannot perform this action');
         }
 
-        $first_login = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService(), new PasswordService(new PasswordRepository(DbConnection::build())), new CookieService())->hasAlreadyLoggedIn($params['user_id']);
+        $conn = DbConnection::build();
+        $first_login = self::authService($conn)->hasAlreadyLoggedIn($params['user_id']);
         $send_by_mail_response = null;
         $user_lost_language = is_string($user_lost['language']) ? $user_lost['language'] : self::userService()->getDefaultLanguage();
         $lang_to_use = $first_login ? self::userService()->getDefaultLanguage() : $user_lost_language;
 
         new MailService()
             ->switchLangTo($lang_to_use);
-        $generate_link = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService(), new PasswordService(new PasswordRepository(DbConnection::build())), new CookieService())->generatePasswordLink($params['user_id'], $first_login);
+        $generate_link = self::authService($conn)->generatePasswordLink($params['user_id'], $first_login);
 
         $user_lost_email = is_string($user_lost['email']) ? $user_lost['email'] : null;
 
@@ -1016,7 +1045,7 @@ SELECT
     {
         $logger = \Piwigo\Core\CurrentLogger::get();
 
-        if (AccessControl::isAGuest() or ! new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())))->connectedWithPwgUi()) {
+        if (AccessControl::isAGuest() or ! self::apiKeyService()->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
 
@@ -1032,16 +1061,17 @@ SELECT
             return new PwgError(400, 'Key name is too long');
         }
 
-        $key_name = \Piwigo\Db\MysqliDb::realEscapeString($params['key_name']);
-        assert($key_name !== null);
+        // realEscapeString() dropped: ApiKeyRepository::insert() parameterizes
+        // apikey_name instead of interpolating it, same "dead pre-escaping"
+        // rationale as Ws\PwgTags::rename() (Phase 1f step 3).
+        $key_name = $params['key_name'];
         // the guard above already rejects any duration outside [1, 999999], so
         // it can never be 0 here.
         $duration = $params['duration'];
 
         $user_id = \Piwigo\Users\CurrentUser::get()->id;
 
-        $secret = new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())))
-            ->create($user_id, $duration, $key_name);
+        $secret = self::apiKeyService()->create($user_id, $duration, $key_name);
 
         $logger->info('[api_key][user_id=' . $user_id . '][action=create][key_name=' . $params['key_name'] . ']');
 
@@ -1060,7 +1090,7 @@ SELECT
     {
         $logger = \Piwigo\Core\CurrentLogger::get();
 
-        if (AccessControl::isAGuest() or ! new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())))->connectedWithPwgUi()) {
+        if (AccessControl::isAGuest() or ! self::apiKeyService()->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
 
@@ -1074,8 +1104,7 @@ SELECT
 
         $user_id = \Piwigo\Users\CurrentUser::get()->id;
 
-        $revoked_key = new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())))
-            ->revoke($user_id, $params['pkid']);
+        $revoked_key = self::apiKeyService()->revoke($user_id, $params['pkid']);
 
         if ($revoked_key !== true) {
             return new PwgError(403, $revoked_key);
@@ -1103,7 +1132,7 @@ SELECT
             return new PwgError(401, 'Acces Denied');
         }
 
-        if (! new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())))->connectedWithPwgUi()) {
+        if (! self::apiKeyService()->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
 
@@ -1115,10 +1144,12 @@ SELECT
             return new PwgError(403, l10n('Invalid pkid format'));
         }
 
-        $key_name = \Piwigo\Db\MysqliDb::realEscapeString($params['key_name']);
+        // realEscapeString() dropped: ApiKeyRepository::updateName()
+        // parameterizes apikey_name instead of interpolating it, same
+        // "dead pre-escaping" rationale as createApiKey() above.
+        $key_name = $params['key_name'];
         $user_id = \Piwigo\Users\CurrentUser::get()->id;
-        $edited_key = new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())))
-            ->edit($user_id, $params['pkid'], $key_name);
+        $edited_key = self::apiKeyService()->edit($user_id, $params['pkid'], $key_name);
 
         if ($edited_key !== true) {
             return new PwgError(403, $edited_key);
@@ -1144,7 +1175,7 @@ SELECT
             return new PwgError(401, 'Acces Denied');
         }
 
-        if (! new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())))->connectedWithPwgUi()) {
+        if (! self::apiKeyService()->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
 
@@ -1160,8 +1191,7 @@ SELECT
         // the bug). Every other ApiKeyService method here (create/revoke/
         // edit) already passes a plain int for the same user id value.
         $user_id = \Piwigo\Users\CurrentUser::get()->id;
-        $api_keys = new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())))
-            ->get($user_id);
+        $api_keys = self::apiKeyService()->get($user_id);
 
         return ((bool) $api_keys) ? $api_keys : l10n('No API key found');
     }

@@ -37,9 +37,12 @@ final class UserPermPageRenderer
         $htmlRenderer = new HtmlService();
 
         $conn = DbConnection::build();
+        // Built once, reused below -- was the same PermissionService recipe
+        // repeated verbatim at 2 sites in this method (Phase 1k DI-chain audit).
+        $permissionService = new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
         $categoryService = new CategoryService(
             new CategoryRepository($conn),
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+            $permissionService
         );
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -70,20 +73,15 @@ final class UserPermPageRenderer
             $htmlRenderer->fatalError('user_id URL parameter is missing');
         }
 
-        $permission_service = new PermissionService(
-            new PermissionRepository($conn),
-            new GroupRepository($conn)
-        );
-
         if (isset($_POST['falsify'])
             and count($cat_true) > 0) {
             // if you forbid access to a category, all sub-categories become
             // automatically forbidden
             $subcats = array_map(intval(...), get_subcat_ids($cat_true));
-            $permission_service->removeUserAccess($user_id, $subcats);
+            $permissionService->removeUserAccess($user_id, $subcats);
         } elseif (isset($_POST['trueify'])
             and count($cat_false) > 0) {
-            $permission_service->grantUserAccess($user_id, $cat_false);
+            $permissionService->grantUserAccess($user_id, $cat_false);
         }
 
         $template->set_filenames(

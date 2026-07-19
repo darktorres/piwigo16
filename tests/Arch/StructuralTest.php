@@ -415,6 +415,316 @@ test('src/Piwigo/ contains no define() calls', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
+/**
+ * die() and exit() -- with or without parens/arguments -- both tokenize
+ * as T_EXIT, so this catches every real call site (unlike a substring
+ * search, immune to a false match on an identifier merely containing
+ * "exit", and unlike findCallSitesOutsideComments() above, doesn't need
+ * a needle at all).
+ *
+ * @return array<string, int> relative path (from $dir itself) => call count
+ */
+function countExitCallsPerFile(string $dir): array
+{
+    $counts = [];
+    if (! is_dir($dir)) {
+        return $counts;
+    }
+    $base = $dir . '/';
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+
+    foreach ($iterator as $file) {
+        /** @var SplFileInfo $file RecursiveIteratorIterator loses this over RecursiveDirectoryIterator */
+        if (! $file->isFile() || $file->getExtension() !== 'php') {
+            continue;
+        }
+
+        $source = file_get_contents($file->getPathname());
+        if ($source === false) {
+            continue;
+        }
+
+        $count = 0;
+        foreach (token_get_all($source) as $token) {
+            if (is_array($token) && $token[0] === T_EXIT) {
+                $count++;
+            }
+        }
+
+        if ($count > 0) {
+            $relative = substr($file->getPathname(), strlen($base));
+            $counts[$relative] = $count;
+        }
+    }
+
+    ksort($counts);
+
+    return $counts;
+}
+
+test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlist', function (): void {
+    // Phase 1k close-out (2026-07-19): every site below was read in full
+    // and confirmed intentional -- grouped by rationale, not alphabetical.
+    // A new file calling die()/exit(), or a changed count in a file
+    // already listed here, fails this test until reviewed and reflected
+    // here explicitly. This is a count-based allowlist, not a line-based
+    // one: line numbers drift with unrelated edits, call-site counts
+    // don't (a genuinely new call site always changes the count).
+    $allowlist = [
+        // Ws/* raw-response mechanism: the whole Ws/ module sends its own
+        // JSON-RPC/XML/PHP-serialized response and exits, by design --
+        // bypasses the PSR-7 middleware pipeline entirely (WsController's
+        // own docblock: "PwgServer::run() always ends the response itself
+        // ... there is no real PSR-7 Response to construct"). Same
+        // mechanism reached from Bootstrap/UserBootstrap.php's api_key
+        // gate and Admin/Upload/UploadService.php's IN_WS branch.
+        'Ws/PwgImages.php' => 5,
+        'Ws/PwgServer.php' => 1,
+        'Ws/WsHelper.php' => 1,
+        'Controller/WsController.php' => 1,
+        'Bootstrap/UserBootstrap.php' => 2,
+
+        // Html/HtmlService.php: the sanctioned HtmlRenderingInterface exit
+        // mechanism itself (accessDenied()/fatalError()) -- every other
+        // controller/service that needs to stop the request with an error
+        // page routes through this, not a bare die()/exit() of its own.
+        'Html/HtmlService.php' => 2,
+
+        // Http/functions.php: redirect_http()/redirect_html(), the
+        // canonical redirect() mechanism used throughout the whole
+        // codebase -- same class of sanctioned exit point as HtmlService.
+        'Http/functions.php' => 2,
+
+        // AJAX/JSON action endpoints: echo a JSON (or CSV/file) body
+        // directly and stop, deliberately not falling through to the
+        // full page/template render that follows in the same method.
+        'Admin/AdminShell.php' => 1,
+        'Admin/MaintenanceSysPageRenderer.php' => 1,
+        'Admin/PluginsInstalledPageRenderer.php' => 2,
+        'Admin/Maintenance/MaintenanceActionDispatcher.php' => 1,
+        'Admin/UserActivityPageRenderer.php' => 1,
+        'Admin/Install/InstallWizard.php' => 1,
+        'Controller/Admin/IntroSubController.php' => 1,
+        'Controller/ActionController.php' => 2,
+
+        // 503 Service-Unavailable raw responses (custom Retry-After
+        // header + hand-written body, no template): gallery-locked and
+        // user-cache-still-generating pages.
+        'Bootstrap/RequestBootstrap.php' => 2,
+        'Users/UserService.php' => 1,
+
+        // Full legacy template render + exit(), matching the pre-rewrite
+        // include-then-die() page shape verbatim -- LegacyRenderCapture's
+        // own docblock covers why die()/exit() *inside* its captured
+        // closure is correct, not a bug (PHP flushes the still-open
+        // output buffer on exit() by default).
+        'Page/NoPhotoYetRenderer.php' => 1,
+        'Picture/PictureCommentRenderer.php' => 2,
+        'Controller/Admin/AdminPopuphelpController.php' => 2,
+        'Controller/PopuphelpController.php' => 1,
+
+        // Controller/ImageDerivativeController.php (i.php): runs before
+        // ConfigLoader::applyDefaults() even executes on some paths, so no
+        // HtmlRenderingInterface/DI container is available yet -- a raw
+        // die()/exit() is the only option this early.
+        'Controller/ImageDerivativeController.php' => 6,
+
+        // Image-library internals (Admin/Image/*.php): low-level decode/
+        // library-availability guards inside image_gd/image_ext_imagick/
+        // pwg_image, reached from both Ws/PwgImages.php (needs a JSON
+        // error response, already covered above) and Job/BatchUploadJob.php
+        // (a background job with no HTTP response to build) -- a hard
+        // die() is correct in both real callers.
+        'Admin/Image/image_gd.php' => 2,
+        'Admin/Image/image_ext_imagick.php' => 1,
+        'Admin/Image/pwg_image.php' => 2,
+        'Admin/Upload/UploadService.php' => 10,
+
+        // Frozen historical VersionUpgrade class (Phase 1j's own scope
+        // note: "die()/exit() and ConfigDb:: calls deliberately
+        // untouched").
+        'Admin/Install/VersionUpgrade/UpgradeFrom_1_3_1.php' => 3,
+
+        // upgrade.php's own orchestration: a legacy, top-level-script-
+        // style page (no PSR-7 Response object involved), same as the
+        // Admin/Install/ orchestration classes generally.
+        'Admin/Install/UpgradeRunner.php' => 2,
+
+        // Core/ShutdownHandler.php: exit(143), a deliberate, documented
+        // signal-termination exit code (128 + SIGTERM), not an error path.
+        'Core/ShutdownHandler.php' => 1,
+    ];
+
+    $counts = countExitCallsPerFile(__DIR__ . '/../../src/Piwigo');
+
+    // toBe() is a strict === comparison, which cares about key order for
+    // associative arrays -- countExitCallsPerFile() returns keys in
+    // filesystem-traversal order (ksort()'d), while $allowlist above is
+    // deliberately grouped by rationale, not alphabetically. Sort a copy
+    // of each so the comparison is order-independent without sacrificing
+    // the allowlist's readability.
+    ksort($counts);
+    $expected = $allowlist;
+    ksort($expected);
+
+    expect($counts)->toBe($expected);
+});
+
+/**
+ * Finds the index of the paren/bracket/brace matching the one at $start
+ * (which must itself be an opening bracket character).
+ */
+function findMatchingBracket(string $s, int $start): int
+{
+    $opening = $s[$start];
+    $closing = ['(' => ')', '[' => ']', '{' => '}'][$opening];
+    $depth = 0;
+    $len = strlen($s);
+    for ($i = $start; $i < $len; $i++) {
+        if ($s[$i] === $opening) {
+            $depth++;
+        } elseif ($s[$i] === $closing) {
+            $depth--;
+            if ($depth === 0) {
+                return $i;
+            }
+        }
+    }
+
+    return -1;
+}
+
+function countTopLevelArgs(string $inner): int
+{
+    $trimmed = trim($inner);
+    if ($trimmed === '') {
+        return 0;
+    }
+    $count = 1;
+    $depth = 0;
+    for ($i = 0; $i < strlen($inner); $i++) {
+        $ch = $inner[$i];
+        if (in_array($ch, ['(', '[', '{'], true)) {
+            $depth++;
+        } elseif (in_array($ch, [')', ']', '}'], true)) {
+            $depth--;
+        } elseif ($ch === ',' && $depth === 0) {
+            $count++;
+        }
+    }
+
+    return $count;
+}
+
+/**
+ * Finds the NotificationByMailSender-class anti-pattern: the exact same
+ * expensive `new XService(new YRepository(...), new ZService(...), ...)`
+ * chain (2+ top-level args, at least one nested `new`) appearing verbatim
+ * 2+ times in one file. Single-dependency constructions (`new
+ * ActivityService(new ActivityRepository($conn))` and similar) are
+ * deliberately not flagged even when they recur, matching the
+ * already-established "cheap, stateless-ish service, built fresh where
+ * needed" design used throughout this codebase.
+ *
+ * @return list<array{path: string, class: string, count: int}>
+ */
+function findDuplicateServiceConstructionChains(string $dir): array
+{
+    $violations = [];
+    if (! is_dir($dir)) {
+        return $violations;
+    }
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+
+    foreach ($iterator as $file) {
+        /** @var SplFileInfo $file RecursiveIteratorIterator loses this over RecursiveDirectoryIterator */
+        if (! $file->isFile() || $file->getExtension() !== 'php') {
+            continue;
+        }
+
+        $source = file_get_contents($file->getPathname());
+        if ($source === false) {
+            continue;
+        }
+
+        $seen = [];
+        if (preg_match_all('/new\s+\\\\?[A-Za-z_][A-Za-z0-9_\\\\]*Service\s*\(/', $source, $matches, PREG_OFFSET_CAPTURE) === false) {
+            continue;
+        }
+
+        foreach ($matches[0] as [$matchText, $matchOffset]) {
+            $openParen = $matchOffset + strlen($matchText) - 1;
+            $closeParen = findMatchingBracket($source, $openParen);
+            if ($closeParen === -1) {
+                continue;
+            }
+            $inner = substr($source, $openParen + 1, $closeParen - $openParen - 1);
+            if (! str_contains($inner, 'new ') || countTopLevelArgs($inner) < 2) {
+                continue;
+            }
+            $classShort = preg_replace('/^new\s+\\\\?(?:[A-Za-z0-9_]+\\\\)*/', '', $matchText);
+            $classShort = rtrim((string) $classShort, '(');
+            $normalized = trim((string) preg_replace('/\s+/', ' ', $inner));
+            $seen[$classShort . '|' . $normalized][] = $matchOffset;
+        }
+
+        foreach ($seen as $key => $positions) {
+            if (count($positions) < 2) {
+                continue;
+            }
+            [$classShort] = explode('|', $key, 2);
+            $violations[] = ['path' => $file->getPathname(), 'class' => $classShort, 'count' => count($positions)];
+        }
+    }
+
+    return $violations;
+}
+
+test('src/Piwigo/ does not repeat the same multi-dependency service construction chain verbatim within one file', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $violations = findDuplicateServiceConstructionChains($repoRoot . '/src/Piwigo');
+
+    // Phase 1k DI-chain audit (2026-07-19): every file with a repeated
+    // multi-arg chain was reviewed. Real gaps were fixed (private
+    // DRY-extraction helper methods, or a single reused local variable --
+    // never a constructor param, since the classes involved either
+    // already had 5-6 constructor params or the dependency was reachable
+    // via already-injected state) -- see UserService::permissionService(),
+    // MailService::userService(), and similar. What's left below is
+    // structurally exempt, not overlooked: free-function files and static
+    // Ws/ handler methods have no $this to hang a helper method off of,
+    // and InstallWizard runs before any DI container exists (a
+    // constructor param there would just move the manual construction to
+    // install.php, not remove it).
+    $allowlist = [
+        // Free functions: no enclosing instance, nothing to inject into.
+        'Category/functions.php|CategoryService',
+        'Category/functions.php|PermissionService',
+        'Http/functions.php|UserService',
+
+        // Ws/*.php WS-method handlers: every method is `public static`,
+        // no $this, same reasoning as the free functions above.
+        'Ws/PwgImages.php|SearchService',
+        'Ws/PwgCategories.php|PermissionService',
+
+        // Pre-installation, no DI container exists yet (matches the
+        // Env/FilesystemHelper/MysqliDb precedent documented on this
+        // class's own docblock).
+        'Admin/Install/InstallWizard.php|UserService',
+    ];
+
+    $prefixLength = strlen($repoRoot . '/src/Piwigo/');
+    $actual = array_map(
+        static fn (array $v): string => substr($v['path'], $prefixLength) . '|' . $v['class'],
+        $violations
+    );
+    sort($actual);
+    sort($allowlist);
+
+    expect($actual)->toBe($allowlist);
+});
+
 test('RequestFactory, ResponseEmitter, CommonBootstrap, and the P9 middleware/pipeline/routing classes declare only readonly state', function (): void {
     // SEC-60 (worker-isolation, partial verification): these classes must stay
     // free of MUTABLE state so a future FrankenPHP worker loop can reuse them

@@ -60,6 +60,27 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     ) {}
 
     /**
+     * Phase 1k DI-chain audit: the same PermissionService recipe was
+     * repeated verbatim at 3 call sites in this file. Not a constructor
+     * param -- $conn is already available, and readonly class means no
+     * memoized property, so this is a plain (non-memoized) DRY extraction,
+     * not a caching optimization.
+     */
+    private function permissionService(): PermissionService
+    {
+        return new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn));
+    }
+
+    /**
+     * Same reasoning as permissionService() above -- the same
+     * PasswordService recipe was repeated verbatim at 2 call sites.
+     */
+    private function passwordService(): PasswordService
+    {
+        return new PasswordService(new PasswordRepository($this->conn));
+    }
+
+    /**
      * Checks if an email is well formed and not already in use. Returns an
      * error message, or '' when the address is fine / not required.
      */
@@ -720,10 +741,8 @@ SELECT
                 $status = $userdata['status'];
                 assert(is_string($status));
 
-                $forbidden_categories = new PermissionService(
-                    new PermissionRepository($this->conn),
-                    new GroupRepository($this->conn)
-                )->getForbiddenCategories($userId, $status);
+                $forbidden_categories = $this->permissionService()
+                    ->getForbiddenCategories($userId, $status);
                 $userdata['forbidden_categories'] = $forbidden_categories;
 
                 $level = $userdata['level'] ?? '0';
@@ -769,7 +788,7 @@ SELECT COUNT(DISTINCT(image_id)) as total
                 // local variable instead of re-reading $userdata.
                 $user_cache_cats = new CategoryService(
                     new CategoryRepository($this->conn),
-                    new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn))
+                    $this->permissionService()
                 )->getComputedCategories($userdata, null);
                 if (! AccessControl::isAdmin($status)) { // for non admins we forbid categories with no image (feature 1053)
                     $forbidden_ids = [];
@@ -882,7 +901,7 @@ SELECT DISTINCT f.image_id
   FROM ' . Tables::favorites() . ' AS f INNER JOIN ' . Tables::imageCategory() . ' AS ic
     ON f.image_id = ic.image_id
   WHERE f.user_id = ' . $user_id_str . '
-  ' . new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn))->getSqlConditionFandF(
+  ' . $this->permissionService()->getSqlConditionFandF(
             [
                 'forbidden_categories' => 'ic.category_id',
             ],
@@ -1249,7 +1268,8 @@ SELECT
 
                 $password_param = $params['password'];
                 assert(is_string($password_param));
-                $updates[$user_fields['password']] = new PasswordService(new PasswordRepository($this->conn))->hash($password_param);
+                $updates[$user_fields['password']] = $this->passwordService()
+                    ->hash($password_param);
             }
         }
 
@@ -1380,7 +1400,7 @@ SELECT
             new AuthRepository($this->conn),
             $this->activityLogger,
             $this->htmlRenderer,
-            new PasswordService(new PasswordRepository($this->conn)),
+            $this->passwordService(),
             new CookieService(),
         );
 

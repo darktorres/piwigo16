@@ -33,6 +33,16 @@ use Piwigo\Session\SessionService;
  * own can_manage_comment('edit', $comment_author_id) check (below) is what
  * decides whether any given comment row honors it -- both already existed
  * and are unchanged.
+ *
+ * The two die() calls below (render()'s reject paths) were flagged in an
+ * earlier phase as needing dedicated investigation into whether
+ * LegacyRenderCapture's own try/finally would catch this cleanly -- it
+ * doesn't (die()/exit() skip finally entirely), but that's fine: see
+ * Controller\LegacyRenderCapture's own docblock for why the resulting
+ * partial-output-then-die() behavior is the correct, already-precedented
+ * one (matches PopuphelpController/AdminPopuphelpController's identical
+ * pattern, and the original include/picture_comment.inc.php's own
+ * behavior verbatim).
  */
 final class PictureCommentRenderer
 {

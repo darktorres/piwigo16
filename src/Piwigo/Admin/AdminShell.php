@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
@@ -50,6 +51,15 @@ use Piwigo\Users\UserService;
  */
 final class AdminShell
 {
+    /**
+     * DRY extraction (Phase 1k DI-chain audit): the same ImageService
+     * recipe was repeated verbatim at 2 sites in this file.
+     */
+    private static function imageService(Connection $conn): ImageService
+    {
+        return new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)));
+    }
+
     public function run(): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
@@ -336,7 +346,7 @@ SELECT COUNT(*)
 
         // any photos with no md5sum ?
         if (in_array($page_slug, ['site_update', 'batch_manager'])) {
-            $imageService = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)));
+            $imageService = self::imageService($conn);
 
             $nb_no_md5sum = count($imageService->getPhotosNoMd5sum());
 
@@ -352,7 +362,7 @@ SELECT COUNT(*)
         $nb_photos_total_raw = $row !== false ? $row[0] : 0;
         $nb_photos_total = is_numeric($nb_photos_total_raw) ? (int) $nb_photos_total_raw : 0;
         if ($nb_photos_total < 100000) { // 100k is already a big gallery
-            $nb_orphans_raw = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)))
+            $nb_orphans_raw = self::imageService($conn)
                 ->countOrphans();
             $nb_orphans = is_numeric($nb_orphans_raw) ? (int) $nb_orphans_raw : 0;
         }

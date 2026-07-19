@@ -815,6 +815,72 @@ them when reading commit history or the replay manifest.
   automated Arch test needs its own dedicated scoping pass rather than a
   quick mechanical add-on.
 
+- **Phase 1k (Close-out), part 2: the two Arch tests. DONE.** User said
+  "both now" on the die()/exit() allowlist vs. the DI-chain audit choice.
+  1. **`die()`/`exit()` allowlist** — all 49 originally-found sites plus
+     12 more found only once token-level scanning was used (`die`/`exit`
+     both tokenize as `T_EXIT` regardless of parens/args, so `exit;` with
+     no parens — 12 real sites across 8 files — was invisible to the
+     original grep), 60 total in the final count. Every site read in
+     full; one genuine fix (`Url\UrlService::parseSectionUrl()`'s
+     `die('infinite loop?')` → `$this->htmlRenderer->fatalError(...)`,
+     since the class already had the dependency injected and this is an
+     internal-invariant assertion, not a user-facing reject). Everything
+     else allowlisted by rationale category (Ws/ raw-response mechanism,
+     the HtmlService/redirect_http() sanctioned exit points, AJAX/JSON
+     action endpoints, 503 Retry-After raw responses, image-library
+     internals, i.php's pre-bootstrap fast path, frozen historical
+     VersionUpgrade classes). Resolved a real previously-deferred
+     question along the way: `Picture\PictureCommentRenderer::render()`'s
+     2 `die()` calls run inside `LegacyRenderCapture::capture()`'s own
+     closure, whose docblock claimed nothing inside it calls
+     exit()/die() -- false, and already contradicted by
+     `PopuphelpController`/`AdminPopuphelpController`'s own docblocks
+     (written in an earlier phase, never cross-referenced). Not a bug:
+     PHP flushes the still-open output buffer on exit()/die() by default,
+     reproducing the original bare-include-then-die() behavior verbatim.
+     Corrected `LegacyRenderCapture`'s docblock and closed the loop on
+     `PictureCommentRenderer`'s own. New Arch test:
+     `countExitCallsPerFile()` (token-level, `T_EXIT`) + a per-file count
+     allowlist in `tests/Arch/StructuralTest.php`.
+  2. **DI-chain audit** — 768 raw `new *Repository(`/`new *Service(`
+     sites was the wrong denominator; most are ordinary `new
+     XRepository($conn)` construction or single-dependency services
+     (`ActivityService`, `CsrfService`, `HtmlService`) built fresh where
+     needed, an already-established pattern throughout Phase 1
+     (`RequestBootstrap::activityService()`, `MailService::authService()`
+     precedent). Narrowed to the real anti-pattern signature -- the exact
+     same multi-argument, nested `new XService(new YRepository(...), ...)`
+     chain repeated verbatim 2+ times in one file (the
+     `NotificationByMailSender.php`-class gap from the 1a/1b/1c
+     gap-closure) -- 14 exact-duplicate chains found. 8 were genuine gaps
+     in DI-eligible classes (a real `__construct()`, not static-only, not
+     a free-function file): fixed via a private DRY-extraction helper
+     method (`UserService::permissionService()`/`passwordService()`,
+     `MailService::userService()` -- UserService genuinely can't be a
+     constructor dependency there, same documented cycle as
+     `authService()`; `ExtensionLifecycle::activityService()`,
+     `BatchManagerUnitPageRenderer`/`PictureModifyPageRenderer`/
+     `MaintenanceActionDispatcher::permissionService()`/`categoryService()`,
+     `PiwigoInfosSender::userService()`, `AdminShell::imageService()`) or
+     a single reused local variable where both call sites were in the
+     same method (`UserPermPageRenderer`, `MenubarRenderer`) -- never a
+     constructor param: the classes involved either already carry 5-6
+     constructor params or the dependency is cheaply reachable from
+     already-injected state. The other 6 are structurally exempt, not
+     overlooked: `Category/functions.php`/`Http/functions.php` are free
+     functions (no `$this`), `Ws/PwgImages.php`/`Ws/PwgCategories.php`'s
+     methods are all `public static` (no `$this`), and
+     `InstallWizard.php` runs before any DI container exists (a
+     constructor param there would only move the manual construction to
+     `install.php`, not remove it). New Arch test:
+     `findDuplicateServiceConstructionChains()` (balanced-paren chain
+     extraction + verbatim-text dedup) + an explicit 6-entry exemption
+     list in `tests/Arch/StructuralTest.php`.
+  Full verification gate green (deptrac 0, ECS clean, PHPStan baseline
+  regenerated — 3051 errors, ratio drift only — Unit/Arch 606, Contract
+  93, Integration 620).
+
 ## What direct investigation found (the basis for phase sequencing)
 
 **DI infrastructure already exists and works — it's just unused.**
@@ -1152,15 +1218,16 @@ conversion and DI/construction changes don't apply there the same way.
     PHPStan baseline regenerated — 3096 errors, down from 3179, ratio
     drift only — Unit/Arch 604, Contract 93, Integration 620, Browser
     64+1 skipped, Visual 32/32).
-11. **1k — Close-out.** `MysqliDb.php` deletion DONE (see Progress log
-    below) — turned out fully irreducible-to-zero, not merely reducible;
-    every real dependent across the gap-closure pass was gone. Still open:
-    add Arch tests locking in the new baseline (no un-injected manual
-    `new *Repository(`/`new *Service(` chains where a constructor
-    parameter would do, no bare `die()`/`exit()` outside a documented
-    allowlist — matching the existing "no `define()` calls" precedent in
-    `tests/Arch/StructuralTest.php`), full final verification gate,
-    commit, completion memory.
+11. **1k — Close-out. DONE, both parts (see Progress log below).**
+    `MysqliDb.php` deletion — turned out fully irreducible-to-zero, not
+    merely reducible; every real dependent across the gap-closure pass
+    was gone. The two Arch tests locking in the new baseline — no bare
+    `die()`/`exit()` outside a documented allowlist, no un-injected
+    manual `new *Repository(`/`new *Service(` chain where a constructor
+    parameter (or a private DRY-extraction helper, for the classes that
+    genuinely can't take one) would do — both landed in
+    `tests/Arch/StructuralTest.php`, matching the existing "no `define()`
+    calls" precedent.
 
 ### Phase 1 verification (extra rigor)
 

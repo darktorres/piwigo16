@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\pwg_image;
@@ -51,6 +52,15 @@ use Piwigo\Users\UserService;
  */
 final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
 {
+    /**
+     * DRY extraction (Phase 1k DI-chain audit): the same UserService
+     * recipe was repeated verbatim at 2 sites in this file.
+     */
+    private static function userService(Connection $conn): UserService
+    {
+        return new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), new HtmlService(), $conn);
+    }
+
     #[\Override]
     public function send(): void
     {
@@ -352,7 +362,7 @@ SELECT
         $piwigoInfos['general_stats']['nb_private_themes'] = count(array_keys($privateThemes));
         $piwigoInfos['general_stats']['nb_themes'] = $piwigoInfos['general_stats']['nb_private_themes'] + count($piwigoInfos['themes']);
 
-        $defaultTheme = new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), new HtmlService(), $conn)
+        $defaultTheme = self::userService($conn)
             ->getDefaultTheme();
         if (isset($privateThemes[$defaultTheme])) {
             $defaultTheme = 'private theme';
@@ -384,7 +394,7 @@ SELECT
         }
         $piwigoInfos['themes_usage'] = $themesUsage;
 
-        $piwigoInfos['general_stats']['default_language'] = new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), new HtmlService(), $conn)->getDefaultLanguage();
+        $piwigoInfos['general_stats']['default_language'] = self::userService($conn)->getDefaultLanguage();
 
         $query = '
 SELECT

@@ -117,6 +117,29 @@ final class MailService implements MailerInterface
     }
 
     /**
+     * DRY extraction, not a constructor dependency: unlike authService()
+     * above, UserService's own constructor takes MailerInterface (this
+     * class), so an optional-default constructor param the way
+     * $authService is would create a real eager-construction cycle the
+     * moment both sides used their own zero-arg default. A private method
+     * building a fresh instance keeps the exact same behavior every call
+     * site already had (a fresh `new self()` passed as UserService's own
+     * $mailer, not $this) -- was repeated verbatim at 2 call sites (Phase
+     * 1k DI-chain audit).
+     */
+    private function userService(): \Piwigo\Users\UserService
+    {
+        return new \Piwigo\Users\UserService(
+            new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()),
+            new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()),
+            new self(),
+            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())),
+            new HtmlService(),
+            \Piwigo\Db\DbConnection::build(),
+        );
+    }
+
+    /**
      * @var array<string, array{theme: Template}>
      */
     private static array $templateCache = [];
@@ -456,7 +479,7 @@ final class MailService implements MailerInterface
         }
 
         if (is_array($subject) || is_array($content)) {
-            $this->switchLangTo(new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new self(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), \Piwigo\Db\DbConnection::build())->getDefaultLanguage());
+            $this->switchLangTo($this->userService()->getDefaultLanguage());
 
             if (is_array($subject)) {
                 $subject = Lang::args($subject);
@@ -532,7 +555,7 @@ final class MailService implements MailerInterface
             return true;
         }
 
-        $this->switchLangTo(new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new self(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), \Piwigo\Db\DbConnection::build())->getDefaultLanguage());
+        $this->switchLangTo($this->userService()->getDefaultLanguage());
         $return = $this->mail($admins, $args, $tpl);
         $this->switchLangBack();
 

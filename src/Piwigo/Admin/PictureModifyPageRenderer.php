@@ -63,9 +63,18 @@ final class PictureModifyPageRenderer
     {
         return new TagService(
             new TagRepository($conn),
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
+            self::permissionService($conn),
             new ActivityService(new ActivityRepository($conn))
         );
+    }
+
+    /**
+     * DRY extraction (Phase 1k DI-chain audit): the same PermissionService
+     * recipe was repeated verbatim at 3 sites in this file.
+     */
+    private static function permissionService(Connection $conn): PermissionService
+    {
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
     }
 
     public function render(): void
@@ -261,7 +270,7 @@ SELECT id
             if (count($no_longer_thumbnail_for) > 0) {
                 new CategoryService(
                     new CategoryRepository($conn),
-                    new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+                    self::permissionService($conn)
                 )->setRandomRepresentant($no_longer_thumbnail_for);
             }
 
@@ -545,7 +554,7 @@ SELECT category_id
                 $authorized_category_ids,
                 explode(
                     ',',
-                    new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+                    self::permissionService($conn)
                         ->getForbiddenCategories(\Piwigo\Users\CurrentUser::get()->id, \Piwigo\Users\CurrentUser::get()->status->value)
                 )
             );

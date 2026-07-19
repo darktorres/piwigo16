@@ -61,10 +61,19 @@ final readonly class ExtensionLifecycle
             new UserRepository($conn),
             new GroupRepository($conn),
             new MailService(),
-            new ActivityService(new ActivityRepository($conn)),
+            self::activityService($conn),
             new HtmlService(),
             $conn
         );
+    }
+
+    /**
+     * DRY extraction (Phase 1k DI-chain audit): the same ActivityService
+     * recipe was repeated verbatim at 3 sites in this file.
+     */
+    private static function activityService(Connection $conn): ActivityService
+    {
+        return new ActivityService(new ActivityRepository($conn));
     }
 
     /**
@@ -242,7 +251,7 @@ final readonly class ExtensionLifecycle
                 break;
         }
 
-        new ActivityService(new ActivityRepository(DbConnection::build()))->record('system', ActivitySystem::Plugin, $action, $activityDetails);
+        self::activityService(DbConnection::build())->record('system', ActivitySystem::Plugin, $action, $activityDetails);
 
         return array_values($errors);
     }
@@ -347,7 +356,7 @@ final readonly class ExtensionLifecycle
                 break;
         }
 
-        new ActivityService(new ActivityRepository(DbConnection::build()))->record('system', ActivitySystem::Theme, $action, $activityDetails);
+        self::activityService(DbConnection::build())->record('system', ActivitySystem::Theme, $action, $activityDetails);
 
         return array_values($errors);
     }

@@ -578,7 +578,7 @@ final class UrlService
 
             while (isset($tokens[$nextToken])) {
                 if ($loop_counter++ > count($tokens) + 10) {
-                    die('infinite loop?');
+                    $this->htmlRenderer->fatalError('infinite loop?');
                 }
 
                 if (

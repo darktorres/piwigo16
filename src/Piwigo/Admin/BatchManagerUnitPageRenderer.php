@@ -58,9 +58,18 @@ final class BatchManagerUnitPageRenderer
     {
         return new TagService(
             new TagRepository($conn),
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
+            self::permissionService($conn),
             new ActivityService(new ActivityRepository($conn))
         );
+    }
+
+    /**
+     * DRY extraction (Phase 1k DI-chain audit): the same PermissionService
+     * recipe was repeated verbatim at 2 sites in this file.
+     */
+    private static function permissionService(Connection $conn): PermissionService
+    {
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
     }
 
     /**
@@ -458,7 +467,7 @@ SELECT
                     ),
                     explode(
                         ',',
-                        new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+                        self::permissionService($conn)
                             ->getForbiddenCategories($currentUser->id, $currentUser->status->value)
                     )
                 );

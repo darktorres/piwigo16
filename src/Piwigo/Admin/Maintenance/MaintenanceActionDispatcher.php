@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Maintenance;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Integrity\check_integrity;
@@ -62,6 +63,24 @@ use Piwigo\Template\FileCombiner;
  */
 final class MaintenanceActionDispatcher
 {
+    /**
+     * DRY extraction (Phase 1k DI-chain audit): the same PermissionService
+     * recipe was repeated verbatim at 3 sites in this file.
+     */
+    private static function permissionService(Connection $conn): PermissionService
+    {
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+    }
+
+    /**
+     * DRY extraction (Phase 1k DI-chain audit): the same CategoryService
+     * recipe was repeated verbatim at 2 sites in this file.
+     */
+    private static function categoryService(Connection $conn): CategoryService
+    {
+        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
+    }
+
     public function dispatch(string $action): void
     {
         $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
@@ -103,10 +122,7 @@ final class MaintenanceActionDispatcher
             case 'categories':
 
                 FilesystemIntegrityChecker::imagesIntegrity();
-                $categoriesService = new CategoryService(
-                    new CategoryRepository($conn),
-                    new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
-                );
+                $categoriesService = self::categoryService($conn);
                 $categoriesService->checkCategoriesIntegrity();
                 $categoriesService->updateUppercats();
                 $categoriesService->updateCategory('all');
@@ -118,10 +134,8 @@ final class MaintenanceActionDispatcher
             case 'images':
 
                 FilesystemIntegrityChecker::imagesIntegrity();
-                new CategoryService(
-                    new CategoryRepository($conn),
-                    new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
-                )->updatePath();
+                self::categoryService($conn)
+                    ->updatePath();
                 new RateService(new RateRepository($conn), new CookieService())
                     ->updateRatingScore();
                 UserCacheInvalidator::invalidate();
@@ -130,7 +144,7 @@ final class MaintenanceActionDispatcher
 
             case 'delete_orphan_tags':
 
-                new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)), new ActivityService(new ActivityRepository($conn)))
+                new TagService(new TagRepository($conn), self::permissionService($conn), new ActivityService(new ActivityRepository($conn)))
                     ->deleteOrphanTags();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Delete orphan tags'), l10n('action successfully performed.')));
                 break;

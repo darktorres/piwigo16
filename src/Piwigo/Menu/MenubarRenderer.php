@@ -65,8 +65,11 @@ final class MenubarRenderer
         $section_context = \Piwigo\Section\SectionContextRegistry::current();
 
         $conn = DbConnection::build();
-        $tagService = new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
-        $categoryService = new CategoryService(new CategoryRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)));
+        // Built once, reused below -- was the same PermissionService recipe
+        // repeated verbatim at 2 sites in this method (Phase 1k DI-chain audit).
+        $permissionService = new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+        $tagService = new TagService(new TagRepository($conn), $permissionService, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+        $categoryService = new CategoryService(new CategoryRepository($conn), $permissionService);
 
         $menu = new BlockManager('menubar');
 

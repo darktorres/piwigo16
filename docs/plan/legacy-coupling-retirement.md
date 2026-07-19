@@ -501,6 +501,31 @@ them when reading commit history or the replay manifest.
     regen — ratio drift only, Unit/Arch 604, Contract 93, Integration
     620, Browser 64+1 skipped, Visual 32, both via the real `composer
     test:browser`/`composer test:visual` scripts).
+  - **Step 2 — Search/Tags/Comments/Feed cluster. DONE, commit `f544ec5f3`.**
+    `SearchController.php`, `TagsController.php`,
+    `CommentsController.php` (669 lines, 8 MysqliDb call sites —
+    3 `getRecentPeriodExpression()` retargeted onto their established
+    `SqlDialect::` sibling from Phase 1a), and `FeedController.php`
+    migrated. `QSearchController.php` audited and confirmed already
+    fully clean (pure redirect) — zero changes needed. Same
+    connection-consolidation/private-helper discipline as step 1;
+    `FeedController.php`'s one `die()` converted to its already-in-scope
+    `$htmlRenderer->fatalError()` (unlike `ImageDerivativeController`'s 2
+    legitimate `die()` calls, this one runs after the renderer already
+    exists) — `global $user` in the same file left completely untouched,
+    confirmed via Track A3's own memory record as a still-live
+    cross-file bridge outside this file's reach alone. **Real bug found
+    and fixed via VR, not assumed**: `CommentsController.php`'s
+    comment-listing query (`GROUP BY comment_id`, unchanged query text)
+    selected `ic.category_id` from the joined table — not functionally
+    dependent on the group column — which `Piwigo\Db\DbConnection`
+    doesn't tolerate the way the legacy mysqli connection did (the same
+    `ONLY_FULL_GROUP_BY` class of issue as `Ws\PwgComments`'s own
+    `ANY_VALUE(author)` fix); fixed identically with
+    `ANY_VALUE(ic.category_id)`. Full verification gate green after the
+    fix (deptrac 0, ECS clean, PHPStan baseline regen — ratio drift
+    only, Unit/Arch 604, Contract 93, Integration 620, Browser 64+1
+    skipped, Visual 32/32).
 
 ## What direct investigation found (the basis for phase sequencing)
 

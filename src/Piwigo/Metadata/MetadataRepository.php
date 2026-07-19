@@ -118,4 +118,22 @@ final class MetadataRepository extends AbstractRepository
 
         return $result;
     }
+
+    /**
+     * @param  list<string>  $updateFields
+     * @param  list<array<string, mixed>>  $datas
+     */
+    public function massUpdateImages(array $updateFields, array $datas): void
+    {
+        $this->batchWriter()
+            ->massUpdate(
+                Tables::images(),
+                [
+                    'primary' => ['id'],
+                    'update' => $updateFields,
+                ],
+                $datas,
+                \Piwigo\Db\BatchWriter::SKIP_EMPTY
+            );
+    }
 }

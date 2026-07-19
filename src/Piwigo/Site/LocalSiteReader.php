@@ -30,7 +30,8 @@ class LocalSiteReader
     private readonly array $flip_picture_ext;
 
     public function __construct(
-        public string $site_url
+        public string $site_url,
+        private readonly ?MetadataService $metadataService = null,
     ) {
         // Legacy Coupling Retirement Track A batch A4: was memoized on the
         // $conf global (flip_file_ext/flip_picture_ext never DB-persist --
@@ -38,6 +39,17 @@ class LocalSiteReader
         // once per instance instead.
         $this->flip_file_ext = array_flip(\Piwigo\Config\Config::fileExtensions());
         $this->flip_picture_ext = array_flip(\Piwigo\Config\Config::pictureExtensions());
+    }
+
+    /**
+     * Optional-with-lazy-default -- only the 2 metadata-sync methods below
+     * reach this dependency, and both real callers construct this class
+     * with just a site URL.
+     */
+    private function metadataService(): MetadataService
+    {
+        return $this->metadataService
+            ?? new MetadataService(new MetadataRepository(DbConnection::build()));
     }
 
     /**
@@ -166,7 +178,8 @@ class LocalSiteReader
      */
     public function get_metadata_attributes(): array
     {
-        return new MetadataService(new MetadataRepository(DbConnection::build()))->getSyncMetadataAttributes();
+        return $this->metadataService()
+            ->getSyncMetadataAttributes();
     }
 
     // returns a hash of attributes (metadata+filesize+width,...) for file
@@ -176,7 +189,8 @@ class LocalSiteReader
      */
     public function get_element_metadata(array $infos): array|false
     {
-        return new MetadataService(new MetadataRepository(DbConnection::build()))->getSyncMetadata($infos);
+        return $this->metadataService()
+            ->getSyncMetadata($infos);
     }
 
     // -------------------------------------------------- private functions --------

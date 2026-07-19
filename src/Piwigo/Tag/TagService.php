@@ -24,9 +24,10 @@ use Piwigo\Permission\PermissionService;
  * this exact layering constraint (see ActivityLoggerInterface's own
  * docblock).
  *
- * Calls trigger_change() and \Piwigo\Db\MysqliDb::singleUpdate()
- * (functions_mysqli.inc.php, relocate-only per P23 batch 8c precedent)
- * directly -- free functions, no class dependency, no deptrac concern.
+ * Calls trigger_change() directly -- a free function, no class dependency,
+ * no deptrac concern. Former bare MysqliDb::singleUpdate()/::massInserts()
+ * calls now go through TagRepository (Legacy Coupling Retirement: DI+DBAL
+ * migration, Phase 1b).
  *
  * getAllTags()/getCommonTags()/getTagList() each take HtmlRenderingInterface
  * as an explicit parameter (P23 batch 8f-3), same per-method shape as
@@ -251,15 +252,7 @@ final readonly class TagService
             $nbAvailableTags = count($this->getAvailableTags());
             $currentUser = $currentUser->withRawAttribute('nb_available_tags', $nbAvailableTags);
             \Piwigo\Users\CurrentUser::set($currentUser);
-            \Piwigo\Db\MysqliDb::singleUpdate(
-                Tables::userCache(),
-                [
-                    'nb_available_tags' => $nbAvailableTags,
-                ],
-                [
-                    'user_id' => $currentUser->id,
-                ]
-            );
+            $this->repo->saveNbAvailableTags($currentUser->id, $nbAvailableTags);
         }
 
         $nbAvailableTags = $currentUser->rawAttributes['nb_available_tags'] ?? null;
@@ -416,11 +409,7 @@ final readonly class TagService
                 ];
             }
         }
-        \Piwigo\Db\MysqliDb::massInserts(
-            Tables::imageTag(),
-            array_keys($inserts[0]),
-            $inserts
-        );
+        $this->repo->massInsertImageTags($inserts);
 
         $taglistAfter = $this->getImageTagIds($imageIds);
         $imagesToUpdate = $this->compareImageTagLists($taglistBefore, $taglistAfter);
@@ -534,13 +523,7 @@ final readonly class TagService
             }
         }
 
-        if ($inserts !== []) {
-            \Piwigo\Db\MysqliDb::massInserts(
-                Tables::imageTag(),
-                array_keys($inserts[0]),
-                $inserts
-            );
-        }
+        $this->repo->massInsertImageTags($inserts);
 
         $taglistAfter = $this->getImageTagIds(array_keys($tagsOf));
         $logger->debug('taglist_after', $taglistAfter);

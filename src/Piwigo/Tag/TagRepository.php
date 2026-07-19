@@ -386,4 +386,28 @@ SELECT id
         return $this->conn->executeQuery($query)
             ->fetchAllAssociative();
     }
+
+    public function saveNbAvailableTags(int $userId, int $count): void
+    {
+        $this->conn->createQueryBuilder()
+            ->update(Tables::userCache())
+            ->set('nb_available_tags', ':count')
+            ->where('user_id = :userId')
+            ->setParameter('count', $count)
+            ->setParameter('userId', $userId)
+            ->executeStatement();
+    }
+
+    /**
+     * @param  list<array{image_id: int|string, tag_id: int|string}>  $inserts
+     */
+    public function massInsertImageTags(array $inserts): void
+    {
+        if ($inserts === []) {
+            return;
+        }
+
+        $this->batchWriter()
+            ->massInsert(Tables::imageTag(), array_keys($inserts[0]), $inserts);
+    }
 }

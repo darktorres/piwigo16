@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Metadata;
 
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -136,7 +135,7 @@ final readonly class MetadataService
         $result = [];
 
         if (! function_exists('exif_read_data')) {
-            die('Exif extension not available, admin should disable exif use');
+            throw new \RuntimeException('Exif extension not available, admin should disable exif use');
         }
 
         // exif_read_data() only ever supports JPEG/TIFF (per its own docs)
@@ -562,17 +561,9 @@ final readonly class MetadataService
         if (count($datas) > 0) {
             $updateFields = $this->getSyncMetadataAttributes();
             $updateFields[] = 'date_metadata_update';
-            $updateFields = array_diff($updateFields, ['tags', 'keywords']);
+            $updateFields = array_values(array_diff($updateFields, ['tags', 'keywords']));
 
-            \Piwigo\Db\MysqliDb::massUpdates(
-                Tables::images(),
-                [
-                    'primary' => ['id'],
-                    'update' => $updateFields,
-                ],
-                $datas,
-                \Piwigo\Db\MysqliDb::MASS_UPDATES_SKIP_EMPTY
-            );
+            $this->repo->massUpdateImages($updateFields, $datas);
         }
 
         $tagService->setTagsOf($tagsOf);

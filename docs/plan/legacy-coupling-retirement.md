@@ -208,7 +208,7 @@ them when reading commit history or the replay manifest.
   Zero manual `new *Repository(`/`new *Service(` chains found anywhere in
   the domain (matches the original table's very low "New-chains: 1").
   Commit `456241849`.
-- **Phase 1f (Ws) — IN PROGRESS, sub-batch 4 of ~7 done (Users).** 24
+- **Phase 1f (Ws) — IN PROGRESS, sub-batch 5 of ~7 done (Core).** 24
   files/12396 lines total, by far the largest domain in
   this plan — confirmed needs the multi-batch breakdown the plan already
   anticipated. Sub-batch 1 investigated the small/shared files first:
@@ -341,16 +341,63 @@ them when reading commit history or the replay manifest.
   `array<string>`), `is_numeric()` guards before `(int)` casts on
   now-`mixed` row values (repeated at every row-value site touched in
   this file). Commit `a514db5cc`.
+  Sub-batch 5 (Core): `PwgCore.php` (1428 lines, ~30 `MysqliDb::` calls
+  across 8 methods, Ws's own file — distinct from the already-complete
+  `Core/` domain) fully migrated. `getInfos()`'s 11 sequential
+  `COUNT(*)`/`MIN()` single-value queries all collapsed onto
+  `fetchOne()`; `historySearch()` (the single largest WS method touched
+  in this phase, ~650 lines) needed the widest range of swaps in one
+  method yet: `query2Array()`'s no-key/no-value full-row form, its
+  `key_name`+`value_name` form, AND (new this file) its `key_name`-only
+  "keep the whole row, index by this column" form (`array_column($rows,
+  null, 'id')` — confirmed `array_column()`'s `$column_key === null`
+  branch does exactly this), plus a raw `INSERT ... VALUES('...')`
+  onto `$conn->quote(serialize(...))` + `executeStatement()` +
+  `Connection::lastInsertId()`. `historyLog()`/`historySearch()`'s
+  `MysqliDb::getEnums()` calls retargeted onto the shared
+  `DbInfo::getEnums()` added in step 4 — its second real caller,
+  confirming that addition was correctly justified rather than
+  speculative.
+  **Real bug found and fixed, not just a retarget:** `ratesDelete()`
+  built a `DELETE` query string and then called `MysqliDb::changes()`
+  (which reads the connection's own last-statement affected-row count)
+  *without ever executing the query it built* — traced this back to the
+  original pre-rewrite legacy code
+  (`include/ws_functions/pwg.php::ws_rates_delete()`) and confirmed the
+  bug predates this entire rewrite; `pwg.rates.delete` has never
+  actually deleted a rate row. Fixed by executing the query via
+  `executeStatement()`, which both runs it for real and returns its
+  actual affected-row count — zero test coverage existed for this
+  method, so this is a case where migration-driven code reading (not
+  testing) surfaced the bug.
+  Dropped 3 more dead `realEscapeString()` pre-escaping calls:
+  `sessionLogin()`'s auth-key secret (the combined string must match
+  `authKeyLogin()`'s own strict `[a-z0-9]`-only regex to be valid,
+  so escaping could only break it) and `historySearch()`'s
+  `filename`/`ip` search fields (both already flow into
+  `HistoryRepository`'s parameterized `:pattern`/`:ip` queries,
+  confirmed by reading `HistoryRepository::search()`/
+  `findImageIdsByFilename()`, both from Phase 1b).
+  Removed a dead `global $name_of_tag;` declaration in
+  `historySearch()` — written, read (including via a closure capture),
+  and `unset()` entirely within that one function; confirmed via a
+  full-codebase grep that nothing else ever touches it. The 3 repeated
+  `AuthService` chains (`sessionLogin` x2/`sessionLogout`) collapsed
+  into a private static `authService()` (build-own-connection variant,
+  since none of the 3 call sites are in a loop).
+  Full-`mixed`-row narrowing needed across `getActivityList()`/
+  `historySearch()` — both large, row-value-heavy methods — was the
+  bulk of the PHPStan follow-up work: scalar narrowing before string
+  concatenation/casts, `===` in place of a loose `==` PHPStan now flags,
+  and explicit `(string)` casts before using row values as array keys.
+  Commit `e1ef1a062`.
   Remaining sub-batches (by WS resource area, largest/most complex
-  last): Core (`PwgCore.php`, Ws's own file, distinct from the
-  already-complete `Core/` domain — next up, and will need its own
-  `MysqliDb::getEnums()` call sites retargeted onto the now-shared
-  `DbInfo::getEnums()`), Categories, Images (3034 lines, the biggest
-  single file in the plan) — `WsDefaultMethods.php` (2357 lines)
-  confirmed clean already (pure method-registration table, zero
-  MysqliDb/globals/die-exit/manual-chains), `Protocol/*` encoders +
-  `PwgNamedArray`/`PwgNamedStruct`/`PwgRequestHandler` not yet checked
-  but absent from every grep so far, likely clean too.
+  last): Categories, Images (3034 lines, the biggest single file in the
+  plan) — `WsDefaultMethods.php` (2357 lines) confirmed clean already
+  (pure method-registration table, zero MysqliDb/globals/die-exit/
+  manual-chains), `Protocol/*` encoders + `PwgNamedArray`/
+  `PwgNamedStruct`/`PwgRequestHandler` not yet checked but absent from
+  every grep so far, likely clean too.
 
 ## What direct investigation found (the basis for phase sequencing)
 

@@ -145,6 +145,7 @@ final class RequestBootstrap
         \Piwigo\Db\MysqliDb::setHtmlRenderer(new HtmlService());
         \Piwigo\Validation\InputValidator::setHtmlRenderer(new HtmlService());
         \Piwigo\Image\SrcImage::setHtmlRenderer(new HtmlService());
+        \Piwigo\Image\SrcImage::setImageRepository(new ImageRepository(DbConnection::build()));
         \Piwigo\Config\ConfigDb::setHtmlRenderer(new HtmlService());
 
         // Piwigo\Db\Tables::*()/other Piwigo\Config\Config::* accessors used

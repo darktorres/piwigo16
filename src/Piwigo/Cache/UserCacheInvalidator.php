@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Cache;
 
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
 
 /**
  * Ported from admin/include/functions.php's invalidate_user_cache()/
@@ -24,18 +24,12 @@ final class UserCacheInvalidator
 
         $logger->info(__FUNCTION__ . ' called');
 
+        $repo = new UserCacheRepository(DbConnection::build());
         if ($full) {
-            $query = '
-TRUNCATE TABLE ' . Tables::userCacheCategories() . ';';
-            \Piwigo\Db\MysqliDb::query($query);
-            $query = '
-TRUNCATE TABLE ' . Tables::userCache() . ';';
-            \Piwigo\Db\MysqliDb::query($query);
+            $repo->truncateUserCacheCategories();
+            $repo->truncateUserCache();
         } else {
-            $query = '
-UPDATE ' . Tables::userCache() . '
-  SET need_update = \'true\';';
-            \Piwigo\Db\MysqliDb::query($query);
+            $repo->markNeedUpdate();
         }
         if (! $persistent_cache instanceof PersistentCache) {
             throw new \LogicException('Piwigo\Cache\CurrentPersistentCache not initialised.');
@@ -54,9 +48,6 @@ UPDATE ' . Tables::userCache() . '
      */
     public static function invalidateNbTags(): void
     {
-        $query = '
-UPDATE ' . Tables::userCache() . '
-  SET nb_available_tags = NULL';
-        \Piwigo\Db\MysqliDb::query($query);
+        new UserCacheRepository(DbConnection::build())->clearNbAvailableTags();
     }
 }

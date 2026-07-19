@@ -13,7 +13,6 @@ namespace Piwigo\Image;
 
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\ThemeConfProviderInterface;
-use Piwigo\Db\Tables;
 
 /**
  * A source image is used to get a derivative image. It is either
@@ -74,6 +73,22 @@ final class SrcImage
         }
 
         return self::$themeConfProvider->themeConf($key);
+    }
+
+    private static ?ImageRepository $imageRepository = null;
+
+    /**
+     * Set once by include/common.inc.php (legacy, not subject to deptrac) --
+     * same static-setter shape as setHtmlRenderer()/setThemeConfProvider()
+     * above, for the same reason: get_size()'s width/height write-back
+     * (Legacy Coupling Retirement: DI+DBAL migration, Phase 1b) sits behind
+     * a rare edge case (dimensions not yet metadata-synced), and this
+     * class's ~20 real construction sites make constructor injection an
+     * unreasonable ripple.
+     */
+    public static function setImageRepository(ImageRepository $repo): void
+    {
+        self::$imageRepository = $repo;
     }
 
     public const int IS_ORIGINAL = 0x01;
@@ -219,7 +234,7 @@ final class SrcImage
             // probably not metadata synced
             if (($size = getimagesize($this->get_path())) !== false) {
                 $this->size = [$size[0], $size[1]];
-                \Piwigo\Db\MysqliDb::query('UPDATE ' . Tables::images() . ' SET width=' . $size[0] . ', height=' . $size[1] . ' WHERE id=' . $this->id);
+                self::$imageRepository?->updateDimensions($this->id, $size[0], $size[1]);
             }
         }
         return $this->size;

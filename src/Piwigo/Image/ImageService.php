@@ -10,7 +10,6 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -107,7 +106,7 @@ final readonly class ImageService
             if ((bool) preg_match_all('/([a-z]+)-(true|false)/', (string) $encodeParams, $matches)) {
                 $matchCount = count($matches[1]);
                 for ($i = 0; $i < $matchCount; $i++) {
-                    $result[$matches[1][$i]] = \Piwigo\Db\MysqliDb::getBoolean($matches[2][$i]);
+                    $result[$matches[1][$i]] = \Piwigo\Db\SqlDialect::getBoolean($matches[2][$i]);
                 }
             }
         }
@@ -132,7 +131,7 @@ final readonly class ImageService
         // $params' keys are always string: correctSlideshowParams() and
         // getDefaultSlideshowParams() both declare array<string, mixed>.
         foreach ($params as $name => $value) {
-            $value = \Piwigo\Db\MysqliDb::booleanToString($value);
+            $value = \Piwigo\Db\SqlDialect::booleanToString($value);
             if (! is_scalar($value)) {
                 continue;
             }
@@ -303,16 +302,7 @@ final readonly class ImageService
             }
         }
 
-        if ($inserts !== []) {
-            \Piwigo\Db\MysqliDb::massInserts(
-                Tables::lounge(),
-                array_keys($inserts[0]),
-                $inserts,
-                [
-                    'ignore' => true,
-                ]
-            );
-        }
+        $this->repo->massInsertLounge($inserts);
     }
 
     /**
@@ -441,11 +431,7 @@ final readonly class ImageService
         }
 
         if ($inserts !== []) {
-            \Piwigo\Db\MysqliDb::massInserts(
-                Tables::imageCategory(),
-                array_keys($inserts[0]),
-                $inserts
-            );
+            $this->repo->massInsertImageCategory($inserts);
 
             $this->categoryService()
                 ->updateCategory($categories);
@@ -526,20 +512,21 @@ final readonly class ImageService
         $updates = [];
 
         foreach ($pathForId as $id => $path) {
+            $md5sum = md5_file(PHPWG_ROOT_PATH . $path);
+            // md5_file() returns false when the file can't be read -- skip
+            // rather than writing a bogus md5sum that would then read as
+            // "already computed" on the next addMd5sum() pass.
+            if ($md5sum === false) {
+                continue;
+            }
+
             $updates[] = [
                 'id' => $id,
-                'md5sum' => md5_file(PHPWG_ROOT_PATH . $path),
+                'md5sum' => $md5sum,
             ];
         }
 
-        \Piwigo\Db\MysqliDb::massUpdates(
-            Tables::images(),
-            [
-                'primary' => ['id'],
-                'update' => ['md5sum'],
-            ],
-            $updates
-        );
+        $this->repo->massUpdateMd5sums($updates);
 
         return count($pathForId);
     }
@@ -588,11 +575,7 @@ final readonly class ImageService
                 'rank' => ++$currentRank,
             ];
         }
-        $fields = [
-            'primary' => ['image_id', 'category_id'],
-            'update' => ['rank'],
-        ];
-        \Piwigo\Db\MysqliDb::massUpdates(Tables::imageCategory(), $fields, $datas);
+        $this->repo->massUpdateImageCategoryRanks($datas);
     }
 
     /**

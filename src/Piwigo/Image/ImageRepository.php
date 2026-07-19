@@ -428,4 +428,77 @@ SELECT *
 
         return $byId;
     }
+
+    /**
+     * @param  list<array{image_id: int|string, category_id: int|string}>  $inserts
+     */
+    public function massInsertLounge(array $inserts): void
+    {
+        if ($inserts === []) {
+            return;
+        }
+
+        $this->batchWriter()
+            ->massInsert(Tables::lounge(), array_keys($inserts[0]), $inserts, [
+                'ignore' => true,
+            ]);
+    }
+
+    /**
+     * @param  list<array{image_id: int|string, category_id: int|string, rank: int}>  $inserts
+     */
+    public function massInsertImageCategory(array $inserts): void
+    {
+        if ($inserts === []) {
+            return;
+        }
+
+        $this->batchWriter()
+            ->massInsert(Tables::imageCategory(), array_keys($inserts[0]), $inserts);
+    }
+
+    /**
+     * @param  list<array{id: int|string, md5sum: string}>  $updates
+     */
+    public function massUpdateMd5sums(array $updates): void
+    {
+        $this->batchWriter()
+            ->massUpdate(
+                Tables::images(),
+                [
+                    'primary' => ['id'],
+                    'update' => ['md5sum'],
+                ],
+                $updates
+            );
+    }
+
+    public function updateDimensions(int $imageId, int $width, int $height): void
+    {
+        $this->conn->createQueryBuilder()
+            ->update(Tables::images())
+            ->set('width', ':width')
+            ->set('height', ':height')
+            ->where('id = :id')
+            ->setParameter('width', $width)
+            ->setParameter('height', $height)
+            ->setParameter('id', $imageId)
+            ->executeStatement();
+    }
+
+    /**
+     * @param  list<array{category_id: int|string, image_id: int|string, rank: int}>  $datas
+     */
+    public function massUpdateImageCategoryRanks(array $datas): void
+    {
+        $this->batchWriter()
+            ->massUpdate(
+                Tables::imageCategory(),
+                [
+                    'primary' => ['image_id', 'category_id'],
+                    'update' => ['rank'],
+                ],
+                $datas
+            );
+    }
 }

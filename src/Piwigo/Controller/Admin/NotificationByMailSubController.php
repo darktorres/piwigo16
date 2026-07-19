@@ -106,7 +106,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
                 $persistent_cache,
                 $htmlRenderer
-            )
+            ),
+            new \Piwigo\Db\BatchWriter($conn)
         );
 
         new \Piwigo\Validation\InputValidator()

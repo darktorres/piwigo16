@@ -43,9 +43,11 @@ use Piwigo\Template\Template;
  * P23 batch 8c) -- `Notification` is L2bExtendedDomain, this class is
  * L3Presentation, same allowed downward direction as
  * `NotificationByMailService` above.
- * `set_make_full_url()`/`unset_make_full_url()`/`\Piwigo\Db\MysqliDb::massUpdates()`/
- * `\Piwigo\Db\MysqliDb::booleanToString()` have no `src/Piwigo/` equivalent yet and stay bare
- * free-function calls, unchanged.
+ * `set_make_full_url()`/`unset_make_full_url()` have no `src/Piwigo/`
+ * equivalent yet and stay bare free-function calls, unchanged.
+ * `\Piwigo\Db\MysqliDb::massUpdates()`/`::booleanToString()`/`::getBoolean()`
+ * retargeted onto `Piwigo\Db\BatchWriter`/`Piwigo\Db\SqlDialect`
+ * (Legacy Coupling Retirement: DI+DBAL migration, Phase 1b).
  */
 final class NotificationByMailSender
 {
@@ -85,6 +87,7 @@ final class NotificationByMailSender
     public function __construct(
         private readonly NotificationByMailService $notificationByMailService,
         private readonly NotificationService $notificationService,
+        private readonly \Piwigo\Db\BatchWriter $batchWriter,
     ) {
         // \Piwigo\Config\Config::nbmMaxTreatmentTimeoutPercent()/'nbm_treatment_timeout_default'
         // are always numeric (config_default.inc.php: 0.8 and 20
@@ -157,7 +160,7 @@ final class NotificationByMailSender
 
         if ($isToSendMail) {
             $this->emailFormat = new MailService()
-                ->getStrEmailFormat(\Piwigo\Db\MysqliDb::getBoolean(\Piwigo\Config\Config::nbmSendHtmlMail()));
+                ->getStrEmailFormat(\Piwigo\Db\SqlDialect::getBoolean(\Piwigo\Config\Config::nbmSendHtmlMail()));
 
             // \Piwigo\Config\Config::nbmSendMailAs() is admin-submitted free text (see
             // NotificationByMailSubController), always a string when set.
@@ -362,7 +365,7 @@ final class NotificationByMailSender
 
         if (count($checkKeyList) != 0) {
             $updates = [];
-            $enabledValue = \Piwigo\Db\MysqliDb::booleanToString($isSubscribe);
+            $enabledValue = \Piwigo\Db\SqlDialect::booleanToString($isSubscribe);
             $dataUsers = $this->getUserNotifications('subscribe', $checkKeyList, ! $isSubscribe);
 
             // Prepare message after change language
@@ -447,7 +450,7 @@ final class NotificationByMailSender
 
             $this->displayCounterInfo();
 
-            \Piwigo\Db\MysqliDb::massUpdates(
+            $this->batchWriter->massUpdate(
                 Tables::userMailNotification(),
                 [
                     'primary' => ['check_key'],
@@ -489,9 +492,12 @@ final class NotificationByMailSender
         $returnList = [];
 
         if (in_array($action, ['list_to_send', 'send'])) {
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT NOW();'));
-            assert($row !== null);
-            [$dbnow] = $row;
+            // Env::now() rather than SQL's NOW() -- matches
+            // SessionRepository/CommentRepository's own established
+            // reasoning: invisible to PIWIGO_TEST_NOW, so a fixture-dated
+            // 'last_send' comparison would silently use two different
+            // clocks otherwise.
+            $dbnow = \Piwigo\Core\Env::now()->format('Y-m-d H:i:s');
 
             $isActionSend = ($action == 'send');
 
@@ -711,7 +717,7 @@ final class NotificationByMailSender
                     $this->endUsersEnv();
 
                     if ($isActionSend) {
-                        \Piwigo\Db\MysqliDb::massUpdates(
+                        $this->batchWriter->massUpdate(
                             Tables::userMailNotification(),
                             [
                                 'primary' => ['user_id'],

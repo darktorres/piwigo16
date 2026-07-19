@@ -62,7 +62,8 @@ final class NbmController implements ControllerInterface
                 new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
                 $persistent_cache,
                 $htmlRenderer
-            )
+            ),
+            new \Piwigo\Db\BatchWriter($conn)
         );
 
         $queryParams = $request->getQueryParams();

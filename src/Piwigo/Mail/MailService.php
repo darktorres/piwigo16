@@ -8,7 +8,6 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
-use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
@@ -72,6 +71,7 @@ final class MailService implements MailerInterface
      */
     public function __construct(
         private readonly ?WebmasterMailProviderInterface $webmasterMailProvider = null,
+        private readonly ?MailRecipientRepository $mailRecipientRepo = null,
     ) {}
 
     private function webmasterMailAddress(): string
@@ -80,6 +80,17 @@ final class MailService implements MailerInterface
             ?? new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build());
 
         return $provider->getWebmasterMailAddress();
+    }
+
+    /**
+     * Optional-with-lazy-default, same reasoning as
+     * $webmasterMailProvider above -- ~98 `new MailService()` construction
+     * sites, most of which never reach mailAdmins()/mailGroup().
+     */
+    private function recipientRepo(): MailRecipientRepository
+    {
+        return $this->mailRecipientRepo
+            ?? new MailRecipientRepository(\Piwigo\Db\DbConnection::build());
     }
 
     /**
@@ -484,40 +495,15 @@ final class MailService implements MailerInterface
 
         $userFields = self::userFields();
 
-        $query = '
-SELECT
-    i.user_id,
-    u.' . $userFields['username'] . ' AS name,
-    u.' . $userFields['email'] . ' AS email
-  FROM ' . Tables::users() . ' AS u
-    JOIN ' . Tables::userInfos() . ' AS i
-    ON i.user_id =  u.' . $userFields['id'];
-
-        if ($groupId !== null) {
-            $query .= '
-    JOIN ' . Tables::userGroup() . ' AS ug
-      ON ug.user_id = i.user_id';
-        }
-
-        $query .= '
-  WHERE i.status in (\'' . implode("','", $userStatuses) . '\')
-    AND u.' . $userFields['email'] . ' IS NOT NULL';
-
-        if ($groupId !== null) {
-            $query .= '
-    AND group_id = ' . intval($groupId);
-        }
-
-        if ($excludeCurrentUser) {
-            $currentUserId = \Piwigo\Users\CurrentUser::get()->id;
-            $query .= '
-    AND i.user_id <> ' . $currentUserId;
-        }
-
-        $query .= '
-  ORDER BY name
-;';
-        $admins = \Piwigo\Db\MysqliDb::query2Array($query);
+        $admins = $this->recipientRepo()
+            ->findAdminsAndWebmasters(
+                $userFields['id'],
+                $userFields['username'],
+                $userFields['email'],
+                $userStatuses,
+                $groupId !== null ? (int) $groupId : null,
+                $excludeCurrentUser ? \Piwigo\Users\CurrentUser::get()->id : null,
+            );
 
         if ($admins === []) {
             return true;
@@ -545,49 +531,35 @@ SELECT
         $userFields = self::userFields();
         $return = true;
 
-        $query = '
-SELECT DISTINCT language
-  FROM ' . Tables::userGroup() . ' AS ug
-    INNER JOIN ' . Tables::users() . ' AS u
-    ON ' . $userFields['id'] . ' = ug.user_id
-    INNER JOIN ' . Tables::userInfos() . ' AS ui
-    ON ui.user_id = ug.user_id
-  WHERE group_id = ' . $groupId . '
-    AND ' . $userFields['email'] . ' <> ""';
-        if (isset($args['language_selected']) && ! self::emptyValue($args['language_selected'])) {
-            $query .= '
-    AND language = \'' . $args['language_selected'] . '\'';
-        }
+        $languageSelected = isset($args['language_selected']) && ! self::emptyValue($args['language_selected'])
+            ? $args['language_selected']
+            : null;
 
-        $query .= '
-;';
-        $languages = \Piwigo\Db\MysqliDb::query2Array($query, null, 'language');
+        $languages = $this->recipientRepo()
+            ->findDistinctLanguagesInGroup(
+                $userFields['id'],
+                $userFields['email'],
+                $groupId,
+                $languageSelected,
+            );
 
         if ($languages === []) {
             return $return;
         }
 
         foreach ($languages as $language) {
-            if (! is_string($language) || $language === '') {
+            if ($language === '') {
                 continue;
             }
 
-            $query = '
-SELECT
-    ui.user_id,
-    ui.status,
-    u.' . $userFields['username'] . ' AS name,
-    u.' . $userFields['email'] . ' AS email
-  FROM ' . Tables::userGroup() . ' AS ug
-    INNER JOIN ' . Tables::users() . ' AS u
-    ON ' . $userFields['id'] . ' = ug.user_id
-    INNER JOIN ' . Tables::userInfos() . ' AS ui
-    ON ui.user_id = ug.user_id
-  WHERE group_id = ' . $groupId . '
-    AND ' . $userFields['email'] . ' <> ""
-    AND language = \'' . $language . '\'
-;';
-            $users = \Piwigo\Db\MysqliDb::query2Array($query);
+            $users = $this->recipientRepo()
+                ->findByGroupAndLanguage(
+                    $userFields['id'],
+                    $userFields['username'],
+                    $userFields['email'],
+                    $groupId,
+                    $language,
+                );
 
             if ($users === []) {
                 continue;
@@ -596,18 +568,12 @@ SELECT
             $this->switchLangTo($language);
 
             foreach ($users as $u) {
-                if (! is_array($u)) {
-                    continue;
-                }
-
-                $uUserId = $u['user_id'] ?? null;
+                $uUserId = $u['user_id'];
                 if (! is_numeric($uUserId)) {
                     continue;
                 }
-                $uStatus = $u['status'] ?? null;
-                $uStatus = is_string($uStatus) ? $uStatus : null;
-                $uEmail = $u['email'] ?? null;
-                $uEmail = is_string($uEmail) ? $uEmail : '';
+                $uStatus = $u['status'];
+                $uEmail = $u['email'];
 
                 $authkey = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->createUserAuthKey((int) $uUserId, $uStatus);
 

@@ -208,7 +208,7 @@ them when reading commit history or the replay manifest.
   Zero manual `new *Repository(`/`new *Service(` chains found anywhere in
   the domain (matches the original table's very low "New-chains: 1").
   Commit `456241849`.
-- **Phase 1f (Ws) — IN PROGRESS, sub-batch 3 of ~7 done (Tags).** 24
+- **Phase 1f (Ws) — IN PROGRESS, sub-batch 4 of ~7 done (Users).** 24
   files/12396 lines total, by far the largest domain in
   this plan — confirmed needs the multi-batch breakdown the plan already
   anticipated. Sub-batch 1 investigated the small/shared files first:
@@ -300,14 +300,57 @@ them when reading commit history or the replay manifest.
   original loose `!=`/`==` once `COUNT(*)` results are cast to `int`
   (PHPStan disallows loose comparison between `mixed`/`string|null` and
   `int`). Commit `e5a270c64`.
+  Sub-batch 4 (Users): `PwgUsers.php` (1168 lines, 16 `MysqliDb::`
+  calls) fully migrated — the free-text `username`/`filter` search
+  terms in `getList()`'s hand-built WHERE clause escaped via
+  `Connection::quote()` (SEC-18 pattern, same rationale as Phase 1c/1f
+  step 1's own occurrences). `getList()`'s `SELECT SQL_CALC_FOUND_ROWS
+  ...` + `SELECT FOUND_ROWS();` pair kept on one shared `$conn` for the
+  whole method — `FOUND_ROWS()` reflects the immediately-preceding
+  query on the *same connection/session*, so unlike every other query
+  in this file, this pair could not be allowed to open independent
+  connections per call. Everything else followed established patterns:
+  `query()`+loop onto `fetchAllAssociative()`+`foreach`,
+  `query2Array()`/`fetchRow(query())` onto `array_column()`/
+  `fetchOne()`, `singleInsert()`/raw `DELETE` onto `BatchWriter`/
+  `executeStatement()`. Dropped 2 more dead `realEscapeString()`
+  pre-escaping calls once `ApiKeyRepository::insert()`/`updateName()`
+  were confirmed to already parameterize the value themselves (same
+  "dead pre-escaping" pattern, 3rd occurrence this phase).
+  **New shared helper:** `MysqliDb::getEnums()` (DESC-table +
+  string-parse, no cross-driver-portable DBAL equivalent for reading a
+  live ENUM definition) is called from 4 files across 2 domains (Ws:
+  this file + the not-yet-migrated `PwgCore.php`; Admin:
+  `HistoryPageRenderer.php`/`UserListPageRenderer.php`, both out of
+  Phase 1's scope) — added `Db\DbInfo::getEnums(string $table, string
+  $field): array` as a shared home once this file's own migration
+  confirmed a second real Ws-domain caller exists, rather than inlining
+  the DESC-parse logic again (`HistoryRepository::
+  getSectionEnumOptions()`, Phase 1b, already has its own
+  single-table-hardcoded copy — not retrofitted onto the new shared
+  method, out of scope for this pass). Two more repeated construction
+  chains collapsed: `new AuthService(...)` (4 sites, 1 inside
+  `getList()`'s per-user loop) into `authService(Connection $conn)`
+  (connection-as-param variant, `PwgTags::activityService()`'s
+  precedent); `new ApiKeyService(...)` (8 sites, none in a loop) into
+  `apiKeyService()` (build-own-connection variant,
+  `PwgComments::commentService()`'s precedent) — confirms this file
+  needed both private-static-helper sub-variants side by side. Fixed 2
+  real PHPStan errors, both already-known regression classes:
+  `is_scalar()`+string-cast narrowing before `implode()` (needs
+  `array<string>`), `is_numeric()` guards before `(int)` casts on
+  now-`mixed` row values (repeated at every row-value site touched in
+  this file). Commit `a514db5cc`.
   Remaining sub-batches (by WS resource area, largest/most complex
-  last): Users (1168 lines, 16 `MysqliDb::` calls — next up), Core,
-  Categories, Images (3034 lines, the biggest single file in the plan)
-  — `WsDefaultMethods.php` (2357 lines) confirmed clean already (pure
-  method-registration table, zero MysqliDb/globals/die-exit/manual-
-  chains), `Protocol/*` encoders + `PwgNamedArray`/`PwgNamedStruct`/
-  `PwgRequestHandler` not yet checked but absent from every grep so
-  far, likely clean too.
+  last): Core (`PwgCore.php`, Ws's own file, distinct from the
+  already-complete `Core/` domain — next up, and will need its own
+  `MysqliDb::getEnums()` call sites retargeted onto the now-shared
+  `DbInfo::getEnums()`), Categories, Images (3034 lines, the biggest
+  single file in the plan) — `WsDefaultMethods.php` (2357 lines)
+  confirmed clean already (pure method-registration table, zero
+  MysqliDb/globals/die-exit/manual-chains), `Protocol/*` encoders +
+  `PwgNamedArray`/`PwgNamedStruct`/`PwgRequestHandler` not yet checked
+  but absent from every grep so far, likely clean too.
 
 ## What direct investigation found (the basis for phase sequencing)
 

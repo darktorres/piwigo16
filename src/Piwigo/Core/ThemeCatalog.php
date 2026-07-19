@@ -13,6 +13,11 @@ use Piwigo\Db\Tables;
  * Piwigo\Users\UserService, L2aCoreDomain, is a real caller of
  * getPwgThemes()/checkThemeInstalled(), so this needs an L1Infrastructure
  * home, same reasoning as PaginationService's own move).
+ *
+ * Legacy Coupling Retirement: DI+DBAL migration Phase 1e -- `Piwigo\Db`
+ * is the same L1Infrastructure layer as this class, so `DbConnection`
+ * (constructed inline; static method, no instance state) is a legal,
+ * same-layer dependency.
  */
 final class ThemeCatalog
 {
@@ -33,8 +38,8 @@ SELECT
   FROM ' . Tables::themes() . '
   ORDER BY name ASC
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        $rows = \Piwigo\Db\DbConnection::build()->fetchAllAssociative($query);
+        foreach ($rows as $row) {
             $id = $row['id'];
             $name = $row['name'];
             if (! is_string($id) || ! is_string($name)) {

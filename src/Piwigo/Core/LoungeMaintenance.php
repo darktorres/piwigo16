@@ -14,6 +14,11 @@ use Piwigo\Db\Tables;
  * L0Data), so it can't call it directly. include/common.inc.php's own
  * `needsEmptying()` caller (its only real caller, isn't deptrac-scanned)
  * triggers emptyLounge() itself once this returns true.
+ *
+ * Legacy Coupling Retirement: DI+DBAL migration Phase 1e -- `Piwigo\Db`
+ * is the same L1Infrastructure layer as this class, so `DbConnection`
+ * (constructed inline; static method, no instance state) is a legal,
+ * same-layer dependency.
  */
 final class LoungeMaintenance
 {
@@ -44,14 +49,16 @@ SELECT
   ORDER BY image_id ASC
   LIMIT 1
 ;';
-        $voyagers = \Piwigo\Db\MysqliDb::query2Array($query);
+        $voyagers = \Piwigo\Db\DbConnection::build()->fetchAllAssociative($query);
         if (count($voyagers) === 0) {
             return false;
         }
 
         $voyager = $voyagers[0];
-        $dbnow = strtotime((string) $voyager['dbnow']);
-        $date_available = strtotime((string) $voyager['date_available']);
+        $voyager_dbnow = $voyager['dbnow'];
+        $voyager_date_available = $voyager['date_available'];
+        $dbnow = strtotime(is_scalar($voyager_dbnow) ? (string) $voyager_dbnow : '');
+        $date_available = strtotime(is_scalar($voyager_date_available) ? (string) $voyager_date_available : '');
         // dbnow/date_available come straight from NOW() and a required,
         // populated lounge-table column -- both are always well-formed
         // MySQL datetimes in practice; the false fallback (age 0) is a

@@ -184,8 +184,33 @@ them when reading commit history or the replay manifest.
   individually investigated and confirmed structurally necessary
   (matching the plan's own "not bootstrap-time code that's fine as-is"
   carve-out for 1d) — not silently skipped. Commit `bfb705813`.
-- **Next up: Phase 1e** (Core, 46 files, mostly infrastructure — low
-  construction density but 6 `MysqliDb::` call sites) — not yet started.
+- **Phase 1e (Core) — DONE.** 5 files had real `MysqliDb::` debt (of 47
+  total): `DeviceHelper.php` was a trivial rename onto the already-built
+  `SqlDialect::getBoolean()` (pure logic, zero DB access, Phase 1a).
+  `RecentIconResolver.php`/`LoungeMaintenance.php`/`ThemeCatalog.php`/
+  `UniqueExecLock.php` had real query execution, retargeted onto
+  `DbConnection` constructed inline (all are static-only classes/methods,
+  matching the established "static method, no instance state" precedent)
+  -- `Piwigo\Db\*` and `Piwigo\Core\*` share the same L1Infrastructure
+  deptrac layer, so this is always a legal same-layer dependency.
+  `UniqueExecLock`'s `INSERT IGNORE`-based distributed-lock race kept its
+  exact original SQL text (pure execution-API swap, not rewritten through
+  QueryBuilder or newly parameterized) since that's the real mechanism
+  the class exists for. Caught and fixed a real PHPStan `cast.string`
+  error in `LoungeMaintenance.php` (casting DBAL's `mixed` column value
+  straight to `string` needs an `is_scalar()` guard first — a mysqli
+  raw-row assumption that doesn't hold against DBAL's wider return type).
+  `Core/ShutdownHandler.php`'s `exit(143)` (a real `pcntl_signal(SIGTERM,
+  ...)` handler — throwing an exception from inside a signal-handler
+  callback is unsound) and `Core/Lang.php`'s `global $lang;` (the
+  documented, Phase-4-scoped `l10n()`/PO-translation bridge) were both
+  re-confirmed as legitimate, already-documented exceptions, not gaps.
+  Zero manual `new *Repository(`/`new *Service(` chains found anywhere in
+  the domain (matches the original table's very low "New-chains: 1").
+  Commit TBD.
+- **Next up: Phase 1f** (Ws, 24 files, 308 call sites, 9 `MysqliDb::`
+  files — needs its own multi-batch breakdown by WS resource area) — not
+  yet started.
 
 ## What direct investigation found (the basis for phase sequencing)
 
@@ -384,9 +409,8 @@ conversion and DI/construction changes don't apply there the same way.
    redundant global, dead pre-escaping) — full verification gate
    including Contract/Integration/Browser/Visual all green, confirming
    the widest-blast-radius sub-phase landed safely.
-5. **1e — Core (46 files, mostly infrastructure).** Low construction
-   density (`newchains=1`) but still has 6 `MysqliDb::` call sites.
-   **Correction from an earlier draft**: the 15 static-singleton classes
+5. **1e — Core (47 files, mostly infrastructure). DONE.** See Progress
+   log above. **Correction from an earlier draft**: the 15 static-singleton classes
    are NOT concentrated here — only 4 of them (`PageState`,
    `CurrentLogger`, `Lang`, `FilesystemHelper`) live in `Core/`; the rest
    are scattered across 10 other domains (Users, Template, PluginConfig,

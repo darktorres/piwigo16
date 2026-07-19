@@ -12,8 +12,16 @@ namespace Piwigo\Core;
  * beyond the per-request `ProcessCache::get('get_icon')` memoization
  * bridge it reads/writes through (Legacy Coupling Retirement Track A
  * gap-fill batch G5, formerly `$cache['get_icon']`), unchanged.
- * `\Piwigo\Db\MysqliDb::getRecentPeriod()` stays a bare call --
- * functions_mysqli.inc.php, relocate-only (batch 8f, finding 2).
+ *
+ * Legacy Coupling Retirement: DI+DBAL migration Phase 1e --
+ * `\Piwigo\Db\MysqliDb::getRecentPeriod()`'s own real `SELECT SUBDATE(...)`
+ * query (a genuine DB round-trip, unlike `SqlDialect::
+ * getRecentPeriodExpression()`'s pure fragment-building sibling) is now
+ * executed via `DbConnection::build()`, constructed inline -- this static
+ * method has no instance state to inject a Connection into, and every
+ * real caller invokes it statically (`RecentIconResolver::getIcon(...)`),
+ * matching the established "static method constructs its own dependency
+ * inline" precedent (same as `Cache\UserCacheInvalidator`).
  */
 final class RecentIconResolver
 {
@@ -52,7 +60,10 @@ final class RecentIconResolver
 
         if (! isset($get_icon_cache['sql_recent_date'])) {
             // Use MySql date in order to standardize all recent "actions/queries"
-            $get_icon_cache['sql_recent_date'] = \Piwigo\Db\MysqliDb::getRecentPeriod($recent_period);
+            $sql_recent_date = \Piwigo\Db\DbConnection::build()->fetchOne(
+                'SELECT ' . \Piwigo\Db\SqlDialect::getRecentPeriodExpression($recent_period)
+            );
+            $get_icon_cache['sql_recent_date'] = is_string($sql_recent_date) ? $sql_recent_date : '';
         }
 
         $get_icon_cache[$date] = $date > $get_icon_cache['sql_recent_date'];

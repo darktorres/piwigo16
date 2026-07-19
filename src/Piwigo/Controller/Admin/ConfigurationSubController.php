@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeCacheService;
@@ -94,6 +96,16 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      */
     private static bool $sizesLoadedInTpl = false;
 
+    private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
+    {
+        return new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn));
+    }
+
+    private static function userService(Connection $conn): \Piwigo\Users\UserService
+    {
+        return new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), self::activityService($conn), new HtmlService());
+    }
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
@@ -101,6 +113,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         /** @var array<string, mixed> $page */
         global $page;
+
+        $conn = DbConnection::build();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
@@ -378,8 +392,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             // updating configuration if no error found
             if (! in_array($page_section, ['sizes', 'watermark']) and ! \Piwigo\Core\PageState::current()->hasErrors() and \Piwigo\Auth\AccessControl::isWebmaster()) {
                 // echo '<pre>'; print_r($_POST); echo '</pre>';
-                $result = \Piwigo\Db\MysqliDb::query('SELECT param FROM ' . Tables::config());
-                while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+                foreach ($conn->fetchAllAssociative('SELECT param FROM ' . Tables::config()) as $row) {
                     if (! is_string($row['param'])) {
                         // `param` is the config table's NOT NULL primary key; a
                         // non-string row here would mean the query result changed
@@ -402,7 +415,7 @@ UPDATE ' . Tables::config() . '
 SET value = \'' . str_replace("\'", "''", $value) . '\'
 WHERE param = \'' . $row['param'] . '\'
 ;';
-                        \Piwigo\Db\MysqliDb::query($query);
+                        $conn->executeStatement($query);
                     }
                 }
                 $template->assign(
@@ -411,7 +424,7 @@ WHERE param = \'' . $row['param'] . '\'
                     ]
                 );
 
-                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Core, 'config', [
+                self::activityService($conn)->record('system', ActivitySystem::Core, 'config', [
                     'config_section' => $page['section'],
                 ]);
             }
@@ -438,7 +451,7 @@ WHERE param = \'' . $row['param'] . '\'
                 ]
             );
 
-            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Core, 'config', [
+            self::activityService($conn)->record('system', ActivitySystem::Core, 'config', [
                 'config_section' => $page['section'],
                 'config_action' => $_GET['action'],
             ]);
@@ -515,7 +528,10 @@ WHERE param = \'' . $row['param'] . '\'
         name
       FROM `' . Tables::groups() . '`
     ;';
-                $groups = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'name');
+                // groups.name is a NOT NULL varchar column, so this is always
+                // a real string; filter defensively rather than trust the
+                // generic array_column() mixed value type.
+                $groups = array_filter(array_column($conn->fetchAllAssociative($query), 'name', 'id'), is_string(...));
                 natcasesort($groups);
 
                 $template->assign(
@@ -561,7 +577,7 @@ WHERE param = \'' . $row['param'] . '\'
 
                 $guest_id = \Piwigo\Config\Config::guestId();
 
-                $edit_user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->buildUser($guest_id, false);
+                $edit_user = self::userService($conn)->buildUser($guest_id, false);
                 // P22: profile.php's own save_profile_from_post()/
                 // load_profile_in_template() ported to Piwigo\Controller\
                 // ProfileFormHandler in P23 batch 8c.
@@ -570,7 +586,7 @@ WHERE param = \'' . $row['param'] . '\'
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {
                     // Reload user
-                    $edit_user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->buildUser($guest_id, false);
+                    $edit_user = self::userService($conn)->buildUser($guest_id, false);
                     \Piwigo\Core\PageState::current()->addInfo(l10n('Information data registered in database'));
                 }
                 \Piwigo\Core\PageState::current()->errors = array_merge(\Piwigo\Core\PageState::current()->errors, array_values(array_filter($errors, is_string(...))));
@@ -1044,7 +1060,7 @@ WHERE param = \'' . $row['param'] . '\'
                 ]
             );
 
-            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Core, 'config', [
+            self::activityService(DbConnection::build())->record('system', ActivitySystem::Core, 'config', [
                 'config_section' => 'sizes',
             ]);
         } else {
@@ -1274,7 +1290,7 @@ WHERE param = \'' . $row['param'] . '\'
                 ]
             );
 
-            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Core, 'config', [
+            self::activityService(DbConnection::build())->record('system', ActivitySystem::Core, 'config', [
                 'config_section' => 'watermark',
             ]);
         } else {

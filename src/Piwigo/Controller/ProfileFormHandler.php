@@ -8,11 +8,22 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Auth\AuthRepository;
+use Piwigo\Auth\AuthService;
+use Piwigo\Auth\CookieService;
+use Piwigo\Auth\PasswordRepository;
+use Piwigo\Auth\PasswordService;
 use Piwigo\Core\Lang;
+use Piwigo\Db\BatchWriter;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 /**
  * P23 batch 8c: ported from `include/profile_functions.inc.php`'s 2
@@ -29,6 +40,26 @@ use Piwigo\Template\Template;
  */
 final class ProfileFormHandler
 {
+    private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
+    {
+        return new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn));
+    }
+
+    private static function userService(Connection $conn): UserService
+    {
+        return new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), self::activityService($conn), new HtmlService());
+    }
+
+    private static function passwordService(Connection $conn): PasswordService
+    {
+        return new PasswordService(new PasswordRepository($conn));
+    }
+
+    private static function authService(Connection $conn): AuthService
+    {
+        return new AuthService(new AuthRepository($conn), self::activityService($conn), new HtmlService(), self::passwordService($conn), new CookieService());
+    }
+
     // ------------------------------------------------------ update & customization
     /**
      * @param array<string, mixed> $userdata
@@ -41,6 +72,8 @@ final class ProfileFormHandler
         if (! isset($_POST['validate'])) {
             return false;
         }
+
+        $conn = DbConnection::build();
 
         // $userdata['id'] is always the current session user's numeric id
         // (built in include/user.inc.php from \Piwigo\Config\Config::guestId() or
@@ -66,8 +99,8 @@ final class ProfileFormHandler
                 $_POST['theme'],
                 $_POST['language']
             );
-            $_POST['theme'] = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultTheme();
-            $_POST['language'] = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultLanguage();
+            $_POST['theme'] = self::userService($conn)->getDefaultTheme();
+            $_POST['language'] = self::userService($conn)->getDefaultLanguage();
         }
 
         if (! defined('IN_ADMIN')) {
@@ -94,11 +127,13 @@ final class ProfileFormHandler
             }
 
             if (! in_array($_POST['language'], array_keys(\Piwigo\Lang\LangService::getLanguages()), true)) {
-                die('Hacking attempt, incorrect language value');
+                new HtmlService()
+                    ->fatalError('Hacking attempt, incorrect language value');
             }
 
             if (! in_array($_POST['theme'], array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes()), true)) {
-                die('Hacking attempt, incorrect theme value');
+                new HtmlService()
+                    ->fatalError('Hacking attempt, incorrect theme value');
             }
         }
 
@@ -106,7 +141,7 @@ final class ProfileFormHandler
             // if $_POST and $userdata have are same email
             // validate_mail_address allows, however, to check email
             $mail_address_input = is_string($_POST['mail_address']) ? $_POST['mail_address'] : null;
-            $mail_error = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->validateMailAddress($user_id, $mail_address_input);
+            $mail_error = self::userService($conn)->validateMailAddress($user_id, $mail_address_input);
             if ($mail_error !== '' && $mail_error !== '0') {
                 $errors[] = $mail_error;
             }
@@ -132,9 +167,7 @@ final class ProfileFormHandler
     FROM ' . Tables::users() . '
     WHERE ' . $user_fields['id'] . ' = \'' . $user_id . '\'
   ;';
-                $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-                assert($row !== null);
-                [$current_password] = $row;
+                $current_password = $conn->fetchOne($query);
 
                 // the password column allows NULL (external-authentication
                 // accounts with no local password set); such an account can
@@ -142,7 +175,7 @@ final class ProfileFormHandler
                 $password_input = $_POST['password'] ?? null;
                 if (! is_string($current_password)
                     or ! is_string($password_input)
-                    or ! new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build()))->verify($password_input, $current_password)) {
+                    or ! self::passwordService($conn)->verify($password_input, $current_password)) {
                     $errors[] = l10n('Current password is wrong');
                 }
             }
@@ -164,16 +197,16 @@ final class ProfileFormHandler
                 $new_pwd_for_update = $_POST['use_new_pwd'] ?? null;
                 if (is_string($new_pwd_for_update) and $new_pwd_for_update !== '' and $new_pwd_for_update !== '0') {
                     $fields[] = $user_fields['password'];
-                    $data[$user_fields['password']] = new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build()))->hash($new_pwd_for_update);
+                    $data[$user_fields['password']] = self::passwordService($conn)->hash($new_pwd_for_update);
 
-                    new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->deactivateUserAuthKeys($user_id);
+                    self::authService($conn)->deactivateUserAuthKeys($user_id);
                 }
 
                 // username is updated only if allowed
                 $username_for_update = $_POST['username'] ?? null;
                 if (is_string($username_for_update) and $username_for_update !== '' and $username_for_update !== '0') {
                     $username = $username_for_update;
-                    if ($username !== $userdata['username'] and (bool) new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getUserId($username)) {
+                    if ($username !== $userdata['username'] and (bool) self::userService($conn)->getUserId($username)) {
                         \Piwigo\Core\PageState::current()->addError(l10n('this login is already used'));
                         unset($_POST['redirect']);
                     } else {
@@ -182,7 +215,7 @@ final class ProfileFormHandler
 
                         // send email to the user
                         if ($username !== $userdata['username']) {
-                            $notification_language = is_string($userdata['language']) ? $userdata['language'] : new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultLanguage();
+                            $notification_language = is_string($userdata['language']) ? $userdata['language'] : self::userService($conn)->getDefaultLanguage();
                             new MailService()
                                 ->switchLangTo($notification_language);
 
@@ -208,17 +241,18 @@ final class ProfileFormHandler
                     }
                 }
 
-                \Piwigo\Db\MysqliDb::massUpdates(
-                    Tables::users(),
-                    [
-                        'primary' => [$user_fields['id']],
-                        'update' => $fields,
-                    ],
-                    [$data]
-                );
+                new BatchWriter($conn)
+                    ->massUpdate(
+                        Tables::users(),
+                        [
+                            'primary' => [$user_fields['id']],
+                            'update' => $fields,
+                        ],
+                        [$data]
+                    );
 
                 if ($mail_address !== $userdata['email']) {
-                    new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->deactivatePasswordResetKey($user_id);
+                    self::authService($conn)->deactivatePasswordResetKey($user_id);
                 }
 
                 $activity_details_tables[] = 'users';
@@ -243,19 +277,20 @@ final class ProfileFormHandler
                         $data[$field] = $_POST[$field];
                     }
                 }
-                \Piwigo\Db\MysqliDb::massUpdates(
-                    Tables::userInfos(),
-                    [
-                        'primary' => ['user_id'],
-                        'update' => $fields,
-                    ],
-                    [$data]
-                );
+                new BatchWriter($conn)
+                    ->massUpdate(
+                        Tables::userInfos(),
+                        [
+                            'primary' => ['user_id'],
+                            'update' => $fields,
+                        ],
+                        [$data]
+                    );
 
                 $activity_details_tables[] = 'user_infos';
             }
             trigger_notify('save_profile_from_post', $userdata['id']);
-            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('user', $user_id, 'edit', [
+            self::activityService($conn)->record('user', $user_id, 'edit', [
                 'function' => __METHOD__,
                 'tables' => implode(',', $activity_details_tables),
             ]);
@@ -322,10 +357,10 @@ final class ProfileFormHandler
         $template->assign('IN_ADMIN', defined('IN_ADMIN'));
 
         // api key expiration choice
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT ADDDATE(NOW(), INTERVAL 1 DAY);'));
-        assert($row !== null);
-        [$dbnow] = $row;
-        $template->assign('API_CURRENT_DATE', explode(' ', (string) $dbnow)[0]);
+        $conn = DbConnection::build();
+        $dbnow = $conn->fetchOne('SELECT ADDDATE(NOW(), INTERVAL 1 DAY);');
+        $dbnow_str = is_scalar($dbnow) ? (string) $dbnow : '';
+        $template->assign('API_CURRENT_DATE', explode(' ', $dbnow_str)[0]);
 
         $duration = [];
         $display_duration = [];
@@ -345,9 +380,10 @@ final class ProfileFormHandler
 SELECT
   ' . implode(', ', $duration) . '
 ;';
-        $result = \Piwigo\Db\MysqliDb::query2Array($query)[0];
+        $result = $conn->fetchAllAssociative($query)[0];
         foreach ($result as $day => $date) {
-            $display_duration[$day] = l10n('%d days', $day) . ' (' . \Piwigo\Core\DateHelper::formatDate($date ?? false, ['day', 'month', 'year']) . ')';
+            $date_for_format = (is_string($date) || is_int($date)) ? $date : false;
+            $display_duration[$day] = l10n('%d days', $day) . ' (' . \Piwigo\Core\DateHelper::formatDate($date_for_format, ['day', 'month', 'year']) . ')';
         }
 
         if ($has_custom) {

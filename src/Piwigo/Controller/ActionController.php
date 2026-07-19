@@ -58,6 +58,8 @@ final class ActionController implements ControllerInterface
     {
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
+        $conn = DbConnection::build();
+
         if (\Piwigo\Config\Config::isFormatsEnabled() and isset($_GET['format'])) {
             new \Piwigo\Validation\InputValidator()
                 ->validate('format', $_GET, false, ValidationPattern::ID);
@@ -73,7 +75,7 @@ SELECT
   FROM ' . Tables::imageFormat() . '
   WHERE format_id = ' . $format_id . '
 ;';
-            $formats = \Piwigo\Db\MysqliDb::query2Array($query);
+            $formats = $conn->fetchAllAssociative($query);
 
             if (count($formats) === 0) {
                 $this->doError(400, 'Invalid request - format');
@@ -99,8 +101,8 @@ SELECT * FROM ' . Tables::images() . '
   WHERE id=' . $_GET['id'] . '
 ;';
 
-        $element_info = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
-        if ($element_info === false || $element_info === null) {
+        $element_info = $conn->fetchAssociative($query);
+        if ($element_info === false) {
             $this->doError(404, 'Requested id not found');
         }
 
@@ -120,20 +122,20 @@ SELECT id
   FROM ' . Tables::categories() . '
     INNER JOIN ' . Tables::imageCategory() . ' ON category_id = id
   WHERE image_id = ' . $_GET['id'] . '
-' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
+' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository($conn), new \Piwigo\Group\GroupRepository($conn))->getSqlConditionFandF([
             'forbidden_categories' => 'category_id',
             'forbidden_images' => 'image_id',
         ], '    AND') . '
   LIMIT 1
 ;';
-        if (! $is_admin_download and \Piwigo\Db\MysqliDb::numRows(\Piwigo\Db\MysqliDb::query($query)) < 1) {
+        if (! $is_admin_download and $conn->fetchOne($query) === false) {
             $this->doError(401, 'Access denied');
         }
 
         // $format is only set when the enable_formats block above ran;
         // part=f is reachable directly by request even when it never ran.
         /** @var array<string, mixed>|null $format_row */
-        $format_row = (isset($format) && is_array($format)) ? $format : null;
+        $format_row = $format ?? null;
 
         $file = '';
         switch ($get_part) {
@@ -182,16 +184,19 @@ SELECT id
 
         $image_id_val = $_GET['id'];
         if ($get_part === 'e') {
-            new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit($image_id_val, 'high');
+            new HistoryService(new HistoryRepository($conn))
+                ->logVisit($image_id_val, 'high');
         } elseif ($get_part === 'r') {
-            new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit($image_id_val, 'other');
+            new HistoryService(new HistoryRepository($conn))
+                ->logVisit($image_id_val, 'other');
         } elseif ($get_part === 'f') {
             if ($format_row === null) {
                 $this->doError(400, 'Invalid request - format');
             }
             $format_id_val = $format_row['format_id'] ?? null;
             $format_id_val = is_string($format_id_val) ? $format_id_val : null;
-            new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit($image_id_val, 'high', $format_id_val);
+            new HistoryService(new HistoryRepository($conn))
+                ->logVisit($image_id_val, 'high', $format_id_val);
         }
 
         trigger_notify('loc_action_before_http_headers');
@@ -244,7 +249,9 @@ SELECT id
         $http_headers['Content-Type'] = $ctype;
 
         if (isset($_GET['download'])) {
-            $http_headers['Content-Disposition'] = 'attachment; filename="' . htmlspecialchars_decode((string) $element_info['file']) . '";';
+            $element_file = $element_info['file'];
+            $element_file = is_scalar($element_file) ? (string) $element_file : '';
+            $http_headers['Content-Disposition'] = 'attachment; filename="' . htmlspecialchars_decode($element_file) . '";';
             $http_headers['Content-Transfer-Encoding'] = 'binary';
         } else {
             $http_headers['Content-Disposition'] = 'inline; filename="'

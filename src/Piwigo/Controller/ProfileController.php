@@ -6,6 +6,8 @@ namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Db\BatchWriter;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
@@ -69,8 +71,8 @@ SELECT ' . implode(',', $fields) . '
   FROM ' . Tables::userInfos() . '
   WHERE user_id = ' . $default_user_id . '
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-        $default_user = \Piwigo\Db\MysqliDb::fetchAssoc($result);
+        $conn = DbConnection::build();
+        $default_user = $conn->fetchAssociative($query);
         // The guest user_infos row can plausibly be missing (deleted directly in
         // DB, broken migration, ...); fall back to an empty array rather than
         // trusting a no-op assert() (zend.assertions=-1 in this environment --
@@ -102,7 +104,9 @@ SELECT ' . implode(',', $fields) . '
         $template->assign_var_from_handle('PROFILE_CONTENT', 'profile_content');
 
         $body = LegacyRenderCapture::capture(static function (): void {
-            global $title;
+            // $title is set and read entirely within this closure (passed
+            // straight into PageHeaderRenderer::render() below) -- no
+            // other file reads $GLOBALS['title']. Plain local, not global.
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('Your Gallery Customization');
@@ -134,7 +138,7 @@ SELECT ' . implode(',', $fields) . '
                 }
 
                 \Piwigo\Users\CurrentUser::updateLanguage($cookie_lang);
-                \Piwigo\Db\MysqliDb::singleUpdate(
+                new BatchWriter(DbConnection::build())->singleUpdate(
                     Tables::userInfos(),
                     [
                         'language' => $cookie_lang,

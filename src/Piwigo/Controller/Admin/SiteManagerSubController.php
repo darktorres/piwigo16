@@ -57,13 +57,16 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         global $my_base_url;
 
         if (! \Piwigo\Config\Config::enableSynchronization()) {
-            die('synchronization is disabled');
+            new HtmlService()
+                ->fatalError('synchronization is disabled');
         }
 
         if (! empty($_POST) or isset($_GET['action'])) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(new HtmlService());
         }
+
+        $conn = DbConnection::build();
 
         $template->set_filenames([
             'site_manager' => 'site_manager.tpl',
@@ -95,7 +98,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             }
 
             // site must not exists
-            $site_repo = new SiteRepository(DbConnection::build());
+            $site_repo = new SiteRepository($conn);
             if ($site_repo->countByUrl($url) > 0) {
                 \Piwigo\Core\PageState::current()->addError(l10n('This site already exists') . ' [' . $url . ']');
             }
@@ -120,12 +123,11 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         }
         if (isset($_GET['action']) and $site !== null) {
             $site_id = (int) $site;
-            $galleries_url = new SiteRepository(DbConnection::build())
+            $galleries_url = new SiteRepository($conn)
                 ->findGalleriesUrlById($site_id);
             switch ($_GET['action']) {
                 case 'delete':
 
-                    $conn = DbConnection::build();
                     new CategoryService(
                         new CategoryRepository($conn),
                         new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
@@ -153,9 +155,9 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
   GROUP BY c.site_id
 ;';
         /** @var array<int|string, array<string, string|null>> $sites_detail */
-        $sites_detail = \Piwigo\Db\MysqliDb::query2Array($query, 'site_id');
+        $sites_detail = array_column($conn->fetchAllAssociative($query), null, 'site_id');
 
-        foreach (new SiteRepository(DbConnection::build())->findAll() as $row) {
+        foreach (new SiteRepository($conn)->findAll() as $row) {
             // 'id' and 'galleries_url' are both NOT NULL columns on the sites
             // table (see install/piwigo_structure-mysql.sql), so findAll() never
             // returns null for either of these keys here.

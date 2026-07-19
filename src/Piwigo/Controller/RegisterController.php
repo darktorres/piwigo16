@@ -92,7 +92,8 @@ final class RegisterController implements ControllerInterface
             // rationale (this is also why an existing account gets a
             // "someone tried to register your username" email instead of
             // the requester ever seeing an error here).
-            $registration_result = new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())
+            $conn = DbConnection::build();
+            $registration_result = new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService())
                 ->registerUser(
                     $post_login,
                     $post_password,
@@ -110,7 +111,7 @@ final class RegisterController implements ControllerInterface
             // user themselves (self-registration has no separate acting
             // admin); only the username is recorded, never the password.
             if ($new_user_id !== null) {
-                new AuditService(new AuditRepository(DbConnection::build()))
+                new AuditService(new AuditRepository($conn))
                     ->record($new_user_id, 'create', 'user', $new_user_id, null, [
                         'username' => $post_login,
                     ]);
@@ -139,7 +140,8 @@ final class RegisterController implements ControllerInterface
                 // would be a full account-takeover, not just an
                 // information leak. Both cases redirect identically.
                 if ($new_user_id !== null) {
-                    new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->logUser($new_user_id, false);
+                    new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())
+                        ->logUser($new_user_id, false);
                 }
                 redirect(make_index_url());
             }
@@ -157,7 +159,9 @@ final class RegisterController implements ControllerInterface
         $email = is_string($mail_raw) && $mail_raw !== '' && $mail_raw !== '0' ? htmlspecialchars(stripslashes($mail_raw)) : '';
 
         $body = LegacyRenderCapture::capture(static function () use ($registration_post_key, $login, $email, $errors): void {
-            global $title;
+            // $title is set and read entirely within this closure (passed
+            // straight into PageHeaderRenderer::render() below) -- no
+            // other file reads $GLOBALS['title']. Plain local, not global.
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('Registration');

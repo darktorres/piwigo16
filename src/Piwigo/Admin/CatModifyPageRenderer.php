@@ -300,19 +300,24 @@ SELECT COUNT(*)
             $template->assign('CAT_MIN_DIR', $this->getMinLocalDir($category_full_dir));
 
             if (\Piwigo\Config\Config::enableSynchronization()) {
+                $category_site_id = $category['site_id'];
+                $category_site_id = (is_int($category_site_id) || is_string($category_site_id)) ? $category_site_id : '';
                 $template->assign(
                     'U_SYNC',
-                    $base_url . 'site_update&amp;site=' . (is_string($category['site_id']) ? $category['site_id'] : '') . '&amp;cat_id=' . $category_id
+                    $base_url . 'site_update&amp;site=' . $category_site_id . '&amp;cat_id=' . $category_id
                 );
             }
 
         }
 
         // representant management
-        // 'representative_picture_id' is a nullable FK column; the driver types it
-        // string|null (never int, even though the referenced images.id is an int
-        // PK), so narrow with a real fallback rather than assuming.
-        $category_representative_picture_id = is_string($category['representative_picture_id']) ? $category['representative_picture_id'] : 0;
+        // 'representative_picture_id' is a nullable FK column; DBAL's native
+        // int/float casting (MYSQLI_OPT_INT_AND_FLOAT_NATIVE) means the
+        // driver can hand back either a native int or a string depending on
+        // which controller populated $GLOBALS['category'], so accept both
+        // rather than assuming string|null.
+        $category_representative_picture_id_raw = $category['representative_picture_id'];
+        $category_representative_picture_id = (is_int($category_representative_picture_id_raw) || is_string($category_representative_picture_id_raw)) ? $category_representative_picture_id_raw : 0;
         if ($category['has_images'] or ! empty($category_representative_picture_id)) {
             $tpl_representant = [];
 

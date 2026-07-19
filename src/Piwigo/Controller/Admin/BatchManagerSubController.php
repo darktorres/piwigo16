@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\BatchManagerGlobalPageRenderer;
 use Piwigo\Admin\BatchManagerUnitPageRenderer;
@@ -58,6 +59,21 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class BatchManagerSubController implements AdminSubControllerInterface
 {
+    private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
+    {
+        return new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn));
+    }
+
+    private static function imageService(Connection $conn): ImageService
+    {
+        return new ImageService(new ImageRepository($conn), self::activityService($conn));
+    }
+
+    private static function tagService(Connection $conn): TagService
+    {
+        return new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)), self::activityService($conn));
+    }
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
@@ -176,7 +192,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
 DELETE FROM ' . Tables::caddie() . '
   WHERE user_id = ' . $userId . '
 ;';
-            \Piwigo\Db\MysqliDb::query($query);
+            DbConnection::build()->executeStatement($query);
 
             $_SESSION['page_infos'] = [
                 l10n('Information data registered in database'),
@@ -285,8 +301,7 @@ DELETE FROM ' . Tables::caddie() . '
                 } else {
                     $filter_tags = is_string($raw_filter_tags) ? $raw_filter_tags : '';
                 }
-                $filterTagConn = DbConnection::build();
-                $_SESSION['bulk_manager_filter']['tags'] = new TagService(new TagRepository($filterTagConn), new PermissionService(new PermissionRepository($filterTagConn), new GroupRepository($filterTagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+                $_SESSION['bulk_manager_filter']['tags'] = self::tagService(DbConnection::build())
                     ->getTagIds($filter_tags, false);
 
                 if (isset($_POST['tag_mode']) and in_array($_POST['tag_mode'], ['AND', 'OR'], true)) {
@@ -521,8 +536,8 @@ DELETE FROM ' . Tables::caddie() . '
             $prefilter_result = match ($prefilter) {
                 // getOrphans()/getPhotosNoMd5sum() are existing, already-tested
                 // ImageService methods -- not duplicated into FilterResolver.
-                'no_album' => new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))->getOrphans(),
-                'no_sync_md5sum' => new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))->getPhotosNoMd5sum(),
+                'no_album' => self::imageService(DbConnection::build())->getOrphans(),
+                'no_sync_md5sum' => self::imageService(DbConnection::build())->getPhotosNoMd5sum(),
                 default => $filterResolver->resolvePrefilter($prefilter, $bulkFilter, $userId, $confOrderBy),
             };
 
@@ -574,8 +589,7 @@ DELETE FROM ' . Tables::caddie() . '
 
             $filter_tag_mode = is_string($bulkFilter['tag_mode'] ?? null) ? $bulkFilter['tag_mode'] : 'AND';
 
-            $tagConn = DbConnection::build();
-            $filter_sets[] = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+            $filter_sets[] = self::tagService(DbConnection::build())
                 ->getImageIdsForTags(
                     $filter_tag_ids,
                     $filter_tag_mode,
@@ -683,15 +697,11 @@ SELECT
   WHERE width IS NOT NULL
     AND height IS NOT NULL
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-
-        if ((bool) \Piwigo\Db\MysqliDb::numRows($result)) {
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-                if (is_numeric($row['width']) && is_numeric($row['height']) && $row['width'] > 0 && $row['height'] > 0) {
-                    $widths[] = $row['width'];
-                    $heights[] = $row['height'];
-                    $ratios[] = floor((float) $row['width'] / (float) $row['height'] * 100) / 100;
-                }
+        foreach (DbConnection::build()->fetchAllAssociative($query) as $row) {
+            if (is_numeric($row['width']) && is_numeric($row['height']) && $row['width'] > 0 && $row['height'] > 0) {
+                $widths[] = $row['width'];
+                $heights[] = $row['height'];
+                $ratios[] = floor((float) $row['width'] / (float) $row['height'] * 100) / 100;
             }
         }
         if ($widths === []) { // arbitrary values, only used when no photos on the gallery
@@ -778,9 +788,7 @@ SELECT
   WHERE filesize IS NOT NULL
   GROUP BY filesize
 ;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach (DbConnection::build()->fetchAllAssociative($query) as $row) {
             if (is_numeric($row['filesize'])) {
                 $filesizes[] = sprintf('%.1f', (float) $row['filesize'] / 1024);
             }

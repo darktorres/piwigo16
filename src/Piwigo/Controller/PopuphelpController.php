@@ -45,7 +45,9 @@ final class PopuphelpController implements ControllerInterface
             // arch-tested to contain zero define() calls at all
             // (tests/Arch/StructuralTest.php).
 
-            global $title;
+            // $title is set and read entirely within this closure (passed
+            // straight into PageHeaderRenderer::render() below) -- no
+            // other file reads $GLOBALS['title']. Plain local, not global.
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             \Piwigo\Core\PageState::current()->setBodyId('thePopuphelpPage');

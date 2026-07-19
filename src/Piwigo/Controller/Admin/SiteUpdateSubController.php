@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -95,6 +98,39 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class SiteUpdateSubController implements AdminSubControllerInterface
 {
+    private static function permissionService(Connection $conn): PermissionService
+    {
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+    }
+
+    private static function categoryService(Connection $conn): CategoryService
+    {
+        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
+    }
+
+    private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
+    {
+        return new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn));
+    }
+
+    /**
+     * Get max value plus one of a particular column -- same shape as the
+     * retired MysqliDb::nextval(), reused twice in this file (categories,
+     * images).
+     */
+    private static function nextval(Connection $conn, string $column, string $table): int
+    {
+        $query = '
+SELECT IF(MAX(' . $column . ')+1 IS NULL, 1, MAX(' . $column . ')+1)
+  FROM ' . $table;
+        $next = $conn->fetchOne($query);
+
+        // The IF(...) wrapper guarantees a non-NULL numeric result; fall back to
+        // 1 (the same value the query itself uses when MAX() is NULL) if that
+        // invariant is ever violated.
+        return is_numeric($next) ? (int) $next : 1;
+    }
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
@@ -106,28 +142,34 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         // +-----------------------------------------------------------------------+
 
         if (! \Piwigo\Config\Config::enableSynchronization()) {
-            die('synchronization is disabled');
+            new HtmlService()
+                ->fatalError('synchronization is disabled');
         }
 
         if (! is_numeric($_GET['site'])) {
-            die('site param missing or invalid');
+            new HtmlService()
+                ->fatalError('site param missing or invalid');
         }
         $site_id = (int) $_GET['site'];
+
+        // A single connection for the whole request -- mirrors the legacy
+        // single-global-mysqli-connection model this migration restores,
+        // and avoids the needless-reconnection pattern found in earlier
+        // construction-chain debt (Phase 1d finding).
+        $conn = DbConnection::build();
 
         $query = '
 SELECT galleries_url
   FROM ' . Tables::sites() . '
   WHERE id = ' . $site_id;
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        $site_url = $row !== null ? $row[0] : null;
-        if (! isset($site_url)) {
-            die('site ' . $site_id . ' does not exist');
+        $site_url = $conn->fetchOne($query);
+        if (! is_string($site_url)) {
+            new HtmlService()
+                ->fatalError('site ' . $site_id . ' does not exist');
         }
         $site_is_remote = url_is_remote($site_url);
 
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT NOW();'));
-        assert($row !== null);
-        [$dbnow] = $row;
+        $dbnow = $conn->fetchOne('SELECT NOW();');
 
         $error_labels = [
             'PWG-UPDATE-1' => [
@@ -243,7 +285,7 @@ SELECT id, uppercats, global_rank, status, visible
             if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
                 if (isset($_POST['subcats-included']) and $_POST['subcats-included'] == 1) {
                     $query .= '
-    AND uppercats ' . \Piwigo\Db\MysqliDb::DB_REGEX_OPERATOR . ' \'(^|,)' . $_POST['cat'] . '(,|$)\'
+    AND uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' \'(^|,)' . $_POST['cat'] . '(,|$)\'
 ';
                 } else {
                     $query .= '
@@ -259,16 +301,12 @@ SELECT id, uppercats, global_rank, status, visible
             // 'id'/'rank'/'global_rank' fields. array<string, mixed> is the honest
             // common shape for both origins; individual fields are narrowed with
             // is_string()/is_int() at each point of use below.
-            $db_categories = \Piwigo\Db\MysqliDb::query2Array($query, 'id');
             /** @var array<int|string, array<string, mixed>> $db_categories */
+            $db_categories = array_column($conn->fetchAllAssociative($query), null, 'id');
 
             // get categort full directories in an array for comparison with file
             // system directory tree
-            $fulldirsConn = DbConnection::build();
-            $db_fulldirs = new CategoryService(
-                new CategoryRepository($fulldirsConn),
-                new PermissionService(new PermissionRepository($fulldirsConn), new GroupRepository($fulldirsConn))
-            )->getFulldirs(array_map(intval(...), array_keys($db_categories)));
+            $db_fulldirs = self::categoryService($conn)->getFulldirs(array_map(intval(...), array_keys($db_categories)));
 
             // what is the base directory to search file system sub-directories ?
             if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
@@ -292,14 +330,14 @@ SELECT id, uppercats, global_rank, status, visible
             $query = '
 SELECT id
   FROM ' . Tables::categories();
-            $result = \Piwigo\Db\MysqliDb::query($query);
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+            foreach ($conn->fetchAllAssociative($query) as $row) {
                 // id is a NOT NULL primary key; skip defensively rather than use a
-                // null value as an invalid array key.
-                if ($row['id'] === null) {
+                // null/non-scalar value as an invalid array key.
+                $row_id = $row['id'];
+                if (! is_int($row_id) && ! is_string($row_id)) {
                     continue;
                 }
-                $next_rank[$row['id']] = 1;
+                $next_rank[$row_id] = 1;
             }
 
             // let's see if some categories already have some sub-categories...
@@ -307,8 +345,7 @@ SELECT id
 SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
   FROM ' . Tables::categories() . '
   GROUP BY id_uppercat';
-            $result = \Piwigo\Db\MysqliDb::query($query);
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+            foreach ($conn->fetchAllAssociative($query) as $row) {
                 // for the id_uppercat NULL, we write 'NULL' and not the empty string
                 if (! isset($row['id_uppercat']) or $row['id_uppercat'] == '') {
                     $row['id_uppercat'] = 'NULL';
@@ -317,11 +354,15 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                 // positive numeric string; fall back to the same default used above
                 // for categories without any sub-category yet.
                 $row_next_rank = $row['next_rank'];
-                $next_rank[$row['id_uppercat']] = is_numeric($row_next_rank) ? (int) $row_next_rank : 1;
+                $row_id_uppercat = $row['id_uppercat'];
+                if (! is_int($row_id_uppercat) && ! is_string($row_id_uppercat)) {
+                    continue;
+                }
+                $next_rank[$row_id_uppercat] = is_numeric($row_next_rank) ? (int) $row_next_rank : 1;
             }
 
             // next category id available
-            $next_id = \Piwigo\Db\MysqliDb::nextval('id', Tables::categories());
+            $next_id = self::nextval($conn, 'id', Tables::categories());
 
             // retrieve sub-directories fulldirs from the site reader
             // get_full_directories() is declared to return mixed[], but in practice
@@ -355,9 +396,9 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         'dir' => $dir,
                         'name' => str_replace('_', ' ', $dir),
                         'site_id' => $site_id,
-                        'commentable' => \Piwigo\Db\MysqliDb::booleanToString(\Piwigo\Config\Config::newcatDefaultCommentable()),
+                        'commentable' => SqlDialect::booleanToString(\Piwigo\Config\Config::newcatDefaultCommentable()),
                         'status' => \Piwigo\Config\Config::newcatDefaultStatus(),
-                        'visible' => \Piwigo\Db\MysqliDb::booleanToString(\Piwigo\Config\Config::newcatDefaultVisible()),
+                        'visible' => SqlDialect::booleanToString(\Piwigo\Config\Config::newcatDefaultVisible()),
                     ];
 
                     if (isset($db_fulldirs[dirname($fulldir)])) {
@@ -425,7 +466,8 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         'id', 'dir', 'name', 'site_id', 'id_uppercat', 'uppercats', 'commentable',
                         'visible', 'status', 'rank', 'global_rank',
                     ];
-                    \Piwigo\Db\MysqliDb::massInserts(Tables::categories(), $dbfields, $inserts);
+                    new BatchWriter($conn)
+                        ->massInsert(Tables::categories(), $dbfields, $inserts);
 
                     // add default permissions to categories
                     $category_ids = [];
@@ -437,7 +479,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         }
                     }
 
-                    new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('album', $category_ids, 'add', [
+                    self::activityService($conn)->record('album', $category_ids, 'add', [
                         'sync' => true,
                     ]);
 
@@ -452,58 +494,50 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
           FROM ' . Tables::groupAccess() . '
           WHERE cat_id IN (' . $category_up . ')
         ;';
-                        $result = \Piwigo\Db\MysqliDb::query($query);
-                        if (! empty($result)) {
-                            $granted_grps = [];
-                            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-                                // cat_id is a NOT NULL foreign key; skip defensively
-                                // if it's ever missing/non-numeric rather than using
-                                // it as an invalid array key.
-                                $cat_id = $row['cat_id'];
-                                if (! is_numeric($cat_id)) {
-                                    continue;
-                                }
-                                $cat_id = (int) $cat_id;
-                                if (! isset($granted_grps[$cat_id])) {
-                                    $granted_grps[$cat_id] = [];
-                                }
-                                // TODO: explanaition
-                                array_push(
-                                    $granted_grps,
-                                    [
-                                        $cat_id => array_push($granted_grps[$cat_id], $row['group_id']),
-                                    ]
-                                );
+                        foreach ($conn->fetchAllAssociative($query) as $row) {
+                            // cat_id is a NOT NULL foreign key; skip defensively
+                            // if it's ever missing/non-numeric rather than using
+                            // it as an invalid array key.
+                            $cat_id = $row['cat_id'];
+                            if (! is_numeric($cat_id)) {
+                                continue;
                             }
+                            $cat_id = (int) $cat_id;
+                            if (! isset($granted_grps[$cat_id])) {
+                                $granted_grps[$cat_id] = [];
+                            }
+                            // TODO: explanaition
+                            array_push(
+                                $granted_grps,
+                                [
+                                    $cat_id => array_push($granted_grps[$cat_id], $row['group_id']),
+                                ]
+                            );
                         }
                         $query = '
           SELECT *
           FROM ' . Tables::userAccess() . '
           WHERE cat_id IN (' . $category_up . ')
         ;';
-                        $result = \Piwigo\Db\MysqliDb::query($query);
-                        if (! empty($result)) {
-                            $granted_users = [];
-                            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-                                // cat_id is a NOT NULL foreign key; skip defensively
-                                // if it's ever missing/non-numeric rather than using
-                                // it as an invalid array key.
-                                $cat_id = $row['cat_id'];
-                                if (! is_numeric($cat_id)) {
-                                    continue;
-                                }
-                                $cat_id = (int) $cat_id;
-                                if (! isset($granted_users[$cat_id])) {
-                                    $granted_users[$cat_id] = [];
-                                }
-                                // TODO: explanaition
-                                array_push(
-                                    $granted_users,
-                                    [
-                                        $cat_id => array_push($granted_users[$cat_id], $row['user_id']),
-                                    ]
-                                );
+                        foreach ($conn->fetchAllAssociative($query) as $row) {
+                            // cat_id is a NOT NULL foreign key; skip defensively
+                            // if it's ever missing/non-numeric rather than using
+                            // it as an invalid array key.
+                            $cat_id = $row['cat_id'];
+                            if (! is_numeric($cat_id)) {
+                                continue;
                             }
+                            $cat_id = (int) $cat_id;
+                            if (! isset($granted_users[$cat_id])) {
+                                $granted_users[$cat_id] = [];
+                            }
+                            // TODO: explanaition
+                            array_push(
+                                $granted_users,
+                                [
+                                    $cat_id => array_push($granted_users[$cat_id], $row['user_id']),
+                                ]
+                            );
                         }
                         $insert_granted_users = [];
                         $insert_granted_grps = [];
@@ -536,12 +570,14 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                                 }
                             }
                         }
-                        \Piwigo\Db\MysqliDb::massInserts(Tables::groupAccess(), ['group_id', 'cat_id'], $insert_granted_grps);
+                        new BatchWriter($conn)
+                            ->massInsert(Tables::groupAccess(), ['group_id', 'cat_id'], $insert_granted_grps);
                         $insert_granted_users = array_unique($insert_granted_users, SORT_REGULAR);
-                        \Piwigo\Db\MysqliDb::massInserts(Tables::userAccess(), ['user_id', 'cat_id'], $insert_granted_users);
+                        new BatchWriter($conn)
+                            ->massInsert(Tables::userAccess(), ['user_id', 'cat_id'], $insert_granted_users);
                     } else {
-                        new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))
-                            ->addPermissionOnCategory($category_ids, new UserRepository(DbConnection::build())->findAdminIds());
+                        self::permissionService($conn)
+                            ->addPermissionOnCategory($category_ids, new UserRepository($conn)->findAdminIds());
                     }
                 }
 
@@ -569,11 +605,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
 
             if (count($to_delete) > 0) {
                 if (! $simulate) {
-                    $deleteCatsConn = DbConnection::build();
-                    new CategoryService(
-                        new CategoryRepository($deleteCatsConn),
-                        new PermissionService(new PermissionRepository($deleteCatsConn), new GroupRepository($deleteCatsConn))
-                    )->deleteCategories($to_delete, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($deleteCatsConn)));
+                    self::categoryService($conn)->deleteCategories($to_delete, self::activityService($conn));
                     foreach ($to_delete_derivative_dirs as $to_delete_dir) {
                         if (is_dir($to_delete_dir)) {
                             new DerivativeCacheService()
@@ -616,14 +648,13 @@ SELECT id, path
                       160,
                       "\n"
                   ) . ')';
-                // simple_hash_from_query()'s declared return type is under-typed
-                // (array<int|string, mixed>); path is a NOT NULL varchar column, so
-                // filter defensively to guarantee real strings here.
-                $db_elements = array_filter(\Piwigo\Db\MysqliDb::query2Array($query, 'id', 'path'), is_string(...));
+                // path is a NOT NULL varchar column, so filter defensively to
+                // guarantee real strings here.
+                $db_elements = array_filter(array_column($conn->fetchAllAssociative($query), 'path', 'id'), is_string(...));
             }
 
             // next element id available
-            $next_element_id = \Piwigo\Db\MysqliDb::nextval('id', Tables::images());
+            $next_element_id = self::nextval($conn, 'id', Tables::images());
 
             $start = \Piwigo\Core\TimingHelper::getMoment();
 
@@ -655,10 +686,10 @@ SELECT id, path
 
                 $insert = [
                     'id' => $next_element_id++,
-                    'file' => \Piwigo\Db\MysqliDb::realEscapeString($filename),
-                    'name' => \Piwigo\Db\MysqliDb::realEscapeString(\Piwigo\Core\StringHelper::getNameFromFile($filename)),
+                    'file' => $filename,
+                    'name' => \Piwigo\Core\StringHelper::getNameFromFile($filename),
                     'date_available' => $dbnow,
-                    'path' => \Piwigo\Db\MysqliDb::realEscapeString($path),
+                    'path' => $path,
                     'representative_ext' => $fs[$path]['representative_ext'],
                     'storage_category_id' => $db_fulldirs[$dirname],
                     'added_by' => \Piwigo\Users\CurrentUser::get()->id,
@@ -725,8 +756,7 @@ SELECT *
   FROM ' . Tables::imageFormat() . '
   WHERE image_id IN (' . implode(',', $existing_ids) . ')
 ;';
-                    $result = \Piwigo\Db\MysqliDb::query($query);
-                    while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+                    foreach ($conn->fetchAllAssociative($query) as $row) {
                         // image_id/ext are NOT NULL columns; skip defensively rather
                         // than use a null/non-scalar value as an array key.
                         $format_image_id = $row['image_id'];
@@ -739,7 +769,8 @@ SELECT *
                             $db_formats[$format_image_id] = [];
                         }
 
-                        $db_formats[$format_image_id][$format_ext] = $row['format_id'];
+                        $row_format_id = $row['format_id'];
+                        $db_formats[$format_image_id][$format_ext] = is_scalar($row_format_id) ? (string) $row_format_id : '';
                     }
 
                     // first we search the formats that were removed
@@ -792,20 +823,22 @@ SELECT *
             if (! $simulate) {
                 // inserts all new elements
                 if (count($inserts) > 0) {
-                    \Piwigo\Db\MysqliDb::massInserts(
-                        Tables::images(),
-                        array_keys($inserts[0]),
-                        $inserts
-                    );
+                    new BatchWriter($conn)
+                        ->massInsert(
+                            Tables::images(),
+                            array_keys($inserts[0]),
+                            $inserts
+                        );
 
                     // inserts all links between new elements and their storage category
-                    \Piwigo\Db\MysqliDb::massInserts(
-                        Tables::imageCategory(),
-                        array_keys($insert_links[0]),
-                        $insert_links
-                    );
+                    new BatchWriter($conn)
+                        ->massInsert(
+                            Tables::imageCategory(),
+                            array_keys($insert_links[0]),
+                            $insert_links
+                        );
 
-                    new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('photo', $caddiables, 'add', [
+                    self::activityService($conn)->record('photo', $caddiables, 'add', [
                         'sync' => true,
                     ]);
 
@@ -817,11 +850,12 @@ SELECT *
 
                 // inserts all formats
                 if (count($insert_formats) > 0) {
-                    \Piwigo\Db\MysqliDb::massInserts(
-                        Tables::imageFormat(),
-                        array_keys($insert_formats[0]),
-                        $insert_formats
-                    );
+                    new BatchWriter($conn)
+                        ->massInsert(
+                            Tables::imageFormat(),
+                            array_keys($insert_formats[0]),
+                            $insert_formats
+                        );
                 }
 
                 if (count($formats_to_delete) > 0) {
@@ -830,7 +864,7 @@ DELETE
   FROM ' . Tables::imageFormat() . '
   WHERE format_id IN (' . implode(',', $formats_to_delete) . ')
 ;';
-                    \Piwigo\Db\MysqliDb::query($query);
+                    $conn->executeStatement($query);
                 }
             }
 
@@ -851,8 +885,7 @@ DELETE
             }
             if (count($to_delete_elements) > 0) {
                 if (! $simulate) {
-                    $imageConn = DbConnection::build();
-                    new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+                    new ImageService(new ImageRepository($conn), self::activityService($conn))
                         ->deleteElements($to_delete_elements);
                 }
                 $counts['del_elements'] = count($to_delete_elements);
@@ -870,11 +903,7 @@ DELETE
             and ($_POST['sync'] == 'dirs' or $_POST['sync'] == 'files')
             and ! $general_failure) {
             if (! $simulate) {
-                $syncConn = DbConnection::build();
-                $syncCategoryService = new CategoryService(
-                    new CategoryRepository($syncConn),
-                    new PermissionService(new PermissionRepository($syncConn), new GroupRepository($syncConn))
-                );
+                $syncCategoryService = self::categoryService($conn);
 
                 $start = \Piwigo\Core\TimingHelper::getMoment();
                 $syncCategoryService->updateCategory('all');
@@ -901,12 +930,13 @@ DELETE
                         $opts['recursive'] = false;
                     }
                 }
-                $files = new MetadataService(new MetadataRepository(DbConnection::build()))->getFilelist(
-                    $opts['category_id'],
-                    $site_id,
-                    $opts['recursive'],
-                    false
-                );
+                $files = new MetadataService(new MetadataRepository($conn))
+                    ->getFilelist(
+                        $opts['category_id'],
+                        $site_id,
+                        $opts['recursive'],
+                        false
+                    );
                 $template->append('footer_elements', '<!-- get_filelist : '
                   . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
                   . ' -->');
@@ -914,9 +944,8 @@ DELETE
 
                 $datas = [];
                 foreach ($files as $id => $file) {
-                    // get_filelist() returns hash_from_query($query, 'id'), i.e.
-                    // each row from \Piwigo\Db\MysqliDb::query2Array() with key_name set and value_name
-                    // null: always the full fetch_assoc() row array (string keys =
+                    // get_filelist() returns each row keyed by id: always the
+                    // full fetchAssociative() row array (string keys =
                     // id/path/representative_ext column names, string|null values).
                     assert(is_array($file));
                     /** @var array<string, string|null> $file */
@@ -928,15 +957,16 @@ DELETE
 
                 $counts['upd_elements'] = count($datas);
                 if (! $simulate and count($datas) > 0) {
-                    \Piwigo\Db\MysqliDb::massUpdates(
-                        Tables::images(),
-                        // fields
-                        [
-                            'primary' => ['id'],
-                            'update' => $site_reader->get_update_attributes(),
-                        ],
-                        $datas
-                    );
+                    new BatchWriter($conn)
+                        ->massUpdate(
+                            Tables::images(),
+                            // fields
+                            [
+                                'primary' => ['id'],
+                                'update' => $site_reader->get_update_attributes(),
+                            ],
+                            $datas
+                        );
                 }
                 $template->append('footer_elements', '<!-- update files : '
                   . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
@@ -983,12 +1013,13 @@ DELETE
                 }
             }
             $start = \Piwigo\Core\TimingHelper::getMoment();
-            $files = new MetadataService(new MetadataRepository(DbConnection::build()))->getFilelist(
-                $opts['category_id'],
-                $site_id,
-                $opts['recursive'],
-                $opts['only_new']
-            );
+            $files = new MetadataService(new MetadataRepository($conn))
+                ->getFilelist(
+                    $opts['category_id'],
+                    $site_id,
+                    $opts['recursive'],
+                    $opts['only_new']
+                );
 
             $template->append('footer_elements', '<!-- get_filelist : '
               . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
@@ -998,13 +1029,11 @@ DELETE
             $datas = [];
             $tags_of = [];
 
-            $tagConn = DbConnection::build();
-            $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+            $tagService = new TagService(new TagRepository($conn), self::permissionService($conn), self::activityService($conn));
 
             foreach ($files as $id => $element_infos) {
-                // get_filelist() returns hash_from_query($query, 'id'), i.e. each
-                // row from \Piwigo\Db\MysqliDb::query2Array() with key_name set and value_name null:
-                // always the full fetch_assoc() row array (string keys = column
+                // get_filelist() returns each row keyed by id: always the
+                // full fetchAssociative() row array (string keys = column
                 // names, string|null values).
                 assert(is_array($element_infos));
                 /** @var array<string, string|null> $element_infos */
@@ -1036,25 +1065,26 @@ DELETE
 
             if (! $simulate) {
                 if (count($datas) > 0) {
-                    \Piwigo\Db\MysqliDb::massUpdates(
-                        Tables::images(),
-                        // fields
-                        [
-                            'primary' => ['id'],
-                            'update' => array_unique(
-                                array_merge(
-                                    array_diff(
-                                        $site_reader->get_metadata_attributes(),
-                                        // keywords and tags fields are managed separately
-                                        ['keywords', 'tags']
-                                    ),
-                                    ['date_metadata_update']
-                                )
-                            ),
-                        ],
-                        $datas,
-                        isset($_POST['meta_empty_overrides']) ? 0 : \Piwigo\Db\MysqliDb::MASS_UPDATES_SKIP_EMPTY
-                    );
+                    new BatchWriter($conn)
+                        ->massUpdate(
+                            Tables::images(),
+                            // fields
+                            [
+                                'primary' => ['id'],
+                                'update' => array_values(array_unique(
+                                    array_merge(
+                                        array_diff(
+                                            $site_reader->get_metadata_attributes(),
+                                            // keywords and tags fields are managed separately
+                                            ['keywords', 'tags']
+                                        ),
+                                        ['date_metadata_update']
+                                    )
+                                )),
+                            ],
+                            $datas,
+                            isset($_POST['meta_empty_overrides']) ? 0 : BatchWriter::SKIP_EMPTY
+                        );
                 }
                 $tagService->setTagsOf($tags_of);
             }
@@ -1158,11 +1188,7 @@ DELETE
 SELECT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . '
   WHERE site_id = ' . $site_id;
-        $categoryConn = DbConnection::build();
-        new CategoryService(
-            new CategoryRepository($categoryConn),
-            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
-        )->displaySelectCatWrapper(
+        self::categoryService($conn)->displaySelectCatWrapper(
             $query,
             $cat_selected,
             'category_options',

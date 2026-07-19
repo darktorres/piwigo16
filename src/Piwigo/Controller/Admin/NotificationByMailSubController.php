@@ -7,7 +7,9 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -182,8 +184,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
                     $updated_param_count = 0;
                     // Update param
-                    $result = \Piwigo\Db\MysqliDb::query('select param, value from ' . Tables::config() . ' where param like \'nbm\\_%\'');
-                    while ((bool) ($nbm_user = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+                    foreach ($conn->fetchAllAssociative('select param, value from ' . Tables::config() . ' where param like \'nbm\\_%\'') as $nbm_user) {
                         // 'param' is the config table's primary key, never null.
                         if (! is_string($nbm_user['param'])) {
                             continue;
@@ -318,7 +319,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                         // check_key is the table's unique key, never null in practice.
                         continue;
                     }
-                    if (\Piwigo\Db\MysqliDb::getBoolean($nbm_user['enabled'])) {
+                    if (SqlDialect::getBoolean($nbm_user['enabled'])) {
                         $opt_true[$nbm_user['check_key']] = stripslashes((string) $nbm_user['username']) . '[' . $nbm_user['mail_address'] . ']';
                         if (isset($_POST['falsify']) and isset($_POST['cat_true']) and is_array($_POST['cat_true']) and in_array($nbm_user['check_key'], $_POST['cat_true'])) {
                             $opt_true_selected[] = $nbm_user['check_key'];
@@ -467,6 +468,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
          */
         global $base_url;
 
+        $conn = DbConnection::build();
+
         // user_fields maps generic field names to table-specific column names
         // (see include/config_default.inc.php); every value is a plain string.
         $user_fields = \Piwigo\Config\Config::userFields();
@@ -482,7 +485,7 @@ set
   ' . $user_field_email . ' = null
 where
   trim(' . $user_field_email . ') = \'\';';
-        \Piwigo\Db\MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         // null mail_address are not selected in the list
         $query = '
@@ -498,13 +501,13 @@ where
 order by
   user_id;';
 
-        $result = \Piwigo\Db\MysqliDb::query($query);
+        $rows = $conn->fetchAllAssociative($query);
 
-        if (\Piwigo\Db\MysqliDb::numRows($result) > 0) {
+        if ($rows !== []) {
             $inserts = [];
             $check_key_list = [];
 
-            while ((bool) ($nbm_user = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+            foreach ($rows as $nbm_user) {
                 // Calculate key
                 $nbm_user['check_key'] = $nbmSender->findAvailableCheckKey();
 
@@ -518,15 +521,18 @@ order by
                     'enabled' => 'false', // By default if false, set to true with specific functions
                 ];
 
+                $nbm_username = $nbm_user['username'];
+                $nbm_username = is_scalar($nbm_username) ? (string) $nbm_username : '';
                 \Piwigo\Core\PageState::current()->addInfo(l10n(
                     'User %s [%s] added.',
-                    stripslashes((string) $nbm_user['username']),
+                    stripslashes($nbm_username),
                     $nbm_user['mail_address']
                 ));
             }
 
             // Insert new nbm_users
-            \Piwigo\Db\MysqliDb::massInserts(Tables::userMailNotification(), ['user_id', 'check_key', 'enabled'], $inserts);
+            new BatchWriter($conn)
+                ->massInsert(Tables::userMailNotification(), ['user_id', 'check_key', 'enabled'], $inserts);
             // Update field enabled with specific function
             $check_key_treated = $nbmSender->doSubscribeUnsubscribeNotificationByMail(
                 true,
@@ -543,7 +549,7 @@ order by
                 $quoted_check_key_list = NotificationByMailSender::quoteCheckKeyList(array_diff($check_key_list, $check_key_treated_strings));
                 if (count($quoted_check_key_list) != 0) {
                     $query = 'delete from ' . Tables::userMailNotification() . ' where check_key in (' . implode(',', $quoted_check_key_list) . ');';
-                    $result = \Piwigo\Db\MysqliDb::query($query);
+                    $conn->executeStatement($query);
 
                     redirect($base_url . get_query_string_diff([], false), l10n('Operation in progress') . "\n" . l10n('Please wait...'));
                 }

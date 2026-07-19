@@ -73,7 +73,9 @@ final class NbmController implements ControllerInterface
         $unsubscribe = $queryParams['unsubscribe'] ?? null;
 
         $body = LegacyRenderCapture::capture(static function () use ($subscribe, $unsubscribe, $nbmSender): void {
-            global $title;
+            // $title is set and read entirely within this closure (passed
+            // straight into PageHeaderRenderer::render() below) -- no
+            // other file reads $GLOBALS['title']. Plain local, not global.
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             if (is_string($subscribe) && (bool) preg_match('/^[A-Za-z0-9]{16}$/', $subscribe)) {

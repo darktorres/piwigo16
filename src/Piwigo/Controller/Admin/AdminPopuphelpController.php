@@ -49,7 +49,9 @@ final class AdminPopuphelpController implements ControllerInterface
         $output = $queryParams['output'] ?? null;
 
         $body = LegacyRenderCapture::capture(static function () use ($rawPage, $output): void {
-            global $title;
+            // $title is set and read entirely within this closure (passed
+            // straight into PageHeaderRenderer::render() below) -- no
+            // other file reads $GLOBALS['title']. Plain local, not global.
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             if ($output !== 'content_only') {

@@ -38,7 +38,9 @@ final class NotificationController implements ControllerInterface
         $feedId = $this->findAvailableFeedId($feedRepo);
 
         $body = LegacyRenderCapture::capture(static function () use ($feedRepo, $feedId): void {
-            global $title;
+            // $title is set and read entirely within this closure (passed
+            // straight into PageHeaderRenderer::render() below) -- no
+            // other file reads $GLOBALS['title']. Plain local, not global.
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $user_id = \Piwigo\Users\CurrentUser::get()->id;

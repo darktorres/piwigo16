@@ -78,12 +78,19 @@ final class IntroSubController implements AdminSubControllerInterface
         global $pwg_loaded_plugins;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
+        // A single connection for the whole request -- mirrors the
+        // legacy single-global-mysqli-connection model this migration
+        // restores, and avoids the needless-reconnection pattern found
+        // in earlier construction-chain debt (Phase 1d finding).
+        $conn = DbConnection::build();
+
         // +-----------------------------------------------------------------------+
         // | tabs                                                                  |
         // +-----------------------------------------------------------------------+
 
         if (isset($_GET['action']) and $_GET['action'] == 'hide_newsletter_subscription') {
-            new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->updateParam('show_newsletter_subscription', 'false');
+            new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository($conn))
+                ->updateParam('show_newsletter_subscription', 'false');
             exit();
         }
 
@@ -110,8 +117,7 @@ final class IntroSubController implements AdminSubControllerInterface
         $nb_orphans = \Piwigo\Core\PageState::current()->nbOrphans; // already calculated in admin.php
 
         if (\Piwigo\Core\PageState::current()->nbPhotosTotal >= 100000) { // but has not been calculated on a big gallery, so force it now
-            $imageConn = DbConnection::build();
-            $nb_orphans = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+            $nb_orphans = new ImageService(new ImageRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)))
                 ->countOrphans();
             $nb_orphans = is_numeric($nb_orphans) ? (int) $nb_orphans : 0;
         }
@@ -132,10 +138,8 @@ SELECT COUNT(*)
   FROM ' . Tables::categories() . '
   WHERE visible =\'false\'
 ;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$locked_album] = $row;
-        if ($locked_album > 0) {
+        $locked_album = $conn->fetchOne($query);
+        if (is_numeric($locked_album) && $locked_album > 0) {
             $locked_album_url = PHPWG_ROOT_PATH . 'admin.php?page=cat_options&section=visible';
 
             $message = '<a href="' . $locked_album_url . '"><i class="icon-cone"></i>';
@@ -155,7 +159,7 @@ SELECT COUNT(*)
             'intro' => 'intro.tpl',
         ]);
 
-        if (\Piwigo\Config\Config::showNewsletterSubscription() and (bool) new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('show_newsletter_subscription', true)) {
+        if (\Piwigo\Config\Config::showNewsletterSubscription() and (bool) new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository($conn))->getParam('show_newsletter_subscription', true)) {
             $query = '
   SELECT registration_date
     FROM ' . Tables::userInfos() . '
@@ -163,28 +167,26 @@ SELECT COUNT(*)
     ORDER BY user_id ASC
     LIMIT 1
   ;';
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-            $register_date = $row !== null ? $row[0] : null;
+            $register_date = $conn->fetchOne($query);
 
             $query = '
   SELECT COUNT(*)
     FROM ' . Tables::categories() . '
   ;';
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-            assert($row !== null);
-            [$nb_cats] = $row;
+            $nb_cats = $conn->fetchOne($query);
+            $nb_cats = is_numeric($nb_cats) ? $nb_cats : 0;
 
             $query = '
   SELECT COUNT(*)
     FROM ' . Tables::images() . '
   ;';
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-            assert($row !== null);
-            [$nb_images] = $row;
+            $nb_images = $conn->fetchOne($query);
+            $nb_images = is_numeric($nb_images) ? $nb_images : 0;
 
             // To see the newsletter promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
+            $register_date_str = is_scalar($register_date) ? (string) $register_date : '';
 
-            if (strtotime((string) $register_date) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30) {
+            if (strtotime($register_date_str) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30) {
                 $currentUser = \Piwigo\Users\CurrentUser::get();
                 $user_language = $currentUser->language !== '' ? $currentUser->language : 'en_UK';
 
@@ -239,9 +241,7 @@ SELECT COUNT(*)
 SELECT COUNT(*)
   FROM ' . Tables::comments() . '
 ;';
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-            assert($row !== null);
-            [$nb_comments] = $row;
+            $nb_comments = $conn->fetchOne($query);
             $template->assign('NB_COMMENTS', $nb_comments);
         } else {
             $template->assign('NB_COMMENTS', 0);
@@ -328,11 +328,13 @@ SELECT COUNT(*)
     WHERE occured_on >= \'' . $date_string . '\'
     GROUP BY activity_day, object, action
   ;';
-            $activity_actions = \Piwigo\Db\MysqliDb::query2Array($query);
+            $activity_actions = $conn->fetchAllAssociative($query);
 
             foreach ($activity_actions as $action) {
                 // set the time to 12:00 (midday) so that it doesn't goes to previous/next day due to timezone offset
-                $day_date = new DateTime($action['activity_day'] . ' 12:00:00');
+                $activity_day = $action['activity_day'];
+                $activity_day = is_scalar($activity_day) ? (string) $activity_day : '';
+                $day_date = new DateTime($activity_day . ' 12:00:00');
 
                 $week = 0;
                 for ($i = 0; $i < $nb_weeks; $i++) {
@@ -346,7 +348,12 @@ SELECT COUNT(*)
                 $activity_counter = $action['activity_counter'] ?? null;
                 $activity_counter = is_numeric($activity_counter) ? (int) $activity_counter : 0;
 
-                $activity_last_weeks[$week][$day_nb]['details'][ucfirst((string) $action['object'])][ucfirst((string) $action['action'])] = $activity_counter;
+                $action_object = $action['object'];
+                $action_object = is_scalar($action_object) ? (string) $action_object : '';
+                $action_action = $action['action'];
+                $action_action = is_scalar($action_action) ? (string) $action_action : '';
+
+                $activity_last_weeks[$week][$day_nb]['details'][ucfirst($action_object)][ucfirst($action_action)] = $activity_counter;
 
                 // 'number' is only ever set below to an int (this same accumulation),
                 // so this is always int|missing -- the ?? 0 fallback covers both.
@@ -493,7 +500,7 @@ SELECT
   GROUP BY ext
 ;';
 
-        $file_extensions = \Piwigo\Db\MysqliDb::query2Array($query, 'ext');
+        $file_extensions = array_column($conn->fetchAllAssociative($query), null, 'ext');
 
         foreach ($file_extensions as $ext => $ext_details) {
             $type = null;
@@ -537,7 +544,7 @@ SELECT
   GROUP BY ext
 ;';
 
-        $file_extensions = \Piwigo\Db\MysqliDb::query2Array($query, 'ext');
+        $file_extensions = array_column($conn->fetchAllAssociative($query), null, 'ext');
         foreach ($file_extensions as $ext => $ext_details) {
             $type = 'Formats';
 

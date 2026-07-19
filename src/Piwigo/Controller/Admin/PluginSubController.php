@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Html\HtmlService;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -57,32 +58,37 @@ final class PluginSubController implements AdminSubControllerInterface
 
         foreach ($sections as $section) {
             if ($section === '..' or ! (bool) preg_match('/^[a-zA-Z0-9_\.-]+$/', $section)) {
-                die('invalid section token [' . htmlentities($section) . ']');
+                new HtmlService()
+                    ->fatalError('invalid section token [' . htmlentities($section) . ']');
             }
         }
 
         if (count($sections) < 2) {
-            die('Invalid plugin URL');
+            new HtmlService()
+                ->fatalError('Invalid plugin URL');
         }
 
         $plugin_id = $sections[0];
 
         if (! (bool) preg_match('/^[\w-]+$/', $plugin_id)) {
-            die('Invalid plugin identifier');
+            new HtmlService()
+                ->fatalError('Invalid plugin identifier');
         }
 
         /** @var array<string, mixed> $pwg_loaded_plugins */
         global $pwg_loaded_plugins;
 
         if (! isset($pwg_loaded_plugins[$plugin_id])) {
-            die('Invalid URL - plugin ' . $plugin_id . ' not active');
+            new HtmlService()
+                ->fatalError('Invalid URL - plugin ' . $plugin_id . ' not active');
         }
 
         $filename = \Piwigo\Admin\PluginLoader::pluginsPath() . implode('/', $sections);
         if (is_file($filename)) {
             include_once $filename;
         } else {
-            die('Missing file ' . htmlentities($filename));
+            new HtmlService()
+                ->fatalError('Missing file ' . htmlentities($filename));
         }
     }
 }

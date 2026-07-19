@@ -60,6 +60,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         global $my_base_url;
 
         $htmlRenderer = new HtmlService();
+        $conn = DbConnection::build();
 
         new \Piwigo\Validation\InputValidator()
             ->validate('cat_id', $_POST, false, ValidationPattern::ID);
@@ -74,7 +75,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
                 ->checkOrFail($htmlRenderer);
             $permalink = $_POST['permalink'] ?? null;
             $permalink = is_string($permalink) ? $permalink : '';
-            $permalink_service = new PermalinkService(new PermalinkRepository(DbConnection::build()));
+            $permalink_service = new PermalinkService(new PermalinkRepository($conn));
             if (empty($permalink)) {
                 $permalink_service->deleteCatPermalink($post_cat_id, isset($_POST['save']));
             } else {
@@ -85,7 +86,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail($htmlRenderer);
             $delete_permanent = is_string($_GET['delete_permanent']) ? $_GET['delete_permanent'] : '';
-            new PermalinkService(new PermalinkRepository(DbConnection::build()))
+            new PermalinkService(new PermalinkRepository($conn))
                 ->deleteOldPermalinkByValue($delete_permanent);
         }
 
@@ -106,9 +107,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
 SELECT COUNT(*)
   FROM ' . Tables::categories() . '
 ;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$nb_cats] = $row;
+        $nb_cats = $conn->fetchOne($query);
         $template->assign(
             [
                 'nb_cats' => $nb_cats,
@@ -122,10 +121,9 @@ SELECT
   uppercats, global_rank
 FROM ' . Tables::categories();
 
-        $categoryConn = DbConnection::build();
         new CategoryService(
-            new CategoryRepository($categoryConn),
-            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+            new CategoryRepository($conn),
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
         )->displaySelectCatWrapper($query, $selected_cat, 'categories', $htmlRenderer, $template, false);
 
         $pwg_token = new \Piwigo\Csrf\CsrfService()
@@ -149,8 +147,7 @@ SELECT id, permalink, uppercats, global_rank
             $query .= ' ORDER BY ' . $sort_by[0];
         }
         $categories = [];
-        $result = \Piwigo\Db\MysqliDb::query($query);
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+        foreach ($conn->fetchAllAssociative($query) as $row) {
             // uppercats is NOT NULL in the schema; is_string() is a defensive
             // narrowing of the driver's generic string|null column type, not a
             // documented nullability.
@@ -180,13 +177,14 @@ SELECT id, permalink, uppercats, global_rank
         if ((bool) count($sort_by)) {
             $query .= ' ORDER BY ' . $sort_by[0];
         }
-        $result = \Piwigo\Db\MysqliDb::query($query);
         $deleted_permalinks = [];
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-            // cat_id is NOT NULL in the schema; is_string() is a defensive
-            // narrowing of the driver's generic string|null column type, not a
-            // documented nullability.
-            $cat_id_str = is_string($row['cat_id']) ? $row['cat_id'] : '';
+        foreach ($conn->fetchAllAssociative($query) as $row) {
+            // cat_id is NOT NULL in the schema; DBAL's native int/float
+            // casting means this can now arrive as a native int rather
+            // than always a string, so accept both instead of only
+            // is_string().
+            $cat_id_raw = $row['cat_id'];
+            $cat_id_str = (is_int($cat_id_raw) || is_string($cat_id_raw)) ? (string) $cat_id_raw : '';
             $row['name'] = $htmlRenderer->getCatDisplayNameCache($cat_id_str);
             $row['U_DELETE'] =
                 add_url_params(

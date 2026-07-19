@@ -85,15 +85,17 @@ final class IdentificationController implements ControllerInterface
                 $username = is_string($_POST['username'] ?? null) ? $_POST['username'] : '';
                 $password = is_string($_POST['password'] ?? null) ? $_POST['password'] : null;
 
+                $conn = \Piwigo\Db\DbConnection::build();
                 if (\Piwigo\Config\Config::insensitiveCaseLogon()) {
-                    $username = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->searchCaseUsername($username);
+                    $username = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService())
+                        ->searchCaseUsername($username);
                 }
 
                 $redirect_to = is_string($_POST['redirect'] ?? null) ? urldecode($_POST['redirect']) : '';
                 $remember_me_raw = $_POST['remember_me'] ?? null;
                 $remember_me = isset($_POST['remember_me']) && is_scalar($remember_me_raw) && (string) $remember_me_raw === '1';
 
-                if (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->tryLogUser($username, $password, $remember_me)) {
+                if (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())->tryLogUser($username, $password, $remember_me)) {
                     // security (level 2): force redirect within Piwigo. We
                     // redirect to absolute root url, including http(s)://,
                     // without the cookie path, concatenated with
@@ -123,7 +125,9 @@ final class IdentificationController implements ControllerInterface
         }
 
         $body = LegacyRenderCapture::capture(static function () use ($redirect_to, $errors): void {
-            global $title;
+            // $title is set and read entirely within this closure (passed
+            // straight into PageHeaderRenderer::render() below) -- no
+            // other file reads $GLOBALS['title']. Plain local, not global.
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('Identification');

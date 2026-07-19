@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Config\Config;
+use Piwigo\Html\HtmlService;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -27,21 +28,24 @@ final class ThemeSubController implements AdminSubControllerInterface
     {
         $theme_raw = $_GET['theme'] ?? null;
         if (! is_string($theme_raw) || $theme_raw === '') {
-            die('Invalid theme URL');
+            new HtmlService()
+                ->fatalError('Invalid theme URL');
         }
         $theme = $theme_raw;
 
         $fs_themes = new ExtensionScanner()
             ->scan(ExtensionType::Theme);
         if (! in_array($theme, array_keys($fs_themes), true)) {
-            die('Invalid theme');
+            new HtmlService()
+                ->fatalError('Invalid theme');
         }
 
         $filename = Config::themesPath() . $theme . '/admin/admin.inc.php';
         if (is_file($filename)) {
             include_once $filename;
         } else {
-            die('Missing file ' . $filename);
+            new HtmlService()
+                ->fatalError('Missing file ' . $filename);
         }
     }
 }

@@ -35,7 +35,9 @@ final class AboutController implements ControllerInterface
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         $body = LegacyRenderCapture::capture(static function (): void {
-            global $title;
+            // $title is set and read entirely within this closure (passed
+            // straight into PageHeaderRenderer::render() below) -- no
+            // other file reads $GLOBALS['title']. Plain local, not global.
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('About Piwigo');

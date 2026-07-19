@@ -9,7 +9,9 @@ use Piwigo\Admin\CatModifyPageRenderer;
 use Piwigo\Admin\CatPermPageRenderer;
 use Piwigo\Admin\ElementSetRanksPageRenderer;
 use Piwigo\Admin\tabsheet;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -49,9 +51,10 @@ SELECT *
   FROM ' . Tables::categories() . '
   WHERE id = ' . $cat_id . '
 ;';
-        $category = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
-        if (! isset($category['id'])) {
-            die('unknown album');
+        $category = DbConnection::build()->fetchAssociative($query);
+        if ($category === false || ! isset($category['id'])) {
+            new HtmlService()
+                ->fatalError('unknown album');
         }
         $GLOBALS['category'] = $category;
 
@@ -67,9 +70,11 @@ SELECT *
         if (! is_string($category_name)) {
             $category_name = is_string($category['name']) ? $category['name'] : '';
         }
+        $category_id_display = $category['id'];
+        $category_id_display = is_scalar($category_id_display) ? (string) $category_id_display : '';
         $template->assign([
             'ADMIN_PAGE_TITLE' => l10n('Edit album') . ' <strong>' . $category_name . '</strong>',
-            'ADMIN_PAGE_OBJECT_ID' => '#' . $category['id'],
+            'ADMIN_PAGE_OBJECT_ID' => '#' . $category_id_display,
         ]);
 
         if ($tab === 'properties') {

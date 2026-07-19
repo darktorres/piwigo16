@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Admin\UpdatesPwgPageRenderer;
+use Piwigo\Html\HtmlService;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -57,7 +58,8 @@ final class UpdatesSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         if (! \Piwigo\Config\Config::enableExtensionsInstall() and ! \Piwigo\Config\Config::enableCoreUpdate()) {
-            die('update system is disabled');
+            new HtmlService()
+                ->fatalError('update system is disabled');
         }
 
         // Consumed by CoreTabs::addCoreTabs()'s own 'updates' case via

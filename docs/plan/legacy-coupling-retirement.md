@@ -625,6 +625,54 @@ them when reading commit history or the replay manifest.
   **Phase 1h (Admin) is now fully complete — all 81 files across 18
   sub-batches DI+DBAL migrated.**
 
+- **Phase 1i (Install/Upgrade orchestration). DONE, commit `076e411c5`.**
+  `InstallService`/`InstallWizard`/`UpgradeRunner`/`UpgradeService`/
+  `UpgradeFeedRunner` (5 files) plus their `upgrade.php`/`install.php`
+  entry-shell call sites. Found before touching anything: the plan's own
+  "trivial 1:1 swap" framing for `MysqliDb::connect()` was wrong —
+  `UpgradeRunner::performUpgrade()`/`UpgradeFeedRunner::run()` dispatch
+  into the 151 frozen `DbPatch`/`VersionUpgrade` classes (Phase 1j, not
+  yet migrated), which still depend on the shared `$mysqli` global
+  `connect()` establishes. Kept `MysqliDb::connect()`/`checkVersion()`/
+  `checkCharset()` exactly as-is; built a real DBAL `Connection` right
+  after each succeeds and threaded it through for every other `MysqliDb::`
+  call site instead — safe because `InstallWizard::boot()` already seeds
+  `Config`'s `db_*` overrides with the same submitted credentials before
+  either connection is built (reused an existing earlier-phase fix, not
+  duplicated). Collapsed a redundant double-query execution in
+  `UpgradeService::checkUpgradeAccessRights()` as a natural side effect of
+  the DBAL retarget (`MysqliDb::query($query)` run once and discarded,
+  then re-run inside `fetchAssoc()` — now one `fetchAssociative()` call).
+  **3 real bugs found via a real fixture-regen run
+  (`composer test:visual` + the opt-in `RegenerateFixtureTest`, not
+  assumed):**
+  1. `CurrentUser`/`CurrentLogger` were never guest/logger-initialized on
+     these 3 no-`Kernel::boot()` entry paths — a theme's missing-
+     screenshot fallback, then `UserService::buildUser()`'s activity log,
+     each threw an uncaught `LogicException` the instant a retargeted
+     consumer touched either singleton. Fixed with `CurrentUser::
+     attachGlobals()` (a safe idempotent guest default, designed for
+     exactly this) plus the same `Logger` construction recipe
+     `RequestBootstrap::connect()` already uses.
+  2. `UserService::createUserInfos()` (outside this phase's own file
+     scope, but blocking its verification) gated `Config::webmasterId()`/
+     `guestId()`/`defaultUserId()` behind `Config::has()`, even though all
+     three already have safe hardcoded fallback defaults matching
+     `config_default.inc.php`. On a no-boot path those keys are never
+     explicitly loaded, so `has()` was false and every created user —
+     including the webmaster and guest accounts `install.php` itself just
+     created — silently fell through to `'normal'` status. Fixed by
+     dropping the redundant `has()` gate.
+  3. The VR baseline for `admin-album` needed updating after the fixture
+     regen — decoded and pixel-compared both PNGs before touching
+     anything: a real "N weeks ago" label shift from the regen running on
+     a later real calendar date than the previous baseline capture, not a
+     regression.
+  Full verification gate green (deptrac 0, ECS clean, PHPStan baseline
+  regenerated — 3179 errors, ratio drift only — Unit/Arch 604, Contract
+  93, Integration 620, Browser 64+1 skipped, Visual 32/32, plus the
+  fixture-regen test itself: 134 assertions).
+
 ## What direct investigation found (the basis for phase sequencing)
 
 **DI infrastructure already exists and works — it's just unused.**
@@ -888,16 +936,48 @@ conversion and DI/construction changes don't apply there the same way.
    BatchUploadJob`) callers with no HTML response pipeline to route a
    `HtmlService::fatalError()` through, matching `ImageDerivativeController`'s
    established exception.
-9. **1i — Install/Upgrade orchestration** (`InstallService`,
-   `InstallWizard`, `UpgradeRunner`, `UpgradeService`,
-   `UpgradeFeedRunner` — the orchestration classes, not the frozen
-   scripts). `InstallService::executeSqlfile()` already parses/executes
-   SQL statement-by-statement (confirmed by reading it) — trivial 1:1 swap
-   to `Connection::executeStatement()`, no multi-statement-blob problem.
-   Needs care since this runs before `Config::` is fully populated from a
-   real install; `DbConnection::build()` is a static factory usable
-   without the container, so this is not actually blocked, just needs the
-   right sequencing confirmed per call site.
+9. **1i — Install/Upgrade orchestration (`InstallService`, `InstallWizard`,
+   `UpgradeRunner`, `UpgradeService`, `UpgradeFeedRunner` — the
+   orchestration classes, not the frozen scripts). DONE, commit
+   `076e411c5`.** The "trivial 1:1 swap" framing above was wrong on one
+   point, found by reading the full call graph before touching anything:
+   `MysqliDb::connect()`/`checkVersion()`/`checkCharset()` could **not**
+   simply become `DbConnection::build()`, because `UpgradeRunner::
+   performUpgrade()`/`UpgradeFeedRunner::run()` dispatch into the 151
+   frozen `DbPatch`/`VersionUpgrade` classes (Phase 1j, not yet migrated),
+   which still depend on the shared `$mysqli` global those calls
+   establish. Kept the legacy connect calls exactly as-is; a real DBAL
+   `Connection` is additionally built right after each one succeeds and
+   threaded through (constructor param for `UpgradeRunner`, per-method
+   param for `UpgradeService`'s static methods) for every *other*
+   `MysqliDb::` call site in these 5 files — safe because `InstallWizard::
+   boot()` already seeds `Config`'s `db_*` overrides with the same
+   submitted credentials before either connection is built (a pre-existing
+   fix from an earlier phase, reused here rather than duplicated).
+   `upgrade.php`'s own direct `MysqliDb::` call sites were retargeted the
+   same way; its `UpgradeRunner`/`UpgradeService::` call sites updated for
+   the new signatures. **3 real bugs found via a real fixture-regen run
+   (`composer test:visual` + the opt-in `RegenerateFixtureTest`, not
+   assumed):** `CurrentUser`/`CurrentLogger` were never guest/logger-
+   initialized on these 3 no-`Kernel::boot()` entry paths (a themes
+   screenshot fallback, then `UserService::buildUser()`'s activity log,
+   each threw an uncaught `LogicException` the instant a retargeted
+   consumer touched either singleton) — fixed with `CurrentUser::
+   attachGlobals()` plus the same `Logger` construction recipe
+   `RequestBootstrap::connect()` already uses; and `UserService::
+   createUserInfos()` (outside this phase's own file scope, but blocking
+   its verification) gated `Config::webmasterId()`/`guestId()`/
+   `defaultUserId()` behind `Config::has()` even though all three already
+   have safe hardcoded fallback defaults — on a no-boot path those keys
+   are never explicitly loaded, so `has()` was false and every created
+   user, including the webmaster and guest accounts `install.php` itself
+   just created, silently fell through to `'normal'` status. VR baseline
+   for `admin-album` updated after decoding and comparing both PNGs — a
+   real "N weeks ago" label shift from the regen running on a later
+   real calendar date, not a regression. Full gate green (deptrac 0, ECS
+   clean, PHPStan baseline regenerated — 3179 errors, ratio drift only —
+   Unit/Arch 604, Contract 93, Integration 620, Browser 64+1 skipped,
+   Visual 32/32, plus the fixture-regen test itself: 134 assertions).
 10. **1j — The 156 frozen DbPatch/VersionUpgrade files: `MysqliDb::` swap
     only.** Last and most mechanical once the pattern is proven
     everywhere else; each still needs individual review since every one

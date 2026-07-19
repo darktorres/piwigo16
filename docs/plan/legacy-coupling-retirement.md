@@ -208,7 +208,7 @@ them when reading commit history or the replay manifest.
   Zero manual `new *Repository(`/`new *Service(` chains found anywhere in
   the domain (matches the original table's very low "New-chains: 1").
   Commit `456241849`.
-- **Phase 1f (Ws) — IN PROGRESS, sub-batch 6 of ~7 done (Categories).**
+- **Phase 1f (Ws) — DONE, all 7 sub-batches complete.**
   24 files/12396 lines total, by far the largest domain in
   this plan — confirmed needs the multi-batch breakdown the plan already
   anticipated. Sub-batch 1 investigated the small/shared files first:
@@ -423,12 +423,51 @@ them when reading commit history or the replay manifest.
   several loop variables that collided with earlier same-named
   variables still in scope (PHPStan's "foreach overwrites $row" check,
   now hit 4 times across this phase). Commit `115193ef6`.
-  Remaining sub-batches: Images (3034 lines, the biggest single file in
-  the plan — final sub-batch of this phase) — `WsDefaultMethods.php`
-  (2357 lines) confirmed clean already (pure method-registration table,
-  zero MysqliDb/globals/die-exit/manual-chains), `Protocol/*` encoders +
-  `PwgNamedArray`/`PwgNamedStruct`/`PwgRequestHandler` not yet checked
-  but absent from every grep so far, likely clean too.
+  Sub-batch 7 (Images, final): `PwgImages.php` (3034 lines, 74
+  `MysqliDb::` calls — the single largest file in this entire plan)
+  fully migrated. Every pattern from steps 1-6 reused at the largest
+  scale yet. Added 4 shared private static helpers for chains repeated
+  across the whole file (12x `PermissionService`, 7x `ImageService`, 5x
+  `TagService`, 2x standalone `ActivityService`) — all connection-as-
+  param, and `tagService()`'s consolidation also fixed the original call
+  sites' `ActivityService` param building off a fresh, unrelated
+  `DbConnection::build()` instead of the shared `$conn`, removing a
+  needless extra connection per call in the process.
+  **Investigated the 5 `die()` calls** in `upload()` (the chunked-upload
+  JSON-RPC handler): a full-codebase grep confirmed this exact raw
+  `{"jsonrpc":"2.0",...}` error shape is produced nowhere else in the
+  codebase, meaning a hardcoded JS chunked-upload client depends on it
+  directly, bypassing the normal `PwgError`/response-format pipeline
+  entirely — same structural precedent as `PwgServer.php`'s own
+  `die(0)` (Phase 1f step 1). Left unchanged, not converted to
+  `PwgError` returns. Also confirmed `uploadAsync()`'s `global $user;`
+  is genuinely load-bearing (`$user['level']` read/written for a
+  documented "trick to bypass get_sql_condition_FandF" dual-write,
+  already paired with a `CurrentUser::set()` sync per Track A5) — left
+  unchanged. Dropped one more dead `realEscapeString()` (`setInfo()`'s
+  `tag_list` batch, confirmed via `TagService::getTagIds()`/
+  `tagIdFromTagName()` already routing through parameterized
+  `TagRepository` queries), and kept one genuinely load-bearing
+  `realEscapeString()`-equivalent via `Connection::quote()`
+  (`upload()`'s `update_mode` filename lookup, still spliced into raw
+  SQL). Fixed the remaining real PHPStan errors — `is_numeric()`/
+  `is_scalar()` row narrowing, array-key type guards, a
+  `syncMetadata()` `list<int>` reindex via `array_values()`, param
+  narrowing for `UploadService::addUploadedFile()`/`addFormat()` — no
+  new regression classes, all instances of patterns already established
+  earlier in this phase. Commit `00a503a59`.
+
+  **Phase 1f (Ws) is now fully complete — all 24 files across 7
+  sub-batches DI+DBAL migrated.** `WsDefaultMethods.php` (2357 lines)
+  confirmed clean (pure method-registration table, zero MysqliDb/
+  globals/die-exit/manual-chains); `Protocol/*` encoders +
+  `PwgNamedArray`/`PwgNamedStruct`/`PwgRequestHandler` absent from every
+  grep across all 7 sub-batches, confirmed clean by omission. One
+  cross-cutting gap remains explicitly tracked but deliberately
+  unfixed: `ConfigDb.php`'s own internal `MysqliDb::` usage (found in
+  step 1, `PwgExtensions.php`'s escaping still depends on it) has no
+  assigned Phase 1 sub-phase in this plan — flagged for a future phase,
+  not this one's scope.
 
 ## What direct investigation found (the basis for phase sequencing)
 
@@ -638,12 +677,19 @@ conversion and DI/construction changes don't apply there the same way.
    since they're touched early anyway), then apply that same criteria
    consistently in whichever sub-phase later encounters each of the
    other 11 classes — don't defer all 15 to this one sub-phase.
-6. **1f — Ws (24 files, 308 call sites, 9 MysqliDb files).** Each WS
-   method independently assembles its own service graph — expect heavy
-   de-duplication once real constructors land. Needs its own multi-batch
-   breakdown once started (by WS resource area: images/categories/users/
-   tags/comments/groups, matching the already-successful P23 batch 8e
-   grouping).
+6. **1f — Ws (24 files, 308 call sites, 9 MysqliDb files). DONE, 7
+   commits** (infrastructure+Comments, Permissions+Groups, Tags, Users,
+   Core, Categories, Images) — see Progress log above. Each WS method
+   independently assembled its own service graph, as anticipated —
+   heavy de-duplication landed via connection-as-param private static
+   helpers, reused/re-established per sub-batch (`activityService()`,
+   `permissionService()`, `tagService()`, `imageService()`,
+   `authService()`, `apiKeyService()`, `groupService()`, `categoryService()`
+   depending on the file). One real pre-existing bug found and fixed
+   (`PwgCore::ratesDelete()` never executed the DELETE it built — an
+   upstream legacy bug, not introduced by this rewrite). One
+   cross-cutting gap flagged but deliberately not fixed here (`ConfigDb.php`'s
+   own `MysqliDb::` usage has no assigned Phase 1 sub-phase).
 7. **1g — Controller (60 files, 326 call sites, 28 die/exit hits — the
    single densest caller layer).** Batch by controller/feature area,
    same rhythm as 1f.

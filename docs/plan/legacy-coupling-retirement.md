@@ -469,6 +469,39 @@ them when reading commit history or the replay manifest.
   assigned Phase 1 sub-phase in this plan — flagged for a future phase,
   not this one's scope.
 
+- **Phase 1g (Controller) — started.** 60 files, batched by
+  controller/feature area following the same rhythm as 1f, tracked as
+  10 sub-batches.
+  - **Step 1 — Gallery/Picture cluster. DONE, commit `58b8604af`.**
+    `PictureController.php` (1357 lines, 11 MysqliDb call sites, ~20
+    manual construction chains — the single largest per-file MysqliDb
+    count outside Ws) and `GalleryController.php` (620 lines, ~15
+    manual chains, zero MysqliDb) migrated. `ImageDerivativeController.php`
+    audited and confirmed already fully migrated (part of the earlier
+    i.php FrankenPHP-exception retirement work, see the P24 memory
+    checkpoint) — zero changes needed, a genuine "already clean" file
+    rather than an oversight. Both controllers collapse repeated
+    PermissionService/CategoryService/TagService/ActivityService/
+    UserService/CommentService chains into private static helpers
+    (connection-as-param), and consolidate every `DbConnection::build()`
+    call in the request down to one shared `Connection` threaded through
+    the closure — restoring the legacy single-global-mysqli-connection
+    model instead of the needless-reconnection pattern earlier
+    chain-construction debt left behind (Phase 1d's own finding).
+    Removed 3 dead globals in `PictureController.php`
+    (`$title`/`$refresh`/`$url_link` — set and read entirely within the
+    closure, confirmed via a full-`src` grep that no other file reads
+    `$GLOBALS` on any of them) and 1 in `GalleryController.php`
+    (`$title`, same reasoning). Kept `$url_self`/`$picture`/
+    `$related_categories` (real bridges to `PictureCommentRenderer`/
+    `PictureRateRenderer`/`PictureMetadataRenderer`, each with their own
+    `global` read) and `$filter` (the documented cross-cutting cluster,
+    Phase 2's job) unchanged — verified via grep, not assumed. Full
+    verification gate green (deptrac 0, ECS clean, PHPStan baseline
+    regen — ratio drift only, Unit/Arch 604, Contract 93, Integration
+    620, Browser 64+1 skipped, Visual 32, both via the real `composer
+    test:browser`/`composer test:visual` scripts).
+
 ## What direct investigation found (the basis for phase sequencing)
 
 **DI infrastructure already exists and works — it's just unused.**

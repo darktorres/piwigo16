@@ -142,7 +142,7 @@ them when reading commit history or the replay manifest.
   write is reached from `Bootstrap/UserBootstrap.php`'s own login flow —
   verifying it's truly dead needs tracing Bootstrap's execution order,
   Phase 1d's own territory, not a quick grep. Left untouched; worth
-  revisiting once 1d is underway. Commit TBD.
+  revisiting once 1d is underway. Commit `412ff004e`.
 - **Next up: Phase 1d** (Bootstrap, 9 files/51 call sites — the
   widest-blast-radius single sub-phase, see its own note above) — not yet
   started.

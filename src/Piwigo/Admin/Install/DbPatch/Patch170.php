@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\ConfigDb;
 
 /**
@@ -31,7 +32,7 @@ final class Patch170 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         // we set it to false in this upgrade script, as opposed to the default value
         // for a new installation, because it was the default behavior before Piwigo 14

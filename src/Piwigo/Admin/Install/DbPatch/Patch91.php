@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,7 +32,7 @@ final class Patch91 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         // Existing adviser become normal user
         $query = '
@@ -42,7 +42,7 @@ WHERE status IN ('webmaster', 'admin')
   AND adviser = 'true'
 ;";
 
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         // Remove adviser column
         $query = '
@@ -50,7 +50,7 @@ ALTER TABLE ' . Tables::userInfos() . '
 DROP COLUMN adviser
 ;';
 
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n"
         . $this->description()

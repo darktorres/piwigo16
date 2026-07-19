@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Cache\UserCacheInvalidator;
-use Piwigo\Db\MysqliDb;
 use Piwigo\Db\Tables;
 
 /**
@@ -35,20 +35,20 @@ final class Patch69 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = '
 ALTER TABLE ' . Tables::userCacheCategories() . '
   ADD COLUMN date_last datetime default NULL AFTER cat_id,
   ADD COLUMN nb_images mediumint(8) unsigned NOT NULL default 0 AFTER max_date_last';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = '
 ALTER TABLE ' . Tables::categories() . '
   DROP COLUMN date_last,
   DROP COLUMN nb_images
   ';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         UserCacheInvalidator::invalidate(); // just to force recalculation
 

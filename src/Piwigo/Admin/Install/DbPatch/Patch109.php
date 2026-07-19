@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -34,7 +34,7 @@ final class Patch109 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /** @var array<string, mixed> $conf */
         global $conf;
@@ -44,13 +44,13 @@ final class Patch109 implements DbPatchInterface
         } else {
             $q = 'ALTER TABLE ' . Tables::images() . ' RENAME average_rate TO rating_score';
         }
-        MysqliDb::query($q);
+        $conn->executeStatement($q);
 
         $q = 'UPDATE ' . Tables::categories() . " SET image_order=REPLACE(image_order, 'average_rate', 'rating_score')";
-        MysqliDb::query($q);
+        $conn->executeStatement($q);
 
         $q = 'UPDATE ' . Tables::config() . " SET value=REPLACE(value, 'average_rate', 'rating_score')
 WHERE param IN ('picture_informations', 'order_by', 'order_by_inside_category')";
-        MysqliDb::query($q);
+        $conn->executeStatement($q);
     }
 }

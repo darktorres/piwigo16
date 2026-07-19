@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Cache\UserCacheInvalidator;
-use Piwigo\Db\MysqliDb;
 use Piwigo\Db\Tables;
 
 /**
@@ -33,12 +33,12 @@ final class Patch136 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = '
 ALTER TABLE ' . Tables::userCacheCategories() . '
   ADD COLUMN nb_categories mediumint(8) unsigned NOT NULL default 0 AFTER count_images';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         UserCacheInvalidator::invalidate();
 

@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,7 +32,7 @@ final class Patch139 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         // add fields
         $query = '
@@ -40,19 +40,19 @@ ALTER TABLE ' . Tables::images() . '
   ADD `latitude` DOUBLE(8, 6) DEFAULT NULL,
   ADD `longitude` DOUBLE(9, 6) DEFAULT NULL
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         // add index
         $query = '
 ALTER TABLE ' . Tables::images() . '
   ADD INDEX `images_i6` (`latitude`)
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         // search for old "lat" field
         $query = 'SHOW COLUMNS FROM ' . Tables::images() . ' LIKE "lat";';
 
-        if (MysqliDb::numRows(MysqliDb::query($query))) {
+        if ($conn->fetchAllAssociative($query) !== []) {
             // duplicate non-null values
             $query = '
 UPDATE ' . Tables::images() . '
@@ -61,7 +61,7 @@ UPDATE ' . Tables::images() . '
   WHERE lat IS NOT NULL
     AND lon IS NOT NULL
 ;';
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         echo "\n" . $this->description() . "\n";

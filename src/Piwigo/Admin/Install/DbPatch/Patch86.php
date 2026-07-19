@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Install\InstallService;
 
 /**
@@ -33,7 +34,7 @@ final class Patch86 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         InstallService::activateCoreThemes();
 

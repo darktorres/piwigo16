@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,21 +32,21 @@ final class Patch126 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = '
 UPDATE ' . Tables::userInfos() . '
   SET language = \'sl_SI\'
   WHERE language = \'sl_SL\'
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = '
 UPDATE ' . Tables::languages() . '
   SET id = \'sl_SI\'
   WHERE id = \'sl_SL\'
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n" . $this->description() . "\n";
     }

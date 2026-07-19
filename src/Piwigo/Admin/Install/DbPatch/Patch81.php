@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -35,7 +35,7 @@ users can modify/delete their owns comments';
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = '
 INSERT INTO ' . Tables::config() . ' (param,value,comment)
@@ -48,7 +48,7 @@ INSERT INTO ' . Tables::config() . ' (param,value,comment)
   (\'email_admin_on_comment_deletion\',\'false\',
     \'Send an email to the administrators when a comment is deleted\')
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n"
         . $this->description()

@@ -11,7 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,10 +33,10 @@ final class Patch150 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         // we use PREFIX_TABLE, in case Piwigo uses an external user table
-        MysqliDb::query('
+        $conn->executeStatement('
 ALTER TABLE `' . Tables::historySummary() . '`
   ADD COLUMN `history_id_from` int(10) unsigned default NULL,
   ADD COLUMN `history_id_to` int(10) unsigned default NULL
@@ -50,25 +51,28 @@ SELECT
   LIMIT 1
 ;';
         // note : much faster than searching MAX(ID), ie on my big sample 14 seconds Vs 2 seconds
-        $history_lines = MysqliDb::query2Array($query);
+        $history_lines = $conn->fetchAllAssociative($query);
         if (count($history_lines) > 0) {
             $last_summarized = $history_lines[0];
 
-            [$year, $month, $day] = explode('-', (string) $last_summarized['date']);
-            [$hour] = explode(':', (string) $last_summarized['time']);
+            $summarized_date = is_scalar($last_summarized['date']) ? (string) $last_summarized['date'] : '';
+            $summarized_time = is_scalar($last_summarized['time']) ? (string) $last_summarized['time'] : '';
+            [$year, $month, $day] = explode('-', $summarized_date);
+            [$hour] = explode(':', $summarized_time);
 
-            MysqliDb::singleUpdate(
-                Tables::historySummary(),
-                [
-                    'history_id_to' => $last_summarized['id'],
-                ],
-                [
-                    'year' => $year,
-                    'month' => $month,
-                    'day' => $day,
-                    'hour' => $hour,
-                ]
-            );
+            new BatchWriter($conn)
+                ->singleUpdate(
+                    Tables::historySummary(),
+                    [
+                        'history_id_to' => $last_summarized['id'],
+                    ],
+                    [
+                        'year' => $year,
+                        'month' => $month,
+                        'day' => $day,
+                        'hour' => $hour,
+                    ]
+                );
 
             // in case this script would update no summary line, it would mean the
             // summary has been purged and will be rebuild from scratch, based on the

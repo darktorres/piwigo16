@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,14 +32,14 @@ final class Patch64 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = '
 REPLACE INTO ' . Tables::plugins() . '
   (id, state)
   VALUES (\'c13y_upgrade\', \'active\')
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n"
         . '"' . $this->description() . '" ended'

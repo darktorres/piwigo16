@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 
 /**
  * Former install/upgrade_1.6.0.php (P23 sub-batch 8g-4): upgrade from
@@ -26,7 +26,7 @@ final class UpgradeFrom_1_6_0 implements VersionUpgradeInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /** @var string $prefixeTable */
         global $prefixeTable;
@@ -43,11 +43,11 @@ ALTER TABLE ' . $prefixeTable . 'users
         ];
 
         foreach ($queries as $query) {
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         // now we upgrade from 1.6.2
         new UpgradeFrom_1_6_2()
-            ->apply();
+            ->apply($conn);
     }
 }

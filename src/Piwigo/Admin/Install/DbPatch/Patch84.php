@@ -11,7 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,25 +33,24 @@ final class Patch84 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = '
 ALTER TABLE ' . Tables::userInfos() . '
   CHANGE COLUMN template theme varchar(255) NOT NULL default \'Sylvia\'
 ;';
 
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = '
 SELECT user_id, theme
   FROM ' . Tables::userInfos() . '
 ;';
 
-        $result = MysqliDb::query($query);
-
         $users = [];
-        while ($row = MysqliDb::fetchAssoc($result)) {
-            [$user_template, $user_theme] = explode('/', (string) $row['theme']);
+        foreach ($conn->fetchAllAssociative($query) as $row) {
+            $theme_value = is_scalar($row['theme']) ? (string) $row['theme'] : '';
+            [$user_template, $user_theme] = explode('/', $theme_value);
 
             switch ($user_template) {
                 case 'yoga':
@@ -85,14 +85,15 @@ SELECT user_id, theme
             );
         }
 
-        MysqliDb::massUpdates(
-            Tables::userInfos(),
-            [
-                'primary' => ['user_id'],
-                'update' => ['theme'],
-            ],
-            $users
-        );
+        new BatchWriter($conn)
+            ->massUpdate(
+                Tables::userInfos(),
+                [
+                    'primary' => ['user_id'],
+                    'update' => ['theme'],
+                ],
+                $users
+            );
 
         echo "\n"
         . $this->description()

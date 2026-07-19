@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,9 +32,9 @@ final class Patch154 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
-        MysqliDb::query('
+        $conn->executeStatement('
 CREATE TABLE `' . Tables::activity() . '` (
   `activity_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `object` varchar(255) NOT NULL,

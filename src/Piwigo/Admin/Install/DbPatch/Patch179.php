@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,11 +32,11 @@ final class Patch179 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         // For API KEY, add a column last_notified_on, to know when the last email (for the moment)
         // notifying of an upcoming expiration date was sent.
-        MysqliDb::query(
+        $conn->executeStatement(
             'ALTER TABLE `' . Tables::userAuthKeys() . '`
   ADD COLUMN `last_notified_on` datetime DEFAULT NULL
 ;'

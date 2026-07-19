@@ -11,7 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -33,17 +34,18 @@ final class Patch137 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = '
 SELECT id, image_order
   FROM ' . Tables::categories() . '
   WHERE image_order != ""
 ;';
-        $cats = MysqliDb::query2Array($query, 'id');
+        $cats = array_column($conn->fetchAllAssociative($query), null, 'id');
 
         foreach ($cats as $id => &$data) {
-            $image_order = explode(',', (string) $data['image_order']);
+            $image_order_raw = is_scalar($data['image_order']) ? (string) $data['image_order'] : '';
+            $image_order = explode(',', $image_order_raw);
             foreach ($image_order as &$order) {
                 if (! str_contains($order, ' ASC') && ! str_contains($order, ' DESC')) {
                     $order .= ' ASC';
@@ -54,14 +56,15 @@ SELECT id, image_order
         }
         unset($data);
 
-        MysqliDb::massUpdates(
-            Tables::categories(),
-            [
-                'primary' => ['id'],
-                'update' => ['image_order'],
-            ],
-            $cats
-        );
+        new BatchWriter($conn)
+            ->massUpdate(
+                Tables::categories(),
+                [
+                    'primary' => ['id'],
+                    'update' => ['image_order'],
+                ],
+                array_values($cats)
+            );
 
         echo "\n" . $this->description() . "\n";
     }

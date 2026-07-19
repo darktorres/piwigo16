@@ -11,7 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -29,7 +30,7 @@ final class UpgradeFrom_1_3_0 implements VersionUpgradeInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /** @var string $prefixeTable */
         global $prefixeTable;
@@ -69,7 +70,7 @@ ALTER TABLE phpwebgallery_image_category
 
         foreach ($queries as $query) {
             $query = str_replace('phpwebgallery_', $prefixeTable, $query);
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
         // filling the new column categories.uppercats
         $id_uppercats = [];
@@ -78,12 +79,13 @@ ALTER TABLE phpwebgallery_image_category
 SELECT id, id_uppercat
   FROM ' . Tables::categories() . '
 ;';
-        $result = MysqliDb::query($query);
-        while ($row = MysqliDb::fetchAssoc($result)) {
-            if (! isset($row['id_uppercat']) or $row['id_uppercat'] == '') {
-                $row['id_uppercat'] = 'NULL';
+        foreach ($conn->fetchAllAssociative($query) as $row) {
+            $id_uppercat = is_scalar($row['id_uppercat']) ? (string) $row['id_uppercat'] : '';
+            if ($id_uppercat === '') {
+                $id_uppercat = 'NULL';
             }
-            $id_uppercats[$row['id']] = $row['id_uppercat'];
+            $id = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $id_uppercats[$id] = $id_uppercat;
         }
 
         $datas = [];
@@ -94,7 +96,7 @@ SELECT id, id_uppercat
             $uppercats = [];
 
             array_push($uppercats, $id);
-            while (isset($id_uppercats[$id]) and $id_uppercats[$id] != 'NULL') {
+            while (isset($id_uppercats[$id]) and $id_uppercats[$id] !== 'NULL') {
                 array_push($uppercats, $id_uppercats[$id]);
                 $id = $id_uppercats[$id];
             }
@@ -103,17 +105,18 @@ SELECT id, id_uppercat
             array_push($datas, $data);
         }
 
-        MysqliDb::massUpdates(
-            Tables::categories(),
-            [
-                'primary' => ['id'],
-                'update' => ['uppercats'],
-            ],
-            $datas
-        );
+        new BatchWriter($conn)
+            ->massUpdate(
+                Tables::categories(),
+                [
+                    'primary' => ['id'],
+                    'update' => ['uppercats'],
+                ],
+                $datas
+            );
 
         // now we upgrade from 1.3.1 to 1.6.0
         new UpgradeFrom_1_3_1()
-            ->apply();
+            ->apply($conn);
     }
 }

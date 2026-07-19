@@ -11,8 +11,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\ConfigDb;
-use Piwigo\Db\MysqliDb;
+use Piwigo\Db\BatchWriter;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 
 /**
@@ -35,7 +37,7 @@ final class Patch104 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /** @var array<string, mixed> $conf */
         global $conf;
@@ -71,18 +73,19 @@ final class Patch104 implements DbPatchInterface
                     $inserts,
                     [
                         'param' => $param_name,
-                        'value' => MysqliDb::booleanToString($param),
+                        'value' => SqlDialect::booleanToString($param),
                     ]
                 );
             }
         }
 
         if (count($inserts) > 0) {
-            MysqliDb::massInserts(
-                Tables::config(),
-                array_keys($inserts[0]),
-                $inserts
-            );
+            new BatchWriter($conn)
+                ->massInsert(
+                    Tables::config(),
+                    array_keys($inserts[0]),
+                    $inserts
+                );
         }
 
         echo "\n"

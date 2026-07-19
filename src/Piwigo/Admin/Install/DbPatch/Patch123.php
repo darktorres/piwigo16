@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\ConfigDb;
-use Piwigo\Db\MysqliDb;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeParams;
@@ -41,7 +41,7 @@ final class Patch123 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /** @var array<string, mixed> $conf */
         global $conf;
@@ -206,7 +206,7 @@ final class Patch123 implements DbPatchInterface
 
         ImageStdParams::set_and_save($types);
 
-        MysqliDb::query('DELETE FROM ' . Tables::config() . ' WHERE param = \'disabled_derivatives\'');
+        $conn->executeStatement('DELETE FROM ' . Tables::config() . ' WHERE param = \'disabled_derivatives\'');
         new DerivativeCacheService()
             ->clearDerivativeCache();
 

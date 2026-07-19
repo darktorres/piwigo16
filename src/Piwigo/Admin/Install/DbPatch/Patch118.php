@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\themes;
 
 /**
@@ -31,7 +32,7 @@ final class Patch118 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $themes = new themes();
         $themes->perform_action('activate', 'smartpocket');

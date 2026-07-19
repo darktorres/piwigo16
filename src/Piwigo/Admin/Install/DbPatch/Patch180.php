@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
+
 /**
  * Former install/db/180-database.php (P23 sub-batch 8g-3). A deliberate
  * no-op: upstream emptied the body after deciding against the related-tags
@@ -32,7 +34,7 @@ final class Patch180 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         // The contents of the database upgrade have been emptied
         // due to the fact that we decicded to not use this configuration

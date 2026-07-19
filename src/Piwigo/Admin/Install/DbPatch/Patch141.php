@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,7 +32,7 @@ final class Patch141 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $tables = [
             Tables::categories(),
@@ -43,7 +43,7 @@ final class Patch141 implements DbPatchInterface
         ];
 
         foreach ($tables as $table) {
-            MysqliDb::query('
+            $conn->executeStatement('
 ALTER TABLE ' . $table . '
   ADD `lastmodified` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   ADD INDEX `lastmodified` (`lastmodified`)

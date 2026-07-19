@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,37 +32,37 @@ final class Patch63 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = '
 ALTER TABLE ' . Tables::images() . ' ADD COLUMN level TINYINT UNSIGNED NOT NULL DEFAULT 0
 ';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = '
 ALTER TABLE ' . Tables::userInfos() . ' ADD COLUMN level TINYINT UNSIGNED NOT NULL DEFAULT 0
 ';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = '
 ALTER TABLE ' . Tables::userCache() . ' ADD COLUMN image_access_type enum("NOT IN","IN") NOT NULL default "NOT IN"
 ';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = '
 ALTER TABLE ' . Tables::userCache() . ' ADD COLUMN image_access_list TEXT DEFAULT NULL
 ';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = '
 UPDATE ' . Tables::userInfos() . ' SET level=8 WHERE status="webmaster"
 ';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = '
 UPDATE ' . Tables::userCache() . ' SET need_update=true
 ';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n"
         . '"' . $this->description() . '" ended'

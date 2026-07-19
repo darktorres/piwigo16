@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,12 +32,13 @@ final class Patch156 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
-        $row = MysqliDb::fetchAssoc(MysqliDb::query('SHOW COLUMNS FROM `' . Tables::activity() . '` LIKE "occured_on";'));
-        if (! preg_match('/^TIMESTAMP/i', (string) $row['Type'])) {
+        $row = $conn->fetchAssociative('SHOW COLUMNS FROM `' . Tables::activity() . '` LIKE "occured_on";');
+        $type = $row !== false && is_scalar($row['Type']) ? (string) $row['Type'] : '';
+        if (! preg_match('/^TIMESTAMP/i', $type)) {
             $query = 'ALTER TABLE `' . Tables::activity() . '` CHANGE `occured_on` `occured_on` TIMESTAMP DEFAULT CURRENT_TIMESTAMP;';
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         echo "\n" . $this->description() . "\n";

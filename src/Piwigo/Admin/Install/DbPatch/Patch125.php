@@ -11,7 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\ConfigDb;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\MysqliDb;
 
 /**
@@ -40,7 +42,7 @@ final class Patch125 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /**
          * @var array<string, mixed>
@@ -78,10 +80,9 @@ final class Patch125 implements DbPatchInterface
         $plugin_table = $prefixeTable . 'additionalpages';
 
         $query = 'SHOW TABLES LIKE \'' . $plugin_table . '\';';
-        $result = MysqliDb::query($query);
 
-        while ($row = MysqliDb::fetchRow($result)) {
-            if ($plugin_table == $row[0]) {
+        foreach ($conn->fetchFirstColumn($query) as $table_name) {
+            if ($plugin_table === $table_name) {
                 $is_plugin_installed = true;
             }
         }
@@ -93,20 +94,20 @@ SELECT
     content
   FROM ' . $plugin_table . '
 ;';
-            $result = MysqliDb::query($query);
-            while ($row = MysqliDb::fetchAssoc($result)) {
-                $content_orig = $row['content'];
+            foreach ($conn->fetchAllAssociative($query) as $row) {
+                $content_orig = is_scalar($row['content']) ? (string) $row['content'] : '';
                 $content_new = $this->replaceHotlinks($content_orig);
-                if ($content_orig != $content_new) {
-                    MysqliDb::singleUpdate(
-                        $plugin_table,
-                        [
-                            'content' => MysqliDb::realEscapeString($content_new),
-                        ],
-                        [
-                            'id' => $row['id'],
-                        ]
-                    );
+                if (is_string($content_new) && $content_orig !== $content_new) {
+                    new BatchWriter($conn)
+                        ->singleUpdate(
+                            $plugin_table,
+                            [
+                                'content' => $content_new,
+                            ],
+                            [
+                                'id' => $row['id'],
+                            ]
+                        );
                 }
             }
 
@@ -120,10 +121,9 @@ SELECT
         $plugin_table = $prefixeTable . 'stuffs';
 
         $query = 'SHOW TABLES LIKE \'' . $plugin_table . '\';';
-        $result = MysqliDb::query($query);
 
-        while ($row = MysqliDb::fetchRow($result)) {
-            if ($plugin_table == $row[0]) {
+        foreach ($conn->fetchFirstColumn($query) as $table_name) {
+            if ($plugin_table === $table_name) {
                 $is_plugin_installed = true;
             }
         }
@@ -136,20 +136,21 @@ SELECT
   FROM ' . $plugin_table . '
   WHERE path LIKE \'%plugins/PWG_Stuffs/modules/Personal%\'
 ;';
-            $result = MysqliDb::query($query);
-            while ($row = MysqliDb::fetchAssoc($result)) {
-                $content_orig = $row['datas'];
-                $content_new = serialize($this->replaceHotlinks(unserialize($content_orig)));
-                if ($content_orig != $content_new) {
-                    MysqliDb::singleUpdate(
-                        $plugin_table,
-                        [
-                            'datas' => MysqliDb::realEscapeString($content_new),
-                        ],
-                        [
-                            'id' => $row['id'],
-                        ]
-                    );
+            foreach ($conn->fetchAllAssociative($query) as $row) {
+                $content_orig = is_scalar($row['datas']) ? (string) $row['datas'] : '';
+                $unserialized = unserialize($content_orig);
+                $content_new = serialize($this->replaceHotlinks(is_array($unserialized) || is_string($unserialized) ? $unserialized : ''));
+                if ($content_orig !== $content_new) {
+                    new BatchWriter($conn)
+                        ->singleUpdate(
+                            $plugin_table,
+                            [
+                                'datas' => $content_new,
+                            ],
+                            [
+                                'id' => $row['id'],
+                            ]
+                        );
                 }
             }
 

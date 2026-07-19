@@ -318,7 +318,7 @@ SELECT id
             // steps push database.inc.php snippets through the
             // DatabaseConfigChanges collector instead.
             \Piwigo\Admin\Install\VersionUpgrade\VersionUpgradeRegistry::make($this->currentRelease)
-                ->apply();
+                ->apply($conn);
             $mysql_changes = \Piwigo\Admin\Install\DbPatch\DatabaseConfigChanges::drain();
 
             \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION));

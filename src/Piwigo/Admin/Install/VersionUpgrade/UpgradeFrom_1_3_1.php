@@ -11,11 +11,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Install\DbPatch\DatabaseConfigChanges;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\MysqliDb;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
@@ -37,7 +37,7 @@ final class UpgradeFrom_1_3_1 implements VersionUpgradeInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /**
          * @var string
@@ -49,7 +49,10 @@ final class UpgradeFrom_1_3_1 implements VersionUpgradeInterface
 SELECT prefix_thumbnail, mail_webmaster
   FROM ' . $prefixeTable . 'config
 ;';
-        $save = MysqliDb::fetchAssoc(MysqliDb::query($query));
+        $save = $conn->fetchAssociative($query);
+        if ($save === false) {
+            $save = [];
+        }
 
         $queries = [
             '
@@ -316,7 +319,7 @@ DELETE FROM phpwebgallery_group_access
 
         foreach ($queries as $query) {
             $query = str_replace('phpwebgallery_', $prefixeTable, $query);
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         //
@@ -348,17 +351,17 @@ DELETE FROM phpwebgallery_group_access
 SHOW INDEX
   FROM ' . $prefixeTable . $table . '
 ;';
-            $result = MysqliDb::query($query);
-            while ($row = MysqliDb::fetchAssoc($result)) {
-                if ($row['Key_name'] != 'PRIMARY') {
-                    if (! in_array($row['Key_name'], array_keys($indexes_of[$table]))) {
+            foreach ($conn->fetchAllAssociative($query) as $row) {
+                $key_name = is_scalar($row['Key_name']) ? (string) $row['Key_name'] : '';
+                if ($key_name !== 'PRIMARY') {
+                    if (! in_array($key_name, array_keys($indexes_of[$table]))) {
                         $query = '
 ALTER TABLE ' . $prefixeTable . $table . '
-  DROP INDEX ' . $row['Key_name'] . '
+  DROP INDEX ' . $key_name . '
 ;';
-                        MysqliDb::query($query);
+                        $conn->executeStatement($query);
                     } else {
-                        array_push($existing_indexes, $row['Key_name']);
+                        array_push($existing_indexes, $key_name);
                     }
                 }
             }
@@ -370,7 +373,7 @@ ALTER TABLE ' . $prefixeTable . $table . '
   ADD ' . ($index['unique'] ? 'UNIQUE' : 'INDEX') . ' '
                       . $index_name . ' (' . implode(',', $index['columns']) . ')
 ;';
-                    MysqliDb::query($query);
+                    $conn->executeStatement($query);
                 }
             }
         }
@@ -516,32 +519,30 @@ ALTER TABLE ' . $prefixeTable . $table . '
             ],
         ];
 
-        MysqliDb::massInserts(
-            Tables::config(),
-            array_keys($params[0]),
-            $params
-        );
+        new BatchWriter($conn)
+            ->massInsert(
+                Tables::config(),
+                array_keys($params[0]),
+                $params
+            );
 
         // refresh calculated datas
-        $upgradeCategoryConn = DbConnection::build();
         $upgradeCategoryService = new CategoryService(
-            new CategoryRepository($upgradeCategoryConn),
-            new PermissionService(new PermissionRepository($upgradeCategoryConn), new GroupRepository($upgradeCategoryConn))
+            new CategoryRepository($conn),
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
         );
         $upgradeCategoryService->updateGlobalRank();
         $upgradeCategoryService->updateCategory();
 
         // update calculated field "images.path"
-        $cat_ids = [];
-
         $query = '
 SELECT DISTINCT(storage_category_id) AS unique_storage_category_id
   FROM ' . Tables::images() . '
 ;';
-        $result = MysqliDb::query($query);
-        while ($row = MysqliDb::fetchAssoc($result)) {
-            array_push($cat_ids, $row['unique_storage_category_id']);
-        }
+        $cat_ids = array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $conn->fetchFirstColumn($query)
+        );
         $fulldirs = $upgradeCategoryService->getFulldirs($cat_ids);
 
         foreach ($cat_ids as $cat_id) {
@@ -550,31 +551,29 @@ UPDATE ' . Tables::images() . '
   SET path = CONCAT(\'' . $fulldirs[$cat_id] . '\',\'/\',file)
   WHERE storage_category_id = ' . $cat_id . '
 ;';
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         // all sub-categories of private categories become private
-        $cat_ids = [];
-
         $query = '
 SELECT id
   FROM ' . Tables::categories() . '
   WHERE status = \'private\'
 ;';
-        $result = MysqliDb::query($query);
-        while ($row = MysqliDb::fetchAssoc($result)) {
-            array_push($cat_ids, $row['id']);
-        }
+        $private_cat_ids = array_map(
+            static fn (mixed $v): int|string => is_int($v) || is_string($v) ? $v : '',
+            $conn->fetchFirstColumn($query)
+        );
 
-        if (count($cat_ids) > 0) {
-            $privates = $upgradeCategoryService->getSubcatIds($cat_ids);
+        if (count($private_cat_ids) > 0) {
+            $privates = $upgradeCategoryService->getSubcatIds($private_cat_ids);
 
             $query = '
 UPDATE ' . Tables::categories() . '
   SET status = \'private\'
   WHERE id IN (' . implode(',', $privates) . ')
 ;';
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         // load the config file
@@ -606,6 +605,6 @@ UPDATE ' . Tables::categories() . '
 
         // now we upgrade from 1.4.0
         new UpgradeFrom_1_4_0()
-            ->apply();
+            ->apply($conn);
     }
 }

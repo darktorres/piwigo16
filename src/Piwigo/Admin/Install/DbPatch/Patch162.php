@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,14 +32,14 @@ final class Patch162 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = '
 UPDATE ' . Tables::activity() . '
   SET performed_by = object_id
   WHERE action = \'logout\'
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n" . $this->description() . "\n";
     }

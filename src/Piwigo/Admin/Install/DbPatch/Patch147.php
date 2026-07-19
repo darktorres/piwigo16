@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,10 +32,10 @@ final class Patch147 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         // we use PREFIX_TABLE, in case Piwigo uses an external user table
-        MysqliDb::query('
+        $conn->executeStatement('
 CREATE TABLE `' . Tables::userAuthKeys() . '` (
   `auth_key_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `auth_key` varchar(255) NOT NULL,

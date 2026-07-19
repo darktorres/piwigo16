@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -37,7 +37,7 @@ final class Patch108 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /** @var array<string, mixed> $conf */
         global $conf;
@@ -61,13 +61,13 @@ final class Patch108 implements DbPatchInterface
       SET value = \'' . preg_replace('# rank (ASC|DESC)(,?)#', '', $order_by) . '\'
       WHERE param = \'order_by\'
     ;';
-                MysqliDb::query($query);
+                $conn->executeStatement($query);
                 $query = '
     UPDATE ' . Tables::config() . '
       SET value = \'' . $order_by . '\'
       WHERE param = \'order_by_inside_category\'
     ';
-                MysqliDb::query($query);
+                $conn->executeStatement($query);
 
                 // update local file (delete lines)
                 $local_config = file($local_file);
@@ -91,13 +91,13 @@ final class Patch108 implements DbPatchInterface
       SET value = \'ORDER BY date_available DESC, file ASC, id ASC\'
       WHERE param = \'order_by\'
     ;';
-                MysqliDb::query($query);
+                $conn->executeStatement($query);
                 $query = '
     UPDATE ' . Tables::config() . '
       SET value = \'ORDER BY date_available DESC, file ASC, id ASC\'
       WHERE param = \'order_by_inside_category\'
     ';
-                MysqliDb::query($query);
+                $conn->executeStatement($query);
 
                 // update local file (rename lines)
                 $local_config = file_get_contents($local_file);
@@ -117,13 +117,13 @@ final class Patch108 implements DbPatchInterface
     SET value = \'ORDER BY date_available DESC, file ASC, id ASC\'
     WHERE param = \'order_by\'
   ;';
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
             $query = '
   UPDATE ' . Tables::config() . '
     SET value = \'ORDER BY date_available DESC, file ASC, id ASC\'
     WHERE param = \'order_by_inside_category\'
   ';
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         echo "\n"

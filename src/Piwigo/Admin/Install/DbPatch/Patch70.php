@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Core\AccessLevel;
-use Piwigo\Db\MysqliDb;
 use Piwigo\Db\Tables;
 
 /**
@@ -35,7 +35,7 @@ final class Patch70 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = '
 replace into ' . Tables::config() . "
@@ -44,7 +44,7 @@ values
 ('upload_link_everytime','false','Show Upload link every time'),
 ('upload_user_access'," . AccessLevel::Classic . ",'Minimal user status allowed to upload pictures')
 ;";
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n"
         . '"' . $this->description() . '" ended'

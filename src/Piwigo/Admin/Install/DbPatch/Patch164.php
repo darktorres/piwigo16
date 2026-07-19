@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,9 +32,9 @@ final class Patch164 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
-        MysqliDb::query('
+        $conn->executeStatement('
 ALTER TABLE `' . Tables::activity() . '`
   ADD COLUMN `user_agent` varchar(255) default NULL
 ;');

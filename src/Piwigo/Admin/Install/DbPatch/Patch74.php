@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,12 +32,12 @@ final class Patch74 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = '
 INSERT INTO ' . Tables::config() . " (param,value,comment) VALUES ('blk_menubar','','Menubar options');
 ";
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n"
         . '"' . $this->description() . '" ended'

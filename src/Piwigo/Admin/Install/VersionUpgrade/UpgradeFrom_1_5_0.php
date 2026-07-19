@@ -11,8 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Core\StringHelper;
-use Piwigo\Db\MysqliDb;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -35,7 +36,7 @@ final class UpgradeFrom_1_5_0 implements VersionUpgradeInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /**
          * @var array<string, mixed>
@@ -46,7 +47,7 @@ final class UpgradeFrom_1_5_0 implements VersionUpgradeInterface
          */
         global $prefixeTable;
 
-        $this->tagReplaceKeywords();
+        $this->tagReplaceKeywords($conn);
 
         $queries = [
             '
@@ -182,7 +183,7 @@ UPDATE ' . $prefixeTable . "config
         ];
 
         foreach ($queries as $query) {
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         //
@@ -219,9 +220,9 @@ UPDATE ' . $prefixeTable . "config
 
         // Do I already have them in DB ?
         $query = 'SELECT param FROM ' . $prefixeTable . 'config';
-        $result = MysqliDb::query($query);
-        while ($row = MysqliDb::fetchAssoc($result)) {
-            unset($params[$row['param']]);
+        foreach ($conn->fetchAllAssociative($query) as $row) {
+            $param_name = is_scalar($row['param']) ? (string) $row['param'] : '';
+            unset($params[$param_name]);
         }
 
         // Perform the insert query
@@ -232,12 +233,12 @@ INSERT INTO ' . $prefixeTable . 'config
   VALUES
  (' . "'{$param_key}','{$param_values[0]}','{$param_values[1]}')
 ;";
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         $query = '
 ALTER TABLE ' . $prefixeTable . 'config MODIFY COLUMN `value` TEXT;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         //
         // replace gallery_description by page_banner
@@ -247,14 +248,20 @@ SELECT value
   FROM ' . $prefixeTable . 'config
   WHERE param=\'gallery_title\'
 ;';
-        [$t] = MysqliDb::query2Array($query, null, 'value');
+        $t = array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            array_column($conn->fetchAllAssociative($query), 'value')
+        )[0] ?? '';
 
         $query = '
 SELECT value
   FROM ' . $prefixeTable . 'config
   WHERE param=\'gallery_description\'
 ;';
-        [$d] = MysqliDb::query2Array($query, null, 'value');
+        $d = array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            array_column($conn->fetchAllAssociative($query), 'value')
+        )[0] ?? '';
 
         $page_banner = '<h1>' . $t . '</h1><p>' . $d . '</p>';
         $page_banner = addslashes($page_banner);
@@ -268,13 +275,13 @@ INSERT INTO ' . $prefixeTable . 'config
     \'html displayed on the top each page of your gallery\'
   )
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = '
 DELETE FROM ' . $prefixeTable . 'config
   WHERE param=\'gallery_description\'
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         //
         // configuration for notification by mail
@@ -299,7 +306,7 @@ INSERT INTO ' . Tables::config() . "
     'Complementary mail content for notification by mail'
   )
 ;";
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         // depending on the way the 1.5.0 was installed (from scratch or by upgrade)
         // the database structure has small differences that should be corrected.
@@ -308,7 +315,7 @@ INSERT INTO ' . Tables::config() . "
 ALTER TABLE ' . $prefixeTable . 'users
   CHANGE COLUMN password password varchar(32) default NULL
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $to_keep = ['id', 'username', 'password', 'mail_address'];
 
@@ -316,28 +323,27 @@ ALTER TABLE ' . $prefixeTable . 'users
 DESC ' . $prefixeTable . 'users
 ;';
 
-        $result = MysqliDb::query($query);
-
-        while ($row = MysqliDb::fetchAssoc($result)) {
-            if (! in_array($row['Field'], $to_keep)) {
+        foreach ($conn->fetchAllAssociative($query) as $row) {
+            $field = is_scalar($row['Field']) ? (string) $row['Field'] : '';
+            if (! in_array($field, $to_keep)) {
                 $query = '
 ALTER TABLE ' . $prefixeTable . 'users
-  DROP COLUMN ' . $row['Field'] . '
+  DROP COLUMN ' . $field . '
 ;';
-                MysqliDb::query($query);
+                $conn->executeStatement($query);
             }
         }
 
         // now we upgrade from 1.6.0 to 1.6.2
         new UpgradeFrom_1_6_0()
-            ->apply();
+            ->apply($conn);
     }
 
     /**
      * Former local tag_replace_keywords() function: replace old style
      * #images.keywords by #tags. Requires a big data migration.
      */
-    private function tagReplaceKeywords(): void
+    private function tagReplaceKeywords(Connection $conn): void
     {
         /** @var string $prefixeTable */
         global $prefixeTable;
@@ -352,7 +358,7 @@ CREATE TABLE ' . $prefixeTable . 'tags (
   PRIMARY KEY (id)
 )
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = '
 CREATE TABLE ' . $prefixeTable . 'image_tag (
@@ -361,7 +367,7 @@ CREATE TABLE ' . $prefixeTable . 'image_tag (
   PRIMARY KEY (image_id,tag_id)
 )
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         //
         // Move keywords to tags
@@ -379,9 +385,10 @@ SELECT id, keywords
   FROM ' . $prefixeTable . 'images
   WHERE keywords IS NOT NULL
 ;';
-        $result = MysqliDb::query($query);
-        while ($row = MysqliDb::fetchAssoc($result)) {
-            foreach (preg_split('/[,]+/', (string) $row['keywords']) as $keyword) {
+        foreach ($conn->fetchAllAssociative($query) as $row) {
+            $keywords = is_scalar($row['keywords']) ? (string) $row['keywords'] : '';
+            $image_id = is_scalar($row['id']) ? (string) $row['id'] : '';
+            foreach (preg_split('/[,]+/', $keywords) as $keyword) {
                 if (! isset($tag_id[$keyword])) {
                     $tag_id[$keyword] = $current_id++;
                 }
@@ -392,7 +399,7 @@ SELECT id, keywords
 
                 array_push(
                     $tag_images[$tag_id[$keyword]],
-                    $row['id']
+                    $image_id
                 );
             }
         }
@@ -410,11 +417,12 @@ SELECT id, keywords
         }
 
         if (! empty($datas)) {
-            MysqliDb::massInserts(
-                $prefixeTable . 'tags',
-                array_keys($datas[0]),
-                $datas
-            );
+            new BatchWriter($conn)
+                ->massInsert(
+                    $prefixeTable . 'tags',
+                    array_keys($datas[0]),
+                    $datas
+                );
         }
 
         $datas = [];
@@ -431,11 +439,12 @@ SELECT id, keywords
         }
 
         if (! empty($datas)) {
-            MysqliDb::massInserts(
-                $prefixeTable . 'image_tag',
-                array_keys($datas[0]),
-                $datas
-            );
+            new BatchWriter($conn)
+                ->massInsert(
+                    $prefixeTable . 'image_tag',
+                    array_keys($datas[0]),
+                    $datas
+                );
         }
 
         //
@@ -444,7 +453,7 @@ SELECT id, keywords
         $query = '
 ALTER TABLE ' . $prefixeTable . 'images DROP COLUMN keywords
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         //
         // Add useful indexes
@@ -453,13 +462,13 @@ ALTER TABLE ' . $prefixeTable . 'images DROP COLUMN keywords
 ALTER TABLE ' . $prefixeTable . 'tags
   ADD INDEX tags_i1(url_name)
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = '
 ALTER TABLE ' . $prefixeTable . 'image_tag
   ADD INDEX image_tag_i1(tag_id)
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         // print_time('tags have replaced keywords');
     }

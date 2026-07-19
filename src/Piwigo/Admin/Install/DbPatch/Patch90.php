@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\languages;
-use Piwigo\Db\MysqliDb;
 use Piwigo\Db\Tables;
 
 /**
@@ -36,7 +36,7 @@ final class Patch90 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = '
 CREATE TABLE ' . Tables::languages() . " (
@@ -50,7 +50,7 @@ CREATE TABLE ' . Tables::languages() . " (
             $query .= ' DEFAULT CHARACTER SET utf8';
         }
 
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         // Fill table
 

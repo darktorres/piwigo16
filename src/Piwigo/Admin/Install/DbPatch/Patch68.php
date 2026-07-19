@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,19 +32,19 @@ final class Patch68 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = '
 ALTER TABLE ' . Tables::sessions() . '
   MODIFY COLUMN data MEDIUMTEXT NOT NULL';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = '
 ALTER TABLE ' . Tables::userCache() . '
   MODIFY COLUMN forbidden_categories MEDIUMTEXT,
   MODIFY COLUMN image_access_list MEDIUMTEXT
   ';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n"
         . '"' . $this->description() . '" ended'

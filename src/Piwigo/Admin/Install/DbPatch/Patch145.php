@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,10 +32,10 @@ final class Patch145 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         // we use PREFIX_TABLE, in case Piwigo uses an external user table
-        MysqliDb::query('
+        $conn->executeStatement('
 CREATE TABLE `' . Tables::imageFormat() . '` (
   `format_id` int(11) unsigned NOT NULL auto_increment,
   `image_id` mediumint(8) unsigned NOT NULL DEFAULT \'0\',

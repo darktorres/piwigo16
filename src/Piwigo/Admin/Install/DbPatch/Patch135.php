@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Cache\UserCacheInvalidator;
-use Piwigo\Db\MysqliDb;
 use Piwigo\Db\Tables;
 
 /**
@@ -33,25 +33,25 @@ final class Patch135 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = 'ALTER TABLE ' . Tables::userInfos() . '
 ADD PRIMARY KEY (`user_id`)
 , DROP INDEX `user_infos_ui1`';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = 'ALTER TABLE ' . Tables::userCache() . '
  ADD COLUMN `last_photo_date` datetime DEFAULT NULL AFTER `nb_total_images`';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
         UserCacheInvalidator::invalidate();
 
         $query = 'ALTER TABLE ' . Tables::userCache() . '
  ADD COLUMN `nb_available_tags` INT(5) DEFAULT NULL AFTER `last_photo_date`';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = 'ALTER TABLE ' . Tables::userCache() . '
  ADD COLUMN `nb_available_comments` INT(5) DEFAULT NULL AFTER `nb_available_tags`';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n" . $this->description() . "\n";
     }

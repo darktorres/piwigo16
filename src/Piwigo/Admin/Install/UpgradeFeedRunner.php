@@ -124,7 +124,7 @@ SELECT id
             // description comes from the class instead of the former
             // include-scope $upgrade_description variable.
             $patch = DbPatch\DbPatchRegistry::make($upgrade_id);
-            $patch->apply();
+            $patch->apply($conn);
             $upgrade_description = $patch->description();
 
             // notify upgrade

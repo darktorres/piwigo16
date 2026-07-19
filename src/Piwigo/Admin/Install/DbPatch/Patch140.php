@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,11 +32,11 @@ final class Patch140 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         // add fields
         $query = 'ALTER TABLE ' . Tables::tags() . ' CHANGE COLUMN `name` `name` VARCHAR(255) NOT NULL DEFAULT \'\'';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n" . $this->description() . "\n";
     }

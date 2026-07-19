@@ -11,8 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\ConfigDb;
-use Piwigo\Db\MysqliDb;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,7 +33,7 @@ final class UpgradeFrom_1_6_2 implements VersionUpgradeInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /**
          * @var array<string, mixed>
@@ -280,7 +281,7 @@ UPDATE ' . $prefixeTable . "user_cache
         ];
 
         foreach ($queries as $query) {
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         $replacements = [
@@ -300,7 +301,7 @@ UPDATE ' . $prefixeTable . 'comments
               addslashes($replacement[1]) .
               '")
 ;';
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         ConfigDb::loadConfFromDb();
@@ -319,16 +320,16 @@ SET
           (empty($conf['default_maxheight']) ? 'NULL' : $conf['default_maxheight']) .
           ',
   recent_period = ' . $conf['recent_period'] . ",
-  expand = '" . MysqliDb::booleanToString($conf['auto_expand']) . "',
-  show_nb_comments = '" . MysqliDb::booleanToString($conf['show_nb_comments']) . "',
-  show_nb_hits = '" . MysqliDb::booleanToString($conf['show_nb_hits']) . "',
-  enabled_high = '" . MysqliDb::booleanToString(
+  expand = '" . SqlDialect::booleanToString($conf['auto_expand']) . "',
+  show_nb_comments = '" . SqlDialect::booleanToString($conf['show_nb_comments']) . "',
+  show_nb_hits = '" . SqlDialect::booleanToString($conf['show_nb_hits']) . "',
+  enabled_high = '" . SqlDialect::booleanToString(
               ($conf['newuser_default_enabled_high'] ?? true)
           ) .
           "'
 WHERE
   user_id = " . $conf['default_user_id'] . ';';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = '
 DELETE FROM ' . Tables::config() . "
@@ -347,10 +348,10 @@ WHERE
   'show_nb_hits'
 )
 ;";
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         // now we upgrade from 1.7.0
         new UpgradeFrom_1_7_0()
-            ->apply();
+            ->apply($conn);
     }
 }

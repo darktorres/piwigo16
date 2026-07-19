@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,13 +32,13 @@ final class Patch133 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = 'ALTER TABLE ' . Tables::categories() . ' CHANGE site_id site_id tinyint(4) unsigned default NULL';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = 'UPDATE ' . Tables::categories() . ' SET site_id=NULL WHERE dir IS NULL';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n" . $this->description() . "\n";
     }

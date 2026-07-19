@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 
 /**
  * Former install/db/75-database.php (P23 sub-batch 8g-1). The original
@@ -38,9 +38,9 @@ final class Patch75 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
-        MysqliDb::query($this->description());
+        $conn->executeStatement($this->description());
 
         echo "\n"
         . '"' . $this->description() . '" ended'

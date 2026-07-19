@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\ConfigDb;
 use Piwigo\Core\FilesystemHelper;
-use Piwigo\Db\MysqliDb;
 use Piwigo\Db\Tables;
 
 /**
@@ -39,7 +39,7 @@ final class Patch94 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /**
          * @var array<string, mixed>
@@ -63,11 +63,7 @@ final class Patch94 implements DbPatchInterface
 SELECT *
   FROM ' . $prefixeTable . 'waiting
 ;';
-        $result = MysqliDb::query($query);
-        $user_upload_conf['waiting_rows'] = [];
-        while ($row = MysqliDb::fetchAssoc($result)) {
-            array_push($user_upload_conf['waiting_rows'], $row);
-        }
+        $user_upload_conf['waiting_rows'] = $conn->fetchAllAssociative($query);
 
         // uploadable categories
         $query = '
@@ -75,11 +71,7 @@ SELECT id
   FROM ' . Tables::categories() . '
   WHERE uploadable = \'true\'
 ;';
-        $result = MysqliDb::query($query);
-        $user_upload_conf['uploadable_categories'] = [];
-        while ($row = MysqliDb::fetchAssoc($result)) {
-            array_push($user_upload_conf['uploadable_categories'], $row['id']);
-        }
+        $user_upload_conf['uploadable_categories'] = $conn->fetchFirstColumn($query);
 
         // save configuration for a future use by the Community plugin
         $backup_filepath = PHPWG_ROOT_PATH . $conf['data_location'] . 'plugins/core_user_upload_to_community.php';
@@ -106,17 +98,17 @@ SELECT id
         //
 
         // categories.uploadable
-        MysqliDb::query('ALTER TABLE ' . Tables::categories() . ' DROP COLUMN uploadable;');
+        $conn->executeStatement('ALTER TABLE ' . Tables::categories() . ' DROP COLUMN uploadable;');
 
         // waiting
-        MysqliDb::query('DROP TABLE ' . $prefixeTable . 'waiting;');
+        $conn->executeStatement('DROP TABLE ' . $prefixeTable . 'waiting;');
 
         // config parameter settings : upload_user_access, upload_link_everytime
         $query = '
 DELETE FROM ' . Tables::config() . '
   WHERE param IN (\'upload_user_access\', \'upload_link_everytime\', \'email_admin_on_picture_uploaded\')
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n"
         . $this->description()

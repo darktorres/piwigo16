@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,7 +32,7 @@ final class Patch161 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $tag_ids_added = [];
         $to_delete_activities = [];
@@ -46,12 +46,12 @@ SELECT
   ORDER BY activity_id ASC
 ;';
 
-        $result = MysqliDb::query($query);
-        while ($row = MysqliDb::fetchAssoc($result)) {
-            if (isset($tag_ids_added[$row['object_id']])) {
-                array_push($to_delete_activities, $row['activity_id']);
+        foreach ($conn->fetchAllAssociative($query) as $row) {
+            $object_id = is_int($row['object_id']) || is_string($row['object_id']) ? $row['object_id'] : '';
+            if (isset($tag_ids_added[$object_id])) {
+                array_push($to_delete_activities, is_scalar($row['activity_id']) ? (string) $row['activity_id'] : '');
             } else {
-                $tag_ids_added[$row['object_id']] = 1;
+                $tag_ids_added[$object_id] = 1;
             }
         }
 
@@ -61,7 +61,7 @@ DELETE
   FROM ' . Tables::activity() . '
   WHERE activity_id IN (' . implode(',', $to_delete_activities) . ')
 ;';
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         echo "\n" . $this->description() . "\n";

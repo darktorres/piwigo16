@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,7 +32,7 @@ final class Patch158 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $queries = [
             'ALTER TABLE `' . Tables::comments() . '` CHANGE `date` `date` datetime NOT NULL default \'1970-01-01 00:00:00\';',
@@ -46,7 +46,7 @@ final class Patch158 implements DbPatchInterface
         ];
 
         foreach ($queries as $query) {
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         echo "\n" . $this->description() . "\n";

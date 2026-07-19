@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\ConfigDb;
 
 /**
@@ -31,7 +32,7 @@ final class Patch167 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         ConfigDb::confUpdateParam('index_search_in_set_button', true);
         ConfigDb::confUpdateParam('index_search_in_set_action', true);

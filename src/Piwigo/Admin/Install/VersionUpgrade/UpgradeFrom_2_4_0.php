@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
+use Doctrine\DBAL\Connection;
+
 /**
  * Former install/upgrade_2.4.0.php (P23 sub-batch 8g-4): marks ids <= 127
  * as not applied, runs patches 128-134, then chains to
@@ -25,13 +27,13 @@ final class UpgradeFrom_2_4_0 extends AbstractRangeVersionUpgrade
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
-        $this->markPreRangeNotApplied(127);
-        $this->runPatchRange(128, 134);
+        $this->markPreRangeNotApplied($conn, 127);
+        $this->runPatchRange($conn, 128, 134);
 
         // now we upgrade from 2.5.0
         new UpgradeFrom_2_5_0()
-            ->apply();
+            ->apply($conn);
     }
 }

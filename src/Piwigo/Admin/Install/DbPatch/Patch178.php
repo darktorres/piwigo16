@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
+
 /**
  * Former install/db/178-database.php (P23 sub-batch 8g-3). Effectively a
  * no-op in the original too -- its one conf_update_param() call was
@@ -32,7 +34,7 @@ final class Patch178 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         // let the $conf['filters_views'] be written in config table when the admin will change settings in administration.
         //

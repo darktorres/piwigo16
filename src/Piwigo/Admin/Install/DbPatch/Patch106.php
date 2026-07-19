@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -34,7 +34,7 @@ final class Patch106 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /** @var array<string, mixed> $conf */
         global $conf;
@@ -43,13 +43,13 @@ final class Patch106 implements DbPatchInterface
 INSERT INTO ' . Tables::config() . '(param,value,comment)
   VALUES (\'order_by\', \'' . $conf['order_by'] . '\', \'default photos order\')
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = '
 INSERT INTO ' . Tables::config() . '(param,value,comment)
   VALUES (\'order_by_inside_category\', \'' . $conf['order_by_inside_category'] . '\', \'default photos order inside category\')
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n"
         . $this->description()

@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
+use Doctrine\DBAL\Connection;
+
 /**
  * One version-step upgrade (P23 sub-batch 8g-4/8g-5) -- the OOP port of a
  * former install/upgrade_X.Y.Z.php script. UpgradeRunner::performUpgrade()
@@ -43,5 +45,5 @@ interface VersionUpgradeInterface
      * Executes the step, echoing its own progress output, then chains to
      * the next step (if any).
      */
-    public function apply(): void;
+    public function apply(Connection $conn): void;
 }

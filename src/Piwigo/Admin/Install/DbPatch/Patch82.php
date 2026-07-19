@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -34,13 +34,13 @@ Guest users names are saved in author column';
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = '
 ALTER TABLE ' . Tables::comments() . '
   ADD COLUMN author_id smallint(5) DEFAULT NULL
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n"
         . $this->description()

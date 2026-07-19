@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,9 +32,9 @@ final class Patch168 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
-        MysqliDb::query('ALTER TABLE `' . Tables::history() . '` ADD COLUMN `search_id` int(10) unsigned default NULL AFTER `category_id`;');
+        $conn->executeStatement('ALTER TABLE `' . Tables::history() . '` ADD COLUMN `search_id` int(10) unsigned default NULL AFTER `category_id`;');
 
         echo "\n" . $this->description() . "\n";
     }

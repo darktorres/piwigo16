@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -35,15 +35,15 @@ final class Patch143 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /** @var string $prefixeTable */
         global $prefixeTable;
 
         // we use PREFIX_TABLE, in case Piwigo uses an external user table
-        MysqliDb::query('ALTER TABLE ' . $prefixeTable . 'users CHANGE id id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT;');
-        MysqliDb::query('ALTER TABLE ' . Tables::images() . ' CHANGE added_by added_by MEDIUMINT UNSIGNED NOT NULL DEFAULT \'0\';');
-        MysqliDb::query('ALTER TABLE ' . Tables::comments() . ' CHANGE author_id author_id MEDIUMINT UNSIGNED DEFAULT NULL;');
+        $conn->executeStatement('ALTER TABLE ' . $prefixeTable . 'users CHANGE id id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT;');
+        $conn->executeStatement('ALTER TABLE ' . Tables::images() . ' CHANGE added_by added_by MEDIUMINT UNSIGNED NOT NULL DEFAULT \'0\';');
+        $conn->executeStatement('ALTER TABLE ' . Tables::comments() . ' CHANGE author_id author_id MEDIUMINT UNSIGNED DEFAULT NULL;');
 
         $tables = [
             Tables::userAccess(),
@@ -60,7 +60,7 @@ final class Patch143 implements DbPatchInterface
         ];
 
         foreach ($tables as $table) {
-            MysqliDb::query('
+            $conn->executeStatement('
 ALTER TABLE ' . $table . '
   CHANGE user_id user_id MEDIUMINT UNSIGNED NOT NULL DEFAULT \'0\'
 ;');

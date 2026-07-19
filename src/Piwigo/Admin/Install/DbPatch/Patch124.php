@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,12 +32,12 @@ final class Patch124 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         //
         // Clean useless configuration settings
         //
-        MysqliDb::query('DELETE FROM ' . Tables::config() . ' WHERE param like \'upload_form_%\';');
+        $conn->executeStatement('DELETE FROM ' . Tables::config() . ' WHERE param like \'upload_form_%\';');
 
         //
         // Remove useless columns
@@ -48,7 +48,7 @@ ALTER TABLE ' . Tables::userInfos() . '
   DROP `maxwidth`,
   DROP `maxheight`
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = '
 ALTER TABLE ' . Tables::images() . '
@@ -58,7 +58,7 @@ ALTER TABLE ' . Tables::images() . '
   DROP `has_high`,
   DROP `tn_ext`
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n" . $this->description() . "\n";
     }

@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
+
 /**
  * Former install/db/80-database.php (P23 sub-batch 8g-1) -- the 2.0-era
  * "delete old and not used files" sweep. No SQL at all: a frozen
@@ -947,7 +949,7 @@ final class Patch80 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         // remove exclude files
         $files = array_diff(self::LIST_FILES, self::LIST_EXCLUDE_FILES);

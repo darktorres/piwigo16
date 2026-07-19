@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,10 +32,10 @@ final class Patch149 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         // we use PREFIX_TABLE, in case Piwigo uses an external user table
-        MysqliDb::query('
+        $conn->executeStatement('
 ALTER TABLE `' . Tables::userInfos() . '`
   ADD COLUMN `last_visit` datetime default NULL,
   ADD COLUMN `last_visit_from_history` enum(\'true\',\'false\') NOT NULL default \'false\'

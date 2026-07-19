@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\ConfigDb;
-use Piwigo\Db\MysqliDb;
 use Piwigo\Db\Tables;
 
 /**
@@ -33,12 +33,13 @@ final class Patch165 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
-        [$old_value] = MysqliDb::fetchRow(MysqliDb::query('SELECT value FROM ' . Tables::config() . ' WHERE param = "email_admin_on_new_user"'));
+        $row = $conn->fetchNumeric('SELECT value FROM ' . Tables::config() . ' WHERE param = "email_admin_on_new_user"');
+        $old_value = $row !== false && is_scalar($row[0]) ? (string) $row[0] : '';
 
         $new_value = 'all';
-        if ($old_value == 'false') {
+        if ($old_value === 'false') {
             $new_value = 'none';
         }
 

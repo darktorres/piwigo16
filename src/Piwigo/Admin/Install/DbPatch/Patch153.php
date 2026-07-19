@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -36,7 +36,7 @@ final class Patch153 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $value = $this->valueDisplayFromto();
 
@@ -45,7 +45,7 @@ INSERT INTO ' . Tables::config() . ' (param,value,comment)
   VALUES (\'display_fromto\',\'' . $value . '\', \'' . $this->description() . '\')
 ;';
 
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n"
         . $this->description()

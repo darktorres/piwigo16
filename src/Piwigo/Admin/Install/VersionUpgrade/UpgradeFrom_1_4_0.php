@@ -11,8 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Core\TimingHelper;
-use Piwigo\Db\MysqliDb;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,7 +33,7 @@ final class UpgradeFrom_1_4_0 implements VersionUpgradeInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /**
          * @var string
@@ -49,7 +50,8 @@ SELECT value
   FROM ' . Tables::config() . '
   WHERE param = \'prefix_thumbnail\'
 ;';
-        [$prefix_thumbnail] = MysqliDb::fetchRow(MysqliDb::query($query));
+        $prefix_thumbnail_row = $conn->fetchNumeric($query);
+        $prefix_thumbnail = $prefix_thumbnail_row !== false && is_scalar($prefix_thumbnail_row[0]) ? (string) $prefix_thumbnail_row[0] : '';
 
         // delete obsolete configuration
         $query = '
@@ -71,7 +73,7 @@ DELETE
    \'authorize_remembering\'
    )
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $queries = [
 
@@ -187,7 +189,7 @@ CREATE TABLE piwigo_user_infos (
 
         foreach ($queries as $query) {
             $query = str_replace('piwigo_', $prefixeTable, $query);
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         // user datas migration from piwigo_users to piwigo_user_infos
@@ -197,33 +199,34 @@ SELECT *
 ;';
 
         $datas = [];
-        [$dbnow] = MysqliDb::fetchRow(MysqliDb::query('SELECT NOW();'));
+        $now_row = $conn->fetchNumeric('SELECT NOW();');
+        $dbnow = $now_row !== false ? $now_row[0] : null;
 
-        $result = MysqliDb::query($query);
-        while ($row = MysqliDb::fetchAssoc($result)) {
+        foreach ($conn->fetchAllAssociative($query) as $row) {
             $row['user_id'] = $row['id'];
             $row['registration_date'] = $dbnow;
             array_push($datas, $row);
         }
 
-        MysqliDb::massInserts(
-            Tables::userInfos(),
-            [
-                'user_id',
-                'nb_image_line',
-                'nb_line_page',
-                'status',
-                'language',
-                'maxwidth',
-                'maxheight',
-                'expand',
-                'show_nb_comments',
-                'recent_period',
-                'template',
-                'registration_date',
-            ],
-            $datas
-        );
+        new BatchWriter($conn)
+            ->massInsert(
+                Tables::userInfos(),
+                [
+                    'user_id',
+                    'nb_image_line',
+                    'nb_line_page',
+                    'status',
+                    'language',
+                    'maxwidth',
+                    'maxheight',
+                    'expand',
+                    'show_nb_comments',
+                    'recent_period',
+                    'template',
+                    'registration_date',
+                ],
+                $datas
+            );
 
         $queries = [
 
@@ -277,10 +280,10 @@ INSERT INTO ' . Tables::config() . "
 
         foreach ($queries as $query) {
             $query = str_replace('piwigo_', $prefixeTable, $query);
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
-        if ($prefix_thumbnail != 'TN-') {
+        if ($prefix_thumbnail !== 'TN-') {
             \Piwigo\Core\PageState::current()->addInfo(
                 'the thumbnail prefix configuration parameter was moved to configuration
 file, copy config.inc.php from "tools" directory to "local/config" directory
@@ -290,6 +293,6 @@ and edit $conf[\'prefix_thumbnail\'] = ' . $prefix_thumbnail
 
         // now we upgrade from 1.5.0 to 1.6.0
         new UpgradeFrom_1_5_0()
-            ->apply();
+            ->apply($conn);
     }
 }

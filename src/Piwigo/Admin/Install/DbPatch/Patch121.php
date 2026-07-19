@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
+
 /**
  * Former install/db/121-database.php (P23 sub-batch 8g-2). A no-op in the
  * original too -- the htaccess hotlink work was cancelled upstream (see
@@ -32,7 +34,7 @@ final class Patch121 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         echo "\n"
         . $this->description()

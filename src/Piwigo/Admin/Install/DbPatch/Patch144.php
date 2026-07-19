@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,17 +32,17 @@ final class Patch144 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         // we use PREFIX_TABLE, in case Piwigo uses an external user table
-        MysqliDb::query('
+        $conn->executeStatement('
 ALTER TABLE ' . Tables::userInfos() . '
   CHANGE activation_key activation_key VARCHAR(255) DEFAULT NULL,
   ADD COLUMN activation_key_expire DATETIME DEFAULT NULL AFTER activation_key
 ;');
 
         // purge current expiration keys
-        MysqliDb::query('UPDATE ' . Tables::userInfos() . ' SET activation_key = NULL;');
+        $conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET activation_key = NULL;');
 
         echo "\n" . $this->description() . "\n";
     }

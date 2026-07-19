@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -34,7 +34,7 @@ final class Patch83 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /** @var array<string, mixed> $conf */
         global $conf;
@@ -51,14 +51,14 @@ AND c.author = u.' . $conf['user_fields']['username'] . '
 AND u.' . $conf['user_fields']['id'] . ' = i.user_id
 AND i.registration_date <= c.date
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = '
 UPDATE ' . Tables::comments() . ' AS c
 SET c.author_id = ' . $conf['guest_id'] . '
 WHERE c.author_id is null
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n"
         . $this->description()

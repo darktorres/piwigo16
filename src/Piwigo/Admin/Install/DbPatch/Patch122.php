@@ -11,8 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Core\TimingHelper;
-use Piwigo\Db\MysqliDb;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -33,7 +34,7 @@ final class Patch122 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = '
 SELECT
@@ -46,15 +47,15 @@ SELECT
     high_height
   FROM ' . Tables::images() . '
 ;';
-        $result = MysqliDb::query($query);
         $starttime = TimingHelper::getMoment();
 
         $updates = [];
 
-        while ($row = MysqliDb::fetchAssoc($result)) {
-            if ($row['has_high'] == 'true') {
-                $high_path = dirname((string) $row['path']) . '/pwg_high/' . basename((string) $row['path']);
-                rename($high_path, $row['path']);
+        foreach ($conn->fetchAllAssociative($query) as $row) {
+            if (is_scalar($row['has_high']) && (string) $row['has_high'] === 'true') {
+                $path = is_scalar($row['path']) ? (string) $row['path'] : '';
+                $high_path = dirname($path) . '/pwg_high/' . basename($path);
+                rename($high_path, $path);
 
                 array_push(
                     $updates,
@@ -69,14 +70,15 @@ SELECT
         }
 
         if (count($updates) > 0) {
-            MysqliDb::massUpdates(
-                Tables::images(),
-                [
-                    'primary' => ['id'],
-                    'update' => ['width', 'height', 'filesize'],
-                ],
-                $updates
-            );
+            new BatchWriter($conn)
+                ->massUpdate(
+                    Tables::images(),
+                    [
+                        'primary' => ['id'],
+                        'update' => ['width', 'height', 'filesize'],
+                    ],
+                    $updates
+                );
         }
 
         echo "\n"

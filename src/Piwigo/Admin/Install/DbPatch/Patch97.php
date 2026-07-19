@@ -11,7 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,7 +33,7 @@ final class Patch97 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /** @var array<string, mixed> $conf */
         global $conf;
@@ -44,8 +45,9 @@ SELECT
   FROM ' . Tables::userInfos() . '
   WHERE user_id = ' . $conf['default_user_id'] . '
 ;';
-        $result = MysqliDb::query($query);
-        [$theme, $language] = MysqliDb::fetchRow($result);
+        $row = $conn->fetchNumeric($query);
+        $theme = $row !== false && is_scalar($row[0]) ? (string) $row[0] : '';
+        $language = $row !== false && is_scalar($row[1]) ? (string) $row[1] : '';
 
         $data = [
             'user_id' => $conf['default_user_id'],
@@ -53,16 +55,17 @@ SELECT
             'language' => empty($language) ? 'en_UK' : $language,
         ];
 
-        MysqliDb::massUpdates(
-            Tables::userInfos(),
-            [
-                'primary' => ['user_id'],
-                'update' => ['theme', 'language'],
-            ],
-            [
-                $data,
-            ]
-        );
+        new BatchWriter($conn)
+            ->massUpdate(
+                Tables::userInfos(),
+                [
+                    'primary' => ['user_id'],
+                    'update' => ['theme', 'language'],
+                ],
+                [
+                    $data,
+                ]
+            );
 
         echo "\n"
         . $this->description()

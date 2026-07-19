@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -35,7 +35,7 @@ final class Patch110 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /**
          * @var array<string, mixed>
@@ -48,7 +48,8 @@ SELECT
   FROM ' . Tables::config() . '
   WHERE param =\'gallery_url\'
 ;';
-        [$gallery_url] = MysqliDb::fetchRow(MysqliDb::query($query));
+        $row = $conn->fetchNumeric($query);
+        $gallery_url = $row !== false && is_scalar($row[0]) ? (string) $row[0] : '';
 
         if (! empty($gallery_url)) {
             // let's try to write it in the local configuration file
@@ -99,7 +100,7 @@ DELETE
   FROM ' . Tables::config() . '
   WHERE param =\'gallery_url\'
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n"
         . $this->description()

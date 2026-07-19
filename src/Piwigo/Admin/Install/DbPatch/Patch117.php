@@ -11,8 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Core\StringHelper;
-use Piwigo\Db\MysqliDb;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -33,27 +34,28 @@ final class Patch117 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = 'SELECT id, file FROM ' . Tables::images() . ' WHERE name IS NULL;';
-        $images = MysqliDb::query($query);
 
         $updates = [];
-        while ($row = MysqliDb::fetchAssoc($images)) {
+        foreach ($conn->fetchAllAssociative($query) as $row) {
+            $file = is_scalar($row['file']) ? (string) $row['file'] : '';
             $updates[] = [
                 'id' => $row['id'],
-                'name' => StringHelper::getNameFromFile($row['file']),
+                'name' => StringHelper::getNameFromFile($file),
             ];
         }
 
-        MysqliDb::massUpdates(
-            Tables::images(),
-            [
-                'primary' => ['id'],
-                'update' => ['name'],
-            ],
-            $updates
-        );
+        new BatchWriter($conn)
+            ->massUpdate(
+                Tables::images(),
+                [
+                    'primary' => ['id'],
+                    'update' => ['name'],
+                ],
+                $updates
+            );
 
         echo "\n"
         . '"' . $this->description() . '" ended'

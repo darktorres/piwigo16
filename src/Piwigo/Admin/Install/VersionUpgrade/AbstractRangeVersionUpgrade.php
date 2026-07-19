@@ -11,10 +11,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Install\DbPatch\DbPatchRegistry;
 use Piwigo\Admin\Install\UpgradeService;
 use Piwigo\Core\AppInfo;
-use Piwigo\Db\MysqliDb;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -42,14 +43,17 @@ abstract class AbstractRangeVersionUpgrade implements VersionUpgradeInterface
      * `if ($upgrade_id >= 81) break;` in 2.0.0 -- both are an inclusive
      * upper bound over the natcasesort-ordered id list.)
      */
-    protected function markPreRangeNotApplied(int $maxIdInclusive): void
+    protected function markPreRangeNotApplied(Connection $conn, int $maxIdInclusive): void
     {
         // retrieve already applied upgrades
         $query = '
 SELECT id
   FROM ' . Tables::upgrade() . '
 ;';
-        $applied = MysqliDb::query2Array($query, null, 'id');
+        $applied = array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            $conn->fetchFirstColumn($query)
+        );
 
         // retrieve existing upgrades
         $existing = UpgradeService::getAvailableUpgradeIds();
@@ -73,11 +77,12 @@ SELECT id
         }
 
         if (! empty($inserts)) {
-            MysqliDb::massInserts(
-                '`' . Tables::upgrade() . '`',
-                array_keys($inserts[0]),
-                $inserts
-            );
+            new BatchWriter($conn)
+                ->massInsert(
+                    '`' . Tables::upgrade() . '`',
+                    array_keys($inserts[0]),
+                    $inserts
+                );
         }
     }
 
@@ -88,7 +93,7 @@ SELECT id
      * detection; the registry carries every id, so has() keeps the exact
      * same guard shape.
      */
-    protected function runPatchRange(int $firstId, int $lastId): void
+    protected function runPatchRange(Connection $conn, int $firstId, int $lastId): void
     {
         ob_start();
         echo '<pre>';
@@ -102,7 +107,7 @@ SELECT id
             echo '=== upgrade ' . $upgrade_id . "\n";
 
             $patch = DbPatchRegistry::make((string) $upgrade_id);
-            $patch->apply();
+            $patch->apply($conn);
 
             // notify upgrade
             $query = '
@@ -111,7 +116,7 @@ INSERT INTO `' . Tables::upgrade() . '`
   VALUES
   (\'' . $upgrade_id . '\', NOW(), \'[migration from ' . $this->versionFrom() . ' to ' . AppInfo::VERSION . '] ' . $patch->description() . '\')
 ;';
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         echo '</pre>';

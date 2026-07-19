@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -34,32 +34,32 @@ final class Patch101 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /** @var array<string, mixed> $conf */
         global $conf;
 
         // add column
         if ($conf['dblayer'] == 'mysql') {
-            MysqliDb::query('
+            $conn->executeStatement('
     ALTER TABLE ' . Tables::userInfos() . '
       ADD COLUMN `nb_image_page` smallint(3) unsigned NOT NULL default \'15\'
   ;');
         } elseif (in_array($conf['dblayer'], ['pgsql', 'sqlite', 'pdo-sqlite'])) {
-            MysqliDb::query('
+            $conn->executeStatement('
     ALTER TABLE ' . Tables::userInfos() . '
       ADD COLUMN "nb_image_page" INTEGER default 15 NOT NULL
   ;');
         }
 
         // merge datas
-        MysqliDb::query('
+        $conn->executeStatement('
   UPDATE ' . Tables::userInfos() . '
   SET nb_image_page = nb_line_page*nb_image_line
 ;');
 
         // delete old columns
-        MysqliDb::query('
+        $conn->executeStatement('
   ALTER TABLE ' . Tables::userInfos() . '
     DROP `nb_line_page`,
     DROP `nb_image_line`

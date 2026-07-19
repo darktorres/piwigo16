@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,10 +32,10 @@ final class Patch155 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
-        MysqliDb::query('alter table `' . Tables::activity() . '` add column `session_idx` varchar(255) NOT NULL after `performed_by`;');
-        MysqliDb::query('alter table `' . Tables::activity() . '` add column `ip_address` varchar(50) default null after session_idx;');
+        $conn->executeStatement('alter table `' . Tables::activity() . '` add column `session_idx` varchar(255) NOT NULL after `performed_by`;');
+        $conn->executeStatement('alter table `' . Tables::activity() . '` add column `ip_address` varchar(50) default null after session_idx;');
 
         echo "\n" . $this->description() . "\n";
     }

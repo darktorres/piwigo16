@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,19 +32,19 @@ final class Patch77 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = 'ALTER TABLE ' . Tables::categories() . '
   MODIFY COLUMN permalink varchar(64) binary default NULL';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = 'ALTER TABLE ' . Tables::oldPermalinks() . '
   MODIFY COLUMN permalink varchar(64) binary NOT NULL default ""';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         $query = 'ALTER TABLE ' . Tables::images() . '
   MODIFY COLUMN file varchar(255) binary NOT NULL default ""';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n"
         . '"' . $this->description() . '" ended'

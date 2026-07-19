@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,10 +32,10 @@ final class Patch169 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
-        MysqliDb::query('UPDATE `' . Tables::search() . '` SET `created_on` = `last_seen` where `created_on` IS NULL AND `last_seen` IS NOT NULL;');
-        MysqliDb::query('ALTER TABLE `' . Tables::search() . '` DROP COLUMN `last_seen`;');
+        $conn->executeStatement('UPDATE `' . Tables::search() . '` SET `created_on` = `last_seen` where `created_on` IS NULL AND `last_seen` IS NOT NULL;');
+        $conn->executeStatement('ALTER TABLE `' . Tables::search() . '` DROP COLUMN `last_seen`;');
 
         echo "\n" . $this->description() . "\n";
     }

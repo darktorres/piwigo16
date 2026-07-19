@@ -11,7 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
+use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
 
 /**
@@ -25,7 +26,7 @@ use Piwigo\Db\Tables;
  *   (the runner-local was unreachable from a method);
  * - mysql_get_server_info(), the PHP-4-era mysql-extension function that
  *   no longer exists in PHP at all (this script was broken-at-HEAD the
- *   moment it ran), became MysqliDb::getDbVersion();
+ *   moment it ran), became DbInfo::version();
  * - the final `DB_CHARSET != ''` re-read of the just-defined constant
  *   reads the $db_charset local instead -- same value by construction.
  * The include of config_default.inc.php (a kept plain-data file) is
@@ -47,7 +48,7 @@ final class Patch65 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         /**
          * @var array<string, mixed>
@@ -72,10 +73,9 @@ final class Patch65 implements DbPatchInterface
         $query = '
 SELECT language, COUNT(user_id) AS count FROM ' . Tables::userInfos() . '
   GROUP BY language';
-        $result = MysqliDb::query($query);
-        while ($row = MysqliDb::fetchAssoc($result)) {
-            $language = $row['language'];
-            $lang_def = explode('.', (string) $language);
+        foreach ($conn->fetchAllAssociative($query) as $row) {
+            $language = is_scalar($row['language']) ? (string) $row['language'] : '';
+            $lang_def = explode('.', $language);
             if (count($lang_def) == 2) {
                 $new_lang = $lang_def[0];
                 $charset = strtolower($lang_def[1]);
@@ -100,38 +100,40 @@ SELECT language, COUNT(user_id) AS count FROM ' . Tables::userInfos() . '
         $query = '
 SELECT language FROM ' . Tables::userInfos() . '
   WHERE user_id=' . $conf['webmaster_id'];
-        $result = MysqliDb::query($query);
-        if (MysqliDb::numRows($result) == 0) {
+        $rows = $conn->fetchAllAssociative($query);
+        if (count($rows) === 0) {
             $query = '
 SELECT language FROM ' . Tables::userInfos() . '
   WHERE status="webmaster" and adviser="false"
   LIMIT 1';
-            $result = MysqliDb::query($query);
+            $rows = $conn->fetchAllAssociative($query);
         }
 
-        if ($row = MysqliDb::fetchAssoc($result)) {
-            $admin_charset = $all_langs[$row['language']]['charset'];
+        if (isset($rows[0])) {
+            $admin_language = is_int($rows[0]['language']) || is_string($rows[0]['language']) ? $rows[0]['language'] : '';
+            if (isset($all_langs[$admin_language])) {
+                $admin_charset = $all_langs[$admin_language]['charset'];
+            }
         }
         $upgrade_log .= ">>admin_charset\t" . $admin_charset . "\n";
 
         // +-----------------------------------------------------------------------+
         // get mysql version and structure of tables
-        $mysql_version = MysqliDb::getDbVersion();
+        $mysql_version = new DbInfo($conn)
+            ->version();
         $upgrade_log .= ">>mysql_ver\t" . $mysql_version . "\n";
 
-        $all_tables = [];
         $query = 'SHOW TABLES LIKE "' . $prefixeTable . '%"';
-        $result = MysqliDb::query($query);
-        while ($row = MysqliDb::fetchRow($result)) {
-            array_push($all_tables, $row[0]);
-        }
+        $all_tables = array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            $conn->fetchFirstColumn($query)
+        );
 
         $all_tables_definition = [];
         foreach ($all_tables as $table) {
             $query = 'SHOW FULL COLUMNS FROM ' . $table;
-            $result = MysqliDb::query($query);
             $field_definitions = [];
-            while ($row = MysqliDb::fetchAssoc($result)) {
+            foreach ($conn->fetchAllAssociative($query) as $row) {
                 if (! isset($row['Collation']) or $row['Collation'] == 'NULL') {
                     continue;
                 }
@@ -156,9 +158,9 @@ SELECT language FROM ' . Tables::userInfos() . '
             $pwg_charset = 'utf-8';
             $db_charset = 'utf8';
             foreach ($all_tables as $table) {
-                $this->changeTableToCharset($table, $all_tables_definition[$table], 'utf8');
+                $this->changeTableToCharset($conn, $table, $all_tables_definition[$table], 'utf8');
                 $query = 'ALTER TABLE ' . $table . ' DEFAULT CHARACTER SET utf8';
-                MysqliDb::query($query);
+                $conn->executeStatement($query);
             }
             $upgrade_log .= "< conversion\tchange utf8\n";
         }
@@ -171,12 +173,12 @@ SELECT language FROM ' . Tables::userInfos() . '
             $pwg_charset = 'utf-8';
             $db_charset = 'utf8';
             foreach ($all_tables as $table) {
-                if (! isset($safe_tables[substr((string) $table, strlen($prefixeTable))])) {
-                    $this->changeTableToBlob($table, $all_tables_definition[$table]);
+                if (! isset($safe_tables[substr($table, strlen($prefixeTable))])) {
+                    $this->changeTableToBlob($conn, $table, $all_tables_definition[$table]);
                 }
-                $this->changeTableToCharset($table, $all_tables_definition[$table], 'utf8');
+                $this->changeTableToCharset($conn, $table, $all_tables_definition[$table], 'utf8');
                 $query = 'ALTER TABLE ' . $table . ' DEFAULT CHARACTER SET utf8';
-                MysqliDb::query($query);
+                $conn->executeStatement($query);
             }
             $upgrade_log .= "< conversion\tchange binary\n";
             $upgrade_log .= "< conversion\tchange utf8\n";
@@ -184,13 +186,13 @@ SELECT language FROM ' . Tables::userInfos() . '
             $pwg_charset = 'utf-8';
             $db_charset = 'utf8';
             foreach ($all_tables as $table) {
-                if (! isset($safe_tables[substr((string) $table, strlen($prefixeTable))])) {
-                    $this->changeTableToBlob($table, $all_tables_definition[$table]);
-                    $this->changeTableToCharset($table, $all_tables_definition[$table], 'latin2');
+                if (! isset($safe_tables[substr($table, strlen($prefixeTable))])) {
+                    $this->changeTableToBlob($conn, $table, $all_tables_definition[$table]);
+                    $this->changeTableToCharset($conn, $table, $all_tables_definition[$table], 'latin2');
                 }
-                $this->changeTableToCharset($table, $all_tables_definition[$table], 'utf8');
+                $this->changeTableToCharset($conn, $table, $all_tables_definition[$table], 'utf8');
                 $query = 'ALTER TABLE ' . $table . ' DEFAULT CHARACTER SET utf8';
-                MysqliDb::query($query);
+                $conn->executeStatement($query);
             }
             $upgrade_log .= "< conversion\tchange binary\n";
             $upgrade_log .= "< conversion\tchange latin2\n";
@@ -209,13 +211,13 @@ define(\'DB_COLLATE\',  \'\');'
             $query = '
   UPDATE ' . Tables::userInfos() . ' SET language="' . $lang_data['new_lang'] . '"
     WHERE language="' . $old_lang . '"';
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
 
         UpgradeCharset::set($pwg_charset, $db_charset);
 
-        if (version_compare(MysqliDb::getDbVersion(), '4.1.0', '>=') and $db_charset != '') {
-            MysqliDb::query('SET NAMES "' . $db_charset . '"');
+        if (version_compare(new DbInfo($conn)->version(), '4.1.0', '>=') and $db_charset != '') {
+            $conn->executeStatement('SET NAMES "' . $db_charset . '"');
         }
 
         echo $upgrade_log;
@@ -236,7 +238,7 @@ define(\'DB_COLLATE\',  \'\');'
      *
      * @param array<int, array<string, mixed>> $field_definitions
      */
-    private function changeTableToBlob(string $table, array $field_definitions): void
+    private function changeTableToBlob(Connection $conn, string $table, array $field_definitions): void
     {
         $types = [
             'varchar' => 'varbinary',
@@ -247,19 +249,22 @@ define(\'DB_COLLATE\',  \'\');'
 
         $changes = [];
         foreach ($field_definitions as $row) {
-            if (! isset($row['Collation']) or $row['Collation'] == 'NULL') {
+            $collation = is_scalar($row['Collation'] ?? null) ? (string) $row['Collation'] : null;
+            if ($collation === null || $collation === 'NULL') {
                 continue;
             }
-            [$type] = explode('(', (string) $row['Type']);
+            $rowType = is_scalar($row['Type']) ? (string) $row['Type'] : '';
+            [$type] = explode('(', $rowType);
             if (! isset($types[$type])) {
                 continue;
             } // no need
-            $binaryType = preg_replace('/' . $type . '/i', $types[$type], (string) $row['Type']);
-            $changes[] = 'MODIFY COLUMN ' . $row['Field'] . ' ' . $binaryType;
+            $binaryType = preg_replace('/' . $type . '/i', $types[$type], $rowType);
+            $field = is_scalar($row['Field']) ? (string) $row['Field'] : '';
+            $changes[] = 'MODIFY COLUMN ' . $field . ' ' . $binaryType;
         }
         if (count($changes)) {
             $query = 'ALTER TABLE ' . $table . ' ' . implode(', ', $changes);
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
     }
 
@@ -268,19 +273,23 @@ define(\'DB_COLLATE\',  \'\');'
      *
      * @param array<int, array<string, mixed>> $field_definitions
      */
-    private function changeTableToCharset(string $table, array $field_definitions, string $db_charset): void
+    private function changeTableToCharset(Connection $conn, string $table, array $field_definitions, string $db_charset): void
     {
         $changes = [];
         foreach ($field_definitions as $row) {
-            if (! isset($row['Collation']) or $row['Collation'] == 'NULL') {
+            $collation = is_scalar($row['Collation'] ?? null) ? (string) $row['Collation'] : null;
+            if ($collation === null || $collation === 'NULL') {
                 continue;
             }
-            $query = $row['Field'] . ' ' . $row['Type'];
+            $field = is_scalar($row['Field']) ? (string) $row['Field'] : '';
+            $type = is_scalar($row['Type']) ? (string) $row['Type'] : '';
+            $query = $field . ' ' . $type;
             $query .= ' CHARACTER SET ' . $db_charset;
-            if (str_contains((string) $row['Collation'], '_bin')) {
+            if (str_contains($collation, '_bin')) {
                 $query .= ' BINARY';
             }
-            if ($row['Null'] != 'YES') {
+            $null = is_scalar($row['Null']) ? (string) $row['Null'] : '';
+            if ($null !== 'YES') {
                 $query .= ' NOT NULL';
                 if (isset($row['Default'])) {
                     $query .= ' DEFAULT "' . addslashes((string) $row['Default']) . '"';
@@ -293,7 +302,8 @@ define(\'DB_COLLATE\',  \'\');'
                 }
             }
 
-            if ($row['Extra'] == 'auto_increment') {
+            $extra = is_scalar($row['Extra'] ?? null) ? (string) $row['Extra'] : '';
+            if ($extra === 'auto_increment') {
                 $query .= ' auto_increment';
             }
             $changes[] = 'MODIFY COLUMN ' . $query;
@@ -301,7 +311,7 @@ define(\'DB_COLLATE\',  \'\');'
 
         if (count($changes)) {
             $query = 'ALTER TABLE `' . $table . '` ' . implode(', ', $changes);
-            MysqliDb::query($query);
+            $conn->executeStatement($query);
         }
     }
 }

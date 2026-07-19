@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\Connection;
+
 /**
  * One numbered one-shot database patch (P23 sub-batch 8g). Each class is
  * the OOP port of a former install/db/<id>-database.php script, applied
@@ -41,5 +43,5 @@ interface DbPatchInterface
      * Executes the patch. Echoes its own progress output, exactly as the
      * original script did when include'd by upgrade_feed.php.
      */
-    public function apply(): void;
+    public function apply(Connection $conn): void;
 }

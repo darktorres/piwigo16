@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,14 +32,14 @@ final class Patch79 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         // set yoga/Sylvia as default value for user_infos.template column
         $query = '
 ALTER TABLE ' . Tables::userInfos() . '
   CHANGE COLUMN template template varchar(255) NOT NULL default \'yoga/Sylvia\'
 ;';
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n"
         . 'Default template modified to yoga/Sylvia'

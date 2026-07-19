@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Db\MysqliDb;
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
 /**
@@ -32,7 +32,7 @@ final class Patch89 implements DbPatchInterface
     }
 
     #[\Override]
-    public function apply(): void
+    public function apply(Connection $conn): void
     {
         $query = '
 INSERT INTO ' . Tables::config() . ' (param,value,comment)
@@ -40,7 +40,7 @@ INSERT INTO ' . Tables::config() . ' (param,value,comment)
     ("allow_user_customization","true","allow users to customize their gallery?")
 ;';
 
-        MysqliDb::query($query);
+        $conn->executeStatement($query);
 
         echo "\n"
         . $this->description()

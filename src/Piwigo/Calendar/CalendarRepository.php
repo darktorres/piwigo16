@@ -7,12 +7,13 @@ namespace Piwigo\Calendar;
 use Piwigo\Db\AbstractRepository;
 
 /**
- * Persistence layer for `CalendarRenderer::render()`'s own single
- * data-access point -- the pre-existing
- * CalendarBase/CalendarMonthly/CalendarWeekly rendering classes
- * (already-built, P6-era) keep using the legacy \Piwigo\Db\MysqliDb::query2Array()/\Piwigo\Db\MysqliDb::query()
- * layer internally; only this call site's own final "list of matching
- * image ids" query is ported to DBAL here.
+ * Persistence layer for `CalendarRenderer::render()`'s own final "list of
+ * matching image ids" query, and (Legacy Coupling Retirement: FrankenPHP/
+ * workers exception retirement) for CalendarBase/CalendarMonthly/
+ * CalendarWeekly's own remaining query-execution sites -- the
+ * MysqliDb-only design predated the FrankenPHP/workers conversion plan;
+ * under a persistent worker process there's no longer a per-request
+ * container-cost reason to keep this rendering hierarchy off DBAL.
  */
 final class CalendarRepository extends AbstractRepository
 {
@@ -47,5 +48,38 @@ final class CalendarRepository extends AbstractRepository
         )->fetchFirstColumn();
 
         return array_values(array_map(intval(...), array_filter($ids, is_numeric(...))));
+    }
+
+    /**
+     * Executes an already-built, multi-row SELECT query -- built by
+     * CalendarBase::build_nav_bar()/build_next_prev() or
+     * CalendarMonthly's build_*_calendar() methods from
+     * calendar_levels/inner_sql/get_date_where() fragments, same
+     * "hand-written SQL on complex dynamic queries" allowance as
+     * findImageIds() above -- and returns the raw result rows. Column
+     * extraction/reduction (e.g. period => nb_images) stays in the
+     * calendar classes themselves, matching the shape their own existing
+     * code already expects.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findRows(string $query): array
+    {
+        return $this->conn->executeQuery($query)
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * Same as findRows(), for a query expected to match at most one row
+     * (CalendarMonthly::build_month_calendar()'s per-day random-image
+     * lookup).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findRow(string $query): ?array
+    {
+        $row = $this->conn->executeQuery($query)
+            ->fetchAssociative();
+        return $row === false ? null : $row;
     }
 }

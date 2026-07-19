@@ -31,15 +31,15 @@ class CalendarMonthly extends CalendarBase
         $month_labels = \Piwigo\Core\Lang::months();
         $this->calendar_levels = [
             [
-                'sql' => \Piwigo\Db\MysqliDb::getYear($this->date_field),
+                'sql' => \Piwigo\Db\SqlDialect::getYear($this->date_field),
                 'labels' => null,
             ],
             [
-                'sql' => \Piwigo\Db\MysqliDb::getMonth($this->date_field),
+                'sql' => \Piwigo\Db\SqlDialect::getMonth($this->date_field),
                 'labels' => $month_labels,
             ],
             [
-                'sql' => \Piwigo\Db\MysqliDb::getDayOfMonth($this->date_field),
+                'sql' => \Piwigo\Db\SqlDialect::getDayOfMonth($this->date_field),
                 'labels' => null,
             ],
         ];
@@ -215,21 +215,27 @@ class CalendarMonthly extends CalendarBase
         $page_chronology_date = $this->chronology_date;
         assert(count($page_chronology_date) == 0);
         $query = '
-  SELECT ' . \Piwigo\Db\MysqliDb::getDateYYYYMM($this->date_field) . ' as period,
+  SELECT ' . \Piwigo\Db\SqlDialect::getDateYYYYMM($this->date_field) . ' as period,
     COUNT(distinct id) as count';
         $query .= $this->inner_sql;
         $query .= $this->get_date_where();
         $query .= '
     GROUP BY period
-    ORDER BY ' . \Piwigo\Db\MysqliDb::getYear($this->date_field) . ' DESC, ' . \Piwigo\Db\MysqliDb::getMonth($this->date_field) . ' ASC';
+    ORDER BY ' . \Piwigo\Db\SqlDialect::getYear($this->date_field) . ' DESC, ' . \Piwigo\Db\SqlDialect::getMonth($this->date_field) . ' ASC';
 
-        $result = \Piwigo\Db\MysqliDb::query($query);
+        $rows = $this->calendarRepository->findRows($query);
         $items = [];
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-            $y = substr((string) $row['period'], 0, 4);
-            $m = (int) substr((string) $row['period'], 4, 2);
-            // count is a COUNT(...) aggregate, always a numeric string from
-            // the driver (see \Piwigo\Db\MysqliDb::fetchAssoc()'s own doc comment).
+        foreach ($rows as $row) {
+            // period is a DATE_FORMAT(...) expression (SqlDialect::
+            // getDateYYYYMM()), always a scalar; DBAL row values are
+            // typed mixed regardless, so narrow before casting.
+            $periodRaw = $row['period'] ?? null;
+            $period = is_scalar($periodRaw) ? (string) $periodRaw : '';
+            $y = substr($period, 0, 4);
+            $m = (int) substr($period, 4, 2);
+            // count is a COUNT(...) aggregate; DBAL row values are mixed
+            // (native int or numeric string depending on driver), guard
+            // either way.
             $count = is_numeric($row['count']) ? (int) $row['count'] : 0;
             if (! isset($items[$y])) {
                 $items[$y] = [
@@ -284,7 +290,7 @@ class CalendarMonthly extends CalendarBase
     {
         $page_chronology_date = $this->chronology_date;
         assert(count($page_chronology_date) == 1);
-        $query = 'SELECT ' . \Piwigo\Db\MysqliDb::getDateMMDD($this->date_field) . ' as period,
+        $query = 'SELECT ' . \Piwigo\Db\SqlDialect::getDateMMDD($this->date_field) . ' as period,
               COUNT(DISTINCT id) as count';
         $query .= $this->inner_sql;
         $query .= $this->get_date_where();
@@ -292,13 +298,19 @@ class CalendarMonthly extends CalendarBase
     GROUP BY period
     ORDER BY period ASC';
 
-        $result = \Piwigo\Db\MysqliDb::query($query);
+        $rows = $this->calendarRepository->findRows($query);
         $items = [];
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-            $m = (int) substr((string) $row['period'], 0, 2);
-            $d = substr((string) $row['period'], 2, 2);
-            // count is a COUNT(...) aggregate, always a numeric string from
-            // the driver (see \Piwigo\Db\MysqliDb::fetchAssoc()'s own doc comment).
+        foreach ($rows as $row) {
+            // period is a DATE_FORMAT(...) expression (SqlDialect::
+            // getDateMMDD()), always a scalar; DBAL row values are typed
+            // mixed regardless, so narrow before casting.
+            $periodRaw = $row['period'] ?? null;
+            $period = is_scalar($periodRaw) ? (string) $periodRaw : '';
+            $m = (int) substr($period, 0, 2);
+            $d = substr($period, 2, 2);
+            // count is a COUNT(...) aggregate; DBAL row values are mixed
+            // (native int or numeric string depending on driver), guard
+            // either way.
             $count = is_numeric($row['count']) ? (int) $row['count'] : 0;
             if (! isset($items[$m])) {
                 $items[$m] = [
@@ -361,7 +373,7 @@ class CalendarMonthly extends CalendarBase
         $month = $page_chronology_date[self::CMONTH] ?? null;
         $month = is_int($month) || is_string($month) ? $month : 0;
 
-        $query = 'SELECT ' . \Piwigo\Db\MysqliDb::getDayOfMonth($this->date_field) . ' as period,
+        $query = 'SELECT ' . \Piwigo\Db\SqlDialect::getDayOfMonth($this->date_field) . ' as period,
               COUNT(DISTINCT id) as count';
         $query .= $this->inner_sql;
         $query .= $this->get_date_where();
@@ -370,9 +382,10 @@ class CalendarMonthly extends CalendarBase
     ORDER BY period ASC';
 
         $items = [];
-        $result = \Piwigo\Db\MysqliDb::query($query);
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-            $d = (int) $row['period'];
+        $rows = $this->calendarRepository->findRows($query);
+        foreach ($rows as $row) {
+            $periodRaw = $row['period'] ?? null;
+            $d = is_numeric($periodRaw) ? (int) $periodRaw : 0;
             $items[$d] = [
                 'nb_images' => $row['count'],
             ];
@@ -381,15 +394,15 @@ class CalendarMonthly extends CalendarBase
         foreach ($items as $day => $data) {
             $this->chronology_date[self::CDAY] = $day;
             $query = '
-  SELECT id, file,representative_ext,path,width,height,rotation, ' . \Piwigo\Db\MysqliDb::getDayOfWeek($this->date_field) . '-1 as dow';
+  SELECT id, file,representative_ext,path,width,height,rotation, ' . \Piwigo\Db\SqlDialect::getDayOfWeek($this->date_field) . '-1 as dow';
             $query .= $this->inner_sql;
             $query .= $this->get_date_where();
             $query .= '
-    ORDER BY ' . \Piwigo\Db\MysqliDb::DB_RANDOM_FUNCTION . '()
+    ORDER BY ' . \Piwigo\Db\SqlDialect::DB_RANDOM_FUNCTION . '()
     LIMIT 1';
             unset($this->chronology_date[self::CDAY]);
 
-            $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
+            $row = $this->calendarRepository->findRow($query);
             // $day came from the grouped count query above, which only
             // includes days with at least one image, so this LIMIT 1
             // query always finds a row

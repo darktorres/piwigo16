@@ -22,6 +22,17 @@ use Piwigo\Template\Template;
  * include/functions_calendar.inc.php in batch 8c). This shared base hosts
  * them; readers outside the hierarchy (CalendarRenderer) reference them
  * as CalendarBase::CAL_VIEW_* / CalendarBase::C*.
+ *
+ * Legacy Coupling Retirement: DI+DBAL migration -- build_nav_bar()/
+ * build_next_prev() (and CalendarMonthly's own build_*_calendar()
+ * methods) retargeted their remaining MysqliDb::query()/query2Array()
+ * calls onto CalendarRepository (constructor-injected here, inherited by
+ * CalendarMonthly/CalendarWeekly). This class was left on the legacy
+ * MysqliDb layer for longer than most, not for any performance/DI-
+ * avoidance reason -- just unmigrated complex dynamic SQL -- but the same
+ * FrankenPHP/workers reasoning that retired ImageVisibilityChecker's own
+ * exception applies equally well here: there's no remaining reason to
+ * keep any file off DBAL.
  */
 abstract class CalendarBase
 {
@@ -110,6 +121,10 @@ abstract class CalendarBase
      * @var string
      */
     public $chronology_view = '';
+
+    public function __construct(
+        protected readonly CalendarRepository $calendarRepository,
+    ) {}
 
     /**
      * Generate navigation bars for category page.
@@ -307,7 +322,13 @@ $this->inner_sql .
 $this->get_date_where($level) . '
   GROUP BY period;';
 
-        $level_items = \Piwigo\Db\MysqliDb::query2Array($query, 'period', 'nb_images');
+        $rows = $this->calendarRepository->findRows($query);
+        $level_items = [];
+        foreach ($rows as $row) {
+            $keyRaw = $row['period'] ?? null;
+            $key = is_int($keyRaw) || is_string($keyRaw) ? $keyRaw : '';
+            $level_items[$key] = $row['nb_images'];
+        }
 
         $page_chronology_date = $this->chronology_date;
 
@@ -365,19 +386,21 @@ $this->get_date_where($level) . '
             if ($page_chronology_date[$i] === 'any') {
                 $sub_queries[] = '\'any\'';
             } else {
-                $sub_queries[] = \Piwigo\Db\MysqliDb::castToText($this->calendar_levels[$i]['sql']);
+                $sub_queries[] = \Piwigo\Db\SqlDialect::castToText($this->calendar_levels[$i]['sql']);
             }
         }
-        $query = 'SELECT ' . \Piwigo\Db\MysqliDb::concatWs($sub_queries, '-') . ' AS period';
+        $query = 'SELECT ' . \Piwigo\Db\SqlDialect::concatWs($sub_queries, '-') . ' AS period';
         $query .= $this->inner_sql . '
 AND ' . $this->date_field . ' IS NOT NULL
 GROUP BY period';
 
         $current = implode('-', array_filter($page_chronology_date, is_string(...)));
         // period is a concatenation of non-null date parts (enforced by the
-        // "date_field IS NOT NULL" clause above), but \Piwigo\Db\MysqliDb::query2Array()'s generic
-        // signature still types each element as string|null, so filter for real.
-        $upper_items = array_values(array_filter(\Piwigo\Db\MysqliDb::query2Array($query, null, 'period'), is_string(...)));
+        // "date_field IS NOT NULL" clause above), but the row's value is
+        // still typed as mixed under DBAL, so filter for real.
+        $rows = $this->calendarRepository->findRows($query);
+        $periods = array_map(static fn (array $row): mixed => $row['period'] ?? null, $rows);
+        $upper_items = array_values(array_filter($periods, is_string(...)));
 
         $version_compare_2arg = static fn (string $a, string $b): int => version_compare($a, $b);
 

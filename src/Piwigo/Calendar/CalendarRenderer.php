@@ -138,7 +138,7 @@ final readonly class CalendarRenderer
         $cal_style = $chronology_style;
         $classname = $styles[$cal_style]['classname'];
 
-        $calendar = new $classname();
+        $calendar = new $classname(new CalendarRepository($conn));
         $calendar->chronology_field = $chronologyField;
 
         // Retrieve view

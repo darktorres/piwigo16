@@ -34,23 +34,23 @@ class CalendarWeekly extends CalendarBase
 
         $this->calendar_levels = [
             [
-                'sql' => \Piwigo\Db\MysqliDb::getYear($this->date_field),
+                'sql' => \Piwigo\Db\SqlDialect::getYear($this->date_field),
                 'labels' => null,
             ],
             [
-                'sql' => \Piwigo\Db\MysqliDb::getWeek($this->date_field) . '+1',
+                'sql' => \Piwigo\Db\SqlDialect::getWeek($this->date_field) . '+1',
                 'labels' => $week_no_labels,
             ],
             [
-                'sql' => \Piwigo\Db\MysqliDb::getDayOfWeek($this->date_field) . '-1',
+                'sql' => \Piwigo\Db\SqlDialect::getDayOfWeek($this->date_field) . '-1',
                 'labels' => $day_labels,
             ],
         ];
         // Comment next lines for week starting on Sunday or if MySQL version<4.0.17
         // WEEK(date,5) = "0-53 - Week 1=the first week with a Monday in this year"
         if (\Piwigo\Config\Config::weekStartsOn() === 'monday') {
-            $this->calendar_levels[self::CWEEK]['sql'] = \Piwigo\Db\MysqliDb::getWeek($this->date_field, 5) . '+1';
-            $this->calendar_levels[self::CDAY]['sql'] = \Piwigo\Db\MysqliDb::getWeekday($this->date_field);
+            $this->calendar_levels[self::CWEEK]['sql'] = \Piwigo\Db\SqlDialect::getWeek($this->date_field, 5) . '+1';
+            $this->calendar_levels[self::CDAY]['sql'] = \Piwigo\Db\SqlDialect::getWeekday($this->date_field);
             // Always a real array here: $day_labels above comes from
             // Lang::days(), which never returns null.
             $cday_labels = $this->calendar_levels[self::CDAY]['labels'];

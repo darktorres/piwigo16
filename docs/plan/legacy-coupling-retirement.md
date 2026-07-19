@@ -526,6 +526,58 @@ them when reading commit history or the replay manifest.
     fix (deptrac 0, ECS clean, PHPStan baseline regen — ratio drift
     only, Unit/Arch 604, Contract 93, Integration 620, Browser 64+1
     skipped, Visual 32/32).
+  - **Steps 3–10 (all remaining sub-batches). DONE, commit `4fb6c2ff1`.**
+    Migrated together and verified once at the end (user direction,
+    departing from steps 1–2's per-sub-batch verification rhythm).
+    Step 3 (Auth/Identity/Action): `IdentificationController.php`,
+    `PasswordController.php`, `RegisterController.php`,
+    `ActionController.php`. Step 4 (Profile): `ProfileController.php`,
+    `ProfileFormHandler.php` (4 shared helpers collapsing ~10 repeated
+    chains, 2 `die()` → `fatalError()`). Step 5 (Notification/Ws/Misc
+    top-level): only a dead-`$title`-global cleanup in
+    `NotificationController.php`/`NbmController.php`;
+    `WsController.php`/`VitalsController.php`/`LegacyRenderCapture.php`
+    confirmed already clean. Step 6 (Admin Site/Config):
+    `SiteUpdateSubController.php` (1215 lines, the single densest file
+    in this domain — 20+ MysqliDb call sites, 4 shared helpers
+    including a ported `nextval()`), `SiteManagerSubController.php`,
+    `ConfigurationSubController.php` (1300 lines),
+    `PermalinksSubController.php`; `MaintenanceSubController.php`
+    confirmed already clean. Step 7 (Admin Users/Groups/Rating): all 7
+    files confirmed already clean pure delegates — zero changes, data
+    access lives in their `*PageRenderer` classes (`Piwigo\Admin\`, out
+    of this domain's scope). Step 8 (Admin Photos/Albums/Batch):
+    `BatchManagerSubController.php` (3 shared helpers),
+    `AlbumSubController.php`; 7 of 9 files confirmed already clean.
+    Step 9 (Admin Plugins/Themes/Languages/Updates):
+    `PluginSubController.php` (5 `die()` → `fatalError()`, a
+    path-traversal-adjacent validation chain), `ThemeSubController.php`
+    (3), `UpdatesSubController.php` (1); 4 of 7 files confirmed already
+    clean. Step 10 (Admin Misc): `NotificationByMailSubController.php`
+    (`BatchWriter`/`SqlDialect` retargets), `AdminPopuphelpController.php`
+    (dead-global cleanup only — both `die()`/`exit()` calls confirmed
+    deliberate per its own docblock), `IntroSubController.php` (8
+    MysqliDb call sites); 6 of 10 files confirmed already clean pure
+    delegates. Every `$GLOBALS` bridge found across all 8 steps was
+    individually verified via grep against every real reader before
+    being left alone or removed — none assumed dead or assumed live.
+    **2 real bugs found and fixed via VR, not assumed** (same DBAL
+    native-int-casting class already seen repeatedly this plan):
+    `Piwigo\Admin\CatModifyPageRenderer.php` (outside this domain, but
+    a direct, confirmed consumer of `AlbumSubController.php`'s
+    `$GLOBALS['category']` bridge) had `is_string()`-only guards on
+    `representative_picture_id`/`site_id` that silently broke once
+    `AlbumSubController`'s own query retarget started returning native
+    ints instead of always-string mysqli rows — widened to accept both;
+    same class in `PermalinksSubController.php`'s own `cat_id` history-table
+    lookup. Both confirmed via decode+diff against the VR baseline PNG.
+    Full verification gate green (deptrac 0, ECS clean, PHPStan
+    baseline regenerated — 3186 errors, down from 3191, net removal
+    from now-obsolete suppressions, zero new ones — Unit/Arch 604,
+    Contract 93, Integration 620, Browser 64+1 skipped, Visual 32/32).
+
+  **Phase 1g (Controller) is now fully complete — all 60 files across
+  10 sub-batches DI+DBAL migrated.**
 
 ## What direct investigation found (the basis for phase sequencing)
 
@@ -749,8 +801,19 @@ conversion and DI/construction changes don't apply there the same way.
    cross-cutting gap flagged but deliberately not fixed here (`ConfigDb.php`'s
    own `MysqliDb::` usage has no assigned Phase 1 sub-phase).
 7. **1g — Controller (60 files, 326 call sites, 28 die/exit hits — the
-   single densest caller layer).** Batch by controller/feature area,
-   same rhythm as 1f.
+   single densest caller layer). DONE, 3 commits** (`58b8604af` step 1,
+   `f544ec5f3` step 2, `4fb6c2ff1` steps 3-10) — see Progress log above.
+   10 sub-batches by controller/feature area, same rhythm as 1f for
+   steps 1-2; steps 3-10 migrated together and verified once at the end
+   per user direction. Roughly half the 60 files turned out to already
+   be clean pure delegates (data access already lives in `Piwigo\Admin\`
+   `*PageRenderer` classes, out of this domain's own scope) — confirmed
+   file-by-file, not assumed from the pattern. 3 real bugs found and
+   fixed via VR across the whole phase (1 `ONLY_FULL_GROUP_BY` case
+   matching `Ws\PwgComments`'s own precedent, 2 DBAL native-int-casting
+   cases where a `Piwigo\Admin\` renderer's `is_string()`-only guard
+   broke once its `$GLOBALS` bridge started receiving native ints from
+   a migrated query).
 8. **1h — Admin's real domain (81 files: 237 total minus the 156-file
    frozen Install set).** By far the largest single domain; reuse P23
    batch 6's own proven sub-groupings (user/group management, photo/

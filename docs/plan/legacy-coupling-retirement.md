@@ -183,7 +183,7 @@ them when reading commit history or the replay manifest.
   gallery-locked-maintenance-page in `RequestBootstrap`) were each
   individually investigated and confirmed structurally necessary
   (matching the plan's own "not bootstrap-time code that's fine as-is"
-  carve-out for 1d) — not silently skipped. Commit TBD.
+  carve-out for 1d) — not silently skipped. Commit `bfb705813`.
 - **Next up: Phase 1e** (Core, 46 files, mostly infrastructure — low
   construction density but 6 `MysqliDb::` call sites) — not yet started.
 

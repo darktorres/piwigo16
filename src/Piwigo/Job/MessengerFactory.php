@@ -72,11 +72,13 @@ final class MessengerFactory
                 private DbalConnection $connection,
             ) {}
 
+            #[\Override]
             public function getDefaultConnectionName(): string
             {
                 return 'default';
             }
 
+            #[\Override]
             public function getConnection(?string $name = null): \Doctrine\DBAL\Connection
             {
                 return $this->connection;
@@ -85,6 +87,7 @@ final class MessengerFactory
             /**
              * @return array<string, object>
              */
+            #[\Override]
             public function getConnections(): array
             {
                 return [
@@ -95,6 +98,7 @@ final class MessengerFactory
             /**
              * @return array<string, string>
              */
+            #[\Override]
             public function getConnectionNames(): array
             {
                 return [

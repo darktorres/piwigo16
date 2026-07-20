@@ -22,40 +22,40 @@ class Logger
      * Error severity, from low to high. From BSD syslog RFC, section 4.1.1
      * @see http://www.faqs.org/rfcs/rfc3164.html
      */
-    public const EMERGENCY = 0;  // Emergency: system is unusable
+    public const int EMERGENCY = 0;  // Emergency: system is unusable
 
-    public const ALERT = 1;  // Alert: action must be taken immediately
+    public const int ALERT = 1;  // Alert: action must be taken immediately
 
-    public const CRITICAL = 2;  // Critical: critical conditions
+    public const int CRITICAL = 2;  // Critical: critical conditions
 
-    public const ERROR = 3;  // Error: error conditions
+    public const int ERROR = 3;  // Error: error conditions
 
-    public const WARNING = 4;  // Warning: warning conditions
+    public const int WARNING = 4;  // Warning: warning conditions
 
-    public const NOTICE = 5;  // Notice: normal but significant condition
+    public const int NOTICE = 5;  // Notice: normal but significant condition
 
-    public const INFO = 6;  // Informational: informational messages
+    public const int INFO = 6;  // Informational: informational messages
 
-    public const DEBUG = 7;  // Debug: debug messages
+    public const int DEBUG = 7;  // Debug: debug messages
 
     /**
      * Custom "disable" level.
      */
-    public const OFF = -1; // Log nothing at all
+    public const int OFF = -1; // Log nothing at all
 
     /**
      * Internal status codes.
      */
-    public const STATUS_LOG_OPEN = 1;
+    public const int STATUS_LOG_OPEN = 1;
 
-    public const STATUS_OPEN_FAILED = 2;
+    public const int STATUS_OPEN_FAILED = 2;
 
-    public const STATUS_LOG_CLOSED = 3;
+    public const int STATUS_LOG_CLOSED = 3;
 
     /**
      * Disable archive purge.
      */
-    public const ARCHIVE_NO_PURGE = -1;
+    public const int ARCHIVE_NO_PURGE = -1;
 
     /**
      * Standard messages produced by the class.

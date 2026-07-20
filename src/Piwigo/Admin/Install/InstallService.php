@@ -31,7 +31,7 @@ use RuntimeException;
  * admin/include/functions_install.inc.php (a file it include_once's
  * itself), which forwards to activateCoreThemes() here.
  */
-class InstallService
+final class InstallService
 {
     /**
      * Loads a SQL file and executes all queries.
@@ -138,7 +138,7 @@ class InstallService
      *
      * @var array<string, string>
      */
-    public const PHP5_HOSTING_HTACCESS = [
+    public const array PHP5_HOSTING_HTACCESS = [
         // 1and1
         'kundenserver.de' => 'AddType x-mapp-php5 .php',
 

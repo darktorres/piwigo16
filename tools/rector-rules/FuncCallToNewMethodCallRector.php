@@ -49,6 +49,7 @@ final class FuncCallToNewMethodCallRector extends AbstractRector
     /**
      * @return array<class-string<Node>>
      */
+    #[\Override]
     public function getNodeTypes(): array
     {
         return [FuncCall::class];
@@ -57,6 +58,7 @@ final class FuncCallToNewMethodCallRector extends AbstractRector
     /**
      * @param FuncCall $node
      */
+    #[\Override]
     public function refactor(Node $node): ?Node
     {
         foreach ($this->map as $oldFuncName => [$ctorCode, $methodName]) {

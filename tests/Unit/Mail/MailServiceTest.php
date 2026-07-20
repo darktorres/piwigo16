@@ -16,6 +16,7 @@ use Piwigo\Mail\MailService;
 function mail_service_with_fake_webmaster(): MailService
 {
     return new MailService(new class implements WebmasterMailProviderInterface {
+        #[\Override]
         public function getWebmasterMailAddress(): string
         {
             return 'webmaster@example.test';

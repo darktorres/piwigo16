@@ -29,7 +29,7 @@ use Piwigo\Db\DbConnection;
  * already define()'d -- no $conf/$prefixeTable global needed here anymore
  * (Legacy Coupling Retirement Track A gap-fill batch G5).
  */
-class UpgradeFeedRunner
+final class UpgradeFeedRunner
 {
     public function run(): void
     {

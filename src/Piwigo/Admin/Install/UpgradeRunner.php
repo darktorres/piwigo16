@@ -53,7 +53,7 @@ use Piwigo\Url\UrlService;
  * pre-container call site) is why every ConfigDb:: call here (Tier 3)
  * stays on ConfigDb rather than ConfigService.
  */
-class UpgradeRunner
+final class UpgradeRunner
 {
     private string $language = '';
 

@@ -68,20 +68,14 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
      */
     private string $html_style = '';
 
-    /**
-     * @const string
-     */
-    public const COMBINED_SCRIPTS_TAG = '<!-- COMBINED_SCRIPTS -->';
+    public const string COMBINED_SCRIPTS_TAG = '<!-- COMBINED_SCRIPTS -->';
 
     /**
      * @var ScriptLoader
      */
     public $scriptLoader;
 
-    /**
-     * @const string
-     */
-    public const COMBINED_CSS_TAG = '<!-- COMBINED_CSS -->';
+    public const string COMBINED_CSS_TAG = '<!-- COMBINED_CSS -->';
 
     /**
      * @var CssLoader

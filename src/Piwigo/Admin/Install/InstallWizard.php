@@ -49,7 +49,7 @@ use Piwigo\Url\UrlService;
  * its real call sites) is why every ConfigDb:: call here (Tier 3) stays
  * on ConfigDb rather than ConfigService.
  */
-class InstallWizard
+final class InstallWizard
 {
     private readonly string $confDataLocation;
 

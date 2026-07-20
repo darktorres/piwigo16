@@ -45,7 +45,7 @@ use Piwigo\Db\Tables;
  * fact is why its extents_for_templates write (Tier 3) stays on ConfigDb
  * rather than ConfigService.
  */
-class UpgradeService
+final class UpgradeService
 {
     public static function checkUpgrade(): bool
     {

@@ -27,7 +27,7 @@ abstract class ContractTestCase extends IntegrationTestCase
      * $_SERVER['HTTP_USER_AGENT'] unguarded — real HTTP clients always send
      * one, so the test client does too rather than special-casing curl.
      */
-    protected const USER_AGENT = 'PiwigoContractTests/1.0';
+    protected const string USER_AGENT = 'PiwigoContractTests/1.0';
 
     private static bool $fixtureReady = false;
 

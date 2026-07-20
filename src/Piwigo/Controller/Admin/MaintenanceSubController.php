@@ -8,6 +8,7 @@ use Piwigo\Admin\MaintenanceActionsPageRenderer;
 use Piwigo\Admin\MaintenanceEnvPageRenderer;
 use Piwigo\Admin\MaintenanceSysPageRenderer;
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -89,67 +90,67 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         $maint_actions = [
             'derivatives' => [
                 'icon' => 'icon-trash-1',
-                'label' => l10n('Delete multiple size images'),
+                'label' => Lang::t('Delete multiple size images'),
             ],
             'lock_gallery' => [
                 'icon' => 'icon-lock',
-                'label' => l10n('Lock gallery'),
+                'label' => Lang::t('Lock gallery'),
             ],
             'unlock_gallery' => [
                 'icon' => 'icon-lock',
-                'label' => l10n('Unlock gallery'),
+                'label' => Lang::t('Unlock gallery'),
             ],
             'categories' => [
                 'icon' => 'icon-folder-open',
-                'label' => l10n('Update albums informations'),
+                'label' => Lang::t('Update albums informations'),
             ],
             'images' => [
                 'icon' => 'icon-info-circled-1',
-                'label' => l10n('Update photos information'),
+                'label' => Lang::t('Update photos information'),
             ],
             'empty_lounge' => [
                 'icon' => 'icon-thumbs-up',
-                'label' => l10n('Empty lounge'),
+                'label' => Lang::t('Empty lounge'),
             ],
             'delete_orphan_tags' => [
                 'icon' => 'icon-tags',
-                'label' => l10n('Delete orphan tags'),
+                'label' => Lang::t('Delete orphan tags'),
             ],
             'user_cache' => [
                 'icon' => 'icon-user-1',
-                'label' => l10n('Purge user cache'),
+                'label' => Lang::t('Purge user cache'),
             ],
             'history_detail' => [
                 'icon' => 'icon-back-in-time',
-                'label' => l10n('Purge history detail'),
+                'label' => Lang::t('Purge history detail'),
             ],
             'history_summary' => [
                 'icon' => 'icon-back-in-time',
-                'label' => l10n('Purge history summary'),
+                'label' => Lang::t('Purge history summary'),
             ],
             'sessions' => [
                 'icon' => 'icon-th-list',
-                'label' => l10n('Purge sessions'),
+                'label' => Lang::t('Purge sessions'),
             ],
             'feeds' => [
                 'icon' => 'icon-bell',
-                'label' => l10n('Purge never used notification feeds'),
+                'label' => Lang::t('Purge never used notification feeds'),
             ],
             'database' => [
                 'icon' => 'icon-database',
-                'label' => l10n('Repair and optimize database'),
+                'label' => Lang::t('Repair and optimize database'),
             ],
             'c13y' => [
                 'icon' => 'icon-ok',
-                'label' => l10n('Reinitialize check integrity'),
+                'label' => Lang::t('Reinitialize check integrity'),
             ],
             'search' => [
                 'icon' => 'icon-search',
-                'label' => l10n('Purge search history'),
+                'label' => Lang::t('Purge search history'),
             ],
             'compiled-templates' => [
                 'icon' => 'icon-file-code',
-                'label' => l10n('Purge compiled templates'),
+                'label' => Lang::t('Purge compiled templates'),
             ],
         ];
 
@@ -188,7 +189,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
 
         $template->assign(
             [
-                'ADMIN_PAGE_TITLE' => l10n('Maintenance'),
+                'ADMIN_PAGE_TITLE' => Lang::t('Maintenance'),
             ]
         );
     }

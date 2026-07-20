@@ -10,6 +10,7 @@ use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Template\Template;
@@ -152,7 +153,7 @@ final class UpdatesPwgPageRenderer
         // +-----------------------------------------------------------------------+
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         $template->assign(
@@ -190,7 +191,7 @@ final class UpdatesPwgPageRenderer
             );
         }
 
-        $template->assign('ADMIN_PAGE_TITLE', l10n('Updates'));
+        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Updates'));
         $template->set_filename('plugin_admin_content', 'updates_pwg.tpl');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');
     }

@@ -20,6 +20,7 @@ use Piwigo\Bootstrap\PageTail;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -258,8 +259,8 @@ final class AdminShell
         // | Template init                                                     |
         // +-------------------------------------------------------------------+
 
-        $title = l10n('Piwigo Administration'); // for the PageHeaderRenderer::render() call below
-        \Piwigo\Core\PageState::current()->setPageBanner('<h1>' . l10n('Piwigo Administration') . '</h1>');
+        $title = Lang::t('Piwigo Administration'); // for the PageHeaderRenderer::render() call below
+        \Piwigo\Core\PageState::current()->setPageBanner('<h1>' . Lang::t('Piwigo Administration') . '</h1>');
         \Piwigo\Core\PageState::current()->setBodyId('theAdminPage');
 
         $template->set_filenames([

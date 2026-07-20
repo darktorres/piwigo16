@@ -8,6 +8,7 @@ use Piwigo\Admin\PluginsInstalledPageRenderer;
 use Piwigo\Admin\PluginsNewPageRenderer;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Admin\UpdatesExtPageRenderer;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Template\Template;
@@ -83,7 +84,7 @@ final class PluginsSubController implements AdminSubControllerInterface
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
                 ->render('plugins', $this->urlService);
-            $template->assign('ADMIN_PAGE_TITLE', l10n('Plugins'));
+            $template->assign('ADMIN_PAGE_TITLE', Lang::t('Plugins'));
         } elseif ($tab === 'new') {
             new PluginsNewPageRenderer($this->redirectService, $this->urlService)
                 ->render('plugins', $tab);

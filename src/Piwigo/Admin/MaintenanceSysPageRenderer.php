@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Admin\Maintenance\ActivityLogEntryFormatter;
+use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Template\Template;
 
@@ -68,7 +69,7 @@ final class MaintenanceSysPageRenderer
                 exit;
             }
         } else {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         // +-------------------------------------------------------------------+

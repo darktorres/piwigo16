@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Template\Template;
 
@@ -209,7 +210,7 @@ abstract class CalendarBase
         if (isset($this->calendar_levels[$level]['labels'][$date_component])) {
             $label = $this->calendar_levels[$level]['labels'][$date_component];
         } elseif ($date_component === 'any') {
-            $label = l10n('All');
+            $label = Lang::t('All');
         }
         return $label;
     }
@@ -301,7 +302,7 @@ abstract class CalendarBase
                 ['start']
             );
             $nav_bar_datas[] = [
-                'LABEL' => l10n('All'),
+                'LABEL' => Lang::t('All'),
                 'URL' => $url,
             ];
         }

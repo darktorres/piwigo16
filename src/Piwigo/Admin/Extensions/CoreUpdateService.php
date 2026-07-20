@@ -8,6 +8,7 @@ use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
@@ -205,19 +206,19 @@ final readonly class CoreUpdateService
         new MailService()
             ->switchLangTo(new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($notifyConn), new \Piwigo\Group\GroupRepository($notifyConn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($notifyConn)), new HtmlService(), $notifyConn)->getDefaultLanguage());
 
-        $content = l10n('Hello,');
-        $content .= "\n\n" . l10n(
+        $content = Lang::t('Hello,');
+        $content .= "\n\n" . Lang::t(
             'Time has come to update your Piwigo with version %s, go to %s',
             $newVersionsString,
             $this->urlService->getAbsoluteRootUrl() . 'admin.php?page=updates'
         );
-        $content .= "\n\n" . l10n('It only takes a few clicks.');
-        $content .= "\n\n" . l10n('Running on an up-to-date Piwigo is important for security.');
+        $content .= "\n\n" . Lang::t('It only takes a few clicks.');
+        $content .= "\n\n" . Lang::t('Running on an up-to-date Piwigo is important for security.');
 
         new MailService()
             ->mailAdmins(
                 [
-                    'subject' => l10n('Piwigo %s is available, please update', $newVersionsString),
+                    'subject' => Lang::t('Piwigo %s is available, please update', $newVersionsString),
                     'content' => $content,
                     'content_format' => 'text/plain',
                 ],
@@ -304,14 +305,14 @@ final readonly class CoreUpdateService
         }
 
         if (! (bool) @filesize($filename)) {
-            \Piwigo\Core\PageState::current()->addError(l10n('Piwigo cannot retrieve upgrade file from server'));
+            \Piwigo\Core\PageState::current()->addError(Lang::t('Piwigo cannot retrieve upgrade file from server'));
             return;
         }
 
         $result = $this->zipExtractor->extract($filename, PHPWG_ROOT_PATH, $removePath, 0755);
         if ($result === null) {
             FilesystemHelper::deltree(PHPWG_ROOT_PATH . $dataLocation . 'update');
-            \Piwigo\Core\PageState::current()->addError(l10n('An error has occured during upgrade.'));
+            \Piwigo\Core\PageState::current()->addError(Lang::t('An error has occured during upgrade.'));
             return;
         }
 
@@ -337,7 +338,7 @@ final readonly class CoreUpdateService
         if ($error !== '') {
             file_put_contents(PHPWG_ROOT_PATH . $dataLocation . 'update/log_error.txt', $error);
 
-            \Piwigo\Core\PageState::current()->addError(l10n(
+            \Piwigo\Core\PageState::current()->addError(Lang::t(
                 'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
                 $this->urlService->getRootUrl() . $dataLocation . 'update/log_error.txt'
             ));
@@ -360,7 +361,7 @@ final readonly class CoreUpdateService
             $template->delete_compiled_templates();
             \Piwigo\Config\ConfigDb::confDeleteParam('fs_quick_check_last_check');
 
-            \Piwigo\Core\PageState::current()->addInfo(l10n('Update Complete'));
+            \Piwigo\Core\PageState::current()->addInfo(Lang::t('Update Complete'));
             \Piwigo\Core\PageState::current()->addInfo($upgradeTo);
             \Piwigo\Core\PageState::current()->setUpdatedVersion($upgradeTo);
             $step = -1;

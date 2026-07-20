@@ -9,6 +9,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -88,7 +89,7 @@ final class FeedController implements ControllerInterface
         if ($feed_id !== '') {
             $feed_row = $feed_repo->findById($feed_id);
             if ($feed_row === null) {
-                $htmlRenderer->pageNotFound($this->redirectService, l10n('Unknown feed identifier'));
+                $htmlRenderer->pageNotFound($this->redirectService, Lang::t('Unknown feed identifier'));
             }
             $feed_last_check = $feed_row['lastCheck'];
             $user_id_before = is_numeric($user['id']) ? (int) $user['id'] : null;
@@ -157,7 +158,7 @@ final class FeedController implements ControllerInterface
                 assert($dbnow_ts !== false);
 
                 $rss_items[] = [
-                    'title' => l10n('New on %s', \Piwigo\Core\DateHelper::formatDate($dbnow)),
+                    'title' => Lang::t('New on %s', \Piwigo\Core\DateHelper::formatDate($dbnow)),
                     'link' => $this->urlService->getGalleryHomeUrl(),
                     'description' => $description,
                     'html' => true,

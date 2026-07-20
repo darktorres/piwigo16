@@ -8,6 +8,7 @@ use Piwigo\Cache\PersistentCache;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -471,7 +472,7 @@ SELECT id
                         'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
-                                    . l10n('Search results') . '</a>',
+                                    . Lang::t('Search results') . '</a>',
                     ]
                 );
             }
@@ -487,7 +488,7 @@ SELECT id
                         'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
-                                    . l10n('Favorites') . '</a>',
+                                    . Lang::t('Favorites') . '</a>',
                     ]
                 );
 
@@ -570,7 +571,7 @@ SELECT id
                         'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
-                                    . l10n('Recent photos') . '</a>',
+                                    . Lang::t('Recent photos') . '</a>',
                         'items' => $this->repo->queryColumn($query),
                     ]
                 );
@@ -585,7 +586,7 @@ SELECT id
                         'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
-                                    . l10n('Recent albums') . '</a>',
+                                    . Lang::t('Recent albums') . '</a>',
                     ]
                 );
             }
@@ -617,7 +618,7 @@ SELECT id
                         'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
-                                    . $top_number . ' ' . l10n('Most visited') . '</a>',
+                                    . $top_number . ' ' . Lang::t('Most visited') . '</a>',
                         'items' => $this->repo->queryColumn($query),
                     ]
                 );
@@ -650,7 +651,7 @@ SELECT id
                         'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
-                                    . $top_number . ' ' . l10n('Best rated') . '</a>',
+                                    . $top_number . ' ' . Lang::t('Best rated') . '</a>',
                         'items' => $this->repo->queryColumn($query),
                     ]
                 );
@@ -682,7 +683,7 @@ SELECT id
                         'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
-                                    . l10n('Random photos') . '</a>',
+                                    . Lang::t('Random photos') . '</a>',
                         'items' => $this->repo->queryColumn($query),
                     ]
                 );
@@ -736,7 +737,7 @@ SELECT id
             // widening this concatenation's context
             $gallery_home_url = $this->urlService->getGalleryHomeUrl();
             $gallery_home_url = is_string($gallery_home_url) ? $gallery_home_url : '';
-            $page['section_title'] = '<a href="' . $gallery_home_url . '">' . l10n('Home') . '</a>';
+            $page['section_title'] = '<a href="' . $gallery_home_url . '">' . Lang::t('Home') . '</a>';
             $title_value = is_string($page['title']) ? $page['title'] : '';
             if ($title_value !== '' && $title_value !== '0') {
                 $level_separator = \Piwigo\Config\Config::levelSeparator();

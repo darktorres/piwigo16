@@ -14,6 +14,7 @@ namespace Piwigo\Ws;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
+use Piwigo\Core\Lang;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -190,7 +191,7 @@ SELECT
                 $author_name = $row_author;
             } else {
                 $row_username = $row['username'] ?? null;
-                $author_name = stripslashes((is_string($row_username) ? $row_username : null) ?? $row_author ?? l10n('guest'));
+                $author_name = stripslashes((is_string($row_username) ? $row_username : null) ?? $row_author ?? Lang::t('guest'));
             }
 
             // date/date_available are NOT NULL DATETIME columns -- always
@@ -282,7 +283,7 @@ GROUP BY author_id
     public static function delete(array $params, PwgServer &$service): PwgError|string
     {
         if (new CsrfService()->getToken() != $params['pwg_token']) {
-            return new PwgError(403, l10n('Invalid security token'));
+            return new PwgError(403, Lang::t('Invalid security token'));
         }
 
         $params['comment_id'] = array_unique($params['comment_id']);
@@ -302,7 +303,7 @@ GROUP BY author_id
     public static function validate(array $params, PwgServer &$service): PwgError|string
     {
         if (new CsrfService()->getToken() != $params['pwg_token']) {
-            return new PwgError(403, l10n('Invalid security token'));
+            return new PwgError(403, Lang::t('Invalid security token'));
         }
 
         $params['comment_id'] = array_unique($params['comment_id']);

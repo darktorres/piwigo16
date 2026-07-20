@@ -7,6 +7,7 @@ namespace Piwigo\Tag;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageRepository;
@@ -611,13 +612,13 @@ final readonly class TagService
             $insertedId = $this->repo->insert($tagName, $urlName);
 
             return [
-                'info' => l10n('Tag "%s" was added', stripslashes($tagName)),
+                'info' => Lang::t('Tag "%s" was added', stripslashes($tagName)),
                 'id' => $insertedId,
             ];
         }
 
         return [
-            'error' => l10n('Tag "%s" already exists', stripslashes($tagName)),
+            'error' => Lang::t('Tag "%s" already exists', stripslashes($tagName)),
         ];
     }
 

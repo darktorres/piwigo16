@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
@@ -107,14 +108,14 @@ final class RatingPageRenderer
         );
 
         $available_order_by = [
-            [l10n('Rate date'), 'recently_rated DESC'],
-            [l10n('Rating score'), 'score DESC'],
-            [l10n('Average rate'), 'avg_rates DESC'],
-            [l10n('Number of rates'), 'nb_rates DESC'],
-            [l10n('Sum of rates'), 'sum_rates DESC'],
-            [l10n('File name'), 'file DESC'],
-            [l10n('Creation date'), 'date_creation DESC'],
-            [l10n('Post date'), 'date_available DESC'],
+            [Lang::t('Rate date'), 'recently_rated DESC'],
+            [Lang::t('Rating score'), 'score DESC'],
+            [Lang::t('Average rate'), 'avg_rates DESC'],
+            [Lang::t('Number of rates'), 'nb_rates DESC'],
+            [Lang::t('Sum of rates'), 'sum_rates DESC'],
+            [Lang::t('File name'), 'file DESC'],
+            [Lang::t('Creation date'), 'date_creation DESC'],
+            [Lang::t('Post date'), 'date_available DESC'],
         ];
 
         for ($i = 0; $i < count($available_order_by); $i++) {
@@ -126,14 +127,14 @@ final class RatingPageRenderer
         $template->assign('order_by_options_selected', [$order_by_index]);
 
         $user_options = [
-            'all' => l10n('all'),
-            'user' => l10n('Users'),
-            'guest' => l10n('Guests'),
+            'all' => Lang::t('all'),
+            'user' => Lang::t('Users'),
+            'guest' => Lang::t('Guests'),
         ];
 
         $template->assign('user_options', $user_options);
         $template->assign('user_options_selected', [$_GET['users'] ?? null]);
-        $template->assign('ADMIN_PAGE_TITLE', l10n('Rating'));
+        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Rating'));
 
         $images = $rate_repository->findRatingReport(
             $filter_user_id,

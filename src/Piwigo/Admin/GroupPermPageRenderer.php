@@ -12,6 +12,7 @@ use Piwigo\Audit\AuditService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
@@ -147,13 +148,13 @@ SELECT id
 
         $template->assign(
             [
-                'TITLE' => l10n(
+                'TITLE' => Lang::t(
                     'Manage permissions for group "%s"',
                     new GroupRepository($conn)
                         ->findName($group_id) ?? false
                 ),
-                'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
-                'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
+                'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),
+                'L_CAT_OPTIONS_FALSE' => Lang::t('Forbidden'),
 
                 'F_ACTION' => $this->urlService->getRootUrl() .
                     'admin.php?page=group_perm&amp;group_id=' .

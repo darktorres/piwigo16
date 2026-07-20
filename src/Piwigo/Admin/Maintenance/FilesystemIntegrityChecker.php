@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Maintenance;
 
+use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
@@ -101,7 +102,7 @@ SELECT
                 $template->assign(
                     'header_msgs',
                     [
-                        l10n('Some photos are missing from your file system. Details provided by plugin Check Uploads'),
+                        Lang::t('Some photos are missing from your file system. Details provided by plugin Check Uploads'),
                     ]
                 );
 
@@ -125,7 +126,7 @@ SELECT
             $template->assign(
                 'header_msgs',
                 [
-                    l10n('We have found %d duplicate paths. Details provided by plugin Check Uploads', count($duplicate_paths)),
+                    Lang::t('We have found %d duplicate paths. Details provided by plugin Check Uploads', count($duplicate_paths)),
                 ]
             );
 

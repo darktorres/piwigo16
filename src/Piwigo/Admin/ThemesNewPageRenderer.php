@@ -9,6 +9,7 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Template\Template;
@@ -59,7 +60,7 @@ final class ThemesNewPageRenderer
 
         $themes_dir = PHPWG_ROOT_PATH . 'themes';
         if (! is_writable($themes_dir)) {
-            \Piwigo\Core\PageState::current()->addError(l10n('Add write access to the "%s" directory', 'themes'));
+            \Piwigo\Core\PageState::current()->addError(Lang::t('Add write access to the "%s" directory', 'themes'));
         }
 
         // +-----------------------------------------------------------------------+
@@ -70,7 +71,7 @@ final class ThemesNewPageRenderer
             and is_string($_GET['revision']) and is_string($_GET['extension'])
         ) {
             if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-                \Piwigo\Core\PageState::current()->addError(l10n('Webmaster status is required.'));
+                \Piwigo\Core\PageState::current()->addError(Lang::t('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
                     ->checkOrFail(new \Piwigo\Html\HtmlService(), $this->redirectService);
@@ -90,7 +91,7 @@ final class ThemesNewPageRenderer
         if (isset($_GET['installstatus'])) {
             switch ($_GET['installstatus']) {
                 case 'ok':
-                    \Piwigo\Core\PageState::current()->addInfo(l10n('Theme has been successfully installed'));
+                    \Piwigo\Core\PageState::current()->addInfo(Lang::t('Theme has been successfully installed'));
 
                     $installed_theme_id = $_GET['theme_id'] ?? null;
                     $installed_fs_theme = is_string($installed_theme_id) ? ($extension_scanner->scan(ExtensionType::Theme, $this->urlService)[$installed_theme_id] ?? null) : null;
@@ -103,22 +104,22 @@ final class ThemesNewPageRenderer
                     break;
 
                 case 'temp_path_error':
-                    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t create temporary file.'));
+                    \Piwigo\Core\PageState::current()->addError(Lang::t('Can\'t create temporary file.'));
                     break;
 
                 case 'dl_archive_error':
-                    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t download archive.'));
+                    \Piwigo\Core\PageState::current()->addError(Lang::t('Can\'t download archive.'));
                     break;
 
                 case 'archive_error':
-                    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t read or extract archive.'));
+                    \Piwigo\Core\PageState::current()->addError(Lang::t('Can\'t read or extract archive.'));
                     break;
 
                 default:
                     $installstatus_raw = $_GET['installstatus'];
                     $installstatus_str = is_scalar($installstatus_raw) ? (string) $installstatus_raw : '';
                     \Piwigo\Core\PageState::current()->addError(
-                        l10n(
+                        Lang::t(
                             'An error occured during extraction (%s).',
                             htmlspecialchars($installstatus_str)
                         )
@@ -171,7 +172,7 @@ final class ThemesNewPageRenderer
                 );
             }
         } else {
-            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t connect to server.'));
+            \Piwigo\Core\PageState::current()->addError(Lang::t('Can\'t connect to server.'));
         }
 
         $admin_theme_pref = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('admin_theme', 'clear');
@@ -179,7 +180,7 @@ final class ThemesNewPageRenderer
             'default_screenshot',
             $this->urlService->getRootUrl() . 'admin/themes/' . (is_string($admin_theme_pref) ? $admin_theme_pref : 'clear') . '/images/missing_screenshot.png'
         );
-        $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
+        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'themes');
     }

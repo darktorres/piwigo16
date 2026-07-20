@@ -9,6 +9,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
@@ -212,7 +213,7 @@ final class PluginsInstalledPageRenderer
 
                 $plugin_state = 'merged';
                 $tpl_plugin['STATE'] = $plugin_state;
-                $tpl_plugin['DESC'] = l10n('THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW.');
+                $tpl_plugin['DESC'] = Lang::t('THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW.');
                 $merged_plugins = true;
             }
 
@@ -239,7 +240,7 @@ final class PluginsInstalledPageRenderer
                     'NAME' => $plugin_id,
                     'ID' => $plugin_id,
                     'VERSION' => $db_plugins_by_id[$plugin_id]['version'],
-                    'DESC' => l10n('ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW.'),
+                    'DESC' => Lang::t('ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW.'),
                     'STATE' => 'missing',
                 ];
                 $count_types_plugins['missing']++;
@@ -256,7 +257,7 @@ final class PluginsInstalledPageRenderer
                 'show_details' => $show_details,
                 'max_inactive_before_hide' => isset($_GET['show_inactive']) ? 999 : 8,
                 'isWebmaster' => (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0,
-                'ADMIN_PAGE_TITLE' => l10n('Plugins'),
+                'ADMIN_PAGE_TITLE' => Lang::t('Plugins'),
                 'view_selector' => new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository($conn))
                     ->getParam('plugin-manager-view', 'classic'),
                 'CONF_ENABLE_EXTENSIONS_INSTALL' => \Piwigo\Config\Config::enableExtensionsInstall(),

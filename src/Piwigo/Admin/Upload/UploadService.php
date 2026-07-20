@@ -10,6 +10,7 @@ use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Config\Config;
 use Piwigo\Core\Env;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
@@ -95,7 +96,7 @@ final class UploadService
                 'max' => 20000,
                 'pattern' => '/^\d+$/',
                 'can_be_null' => false,
-                'error_message' => l10n('The original maximum width must be a number between %d and %d'),
+                'error_message' => Lang::t('The original maximum width must be a number between %d and %d'),
             ],
 
             'original_resize_maxheight' => [
@@ -104,7 +105,7 @@ final class UploadService
                 'max' => 20000,
                 'pattern' => '/^\d+$/',
                 'can_be_null' => false,
-                'error_message' => l10n('The original maximum height must be a number between %d and %d'),
+                'error_message' => Lang::t('The original maximum height must be a number between %d and %d'),
             ],
 
             'original_resize_quality' => [
@@ -113,7 +114,7 @@ final class UploadService
                 'max' => 98,
                 'pattern' => '/^\d+$/',
                 'can_be_null' => false,
-                'error_message' => l10n('The original image quality must be a number between %d and %d'),
+                'error_message' => Lang::t('The original image quality must be a number between %d and %d'),
             ],
         ];
     }
@@ -1235,16 +1236,16 @@ SELECT
     {
         return match ($error_code) {
             UPLOAD_ERR_INI_SIZE => sprintf(
-                l10n('The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB'),
+                Lang::t('The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB'),
                 $this->getIniSize('upload_max_filesize', false)
             ),
-            UPLOAD_ERR_FORM_SIZE => l10n('The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form'),
-            UPLOAD_ERR_PARTIAL => l10n('The uploaded file was only partially uploaded'),
-            UPLOAD_ERR_NO_FILE => l10n('No file was uploaded'),
-            UPLOAD_ERR_NO_TMP_DIR => l10n('Missing a temporary folder'),
-            UPLOAD_ERR_CANT_WRITE => l10n('Failed to write file to disk'),
-            UPLOAD_ERR_EXTENSION => l10n('File upload stopped by extension'),
-            default => l10n('Unknown upload error'),
+            UPLOAD_ERR_FORM_SIZE => Lang::t('The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form'),
+            UPLOAD_ERR_PARTIAL => Lang::t('The uploaded file was only partially uploaded'),
+            UPLOAD_ERR_NO_FILE => Lang::t('No file was uploaded'),
+            UPLOAD_ERR_NO_TMP_DIR => Lang::t('Missing a temporary folder'),
+            UPLOAD_ERR_CANT_WRITE => Lang::t('Failed to write file to disk'),
+            UPLOAD_ERR_EXTENSION => Lang::t('File upload stopped by extension'),
+            default => Lang::t('Unknown upload error'),
         };
     }
 
@@ -1302,7 +1303,7 @@ SELECT
         if (! is_dir($upload_dir)) {
             if (! is_writable(dirname($upload_dir))) {
                 return sprintf(
-                    l10n('Create the "%s" directory at the root of your Piwigo installation'),
+                    Lang::t('Create the "%s" directory at the root of your Piwigo installation'),
                     $relative_dir
                 );
             }
@@ -1317,7 +1318,7 @@ SELECT
                 // @phpstan-ignore booleanNot.alwaysTrue
                 if (! is_writable($upload_dir)) {
                     return sprintf(
-                        l10n('Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation'),
+                        Lang::t('Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation'),
                         $relative_dir
                     );
                 }

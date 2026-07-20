@@ -11,6 +11,7 @@ use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Session\SessionService;
@@ -68,7 +69,7 @@ final class PluginsNewPageRenderer
             and is_string($_GET['revision']) and is_string($_GET['extension'])
         ) {
             if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-                \Piwigo\Core\PageState::current()->addError(l10n('Webmaster status is required.'));
+                \Piwigo\Core\PageState::current()->addError(Lang::t('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
                     ->checkOrFail(new \Piwigo\Html\HtmlService(), $this->redirectService);
@@ -91,8 +92,8 @@ final class PluginsNewPageRenderer
                     // installed plugin and click on the activation switch.
                     $activate_url = $this->urlService->getRootUrl() . 'admin.php?page=plugins&amp;filter=deactivated';
 
-                    \Piwigo\Core\PageState::current()->addInfo(l10n('Plugin has been successfully copied'));
-                    \Piwigo\Core\PageState::current()->addInfo('<a href="' . $activate_url . '">' . l10n('Activate it now') . '</a>');
+                    \Piwigo\Core\PageState::current()->addInfo(Lang::t('Plugin has been successfully copied'));
+                    \Piwigo\Core\PageState::current()->addInfo('<a href="' . $activate_url . '">' . Lang::t('Activate it now') . '</a>');
 
                     $installed_plugin_id = $_GET['plugin_id'] ?? null;
                     $installed_fs_plugin = is_string($installed_plugin_id) ? ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService)[$installed_plugin_id] ?? null) : null;
@@ -105,22 +106,22 @@ final class PluginsNewPageRenderer
                     break;
 
                 case 'temp_path_error':
-                    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t create temporary file.'));
+                    \Piwigo\Core\PageState::current()->addError(Lang::t('Can\'t create temporary file.'));
                     break;
 
                 case 'dl_archive_error':
-                    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t download archive.'));
+                    \Piwigo\Core\PageState::current()->addError(Lang::t('Can\'t download archive.'));
                     break;
 
                 case 'archive_error':
-                    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t read or extract archive.'));
+                    \Piwigo\Core\PageState::current()->addError(Lang::t('Can\'t read or extract archive.'));
                     break;
 
                 default:
                     $installstatus_raw = $_GET['installstatus'];
                     $installstatus_str = is_scalar($installstatus_raw) ? (string) $installstatus_raw : '';
-                    \Piwigo\Core\PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars($installstatus_str)));
-                    \Piwigo\Core\PageState::current()->addError(l10n('Please check "plugins" folder and sub-folders permissions (CHMOD).'));
+                    \Piwigo\Core\PageState::current()->addError(Lang::t('An error occured during extraction (%s).', htmlspecialchars($installstatus_str)));
+                    \Piwigo\Core\PageState::current()->addError(Lang::t('Please check "plugins" folder and sub-folders permissions (CHMOD).'));
             }
         }
 
@@ -128,11 +129,11 @@ final class PluginsNewPageRenderer
         $template->assign(
             'order_options',
             [
-                'date' => l10n('Post date'),
-                'revision' => l10n('Last revisions'),
-                'name' => l10n('Name'),
-                'author' => l10n('Author'),
-                'downloads' => l10n('Number of downloads'),
+                'date' => Lang::t('Post date'),
+                'revision' => Lang::t('Last revisions'),
+                'name' => Lang::t('Name'),
+                'author' => Lang::t('Author'),
+                'downloads' => Lang::t('Number of downloads'),
             ]
         );
 
@@ -266,13 +267,13 @@ final class PluginsNewPageRenderer
             }
 
         } else {
-            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t connect to server.'));
+            \Piwigo\Core\PageState::current()->addError(Lang::t('Can\'t connect to server.'));
         }
 
         if (! $beta_test and (bool) preg_match('/(beta|RC)/', AppInfo::VERSION)) {
             $template->assign('BETA_URL', $base_url . '&amp;beta-test=true');
         }
-        $template->assign('ADMIN_PAGE_TITLE', l10n('Plugins'));
+        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Plugins'));
         $template->assign('BETA_TEST', $beta_test);
         $template->assign_var_from_handle('ADMIN_CONTENT', 'plugins');
     }

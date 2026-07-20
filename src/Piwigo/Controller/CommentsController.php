@@ -11,6 +11,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
@@ -80,14 +81,14 @@ final class CommentsController implements ControllerInterface
           . $this->urlService->getQueryStringDiff(['delete', 'edit', 'validate', 'pwg_token']);
 
         $sort_order = [
-            'DESC' => l10n('descending'),
-            'ASC' => l10n('ascending'),
+            'DESC' => Lang::t('descending'),
+            'ASC' => Lang::t('ascending'),
         ];
 
         // sort_by : database fields proposed for sorting comments list
         $sort_by = [
-            'date' => l10n('comment date'),
-            'image_id' => l10n('photo'),
+            'date' => Lang::t('comment date'),
+            'image_id' => Lang::t('photo'),
         ];
 
         // items_number : list of number of items to display per page
@@ -122,19 +123,19 @@ final class CommentsController implements ControllerInterface
         //
         $since_options = [
             1 => [
-                'label' => l10n('today'),
+                'label' => Lang::t('today'),
                 'clause' => 'date > ' . SqlDialect::getRecentPeriodExpression(1),
             ],
             2 => [
-                'label' => l10n('last %d days', 7),
+                'label' => Lang::t('last %d days', 7),
                 'clause' => 'date > ' . SqlDialect::getRecentPeriodExpression(7),
             ],
             3 => [
-                'label' => l10n('last %d days', 30),
+                'label' => Lang::t('last %d days', 30),
                 'clause' => 'date > ' . SqlDialect::getRecentPeriodExpression(30),
             ],
             4 => [
-                'label' => l10n('the beginning'),
+                'label' => Lang::t('the beginning'),
                 'clause' => '1=1',
             ], // stupid but generic
         ];
@@ -346,20 +347,20 @@ final class CommentsController implements ControllerInterface
                                 if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
                                     $_SESSION['page_infos'] = [];
                                 }
-                                $_SESSION['page_infos'][] = l10n('An administrator must authorize your comment before it is visible.');
+                                $_SESSION['page_infos'][] = Lang::t('An administrator must authorize your comment before it is visible.');
                                 // no break
                             case 'validate':
                                 if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
                                     $_SESSION['page_infos'] = [];
                                 }
-                                $_SESSION['page_infos'][] = l10n('Your comment has been registered');
+                                $_SESSION['page_infos'][] = Lang::t('Your comment has been registered');
                                 $perform_redirect = true;
                                 break;
                             case 'reject':
                                 if (! isset($_SESSION['page_errors']) or ! is_array($_SESSION['page_errors'])) {
                                     $_SESSION['page_errors'] = [];
                                 }
-                                $_SESSION['page_errors'][] = l10n('Your comment has NOT been registered because it did not pass the validation rules');
+                                $_SESSION['page_errors'][] = Lang::t('Your comment has NOT been registered because it did not pass the validation rules');
                                 break;
                             default:
                                 trigger_error('Invalid comment action ' . $comment_action, E_USER_WARNING);
@@ -403,7 +404,7 @@ final class CommentsController implements ControllerInterface
             // |                    page header and options                    |
             // +---------------------------------------------------------------+
 
-            $title = l10n('User comments');
+            $title = Lang::t('User comments');
             \Piwigo\Core\PageState::current()->setBodyId('theCommentsPage');
 
             $template->set_filenames([
@@ -459,7 +460,7 @@ SELECT id, name, uppercats, global_rank
             $blockname = 'items_number_option';
             $tpl_var = [];
             foreach ($items_number as $option) {
-                $tpl_var[$option] = is_numeric($option) ? $option : l10n($option);
+                $tpl_var[$option] = is_numeric($option) ? $option : Lang::t($option);
             }
             $template->assign('item_number_options', $tpl_var);
             $template->assign('item_number_options_selected', $selected_items_number);

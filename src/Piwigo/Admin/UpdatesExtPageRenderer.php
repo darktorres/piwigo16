@@ -9,6 +9,7 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Template\Template;
 
@@ -51,7 +52,7 @@ final class UpdatesExtPageRenderer
         }
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         $updates_ignored = \Piwigo\Config\Config::updatesIgnored();
@@ -155,7 +156,7 @@ final class UpdatesExtPageRenderer
         }
 
         if (! $all_types_reachable) {
-            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t connect to server.'));
+            \Piwigo\Core\PageState::current()->addError(Lang::t('Can\'t connect to server.'));
             return; // TODO: remove this return and add a proper "page killer"
         }
 
@@ -166,6 +167,6 @@ final class UpdatesExtPageRenderer
         $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
         $template->set_filename('plugin_admin_content', 'updates_ext.tpl');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');
-        $template->assign('ADMIN_PAGE_TITLE', l10n('Updates'));
+        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Updates'));
     }
 }

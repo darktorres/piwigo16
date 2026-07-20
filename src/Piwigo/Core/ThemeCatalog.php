@@ -51,7 +51,7 @@ SELECT
                 if (! $showMobile) {
                     continue;
                 }
-                $name .= ' (' . l10n('Mobile') . ')';
+                $name .= ' (' . Lang::t('Mobile') . ')';
             }
             if (self::checkThemeInstalled($id)) {
                 $themes[$id] = $name;

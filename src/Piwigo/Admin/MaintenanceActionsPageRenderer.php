@@ -10,6 +10,7 @@ use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -69,16 +70,16 @@ final class MaintenanceActionsPageRenderer
         $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         /** @var array<string, string> $purge_urls */
         $purge_urls = [];
-        $purge_urls[l10n('All')] = 'all';
+        $purge_urls[Lang::t('All')] = 'all';
         foreach (ImageStdParams::get_defined_type_map() as $params) {
-            $purge_urls[l10n($params->type)] = $params->type;
+            $purge_urls[Lang::t($params->type)] = $params->type;
         }
-        $purge_urls[l10n(ImageStdParams::CUSTOM)] = ImageStdParams::CUSTOM;
+        $purge_urls[Lang::t(ImageStdParams::CUSTOM)] = ImageStdParams::CUSTOM;
 
         $conn = DbConnection::build();
         $php_current_timestamp = date('Y-m-d H:i:s');

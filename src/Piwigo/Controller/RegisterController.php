@@ -61,21 +61,21 @@ final class RegisterController implements ControllerInterface
             if (! new \Piwigo\Auth\EphemeralKeyService()->verify($post_key)) {
                 new HtmlService()
                     ->setStatusHeader(403);
-                $errors['register_page_error'] = l10n('Invalid/expired form key');
+                $errors['register_page_error'] = Lang::t('Invalid/expired form key');
             }
 
             $post_password_raw = $_POST['password'] ?? null;
             $post_password_conf_raw = $_POST['password_conf'] ?? null;
 
             if ($post_password_raw === null || $post_password_raw === '' || $post_password_raw === '0') {
-                $errors['register_form_error'] = l10n('Password is missing. Please enter the password.');
+                $errors['register_form_error'] = Lang::t('Password is missing. Please enter the password.');
             } elseif ($post_password_conf_raw === null || $post_password_conf_raw === '' || $post_password_conf_raw === '0') {
-                $errors['register_form_error'] = l10n('Password confirmation is missing. Please confirm the chosen password.');
+                $errors['register_form_error'] = Lang::t('Password confirmation is missing. Please confirm the chosen password.');
             } elseif (
                 (is_string($post_password_raw) ? $post_password_raw : '')
                 !== (is_string($post_password_conf_raw) ? $post_password_conf_raw : '')
             ) {
-                $errors['register_form_error'] = l10n('The passwords do not match');
+                $errors['register_form_error'] = Lang::t('The passwords do not match');
             }
 
             $post_login = is_string($_POST['login'] ?? null) ? $_POST['login'] : '';
@@ -139,7 +139,7 @@ final class RegisterController implements ControllerInterface
                     if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
                         $_SESSION['page_infos'] = [];
                     }
-                    $_SESSION['page_infos'][] = l10n('Successfully registered, you will soon receive an email with your connection settings. Welcome!');
+                    $_SESSION['page_infos'][] = Lang::t('Successfully registered, you will soon receive an email with your connection settings. Welcome!');
                 }
 
                 // [SEC-31] Only a real new account gets logged in -- a
@@ -173,7 +173,7 @@ final class RegisterController implements ControllerInterface
             // other file reads $GLOBALS['title']. Plain local, not global.
             $template = \Piwigo\Template\CurrentTemplate::get();
 
-            $title = l10n('Registration');
+            $title = Lang::t('Registration');
             \Piwigo\Core\PageState::current()->setBodyId('theRegisterPage');
 
             $template->set_filenames([

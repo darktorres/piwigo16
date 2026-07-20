@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
@@ -48,7 +49,7 @@ final class TagsController implements ControllerInterface
             // other file reads $GLOBALS['title']. Plain local, not global.
             $template = \Piwigo\Template\CurrentTemplate::get();
 
-            $title = l10n('Tags');
+            $title = Lang::t('Tags');
             \Piwigo\Core\PageState::current()->setBodyId('theTagsPage');
 
             $template->set_filenames([

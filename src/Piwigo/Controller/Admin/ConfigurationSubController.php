@@ -10,6 +10,7 @@ use Piwigo\Admin\tabsheet;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -128,7 +129,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $conn = DbConnection::build();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         // -------------------------------------------------------- sections definitions
@@ -230,26 +231,26 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // image order management
         $sort_fields = [
             '' => '',
-            'file ASC' => l10n('File name, A &rarr; Z'),
-            'file DESC' => l10n('File name, Z &rarr; A'),
-            'name ASC' => l10n('Photo title, A &rarr; Z'),
-            'name DESC' => l10n('Photo title, Z &rarr; A'),
-            'date_creation DESC' => l10n('Date created, new &rarr; old'),
-            'date_creation ASC' => l10n('Date created, old &rarr; new'),
-            'date_available DESC' => l10n('Date posted, new &rarr; old'),
-            'date_available ASC' => l10n('Date posted, old &rarr; new'),
-            'rating_score DESC' => l10n('Rating score, high &rarr; low'),
-            'rating_score ASC' => l10n('Rating score, low &rarr; high'),
-            'hit DESC' => l10n('Visits, high &rarr; low'),
-            'hit ASC' => l10n('Visits, low &rarr; high'),
-            'id ASC' => l10n('Numeric identifier, 1 &rarr; 9'),
-            'id DESC' => l10n('Numeric identifier, 9 &rarr; 1'),
-            '`rank` ASC' => l10n('Manual sort order'),
+            'file ASC' => Lang::t('File name, A &rarr; Z'),
+            'file DESC' => Lang::t('File name, Z &rarr; A'),
+            'name ASC' => Lang::t('Photo title, A &rarr; Z'),
+            'name DESC' => Lang::t('Photo title, Z &rarr; A'),
+            'date_creation DESC' => Lang::t('Date created, new &rarr; old'),
+            'date_creation ASC' => Lang::t('Date created, old &rarr; new'),
+            'date_available DESC' => Lang::t('Date posted, new &rarr; old'),
+            'date_available ASC' => Lang::t('Date posted, old &rarr; new'),
+            'rating_score DESC' => Lang::t('Rating score, high &rarr; low'),
+            'rating_score ASC' => Lang::t('Rating score, low &rarr; high'),
+            'hit DESC' => Lang::t('Visits, high &rarr; low'),
+            'hit ASC' => Lang::t('Visits, low &rarr; high'),
+            'id ASC' => Lang::t('Numeric identifier, 1 &rarr; 9'),
+            'id DESC' => Lang::t('Numeric identifier, 9 &rarr; 1'),
+            '`rank` ASC' => Lang::t('Manual sort order'),
         ];
 
         $comments_order = [
-            'ASC' => l10n('Show oldest comments first'),
-            'DESC' => l10n('Show latest comments first'),
+            'ASC' => Lang::t('Show oldest comments first'),
+            'DESC' => Lang::t('Show latest comments first'),
         ];
 
         $mail_themes = [
@@ -287,7 +288,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                                 }
                             }
                             if (! (bool) count($order_by_input)) {
-                                \Piwigo\Core\PageState::current()->addError(l10n('No order field selected'));
+                                \Piwigo\Core\PageState::current()->addError(Lang::t('No order field selected'));
                             } else {
                                 // limit to the number of available parameters
                                 $order_by = $order_by_inside_category = array_slice($order_by_input, 0, (int) ceil(count($sort_fields) / 2));
@@ -306,7 +307,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                                 $_POST['order_by_inside_category'] = 'ORDER BY ' . implode(', ', $order_by_inside_category);
                             }
                         } else {
-                            \Piwigo\Core\PageState::current()->addError(l10n('No order field selected'));
+                            \Piwigo\Core\PageState::current()->addError(Lang::t('No order field selected'));
                         }
                     }
 
@@ -346,7 +347,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     if (! (bool) preg_match($int_pattern, is_scalar($nb_comment_page) ? (string) $nb_comment_page : '')
                          or $_POST['nb_comment_page'] < 5
                          or $_POST['nb_comment_page'] > 50) {
-                        \Piwigo\Core\PageState::current()->addError(l10n('The number of comments a page must be between 5 and 50 included.'));
+                        \Piwigo\Core\PageState::current()->addError(Lang::t('The number of comments a page must be between 5 and 50 included.'));
                     }
                     foreach ($comments_checkboxes as $checkbox) {
                         $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
@@ -363,7 +364,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $nb_categories_page = $_POST['nb_categories_page'] ?? null;
                     if (! (bool) preg_match($int_pattern, is_scalar($nb_categories_page) ? (string) $nb_categories_page : '')
                           or $_POST['nb_categories_page'] < 4) {
-                        \Piwigo\Core\PageState::current()->addError(l10n('The number of albums a page must be above 4.'));
+                        \Piwigo\Core\PageState::current()->addError(Lang::t('The number of albums a page must be above 4.'));
                     }
                     foreach ($display_checkboxes as $checkbox) {
                         $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
@@ -431,7 +432,7 @@ WHERE param = \'' . $row['param'] . '\'
                 }
                 $template->assign(
                     [
-                        'save_success' => l10n('Your configuration settings are saved'),
+                        'save_success' => Lang::t('Your configuration settings are saved'),
                     ]
                 );
 
@@ -458,7 +459,7 @@ WHERE param = \'' . $row['param'] . '\'
 
             $template->assign(
                 [
-                    'save_success' => l10n('Your configuration settings are saved'),
+                    'save_success' => Lang::t('Your configuration settings are saved'),
                 ]
             );
 
@@ -493,7 +494,7 @@ WHERE param = \'' . $row['param'] . '\'
             case 'main':
 
                 if (self::orderByIsLocal()) {
-                    \Piwigo\Core\PageState::current()->addWarning(l10n('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !'));
+                    \Piwigo\Core\PageState::current()->addWarning(Lang::t('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !'));
                 }
 
                 if (\Piwigo\Config\Config::has('order_by_custom') or \Piwigo\Config\Config::has('order_by_inside_category_custom')) {
@@ -598,7 +599,7 @@ WHERE param = \'' . $row['param'] . '\'
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {
                     // Reload user
                     $edit_user = self::userService($conn)->buildUser($guest_id, false);
-                    \Piwigo\Core\PageState::current()->addInfo(l10n('Information data registered in database'));
+                    \Piwigo\Core\PageState::current()->addInfo(Lang::t('Information data registered in database'));
                 }
                 \Piwigo\Core\PageState::current()->errors = array_merge(\Piwigo\Core\PageState::current()->errors, array_values(array_filter($errors, is_string(...))));
 
@@ -695,7 +696,7 @@ WHERE param = \'' . $row['param'] . '\'
                     $tpl_vars = [];
                     $now = time();
                     foreach (ImageStdParams::$custom as $custom => $time) {
-                        $tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? l10n('today') : \Piwigo\Core\DateHelper::timeSince($time, 'day');
+                        $tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? Lang::t('today') : \Piwigo\Core\DateHelper::timeSince($time, 'day');
                     }
                     $template->assign('custom_derivatives', $tpl_vars);
                 }
@@ -780,7 +781,7 @@ WHERE param = \'' . $row['param'] . '\'
         }
 
         $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
-        $template->assign('ADMIN_PAGE_TITLE', l10n('Configuration'));
+        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Configuration'));
 
         // ----------------------------------------------------------- sending html code
         $template->assign_var_from_handle('ADMIN_CONTENT', 'config');
@@ -1067,7 +1068,7 @@ WHERE param = \'' . $row['param'] . '\'
 
             $template->assign(
                 [
-                    'save_success' => l10n('Your configuration settings are saved'),
+                    'save_success' => Lang::t('Your configuration settings are saved'),
                 ]
             );
 
@@ -1142,7 +1143,7 @@ WHERE param = \'' . $row['param'] . '\'
             $type = $image_size === false ? false : $image_size[2];
             if ($type != IMAGETYPE_PNG) {
                 $errors['watermarkImage'] = sprintf(
-                    l10n('Allowed file types: %s.'),
+                    Lang::t('Allowed file types: %s.'),
                     'PNG'
                 );
             } else {
@@ -1169,10 +1170,10 @@ WHERE param = \'' . $row['param'] . '\'
                         fclose($watermark_stream);
                         $pwatermark['file'] = substr($file_path, strlen(PHPWG_ROOT_PATH));
                     } else {
-                        \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = "{$file_path} " . l10n('no write access'));
+                        \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = "{$file_path} " . Lang::t('no write access'));
                     }
                 } else {
-                    \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = sprintf(l10n('Add write access to the "%s" directory'), $upload_dir));
+                    \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = sprintf(Lang::t('Add write access to the "%s" directory'), $upload_dir));
                 }
             }
         }
@@ -1297,7 +1298,7 @@ WHERE param = \'' . $row['param'] . '\'
 
             $template->assign(
                 [
-                    'save_success' => l10n('Your configuration settings are saved'),
+                    'save_success' => Lang::t('Your configuration settings are saved'),
                 ]
             );
 

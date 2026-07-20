@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Feed\FeedRepository;
@@ -62,7 +63,7 @@ final class NotificationController implements ControllerInterface
                 $feed_image_only_url = $feed_url . '&amp;image_only';
             }
 
-            $title = l10n('Notification');
+            $title = Lang::t('Notification');
             \Piwigo\Core\PageState::current()->setBodyId('theNotificationPage');
             \Piwigo\Core\PageState::current()->setMetaRobots([
                 'noindex' => 1,

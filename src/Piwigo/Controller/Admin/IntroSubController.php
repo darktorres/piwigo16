@@ -13,6 +13,7 @@ use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\Env;
+use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Http\HttpClientService;
@@ -101,9 +102,9 @@ final class IntroSubController implements AdminSubControllerInterface
 
         $nb_pending_comments = \Piwigo\Core\PageState::current()->nbPendingComments;
         if ($nb_pending_comments !== null) {
-            $message = l10n('User comments') . ' <i class="icon-chat"></i> ';
+            $message = Lang::t('User comments') . ' <i class="icon-chat"></i> ';
             $message .= '<a href="' . $link_start . 'comments">';
-            $message .= l10n('%d waiting for validation', $nb_pending_comments);
+            $message .= Lang::t('%d waiting for validation', $nb_pending_comments);
             $message .= ' <i class="icon-right"></i></a>';
 
             \Piwigo\Core\PageState::current()->addMessage($message);
@@ -122,7 +123,7 @@ final class IntroSubController implements AdminSubControllerInterface
             $orphans_url = PHPWG_ROOT_PATH . 'admin.php?page=batch_manager&amp;filter=prefilter-no_album';
 
             $message = '<a href="' . $orphans_url . '"><i class="icon-heart-broken"></i>';
-            $message .= l10n('Orphans') . '</a>';
+            $message .= Lang::t('Orphans') . '</a>';
             $message .= '<span class="adminMenubarCounter">' . $nb_orphans . '</span>';
 
             \Piwigo\Core\PageState::current()->addWarning($message);
@@ -139,7 +140,7 @@ SELECT COUNT(*)
             $locked_album_url = PHPWG_ROOT_PATH . 'admin.php?page=cat_options&section=visible';
 
             $message = '<a href="' . $locked_album_url . '"><i class="icon-cone"></i>';
-            $message .= l10n('Locked album') . '</a>';
+            $message .= Lang::t('Locked album') . '</a>';
             $message .= '<span class="adminMenubarCounter">' . $locked_album . '</span>';
 
             \Piwigo\Core\PageState::current()->addWarning($message);
@@ -226,7 +227,7 @@ SELECT COUNT(*)
                 'NB_RATES' => $stats['nb_rates'],
                 'NB_VIEWS' => AdminUiHelper::numberFormatHumanReadable($nb_views),
                 'NB_PLUGINS' => count(\Piwigo\Admin\LoadedPlugins::get()),
-                'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))),
+                'STORAGE_USED' => str_replace(' ', '&nbsp;', Lang::t('%sGB', number_format($du_gb, $du_decimals))),
                 'U_QUICK_SYNC' => PHPWG_ROOT_PATH . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                 'CHECK_FOR_UPDATES' => \Piwigo\Config\Config::dashboardCheckForUpdates(),
             ]
@@ -268,7 +269,7 @@ SELECT COUNT(*)
 
                 \Piwigo\Core\PageState::current()->addMessage(sprintf(
                     '%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>',
-                    l10n('Latest Piwigo news'),
+                    Lang::t('Latest Piwigo news'),
                     $news_url,
                     \Piwigo\Core\DateHelper::timeSince($news_posted_on, 'year') . ' (' . $news_posted . ')',
                     $news_subject

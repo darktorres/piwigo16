@@ -57,42 +57,42 @@ final class FilterPanelRenderer
         $prefilters = [
             [
                 'ID' => 'caddie',
-                'NAME' => l10n('Caddie'),
+                'NAME' => Lang::t('Caddie'),
             ],
             [
                 'ID' => 'favorites',
-                'NAME' => l10n('Your favorites'),
+                'NAME' => Lang::t('Your favorites'),
             ],
             [
                 'ID' => 'last_import',
-                'NAME' => l10n('Last import'),
+                'NAME' => Lang::t('Last import'),
             ],
             [
                 'ID' => 'no_album',
-                'NAME' => l10n('With no album') . ' (' . l10n('Orphans') . ')',
+                'NAME' => Lang::t('With no album') . ' (' . Lang::t('Orphans') . ')',
             ],
             [
                 'ID' => 'no_tag',
-                'NAME' => l10n('With no tag'),
+                'NAME' => Lang::t('With no tag'),
             ],
             [
                 'ID' => 'duplicates',
-                'NAME' => l10n('Duplicates'),
+                'NAME' => Lang::t('Duplicates'),
             ],
             [
                 'ID' => 'all_photos',
-                'NAME' => l10n('All'),
+                'NAME' => Lang::t('All'),
             ],
         ];
 
         if (\Piwigo\Config\Config::enableSynchronization()) {
             $prefilters[] = [
                 'ID' => 'no_virtual_album',
-                'NAME' => l10n('With no virtual album'),
+                'NAME' => Lang::t('With no virtual album'),
             ];
             $prefilters[] = [
                 'ID' => 'no_sync_md5sum',
-                'NAME' => l10n('With no checksum'),
+                'NAME' => Lang::t('With no checksum'),
             ];
         }
 
@@ -119,7 +119,7 @@ final class FilterPanelRenderer
                     ->getToken(),
                 'U_DISPLAY' => $baseUrl . $urlService->getQueryStringDiff(['display']),
                 'F_ACTION' => $baseUrl . $urlService->getQueryStringDiff(['cat', 'start', 'tag', 'filter']),
-                'ADMIN_PAGE_TITLE' => l10n('Batch Manager'),
+                'ADMIN_PAGE_TITLE' => Lang::t('Batch Manager'),
             ]
         );
 
@@ -153,10 +153,10 @@ final class FilterPanelRenderer
                 continue;
             }
 
-            $level_options[$level] = l10n(sprintf('Level %d', $level));
+            $level_options[$level] = Lang::t(sprintf('Level %d', $level));
 
             if ($level === 0) {
-                $level_options[$level] = l10n('Everybody');
+                $level_options[$level] = Lang::t('Everybody');
             }
         }
         $template->assign(

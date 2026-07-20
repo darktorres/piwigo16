@@ -22,6 +22,7 @@ use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\Lang;
 use Piwigo\Core\WsError;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
@@ -34,6 +35,7 @@ use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Lang\Translator;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
 use Piwigo\Url\UrlService;
@@ -853,9 +855,9 @@ SELECT
         $types = array_merge(['none'], new DbInfo($conn)->getEnums(Tables::history(), 'image_type'));
 
         $display_thumbnails = [
-            'no_display_thumbnail' => l10n('No display'),
-            'display_thumbnail_classic' => l10n('Classic display'),
-            'display_thumbnail_hoverbox' => l10n('Hoverbox display'),
+            'no_display_thumbnail' => Lang::t('No display'),
+            'display_thumbnail_classic' => Lang::t('Classic display'),
+            'display_thumbnail_hoverbox' => Lang::t('Hoverbox display'),
         ];
 
         // +-----------------------------------------------------------------------+
@@ -1374,8 +1376,8 @@ SELECT
                     'EDIT_IMAGE' => $image_edit_string,
                     'TYPE' => $line_image_type,
                     'SECTION' => $line_section,
-                    'FULL_CATEGORY_PATH' => $line_category_id !== null && isset($full_cat_path[$line_category_id]) ? strip_tags($full_cat_path[$line_category_id]) : l10n('Root') . $line_category_id,
-                    'CATEGORY' => $line_category_id !== null && isset($name_of_category[$line_category_id]) ? $name_of_category[$line_category_id] : l10n('Root') . $line_category_id,
+                    'FULL_CATEGORY_PATH' => $line_category_id !== null && isset($full_cat_path[$line_category_id]) ? strip_tags($full_cat_path[$line_category_id]) : Lang::t('Root') . $line_category_id,
+                    'CATEGORY' => $line_category_id !== null && isset($name_of_category[$line_category_id]) ? $name_of_category[$line_category_id] : Lang::t('Root') . $line_category_id,
                     'SEARCH_ID' => $line_search_id,
                     'TAGS' => explode(',', (string) $tag_names),
                     'TAGIDS' => explode(',', $tag_ids),
@@ -1428,20 +1430,20 @@ SELECT
 
         $search_summary =
         [
-            'NB_LINES' => l10n_dec(
+            'NB_LINES' => Translator::get()->plural(
                 '%d line filtered',
                 '%d lines filtered',
                 $page_nb_lines
             ),
             'FILESIZE' => $summary_total_filesize != 0 ? ceil($summary_total_filesize / 1024) : 0,
-            'USERS' => l10n_dec(
+            'USERS' => Translator::get()->plural(
                 '%d user',
                 '%d users',
                 $summary_nb_members + $summary_nb_guests
             ),
             'MEMBERS' => $member_strings,
             'SORTED_MEMBERS' => $sorted_members,
-            'GUESTS' => l10n_dec(
+            'GUESTS' => Translator::get()->plural(
                 '%d guest',
                 '%d guests',
                 $summary_nb_guests

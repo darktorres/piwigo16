@@ -7,10 +7,12 @@ namespace Piwigo\Html;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\SrcImage;
+use Piwigo\Lang\Translator;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\RegisteredBlock;
 use Piwigo\Template\Template;
@@ -353,8 +355,8 @@ final class HtmlService implements HtmlRenderingInterface
 <div style="display: flex; justify-content: center;align-items: center;height: 100vh;margin: 0;color: #3C3C3C;font-family: \'Open Sans\', sans-serif;font-size: 20px;font-style: normal;font-weight: 600;line-height: normal;">
   <div style="text-align:center;">
     <img src="themes/default/icon/warning-triangle.svg" alt="warning-triangle" >
-    <p style="max-width: 400px; margin-top 20px;">' . l10n('You are not authorized to access the requested page') . '</p>
-    <a href="' . $this->urlService()->makeIndexUrl() . '" style="display: inline-block;padding: 10px 20px;margin: 10px;margin-top: 50px;border-radius: 7px;cursor: pointer;width: 150px;background-color: #F77000;color: #fff;text-decoration: none;border: 2px solid #F77000;">' . l10n('Home') . '</a>
+    <p style="max-width: 400px; margin-top 20px;">' . Lang::t('You are not authorized to access the requested page') . '</p>
+    <a href="' . $this->urlService()->makeIndexUrl() . '" style="display: inline-block;padding: 10px 20px;margin: 10px;margin-top: 50px;border-radius: 7px;cursor: pointer;width: 150px;background-color: #F77000;color: #fff;text-decoration: none;border: 2px solid #F77000;">' . Lang::t('Home') . '</a>
   </div>
 </div>';
             exit();
@@ -379,7 +381,7 @@ final class HtmlService implements HtmlRenderingInterface
         $redirectService->redirectHtml(
             $alternateUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-<h1 style="text-align:left; font-size:36px;">' . l10n('Forbidden') . '</h1><br>'
+<h1 style="text-align:left; font-size:36px;">' . Lang::t('Forbidden') . '</h1><br>'
 . $msg . '</div>',
             5,
         );
@@ -400,7 +402,7 @@ final class HtmlService implements HtmlRenderingInterface
         $redirectService->redirectHtml(
             $alternateUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-<h1 style="text-align:left; font-size:36px;">' . l10n('Bad request') . '</h1><br>'
+<h1 style="text-align:left; font-size:36px;">' . Lang::t('Bad request') . '</h1><br>'
 . $msg . '</div>',
             5,
         );
@@ -424,7 +426,7 @@ final class HtmlService implements HtmlRenderingInterface
         $redirectService->redirectHtml(
             $alternateUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-<h1 style="text-align:left; font-size:36px;">' . l10n('Page not found') . '</h1><br>'
+<h1 style="text-align:left; font-size:36px;">' . Lang::t('Page not found') . '</h1><br>'
 . $msg . '</div>',
             5,
         );
@@ -438,7 +440,7 @@ final class HtmlService implements HtmlRenderingInterface
     public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
     {
         if ($title === null || $title === '') {
-            $title = l10n('Piwigo encountered a non recoverable error');
+            $title = Lang::t('Piwigo encountered a non recoverable error');
         }
 
         $btrace_msg = '';
@@ -492,8 +494,8 @@ final class HtmlService implements HtmlRenderingInterface
     #[\Override]
     public function getTagsContentTitle(array $tags): string
     {
-        return '<a href="' . $this->urlService()->getRootUrl() . 'tags.php" title="' . l10n('display available tags') . '">'
-          . l10n(count($tags) > 1 ? 'Tags' : 'Tag')
+        return '<a href="' . $this->urlService()->getRootUrl() . 'tags.php" title="' . Lang::t('display available tags') . '">'
+          . Lang::t(count($tags) > 1 ? 'Tags' : 'Tag')
           . '</a> ';
     }
 
@@ -512,7 +514,7 @@ final class HtmlService implements HtmlRenderingInterface
     #[\Override]
     public function getCombinedCategoriesContentTitle(?array $category, array $combinedCategories): string
     {
-        $title = l10n('Albums') . ' ';
+        $title = Lang::t('Albums') . ' ';
 
         $is_first = true;
         $all_categories = array_merge([$category], $combinedCategories);
@@ -551,7 +553,7 @@ final class HtmlService implements HtmlRenderingInterface
 
                 $title .=
                   '<a id="TagsGroupRemoveTag" href="' . $remove_url . '" style="border:none;" title="'
-                  . l10n('remove this tag from the list')
+                  . Lang::t('remove this tag from the list')
                   . '"><img src="'
                     . $this->urlService()->getRootUrl() . $icon_dir . '/remove_s.png'
                   . '" alt="x" style="vertical-align:bottom;" >'
@@ -686,15 +688,15 @@ final class HtmlService implements HtmlRenderingInterface
         $details = [];
 
         if (isset($info['hit']) && is_numeric($info['hit']) && (int) $info['hit'] !== 0) {
-            $details[] = l10n('%d visits', $info['hit']);
+            $details[] = Lang::t('%d visits', $info['hit']);
         }
 
         if (\Piwigo\Config\Config::rateEnabled() and isset($info['rating_score']) && is_numeric($info['rating_score']) && (float) $info['rating_score'] !== 0.0) {
-            $details[] = l10n('rating score %s', $info['rating_score']);
+            $details[] = Lang::t('rating score %s', $info['rating_score']);
         }
 
         if (isset($info['nb_comments']) and is_numeric($info['nb_comments']) and (int) $info['nb_comments'] !== 0) {
-            $details[] = l10n_dec('%d comment', '%d comments', (int) $info['nb_comments']);
+            $details[] = Translator::get()->plural('%d comment', '%d comments', (int) $info['nb_comments']);
         }
 
         if (count($details) > 0) {

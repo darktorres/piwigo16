@@ -24,6 +24,7 @@ use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\DateHelper;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
@@ -34,6 +35,7 @@ use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
+use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -454,7 +456,7 @@ SELECT DISTINCT ';
 
         if (\Piwigo\Config\Config::doublePasswordTypeInAdmin()) {
             if ($params['password'] != ($params['password_confirm'] ?? null)) {
-                return new PwgError(WsError::INVALID_PARAM, l10n('The passwords do not match'));
+                return new PwgError(WsError::INVALID_PARAM, Lang::t('The passwords do not match'));
             }
         }
 
@@ -467,7 +469,7 @@ SELECT DISTINCT ';
         // otherwise reach it with null and crash inside pwg_password_hash() ->
         // password_hash() (a real string-typed native function).
         if ($params['password'] === null) {
-            return new PwgError(WsError::INVALID_PARAM, l10n('Please, enter a password'));
+            return new PwgError(WsError::INVALID_PARAM, Lang::t('Please, enter a password'));
         }
 
         // Preserves the pre-SEC-31 behavior for this real caller (admin-
@@ -488,7 +490,7 @@ SELECT DISTINCT ';
 
         $errors = $result['errors'];
         if ($result['duplicateUsername']) {
-            array_unshift($errors, l10n('this login is already used'));
+            array_unshift($errors, Lang::t('this login is already used'));
         }
 
         $user_id = $result['userId'] ?? false;
@@ -576,7 +578,7 @@ SELECT
             $counter++;
         }
 
-        return l10n_dec(
+        return Translator::get()->plural(
             '%d user deleted',
             '%d users deleted',
             $counter
@@ -677,7 +679,7 @@ SELECT
 
         if (! empty($params['password'])) {
             if (($params['new_password'] ?? null) != ($params['conf_new_password'] ?? null)) {
-                return new PwgError(403, l10n('The passwords do not match'));
+                return new PwgError(403, Lang::t('The passwords do not match'));
             }
 
             // \Piwigo\Config\Config::userFields() maps generic field names to table-specific
@@ -703,7 +705,7 @@ SELECT ' . $user_field_password . ' AS password
             $params_password = is_string($params['password']) ? $params['password'] : '';
 
             if (! new PasswordService(new PasswordRepository(DbConnection::build()))->verify($params_password, $current_password)) {
-                return new PwgError(403, l10n('Current password is wrong'));
+                return new PwgError(403, Lang::t('Current password is wrong'));
             }
 
             $params['password'] = $params['new_password'] ?? null;
@@ -735,7 +737,7 @@ SELECT ' . $user_field_password . ' AS password
             return new PwgError($error_code, $error_message);
         }
 
-        return l10n('Your changes have been applied.');
+        return Lang::t('Your changes have been applied.');
     }
 
     /**
@@ -1098,11 +1100,11 @@ SELECT
         }
 
         if (new CsrfService()->getToken() != $params['pwg_token']) {
-            return new PwgError(403, l10n('Invalid security token'));
+            return new PwgError(403, Lang::t('Invalid security token'));
         }
 
         if (! (bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['pkid'])) {
-            return new PwgError(403, l10n('Invalid pkid format'));
+            return new PwgError(403, Lang::t('Invalid pkid format'));
         }
 
         $user_id = \Piwigo\Users\CurrentUser::get()->id;
@@ -1115,7 +1117,7 @@ SELECT
 
         $logger->info('[api_key][user_id=' . $user_id . '][action=revoke][pkid=' . $params['pkid'] . ']');
 
-        return l10n('API Key has been successfully revoked.');
+        return Lang::t('API Key has been successfully revoked.');
     }
 
     /**
@@ -1140,11 +1142,11 @@ SELECT
         }
 
         if (new CsrfService()->getToken() != $params['pwg_token']) {
-            return new PwgError(403, l10n('Invalid security token'));
+            return new PwgError(403, Lang::t('Invalid security token'));
         }
 
         if (! (bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['pkid'])) {
-            return new PwgError(403, l10n('Invalid pkid format'));
+            return new PwgError(403, Lang::t('Invalid pkid format'));
         }
 
         // realEscapeString() dropped: ApiKeyRepository::updateName()
@@ -1160,7 +1162,7 @@ SELECT
 
         $logger->info('[api_key][user_id=' . $user_id . '][action=edit][pkid=' . $params['pkid'] . '][new_name=' . $key_name . ']');
 
-        return l10n('API Key has been successfully edited.');
+        return Lang::t('API Key has been successfully edited.');
     }
 
     /**
@@ -1196,6 +1198,6 @@ SELECT
         $user_id = \Piwigo\Users\CurrentUser::get()->id;
         $api_keys = self::apiKeyService()->get($user_id);
 
-        return ((bool) $api_keys) ? $api_keys : l10n('No API key found');
+        return ((bool) $api_keys) ? $api_keys : Lang::t('No API key found');
     }
 }

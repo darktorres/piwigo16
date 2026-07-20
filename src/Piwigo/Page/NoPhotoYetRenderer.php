@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Page;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\Tables;
@@ -79,7 +80,7 @@ final readonly class NoPhotoYetRenderer
                     $template->assign(
                         [
                             'step' => 2,
-                            'intro' => l10n(
+                            'intro' => Lang::t(
                                 'Hello %s, your Piwigo photo gallery is empty!',
                                 \Piwigo\Users\CurrentUser::get()->username
                             ),

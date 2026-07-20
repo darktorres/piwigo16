@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Piwigo\Core\Lang;
+
 /**
  * Weekly calendar style (composed of years/week in years and days in week)
  */
@@ -26,7 +28,7 @@ class CalendarWeekly extends CalendarBase
         parent::initialize($inner_sql);
         $week_no_labels = [];
         for ($i = 1; $i <= 53; $i++) {
-            $week_no_labels[$i] = l10n('Week %d', $i);
+            $week_no_labels[$i] = Lang::t('Week %d', $i);
             // $week_no_labels[$i] = $i;
         }
 

@@ -12,6 +12,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -583,7 +584,7 @@ final class GalleryController implements ControllerInterface
                         $template->append(
                             'image_derivatives',
                             [
-                                'DISPLAY' => l10n($params->type),
+                                'DISPLAY' => Lang::t($params->type),
                                 'URL' => $url . $params->type,
                                 'SELECTED' => $params->type === $selected_type,
                             ]

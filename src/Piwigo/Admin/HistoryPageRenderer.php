@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Auth\CookieService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Env;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
@@ -58,9 +59,9 @@ final class HistoryPageRenderer
         $types = array_merge(['none'], new DbInfo($conn)->getEnums(Tables::history(), 'image_type'));
 
         $display_thumbnails = [
-            'no_display_thumbnail' => l10n('No display'),
-            'display_thumbnail_classic' => l10n('Classic display'),
-            'display_thumbnail_hoverbox' => l10n('Hoverbox display'),
+            'no_display_thumbnail' => Lang::t('No display'),
+            'display_thumbnail_classic' => Lang::t('Classic display'),
+            'display_thumbnail_hoverbox' => Lang::t('Hoverbox display'),
         ];
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -141,7 +142,7 @@ final class HistoryPageRenderer
         $template->assign('display_thumbnails', $display_thumbnails);
         $template->assign('display_thumbnail_selected', $form['display_thumbnail'] ?? null);
         $template->assign('guest_id', \Piwigo\Config\Config::guestId());
-        $template->assign('ADMIN_PAGE_TITLE', l10n('History'));
+        $template->assign('ADMIN_PAGE_TITLE', Lang::t('History'));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'history');
     }

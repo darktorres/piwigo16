@@ -14,6 +14,7 @@ use Piwigo\Admin\ThemeMaintain;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
@@ -280,7 +281,7 @@ final readonly class ExtensionLifecycle
 
                 $missingParent = $this->missingParentTheme($id, $fsEntry);
                 if ($missingParent !== null) {
-                    $errors[] = l10n('Impossible to activate this theme, the parent theme is missing: %s', $missingParent);
+                    $errors[] = Lang::t('Impossible to activate this theme, the parent theme is missing: %s', $missingParent);
                     break;
                 }
 
@@ -288,7 +289,7 @@ final readonly class ExtensionLifecycle
                 $currentMobileTheme = \Piwigo\Config\Config::mobilTheme();
                 $hasOtherMobileTheme = is_string($currentMobileTheme) && $currentMobileTheme !== '' && $currentMobileTheme !== '0';
                 if ($isMobile && $hasOtherMobileTheme && $currentMobileTheme !== $id) {
-                    $errors[] = l10n('You can activate only one mobile theme.');
+                    $errors[] = Lang::t('You can activate only one mobile theme.');
                     break;
                 }
 
@@ -313,7 +314,7 @@ final readonly class ExtensionLifecycle
                 }
 
                 if ($this->repo->count(ExtensionType::Theme) <= 1) {
-                    $errors[] = l10n('Impossible to deactivate this theme, you need at least one theme.');
+                    $errors[] = Lang::t('Impossible to deactivate this theme, you need at least one theme.');
                     break;
                 }
 
@@ -343,7 +344,7 @@ final readonly class ExtensionLifecycle
 
                 $children = $this->getChildrenThemes($id);
                 if ($children !== []) {
-                    $errors[] = l10n('Impossible to delete this theme. Other themes depends on it: %s', implode(', ', $children));
+                    $errors[] = Lang::t('Impossible to delete this theme. Other themes depends on it: %s', implode(', ', $children));
                     break;
                 }
 

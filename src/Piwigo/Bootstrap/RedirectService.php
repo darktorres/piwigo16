@@ -87,7 +87,7 @@ final class RedirectService implements RedirectServiceInterface
         // global) is provably dead code now, not just redundant.
 
         if ($msg === '' || $msg === '0') {
-            $msg = nl2br(l10n('Redirection...'));
+            $msg = nl2br(Lang::t('Redirection...'));
         }
 
         $url_link = $url;

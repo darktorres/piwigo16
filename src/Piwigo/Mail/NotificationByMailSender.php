@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Mail;
 
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\Tables;
+use Piwigo\Lang\Translator;
 use Piwigo\Notification\NotificationByMailService;
 use Piwigo\Notification\NotificationService;
 use Piwigo\Template\Template;
@@ -184,8 +186,8 @@ final class NotificationByMailSender
 
             $this->errorOnMailCount = 0;
             $this->sentMailCount = 0;
-            $this->msgInfo = l10n('Mail sent to %s [%s].');
-            $this->msgError = l10n('Error when sending email to %s [%s].');
+            $this->msgInfo = Lang::t('Mail sent to %s [%s].');
+            $this->msgError = Lang::t('Error when sending email to %s [%s].');
         }
     }
 
@@ -279,14 +281,14 @@ final class NotificationByMailSender
     public function displayCounterInfo(): void
     {
         if ($this->errorOnMailCount != 0) {
-            \Piwigo\Core\PageState::current()->addError(l10n_dec(
+            \Piwigo\Core\PageState::current()->addError(Translator::get()->plural(
                 '%d mail was not sent.',
                 '%d mails were not sent.',
                 $this->errorOnMailCount
             ));
 
             if ($this->sentMailCount != 0) {
-                \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
+                \Piwigo\Core\PageState::current()->addInfo(Translator::get()->plural(
                     '%d mail was sent.',
                     '%d mails were sent.',
                     $this->sentMailCount
@@ -294,9 +296,9 @@ final class NotificationByMailSender
             }
         } else {
             if ($this->sentMailCount == 0) {
-                \Piwigo\Core\PageState::current()->addInfo(l10n('No mail to send.'));
+                \Piwigo\Core\PageState::current()->addInfo(Lang::t('No mail to send.'));
             } else {
-                \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
+                \Piwigo\Core\PageState::current()->addInfo(Translator::get()->plural(
                     '%d mail was sent.',
                     '%d mails were sent.',
                     $this->sentMailCount
@@ -361,11 +363,11 @@ final class NotificationByMailSender
         $errorOnUpdatedDataCount = 0;
 
         if ($isSubscribe) {
-            $msgInfo = l10n('User %s [%s] was added to the subscription list.');
-            $msgError = l10n('User %s [%s] was not added to the subscription list.');
+            $msgInfo = Lang::t('User %s [%s] was added to the subscription list.');
+            $msgError = Lang::t('User %s [%s] was not added to the subscription list.');
         } else {
-            $msgInfo = l10n('User %s [%s] was removed from the subscription list.');
-            $msgError = l10n('User %s [%s] was not removed from the subscription list.');
+            $msgInfo = Lang::t('User %s [%s] was removed from the subscription list.');
+            $msgError = Lang::t('User %s [%s] was not removed from the subscription list.');
         }
 
         if (count($checkKeyList) != 0) {
@@ -374,7 +376,7 @@ final class NotificationByMailSender
             $dataUsers = $this->getUserNotifications('subscribe', $checkKeyList, ! $isSubscribe);
 
             // Prepare message after change language
-            $msgBreakTimeout = l10n('Time to send mail is limited. Others mails are skipped.');
+            $msgBreakTimeout = Lang::t('Time to send mail is limited. Others mails are skipped.');
 
             $this->beginUsersEnv(true);
 
@@ -391,7 +393,7 @@ final class NotificationByMailSender
                 if ($nbmUser['mail_address'] != '') {
                     $this->setUserOnEnv($nbmUser, true);
 
-                    $subject = '[' . $galleryTitle . '] ' . ($isSubscribe ? l10n('Subscribe to notification by mail') : l10n('Unsubscribe from notification by mail'));
+                    $subject = '[' . $galleryTitle . '] ' . ($isSubscribe ? Lang::t('Subscribe to notification by mail') : Lang::t('Unsubscribe from notification by mail'));
 
                     $this->assignVarsNbmMailContent($nbmUser);
 
@@ -465,14 +467,14 @@ final class NotificationByMailSender
             );
         }
 
-        \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
+        \Piwigo\Core\PageState::current()->addInfo(Translator::get()->plural(
             '%d user was updated.',
             '%d users were updated.',
             $updatedDataCount
         ));
 
         if ($errorOnUpdatedDataCount != 0) {
-            \Piwigo\Core\PageState::current()->addError(l10n_dec(
+            \Piwigo\Core\PageState::current()->addError(Translator::get()->plural(
                 '%d user was not updated.',
                 '%d users were not updated.',
                 $errorOnUpdatedDataCount
@@ -526,9 +528,9 @@ final class NotificationByMailSender
 
                     // Prepare message after change language
                     if ($isActionSend) {
-                        $msgBreakTimeout = l10n('Time to send mail is limited. Others mails are skipped.');
+                        $msgBreakTimeout = Lang::t('Time to send mail is limited. Others mails are skipped.');
                     } else {
-                        $msgBreakTimeout = l10n('Prepared time for list of users to send mail is limited. Others users are not listed.');
+                        $msgBreakTimeout = Lang::t('Prepared time for list of users to send mail is limited. Others users are not listed.');
                     }
 
                     $this->beginUsersEnv($isActionSend);
@@ -586,7 +588,7 @@ final class NotificationByMailSender
                                 // gallery_title is always a configured string
                                 // (see include/config_default.inc.php).
                                 $galleryTitle = \Piwigo\Config\Config::galleryTitle();
-                                $subject = '[' . $galleryTitle . '] ' . l10n('New photos added');
+                                $subject = '[' . $galleryTitle . '] ' . Lang::t('New photos added');
 
                                 $mailEmailFormat = $this->emailFormat ?? new MailService()
                                     ->getStrEmailFormat($nbmSendHtmlMail);
@@ -735,7 +737,7 @@ final class NotificationByMailSender
                     }
                 } else {
                     if ($isActionSend) {
-                        \Piwigo\Core\PageState::current()->addError(l10n('No user to send notifications by mail.'));
+                        \Piwigo\Core\PageState::current()->addError(Lang::t('No user to send notifications by mail.'));
                     }
                 }
             } else {

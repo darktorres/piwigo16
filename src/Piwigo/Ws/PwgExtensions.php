@@ -22,6 +22,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
@@ -88,7 +89,7 @@ final class PwgExtensions
         }
 
         if (! AccessControl::isWebmaster()) {
-            return new PwgError(403, l10n('Webmaster status is required.'));
+            return new PwgError(403, Lang::t('Webmaster status is required.'));
         }
 
         if (! \Piwigo\Config\Config::enableExtensionsInstall() and $params['action'] == 'delete') {
@@ -173,7 +174,7 @@ final class PwgExtensions
         }
 
         if (! AccessControl::isWebmaster()) {
-            return new PwgError(401, l10n('Webmaster status is required.'));
+            return new PwgError(401, Lang::t('Webmaster status is required.'));
         }
 
         if (new CsrfService()->getToken() != $params['pwg_token']) {
@@ -258,11 +259,11 @@ final class PwgExtensions
         $template->delete_compiled_templates();
 
         return match ($upgrade_status) {
-            'ok' => l10n('%s has been successfully updated.', $extension_name),
-            'temp_path_error' => new PwgError(500, l10n('Can\'t create temporary file.')),
-            'dl_archive_error' => new PwgError(500, l10n('Can\'t download archive.')),
-            'archive_error' => new PwgError(500, l10n('Can\'t read or extract archive.')),
-            default => new PwgError(500, l10n('An error occured during extraction (%s).', $upgrade_status)),
+            'ok' => Lang::t('%s has been successfully updated.', $extension_name),
+            'temp_path_error' => new PwgError(500, Lang::t('Can\'t create temporary file.')),
+            'dl_archive_error' => new PwgError(500, Lang::t('Can\'t download archive.')),
+            'archive_error' => new PwgError(500, Lang::t('Can\'t read or extract archive.')),
+            default => new PwgError(500, Lang::t('An error occured during extraction (%s).', $upgrade_status)),
         };
     }
 

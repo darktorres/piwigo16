@@ -15,6 +15,7 @@ use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Lang;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -112,11 +113,11 @@ final readonly class CalendarRenderer
         $fields = [
             // Created
             'created' => [
-                'label' => l10n('Creation date'),
+                'label' => Lang::t('Creation date'),
             ],
             // Posted
             'posted' => [
-                'label' => l10n('Post date'),
+                'label' => Lang::t('Post date'),
             ],
         ];
 
@@ -240,7 +241,7 @@ final readonly class CalendarRenderer
                             'chronology_views',
                             [
                                 'VALUE' => $url,
-                                'CONTENT' => l10n('chronology_' . $style . '_' . $view),
+                                'CONTENT' => Lang::t('chronology_' . $style . '_' . $view),
                                 'SELECTED' => $selected,
                             ]
                         );

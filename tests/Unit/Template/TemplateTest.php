@@ -52,39 +52,39 @@ test('modcompiler_translate returns a cached lang lookup when compiled_template_
     expect($result)->toBe(var_export('Commentaire', true));
 });
 
-test('modcompiler_translate falls back to a runtime l10n() call when caching is off', function (): void {
+test('modcompiler_translate falls back to a runtime Lang::t() call when caching is off', function (): void {
     Config::override('compiled_template_cache_language', false);
     Lang::loadArray(['Comment' => 'Commentaire']);
 
     $result = Template::modcompiler_translate(["'Comment'"]);
 
-    expect($result)->toBe("l10n('Comment')");
+    expect($result)->toBe("\\Piwigo\\Core\\Lang::t('Comment')");
 });
 
-test('modcompiler_translate falls back to a runtime l10n() call when the key is not in the cached lang table', function (): void {
+test('modcompiler_translate falls back to a runtime Lang::t() call when the key is not in the cached lang table', function (): void {
     Config::override('compiled_template_cache_language', true);
     Lang::loadArray([]);
 
     $result = Template::modcompiler_translate(["'Unknown'"]);
 
-    expect($result)->toBe("l10n('Unknown')");
+    expect($result)->toBe("\\Piwigo\\Core\\Lang::t('Unknown')");
 });
 
-test('modcompiler_translate wraps a runtime l10n() call in sprintf when extra params are given', function (): void {
+test('modcompiler_translate wraps a runtime Lang::t() call in sprintf when extra params are given', function (): void {
     Config::override('compiled_template_cache_language', false);
     Lang::loadArray([]);
 
     $result = Template::modcompiler_translate(["'%d comments'", '$count']);
 
-    expect($result)->toBe("l10n('%d comments',\$count)");
+    expect($result)->toBe("\\Piwigo\\Core\\Lang::t('%d comments',\$count)");
 });
 
-test('modcompiler_translate_dec falls back to a runtime l10n_dec() call when caching is off', function (): void {
+test('modcompiler_translate_dec falls back to a runtime Lang::plural() call when caching is off', function (): void {
     Config::override('compiled_template_cache_language', false);
 
     $result = Template::modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
 
-    expect($result)->toBe("l10n_dec('%d comment','%d comments',\$count)");
+    expect($result)->toBe("\\Piwigo\\Core\\Lang::plural('%d comment','%d comments',\$count)");
 });
 
 test('mod_explode splits on the given delimiter', function (): void {

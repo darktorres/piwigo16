@@ -8,6 +8,7 @@ use Piwigo\Admin\tabsheet;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\BatchWriter;
@@ -16,6 +17,7 @@ use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
+use Piwigo\Lang\Translator;
 use Piwigo\Mail\NotificationByMailSender;
 use Piwigo\Notification\NotificationByMailRepository;
 use Piwigo\Notification\NotificationByMailService;
@@ -207,7 +209,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
                     $template->assign(
                         [
-                            'save_success' => l10n_dec(
+                            'save_success' => Translator::get()->plural(
                                 '%d parameter was updated.',
                                 '%d parameters were updated.',
                                 $updated_param_count
@@ -313,8 +315,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
                 $template->assign(
                     [
-                        'L_CAT_OPTIONS_TRUE' => l10n('Subscribed'),
-                        'L_CAT_OPTIONS_FALSE' => l10n('Unsubscribed'),
+                        'L_CAT_OPTIONS_TRUE' => Lang::t('Subscribed'),
+                        'L_CAT_OPTIONS_FALSE' => Lang::t('Unsubscribed'),
                     ]
                 );
 
@@ -413,7 +415,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
         }
 
-        $template->assign('ADMIN_PAGE_TITLE', l10n('Send mail to users'));
+        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Send mail to users'));
 
         // +-----------------------------------------------------------------------+
         // | Sending html code                                                     |
@@ -443,7 +445,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 $check_key_treated_strings = array_filter($check_key_treated, is_string(...));
                 $_POST[$post_keyname] = array_diff(array_filter($_POST[$post_keyname], is_string(...)), $check_key_treated_strings);
 
-                \Piwigo\Core\PageState::current()->addError(l10n_dec(
+                \Piwigo\Core\PageState::current()->addError(Translator::get()->plural(
                     'Execution time is out, treatment must be continue [Estimated time: %d second].',
                     'Execution time is out, treatment must be continue [Estimated time: %d seconds].',
                     $time_refresh
@@ -533,7 +535,7 @@ order by
 
                 $nbm_username = $nbm_user['username'];
                 $nbm_username = is_scalar($nbm_username) ? (string) $nbm_username : '';
-                \Piwigo\Core\PageState::current()->addInfo(l10n(
+                \Piwigo\Core\PageState::current()->addInfo(Lang::t(
                     'User %s [%s] added.',
                     stripslashes($nbm_username),
                     $nbm_user['mail_address']
@@ -561,7 +563,7 @@ order by
                     $query = 'delete from ' . Tables::userMailNotification() . ' where check_key in (' . implode(',', $quoted_check_key_list) . ');';
                     $conn->executeStatement($query);
 
-                    $redirectService->redirect($base_url . $urlService->getQueryStringDiff([], false), l10n('Operation in progress') . "\n" . l10n('Please wait...'));
+                    $redirectService->redirect($base_url . $urlService->getQueryStringDiff([], false), Lang::t('Operation in progress') . "\n" . Lang::t('Please wait...'));
                 }
             }
         }

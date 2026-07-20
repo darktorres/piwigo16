@@ -132,11 +132,11 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
                 Lang::load('admin.lang');
                 new HtmlService()
                     ->fatalError(
-                        l10n(
+                        Lang::t(
                             'Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation',
                             $conf_data_location
                         ),
-                        l10n('an error happened'),
+                        Lang::t('an error happened'),
                         false // show trace
                     );
             }
@@ -185,7 +185,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         $this->smarty->registerFilter('pre', self::prefilter_white_space(...));
         $this->smarty->registerPlugin('modifier', 'url_is_remote', self::urlService()->urlIsRemote(...));
         $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
-        $this->smarty->registerPlugin('modifier', 'l10n', 'l10n');
+        $this->smarty->registerPlugin('modifier', 'l10n', Lang::t(...));
         $this->smarty->registerPlugin('modifier', 'str_replace', 'str_replace');
         $this->smarty->registerPlugin('modifier', 'is_admin', AccessControl::isAdmin(...));
         $this->smarty->registerPlugin('modifier', 'is_classic_user', AccessControl::isClassicUser(...));
@@ -722,7 +722,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
      * Usage :
      *    - {'Comment'|translate}
      *    - {'%d comments'|translate:$count}
-     * @see l10n()
+     * @see Lang::t()
      * @param array<int, string> $params
      */
     public static function modcompiler_translate(array $params): string
@@ -742,7 +742,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
                 ) {
                     return var_export(Lang::t($key), true);
                 }
-                return 'l10n(' . $params[0] . ')';
+                return '\Piwigo\Core\Lang::t(' . $params[0] . ')';
 
             default:
                 if (\Piwigo\Config\Config::compiledTemplateCacheLanguage()) {
@@ -752,7 +752,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
                     $ret .= ')';
                     return $ret;
                 }
-                return 'l10n(' . $params[0] . ',' . implode(',', array_slice($params, 1)) . ')';
+                return '\Piwigo\Core\Lang::t(' . $params[0] . ',' . implode(',', array_slice($params, 1)) . ')';
         }
     }
 
@@ -760,7 +760,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
      * "translate_dec" variable modifier.
      * Usage :
      *    - {$count|translate_dec:'%d comment':'%d comments'}
-     * @see l10n_dec()
+     * @see Lang::plural()
      * @param array<int, string> $params
      */
     public static function modcompiler_translate_dec(array $params): string
@@ -780,7 +780,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
             $ret .= ')';
             return $ret;
         }
-        return 'l10n_dec(' . $params[1] . ',' . $params[2] . ',' . $params[0] . ')';
+        return '\Piwigo\Core\Lang::plural(' . $params[1] . ',' . $params[2] . ',' . $params[0] . ')';
     }
 
     /**

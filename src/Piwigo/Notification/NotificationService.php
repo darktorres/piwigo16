@@ -6,8 +6,10 @@ namespace Piwigo\Notification;
 
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionService;
 
 /**
@@ -203,7 +205,7 @@ final readonly class NotificationService
     public function addNewsLine(array &$news, int $count, string $singularKey, string $pluralKey, string $url = '', bool $addUrl = false): void
     {
         if ($count > 0) {
-            $line = l10n_dec($singularKey, $pluralKey, $count);
+            $line = Translator::get()->plural($singularKey, $pluralKey, $count);
             if ($addUrl and $url !== '') {
                 $line = '<a href="' . $url . '">' . $line . '</a>';
             }
@@ -306,12 +308,12 @@ final readonly class NotificationService
 
         $description .=
               '<li>'
-              . l10n_dec('%d new photo', '%d new photos', $nbElements)
+              . Translator::get()->plural('%d new photo', '%d new photos', $nbElements)
               . ' ('
               . '<a href="' . $this->urlService->addUrlParams($this->urlService->makeIndexUrl([
                   'section' => 'recent_pics',
               ]), $addUrlParams) . '">'
-                . l10n('Recent photos') . '</a>'
+                . Lang::t('Recent photos') . '</a>'
               . ')'
               . '</li><br>';
 
@@ -342,7 +344,7 @@ final readonly class NotificationService
 
         $description .=
               '<li>'
-              . l10n_dec('%d album updated', '%d albums updated', $nbCats)
+              . Translator::get()->plural('%d album updated', '%d albums updated', $nbCats)
               . '</li>';
 
         $description .= '<ul>';
@@ -360,7 +362,7 @@ final readonly class NotificationService
                   '<li>'
                   . $this->htmlRenderer->getCatDisplayNameCache($uppercats, '', false, null, $authKey)
                   . ' (' .
-                  l10n_dec('%d new photo', '%d new photos', $imgCount) . ')'
+                  Translator::get()->plural('%d new photo', '%d new photos', $imgCount) . ')'
                   . '</li>';
         }
         $description .= '</ul>';
@@ -379,7 +381,7 @@ final readonly class NotificationService
     {
         $nbElements = $dateDetail['nb_elements'] ?? null;
         $nbElements = is_numeric($nbElements) ? (int) $nbElements : 0;
-        $title = l10n_dec('%d new photo', '%d new photos', $nbElements);
+        $title = Translator::get()->plural('%d new photo', '%d new photos', $nbElements);
 
         $dateAvailable = $dateDetail['date_available'] ?? null;
         $dateAvailable = is_string($dateAvailable) ? $dateAvailable : '';

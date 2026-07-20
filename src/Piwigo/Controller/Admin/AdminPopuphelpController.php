@@ -56,7 +56,7 @@ final class AdminPopuphelpController implements ControllerInterface
 
             if ($output !== 'content_only') {
                 \Piwigo\Core\PageState::current()->setBodyId('thePopuphelpPage');
-                $title = l10n('Piwigo Help');
+                $title = Lang::t('Piwigo Help');
                 \Piwigo\Core\PageState::current()->setPageBanner('<h1>' . $title . '</h1>');
                 \Piwigo\Core\PageState::current()->setMetaRobots([
                     'noindex' => 1,

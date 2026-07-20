@@ -51,7 +51,7 @@ final class PopuphelpController implements ControllerInterface
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             \Piwigo\Core\PageState::current()->setBodyId('thePopuphelpPage');
-            $title = l10n('Piwigo Help');
+            $title = Lang::t('Piwigo Help');
             \Piwigo\Core\PageState::current()->setPageBanner('');
             \Piwigo\Core\PageState::current()->setMetaRobots([
                 'noindex' => 1,

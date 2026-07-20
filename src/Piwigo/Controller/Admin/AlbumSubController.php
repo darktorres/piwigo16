@@ -9,6 +9,7 @@ use Piwigo\Admin\CatModifyPageRenderer;
 use Piwigo\Admin\CatPermPageRenderer;
 use Piwigo\Admin\ElementSetRanksPageRenderer;
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -80,7 +81,7 @@ SELECT *
         $category_id_display = $category['id'];
         $category_id_display = is_scalar($category_id_display) ? (string) $category_id_display : '';
         $template->assign([
-            'ADMIN_PAGE_TITLE' => l10n('Edit album') . ' <strong>' . $category_name . '</strong>',
+            'ADMIN_PAGE_TITLE' => Lang::t('Edit album') . ' <strong>' . $category_name . '</strong>',
             'ADMIN_PAGE_OBJECT_ID' => '#' . $category_id_display,
         ]);
 

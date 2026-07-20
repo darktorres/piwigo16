@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
 use Piwigo\Lang\Translator;
 
 beforeEach(function (): void {
@@ -13,6 +14,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     Translator::reset();
     unset($GLOBALS['lang']);
+    Config::reset();
     if (file_exists($this->poFile)) {
         unlink($this->poFile);
     }
@@ -122,4 +124,54 @@ test('load on an unreadable file is a silent no-op', function (): void {
     Translator::get()->load('fr', '/nonexistent/path.po');
 
     expect(Translator::get()->translate('Hello'))->toBe('Hello');
+});
+
+test('translate warns about a missing key when debug_l10n is enabled', function (): void {
+    Config::override('debug_l10n', true);
+
+    $triggered = null;
+    set_error_handler(function (int $errno, string $errstr) use (&$triggered): bool {
+        $triggered = $errstr;
+        return true;
+    }, E_USER_WARNING);
+
+    Translator::get()->translate('missing_key');
+
+    restore_error_handler();
+
+    expect($triggered)->toBe('[l10n] language key "missing_key" not defined');
+});
+
+test('translate does not warn about a missing key when debug_l10n is disabled', function (): void {
+    Config::override('debug_l10n', false);
+
+    $triggered = false;
+    set_error_handler(function () use (&$triggered): bool {
+        $triggered = true;
+        return true;
+    }, E_USER_WARNING);
+
+    Translator::get()->translate('missing_key');
+
+    restore_error_handler();
+
+    expect($triggered)->toBeFalse();
+});
+
+test('translate does not warn about a resolved key even when debug_l10n is enabled', function (): void {
+    Config::override('debug_l10n', true);
+    $GLOBALS['lang'] = ['known_key' => 'known value'];
+
+    $triggered = false;
+    set_error_handler(function () use (&$triggered): bool {
+        $triggered = true;
+        return true;
+    }, E_USER_WARNING);
+
+    $result = Translator::get()->translate('known_key');
+
+    restore_error_handler();
+
+    expect($result)->toBe('known value')
+        ->and($triggered)->toBeFalse();
 });

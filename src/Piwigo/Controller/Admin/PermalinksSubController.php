@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
@@ -208,7 +209,7 @@ SELECT id, permalink, uppercats, global_rank
             'PWG_TOKEN' => $pwg_token,
             'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=permalinks',
             'deleted_permalinks' => $deleted_permalinks,
-            'ADMIN_PAGE_TITLE' => l10n('Albums'),
+            'ADMIN_PAGE_TITLE' => Lang::t('Albums'),
         ]);
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'permalinks');
@@ -273,7 +274,7 @@ SELECT id, permalink, uppercats, global_rank
             }
             $template->assign(
                 $template_var . strtoupper($field),
-                '<a href="' . $url . $anchor . '" title="' . l10n('Sort order') . '">' . $disp . '</a>'
+                '<a href="' . $url . $anchor . '" title="' . Lang::t('Sort order') . '">' . $disp . '</a>'
             );
         }
         return $ret;

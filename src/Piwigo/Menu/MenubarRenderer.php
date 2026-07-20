@@ -7,6 +7,7 @@ namespace Piwigo\Menu;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Filter\FilterService;
@@ -227,8 +228,8 @@ final class MenubarRenderer
                       'URL' => $urlService->makeIndexUrl([
                           'section' => 'favorites',
                       ]),
-                      'TITLE' => l10n('display your favorites photos'),
-                      'NAME' => l10n('Your favorites'),
+                      'TITLE' => Lang::t('display your favorites photos'),
+                      'NAME' => Lang::t('Your favorites'),
                   ];
             }
 
@@ -237,8 +238,8 @@ final class MenubarRenderer
                   'URL' => $urlService->makeIndexUrl([
                       'section' => 'most_visited',
                   ]),
-                  'TITLE' => l10n('display most visited photos'),
-                  'NAME' => l10n('Most visited'),
+                  'TITLE' => Lang::t('display most visited photos'),
+                  'NAME' => Lang::t('Most visited'),
               ];
 
             if (\Piwigo\Config\Config::rateEnabled()) {
@@ -247,8 +248,8 @@ final class MenubarRenderer
                      'URL' => $urlService->makeIndexUrl([
                          'section' => 'best_rated',
                      ]),
-                     'TITLE' => l10n('display best rated photos'),
-                     'NAME' => l10n('Best rated'),
+                     'TITLE' => Lang::t('display best rated photos'),
+                     'NAME' => Lang::t('Best rated'),
                  ];
             }
 
@@ -257,8 +258,8 @@ final class MenubarRenderer
                   'URL' => $urlService->makeIndexUrl([
                       'section' => 'recent_pics',
                   ]),
-                  'TITLE' => l10n('display most recent photos'),
-                  'NAME' => l10n('Recent photos'),
+                  'TITLE' => Lang::t('display most recent photos'),
+                  'NAME' => Lang::t('Recent photos'),
               ];
 
             $block->data['recent_cats'] =
@@ -266,15 +267,15 @@ final class MenubarRenderer
                   'URL' => $urlService->makeIndexUrl([
                       'section' => 'recent_cats',
                   ]),
-                  'TITLE' => l10n('display recently updated albums'),
-                  'NAME' => l10n('Recent albums'),
+                  'TITLE' => Lang::t('display recently updated albums'),
+                  'NAME' => Lang::t('Recent albums'),
               ];
 
             $block->data['random'] =
               [
                   'URL' => $urlService->getRootUrl() . 'random.php',
-                  'TITLE' => l10n('display a set of random photos'),
-                  'NAME' => l10n('Random photos'),
+                  'TITLE' => Lang::t('display a set of random photos'),
+                  'NAME' => Lang::t('Random photos'),
                   'REL' => 'rel="nofollow"',
               ];
 
@@ -288,8 +289,8 @@ final class MenubarRenderer
                           'chronology_view' => 'calendar',
                       ]
                   ),
-                  'TITLE' => l10n('display each day with photos, month per month'),
-                  'NAME' => l10n('Calendar'),
+                  'TITLE' => Lang::t('display each day with photos, month per month'),
+                  'NAME' => Lang::t('Calendar'),
                   'REL' => 'rel="nofollow"',
               ];
             $block->template = 'menubar_specials.tpl';
@@ -305,8 +306,8 @@ final class MenubarRenderer
             // tags link
             $block->data['tags'] =
               [
-                  'TITLE' => l10n('display available tags'),
-                  'NAME' => l10n('Tags'),
+                  'TITLE' => Lang::t('display available tags'),
+                  'NAME' => Lang::t('Tags'),
                   'URL' => $urlService->getRootUrl() . 'tags.php',
                   'COUNTER' => $tagService->getNbAvailableTags(),
               ];
@@ -314,8 +315,8 @@ final class MenubarRenderer
             // search link
             $block->data['search'] =
               [
-                  'TITLE' => l10n('search'),
-                  'NAME' => l10n('Search'),
+                  'TITLE' => Lang::t('search'),
+                  'NAME' => Lang::t('Search'),
                   'URL' => $urlService->getRootUrl() . 'search.php',
                   'REL' => 'rel="search"',
               ];
@@ -324,8 +325,8 @@ final class MenubarRenderer
                 // comments link
                 $block->data['comments'] =
                   [
-                      'TITLE' => l10n('display last user comments'),
-                      'NAME' => l10n('Comments'),
+                      'TITLE' => Lang::t('display last user comments'),
+                      'NAME' => Lang::t('Comments'),
                       'URL' => $urlService->getRootUrl() . 'comments.php',
                       'COUNTER' => \Piwigo\Comment\CommentService::getNbAvailableComments(),
                   ];
@@ -334,16 +335,16 @@ final class MenubarRenderer
             // about link
             $block->data['about'] =
               [
-                  'TITLE' => l10n('About Piwigo'),
-                  'NAME' => l10n('About'),
+                  'TITLE' => Lang::t('About Piwigo'),
+                  'NAME' => Lang::t('About'),
                   'URL' => $urlService->getRootUrl() . 'about.php',
               ];
 
             // notification
             $block->data['rss'] =
               [
-                  'TITLE' => l10n('RSS feed'),
-                  'NAME' => l10n('Notification'),
+                  'TITLE' => Lang::t('RSS feed'),
+                  'NAME' => Lang::t('Notification'),
                   'URL' => $urlService->getRootUrl() . 'notification.php',
                   'REL' => 'rel="nofollow"',
               ];

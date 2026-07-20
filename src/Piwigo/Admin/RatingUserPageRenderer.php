@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeImage;
@@ -175,11 +176,11 @@ final class RatingUserPageRenderer
         }
 
         $available_order_by = [
-            [l10n('Average rate'), self::avgCompare(...)],
-            [l10n('Number of rates'), self::countCompare(...)],
-            [l10n('Variation'), self::cvCompare(...)],
-            [l10n('Consensus deviation'), self::consensusDevCompare(...)],
-            [l10n('Last'), self::lastRateCompare(...)],
+            [Lang::t('Average rate'), self::avgCompare(...)],
+            [Lang::t('Number of rates'), self::countCompare(...)],
+            [Lang::t('Variation'), self::cvCompare(...)],
+            [Lang::t('Consensus deviation'), self::consensusDevCompare(...)],
+            [Lang::t('Last'), self::lastRateCompare(...)],
         ];
 
         for ($i = 0; $i < count($available_order_by); $i++) {
@@ -203,7 +204,7 @@ final class RatingUserPageRenderer
             'image_urls' => $image_urls,
             'TN_WIDTH' => ImageStdParams::get_by_type(ImageStdParams::SQUARE)->sizing->ideal_size[0],
             'NB_ELEMENTS' => $nb_elements,
-            'ADMIN_PAGE_TITLE' => l10n('Rating'),
+            'ADMIN_PAGE_TITLE' => Lang::t('Rating'),
         ]);
         $template->set_filename('rating', 'rating_user.tpl');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'rating');

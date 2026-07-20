@@ -10,6 +10,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -55,7 +56,7 @@ final class ThemesInstalledPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug;
@@ -126,11 +127,11 @@ final class ThemesInstalledPageRenderer
 
                 if (count($db_theme_ids) <= 1) {
                     $tpl_theme['DEACTIVABLE'] = false;
-                    $tpl_theme['DEACTIVATE_TOOLTIP'] = l10n('Impossible to deactivate this theme, you need at least one theme.');
+                    $tpl_theme['DEACTIVATE_TOOLTIP'] = Lang::t('Impossible to deactivate this theme, you need at least one theme.');
                 }
                 if ($tpl_theme['IS_DEFAULT']) {
                     $tpl_theme['DEACTIVABLE'] = false;
-                    $tpl_theme['DEACTIVATE_TOOLTIP'] = l10n('Impossible to deactivate the default theme.');
+                    $tpl_theme['DEACTIVATE_TOOLTIP'] = Lang::t('Impossible to deactivate the default theme.');
                 }
             } else {
                 $tpl_theme['STATE'] = 'inactive';
@@ -138,7 +139,7 @@ final class ThemesInstalledPageRenderer
                 // is the theme "activable" ?
                 if (isset($fs_theme['activable']) and ! (bool) $fs_theme['activable']) {
                     $tpl_theme['ACTIVABLE'] = false;
-                    $tpl_theme['ACTIVABLE_TOOLTIP'] = l10n('This theme was not designed to be directly activated');
+                    $tpl_theme['ACTIVABLE_TOOLTIP'] = Lang::t('This theme was not designed to be directly activated');
                 } else {
                     $tpl_theme['ACTIVABLE'] = true;
                 }
@@ -147,7 +148,7 @@ final class ThemesInstalledPageRenderer
                 if (isset($missing_parent)) {
                     $tpl_theme['ACTIVABLE'] = false;
 
-                    $tpl_theme['ACTIVABLE_TOOLTIP'] = l10n(
+                    $tpl_theme['ACTIVABLE_TOOLTIP'] = Lang::t(
                         'Impossible to activate this theme, the parent theme is missing: %s',
                         $missing_parent
                     );
@@ -161,7 +162,7 @@ final class ThemesInstalledPageRenderer
                 if (count($children) > 0) {
                     $tpl_theme['DELETABLE'] = false;
 
-                    $tpl_theme['DELETE_TOOLTIP'] = l10n(
+                    $tpl_theme['DELETE_TOOLTIP'] = Lang::t(
                         'Impossible to delete this theme. Other themes depends on it: %s',
                         implode(', ', array_filter($children, is_string(...)))
                     );
@@ -190,7 +191,7 @@ final class ThemesInstalledPageRenderer
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_themes_installed');
 
         $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
-        $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
+        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
         $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', \Piwigo\Config\Config::enableExtensionsInstall());
 
         $template->set_filenames([

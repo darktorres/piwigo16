@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -63,21 +64,21 @@ final class ElementSetRanksPageRenderer
 
         $sort_fields = [
             '' => '',
-            'file ASC' => l10n('File name, A &rarr; Z'),
-            'file DESC' => l10n('File name, Z &rarr; A'),
-            'name ASC' => l10n('Photo title, A &rarr; Z'),
-            'name DESC' => l10n('Photo title, Z &rarr; A'),
-            'date_creation DESC' => l10n('Date created, new &rarr; old'),
-            'date_creation ASC' => l10n('Date created, old &rarr; new'),
-            'date_available DESC' => l10n('Date posted, new &rarr; old'),
-            'date_available ASC' => l10n('Date posted, old &rarr; new'),
-            'rating_score DESC' => l10n('Rating score, high &rarr; low'),
-            'rating_score ASC' => l10n('Rating score, low &rarr; high'),
-            'hit DESC' => l10n('Visits, high &rarr; low'),
-            'hit ASC' => l10n('Visits, low &rarr; high'),
-            'id ASC' => l10n('Numeric identifier, 1 &rarr; 9'),
-            'id DESC' => l10n('Numeric identifier, 9 &rarr; 1'),
-            'rank ASC' => l10n('Manual sort order'),
+            'file ASC' => Lang::t('File name, A &rarr; Z'),
+            'file DESC' => Lang::t('File name, Z &rarr; A'),
+            'name ASC' => Lang::t('Photo title, A &rarr; Z'),
+            'name DESC' => Lang::t('Photo title, Z &rarr; A'),
+            'date_creation DESC' => Lang::t('Date created, new &rarr; old'),
+            'date_creation ASC' => Lang::t('Date created, old &rarr; new'),
+            'date_available DESC' => Lang::t('Date posted, new &rarr; old'),
+            'date_available ASC' => Lang::t('Date posted, old &rarr; new'),
+            'rating_score DESC' => Lang::t('Rating score, high &rarr; low'),
+            'rating_score ASC' => Lang::t('Rating score, low &rarr; high'),
+            'hit DESC' => Lang::t('Visits, high &rarr; low'),
+            'hit ASC' => Lang::t('Visits, low &rarr; high'),
+            'id ASC' => Lang::t('Numeric identifier, 1 &rarr; 9'),
+            'id DESC' => Lang::t('Numeric identifier, 9 &rarr; 1'),
+            'rank ASC' => Lang::t('Manual sort order'),
         ];
 
         if (! isset($_GET['cat_id']) or ! is_numeric($_GET['cat_id'])) {
@@ -113,7 +114,7 @@ final class ElementSetRanksPageRenderer
                 $image_order_choice = $_POST['image_order_choice'];
             }
 
-            $message = l10n('Album updated successfully');
+            $message = Lang::t('Album updated successfully');
 
             $image_order = null;
             if ($image_order_choice === 'user_define') {
@@ -130,7 +131,7 @@ final class ElementSetRanksPageRenderer
             } elseif ($image_order_choice === 'rank') {
                 $image_order = '`rank` ASC';
 
-                $message = l10n('Images manual order was saved');
+                $message = Lang::t('Images manual order was saved');
             }
             new CategoryAdminService(
                 new CategoryService(

@@ -11,6 +11,7 @@ use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
@@ -143,9 +144,9 @@ SELECT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . '
   WHERE commentable = \'false\'
 ;',
-                l10n('Authorize users to add comments on selected albums'),
-                l10n('Authorized'),
-                l10n('Forbidden'),
+                Lang::t('Authorize users to add comments on selected albums'),
+                Lang::t('Authorized'),
+                Lang::t('Forbidden'),
             ],
             'visible' => [
                 '
@@ -158,9 +159,9 @@ SELECT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . '
   WHERE visible = \'false\'
 ;',
-                l10n('Lock albums'),
-                l10n('Unlocked'),
-                l10n('Locked'),
+                Lang::t('Lock albums'),
+                Lang::t('Unlocked'),
+                Lang::t('Locked'),
             ],
             'status' => [
                 '
@@ -173,9 +174,9 @@ SELECT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . '
   WHERE status = \'private\'
 ;',
-                l10n('Manage authorizations for selected albums'),
-                l10n('Public'),
-                l10n('Private'),
+                Lang::t('Manage authorizations for selected albums'),
+                Lang::t('Public'),
+                Lang::t('Private'),
             ],
             // 'representative' is the only value that can still reach here: $section
             // is already restricted to comments/visible/status/representative by
@@ -191,9 +192,9 @@ SELECT DISTINCT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=category_id
   WHERE representative_picture_id IS NULL
 ;',
-                l10n('Representative'),
-                l10n('singly represented'),
-                l10n('randomly represented'),
+                Lang::t('Representative'),
+                Lang::t('singly represented'),
+                Lang::t('randomly represented'),
             ],
         };
         $template->assign(
@@ -207,7 +208,7 @@ SELECT DISTINCT id,name,uppercats,global_rank
         $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', new HtmlService(), $template);
         $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', new HtmlService(), $template);
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
-        $template->assign('ADMIN_PAGE_TITLE', l10n('Properties of abums'));
+        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Properties of abums'));
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'cat_options');

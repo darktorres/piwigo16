@@ -9,6 +9,7 @@ use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -17,6 +18,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
+use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Users\UserRepository;
 
@@ -230,18 +232,18 @@ final readonly class CategoryService
     {
 
         $orders = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_category_preferred_image_orders', [
-            [l10n('Default'), '', true],
-            [l10n('Photo title, A &rarr; Z'), 'name ASC', true],
-            [l10n('Photo title, Z &rarr; A'), 'name DESC', true],
-            [l10n('Date created, new &rarr; old'), 'date_creation DESC', true],
-            [l10n('Date created, old &rarr; new'), 'date_creation ASC', true],
-            [l10n('Date posted, new &rarr; old'), 'date_available DESC', true],
-            [l10n('Date posted, old &rarr; new'), 'date_available ASC', true],
-            [l10n('Rating score, high &rarr; low'), 'rating_score DESC', \Piwigo\Config\Config::rateEnabled()],
-            [l10n('Rating score, low &rarr; high'), 'rating_score ASC', \Piwigo\Config\Config::rateEnabled()],
-            [l10n('Visits, high &rarr; low'), 'hit DESC', true],
-            [l10n('Visits, low &rarr; high'), 'hit ASC', true],
-            [l10n('Permissions'), 'level DESC', \Piwigo\Auth\AccessControl::isAdmin()],
+            [Lang::t('Default'), '', true],
+            [Lang::t('Photo title, A &rarr; Z'), 'name ASC', true],
+            [Lang::t('Photo title, Z &rarr; A'), 'name DESC', true],
+            [Lang::t('Date created, new &rarr; old'), 'date_creation DESC', true],
+            [Lang::t('Date created, old &rarr; new'), 'date_creation ASC', true],
+            [Lang::t('Date posted, new &rarr; old'), 'date_available DESC', true],
+            [Lang::t('Date posted, old &rarr; new'), 'date_available ASC', true],
+            [Lang::t('Rating score, high &rarr; low'), 'rating_score DESC', \Piwigo\Config\Config::rateEnabled()],
+            [Lang::t('Rating score, low &rarr; high'), 'rating_score ASC', \Piwigo\Config\Config::rateEnabled()],
+            [Lang::t('Visits, high &rarr; low'), 'hit DESC', true],
+            [Lang::t('Visits, low &rarr; high'), 'hit ASC', true],
+            [Lang::t('Permissions'), 'level DESC', \Piwigo\Auth\AccessControl::isAdmin()],
         ]);
 
         if (! is_array($orders)) {
@@ -316,14 +318,14 @@ final readonly class CategoryService
                 $catNbImages = 0;
             }
 
-            $displayText .= l10n_dec('%d photo', '%d photos', $catCountImages);
+            $displayText .= Translator::get()->plural('%d photo', '%d photos', $catCountImages);
 
             if ($catCountCategories === 0 || $catNbImages === $catCountImages) {
                 if (! $shortMessage) {
-                    $displayText .= ' ' . l10n('in this album');
+                    $displayText .= ' ' . Lang::t('in this album');
                 }
             } else {
-                $displayText .= ' ' . l10n_dec('in %d sub-album', 'in %d sub-albums', $catCountCategories);
+                $displayText .= ' ' . Translator::get()->plural('in %d sub-album', 'in %d sub-albums', $catCountCategories);
             }
         }
 
@@ -1513,7 +1515,7 @@ final readonly class CategoryService
                 // technically, you can't move a category with uppercats 12,125,13,14
                 // into a new parent category with uppercats 12,125,13,14,24
                 if ((bool) preg_match('/^' . $category['uppercats'] . '(,|$)/', $newParentUppercats)) {
-                    \Piwigo\Core\PageState::current()->addError(l10n('You cannot move an album in its own sub album'));
+                    \Piwigo\Core\PageState::current()->addError(Lang::t('You cannot move an album in its own sub album'));
                     return;
                 }
             }
@@ -1535,7 +1537,7 @@ final readonly class CategoryService
             $this->setCatStatus(array_map(intval(...), array_keys($categories)), 'private');
         }
 
-        \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
+        \Piwigo\Core\PageState::current()->addInfo(Translator::get()->plural(
             '%d album moved',
             '%d albums moved',
             count($categories)
@@ -1562,7 +1564,7 @@ final readonly class CategoryService
         // is the given category name only containing blank spaces ?
         if ((bool) preg_match('/^\s*$/', $categoryName)) {
             return [
-                'error' => l10n('The name of an album must not be empty'),
+                'error' => Lang::t('The name of an album must not be empty'),
             ];
         }
 
@@ -1622,7 +1624,7 @@ final readonly class CategoryService
             $parent = $this->repo->findParentCategoryForCreate($parentId);
             if ($parent === null) {
                 return [
-                    'error' => l10n('The parent album does not exist'),
+                    'error' => Lang::t('The parent album does not exist'),
                 ];
             }
 
@@ -1693,7 +1695,7 @@ final readonly class CategoryService
         $activityLogger->record('album', $insertedId, 'add');
 
         return [
-            'info' => l10n('Album added'),
+            'info' => Lang::t('Album added'),
             'id' => $insertedId,
         ];
     }

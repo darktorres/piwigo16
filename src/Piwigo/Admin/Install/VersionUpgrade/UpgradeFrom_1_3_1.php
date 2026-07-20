@@ -15,6 +15,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Install\DbPatch\DatabaseConfigChanges;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\Lang;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -597,9 +598,9 @@ UPDATE ' . Tables::categories() . '
         \Piwigo\Core\PageState::current()->infos = array_merge(
             \Piwigo\Core\PageState::current()->infos,
             [
-                l10n('All sub-albums of private albums become private'),
-                l10n('User permissions and group permissions have been erased'),
-                l10n('Only thumbnails prefix and webmaster mail address have been saved from previous configuration'),
+                Lang::t('All sub-albums of private albums become private'),
+                Lang::t('User permissions and group permissions have been erased'),
+                Lang::t('Only thumbnails prefix and webmaster mail address have been saved from previous configuration'),
             ]
         );
 

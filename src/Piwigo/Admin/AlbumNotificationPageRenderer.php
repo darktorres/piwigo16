@@ -11,6 +11,7 @@ use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
@@ -20,6 +21,7 @@ use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
@@ -113,7 +115,7 @@ SELECT id, file, path, representative_ext
             }
 
             $args = [
-                'subject' => l10n('[%s] Visit album %s', \Piwigo\Config\Config::galleryTitle(), \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $category['name'], 'admin_cat_list')),
+                'subject' => Lang::t('[%s] Visit album %s', \Piwigo\Config\Config::galleryTitle(), \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $category['name'], 'admin_cat_list')),
                 // TODO : change this language variable to 'Visit album %s'
                 // TODO : 'language_selected' => ....
             ];
@@ -218,7 +220,7 @@ SELECT
                         ->switchLangBack();
                 }
 
-                $message = l10n_dec('%d mail was sent.', '%d mails were sent.', count($users));
+                $message = Translator::get()->plural('%d mail was sent.', '%d mails were sent.', count($users));
                 $message .= ' (' . implode(', ', $usernames) . ')';
 
                 $template->assign(
@@ -249,7 +251,7 @@ SELECT
 
                 $template->assign(
                     [
-                        'save_success' => l10n('An information email was sent to group "%s"', $group_name),
+                        'save_success' => Lang::t('An information email was sent to group "%s"', $group_name),
                     ]
                 );
             }

@@ -7,6 +7,7 @@ namespace Piwigo\Picture;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
@@ -122,15 +123,15 @@ final class PictureCommentRenderer
 
             switch ($commentAction) {
                 case 'moderate':
-                    $commentInfos[] = l10n('An administrator must authorize your comment before it is visible.');
+                    $commentInfos[] = Lang::t('An administrator must authorize your comment before it is visible.');
                     // no break
                 case 'validate':
-                    $commentInfos[] = l10n('Your comment has been registered');
+                    $commentInfos[] = Lang::t('Your comment has been registered');
                     break;
                 case 'reject':
                     new HtmlService()
                         ->setStatusHeader(403);
-                    $commentErrors[] = l10n('Your comment has NOT been registered because it did not pass the validation rules');
+                    $commentErrors[] = Lang::t('Your comment has NOT been registered because it did not pass the validation rules');
                     break;
                 default:
                     trigger_error('Invalid comment action ' . $commentAction, E_USER_WARNING);
@@ -188,7 +189,7 @@ final class PictureCommentRenderer
                 'COMMENTS_ORDER_URL' => $urlService->addUrlParams($urlService->duplicatePictureUrl(), [
                     'comments_order' => ($commentsOrder === 'ASC' ? 'DESC' : 'ASC'),
                 ]),
-                'COMMENTS_ORDER_TITLE' => $commentsOrder === 'ASC' ? l10n('Show latest comments first') : l10n('Show oldest comments first'),
+                'COMMENTS_ORDER_TITLE' => $commentsOrder === 'ASC' ? Lang::t('Show latest comments first') : Lang::t('Show oldest comments first'),
             ]);
 
             // \Piwigo\Config\Config::userFields() maps generic field names to actual DB
@@ -211,7 +212,7 @@ final class PictureCommentRenderer
 
             foreach ($rows as $row) {
                 if ($row['author'] === 'guest') {
-                    $row['author'] = l10n('guest');
+                    $row['author'] = Lang::t('guest');
                 }
 
                 $email = null;

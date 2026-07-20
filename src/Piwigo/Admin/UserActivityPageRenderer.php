@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
@@ -100,7 +101,7 @@ final class UserActivityPageRenderer
         }
 
         $template->set_filename('user_activity', 'user_activity.tpl');
-        $template->assign('ADMIN_PAGE_TITLE', l10n('Users'));
+        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Users'));
 
         $template->assign([
             'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()

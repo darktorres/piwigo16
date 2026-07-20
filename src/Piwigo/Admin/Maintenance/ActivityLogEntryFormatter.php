@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Maintenance;
 
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\Lang;
 
 /**
  * Formats one Piwigo\Activity\ActivityRepository::
@@ -43,19 +44,19 @@ final class ActivityLogEntryFormatter
         switch ($row['object_id']) {
             case ActivitySystem::Core:
                 $object_icon = 'icon-piwigo';
-                $object = l10n('Core');
+                $object = Lang::t('Core');
 
                 switch ($row['action']) {
                     case 'install':
                         $action_icon = 'icon-download';
                         $action_color = 'icon-green';
-                        $action = l10n('Install');
+                        $action = Lang::t('Install');
                         break;
 
                     case 'config':
                         $action_icon = 'icon-cog-alt';
                         $action_color = 'icon-yellow';
-                        $action = l10n('Configuration');
+                        $action = Lang::t('Configuration');
                         // for config we need to specific format details
                         if (isset($details['config_section'])) {
                             $c_icon = '';
@@ -63,34 +64,34 @@ final class ActivityLogEntryFormatter
                             switch ($details['config_section']) {
                                 case 'main':
                                     $c_icon = 'icon-cog';
-                                    $c_text = l10n('General');
+                                    $c_text = Lang::t('General');
                                     break;
 
                                 case 'watermark':
                                     $c_icon = 'icon-file-image';
-                                    $c_text = l10n('Watermark');
+                                    $c_text = Lang::t('Watermark');
                                     break;
 
                                 case 'sizes':
                                     $c_icon = 'icon-zoom-square';
-                                    $c_text = l10n('Photo sizes');
+                                    $c_text = Lang::t('Photo sizes');
                                     // sizes have 2 params always Photo sizes and sometimes config_action
                                     if (isset($details['config_action']) && $details['config_action'] === 'restore_settings') {
                                         $detail[] = [
                                             'icon' => 'icon-back-in-time',
-                                            'text' => l10n('Set as default'),
+                                            'text' => Lang::t('Set as default'),
                                         ];
                                     }
                                     break;
 
                                 case 'comments':
                                     $c_icon = 'icon-chat';
-                                    $c_text = l10n('Comments');
+                                    $c_text = Lang::t('Comments');
                                     break;
 
                                 case 'display':
                                     $c_icon = 'icon-television';
-                                    $c_text = l10n('Display');
+                                    $c_text = Lang::t('Display');
                                     break;
 
                                 default:
@@ -110,7 +111,7 @@ final class ActivityLogEntryFormatter
                     case 'maintenance':
                         $action_icon = 'icon-cone';
                         $action_color = 'icon-yellow';
-                        $action = l10n('Maintenance');
+                        $action = Lang::t('Maintenance');
                         // for maintenance we need to specific format details
                         if (isset($details['maintenance_action'])) {
                             $action_detail = $details['maintenance_action'];
@@ -131,14 +132,14 @@ final class ActivityLogEntryFormatter
                     case 'update':
                         $action_icon = 'icon-arrows-cw';
                         $action_color = 'icon-blue';
-                        $action = l10n('Update');
+                        $action = Lang::t('Update');
                         $major_infos = true;
                         break;
 
                     case 'autoupdate':
                         $action_icon = 'icon-arrows-cw';
                         $action_color = 'icon-blue';
-                        $action = l10n('Auto-update');
+                        $action = Lang::t('Auto-update');
                         $major_infos = true;
                         break;
 
@@ -159,43 +160,43 @@ final class ActivityLogEntryFormatter
                     case 'install':
                         $action_icon = 'icon-download';
                         $action_color = 'icon-green';
-                        $action = l10n('Install');
+                        $action = Lang::t('Install');
                         break;
 
                     case 'update':
                         $action_icon = 'icon-arrows-cw';
                         $action_color = 'icon-blue';
-                        $action = l10n('Update');
+                        $action = Lang::t('Update');
                         break;
 
                     case 'activate':
                         $action_icon = 'icon-check';
                         $action_color = 'icon-green';
-                        $action = l10n('Activate');
+                        $action = Lang::t('Activate');
                         break;
 
                     case 'deactivate':
                         $action_icon = 'icon-block';
                         $action_color = 'icon-purple';
-                        $action = l10n('Deactivate');
+                        $action = Lang::t('Deactivate');
                         break;
 
                     case 'uninstall':
                         $action_icon = 'icon-trash-1';
                         $action_color = 'icon-red';
-                        $action = l10n('Uninstall');
+                        $action = Lang::t('Uninstall');
                         break;
 
                     case 'restore':
                         $action_icon = 'icon-back-in-time';
                         $action_color = 'icon-blue';
-                        $action = l10n('Restore');
+                        $action = Lang::t('Restore');
                         break;
 
                     case 'delete':
                         $action_icon = 'icon-trash-1';
                         $action_color = 'icon-red';
-                        $action = l10n('Delete');
+                        $action = Lang::t('Delete');
                         // for delete we need to specific format details
                         if (isset($details['db_version']) && is_string($details['db_version'])) {
                             $detail['type'] = 'db_fs_version';
@@ -216,7 +217,7 @@ final class ActivityLogEntryFormatter
                     case 'autoupdate':
                         $action_icon = 'icon-arrows-cw';
                         $action_color = 'icon-blue';
-                        $action = l10n('Auto-update');
+                        $action = Lang::t('Auto-update');
                         break;
 
                     default:
@@ -237,37 +238,37 @@ final class ActivityLogEntryFormatter
                     case 'install':
                         $action_icon = 'icon-download';
                         $action_color = 'icon-green';
-                        $action = l10n('Install');
+                        $action = Lang::t('Install');
                         break;
 
                     case 'activate':
                         $action_icon = 'icon-check';
                         $action_color = 'icon-green';
-                        $action = l10n('Activate');
+                        $action = Lang::t('Activate');
                         break;
 
                     case 'deactivate':
                         $action_icon = 'icon-block';
                         $action_color = 'icon-purple';
-                        $action = l10n('Deactivate');
+                        $action = Lang::t('Deactivate');
                         break;
 
                     case 'delete':
                         $action_icon = 'icon-trash-1';
                         $action_color = 'icon-red';
-                        $action = l10n('Delete');
+                        $action = Lang::t('Delete');
                         break;
 
                     case 'set_default':
                         $action_icon = 'icon-star';
                         $action_color = 'icon-yellow';
-                        $action = l10n('Set as default');
+                        $action = Lang::t('Set as default');
                         break;
 
                     case 'update':
                         $action_icon = 'icon-arrows-cw';
                         $action_color = 'icon-blue';
-                        $action = l10n('Update');
+                        $action = Lang::t('Update');
                         break;
 
                     default:

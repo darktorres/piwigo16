@@ -12,6 +12,7 @@ use Piwigo\Admin\tabsheet;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
@@ -21,6 +22,7 @@ use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
+use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -214,7 +216,7 @@ DELETE FROM ' . Tables::caddie() . '
             DbConnection::build()->executeStatement($query);
 
             $_SESSION['page_infos'] = [
-                l10n('Information data registered in database'),
+                Lang::t('Information data registered in database'),
             ];
 
             $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=' . $getPage);
@@ -229,7 +231,7 @@ DELETE FROM ' . Tables::caddie() . '
                 if (! isset($_SESSION['page_infos']) || ! is_array($_SESSION['page_infos'])) {
                     $_SESSION['page_infos'] = [];
                 }
-                $_SESSION['page_infos'][] = l10n_dec(
+                $_SESSION['page_infos'][] = Translator::get()->plural(
                     '%d photo was deleted',
                     '%d photos were deleted',
                     $nb_orphans_deleted
@@ -248,7 +250,7 @@ DELETE FROM ' . Tables::caddie() . '
                 if (! isset($_SESSION['page_infos']) || ! is_array($_SESSION['page_infos'])) {
                     $_SESSION['page_infos'] = [];
                 }
-                $_SESSION['page_infos'][] = l10n_dec(
+                $_SESSION['page_infos'][] = Translator::get()->plural(
                     '%d checksums were added',
                     '%d checksums were added',
                     $nb_md5sum_added

@@ -13,6 +13,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -75,7 +76,7 @@ final class LanguagesInstalledPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         $template->set_filenames([
@@ -141,12 +142,12 @@ final class LanguagesInstalledPageRenderer
 
                 if (count($db_languages) <= 1) {
                     $language['deactivable'] = false;
-                    $language['deactivate_tooltip'] = l10n('Impossible to deactivate this language, you need at least one language.');
+                    $language['deactivate_tooltip'] = Lang::t('Impossible to deactivate this language, you need at least one language.');
                 }
 
                 if ($language_id === $default_language) {
                     $language['deactivable'] = false;
-                    $language['deactivate_tooltip'] = l10n('Impossible to deactivate this language, first set another language as default.');
+                    $language['deactivate_tooltip'] = Lang::t('Impossible to deactivate this language, first set another language as default.');
                 }
             } else {
                 $language['state'] = 'inactive';
@@ -180,7 +181,7 @@ final class LanguagesInstalledPageRenderer
         }
 
         $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
-        $template->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
+        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Languages'));
         $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', \Piwigo\Config\Config::enableExtensionsInstall());
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');

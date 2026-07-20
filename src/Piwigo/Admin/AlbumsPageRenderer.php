@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
@@ -337,7 +338,7 @@ SELECT
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
                 'nb_albums' => count($allAlbum),
-                'ADMIN_PAGE_TITLE' => l10n('Albums'),
+                'ADMIN_PAGE_TITLE' => Lang::t('Albums'),
                 'light_album_manager' => ($albums_counter > \Piwigo\Config\Config::lightAlbumManagerThreshold()) ? 1 : 0,
             ]
         );

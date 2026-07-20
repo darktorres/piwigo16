@@ -12,6 +12,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Session\SessionService;
@@ -192,7 +193,7 @@ WHERE ';
             }
             unset($filter_key);
             if ((bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('add_notes')) {
-                \Piwigo\Core\PageState::current()->addHeaderNote(l10n_dec(
+                \Piwigo\Core\PageState::current()->addHeaderNote(Translator::get()->plural(
                     'Photos posted within the last %d day.',
                     'Photos posted within the last %d days.',
                     $filter_recent_period

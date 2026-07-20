@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
@@ -118,7 +119,7 @@ ORDER BY registration_year, registration_month
 
         $template->assign(
             [
-                'ADMIN_PAGE_TITLE' => l10n('Users'),
+                'ADMIN_PAGE_TITLE' => Lang::t('Users'),
                 'ACTIVATE_COMMENTS' => \Piwigo\Config\Config::activateComments(),
                 'Double_Password' => \Piwigo\Config\Config::doublePasswordTypeInAdmin(),
             ]
@@ -220,7 +221,7 @@ SELECT
         // Status options
         $label_of_status = [];
         foreach (new DbInfo($conn)->getEnums(Tables::userInfos(), 'status') as $status) {
-            $label_of_status[$status] = l10n('user_status_' . $status);
+            $label_of_status[$status] = Lang::t('user_status_' . $status);
         }
 
         $query = '
@@ -239,7 +240,7 @@ SELECT
                 continue;
             }
             $nb_users_by_status[$status] = [
-                'name' => l10n('user_status_' . $status),
+                'name' => Lang::t('user_status_' . $status),
                 'counter' => $row['nb_users_of'],
             ];
         }
@@ -267,7 +268,7 @@ SELECT
             if (! is_int($level)) {
                 continue;
             }
-            $level_options[$level] = l10n(sprintf('Level %d', $level));
+            $level_options[$level] = Lang::t(sprintf('Level %d', $level));
         }
 
         $query = '
@@ -287,7 +288,7 @@ SELECT
             }
             $level = (int) $level;
             $nb_users_by_level[$level] = [
-                'name' => l10n(sprintf('Level %d', $level)),
+                'name' => Lang::t(sprintf('Level %d', $level)),
                 'counter' => $row['nb_users_of'],
             ];
         }
@@ -325,7 +326,7 @@ SELECT id, name, is_default
         }
 
         if ((bool) self::webmasterIdIsLocal()) {
-            \Piwigo\Core\PageState::current()->addWarning(l10n('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
+            \Piwigo\Core\PageState::current()->addWarning(Lang::t('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
         }
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'user_list');

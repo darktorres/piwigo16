@@ -8,6 +8,7 @@ use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
@@ -64,12 +65,12 @@ final class CatListPageRenderer
         }
 
         $sort_orders = [
-            'name ASC' => l10n('Album name, A &rarr; Z'),
-            'name DESC' => l10n('Album name, Z &rarr; A'),
-            'date_creation DESC' => l10n('Date created, new &rarr; old') . ' ' . l10n('(determined from photos)'),
-            'date_creation ASC' => l10n('Date created, old &rarr; new') . ' ' . l10n('(determined from photos)'),
-            'date_available DESC' => l10n('Date posted, new &rarr; old') . ' ' . l10n('(determined from photos)'),
-            'date_available ASC' => l10n('Date posted, old &rarr; new') . ' ' . l10n('(determined from photos)'),
+            'name ASC' => Lang::t('Album name, A &rarr; Z'),
+            'name DESC' => Lang::t('Album name, Z &rarr; A'),
+            'date_creation DESC' => Lang::t('Date created, new &rarr; old') . ' ' . Lang::t('(determined from photos)'),
+            'date_creation ASC' => Lang::t('Date created, old &rarr; new') . ' ' . Lang::t('(determined from photos)'),
+            'date_available DESC' => Lang::t('Date posted, new &rarr; old') . ' ' . Lang::t('(determined from photos)'),
+            'date_available ASC' => Lang::t('Date posted, old &rarr; new') . ' ' . Lang::t('(determined from photos)'),
         ];
 
         // +-------------------------------------------------------------------+
@@ -92,7 +93,7 @@ final class CatListPageRenderer
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_list';
         $navigation = '<a href="' . $base_url . '">';
-        $navigation .= l10n('Home');
+        $navigation .= Lang::t('Home');
         $navigation .= '</a>';
 
         // +-------------------------------------------------------------------+
@@ -134,7 +135,7 @@ SELECT COUNT(*)
                 $photo_deletion_mode
             );
 
-            $_SESSION['page_infos'] = [l10n('Virtual album deleted')];
+            $_SESSION['page_infos'] = [Lang::t('Virtual album deleted')];
             $categoryService->updateGlobalRank();
             UserCacheInvalidator::invalidate();
 
@@ -160,7 +161,7 @@ SELECT COUNT(*)
                 \Piwigo\Core\PageState::current()->addError($output_create_message);
             } else {
                 $edit_url = $this->urlService->getRootUrl() . 'admin.php?page=album-' . $output_create->categoryId;
-                \Piwigo\Core\PageState::current()->addInfo($output_create_message . ' <a class="icon-pencil" href="' . $edit_url . '">' . l10n('Edit album') . '</a>');
+                \Piwigo\Core\PageState::current()->addInfo($output_create_message . ' <a class="icon-pencil" href="' . $edit_url . '">' . Lang::t('Edit album') . '</a>');
             }
         }
         // +-------------------------------------------------------------------+
@@ -192,7 +193,7 @@ SELECT COUNT(*)
         $sort_orders_checked = array_keys($sort_orders);
 
         $template->assign([
-            'ADMIN_PAGE_TITLE' => l10n('Album list management'),
+            'ADMIN_PAGE_TITLE' => Lang::t('Album list management'),
             'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
             'F_ACTION' => $form_action,
             'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()

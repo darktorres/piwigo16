@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -101,7 +102,7 @@ final class CatPermPageRenderer
 
             $template->assign(
                 [
-                    'save_success' => l10n('Album updated successfully'),
+                    'save_success' => Lang::t('Album updated successfully'),
                 ]
             );
         }

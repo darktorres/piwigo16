@@ -15,6 +15,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
@@ -73,10 +74,10 @@ class c13y_internal
         foreach ($check_list as $elem) {
             if (version_compare($elem['current'], $elem['required'], '<')) {
                 $c13y->add_anomaly(
-                    sprintf(l10n('The version of %s [%s] installed is not compatible with the version required [%s]'), $elem['type'], $elem['current'], $elem['required']),
+                    sprintf(Lang::t('The version of %s [%s] installed is not compatible with the version required [%s]'), $elem['type'], $elem['current'], $elem['required']),
                     null,
                     null,
-                    l10n('You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all')
+                    Lang::t('You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all')
           . '<br>' .
           $c13y->get_htlm_links_more_info()
                 );
@@ -94,10 +95,10 @@ class c13y_internal
         foreach (['show_exif', 'use_exif'] as $value) {
             if (((bool) (\Piwigo\Config\Config::all()[$value] ?? null)) and (! function_exists('exif_read_data'))) {
                 $c13y->add_anomaly(
-                    sprintf(l10n('%s value is not correct file because exif are not supported'), '$conf[\'' . $value . '\']'),
+                    sprintf(Lang::t('%s value is not correct file because exif are not supported'), '$conf[\'' . $value . '\']'),
                     null,
                     null,
-                    sprintf(l10n('%s must be to set to false in your local/config/config.inc.php file'), '$conf[\'' . $value . '\']')
+                    sprintf(Lang::t('%s must be to set to false in your local/config/config.inc.php file'), '$conf[\'' . $value . '\']')
           . '<br>' .
           $c13y->get_htlm_links_more_info()
                 );
@@ -169,7 +170,7 @@ class c13y_internal
         foreach ($c13y_users as $id => $data) {
             if (! array_key_exists($id, $status)) {
                 $c13y->add_anomaly(
-                    l10n($data['l10n_non_existent']),
+                    Lang::t($data['l10n_non_existent']),
                     'c13y_correction_user',
                     [
                         'id' => $id,
@@ -178,7 +179,7 @@ class c13y_internal
                 );
             } elseif (! empty($data['status']) and (is_scalar($status[$id]) ? (string) $status[$id] : '') !== $data['status']) {
                 $c13y->add_anomaly(
-                    l10n($data['l10n_bad_status']),
+                    Lang::t($data['l10n_bad_status']),
                     'c13y_correction_user',
                     [
                         'id' => $id,
@@ -245,7 +246,7 @@ class c13y_internal
 
                         self::userService($conn)->createUserInfos($id);
 
-                        \Piwigo\Core\PageState::current()->addInfo(sprintf(l10n('User "%s" created with "%s" like password'), $name, $password));
+                        \Piwigo\Core\PageState::current()->addInfo(sprintf(Lang::t('User "%s" created with "%s" like password'), $name, $password));
 
                         $result = true;
                     }
@@ -276,7 +277,7 @@ class c13y_internal
                                 $updates
                             );
 
-                        \Piwigo\Core\PageState::current()->addInfo(sprintf(l10n('Status of user "%s" updated'), self::userService($conn)->getUsername($id)));
+                        \Piwigo\Core\PageState::current()->addInfo(sprintf(Lang::t('Status of user "%s" updated'), self::userService($conn)->getUsername($id)));
 
                         $result = true;
                     }

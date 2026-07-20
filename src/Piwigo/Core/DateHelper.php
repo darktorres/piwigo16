@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Lang\Translator;
+
 /**
  * P23 batch 8d: pure date/time formatting helpers relocated from
  * include/functions.inc.php -- no natural existing class home, stateless.
- * l10n()/l10n_dec() calls inside stay bare free-function calls -- l10n()'s
- * own migration is deliberately its own dedicated pass (finding 5's
- * Smarty-modifier checklist), not folded into this one.
  */
 final class DateHelper
 {
@@ -88,7 +87,7 @@ final class DateHelper
         $date = self::str2DateTime($original, $format);
 
         if (! (bool) $date) {
-            return l10n('N/A');
+            return Lang::t('N/A');
         }
 
         if ($show === null) {
@@ -140,7 +139,7 @@ final class DateHelper
         $date = self::str2DateTime($original, $format);
 
         if (! (bool) $date) {
-            return l10n('N/A');
+            return Lang::t('N/A');
         }
 
         if ($show === null) {
@@ -178,7 +177,7 @@ final class DateHelper
         $toDate = self::str2DateTime($to);
 
         if ($fromDate === false || $toDate === false) {
-            return l10n('N/A');
+            return Lang::t('N/A');
         }
 
         if ($fromDate->format('Y-m-d') === $toDate->format('Y-m-d')) {
@@ -193,7 +192,7 @@ final class DateHelper
             }
             $to_str = self::formatDate($toDate);
 
-            return l10n('from %s to %s', $from_str, $to_str);
+            return Lang::t('from %s to %s', $from_str, $to_str);
         }
     }
 
@@ -210,7 +209,7 @@ final class DateHelper
         $date = self::str2DateTime($original, $format);
 
         if (! (bool) $date) {
-            return l10n('N/A');
+            return Lang::t('N/A');
         }
 
         $now = Env::now();
@@ -240,7 +239,7 @@ final class DateHelper
         if (! $only_last_unit) {
             foreach ($chunks as $name => $value) {
                 if ($value !== 0) {
-                    $print .= ' ' . l10n_dec('%d ' . $name, '%d ' . $name . 's', $value);
+                    $print .= ' ' . Translator::get()->plural('%d ' . $name, '%d ' . $name . 's', $value);
                 }
                 if ($print !== '' && $i >= $j) {
                     break;
@@ -253,7 +252,7 @@ final class DateHelper
                 $name = $reversed_chunks_names[$i];
                 $value = $chunks[$name];
                 if ($value !== 0) {
-                    $print = l10n_dec('%d ' . $name, '%d ' . $name . 's', $value);
+                    $print = Translator::get()->plural('%d ' . $name, '%d ' . $name . 's', $value);
                 }
                 if ($print !== '' && $i >= $j) {
                     break;
@@ -274,9 +273,9 @@ final class DateHelper
             // tie; a frozen Env::now() test clock hits it whenever the compared
             // timestamp was itself written via Env::now().
             if ($now >= $date) {
-                $print = l10n('%s ago', $print);
+                $print = Lang::t('%s ago', $print);
             } else {
-                $print = l10n('%s in the future', $print);
+                $print = Lang::t('%s in the future', $print);
             }
         }
 

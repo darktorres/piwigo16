@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 
 /**
@@ -67,7 +68,7 @@ final class CoreTabs
         switch ($tabId) {
             case 'admin_home':
                 $sheets[''] = [
-                    'caption' => l10n('Administration Home'),
+                    'caption' => Lang::t('Administration Home'),
                     'url' => 'admin.php',
                 ];
                 break;
@@ -76,7 +77,7 @@ final class CoreTabs
                 /** @var string $my_base_url */
                 global $my_base_url;
                 $sheets[''] = [
-                    'caption' => '<span class="icon-menu"></span>' . l10n('List'),
+                    'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
                     'url' => $my_base_url . 'tags',
                 ];
                 break;
@@ -85,19 +86,19 @@ final class CoreTabs
                 /** @var string $admin_album_base_url */
                 global $admin_album_base_url;
                 $sheets['properties'] = [
-                    'caption' => '<span class="icon-pencil"></span>' . l10n('Properties'),
+                    'caption' => '<span class="icon-pencil"></span>' . Lang::t('Properties'),
                     'url' => $admin_album_base_url . '-properties',
                 ];
                 $sheets['sort_order'] = [
-                    'caption' => '<span class="icon-shuffle"></span>' . l10n('Manage photo ranks'),
+                    'caption' => '<span class="icon-shuffle"></span>' . Lang::t('Manage photo ranks'),
                     'url' => $admin_album_base_url . '-sort_order',
                 ];
                 $sheets['permissions'] = [
-                    'caption' => '<span class="icon-lock"></span>' . l10n('Permissions'),
+                    'caption' => '<span class="icon-lock"></span>' . Lang::t('Permissions'),
                     'url' => $admin_album_base_url . '-permissions',
                 ];
                 $sheets['notification'] = [
-                    'caption' => '<span class="icon-mail-alt"></span>' . l10n('Notification'),
+                    'caption' => '<span class="icon-mail-alt"></span>' . Lang::t('Notification'),
                     'url' => $admin_album_base_url . '-notification',
                 ];
                 break;
@@ -106,11 +107,11 @@ final class CoreTabs
                 /** @var string $my_base_url */
                 global $my_base_url;
                 $sheets['list'] = [
-                    'caption' => '<span class="icon-menu"></span>' . l10n('List'),
+                    'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
                     'url' => $my_base_url . 'albums',
                 ];
                 $sheets['permalinks'] = [
-                    'caption' => '<span class="icon-link-1"></span>' . l10n('Permalinks'),
+                    'caption' => '<span class="icon-link-1"></span>' . Lang::t('Permalinks'),
                     'url' => $my_base_url . 'permalinks',
                 ];
                 break;
@@ -119,11 +120,11 @@ final class CoreTabs
                 /** @var string $my_base_url */
                 global $my_base_url;
                 $sheets['user_list'] = [
-                    'caption' => '<span class="icon-menu"></span>' . l10n('List'),
+                    'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
                     'url' => $my_base_url . 'user_list',
                 ];
                 $sheets['user_activity'] = [
-                    'caption' => '<span class="icon-pulse"></span>' . l10n('Activity'),
+                    'caption' => '<span class="icon-pulse"></span>' . Lang::t('Activity'),
                     'url' => $my_base_url . 'user_activity',
                 ];
                 break;
@@ -132,11 +133,11 @@ final class CoreTabs
                 /** @var string $manager_link */
                 global $manager_link;
                 $sheets['global'] = [
-                    'caption' => '<span class="icon-th"></span>' . l10n('global mode'),
+                    'caption' => '<span class="icon-th"></span>' . Lang::t('global mode'),
                     'url' => $manager_link . 'global',
                 ];
                 $sheets['unit'] = [
-                    'caption' => '<span class="icon-th-list"></span>' . l10n('unit mode'),
+                    'caption' => '<span class="icon-th-list"></span>' . Lang::t('unit mode'),
                     'url' => $manager_link . 'unit',
                 ];
                 break;
@@ -145,22 +146,22 @@ final class CoreTabs
                 /** @var string $link_start */
                 global $link_start;
                 $sheets['status'] = [
-                    'caption' => '<span class="icon-lock"></span>' . l10n('Public / Private'),
+                    'caption' => '<span class="icon-lock"></span>' . Lang::t('Public / Private'),
                     'url' => $link_start . 'cat_options&amp;section=status',
                 ];
                 $sheets['visible'] = [
-                    'caption' => '<span class="icon-block"></span>' . l10n('Lock'),
+                    'caption' => '<span class="icon-block"></span>' . Lang::t('Lock'),
                     'url' => $link_start . 'cat_options&amp;section=visible',
                 ];
                 if (\Piwigo\Config\Config::activateComments()) {
                     $sheets['comments'] = [
-                        'caption' => '<span class="icon-chat"></span>' . l10n('Comments'),
+                        'caption' => '<span class="icon-chat"></span>' . Lang::t('Comments'),
                         'url' => $link_start . 'cat_options&amp;section=comments',
                     ];
                 }
                 if (\Piwigo\Config\Config::allowRandomRepresentative()) {
                     $sheets['representative'] = [
-                        'caption' => l10n('Representative'),
+                        'caption' => Lang::t('Representative'),
                         'url' => $link_start . 'cat_options&amp;section=representative',
                     ];
                 }
@@ -170,7 +171,7 @@ final class CoreTabs
                 /** @var string $my_base_url */
                 global $my_base_url;
                 $sheets[''] = [
-                    'caption' => '<span class="icon-menu"></span>' . l10n('List'),
+                    'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
                     'url' => $my_base_url . 'comments',
                 ];
                 break;
@@ -179,7 +180,7 @@ final class CoreTabs
                 /** @var string $my_base_url */
                 global $my_base_url;
                 $sheets[''] = [
-                    'caption' => '<span class="icon-menu"> </span>' . l10n('List'),
+                    'caption' => '<span class="icon-menu"> </span>' . Lang::t('List'),
                     'url' => $my_base_url . 'group_list',
                 ];
                 break;
@@ -188,27 +189,27 @@ final class CoreTabs
                 /** @var string $conf_link */
                 global $conf_link;
                 $sheets['main'] = [
-                    'caption' => '<span class="icon-cog"></span>' . l10n('General'),
+                    'caption' => '<span class="icon-cog"></span>' . Lang::t('General'),
                     'url' => $conf_link . 'main',
                 ];
                 $sheets['sizes'] = [
-                    'caption' => '<span class="icon-zoom-square"></span>' . l10n('Photo sizes'),
+                    'caption' => '<span class="icon-zoom-square"></span>' . Lang::t('Photo sizes'),
                     'url' => $conf_link . 'sizes',
                 ];
                 $sheets['watermark'] = [
-                    'caption' => '<span class="icon-file-image"></span>' . l10n('Watermark'),
+                    'caption' => '<span class="icon-file-image"></span>' . Lang::t('Watermark'),
                     'url' => $conf_link . 'watermark',
                 ];
                 $sheets['display'] = [
-                    'caption' => '<span class="icon-television"></span>' . l10n('Display'),
+                    'caption' => '<span class="icon-television"></span>' . Lang::t('Display'),
                     'url' => $conf_link . 'display',
                 ];
                 $sheets['comments'] = [
-                    'caption' => '<span class="icon-chat"></span>' . l10n('Comments'),
+                    'caption' => '<span class="icon-chat"></span>' . Lang::t('Comments'),
                     'url' => $conf_link . 'comments',
                 ];
                 $sheets['search'] = [
-                    'caption' => '<span class="icon-search"></span>' . l10n('Search'),
+                    'caption' => '<span class="icon-search"></span>' . Lang::t('Search'),
                     'url' => $conf_link . 'search',
                 ];
                 // $sheets['default'] = array('caption' => l10n('Guest Settings'), 'url' => $conf_link.'default');
@@ -218,23 +219,23 @@ final class CoreTabs
                 /** @var string $help_link */
                 global $help_link;
                 $sheets['add_photos'] = [
-                    'caption' => l10n('Add Photos'),
+                    'caption' => Lang::t('Add Photos'),
                     'url' => $help_link . 'add_photos',
                 ];
                 $sheets['permissions'] = [
-                    'caption' => l10n('Permissions'),
+                    'caption' => Lang::t('Permissions'),
                     'url' => $help_link . 'permissions',
                 ];
                 $sheets['groups'] = [
-                    'caption' => l10n('Groups'),
+                    'caption' => Lang::t('Groups'),
                     'url' => $help_link . 'groups',
                 ];
                 $sheets['virtual_links'] = [
-                    'caption' => l10n('Virtual Links'),
+                    'caption' => Lang::t('Virtual Links'),
                     'url' => $help_link . 'virtual_links',
                 ];
                 $sheets['misc'] = [
-                    'caption' => l10n('Miscellaneous'),
+                    'caption' => Lang::t('Miscellaneous'),
                     'url' => $help_link . 'misc',
                 ];
                 break;
@@ -243,11 +244,11 @@ final class CoreTabs
                 /** @var string $link_start */
                 global $link_start;
                 $sheets['stats'] = [
-                    'caption' => '<span class="icon-signal"></span>' . l10n('Statistics'),
+                    'caption' => '<span class="icon-signal"></span>' . Lang::t('Statistics'),
                     'url' => $link_start . 'stats',
                 ];
                 $sheets['history'] = [
-                    'caption' => '<span class="icon-search"></span>' . l10n('Search'),
+                    'caption' => '<span class="icon-search"></span>' . Lang::t('Search'),
                     'url' => $link_start . 'history',
                 ];
                 break;
@@ -256,16 +257,16 @@ final class CoreTabs
                 /** @var string $my_base_url */
                 global $my_base_url;
                 $sheets['installed'] = [
-                    'caption' => '<span class="icon-menu"></span>' . l10n('List'),
+                    'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
                     'url' => $my_base_url . '&amp;tab=installed',
                 ];
                 if (\Piwigo\Config\Config::enableExtensionsInstall()) {
                     $sheets['update'] = [
-                        'caption' => '<span class="icon-arrows-cw"></span>' . l10n('Check for updates'),
+                        'caption' => '<span class="icon-arrows-cw"></span>' . Lang::t('Check for updates'),
                         'url' => $my_base_url . '&amp;tab=update',
                     ];
                     $sheets['new'] = [
-                        'caption' => '<span class="icon-plus-circled"></span>' . l10n('Add New Language'),
+                        'caption' => '<span class="icon-plus-circled"></span>' . Lang::t('Add New Language'),
                         'url' => $my_base_url . '&amp;tab=new',
                     ];
                 }
@@ -275,7 +276,7 @@ final class CoreTabs
                 /** @var string $my_base_url */
                 global $my_base_url;
                 $sheets[''] = [
-                    'caption' => '<span class="icon-menu"></span>' . l10n('List'),
+                    'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
                     'url' => $my_base_url . 'menubar',
                 ];
                 break;
@@ -284,15 +285,15 @@ final class CoreTabs
                 /** @var string $base_url */
                 global $base_url;
                 $sheets['param'] = [
-                    'caption' => l10n('Parameter'),
+                    'caption' => Lang::t('Parameter'),
                     'url' => $base_url . '?page=notification_by_mail&amp;mode=param',
                 ];
                 $sheets['subscribe'] = [
-                    'caption' => l10n('Subscribe'),
+                    'caption' => Lang::t('Subscribe'),
                     'url' => $base_url . '?page=notification_by_mail&amp;mode=subscribe',
                 ];
                 $sheets['send'] = [
-                    'caption' => l10n('Send'),
+                    'caption' => Lang::t('Send'),
                     'url' => $base_url . '?page=notification_by_mail&amp;mode=send',
                 ];
                 break;
@@ -303,16 +304,16 @@ final class CoreTabs
                  */
                 global $admin_photo_base_url;
                 $sheets['properties'] = [
-                    'caption' => '<span class="icon-file-image"></span>' . l10n('Properties'),
+                    'caption' => '<span class="icon-file-image"></span>' . Lang::t('Properties'),
                     'url' => $admin_photo_base_url . '-properties',
                 ];
                 $sheets['coi'] = [
-                    'caption' => '<span class="icon-crop"></span>' . l10n('Center of interest'),
+                    'caption' => '<span class="icon-crop"></span>' . Lang::t('Center of interest'),
                     'url' => $admin_photo_base_url . '-coi',
                 ];
                 if (\Piwigo\Config\Config::isFormatsEnabled()) {
                     $sheets['formats'] = [
-                        'caption' => '<span class="icon-docs"></span>' . l10n('Formats'),
+                        'caption' => '<span class="icon-docs"></span>' . Lang::t('Formats'),
                         'url' => $admin_photo_base_url . '-formats',
                     ];
                 }
@@ -320,16 +321,16 @@ final class CoreTabs
 
             case 'photos_add':
                 $sheets['direct'] = [
-                    'caption' => '<span class="icon-upload"></span>' . l10n('Web Form'),
+                    'caption' => '<span class="icon-upload"></span>' . Lang::t('Web Form'),
                     'url' => PhotosAddDirectPageRenderer::baseUrl(self::urlService()) . '&amp;section=direct',
                 ];
                 $sheets['applications'] = [
-                    'caption' => '<span class="icon-network"></span>' . l10n('Applications'),
+                    'caption' => '<span class="icon-network"></span>' . Lang::t('Applications'),
                     'url' => PhotosAddDirectPageRenderer::baseUrl(self::urlService()) . '&amp;section=applications',
                 ];
                 if (\Piwigo\Config\Config::enableSynchronization()) {
                     $sheets['ftp'] = [
-                        'caption' => '<span class="icon-exchange"></span>' . l10n('FTP + Synchronization'),
+                        'caption' => '<span class="icon-exchange"></span>' . Lang::t('FTP + Synchronization'),
                         'url' => PhotosAddDirectPageRenderer::baseUrl(self::urlService()) . '&amp;section=ftp',
                     ];
                 }
@@ -339,16 +340,16 @@ final class CoreTabs
                 /** @var string $my_base_url */
                 global $my_base_url;
                 $sheets['installed'] = [
-                    'caption' => '<span class="icon-menu"></span>' . l10n('List'),
+                    'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
                     'url' => $my_base_url . '&amp;tab=installed',
                 ];
                 if (\Piwigo\Config\Config::enableExtensionsInstall()) {
                     $sheets['update'] = [
-                        'caption' => '<span class="icon-arrows-cw"></span>' . l10n('Check for updates'),
+                        'caption' => '<span class="icon-arrows-cw"></span>' . Lang::t('Check for updates'),
                         'url' => $my_base_url . '&amp;tab=update',
                     ];
                     $sheets['new'] = [
-                        'caption' => '<span class="icon-plus-circled"></span>' . l10n('Add New Plugin'),
+                        'caption' => '<span class="icon-plus-circled"></span>' . Lang::t('Add New Plugin'),
                         'url' => $my_base_url . '&amp;tab=new',
                     ];
                 }
@@ -356,11 +357,11 @@ final class CoreTabs
 
             case 'rating':
                 $sheets['rating'] = [
-                    'caption' => l10n('Photos'),
+                    'caption' => Lang::t('Photos'),
                     'url' => self::urlService()->getRootUrl() . 'admin.php?page=rating',
                 ];
                 $sheets['rating_user'] = [
-                    'caption' => l10n('Users'),
+                    'caption' => Lang::t('Users'),
                     'url' => self::urlService()->getRootUrl() . 'admin.php?page=rating_user',
                 ];
                 break;
@@ -369,21 +370,21 @@ final class CoreTabs
                 /** @var string $my_base_url */
                 global $my_base_url;
                 $sheets['installed'] = [
-                    'caption' => '<span class="icon-menu"></span>' . l10n('List'),
+                    'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
                     'url' => $my_base_url . '&amp;tab=installed',
                 ];
                 if (\Piwigo\Config\Config::enableExtensionsInstall()) {
                     $sheets['update'] = [
-                        'caption' => '<span class="icon-arrows-cw"></span>' . l10n('Check for updates'),
+                        'caption' => '<span class="icon-arrows-cw"></span>' . Lang::t('Check for updates'),
                         'url' => $my_base_url . '&amp;tab=update',
                     ];
                     $sheets['new'] = [
-                        'caption' => '<span class="icon-plus-circled"></span>' . l10n('Add New Theme'),
+                        'caption' => '<span class="icon-plus-circled"></span>' . Lang::t('Add New Theme'),
                         'url' => $my_base_url . '&amp;tab=new',
                     ];
                 }
                 $sheets['standard_pages'] = [
-                    'caption' => '<span class="icon-cog-alt"></span>' . l10n('Standard pages'),
+                    'caption' => '<span class="icon-cog-alt"></span>' . Lang::t('Standard pages'),
                     'url' => $my_base_url . '&amp;tab=standard_pages',
                 ];
                 break;
@@ -394,14 +395,14 @@ final class CoreTabs
 
                 if (\Piwigo\Config\Config::enableCoreUpdate()) {
                     $sheets['pwg'] = [
-                        'caption' => l10n('Piwigo core'),
+                        'caption' => Lang::t('Piwigo core'),
                         'url' => $my_base_url,
                     ];
                 }
 
                 if (\Piwigo\Config\Config::enableExtensionsInstall()) {
                     $sheets['ext'] = [
-                        'caption' => l10n('Extensions'),
+                        'caption' => Lang::t('Extensions'),
                         'url' => $my_base_url . '&amp;tab=ext',
                     ];
                 }
@@ -410,11 +411,11 @@ final class CoreTabs
                 /** @var string $my_base_url */
                 global $my_base_url;
                 $sheets['synchronization'] = [
-                    'caption' => '<span class="icon-exchange"></span>' . l10n('Synchronization'),
+                    'caption' => '<span class="icon-exchange"></span>' . Lang::t('Synchronization'),
                     'url' => $my_base_url . 'site_update&site=1',
                 ];
                 $sheets['site_maager'] = [
-                    'caption' => '<span class="icon-flow-branch"></span>' . l10n('Site manager'),
+                    'caption' => '<span class="icon-flow-branch"></span>' . Lang::t('Site manager'),
                     'url' => $my_base_url . 'site_manager',
                 ];
                 break;
@@ -422,15 +423,15 @@ final class CoreTabs
                 /** @var string $my_base_url */
                 global $my_base_url;
                 $sheets['actions'] = [
-                    'caption' => '<span class="icon-tools"></span>' . l10n('Actions'),
+                    'caption' => '<span class="icon-tools"></span>' . Lang::t('Actions'),
                     'url' => $my_base_url . 'maintenance&tab=actions',
                 ];
                 $sheets['env'] = [
-                    'caption' => '<span class="icon-television"></span>' . l10n('Environment'),
+                    'caption' => '<span class="icon-television"></span>' . Lang::t('Environment'),
                     'url' => $my_base_url . 'maintenance&tab=env',
                 ];
                 $sheets['sys'] = [
-                    'caption' => '<span class="icon-pulse"></span>' . l10n('System Activities'),
+                    'caption' => '<span class="icon-pulse"></span>' . Lang::t('System Activities'),
                     'url' => $my_base_url . 'maintenance&tab=sys',
                 ];
                 break;

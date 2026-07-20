@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Template\Template;
 
@@ -38,7 +39,7 @@ final class CommentsPageRenderer
         $tabsheet->select('');
         $tabsheet->assign();
 
-        $template->assign('ADMIN_PAGE_TITLE', l10n('User comments'));
+        $template->assign('ADMIN_PAGE_TITLE', Lang::t('User comments'));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'comments');
     }

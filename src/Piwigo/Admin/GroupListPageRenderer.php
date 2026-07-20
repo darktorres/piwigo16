@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Lang\Translator;
 
 /**
  * Ported from admin/group_list.php (page slug "group_list").
@@ -71,10 +73,10 @@ final class GroupListPageRenderer
                 [
                     'NAME' => $row['name'],
                     'ID' => $row['id'],
-                    'IS_DEFAULT' => ($row['is_default'] ? ' [' . l10n('default') . ']' : ''),
+                    'IS_DEFAULT' => ($row['is_default'] ? ' [' . Lang::t('default') . ']' : ''),
                     'NB_MEMBERS' => count($members),
                     'L_MEMBERS' => implode(' <span class="userSeparator">&middot;</span> ', $members),
-                    'MEMBERS' => l10n_dec('%d member', '%d members', count($members)),
+                    'MEMBERS' => Translator::get()->plural('%d member', '%d members', count($members)),
                     'U_DELETE' => $del_url . $row['id'] . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                     'U_PERM' => $perm_url . $row['id'],
                     'U_USERS' => $users_url . $row['id'],
@@ -85,7 +87,7 @@ final class GroupListPageRenderer
             $group_counter++;
         }
 
-        $template->assign('ADMIN_PAGE_TITLE', l10n('Groups') . ' <span class="badge-number">' . $group_counter . '</span>');
+        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Groups') . ' <span class="badge-number">' . $group_counter . '</span>');
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'group_list');
     }

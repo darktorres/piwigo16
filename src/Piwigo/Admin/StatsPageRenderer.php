@@ -9,6 +9,7 @@ use DateTime;
 use Doctrine\DBAL\Connection;
 use InvalidArgumentException;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -135,7 +136,7 @@ final class StatsPageRenderer
             'lastYears' => $last_years,
             'langCode' => \Piwigo\Users\CurrentUser::get()->language,
             'month_labels' => join('~', array_filter($lang_month, is_string(...))),
-            'ADMIN_PAGE_TITLE' => l10n('History'),
+            'ADMIN_PAGE_TITLE' => Lang::t('History'),
         ]);
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'stats');

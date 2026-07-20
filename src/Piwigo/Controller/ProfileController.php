@@ -117,7 +117,7 @@ SELECT ' . implode(',', $fields) . '
             // other file reads $GLOBALS['title']. Plain local, not global.
             $template = \Piwigo\Template\CurrentTemplate::get();
 
-            $title = l10n('Your Gallery Customization');
+            $title = Lang::t('Your Gallery Customization');
 
             // include menubar
             $themeconf = $template->get_template_vars('themeconf');

@@ -11,6 +11,7 @@ use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
@@ -178,7 +179,7 @@ SELECT id
 
             new MetadataService(new MetadataRepository($conn))
                 ->syncMetadata([$image_id]);
-            \Piwigo\Core\PageState::current()->addInfo(l10n('Metadata synchronized from file'));
+            \Piwigo\Core\PageState::current()->addInfo(Lang::t('Metadata synchronized from file'));
         }
 
         // --------------------------------------------------------- update informations
@@ -297,7 +298,7 @@ UPDATE ' . Tables::categories() . '
 
             $template->assign(
                 [
-                    'save_success' => l10n('Photo informations updated'),
+                    'save_success' => Lang::t('Photo informations updated'),
                 ]
             );
 
@@ -421,14 +422,14 @@ SELECT
         $extTab = explode('.', $row_file);
 
         $intro_vars = [
-            'file' => l10n('%s', $row_file),
-            'date' => l10n('Posted the %s', \Piwigo\Core\DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false, ['day', 'month', 'year'])),
-            'age' => l10n(ucfirst(\Piwigo\Core\DateHelper::timeSince(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : '', 'year'))),
-            'added_by' => l10n('Added by %s', $row['added_by']),
-            'size' => l10n('%s pixels, %.2f MB', (is_scalar($row['width']) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height']) ? (string) $row['height'] : ''), (is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0) / 1024),
-            'stats' => l10n('Visited %d times', $row['hit']),
-            'id' => l10n(is_string($row['id']) ? $row['id'] : ''),
-            'ext' => l10n('%s file type', strtoupper(end($extTab))),
+            'file' => Lang::t('%s', $row_file),
+            'date' => Lang::t('Posted the %s', \Piwigo\Core\DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false, ['day', 'month', 'year'])),
+            'age' => Lang::t(ucfirst(\Piwigo\Core\DateHelper::timeSince(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : '', 'year'))),
+            'added_by' => Lang::t('Added by %s', $row['added_by']),
+            'size' => Lang::t('%s pixels, %.2f MB', (is_scalar($row['width']) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height']) ? (string) $row['height'] : ''), (is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0) / 1024),
+            'stats' => Lang::t('Visited %d times', $row['hit']),
+            'id' => Lang::t(is_string($row['id']) ? $row['id'] : ''),
+            'ext' => Lang::t('%s file type', strtoupper(end($extTab))),
             'is_svg' => (strtoupper(end($extTab)) === 'SVG'),
         ];
 
@@ -446,7 +447,7 @@ SELECT
             if ($rate_row !== false) {
                 [$row['nb_rates']] = $rate_row;
 
-                $intro_vars['stats'] .= ', ' . sprintf(l10n('Rated %d times, score : %.2f'), is_numeric($row['nb_rates']) ? (int) $row['nb_rates'] : 0, is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
+                $intro_vars['stats'] .= ', ' . sprintf(Lang::t('Rated %d times, score : %.2f'), is_numeric($row['nb_rates']) ? (int) $row['nb_rates'] : 0, is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
             }
         }
 
@@ -467,7 +468,7 @@ SELECT *
                 $format_strings[] = sprintf('%s (%.2fMB)', $format_ext, $format_filesize / 1024);
             }
 
-            $intro_vars['formats'] = l10n('Formats: %s', implode(', ', $format_strings));
+            $intro_vars['formats'] = Lang::t('Formats: %s', implode(', ', $format_strings));
         }
 
         $template->assign('INTRO', $intro_vars);

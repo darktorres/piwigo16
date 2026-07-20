@@ -151,7 +151,7 @@ final readonly class CommentService
         if (! \Piwigo\Auth\AccessControl::isClassicUser()) {
             if (self::emptyValue($comm['author'] ?? null)) {
                 if (\Piwigo\Config\Config::commentsAuthorMandatory()) {
-                    $infos[] = l10n('Username is mandatory');
+                    $infos[] = Lang::t('Username is mandatory');
                     $commentAction = 'reject';
                 }
 
@@ -169,7 +169,7 @@ final readonly class CommentService
                 $usernameColumn = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
 
                 if ($this->repo->usernameExists($usernameColumn, $authorName)) {
-                    $infos[] = l10n('This login is already used by another user');
+                    $infos[] = Lang::t('This login is already used by another user');
                     $commentAction = 'reject';
                 }
             }
@@ -205,7 +205,7 @@ final readonly class CommentService
 
                 $comm['website_url'] = $websiteUrl;
                 if (! \Piwigo\Validation\InputValidator::checkUrlFormat($websiteUrl)) {
-                    $infos[] = l10n('Your website URL is invalid');
+                    $infos[] = Lang::t('Your website URL is invalid');
                     $commentAction = 'reject';
                 }
             }
@@ -217,13 +217,13 @@ final readonly class CommentService
             if (! self::emptyValue($currentUserEmail)) {
                 $comm['email'] = $currentUserEmail;
             } elseif (\Piwigo\Config\Config::commentsEmailMandatory()) {
-                $infos[] = l10n('Email address is missing. Please specify an email address.');
+                $infos[] = Lang::t('Email address is missing. Please specify an email address.');
                 $commentAction = 'reject';
             }
         } else {
             $email = is_string($comm['email']) ? $comm['email'] : null;
             if (! \Piwigo\Validation\InputValidator::checkEmailFormat($email)) {
-                $infos[] = l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
+                $infos[] = Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
                 $commentAction = 'reject';
             }
         }
@@ -251,7 +251,7 @@ final readonly class CommentService
             $anonymousIdPrefix = \Piwigo\Auth\AccessControl::isClassicUser() ? null : $trimmedIp;
             $counter = $this->repo->countRecentComments($authorId, $anonymousIdPrefix, $antiFloodTime);
             if ($counter > 0) {
-                $infos[] = l10n('Anti-flood system : please wait for a moment before trying to post another comment');
+                $infos[] = Lang::t('Anti-flood system : please wait for a moment before trying to post another comment');
                 $commentAction = 'reject';
                 self::pushCrReason('flood_time');
             }
@@ -395,7 +395,7 @@ final readonly class CommentService
 
             $comment['website_url'] = $websiteUrl;
             if (! \Piwigo\Validation\InputValidator::checkUrlFormat($websiteUrl)) {
-                \Piwigo\Core\PageState::current()->addError(l10n('Your website URL is invalid'));
+                \Piwigo\Core\PageState::current()->addError(Lang::t('Your website URL is invalid'));
                 $commentAction = 'reject';
             }
         }

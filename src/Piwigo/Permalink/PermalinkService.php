@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Permalink;
 
+use Piwigo\Core\Lang;
+
 /**
  * Category-permalink business logic: validation, uniqueness against both
  * the live and historical (old_permalinks) permalink sets, cache
@@ -43,7 +45,7 @@ final readonly class PermalinkService
             $oldCatId = $this->repo->findOldCategoryId($permalink);
             if ($oldCatId !== null && $oldCatId !== $catId) {
                 \Piwigo\Core\PageState::current()->addError(sprintf(
-                    l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
+                    Lang::t('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
                     $permalink,
                     $oldCatId,
                 ));
@@ -79,7 +81,7 @@ final readonly class PermalinkService
         $sanitized_permalink = str_replace('//', '/', $sanitized_permalink);
         if ($sanitized_permalink !== $permalink
             or (bool) preg_match('#^(\d)+(-.*)?$#', $permalink)) {
-            \Piwigo\Core\PageState::current()->addError('{' . $permalink . '} ' . l10n('The permalink name must be composed of a-z, A-Z, 0-9, "-", "_" or "/". It must not be numeric or start with number followed by "-"'));
+            \Piwigo\Core\PageState::current()->addError('{' . $permalink . '} ' . Lang::t('The permalink name must be composed of a-z, A-Z, 0-9, "-", "_" or "/". It must not be numeric or start with number followed by "-"'));
 
             return false;
         }
@@ -91,7 +93,7 @@ final readonly class PermalinkService
                 return true;
             }
             \Piwigo\Core\PageState::current()->addError(sprintf(
-                l10n('Permalink %s is already used by album %s'),
+                Lang::t('Permalink %s is already used by album %s'),
                 $permalink,
                 $existingCatId,
             ));
@@ -103,7 +105,7 @@ final readonly class PermalinkService
         $oldCatId = $this->repo->findOldCategoryId($permalink);
         if ($oldCatId !== null && $oldCatId !== $catId) {
             \Piwigo\Core\PageState::current()->addError(sprintf(
-                l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
+                Lang::t('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
                 $permalink,
                 $oldCatId,
             ));
@@ -133,7 +135,7 @@ final readonly class PermalinkService
     public function deleteOldPermalinkByValue(string $permalink): bool
     {
         if (! $this->repo->deleteOldPermalinkByValue($permalink)) {
-            \Piwigo\Core\PageState::current()->addError(l10n('Cannot delete the old permalink !'));
+            \Piwigo\Core\PageState::current()->addError(Lang::t('Cannot delete the old permalink !'));
 
             return false;
         }

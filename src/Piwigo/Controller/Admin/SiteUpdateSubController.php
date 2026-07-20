@@ -9,6 +9,7 @@ use Piwigo\Admin\tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
@@ -180,12 +181,12 @@ SELECT galleries_url
 
         $error_labels = [
             'PWG-UPDATE-1' => [
-                l10n('wrong filename'),
-                l10n('The name of directories and files must be composed of letters, numbers, "-", "_" or "."'),
+                Lang::t('wrong filename'),
+                Lang::t('The name of directories and files must be composed of letters, numbers, "-", "_" or "."'),
             ],
             'PWG-ERROR-NO-FS' => [
-                l10n('File/directory read error'),
-                l10n('The file or directory cannot be accessed (either it does not exist or the access is denied)'),
+                Lang::t('File/directory read error'),
+                Lang::t('The file or directory cannot be accessed (either it does not exist or the access is denied)'),
             ],
         ];
         $errors = [];
@@ -219,7 +220,7 @@ SELECT galleries_url
         if (\Piwigo\Core\PageState::current()->noMd5sumNumber !== null) {
             $template->assign(
                 [
-                    'save_error' => '<a href="admin.php?page=batch_manager&amp;filter=prefilter-no_sync_md5sum">' . l10n('Some checksums are missing.') . '<i class="icon-right"></i></a>',
+                    'save_error' => '<a href="admin.php?page=batch_manager&amp;filter=prefilter-no_sync_md5sum">' . Lang::t('Some checksums are missing.') . '<i class="icon-right"></i></a>',
                 ]
             );
 
@@ -444,7 +445,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                     $inserts[] = $insert;
                     $infos[] = [
                         'path' => $fulldir,
-                        'info' => l10n('added'),
+                        'info' => Lang::t('added'),
                     ];
 
                     // add the new category to $db_categories and $db_fulldirs array
@@ -601,7 +602,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
 
                 $infos[] = [
                     'path' => $fulldir,
-                    'info' => l10n('deleted'),
+                    'info' => Lang::t('deleted'),
                 ];
 
                 if (substr_compare($fulldir, '../', 0, 3) == 0) {
@@ -715,7 +716,7 @@ SELECT id, path
 
                 $infos[] = [
                     'path' => $insert['path'],
-                    'info' => l10n('added'),
+                    'info' => Lang::t('added'),
                 ];
 
                 if (\Piwigo\Config\Config::isFormatsEnabled()) {
@@ -733,7 +734,7 @@ SELECT id, path
 
                             $infos[] = [
                                 'path' => $insert['path'],
-                                'info' => l10n('format %s added', $ext),
+                                'info' => Lang::t('format %s added', $ext),
                             ];
                         }
                     }
@@ -792,7 +793,7 @@ SELECT *
 
                             $infos[] = [
                                 'path' => $db_elements[$image_id],
-                                'info' => l10n('format %s removed', $ext),
+                                'info' => Lang::t('format %s removed', $ext),
                             ];
                         }
                     }
@@ -820,7 +821,7 @@ SELECT *
 
                             $infos[] = [
                                 'path' => $db_elements[$image_id],
-                                'info' => l10n('format %s added', $ext),
+                                'info' => Lang::t('format %s added', $ext),
                             ];
                         }
                     }
@@ -887,7 +888,7 @@ DELETE
                 $to_delete_elements[] = (int) $element_id;
                 $infos[] = [
                     'path' => $path,
-                    'info' => l10n('deleted'),
+                    'info' => Lang::t('deleted'),
                 ];
             }
             if (count($to_delete_elements) > 0) {
@@ -1118,7 +1119,7 @@ DELETE
         ]);
         $result_title = '';
         if ($simulate) {
-            $result_title .= '[' . l10n('Simulation') . '] ';
+            $result_title .= '[' . Lang::t('Simulation') . '] ';
         }
 
         // used_metadata string is displayed to inform admin which metadata will be
@@ -1129,11 +1130,11 @@ DELETE
             [
                 'SITE_URL' => $site_url,
                 'U_SITE_MANAGER' => $this->urlService->getRootUrl() . 'admin.php?page=site_manager',
-                'L_RESULT_UPDATE' => $result_title . l10n('Search for new images in the directories'),
-                'L_RESULT_METADATA' => $result_title . l10n('Metadata synchronization results'),
+                'L_RESULT_UPDATE' => $result_title . Lang::t('Search for new images in the directories'),
+                'L_RESULT_METADATA' => $result_title . Lang::t('Metadata synchronization results'),
                 'METADATA_LIST' => $used_metadata,
                 'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=synchronize',
-                'ADMIN_PAGE_TITLE' => l10n('Synchronize'),
+                'ADMIN_PAGE_TITLE' => Lang::t('Synchronize'),
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
             ]

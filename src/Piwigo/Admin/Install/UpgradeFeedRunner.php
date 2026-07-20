@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install;
 
 use Exception;
+use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 
@@ -72,7 +73,7 @@ class UpgradeFeedRunner
             // catch block never falls through, no fallback statement
             // needed after it.
             new \Piwigo\Html\HtmlService()
-                ->fatalError(l10n($e->getMessage()));
+                ->fatalError(Lang::t($e->getMessage()));
         }
 
         // +-------------------------------------------------------------------+

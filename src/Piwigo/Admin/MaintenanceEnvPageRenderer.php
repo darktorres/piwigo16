@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -62,11 +63,11 @@ final class MaintenanceEnvPageRenderer
 
         /** @var array<string, string> $purge_urls */
         $purge_urls = [];
-        $purge_urls[l10n('All')] = sprintf($url_format, 'derivatives') . '&amp;type=all';
+        $purge_urls[Lang::t('All')] = sprintf($url_format, 'derivatives') . '&amp;type=all';
         foreach (ImageStdParams::get_defined_type_map() as $params) {
-            $purge_urls[l10n($params->type)] = sprintf($url_format, 'derivatives') . '&amp;type=' . $params->type;
+            $purge_urls[Lang::t($params->type)] = sprintf($url_format, 'derivatives') . '&amp;type=' . $params->type;
         }
-        $purge_urls[l10n(ImageStdParams::CUSTOM)] = sprintf($url_format, 'derivatives') . '&amp;type=' . ImageStdParams::CUSTOM;
+        $purge_urls[Lang::t(ImageStdParams::CUSTOM)] = sprintf($url_format, 'derivatives') . '&amp;type=' . ImageStdParams::CUSTOM;
 
         $conn = DbConnection::build();
         $php_current_timestamp = date('Y-m-d H:i:s');

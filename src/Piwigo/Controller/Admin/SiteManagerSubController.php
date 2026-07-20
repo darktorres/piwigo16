@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -107,17 +108,17 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             // site must not exists
             $site_repo = new SiteRepository($conn);
             if ($site_repo->countByUrl($url) > 0) {
-                \Piwigo\Core\PageState::current()->addError(l10n('This site already exists') . ' [' . $url . ']');
+                \Piwigo\Core\PageState::current()->addError(Lang::t('This site already exists') . ' [' . $url . ']');
             }
             if (! \Piwigo\Core\PageState::current()->hasErrors()) {
                 if (! file_exists($url)) {
-                    \Piwigo\Core\PageState::current()->addError(l10n('Directory does not exist') . ' [' . $url . ']');
+                    \Piwigo\Core\PageState::current()->addError(Lang::t('Directory does not exist') . ' [' . $url . ']');
                 }
             }
 
             if (! \Piwigo\Core\PageState::current()->hasErrors()) {
                 $site_repo->insert($url);
-                \Piwigo\Core\PageState::current()->addInfo($url . ' ' . l10n('created'));
+                \Piwigo\Core\PageState::current()->addInfo($url . ' ' . Lang::t('created'));
             }
         }
 
@@ -139,7 +140,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
                         new CategoryRepository($conn),
                         new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
                     )->deleteSite($site_id, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), $this->urlService);
-                    \Piwigo\Core\PageState::current()->addInfo($galleries_url . ' ' . l10n('deleted'));
+                    \Piwigo\Core\PageState::current()->addInfo($galleries_url . ' ' . Lang::t('deleted'));
                     break;
 
             }
@@ -150,7 +151,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
                 'F_ACTION' => $this->urlService->getRootUrl() . 'admin.php' . $this->urlService->getQueryStringDiff(['action', 'site', 'pwg_token']),
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
-                'ADMIN_PAGE_TITLE' => l10n('Synchronize'),
+                'ADMIN_PAGE_TITLE' => Lang::t('Synchronize'),
             ]
         );
 
@@ -184,7 +185,7 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
             $tpl_var =
               [
                   'NAME' => $galleries_url,
-                  'TYPE' => l10n($is_remote ? 'Remote' : 'Local'),
+                  'TYPE' => Lang::t($is_remote ? 'Remote' : 'Local'),
                   'CATEGORIES' => (int) @$sites_detail[$id]['nb_categories'],
                   'IMAGES' => (int) @$sites_detail[$id]['nb_images'],
                   'U_SYNCHRONIZE' => $update_url,

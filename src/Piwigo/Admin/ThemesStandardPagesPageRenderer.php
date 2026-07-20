@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Storage\StorageRegistry;
@@ -54,7 +55,7 @@ final class ThemesStandardPagesPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         // +-----------------------------------------------------------------------+
@@ -157,7 +158,7 @@ final class ThemesStandardPagesPageRenderer
                     } else {
                         $template->assign(
                             [
-                                'save_error' => "{$file_path} " . l10n('no write access'),
+                                'save_error' => "{$file_path} " . Lang::t('no write access'),
                             ]
                         );
                     }
@@ -165,7 +166,7 @@ final class ThemesStandardPagesPageRenderer
                     $template->assign(
                         [
                             'save_error' => sprintf(
-                                l10n('Add write access to the "%s" directory'),
+                                Lang::t('Add write access to the "%s" directory'),
                                 $upload_dir
                             ),
                         ]
@@ -214,7 +215,7 @@ final class ThemesStandardPagesPageRenderer
             'themes' => 'themes_standard_pages.tpl',
         ]);
 
-        $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
+        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'themes');
     }

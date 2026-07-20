@@ -9,6 +9,7 @@ use Piwigo\Admin\PictureFormatsPageRenderer;
 use Piwigo\Admin\PictureModifyPageRenderer;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
@@ -87,7 +88,7 @@ final class PhotoSubController implements AdminSubControllerInterface
 
         $template->assign(
             [
-                'ADMIN_PAGE_TITLE' => l10n('Edit photo') . ' <span class="image-id">#' . $get_image_id . '</span>',
+                'ADMIN_PAGE_TITLE' => Lang::t('Edit photo') . ' <span class="image-id">#' . $get_image_id . '</span>',
             ]
         );
 

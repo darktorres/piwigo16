@@ -15,6 +15,7 @@ use Doctrine\DBAL\Connection;
 use Exception;
 use Piwigo\Admin\plugins;
 use Piwigo\Admin\themes;
+use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use RuntimeException;
 
@@ -121,7 +122,7 @@ class InstallService
 
             return $conn;
         } catch (Exception $e) {
-            $errors[] = l10n($e->getMessage());
+            $errors[] = Lang::t($e->getMessage());
 
             return null;
         }

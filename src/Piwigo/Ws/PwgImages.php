@@ -26,6 +26,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Db\BatchWriter;
@@ -426,7 +427,7 @@ SELECT DISTINCT image_id
 
         switch ($comment_action) {
             case 'reject':
-                $infos[] = l10n('Your comment has NOT been registered because it did not pass the validation rules');
+                $infos[] = Lang::t('Your comment has NOT been registered because it did not pass the validation rules');
                 return new PwgError(403, implode('; ', $infos));
 
             case 'validate':

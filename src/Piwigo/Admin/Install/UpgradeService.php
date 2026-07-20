@@ -15,6 +15,7 @@ use Doctrine\DBAL\Connection;
 use Exception;
 use Piwigo\Admin\themes;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
@@ -137,7 +138,7 @@ WHERE id IN (\'' . implode('\',\'', $plugins) . '\')
 ;';
             $conn->executeStatement($query);
 
-            \Piwigo\Core\PageState::current()->addInfo(l10n('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:')
+            \Piwigo\Core\PageState::current()->addInfo(Lang::t('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:')
                                 . '<p><i>' . implode(', ', $plugins) . '</i></p>');
         }
     }
@@ -173,7 +174,7 @@ DELETE
 ;';
             $conn->executeStatement($query);
 
-            \Piwigo\Core\PageState::current()->addInfo(l10n('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:')
+            \Piwigo\Core\PageState::current()->addInfo(Lang::t('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:')
                                 . '<p><i>' . implode(', ', $theme_names) . '</i></p>');
 
             // what is the default theme?
@@ -304,11 +305,11 @@ WHERE ' . $username_field . '=:username
         $stored_status = is_string($stored_status) ? $stored_status : null;
 
         if ($stored_password === null) {
-            \Piwigo\Core\PageState::current()->addError(l10n('Invalid password!'));
+            \Piwigo\Core\PageState::current()->addError(Lang::t('Invalid password!'));
         } elseif (! new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn))->verify($password, $stored_password)) {
-            \Piwigo\Core\PageState::current()->addError(l10n('Invalid password!'));
+            \Piwigo\Core\PageState::current()->addError(Lang::t('Invalid password!'));
         } elseif ($stored_status !== 'admin' and $stored_status !== 'webmaster') {
-            \Piwigo\Core\PageState::current()->addError(l10n('You do not have access rights to run upgrade'));
+            \Piwigo\Core\PageState::current()->addError(Lang::t('You do not have access rights to run upgrade'));
         } else {
             return true;
         }
@@ -382,7 +383,7 @@ SELECT id
             // catch block never falls through, no fallback statement
             // needed after it.
             new \Piwigo\Html\HtmlService()
-                ->fatalError(l10n($e->getMessage()));
+                ->fatalError(Lang::t($e->getMessage()));
         }
     }
 }

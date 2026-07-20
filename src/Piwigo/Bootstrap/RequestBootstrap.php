@@ -241,7 +241,7 @@ final class RequestBootstrap
             $conn->getNativeConnection();
         } catch (\Exception $e) {
             new HtmlService()
-                ->fatalError(l10n($e->getMessage()));
+                ->fatalError(Lang::t($e->getMessage()));
         }
 
         // in Piwigo 15, configuration setting webmaster_id is moved from config files
@@ -433,7 +433,7 @@ final class RequestBootstrap
         // only now we can set the localized username of the guest user (and not in
         // UserBootstrap::initialize())
         if (\Piwigo\Auth\AccessControl::isAGuest()) {
-            $user['username'] = l10n('guest');
+            $user['username'] = Lang::t('guest');
             // Second CurrentUser sync point -- see connect()'s own comment.
             // isAGuest() itself already reads CurrentUser (synced there with
             // the pre-localization username), so only the localized-username
@@ -448,8 +448,8 @@ final class RequestBootstrap
         // be here, with language loaded, to prepare the message
         if ($pageState->authKeyInvalid) {
             $pageState->addError(
-                l10n('Your authentication key is no longer valid.')
-              . sprintf(' <a href="%s">%s</a>', new UrlService(new HtmlService())->getRootUrl() . 'identification.php', l10n('Login'))
+                Lang::t('Your authentication key is no longer valid.')
+              . sprintf(' <a href="%s">%s</a>', new UrlService(new HtmlService())->getRootUrl() . 'identification.php', Lang::t('Login'))
             );
         }
 
@@ -526,18 +526,18 @@ final class RequestBootstrap
 
         $user_internal_status = $user['internal_status'] ?? null;
         if (is_array($user_internal_status) && ($user_internal_status['guest_must_be_guest'] ?? false) === true) {
-            $pageState->addHeaderMessage(l10n('Bad status for user "guest", using default status. Please notify the webmaster.'));
+            $pageState->addHeaderMessage(Lang::t('Bad status for user "guest", using default status. Please notify the webmaster.'));
         }
 
         if (\Piwigo\Config\Config::galleryLocked()) {
-            $pageState->addHeaderMessage(l10n('The gallery is locked for maintenance. Please, come back later.'));
+            $pageState->addHeaderMessage(Lang::t('The gallery is locked for maintenance. Please, come back later.'));
 
             if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'identification' and ! \Piwigo\Auth\AccessControl::isAdmin()) {
                 new HtmlService()
                     ->setStatusHeader(503, 'Service Unavailable');
                 @header('Retry-After: 900');
                 header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
-                echo '<a href="' . new UrlService(new HtmlService())->getAbsoluteRootUrl(false) . 'identification.php">' . l10n('The gallery is locked for maintenance. Please, come back later.') . '</a>';
+                echo '<a href="' . new UrlService(new HtmlService())->getAbsoluteRootUrl(false) . 'identification.php">' . Lang::t('The gallery is locked for maintenance. Please, come back later.') . '</a>';
                 echo str_repeat(' ', 512); // IE6 doesn't error output if below a size
                 exit();
             }

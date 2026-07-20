@@ -165,7 +165,7 @@ class themes
 
                 $missing_parent = $this->missing_parent_theme($theme_id);
                 if (isset($missing_parent)) {
-                    $errors[] = l10n(
+                    $errors[] = Lang::t(
                         'Impossible to activate this theme, the parent theme is missing: %s',
                         $missing_parent
                     );
@@ -176,7 +176,7 @@ class themes
                 if ((bool) $this->fs_themes[$theme_id]['mobile']
                     and ! empty(\Piwigo\Config\Config::mobilTheme())
                     and \Piwigo\Config\Config::mobilTheme() != $theme_id) {
-                    $errors[] = l10n('You can activate only one mobile theme.');
+                    $errors[] = Lang::t('You can activate only one mobile theme.');
                     break;
                 }
 
@@ -211,7 +211,7 @@ INSERT INTO ' . Tables::themes() . '
 
                 // you can't deactivate the last theme
                 if (count($this->db_themes_by_id) <= 1) {
-                    $errors[] = l10n('Impossible to deactivate this theme, you need at least one theme.');
+                    $errors[] = Lang::t('Impossible to deactivate this theme, you need at least one theme.');
                     break;
                 }
 
@@ -264,7 +264,7 @@ DELETE
 
                 $children = $this->get_children_themes($theme_id);
                 if (count($children) > 0) {
-                    $errors[] = l10n(
+                    $errors[] = Lang::t(
                         'Impossible to delete this theme. Other themes depends on it: %s',
                         implode(', ', $children)
                     );

@@ -323,11 +323,11 @@ SELECT
                 'date_posted',
                 'date_available',
                 [
-                    '24h' => l10n('last 24 hours'),
-                    '7d' => l10n('last 7 days'),
-                    '30d' => l10n('last 30 days'),
-                    '3m' => l10n('last 3 months'),
-                    '6m' => l10n('last 6 months'),
+                    '24h' => Lang::t('last 24 hours'),
+                    '7d' => Lang::t('last 7 days'),
+                    '30d' => Lang::t('last 30 days'),
+                    '3m' => Lang::t('last 3 months'),
+                    '6m' => Lang::t('last 6 months'),
                 ],
                 'LIST_DATE_POSTED',
                 'DATE_POSTED',
@@ -347,11 +347,11 @@ SELECT
                 'date_created',
                 'date_creation',
                 [
-                    '7d' => l10n('last 7 days'),
-                    '30d' => l10n('last 30 days'),
-                    '3m' => l10n('last 3 months'),
-                    '6m' => l10n('last 6 months'),
-                    '12m' => l10n('last 12 months'),
+                    '7d' => Lang::t('last 7 days'),
+                    '30d' => Lang::t('last 30 days'),
+                    '3m' => Lang::t('last 3 months'),
+                    '6m' => Lang::t('last 6 months'),
+                    '12m' => Lang::t('last 12 months'),
                 ],
                 'LIST_DATE_CREATED',
                 'DATE_CREATED',
@@ -1159,7 +1159,7 @@ SELECT
             if (! is_array($yearBucket)) {
                 continue;
             }
-            $yearBucket['label'] = l10n('year %d', $y);
+            $yearBucket['label'] = Lang::t('year %d', $y);
 
             $monthsBucket = $yearBucket['months'] ?? null;
             if (is_array($monthsBucket)) {

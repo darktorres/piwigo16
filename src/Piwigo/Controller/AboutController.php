@@ -47,7 +47,7 @@ final class AboutController implements ControllerInterface
             // other file reads $GLOBALS['title']. Plain local, not global.
             $template = \Piwigo\Template\CurrentTemplate::get();
 
-            $title = l10n('About Piwigo');
+            $title = Lang::t('About Piwigo');
             \Piwigo\Core\PageState::current()->setBodyId('theAboutPage');
 
             \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_about');

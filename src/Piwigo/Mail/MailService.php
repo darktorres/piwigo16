@@ -1037,14 +1037,14 @@ final class MailService implements MailerInterface
             ->setMakeFullUrl();
 
         $message = '<p style="margin: 20px 0">';
-        $message = l10n('Someone requested that the password be reset for the following user account:') . ' ' . $username . '</p>';
-        $message .= '<p style="margin: 20px 0">' . l10n('To reset your password, visit the following address:');
-        $message .= ' <a href="' . $passwordLink . '">' . l10n('Change my password') . '</a></p>';
+        $message = Lang::t('Someone requested that the password be reset for the following user account:') . ' ' . $username . '</p>';
+        $message .= '<p style="margin: 20px 0">' . Lang::t('To reset your password, visit the following address:');
+        $message .= ' <a href="' . $passwordLink . '">' . Lang::t('Change my password') . '</a></p>';
         $message .= '<p style="text-align: center; font-size: 70%;">' . $passwordLink . '</p>';
         $message .= '<p style="margin: 20px 0;">';
-        $message .= l10n('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
+        $message .= Lang::t('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
         $message .= ' ';
-        $message .= l10n('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
+        $message .= Lang::t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
 
         $this->urlService()
             ->unsetMakeFullUrl();
@@ -1053,7 +1053,7 @@ final class MailService implements MailerInterface
         $message = is_string($messageAfterTrigger) ? $messageAfterTrigger : $message;
 
         return [
-            'subject' => '[' . $galleryTitle . '] ' . l10n('Password Reset'),
+            'subject' => '[' . $galleryTitle . '] ' . Lang::t('Password Reset'),
             'content' => $message,
             'content_format' => 'text/html',
         ];
@@ -1070,14 +1070,14 @@ final class MailService implements MailerInterface
             ->setMakeFullUrl();
 
         $message = '<p style="margin: 20px 0">';
-        $message .= l10n('A photo library administrator has created the following account for you:') . ' ' . $username . '</p>';
-        $message .= '<p style="margin: 20px 0">' . l10n('To set your password, visit the following address:');
-        $message .= ' <a href="' . $setPasswordLink . '">' . l10n('Activate') . '</a></p>';
+        $message .= Lang::t('A photo library administrator has created the following account for you:') . ' ' . $username . '</p>';
+        $message .= '<p style="margin: 20px 0">' . Lang::t('To set your password, visit the following address:');
+        $message .= ' <a href="' . $setPasswordLink . '">' . Lang::t('Activate') . '</a></p>';
         $message .= '<p style="text-align: center; font-size: 70%; margin: 20px 0;">' . $setPasswordLink . '</p>';
         $message .= '<p style="margin: 20px 0;">';
-        $message .= l10n('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
+        $message .= Lang::t('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
         $message .= ' ';
-        $message .= l10n('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
+        $message .= Lang::t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
 
         $this->urlService()
             ->unsetMakeFullUrl();
@@ -1086,7 +1086,7 @@ final class MailService implements MailerInterface
         $message = is_string($messageAfterTrigger) ? $messageAfterTrigger : $message;
 
         return [
-            'subject' => l10n('Welcome to %s', $galleryTitle),
+            'subject' => Lang::t('Welcome to %s', $galleryTitle),
             'content' => $message,
             'content_format' => 'text/html',
         ];
@@ -1102,17 +1102,17 @@ final class MailService implements MailerInterface
         $this->urlService()
             ->setMakeFullUrl();
         $message = '<p style="margin: 20px 0">';
-        $message .= l10n('Here is your verification code:') . ' <br />';
+        $message .= Lang::t('Here is your verification code:') . ' <br />';
         $message .= '<span style="font-size: 16px">' . $code . '</span></p>';
         $message .= '<p style="margin: 20px 0;">';
-        $message .= l10n('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
+        $message .= Lang::t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
         $this->urlService()
             ->unsetMakeFullUrl();
 
         $galleryTitle = \Piwigo\Config\Config::galleryTitle();
 
         return [
-            'subject' => '[' . $galleryTitle . '] ' . l10n('Your verification code'),
+            'subject' => '[' . $galleryTitle . '] ' . Lang::t('Your verification code'),
             'content' => $message,
             'content_format' => 'text/html',
         ];
@@ -1130,15 +1130,15 @@ final class MailService implements MailerInterface
         $profileUrl = $this->urlService()
             ->getRootUrl() . 'profile.php';
 
-        $message = '<p style="margin-top: 20px;">' . l10n('Hello %s,', $username) . '</p>';
-        $message .= '<p style="margin-bottom: 20px;">' . l10n('Your password was successfully reset') . '.</p>';
+        $message = '<p style="margin-top: 20px;">' . Lang::t('Hello %s,', $username) . '</p>';
+        $message .= '<p style="margin-bottom: 20px;">' . Lang::t('Your password was successfully reset') . '.</p>';
         $message .= '<p>';
-        $message .= l10n('If this wasn\'t you, please change your password immediately or contact your webmaster.');
+        $message .= Lang::t('If this wasn\'t you, please change your password immediately or contact your webmaster.');
         $message .= '</p>';
 
         if ($nbOfApikeys > 0) {
             $message .= '<p style="margin: 20px 0;">';
-            $message .= l10n(
+            $message .= Lang::t(
                 'If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href="%s">in your profile</a>.',
                 $nbOfApikeys,
                 $profileUrl
@@ -1151,7 +1151,7 @@ final class MailService implements MailerInterface
         $galleryTitle = \Piwigo\Config\Config::galleryTitle();
 
         return [
-            'subject' => '[' . $galleryTitle . '] ' . l10n('Your password has been reset'),
+            'subject' => '[' . $galleryTitle . '] ' . Lang::t('Your password has been reset'),
             'content' => $message,
             'content_format' => 'text/html',
         ];

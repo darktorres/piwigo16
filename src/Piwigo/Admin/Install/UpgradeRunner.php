@@ -155,7 +155,7 @@ class UpgradeRunner
         $template->assign(
             [
                 'RELEASE' => AppInfo::VERSION,
-                'L_UPGRADE_HELP' => l10n('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),
+                'L_UPGRADE_HELP' => Lang::t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),
             ]
         );
 
@@ -280,7 +280,7 @@ SELECT id
 
         // check php version
         if (version_compare(PHP_VERSION, AppInfo::REQUIRED_PHP_VERSION, '<')) {
-            \Piwigo\Core\PageState::current()->addError(l10n('PHP version %s required (you are running on PHP %s)', AppInfo::REQUIRED_PHP_VERSION, PHP_VERSION));
+            \Piwigo\Core\PageState::current()->addError(Lang::t('PHP version %s required (you are running on PHP %s)', AppInfo::REQUIRED_PHP_VERSION, PHP_VERSION));
         }
 
         $this->currentRelease = $current_release;
@@ -336,7 +336,7 @@ SELECT id
                   . substr($this->configFileContents, $this->phpEndTag);
 
                 if (! (bool) @file_put_contents($this->configFile, $config_file_contents)) {
-                    \Piwigo\Core\PageState::current()->addInfo(l10n(
+                    \Piwigo\Core\PageState::current()->addInfo(Lang::t(
                         'In <i>%s</i>, before <b>?></b>, insert:',
                         PWG_LOCAL_DIR . 'config/database.inc.php'
                     )
@@ -367,7 +367,7 @@ SELECT id
                 ]
             );
 
-            \Piwigo\Core\PageState::current()->addInfo(l10n('Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem.'));
+            \Piwigo\Core\PageState::current()->addInfo(Lang::t('Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem.'));
 
             // Save PageState's infos in order to restore after maintenance actions
             $infos_sav = \Piwigo\Core\PageState::current()->infos;
@@ -375,7 +375,7 @@ SELECT id
 
             $template->assign(
                 [
-                    'button_label' => l10n('Home'),
+                    'button_label' => Lang::t('Home'),
                     'button_link' => 'index.php',
                 ]
             );
@@ -397,7 +397,7 @@ REPLACE INTO ' . Tables::plugins() . '
 
                     $template->assign(
                         [
-                            'button_label' => l10n('Discover what\'s new in Piwigo %s', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)),
+                            'button_label' => Lang::t('Discover what\'s new in Piwigo %s', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)),
                             'button_link' => 'admin.php?submited_tour_path=tours/' . $version_ . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                         ]
                     );

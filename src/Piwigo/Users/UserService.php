@@ -97,7 +97,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         if (! \Piwigo\Validation\InputValidator::checkEmailFormat($mailAddress)) {
-            return l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
+            return Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         }
 
         if (\defined('PHPWG_INSTALLED') && ! $isEmpty) {
@@ -105,7 +105,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $user_fields = \Piwigo\Config\Config::userFields();
 
             if ($this->repo->emailExists($mailAddress, $user_fields['email'], $user_fields['id'], $userId)) {
-                return l10n('this email address is already in use');
+                return Lang::t('this email address is already in use');
             }
         }
 
@@ -124,7 +124,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $user_fields = \Piwigo\Config\Config::userFields();
 
             if ($this->repo->usernameExistsCaseInsensitive($login, $user_fields['username'])) {
-                return l10n('this login is already used');
+                return Lang::t('this login is already used');
             }
         }
 
@@ -234,19 +234,19 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $duplicateUsername = false;
 
         if ($login === '') {
-            $errors[] = l10n('Please, enter a login');
+            $errors[] = Lang::t('Please, enter a login');
         }
         if (preg_match('/^.* $/', $login) === 1) {
-            $errors[] = l10n('login mustn\'t end with a space character');
+            $errors[] = Lang::t('login mustn\'t end with a space character');
         }
         if (preg_match('/^ .*$/', $login) === 1) {
-            $errors[] = l10n('login mustn\'t start with a space character');
+            $errors[] = Lang::t('login mustn\'t start with a space character');
         }
         if ($this->getUserId($login) !== false) {
             $duplicateUsername = true;
         }
         if ($login !== strip_tags($login)) {
-            $errors[] = l10n('html tags are not allowed in login');
+            $errors[] = Lang::t('html tags are not allowed in login');
         }
 
         $mailError = $this->validateMailAddress(null, $mailAddress);
@@ -471,7 +471,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $this->mailer->mail(
             $existing['email'],
             [
-                'subject' => '[' . $gallery_title . '] ' . l10n('Registration'),
+                'subject' => '[' . $gallery_title . '] ' . Lang::t('Registration'),
                 'content' => Lang::args([
                     Lang::buildArgs('Someone tried to create an account on %s using your username.', $gallery_title),
                     Lang::buildArgs('', ''),
@@ -533,7 +533,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $this->mailer->mail(
             $mailAddress,
             [
-                'subject' => '[' . $gallery_title . '] ' . l10n('Registration'),
+                'subject' => '[' . $gallery_title . '] ' . Lang::t('Registration'),
                 'content' => Lang::args($keyargsContent),
                 'content_format' => 'text/plain',
             ]
@@ -723,7 +723,7 @@ SELECT
                     $this->htmlRenderer->setStatusHeader(503, 'Service Unavailable');
                     @header('Retry-After: 900');
                     header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
-                    echo l10n('Rebuilding user cache takes long. Please, come back later.');
+                    echo Lang::t('Rebuilding user cache takes long. Please, come back later.');
                     echo str_repeat(' ', 512); // IE6 doesn't error output if below a size
                     exit();
                 } else {
@@ -1209,7 +1209,7 @@ DELETE FROM ' . Tables::favorites() . '
                     return [
                         'error' => [
                             'code' => WsError::INVALID_PARAM,
-                            'message' => l10n('this login is already used'),
+                            'message' => Lang::t('this login is already used'),
                         ],
                     ];
                 }
@@ -1217,7 +1217,7 @@ DELETE FROM ' . Tables::favorites() . '
                     return [
                         'error' => [
                             'code' => WsError::INVALID_PARAM,
-                            'message' => l10n('html tags are not allowed in login'),
+                            'message' => Lang::t('html tags are not allowed in login'),
                         ],
                     ];
                 }

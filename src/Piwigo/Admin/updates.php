@@ -16,6 +16,7 @@ use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
@@ -278,19 +279,19 @@ class updates
             new MailService()
                 ->switchLangTo(new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($notifyConn), new \Piwigo\Group\GroupRepository($notifyConn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($notifyConn)), new HtmlService(), $notifyConn)->getDefaultLanguage());
 
-            $content = l10n('Hello,');
-            $content .= "\n\n" . l10n(
+            $content = Lang::t('Hello,');
+            $content .= "\n\n" . Lang::t(
                 'Time has come to update your Piwigo with version %s, go to %s',
                 $new_versions_string,
                 $this->urlService->getAbsoluteRootUrl() . 'admin.php?page=updates'
             );
-            $content .= "\n\n" . l10n('It only takes a few clicks.');
-            $content .= "\n\n" . l10n('Running on an up-to-date Piwigo is important for security.');
+            $content .= "\n\n" . Lang::t('It only takes a few clicks.');
+            $content .= "\n\n" . Lang::t('Running on an up-to-date Piwigo is important for security.');
 
             new MailService()
                 ->mailAdmins(
                     [
-                        'subject' => l10n('Piwigo %s is available, please update', $new_versions_string),
+                        'subject' => Lang::t('Piwigo %s is available, please update', $new_versions_string),
                         'content' => $content,
                         'content_format' => 'text/plain',
                     ],
@@ -705,7 +706,7 @@ class updates
                             $template->delete_compiled_templates();
                             \Piwigo\Config\ConfigDb::confDeleteParam('fs_quick_check_last_check');
 
-                            \Piwigo\Core\PageState::current()->addInfo(l10n('Update Complete'));
+                            \Piwigo\Core\PageState::current()->addInfo(Lang::t('Update Complete'));
                             \Piwigo\Core\PageState::current()->addInfo($upgrade_to);
                             \Piwigo\Core\PageState::current()->setUpdatedVersion($upgrade_to);
                             $step = -1;
@@ -715,17 +716,17 @@ class updates
                     } else {
                         file_put_contents(PHPWG_ROOT_PATH . $data_location . 'update/log_error.txt', $error);
 
-                        \Piwigo\Core\PageState::current()->addError(l10n(
+                        \Piwigo\Core\PageState::current()->addError(Lang::t(
                             'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
                             $urlService->getRootUrl() . $data_location . 'update/log_error.txt'
                         ));
                     }
                 } else {
                     FilesystemHelper::deltree(PHPWG_ROOT_PATH . $data_location . 'update');
-                    \Piwigo\Core\PageState::current()->addError(l10n('An error has occured during upgrade.'));
+                    \Piwigo\Core\PageState::current()->addError(Lang::t('An error has occured during upgrade.'));
                 }
             } else {
-                \Piwigo\Core\PageState::current()->addError(l10n('Piwigo cannot retrieve upgrade file from server'));
+                \Piwigo\Core\PageState::current()->addError(Lang::t('Piwigo cannot retrieve upgrade file from server'));
             }
         }
     }

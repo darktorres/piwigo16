@@ -96,6 +96,18 @@ final class Translator
             }
         }
 
+        // Legacy Coupling Retirement Phase 4d: moved here (from the
+        // deleted l10n() free function) rather than staying in Lang::t() --
+        // testing $val === $key after both real resolution paths above
+        // (gettext() then $GLOBALS['lang']) are exhausted is strictly more
+        // accurate than l10n()'s own former shallow `! isset($lang[$key])`
+        // check (which only ever looked at the fallback array), and this
+        // way every Lang::t() caller gets the diagnostic too, not just
+        // former l10n() callers.
+        if (\Piwigo\Config\Config::debugL10n() && $val === $key && $key !== '') {
+            trigger_error('[l10n] language key "' . $key . '" not defined', E_USER_WARNING);
+        }
+
         if ($args === []) {
             return $val;
         }

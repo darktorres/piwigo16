@@ -9,6 +9,7 @@ use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
@@ -179,7 +180,7 @@ SELECT
             $found_categories = $conn->fetchAllAssociative($query);
             if ($found_categories === []) {
                 new HtmlService()
-                    ->pageNotFound($this->redirectService, l10n('Requested album does not exist'));
+                    ->pageNotFound($this->redirectService, Lang::t('Requested album does not exist'));
             }
 
             $cat_ids = [$cat_id];

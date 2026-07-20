@@ -14,6 +14,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
@@ -471,20 +472,20 @@ UPDATE ' . Tables::categories() . '
                                     if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
                                         $_SESSION['page_infos'] = [];
                                     }
-                                    $_SESSION['page_infos'][] = l10n('An administrator must authorize your comment before it is visible.');
+                                    $_SESSION['page_infos'][] = Lang::t('An administrator must authorize your comment before it is visible.');
                                     // no break
                                 case 'validate':
                                     if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
                                         $_SESSION['page_infos'] = [];
                                     }
-                                    $_SESSION['page_infos'][] = l10n('Your comment has been registered');
+                                    $_SESSION['page_infos'][] = Lang::t('Your comment has been registered');
                                     $perform_redirect = true;
                                     break;
                                 case 'reject':
                                     if (! isset($_SESSION['page_errors']) or ! is_array($_SESSION['page_errors'])) {
                                         $_SESSION['page_errors'] = [];
                                     }
-                                    $_SESSION['page_errors'][] = l10n('Your comment has NOT been registered because it did not pass the validation rules');
+                                    $_SESSION['page_errors'][] = Lang::t('Your comment has NOT been registered because it did not pass the validation rules');
                                     break;
                                 default:
                                     trigger_error('Invalid comment action ' . $comment_action, E_USER_WARNING);
@@ -1140,7 +1141,7 @@ SELECT COUNT(*) AS nb_fav
             // filesize
             $current_filesize = $picture['current']['filesize'] ?? null;
             if (is_numeric($current_filesize) && (float) $current_filesize !== 0.0) {
-                $infos['INFO_FILESIZE'] = l10n('%d Kb', $picture['current']['filesize']);
+                $infos['INFO_FILESIZE'] = Lang::t('%d Kb', $picture['current']['filesize']);
             }
 
             // number of visits

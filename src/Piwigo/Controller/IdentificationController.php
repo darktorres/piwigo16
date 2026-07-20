@@ -73,7 +73,7 @@ final class IdentificationController implements ControllerInterface
         if (is_string($get_redirect) && $get_redirect !== '') {
             $redirect_to = urldecode($get_redirect);
             if (\Piwigo\Config\Config::guestAccess() and ! isset($_GET['hide_redirect_error'])) {
-                $errors['login_page_error'] = l10n('You are not authorized to access the requested page');
+                $errors['login_page_error'] = Lang::t('You are not authorized to access the requested page');
             }
         }
 
@@ -81,7 +81,7 @@ final class IdentificationController implements ControllerInterface
             $session_cookie_name = session_name();
             $has_session_cookie = $session_cookie_name !== false && isset($_COOKIE[$session_cookie_name]);
             if (! $has_session_cookie) {
-                $errors['login_page_error'] = l10n('Cookies are blocked or not supported by your browser. You must enable cookies to connect.');
+                $errors['login_page_error'] = Lang::t('Cookies are blocked or not supported by your browser. You must enable cookies to connect.');
             } else {
                 // $_POST['username'] is required to be a string for
                 // try_log_user(); an unset/non-string value falls back to
@@ -126,7 +126,7 @@ final class IdentificationController implements ControllerInterface
                         : substr($root_url, 0, strlen($root_url) - strlen(new CookieService()->cookiePath())) . $redirect_to
                     );
                 } else {
-                    $errors['login_form_error'] = l10n('Invalid username or password!');
+                    $errors['login_form_error'] = Lang::t('Invalid username or password!');
                 }
             }
         }
@@ -138,7 +138,7 @@ final class IdentificationController implements ControllerInterface
             // other file reads $GLOBALS['title']. Plain local, not global.
             $template = \Piwigo\Template\CurrentTemplate::get();
 
-            $title = l10n('Identification');
+            $title = Lang::t('Identification');
             \Piwigo\Core\PageState::current()->setBodyId('theIdentificationPage');
 
             $template->set_filenames([

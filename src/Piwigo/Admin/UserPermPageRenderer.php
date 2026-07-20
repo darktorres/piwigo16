@@ -9,6 +9,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
@@ -98,13 +99,13 @@ final class UserPermPageRenderer
 
         $template->assign(
             [
-                'TITLE' => l10n(
+                'TITLE' => Lang::t(
                     'Manage permissions for user "%s"',
                     new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), $htmlRenderer, $conn)
                         ->getUsername($user_id)
                 ),
-                'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
-                'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
+                'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),
+                'L_CAT_OPTIONS_FALSE' => Lang::t('Forbidden'),
 
                 'F_ACTION' => PHPWG_ROOT_PATH .
                     'admin.php?page=user_perm' .

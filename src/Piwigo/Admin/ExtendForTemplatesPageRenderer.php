@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -162,7 +163,7 @@ UPDATE ' . Tables::config() . '
   SET value = \'' . str_replace("\'", "''", $serialized_extents) . '\'
 WHERE param = \'extents_for_templates\';';
             $conn->executeStatement($query);
-            \Piwigo\Core\PageState::current()->addInfo(l10n('Templates configuration has been recorded.'));
+            \Piwigo\Core\PageState::current()->addInfo(Lang::t('Templates configuration has been recorded.'));
         }
 
         /* Clearing (remove old extents, add new ones) */
@@ -205,7 +206,7 @@ WHERE param = \'extents_for_templates\';';
                 ]
             );
         }
-        $template->assign('ADMIN_PAGE_TITLE', l10n('Extend for templates'));
+        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Extend for templates'));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'extend_for_templates');
     }

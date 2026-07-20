@@ -10,6 +10,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Core\Env;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
@@ -193,20 +194,20 @@ SELECT *
                         $formats_exts[] = strtolower($format_ext);
                     }
 
-                    $formats_original_info['formats'] = l10n('Formats: %s', implode(', ', $format_strings));
+                    $formats_original_info['formats'] = Lang::t('Formats: %s', implode(', ', $format_strings));
                     $formats_ext_info = json_encode($formats_exts);
                 }
 
                 $formats_file = $formats_original_info['file'];
                 $extTab = explode('.', is_string($formats_file) ? $formats_file : '');
 
-                $formats_original_info['ext'] = l10n('%s file type', strtoupper(end($extTab)));
+                $formats_original_info['ext'] = Lang::t('%s file type', strtoupper(end($extTab)));
 
                 $formats_original_info['u_edit'] = $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $formats_image_id;
 
                 $have_formats_original = true;
             } else {
-                \Piwigo\Core\PageState::current()->addError(l10n('The original picture selected dosen\'t exists.'));
+                \Piwigo\Core\PageState::current()->addError(Lang::t('The original picture selected dosen\'t exists.'));
             }
         }
 
@@ -265,7 +266,7 @@ SELECT *
                 'F_ADD_ACTION' => self::baseUrl($this->urlService),
                 'chunk_size' => \Piwigo\Config\Config::uploadFormChunkSize(),
                 'max_file_size' => \Piwigo\Config\Config::uploadFormMaxFileSize(),
-                'ADMIN_PAGE_TITLE' => l10n('Upload Photos'),
+                'ADMIN_PAGE_TITLE' => Lang::t('Upload Photos'),
             ]
         );
 
@@ -422,7 +423,7 @@ SELECT
         }
 
         if (! function_exists('gd_info')) {
-            $setup_errors[] = l10n('GD library is missing');
+            $setup_errors[] = Lang::t('GD library is missing');
         }
 
         $template->assign([
@@ -439,11 +440,11 @@ SELECT
             $setup_warnings = [];
 
             if (\Piwigo\Config\Config::useExif() and ! function_exists('exif_read_data')) {
-                $setup_warnings[] = l10n('Exif extension not available, admin should disable exif use');
+                $setup_warnings[] = Lang::t('Exif extension not available, admin should disable exif use');
             }
 
             if ($uploadService->getIniSize('upload_max_filesize') > $uploadService->getIniSize('post_max_size')) {
-                $setup_warnings[] = l10n(
+                $setup_warnings[] = Lang::t(
                     'In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting',
                     $uploadService->getIniSize('upload_max_filesize', false),
                     $uploadService->getIniSize('post_max_size', false)

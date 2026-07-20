@@ -245,7 +245,7 @@ class InstallWizard
         header('Content-Type: text/html; charset=UTF-8');
         // ----------------------------------------------- check php version
         if (version_compare(PHP_VERSION, AppInfo::REQUIRED_PHP_VERSION, '<')) {
-            $this->errors[] = l10n('PHP version %s required (you are running on PHP %s)', AppInfo::REQUIRED_PHP_VERSION, PHP_VERSION);
+            $this->errors[] = Lang::t('PHP version %s required (you are running on PHP %s)', AppInfo::REQUIRED_PHP_VERSION, PHP_VERSION);
         }
 
         // --------------------------------------------- template initialization
@@ -280,15 +280,15 @@ class InstallWizard
 
         $webmaster = trim((string) preg_replace('/\s{2,}/', ' ', $this->adminName));
         if (empty($webmaster)) {
-            $this->errors[] = l10n('enter a login for webmaster');
+            $this->errors[] = Lang::t('enter a login for webmaster');
         } elseif ((bool) preg_match('/[\'"]/', $webmaster)) {
-            $this->errors[] = l10n('webmaster login can\'t contain characters \' or "');
+            $this->errors[] = Lang::t('webmaster login can\'t contain characters \' or "');
         }
         if ($this->adminPass1 != $this->adminPass2 || empty($this->adminPass1)) {
-            $this->errors[] = l10n('please enter your password again');
+            $this->errors[] = Lang::t('please enter your password again');
         }
         if (empty($this->adminMail)) {
-            $this->errors[] = l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
+            $this->errors[] = Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         } else {
             $error_mail_address = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), \Piwigo\Db\DbConnection::build())->validateMailAddress(null, $this->adminMail);
             if (! empty($error_mail_address)) {
@@ -443,11 +443,11 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
         $conn->executeStatement($query);
 
         \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION), conn: $conn);
-        \Piwigo\Config\ConfigDb::confUpdateParam('gallery_title', l10n('Just another Piwigo gallery'), conn: $conn);
+        \Piwigo\Config\ConfigDb::confUpdateParam('gallery_title', Lang::t('Just another Piwigo gallery'), conn: $conn);
 
         \Piwigo\Config\ConfigDb::confUpdateParam(
             'page_banner',
-            '<h1>%gallery_title%</h1>' . "\n\n<p>" . l10n('Welcome to my photo gallery') . '</p>',
+            '<h1>%gallery_title%</h1>' . "\n\n<p>" . Lang::t('Welcome to my photo gallery') . '</p>',
             conn: $conn
         );
 
@@ -562,7 +562,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
                 'F_ADMIN_EMAIL' => $this->adminMail,
                 'EMAIL' => '<span class="adminEmail">' . $this->adminMail . '</span>',
                 'F_NEWSLETTER_SUBSCRIBE' => $this->isNewsletterSubscribe,
-                'L_INSTALL_HELP' => l10n('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),
+                'L_INSTALL_HELP' => Lang::t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),
             ]
         );
 
@@ -581,7 +581,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
                 ->record('system', ActivitySystem::Core, 'install', [
                     'version' => AppInfo::VERSION,
                 ]);
-            $this->infos[] = l10n('Congratulations, Piwigo installation is completed');
+            $this->infos[] = Lang::t('Congratulations, Piwigo installation is completed');
 
             // The former top-level code wrapped everything below in
             // `if (isset($error_copy)) { $errors[] = $error_copy; } else {...}`;
@@ -683,7 +683,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
                     ->mail(
                         $this->adminMail,
                         [
-                            'subject' => l10n('Just another Piwigo gallery'),
+                            'subject' => Lang::t('Just another Piwigo gallery'),
                             'content' => Lang::args($keyargs_content),
                             'content_format' => 'text/plain',
                         ]

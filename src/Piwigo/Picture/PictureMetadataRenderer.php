@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Picture;
 
+use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataRepository;
@@ -45,7 +46,7 @@ final class PictureMetadataRenderer
 
             if (count($exif) > 0) {
                 $tplMeta = [
-                    'TITLE' => l10n('EXIF Metadata'),
+                    'TITLE' => Lang::t('EXIF Metadata'),
                     'lines' => [],
                 ];
 
@@ -88,7 +89,7 @@ final class PictureMetadataRenderer
 
             if (count($iptc) > 0) {
                 $tplMeta = [
-                    'TITLE' => l10n('IPTC Metadata'),
+                    'TITLE' => Lang::t('IPTC Metadata'),
                     'lines' => [],
                 ];
 

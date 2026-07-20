@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Permission;
 
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Core\Lang;
 use Piwigo\Group\GroupRepository;
 
 /**
@@ -54,12 +55,12 @@ final readonly class PermissionService
                 continue;
             }
             if ($level === 0) {
-                $label = l10n('Everybody');
+                $label = Lang::t('Everybody');
             } else {
                 if (strlen($label) > 0) {
                     $label .= ', ';
                 }
-                $label .= l10n(sprintf('Level %d', $level));
+                $label .= Lang::t(sprintf('Level %d', $level));
             }
             $options[$level] = $label;
         }

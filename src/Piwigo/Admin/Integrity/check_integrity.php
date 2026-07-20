@@ -13,8 +13,10 @@ namespace Piwigo\Admin\Integrity;
 
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Lang\Translator;
 
 class check_integrity
 {
@@ -69,7 +71,7 @@ class check_integrity
 
         // Information
         if (count($this->retrieve_list) > 0) {
-            \Piwigo\Core\PageState::current()->addHeaderNote(l10n_dec(
+            \Piwigo\Core\PageState::current()->addHeaderNote(Translator::get()->plural(
                 '%d anomaly has been detected.',
                 '%d anomalies have been detected.',
                 count($this->retrieve_list)
@@ -107,14 +109,14 @@ class check_integrity
             }
 
             if ($corrected_count > 0) {
-                \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
+                \Piwigo\Core\PageState::current()->addInfo(Translator::get()->plural(
                     '%d anomaly has been corrected.',
                     '%d anomalies have been detected corrected.',
                     $corrected_count
                 ));
             }
             if ($not_corrected_count > 0) {
-                \Piwigo\Core\PageState::current()->addError(l10n_dec(
+                \Piwigo\Core\PageState::current()->addError(Translator::get()->plural(
                     '%d anomaly has not been corrected.',
                     '%d anomalies have not been corrected.',
                     $not_corrected_count
@@ -134,7 +136,7 @@ class check_integrity
                 }
 
                 if ($ignored_count > 0) {
-                    \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
+                    \Piwigo\Core\PageState::current()->addInfo(Translator::get()->plural(
                         '%d anomaly has been ignored.',
                         '%d anomalies have been ignored.',
                         $ignored_count
@@ -295,9 +297,9 @@ class check_integrity
         $link_fmt = '<a href="%s" onclick="window.open(this.href, \'\'); return false;">%s</a>';
         return
           sprintf(
-              l10n('Go to %s or %s for more informations'),
-              sprintf($link_fmt, $pwg_links['FORUM'], l10n('the forum')),
-              sprintf($link_fmt, $pwg_links['WIKI'], l10n('the wiki'))
+              Lang::t('Go to %s or %s for more informations'),
+              sprintf($link_fmt, $pwg_links['FORUM'], Lang::t('the forum')),
+              sprintf($link_fmt, $pwg_links['WIKI'], Lang::t('the wiki'))
           );
     }
 }

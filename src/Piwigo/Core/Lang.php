@@ -149,6 +149,26 @@ final class Lang
     }
 
     /**
+     * Thin `Translator::get()->plural()` delegate carrying the one
+     * behavioral difference the deleted `l10n_dec()` free function had:
+     * `Translator::plural()` requires a strict native `int`, but this
+     * boundary's real callers are Smarty-compiled-template expressions
+     * (`Template::modcompiler_translate_dec()`'s generated code -- the
+     * only real caller, confirmed by grep) whose runtime value can be a
+     * numeric DB-row string (the exact real 500 `l10n_dec()`'s own
+     * docblock already documented: menubar_categories.tpl passed one).
+     * Every hand-written .php call site instead calls
+     * `Translator::get()->plural()` directly with an explicit int already
+     * in hand, per Legacy Coupling Retirement Phase 4d.
+     */
+    public static function plural(string $singular, string $plural, mixed $decimal): string
+    {
+        $n = is_numeric($decimal) ? (int) $decimal : 0;
+
+        return Translator::get()->plural($singular, $plural, $n);
+    }
+
+    /**
      * Returns the currently active translation table -- for callers that
      * need to temporarily swap it out wholesale and restore it later (e.g.
      * MailService::switchLangTo()/switchLangBack(), building a

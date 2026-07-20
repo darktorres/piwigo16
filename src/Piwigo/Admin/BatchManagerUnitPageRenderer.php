@@ -11,6 +11,7 @@ use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\BatchWriter;
@@ -174,7 +175,7 @@ SELECT id, date_creation
                     $datas
                 );
 
-            \Piwigo\Core\PageState::current()->addInfo(l10n('Photo informations updated'));
+            \Piwigo\Core\PageState::current()->addInfo(Lang::t('Photo informations updated'));
             UserCacheInvalidator::invalidate();
         }
 
@@ -224,7 +225,7 @@ SELECT id, date_creation
 
                 'U_ELEMENTS_PAGE' => $base_url . $this->urlService->getQueryStringDiff(['display', 'start']),
                 'level_options' => \Piwigo\Permission\PermissionService::getPrivacyLevelOptions(),
-                'ADMIN_PAGE_TITLE' => l10n('Batch Manager'),
+                'ADMIN_PAGE_TITLE' => Lang::t('Batch Manager'),
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
             ]
@@ -549,14 +550,14 @@ SELECT
                             'TITLE' => $htmlRenderer->renderElementName($row),
                             'DIMENSIONS' => $row_width . 'x' . $row_height . ' px',
                             'FORMAT' => ($row_width >= $row_height) ? 1 : 0, // 0:horizontal, 1:vertical
-                            'FILESIZE' => l10n('%.2f MB', $row_filesize / 1024),
+                            'FILESIZE' => Lang::t('%.2f MB', $row_filesize / 1024),
                             'REGISTRATION_DATE' => \Piwigo\Core\DateHelper::formatDate($row_date_available),
-                            'EXT' => l10n('%s file type', end($extTab)),
-                            'POST_DATE' => l10n('Added on %s', \Piwigo\Core\DateHelper::formatDate($row_date_available, ['day', 'month', 'year'])),
-                            'AGE' => l10n(ucfirst(\Piwigo\Core\DateHelper::timeSince($row_date_available, 'year'))),
-                            'ADDED_BY' => l10n('Added by %s', $row_added_by !== null ? ($added_by_username_of[$row_added_by] ?? l10n('N/A')) : l10n('N/A')),
-                            'STATS' => l10n('Visited %d times', $row['hit']),
-                            'FILE' => l10n('%s', $row['file']),
+                            'EXT' => Lang::t('%s file type', end($extTab)),
+                            'POST_DATE' => Lang::t('Added on %s', \Piwigo\Core\DateHelper::formatDate($row_date_available, ['day', 'month', 'year'])),
+                            'AGE' => Lang::t(ucfirst(\Piwigo\Core\DateHelper::timeSince($row_date_available, 'year'))),
+                            'ADDED_BY' => Lang::t('Added by %s', $row_added_by !== null ? ($added_by_username_of[$row_added_by] ?? Lang::t('N/A')) : Lang::t('N/A')),
+                            'STATS' => Lang::t('Visited %d times', $row['hit']),
+                            'FILE' => Lang::t('%s', $row['file']),
                             'related_categories' => $related_categories,
                             'related_category_ids' => json_encode($related_category_ids),
                             'U_JUMPTO' => (isset($url_img) and $currentUser->level >= $media['image']['level']) ? $url_img : null,

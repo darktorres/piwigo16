@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Menu\BlockManager;
@@ -31,7 +32,7 @@ final class MenubarPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         $tabsheet = new tabsheet();
@@ -91,7 +92,7 @@ final class MenubarPageRenderer
 
             $template->assign(
                 [
-                    'save_success' => l10n('Order of menubar items has been updated successfully.'),
+                    'save_success' => Lang::t('Order of menubar items has been updated successfully.'),
                 ]
             );
         }
@@ -114,7 +115,7 @@ final class MenubarPageRenderer
         ]);
 
         $template->assign('isWebmaster', \Piwigo\Auth\AccessControl::isWebmaster() ? 1 : 0);
-        $template->assign('ADMIN_PAGE_TITLE', l10n('Menu Management'));
+        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Menu Management'));
 
         $template->set_filename('menubar_admin_content', 'menubar.tpl');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'menubar_admin_content');

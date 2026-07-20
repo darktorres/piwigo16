@@ -11,6 +11,7 @@ use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
@@ -25,6 +26,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Site\LocalSiteReader;
@@ -184,7 +186,7 @@ final class BatchManagerGlobalPageRenderer
             // if the user tries to apply an action, it means that there is at least 1
             // photo in the selection
             if (count($collection) === 0) {
-                \Piwigo\Core\PageState::current()->addError(l10n('Select at least one photo'));
+                \Piwigo\Core\PageState::current()->addError(Lang::t('Select at least one photo'));
             }
 
             // $_POST values are always strings for a plain <select>/hidden
@@ -210,7 +212,7 @@ DELETE
                 $redirect = true;
             } elseif ($action === 'add_tags') {
                 if (! is_array($_POST['add_tags'] ?? null) || count($_POST['add_tags']) === 0) {
-                    \Piwigo\Core\PageState::current()->addError(l10n('Select at least one tag'));
+                    \Piwigo\Core\PageState::current()->addError(Lang::t('Select at least one tag'));
                 } else {
                     $add_tags = [];
                     foreach ($_POST['add_tags'] as $raw_tag) {
@@ -248,13 +250,13 @@ DELETE
                         $redirect = true;
                     }
                 } else {
-                    \Piwigo\Core\PageState::current()->addError(l10n('Select at least one tag'));
+                    \Piwigo\Core\PageState::current()->addError(Lang::t('Select at least one tag'));
                 }
             }
 
             if ($action === 'associate') {
                 if (! is_array($_POST['associate'] ?? null) || count($_POST['associate']) === 0) {
-                    \Piwigo\Core\PageState::current()->addError(l10n('Select at least one album'));
+                    \Piwigo\Core\PageState::current()->addError(Lang::t('Select at least one album'));
                 } else {
                     $associate_categories = [];
                     foreach ($_POST['associate'] as $raw_category_id) {
@@ -269,7 +271,7 @@ DELETE
                     );
 
                     $_SESSION['page_infos'] = [
-                        l10n('Information data registered in database'),
+                        Lang::t('Information data registered in database'),
                     ];
 
                     // let's refresh the page because we the current set might be modified
@@ -295,7 +297,7 @@ DELETE
                 $imageService->moveImagesToCategories($collection, $move_category !== null ? [$move_category] : []);
 
                 $_SESSION['page_infos'] = [
-                    l10n('Information data registered in database'),
+                    Lang::t('Information data registered in database'),
                 ];
 
                 // let's refresh the page because we the current set might be modified
@@ -318,7 +320,7 @@ DELETE
 
                 if ($nb_dissociated > 0) {
                     $_SESSION['page_infos'] = [
-                        l10n('Information data registered in database'),
+                        Lang::t('Information data registered in database'),
                     ];
 
                     // let's refresh the page because the current set might be modified
@@ -464,7 +466,7 @@ DELETE
                         if (! isset($_SESSION['page_infos']) || ! is_array($_SESSION['page_infos'])) {
                             $_SESSION['page_infos'] = [];
                         }
-                        $_SESSION['page_infos'][] = l10n_dec(
+                        $_SESSION['page_infos'][] = Translator::get()->plural(
                             '%d photo was deleted',
                             '%d photos were deleted',
                             count($collection)
@@ -473,16 +475,16 @@ DELETE
                         $redirect_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $get_page;
                         $redirect = true;
                     } else {
-                        \Piwigo\Core\PageState::current()->addError(l10n('No photo can be deleted'));
+                        \Piwigo\Core\PageState::current()->addError(Lang::t('No photo can be deleted'));
                     }
                 } else {
-                    \Piwigo\Core\PageState::current()->addError(l10n('You need to confirm deletion'));
+                    \Piwigo\Core\PageState::current()->addError(Lang::t('You need to confirm deletion'));
                 }
             }
 
             // synchronize metadata
             elseif ($action === 'metadata') {
-                \Piwigo\Core\PageState::current()->addInfo(l10n('Metadata synchronized from file') . ' <span class="badge">' . count($collection) . '</span>');
+                \Piwigo\Core\PageState::current()->addInfo(Lang::t('Metadata synchronized from file') . ' <span class="badge">' . count($collection) . '</span>');
             } elseif ($action === 'delete_derivatives' && isset($_POST['del_derivatives_type']) && is_array($_POST['del_derivatives_type']) && count($_POST['del_derivatives_type']) > 0) {
                 $query = 'SELECT path,representative_ext FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $collection) . ')';
@@ -503,10 +505,10 @@ DELETE
                 }
             } elseif ($action === 'generate_derivatives') {
                 if (($_POST['regenerateSuccess'] ?? '0') !== '0') {
-                    \Piwigo\Core\PageState::current()->addInfo(l10n('%s photos have been regenerated', $_POST['regenerateSuccess']));
+                    \Piwigo\Core\PageState::current()->addInfo(Lang::t('%s photos have been regenerated', $_POST['regenerateSuccess']));
                 }
                 if (($_POST['regenerateError'] ?? '0') !== '0') {
-                    \Piwigo\Core\PageState::current()->addWarning(l10n('%s photos can not be regenerated', $_POST['regenerateError']));
+                    \Piwigo\Core\PageState::current()->addWarning(Lang::t('%s photos can not be regenerated', $_POST['regenerateError']));
                 }
             }
 
@@ -580,10 +582,10 @@ DELETE
         // derivatives
         $del_deriv_map = [];
         foreach (ImageStdParams::get_defined_type_map() as $params) {
-            $del_deriv_map[$params->type] = l10n($params->type);
+            $del_deriv_map[$params->type] = Lang::t($params->type);
         }
         $gen_deriv_map = $del_deriv_map;
-        $del_deriv_map[ImageStdParams::CUSTOM] = l10n(ImageStdParams::CUSTOM);
+        $del_deriv_map[ImageStdParams::CUSTOM] = Lang::t(ImageStdParams::CUSTOM);
         $template->assign(
             [
                 'del_derivatives_types' => $del_deriv_map,

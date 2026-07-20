@@ -727,12 +727,6 @@ parameters:
 			path: src/Piwigo/Admin/Install/InstallService.php
 
 		-
-			rawMessage: 'Out of 124 possible constant types, only 106 - 85.4 %% actually have it. Add more constant types to get over 99 %%'
-			identifier: typeCoverage.constantTypeCoverage
-			count: 1
-			path: src/Piwigo/Admin/Install/InstallService.php
-
-		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 1
@@ -1643,12 +1637,6 @@ parameters:
 			identifier: empty.notAllowed
 			count: 2
 			path: src/Piwigo/Auth/ApiKeyService.php
-
-		-
-			rawMessage: 'Out of 124 possible constant types, only 106 - 85.4 %% actually have it. Add more constant types to get over 99 %%'
-			identifier: typeCoverage.constantTypeCoverage
-			count: 1
-			path: src/Piwigo/Auth/AuthRepository.php
 
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
@@ -2722,12 +2710,6 @@ parameters:
 			rawMessage: 'Loose comparison via "==" between mixed and null is not allowed.'
 			identifier: equal.notAllowed
 			count: 1
-			path: src/Piwigo/Core/Logger.php
-
-		-
-			rawMessage: 'Out of 124 possible constant types, only 106 - 85.4 %% actually have it. Add more constant types to get over 99 %%'
-			identifier: typeCoverage.constantTypeCoverage
-			count: 13
 			path: src/Piwigo/Core/Logger.php
 
 		-
@@ -3805,12 +3787,6 @@ parameters:
 			path: src/Piwigo/Template/Template.php
 
 		-
-			rawMessage: 'Out of 124 possible constant types, only 106 - 85.4 %% actually have it. Add more constant types to get over 99 %%'
-			identifier: typeCoverage.constantTypeCoverage
-			count: 2
-			path: src/Piwigo/Template/Template.php
-
-		-
 			rawMessage: 'Out of 3723 possible param types, only 3484 - 93.5 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 45
@@ -4793,12 +4769,6 @@ parameters:
 			identifier: method.internalClass
 			count: 3
 			path: tests/Browser/VisualRegressionTest.php
-
-		-
-			rawMessage: 'Out of 124 possible constant types, only 106 - 85.4 %% actually have it. Add more constant types to get over 99 %%'
-			identifier: typeCoverage.constantTypeCoverage
-			count: 1
-			path: tests/Contract/ContractTestCase.php
 
 		-
 			rawMessage: Cannot cast mixed to int.

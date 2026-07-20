@@ -12,10 +12,9 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Integrity;
 
 use Piwigo\Admin\AdminUiHelper;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
 
 class check_integrity
@@ -274,8 +273,7 @@ class check_integrity
         $conf_c13y_ignore = [];
         $conf_c13y_ignore['version'] = AppInfo::VERSION;
         $conf_c13y_ignore['list'] = $conf_ignore_list;
-        $query = 'update ' . Tables::config() . ' set value =\'' . serialize($conf_c13y_ignore) . '\'where param = \'c13y_ignore\';';
-        DbConnection::build()->executeStatement($query);
+        CurrentConfigService::get()->confUpdateParam('c13y_ignore', serialize($conf_c13y_ignore));
     }
 
     /**

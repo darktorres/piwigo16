@@ -75,7 +75,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         // \Piwigo\Config\Config::sendPiwigoInfosLastNotice() has been loaded in include/common, maybe
         // a few seconds earlier, we need a refreshed value from the database. Another
         // concurrent execution might have already performed send_piwigo_infos 3 seconds ago.
-        \Piwigo\Config\ConfigDb::loadConfFromDb('param = "send_piwigo_infos_last_notice"', false);
+        \Piwigo\Config\CurrentConfigService::get()->loadConfFromDb('send_piwigo_infos_last_notice', false);
 
         $doSend = false;
         $lastNotice = \Piwigo\Config\Config::sendPiwigoInfosLastNotice() ?? null;
@@ -104,7 +104,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
 
         $logger->info('[' . __FUNCTION__ . '] current conf.send_piwigo_infos_last_notice=' . ($lastNoticeStr ?? 'notFound') . ' => lets do it');
 
-        if (! \Piwigo\Config\ConfigDb::pwgIsDbconfWriteable()) {
+        if (! \Piwigo\Config\CurrentConfigService::get()->pwgIsDbconfWriteable()) {
             $logger->info('[' . __FUNCTION__ . '] conf is not writeable, abort');
             return;
         }
@@ -120,7 +120,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         $dbCurrentDate = $row !== false ? $row[0] : null;
 
         if (! \Piwigo\Config\Config::has('send_piwigo_infos_origin_hash')) {
-            \Piwigo\Config\ConfigDb::confUpdateParam('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
+            \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
         }
 
         [$containerType, $containerVersion] = ContainerDetector::detect();
@@ -610,7 +610,7 @@ SELECT
             $this->retryLater(24 * 60 * 60);
         } else {
             $lastNotice = date('c');
-            \Piwigo\Config\ConfigDb::confUpdateParam('send_piwigo_infos_last_notice', $lastNotice, true);
+            \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('send_piwigo_infos_last_notice', $lastNotice, true);
             $logger->info('[' . __FUNCTION__ . '][exec=' . $execId . '] fetchRemote success, new send_piwigo_infos_last_notice=' . $lastNotice);
         }
 
@@ -628,7 +628,7 @@ SELECT
         $lastNotice = ($lastNotice === false ? time() : $lastNotice) + $waitTime;
 
         $newLastNotice = date('c', $lastNotice);
-        \Piwigo\Config\ConfigDb::confUpdateParam('send_piwigo_infos_last_notice', $newLastNotice, true);
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('send_piwigo_infos_last_notice', $newLastNotice, true);
         $logger->info('[' . __FUNCTION__ . '] new send_piwigo_infos_last_notice=' . $newLastNotice);
     }
 }

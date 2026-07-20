@@ -337,7 +337,7 @@ SELECT id, path, representative_ext, width, height, rotation
             ];
         }
 
-        \Piwigo\Config\ConfigDb::confUpdateParam('cache_sizes', $output, true);
+        CurrentConfigService::get()->confUpdateParam('cache_sizes', $output, true);
 
         return [
             'infos' => new PwgNamedArray($output, 'item'),

@@ -559,7 +559,7 @@ SELECT
     {
 
         if (! \Piwigo\Config\Config::has('lounge_active')) {
-            \Piwigo\Config\ConfigDb::confUpdateParam('lounge_active', false, true);
+            \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('lounge_active', false, true);
         }
 
         if (! \Piwigo\Config\Config::loungeActive()) {
@@ -567,7 +567,7 @@ SELECT
             $row = DbConnection::build()->fetchNumeric('SELECT COUNT(*) FROM ' . Tables::images() . ';');
             $nb_photos = $row !== false ? $row[0] : 0;
             if ($nb_photos >= \Piwigo\Config\Config::loungeActivateThreshold()) {
-                \Piwigo\Config\ConfigDb::confUpdateParam('lounge_active', true, true);
+                \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('lounge_active', true, true);
             }
         }
 

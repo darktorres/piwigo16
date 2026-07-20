@@ -46,7 +46,7 @@ final class FilesystemIntegrityChecker
         }
 
         self::$fsQuickCheckDone = true;
-        \Piwigo\Config\ConfigDb::confUpdateParam('fs_quick_check_last_check', date('c'));
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('fs_quick_check_last_check', date('c'));
 
         $conn = DbConnection::build();
 

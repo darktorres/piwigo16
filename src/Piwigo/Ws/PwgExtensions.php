@@ -283,9 +283,10 @@ final class PwgExtensions
         // IN_ADMIN has no reader left in this request's lifecycle (see
         // pluginsPerformAction()'s own comment), and
         // admin/include/functions.php has been emptied of all functions
-        // since P23 batch 8d (the config write below goes through
+        // since P23 batch 8d (the config write below went through
         // \Piwigo\Config\ConfigDb::confUpdateParam() since P23 batch 8f-4,
-        // which deleted include/functions.inc.php entirely).
+        // which deleted include/functions.inc.php entirely; Phase 5
+        // Legacy Coupling Retirement retargeted it onto CurrentConfigService).
 
         if (! AccessControl::isWebmaster()) {
             return new PwgError(401, 'Access denied');
@@ -310,7 +311,7 @@ final class PwgExtensions
             }
             \Piwigo\Config\Config::override('updates_ignored', $updates_ignored);
 
-            \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', serialize($updates_ignored));
+            \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('updates_ignored', serialize($updates_ignored));
             unset($_SESSION['extensions_need_update']);
             return true;
         }
@@ -325,7 +326,7 @@ final class PwgExtensions
         }
 
         \Piwigo\Config\Config::override('updates_ignored', $updates_ignored);
-        \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', serialize($updates_ignored));
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('updates_ignored', serialize($updates_ignored));
         unset($_SESSION['extensions_need_update']);
         return true;
     }

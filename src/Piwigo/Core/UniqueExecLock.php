@@ -19,6 +19,15 @@ use Piwigo\Db\Tables;
  * is the real mechanism this class exists for; every query keeps its
  * exact original SQL text (a pure execution-API swap), not rewritten
  * through QueryBuilder or newly parameterized.
+ *
+ * Phase 5 (ConfigDb retarget sweep): ends()'s confDeleteParam() call
+ * deliberately stays on ConfigDb, not CurrentConfigService -- confirmed
+ * (the hard way, via a live 500) reachable pre-container through
+ * `Bootstrap\RequestBootstrap::connect()` ->
+ * `Bootstrap\UserBootstrap::initialize()` ->
+ * `Users\UserService::getUserData()` -> `begins()`'s own timeout branch
+ * calling `ends()`, all of which run before `Kernel::boot()` on every
+ * single request.
  */
 final class UniqueExecLock
 {

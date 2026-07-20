@@ -32,8 +32,8 @@ namespace {
         }
     }
 
-    // trigger_change()/trigger_notify() are always available now via
-    // composer autoload.files (src/Piwigo/PluginConfig/functions.php), pure
+    // trigger_change()/trigger_notify() calls go directly through the real
+    // Piwigo\PluginConfig\EventDispatcher::get() singleton now, pure
     // passthroughs with no handlers registered, so no local stubs are
     // needed for them here.
 

@@ -57,7 +57,7 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
         // not a bug, so this degrades to '' rather than asserting non-null.
         $email = is_string($value) ? $value : '';
 
-        $email = trigger_change('get_webmaster_mail_address', $email);
+        $email = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_webmaster_mail_address', $email);
 
         return is_string($email) ? $email : '';
     }

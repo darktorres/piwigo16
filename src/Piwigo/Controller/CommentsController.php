@@ -127,7 +127,7 @@ final class CommentsController implements ControllerInterface
             ], // stupid but generic
         ];
 
-        trigger_notify('loc_begin_comments');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_comments');
 
         $since_raw = $_GET['since'] ?? null;
         $since_present = is_scalar($since_raw) && $since_raw !== '' && $since_raw !== '0' && $since_raw !== 0 && $since_raw !== 0.0 && $since_raw !== false;
@@ -613,10 +613,10 @@ SELECT *
                         'U_PICTURE' => $url,
                         'src_image' => $src_image,
                         'ALT' => $name,
-                        'AUTHOR' => trigger_change('render_comment_author', $comment['author']),
+                        'AUTHOR' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_author', $comment['author']),
                         'WEBSITE_URL' => $comment['website_url'],
                         'DATE' => \Piwigo\Core\DateHelper::formatDate($date, ['day_name', 'day', 'month', 'year', 'time']),
-                        'CONTENT' => trigger_change('render_comment_content', $comment['content']),
+                        'CONTENT' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_content', $comment['content']),
                     ];
 
                     if (\Piwigo\Auth\AccessControl::isAdmin()) {
@@ -671,7 +671,7 @@ SELECT *
                 }
             }
 
-            $derivative_params = trigger_change('get_comments_derivative_params', ImageStdParams::get_by_type(ImageStdParams::THUMB));
+            $derivative_params = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_comments_derivative_params', ImageStdParams::get_by_type(ImageStdParams::THUMB));
             $template->assign('comment_derivative_params', $derivative_params);
 
             // include menubar
@@ -687,7 +687,7 @@ SELECT *
             // +---------------------------------------------------------------+
             new \Piwigo\Page\PageHeaderRenderer()
                 ->render($title);
-            trigger_notify('loc_end_comments');
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_comments');
             new HtmlService()
                 ->flushPageMessages();
             if (count($comments) > 0) {

@@ -163,7 +163,7 @@ final class FileCombiner
                 throw new \Exception("process_combinable(): file not found for {$combinable->path}");
             }
             $template->set_filename($handle, $real_path);
-            trigger_notify('combinable_preparse', $template, $combinable, $this); // allow themes and plugins to set their own vars to template ...
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('combinable_preparse', $template, $combinable, $this); // allow themes and plugins to set their own vars to template ...
             // parse($handle, true) is always string (never null) since we
             // always pass true here (see Template::parse()'s conditional
             // return type).
@@ -220,7 +220,7 @@ final class FileCombiner
     private static function process_css(?string $css, $file, string &$header): string
     {
         $css = self::process_css_rec($css, dirname($file), $header);
-        $css = trigger_change('combined_css_postfilter', $css);
+        $css = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('combined_css_postfilter', $css);
         if (! is_string($css)) {
             throw new \Exception("process_css(): a 'combined_css_postfilter' event listener returned a non-string value");
         }

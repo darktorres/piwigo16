@@ -148,8 +148,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         // | Add event handler                                                     |
         // +-----------------------------------------------------------------------+
-        add_event_handler('nbm_render_global_customize_mail_content', self::renderGlobalCustomizeMailContent(...));
-        trigger_notify('nbm_event_handler_added');
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('nbm_render_global_customize_mail_content', self::renderGlobalCustomizeMailContent(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('nbm_event_handler_added');
 
         // +-----------------------------------------------------------------------+
         // | Insert new users with mails                                           |

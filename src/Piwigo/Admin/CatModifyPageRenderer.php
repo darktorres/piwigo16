@@ -51,7 +51,7 @@ final class CatModifyPageRenderer
             new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
         );
 
-        trigger_notify('loc_begin_cat_modify');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_cat_modify');
 
         // ---------------------------------------------------------------- verification
         if (! isset($_GET['cat_id']) || ! is_numeric($_GET['cat_id'])) {
@@ -351,7 +351,7 @@ SELECT COUNT(*)
 
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
 
-        trigger_notify('loc_end_cat_modify');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_cat_modify');
 
         // ----------------------------------------------------------- sending html code
         $template->assign_var_from_handle('ADMIN_CONTENT', 'album_properties');

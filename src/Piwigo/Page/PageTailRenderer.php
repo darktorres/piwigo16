@@ -39,7 +39,7 @@ final readonly class PageTailRenderer
             'tail' => 'footer.tpl',
         ]);
 
-        trigger_notify('loc_begin_page_tail');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_page_tail');
 
         $template->assign(
             [
@@ -104,7 +104,7 @@ final readonly class PageTailRenderer
             );
         }
 
-        trigger_notify('loc_end_page_tail');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_page_tail');
         //
         // Generate the page
         //

@@ -191,9 +191,9 @@ SELECT SQL_CALC_FOUND_ROWS i.*
                     $image[$k] = $image_row[$k];
                 }
 
-                $rendered_name = trigger_change('render_element_name', $image['name'], __FUNCTION__);
+                $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_name', $image['name'], __FUNCTION__);
                 $image['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
-                $image['comment'] = trigger_change('render_element_description', $image['comment'], __FUNCTION__);
+                $image['comment'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_description', $image['comment'], __FUNCTION__);
 
                 $image = array_merge($image, WsHelper::stdGetUrls($image_row));
 
@@ -441,7 +441,7 @@ SELECT SQL_CALC_FOUND_ROWS
             } else {
                 $row['name_raw'] = $row['name'];
 
-                $rendered_name = trigger_change(
+                $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                     'render_category_name',
                     $row['name'],
                     'ws_categories_getList'
@@ -451,7 +451,7 @@ SELECT SQL_CALC_FOUND_ROWS
 
             $row['comment_raw'] = $row['comment'];
 
-            $rendered_comment = trigger_change(
+            $rendered_comment = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                 'render_category_description',
                 $row['comment'],
                 'ws_categories_getList'
@@ -721,7 +721,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
 
             $row['name_raw'] = $row['name'];
 
-            $rendered_name = trigger_change(
+            $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                 'render_category_name',
                 $row['name'],
                 'ws_categories_getAdminList'
@@ -730,7 +730,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
             $row['fullname'] = strip_tags($cat_display_name);
 
             $row['comment_raw'] = $row['comment'];
-            $row['comment'] = trigger_change(
+            $row['comment'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                 'render_category_description',
                 $row['comment'] ?? '',
                 'ws_categories_getAdminList'
@@ -1329,7 +1329,7 @@ SELECT id, name, dir, uppercats
 
             // we break on error at first physical category detected
             if (! empty($row['dir'])) {
-                $rendered_name = trigger_change(
+                $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                     'render_category_name',
                     $row['name'],
                     'ws_categories_move'

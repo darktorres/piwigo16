@@ -78,7 +78,7 @@ final class DerivativeImage
             return $src_image->get_url();
         }
         $default_url = get_root_url() . $rel_url;
-        $filtered_url = trigger_change(
+        $filtered_url = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
             'get_derivative_url',
             $default_url,
             $params,
@@ -250,7 +250,7 @@ final class DerivativeImage
             return $this->src_image->get_url();
         }
         $default_url = get_root_url() . $this->rel_url;
-        $filtered_url = trigger_change(
+        $filtered_url = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
             'get_derivative_url',
             $default_url,
             $this->params,

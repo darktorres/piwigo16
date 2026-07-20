@@ -180,7 +180,7 @@ final class ThemesInstalledPageRenderer
             ]
         );
 
-        trigger_notify('loc_end_themes_installed');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_themes_installed');
 
         $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
         $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));

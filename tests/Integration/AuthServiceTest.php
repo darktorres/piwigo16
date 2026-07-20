@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-// tryLogUser() calls the real trigger_change() -- always available now via
-// composer autoload.files (src/Piwigo/PluginConfig/functions.php), a pure
-// passthrough with no handlers registered, so no local stub is needed.
+// tryLogUser() calls the real Piwigo\PluginConfig\EventDispatcher::get()->
+// triggerChange() directly, a pure passthrough with no handlers
+// registered, so no local stub is needed.
 
 namespace Piwigo\Tests\Integration {
 
@@ -21,9 +21,9 @@ namespace Piwigo\Tests\Integration {
     /**
      * Covers calculateAutoLoginKey() fully (a pure DB read + HMAC
      * computation, no session/cookie/legacy-activity side effects) and
-     * tryLogUser()'s delegation to the try_log_user event (stubbed above,
-     * matching how the real trigger_change() behaves when no handler is
-     * registered: it returns its own $data argument unchanged).
+     * tryLogUser()'s delegation to the try_log_user event (no handler is
+     * registered in this harness, so EventDispatcher::triggerChange()
+     * returns its own $data argument unchanged).
      * logUser()/autoLogin()/logoutUser() touch pwg_activity() (needs the
      * legacy $mysqli dblayer connection, not DBAL) and real PHP session
      * functions, which this lightweight Integration harness can't
@@ -110,9 +110,9 @@ namespace Piwigo\Tests\Integration {
 
         public function test_try_log_user_fails_closed_when_no_handler_is_registered(): void
         {
-            // The stubbed trigger_change() above returns its own $data
-            // argument (false) unchanged, matching the real function's
-            // behavior when no handler is registered for the event.
+            // No handler is registered for this event, so
+            // EventDispatcher::triggerChange() returns its own $data
+            // argument (false) unchanged.
             self::assertFalse($this->service->tryLogUser('anyone', 'anything', false));
         }
     }

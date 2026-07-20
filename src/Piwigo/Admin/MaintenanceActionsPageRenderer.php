@@ -200,7 +200,7 @@ final class MaintenanceActionsPageRenderer
         $advanced_features = [];
 
         // $advanced_features is array of array composed of CAPTION & URL
-        $advanced_features = trigger_change(
+        $advanced_features = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
             'get_admin_advanced_features_links',
             $advanced_features
         );

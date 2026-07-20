@@ -82,7 +82,7 @@ final class BatchManagerUnitPageRenderer
         $htmlRenderer = new HtmlService();
         $conn = DbConnection::build();
 
-        trigger_notify('loc_begin_element_set_unit');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_element_set_unit');
 
         // +-------------------------------------------------------------------+
         // |                        unit mode form submission                      |
@@ -569,7 +569,7 @@ SELECT
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['tags', 'categories']),
         ]);
 
-        trigger_notify('loc_end_element_set_unit');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_element_set_unit');
 
         // +-------------------------------------------------------------------+
         // |                           sending html code                           |

@@ -355,7 +355,7 @@ DELETE FROM ' . Tables::caddie() . '
                 $_SESSION['bulk_manager_filter']['search']['q'] = $_POST['q'];
             }
 
-            $_SESSION['bulk_manager_filter'] = trigger_change('batch_manager_register_filters', $_SESSION['bulk_manager_filter']);
+            $_SESSION['bulk_manager_filter'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('batch_manager_register_filters', $_SESSION['bulk_manager_filter']);
         }
         // filters from url
         elseif (isset($_GET['filter'])) {
@@ -474,7 +474,7 @@ DELETE FROM ' . Tables::caddie() . '
                         break;
 
                     default:
-                        $url_filter_result = trigger_change('batch_manager_url_filter', $url_filter, $filter);
+                        $url_filter_result = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('batch_manager_url_filter', $url_filter, $filter);
                         $url_filter = is_array($url_filter_result) ? $url_filter_result : $url_filter;
                         break;
                 }
@@ -544,7 +544,7 @@ DELETE FROM ' . Tables::caddie() . '
             if ($prefilter_result !== null) {
                 $filter_sets[] = $prefilter_result;
             } else {
-                $filter_sets = trigger_change('perform_batch_manager_prefilters', $filter_sets, $prefilter);
+                $filter_sets = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('perform_batch_manager_prefilters', $filter_sets, $prefilter);
                 if (! is_array($filter_sets)) {
                     // Plugin handlers must return the (possibly extended) list of id
                     // sets; fall back to an empty set of filters rather than
@@ -654,7 +654,7 @@ DELETE FROM ' . Tables::caddie() . '
             $filter_sets[] = $res_items;
         }
 
-        $filter_sets = trigger_change('batch_manager_perform_filters', $filter_sets, $bulkFilter);
+        $filter_sets = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('batch_manager_perform_filters', $filter_sets, $bulkFilter);
         if (! is_array($filter_sets)) {
             // Plugin handlers must return the (possibly extended) list of id sets;
             // fall back to an empty set of filters rather than propagating a

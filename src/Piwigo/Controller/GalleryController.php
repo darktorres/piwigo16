@@ -152,7 +152,7 @@ final class GalleryController implements ControllerInterface
             $tagService = self::tagService($conn);
             $categoryService = self::categoryService($conn);
 
-            trigger_notify('loc_begin_index');
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_index');
 
             // ---------------------------------------- change of image display order
             if (isset($_GET['image_order'])) {
@@ -373,7 +373,7 @@ final class GalleryController implements ControllerInterface
 
                     $selected_related_tags_info[$selectedTagKey] =
                     [
-                        'tag_name' => trigger_change('render_tag_name', $selectedTag['name'], $selectedTag),
+                        'tag_name' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $selectedTag['name'], $selectedTag),
                         'item_count' => '',
                         'index_url' => make_index_url(
                             [
@@ -621,7 +621,7 @@ final class GalleryController implements ControllerInterface
             // ---------------------------------------------------------- end
             new \Piwigo\Page\PageHeaderRenderer()
                 ->render($title);
-            trigger_notify('loc_end_index');
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_index');
             new HtmlService()
                 ->flushPageMessages();
             $template->parse_index_buttons();

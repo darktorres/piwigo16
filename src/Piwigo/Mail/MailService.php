@@ -421,7 +421,7 @@ final class MailService implements MailerInterface
                 }
             }
 
-            trigger_notify('loading_lang');
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loading_lang');
             Lang::load(
                 'lang',
                 PHPWG_ROOT_PATH . PWG_LOCAL_DIR,
@@ -795,7 +795,7 @@ final class MailService implements MailerInterface
                 self::$templateCache[$cacheKey] = [
                     'theme' => $template,
                 ];
-                trigger_notify('before_parse_mail_template', $cacheKey, $contentType);
+                \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('before_parse_mail_template', $cacheKey, $contentType);
 
                 $template->set_filename('mail_header', 'header.tpl');
                 $template->set_filename('mail_footer', 'footer.tpl');
@@ -933,7 +933,7 @@ final class MailService implements MailerInterface
 
         $ret = true;
         $errorMessage = null;
-        $preResult = trigger_change('before_send_mail', true, $to, $args, $email);
+        $preResult = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('before_send_mail', true, $to, $args, $email);
 
         if ($preResult === true) {
             try {
@@ -1022,7 +1022,7 @@ final class MailService implements MailerInterface
 
         unset_make_full_url();
 
-        $messageAfterTrigger = trigger_change('render_lost_password_mail_content', $message);
+        $messageAfterTrigger = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_lost_password_mail_content', $message);
         $message = is_string($messageAfterTrigger) ? $messageAfterTrigger : $message;
 
         return [
@@ -1053,7 +1053,7 @@ final class MailService implements MailerInterface
 
         unset_make_full_url();
 
-        $messageAfterTrigger = trigger_change('render_lost_password_mail_content', $message);
+        $messageAfterTrigger = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_lost_password_mail_content', $message);
         $message = is_string($messageAfterTrigger) ? $messageAfterTrigger : $message;
 
         return [

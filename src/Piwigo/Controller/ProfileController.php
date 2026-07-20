@@ -55,7 +55,7 @@ final class ProfileController implements ControllerInterface
 
         $userdata = $user;
 
-        trigger_notify('loc_begin_profile');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_profile');
 
         $fields = [
             'nb_image_page', 'expand',
@@ -173,7 +173,7 @@ SELECT ' . implode(',', $fields) . '
 
             $template->assign('HELP_LINK', $help_link);
 
-            trigger_notify('loc_end_profile');
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_profile');
             new HtmlService()
                 ->flushPageMessages();
             $template->pparse('profile');

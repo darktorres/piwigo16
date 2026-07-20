@@ -32,7 +32,7 @@ final class NotificationController implements ControllerInterface
     {
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        trigger_notify('loc_begin_notification');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_notification');
 
         $feedRepo = new FeedRepository(DbConnection::build());
         $feedId = $this->findAvailableFeedId($feedRepo);
@@ -83,7 +83,7 @@ final class NotificationController implements ControllerInterface
 
             new \Piwigo\Page\PageHeaderRenderer()
                 ->render($title);
-            trigger_notify('loc_end_notification');
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_notification');
             new HtmlService()
                 ->flushPageMessages();
             $template->pparse('notification');

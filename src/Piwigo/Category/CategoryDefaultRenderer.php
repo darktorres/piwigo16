@@ -57,7 +57,7 @@ final readonly class CategoryDefaultRenderer
 
         $selection = array_slice($items, $start, $nbImagePage);
 
-        $selection = trigger_change('loc_index_thumbnails_selection', $selection);
+        $selection = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('loc_index_thumbnails_selection', $selection);
         if (! is_array($selection)) {
             // A misbehaving plugin handler could return something else;
             // count() on a non-array/non-Countable is a fatal TypeError in
@@ -119,7 +119,7 @@ final readonly class CategoryDefaultRenderer
             'index_thumbnails' => 'thumbnails.tpl',
         ]);
 
-        trigger_notify('loc_begin_index_thumbnails', $pictures);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_index_thumbnails', $pictures);
         $tplThumbnailsVar = [];
 
         foreach ($pictures as $row) {
@@ -197,11 +197,11 @@ final readonly class CategoryDefaultRenderer
         $indexDeriv = is_string($indexDeriv) ? $indexDeriv : ImageStdParams::THUMB;
 
         $template->assign([
-            'derivative_params' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type($indexDeriv)),
+            'derivative_params' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_index_derivative_params', ImageStdParams::get_by_type($indexDeriv)),
             'maxRequests' => \Piwigo\Config\Config::maxRequests(),
             'SHOW_THUMBNAIL_CAPTION' => \Piwigo\Config\Config::showThumbnailCaption(),
         ]);
-        $tplThumbnailsVar = trigger_change('loc_end_index_thumbnails', $tplThumbnailsVar, $pictures);
+        $tplThumbnailsVar = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('loc_end_index_thumbnails', $tplThumbnailsVar, $pictures);
         $template->assign('thumbnails', $tplThumbnailsVar);
 
         $template->assign_var_from_handle('THUMBNAILS', 'index_thumbnails');

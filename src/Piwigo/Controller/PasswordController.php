@@ -90,7 +90,7 @@ final class PasswordController implements ControllerInterface
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
-        trigger_notify('loc_begin_password');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_password');
 
         new \Piwigo\Validation\InputValidator()
             ->validate('action', $_GET, false, '/^(lost|reset|lost_code|reset_end|none)$/');
@@ -258,7 +258,7 @@ final class PasswordController implements ControllerInterface
 
             new \Piwigo\Page\PageHeaderRenderer()
                 ->render($title);
-            trigger_notify('loc_end_password');
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_password');
             new HtmlService()
                 ->flushPageMessages();
             new HtmlService()

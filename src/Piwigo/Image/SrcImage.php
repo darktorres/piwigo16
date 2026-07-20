@@ -149,7 +149,7 @@ final class SrcImage
             $this->rel_path = \Piwigo\Image\ImagePathHelper::originalToRepresentative($path, $representative_ext);
         } else {
             $default_mimetype_location = self::themeConf('mime_icon_dir') . $ext . '.png';
-            $mimetype_location = trigger_change('get_mimetype_location', $default_mimetype_location, $ext);
+            $mimetype_location = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_mimetype_location', $default_mimetype_location, $ext);
             // trigger_change() hands the value through arbitrary registered
             // event handlers (mixed return); fall back to the pre-filter
             // location if a misbehaving handler returns a non-string.
@@ -208,7 +208,7 @@ final class SrcImage
     {
         $url = get_root_url() . $this->rel_path;
         if (! (bool) ($this->flags & self::IS_MIMETYPE)) {
-            $filtered_url = trigger_change('get_src_image_url', $url, $this);
+            $filtered_url = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_src_image_url', $url, $this);
             // trigger_change() hands the value through arbitrary registered
             // event handlers (mixed return); fall back to the pre-filter
             // url if a misbehaving handler returns a non-string.

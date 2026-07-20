@@ -198,7 +198,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     {
         $this->repo->deleteUser($userId);
         SessionService::get()->deleteUserSessions($userId);
-        trigger_notify('delete_user', $userId);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('delete_user', $userId);
         $this->activityLogger->record('user', $userId, 'delete');
     }
 
@@ -258,7 +258,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             }
         }
 
-        $errorsAfterTrigger = trigger_change(
+        $errorsAfterTrigger = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
             'register_user_check',
             $errors,
             [
@@ -312,7 +312,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $this->sendWelcomeEmail($login, $mailAddress);
         }
 
-        trigger_notify(
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify(
             'register_user',
             [
                 'id' => $userId,

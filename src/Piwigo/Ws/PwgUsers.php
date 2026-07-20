@@ -402,7 +402,7 @@ SELECT DISTINCT ';
         // whatever handler is registered for 'ws_users_getList'); narrow back
         // to the same array<int, array<string, mixed>> shape that was passed
         // in.
-        $users_after_trigger = trigger_change('ws_users_getList', $users);
+        $users_after_trigger = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('ws_users_getList', $users);
         $users = is_array($users_after_trigger) ? $users_after_trigger : $users;
         if ($params['per_page'] == 0 && empty($display_flags)) {
             $method_result = $users_id_arr;

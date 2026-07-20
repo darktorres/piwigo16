@@ -43,7 +43,7 @@ final class AboutController implements ControllerInterface
             $title = l10n('About Piwigo');
             \Piwigo\Core\PageState::current()->setBodyId('theAboutPage');
 
-            trigger_notify('loc_begin_about');
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_about');
 
             $template->set_filename('about', 'about.tpl');
 

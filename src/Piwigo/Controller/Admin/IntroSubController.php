@@ -276,7 +276,7 @@ SELECT COUNT(*)
             }
         }
 
-        trigger_notify('loc_end_intro');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_intro');
 
         // +-----------------------------------------------------------------------+
         // |                           get activity data                           |

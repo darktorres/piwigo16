@@ -518,7 +518,7 @@ final class NotificationByMailSender
                     }
 
                     $customizeMailContent =
-                      trigger_change('nbm_render_global_customize_mail_content', $customizeMailContent);
+                      \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('nbm_render_global_customize_mail_content', $customizeMailContent);
 
                     // Prepare message after change language
                     if ($isActionSend) {
@@ -614,7 +614,7 @@ final class NotificationByMailSender
                                 }
 
                                 $nbmUserCustomizeMailContent =
-                                  trigger_change(
+                                  \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                                       'nbm_render_user_customize_mail_content',
                                       $customizeMailContent,
                                       $nbmUser

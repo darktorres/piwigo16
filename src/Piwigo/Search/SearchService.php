@@ -813,7 +813,7 @@ final readonly class SearchService
 
                     break;
                 default:
-                    $clausesAfterHook = trigger_change('qsearch_get_images_sql_scopes', $clauses, $token, $expr);
+                    $clausesAfterHook = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('qsearch_get_images_sql_scopes', $clauses, $token, $expr);
                     $clauses = is_array($clausesAfterHook) ? array_values(array_filter($clausesAfterHook, is_string(...))) : $clauses;
 
                     break;
@@ -896,7 +896,7 @@ final readonly class SearchService
         $allTags = array_intersect_key($allTags, array_flip(array_diff($positiveIds, $notIds)));
         usort($allTags, $this->htmlRenderer->tagAlphaCompare(...));
         foreach ($allTags as &$tag) {
-            $tag['name'] = trigger_change('render_tag_name', $tag['name'], $tag);
+            $tag['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $tag['name'], $tag);
         }
 
         unset($tag);
@@ -1003,7 +1003,7 @@ final readonly class SearchService
         $allCats = array_intersect_key($allCats, array_flip(array_diff($positiveIds, $notIds)));
         usort($allCats, $this->htmlRenderer->tagAlphaCompare(...));
         foreach ($allCats as &$cat) {
-            $cat['name'] = trigger_change('render_category_name', $cat['name'], $cat);
+            $cat['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $cat['name'], $cat);
         }
 
         unset($cat);
@@ -1118,7 +1118,7 @@ final readonly class SearchService
         /** @var list<string> $debug */
         $debug = [];
 
-        $qAfterHook = trigger_change('qsearch_pre', $q);
+        $qAfterHook = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('qsearch_pre', $q);
         $q = is_string($qAfterHook) ? $qAfterHook : $q;
 
         $scopes = [];
@@ -1146,7 +1146,7 @@ final readonly class SearchService
         $scopes[] = new QDateRangeScope('created', $createdDateAliases, true);
         $scopes[] = new QDateRangeScope('posted', $postedDateAliases);
 
-        $scopesAfterHook = trigger_change('qsearch_get_scopes', $scopes);
+        $scopesAfterHook = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('qsearch_get_scopes', $scopes);
         $scopes = is_array($scopesAfterHook)
             ? array_values(array_filter($scopesAfterHook, static fn (mixed $s): bool => $s instanceof QSearchScope))
             : $scopes;
@@ -1175,7 +1175,7 @@ final readonly class SearchService
             }
         }
 
-        trigger_notify('qsearch_expression_parsed', $expression);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('qsearch_expression_parsed', $expression);
 
         if (count($expression->stokens) === 0) {
             $searchResults['debug'] = $debug;
@@ -1188,7 +1188,7 @@ final readonly class SearchService
         $this->qsearchGetCategories($expression, $qsr);
         $this->qsearchGetImages($expression, $qsr);
 
-        trigger_notify('qsearch_before_eval', $expression, $qsr);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('qsearch_before_eval', $expression, $qsr);
 
         $tmp = false;
         $unmatchedTerms = [];
@@ -1207,7 +1207,7 @@ final readonly class SearchService
 
         $searchResults['qs']['matching_tags'] = $qsr->all_tags;
         $searchResults['qs']['matching_cats'] = $qsr->all_cats;
-        $searchResultsAfterHook = trigger_change('qsearch_results', $searchResults, $expression, $qsr);
+        $searchResultsAfterHook = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('qsearch_results', $searchResults, $expression, $qsr);
         if (is_array($searchResultsAfterHook)) {
             foreach ($searchResultsAfterHook as $hookKey => $hookValue) {
                 if (is_string($hookKey)) {

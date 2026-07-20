@@ -626,7 +626,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
                 $href .= '?v' . ((bool) $combi->version ? $combi->version : AppInfo::VERSION);
             }
             // trigger the event for eventual use of a cdn
-            $href = trigger_change('combined_css', $href, $combi);
+            $href = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('combined_css', $href, $combi);
             if (! is_string($href)) {
                 throw new \Exception("flush(): a 'combined_css' event listener returned a non-string value");
             }
@@ -1043,7 +1043,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         // registers for 'combined_script', so $ret is always still a string
         // here, but a plugin listener could theoretically return something
         // else, which would be a plugin bug worth surfacing loudly
-        $ret = trigger_change('combined_script', $ret, $script);
+        $ret = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('combined_script', $ret, $script);
         if (! is_string($ret)) {
             throw new \Exception("make_script_src(): a 'combined_script' event listener returned a non-string value");
         }

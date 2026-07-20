@@ -289,7 +289,7 @@ final class ProfileFormHandler
 
                 $activity_details_tables[] = 'user_infos';
             }
-            trigger_notify('save_profile_from_post', $userdata['id']);
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('save_profile_from_post', $userdata['id']);
             self::activityService($conn)->record('user', $user_id, 'edit', [
                 'function' => __METHOD__,
                 'tables' => implode(',', $activity_details_tables),
@@ -400,7 +400,7 @@ SELECT
         $template->assign('API_EMAIL_INFOS', $email_notifications_infos);
 
         // allow plugins to add their own form data to content
-        trigger_notify('load_profile_in_template', $userdata);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('load_profile_in_template', $userdata);
 
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
     }

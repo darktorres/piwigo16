@@ -103,7 +103,7 @@ final class PluginsInstalledPageRenderer
 
         // --------------------------------------------------------Get the menu with the depreciated version
 
-        $plugin_menu_links_deprec = trigger_change('get_admin_plugin_menu_links', []);
+        $plugin_menu_links_deprec = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_admin_plugin_menu_links', []);
 
         $settings_url_for_plugin_deprec = [];
 

@@ -190,7 +190,7 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
             $plugin_links = [];
             // $plugin_links is array of array composed of U_HREF, U_HINT & U_CAPTION
             $plugin_links =
-              trigger_change(
+              \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                   'get_admins_site_links',
                   $plugin_links,
                   $id,

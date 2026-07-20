@@ -30,7 +30,7 @@ final class HelpPageRenderer
         $tabsheet->select($selected);
         $tabsheet->assign();
 
-        trigger_notify('loc_end_help');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_help');
 
         $template->set_filenames([
             'help' => 'help.tpl',

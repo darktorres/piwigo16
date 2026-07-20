@@ -31,7 +31,7 @@ final class TagsController implements ControllerInterface
     {
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        trigger_notify('loc_begin_tags');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_tags');
 
         $displayModeParam = $request->getQueryParams()['display_mode'] ?? null;
 
@@ -183,7 +183,7 @@ final class TagsController implements ControllerInterface
 
             new \Piwigo\Page\PageHeaderRenderer()
                 ->render($title);
-            trigger_notify('loc_end_tags');
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_tags');
             new HtmlService()
                 ->flushPageMessages();
             $template->pparse('tags');

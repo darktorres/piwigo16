@@ -199,7 +199,7 @@ SELECT id
                 ->logVisit($image_id_val, 'high', $format_id_val);
         }
 
-        trigger_notify('loc_action_before_http_headers');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_action_before_http_headers');
 
         $http_headers = [];
 

@@ -11,8 +11,8 @@ declare(strict_types=1);
 // CommentServiceTest.php (function_exists() guards mean whichever
 // Integration test file's stub loads first wins for the whole run, so
 // every file declaring these must keep the bodies identical).
-// trigger_change()/trigger_notify() are always available now via composer
-// autoload.files (src/Piwigo/PluginConfig/functions.php), pure
+// trigger_change()/trigger_notify() calls go directly through the real
+// Piwigo\PluginConfig\EventDispatcher::get() singleton now, pure
 // passthroughs with no handlers registered, so no local stubs are needed
 // for them anymore.
 //
@@ -33,8 +33,8 @@ namespace {
         define('PHPWG_ROOT_PATH', './');
     }
 
-    // trigger_change()/trigger_notify() are always available now via
-    // composer autoload.files (src/Piwigo/PluginConfig/functions.php), pure
+    // trigger_change()/trigger_notify() calls go directly through the real
+    // Piwigo\PluginConfig\EventDispatcher::get() singleton now, pure
     // passthroughs with no handlers registered, so no local stubs are
     // needed for them here.
 

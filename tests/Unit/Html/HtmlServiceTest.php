@@ -8,9 +8,9 @@ if (! defined('PHPWG_ROOT_PATH')) {
     define('PHPWG_ROOT_PATH', './');
 }
 
-// trigger_notify() is now always available (composer autoload.files,
-// src/Piwigo/PluginConfig/functions.php) and is a pure no-op with no
-// handlers registered, so no local stub is needed for it here anymore --
+// trigger_notify() calls go directly through the real
+// Piwigo\PluginConfig\EventDispatcher::get() singleton now, a pure no-op
+// with no handlers registered, so no local stub is needed for it here --
 // only get_name_from_file() (a separate not-yet-migrated free function)
 // still needs one, same "load standalone" pattern as PasswordHashTest.php's
 // own stubs.

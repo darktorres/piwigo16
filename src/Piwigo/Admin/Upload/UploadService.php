@@ -396,7 +396,7 @@ SELECT
 
         // handle the uploaded file type by potentially making a
         // pwg_representative file.
-        $representative_ext = trigger_change('upload_file', null, $file_path);
+        $representative_ext = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('upload_file', null, $file_path);
 
         // If it is set to either true (the file didn't need a
         // representative generated), false (the generation of the
@@ -545,7 +545,7 @@ SELECT
         // matters.
         HttpClientService::fetch($derivative_url);
 
-        trigger_notify('loc_end_add_uploaded_file', $image_infos);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_add_uploaded_file', $image_infos);
 
         return $image_id;
     }
@@ -757,7 +757,7 @@ SELECT
         $format_infos = $insert;
         $format_infos['format_id'] = $format_id;
 
-        trigger_notify('loc_end_add_format', $format_infos);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_add_format', $format_infos);
 
         return $add_status;
     }

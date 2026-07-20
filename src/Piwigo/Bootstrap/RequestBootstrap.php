@@ -416,7 +416,7 @@ final class RequestBootstrap
             // Add language for temporary strings for new popup, from piwigo 15
             Lang::load('whats_new_' . \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
         }
-        trigger_notify('loading_lang');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loading_lang');
         Lang::load('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
             'no_fallback' => true,
             'local' => true,
@@ -565,12 +565,12 @@ final class RequestBootstrap
         }
 
         // default event handlers
-        add_event_handler('render_category_literal_description', new HtmlService()->renderCategoryLiteralDescription(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_category_literal_description', new HtmlService()->renderCategoryLiteralDescription(...));
         if (! \Piwigo\Config\Config::allowHtmlDescriptions()) {
-            add_event_handler('render_category_description', new HtmlService()->pwgNl2br(...));
+            \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_category_description', new HtmlService()->pwgNl2br(...));
         }
-        add_event_handler('render_comment_content', new HtmlService()->renderCommentContent(...));
-        add_event_handler('render_comment_author', 'strip_tags');
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_comment_content', new HtmlService()->renderCommentContent(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_comment_author', 'strip_tags');
         // Was registered as the bare string 'str2url' -- dead since some earlier
         // phase migrated the global function to StringHelper::str2url() without
         // updating this one string-literal reference (add_event_handler() doesn't
@@ -580,8 +580,8 @@ final class RequestBootstrap
         // is not callable" -- every prior tag-creation activity-log row in the
         // fixture is static SQL data, never actually round-tripped through this
         // handler.
-        add_event_handler('render_tag_url', StringHelper::str2url(...));
-        add_event_handler('blockmanager_register_blocks', new HtmlService()->registerDefaultMenubarBlocks(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_tag_url', StringHelper::str2url(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('blockmanager_register_blocks', new HtmlService()->registerDefaultMenubarBlocks(...));
         // Relocated from include/functions_comment.inc.php (deleted, P23 batch 8c)
         // -- that file's own top-level add_event_handler() call only ever ran via
         // its include_once at each real caller, all of which now construct
@@ -590,14 +590,14 @@ final class RequestBootstrap
         // (unlike UploadService's static upload_file handlers below), hence the
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
-        add_event_handler('user_comment_check', new CommentService(new CommentRepository($conn), new EphemeralKeyService(), new MailService(), new HtmlService())->checkForSpam(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('user_comment_check', new CommentService(new CommentRepository($conn), new EphemeralKeyService(), new MailService(), new HtmlService())->checkForSpam(...));
         // Relocated from include/functions_user.inc.php (deleted, P23 batch 8d) --
         // same reasoning as user_comment_check above: every real caller of
         // AuthService::tryLogUser() now constructs AuthService directly instead of
         // including the old file, so this registration has to live somewhere that
         // always executes. pwgLogin() is a bound instance method, same
         // first-class-callable shape as checkForSpam() above.
-        add_event_handler('try_log_user', new AuthService(
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('try_log_user', new AuthService(
             new AuthRepository($conn),
             self::activityService($conn),
             new HtmlService(),
@@ -616,19 +616,19 @@ final class RequestBootstrap
         // dead-but-harmless registration, already documented in
         // Piwigo\PluginConfig\EventDispatcher's own class docblock. Preserved
         // unchanged rather than "fixed", per that same documented decision.
-        add_event_handler('upload_image_resize', 'pwg_image_resize');
-        add_event_handler('upload_thumbnail_resize', 'pwg_image_resize');
-        add_event_handler('upload_file', UploadService::uploadFilePdf(...));
-        add_event_handler('upload_file', UploadService::uploadFileHeic(...));
-        add_event_handler('upload_file', UploadService::uploadFileTiff(...));
-        add_event_handler('upload_file', UploadService::uploadFileVideo(...));
-        add_event_handler('upload_file', UploadService::uploadFilePsd(...));
-        add_event_handler('upload_file', UploadService::uploadFileEps(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_image_resize', 'pwg_image_resize');
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_thumbnail_resize', 'pwg_image_resize');
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFilePdf(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFileHeic(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFileTiff(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFileVideo(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFilePsd(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFileEps(...));
         if (! empty(\Piwigo\Config\Config::originalUrlProtection())) {
-            add_event_handler('get_element_url', new HtmlService()->getElementUrlProtectionHandler(...));
-            add_event_handler('get_src_image_url', new HtmlService()->getSrcImageUrlProtectionHandler(...));
+            \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('get_element_url', new HtmlService()->getElementUrlProtectionHandler(...));
+            \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('get_src_image_url', new HtmlService()->getSrcImageUrlProtectionHandler(...));
         }
-        trigger_notify('init');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('init');
     }
 
     /**

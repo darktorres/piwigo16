@@ -40,7 +40,7 @@ class BlockManager
      */
     public function load_registered_blocks(): void
     {
-        trigger_notify('blockmanager_register_blocks', [$this]);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('blockmanager_register_blocks', [$this]);
     }
 
     /**
@@ -100,7 +100,7 @@ class BlockManager
             $idx++;
         }
         $this->sort_blocks();
-        trigger_notify('blockmanager_prepare_display', [$this]);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('blockmanager_prepare_display', [$this]);
         $this->sort_blocks();
     }
 
@@ -175,7 +175,7 @@ class BlockManager
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $template->set_filename('menubar', $file);
-        trigger_notify('blockmanager_apply', [$this]);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('blockmanager_apply', [$this]);
 
         foreach ($this->display_blocks as $id => $block) {
             if (empty($block->raw_content) and empty($block->template)) {

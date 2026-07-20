@@ -970,7 +970,7 @@ SELECT rules
         // trigger_change()'s return type is genuinely mixed (it dispatches
         // to whatever handler is registered for 'get_history'); narrow to the
         // list of row-arrays that historyGet() actually returns.
-        $data = trigger_change('get_history', [], $page['search'], $types);
+        $data = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_history', [], $page['search'], $types);
         if (! is_array($data)) {
             $data = [];
         }
@@ -1164,7 +1164,7 @@ SELECT
                 if (! is_scalar($row['id'])) {
                     continue;
                 }
-                $name_of_tag[(string) $row['id']] = trigger_change('render_tag_name', $row['name'], $row);
+                $name_of_tag[(string) $row['id']] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $row['name'], $row);
             }
         }
 
@@ -1306,7 +1306,7 @@ SELECT
                 $image_title = '';
 
                 if (isset($image_infos[$line_image_id]['label'])) {
-                    $rendered_label = trigger_change('render_element_description', $image_infos[$line_image_id]['label']);
+                    $rendered_label = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_description', $image_infos[$line_image_id]['label']);
                     $image_title .= ' ' . (is_string($rendered_label) ? $rendered_label : '');
                 } else {
                     $image_edit_string = '';

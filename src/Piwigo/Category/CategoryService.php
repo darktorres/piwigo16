@@ -227,7 +227,7 @@ final readonly class CategoryService
     public function getPreferredImageOrders(): array
     {
 
-        $orders = trigger_change('get_category_preferred_image_orders', [
+        $orders = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_category_preferred_image_orders', [
             [l10n('Default'), '', true],
             [l10n('Photo title, A &rarr; Z'), 'name ASC', true],
             [l10n('Photo title, Z &rarr; A'), 'name DESC', true],
@@ -586,7 +586,7 @@ final readonly class CategoryService
 
             $globalRank = $cat['global_rank'];
             $cats[$idx]['LEVEL'] = substr_count(is_scalar($globalRank) ? (string) $globalRank : '', '.') + 1;
-            $cats[$idx]['name'] = trigger_change('render_category_name', $cat['name'], $cat);
+            $cats[$idx]['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $cat['name'], $cat);
 
             if ($catIdIsKeyable && isset($commonCats[$catId])) {
                 $cats[$idx]['count_images'] = $commonCats[$catId]['counter'];
@@ -725,7 +725,7 @@ final readonly class CategoryService
             $row = array_merge(
                 $row,
                 [
-                    'NAME' => trigger_change(
+                    'NAME' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                         'render_category_name',
                         $row['name'],
                         'get_categories_menu'
@@ -802,7 +802,7 @@ final readonly class CategoryService
                     (3 * substr_count(is_string($globalRank) ? $globalRank : '', '.'))
                 );
                 $option .= '- ';
-                $renderedName = trigger_change(
+                $renderedName = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                     'render_category_name',
                     $category['name'],
                     'display_select_categories'
@@ -965,7 +965,7 @@ final readonly class CategoryService
         $this->repo->deleteOldPermalinksForCategories($ids);
         $this->repo->deleteUserCacheCategoriesForCategories($ids);
 
-        trigger_notify('delete_categories', $ids);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('delete_categories', $ids);
         $activityLogger->record('album', $ids, 'delete', [
             'photo_deletion_mode' => $photoDeletionMode,
         ]);
@@ -1697,7 +1697,7 @@ final readonly class CategoryService
             $this->permissionService->addPermissionOnCategory((int) $insertedId, array_unique(array_merge($adminIds, [$currentUserId])));
         }
 
-        trigger_notify('create_virtual_category', array_merge([
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('create_virtual_category', array_merge([
             'id' => $insertedId,
         ], $insert));
         $activityLogger->record('album', $insertedId, 'add');

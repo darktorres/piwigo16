@@ -467,7 +467,7 @@ LIMIT 1
         $image_row = array_merge($image_row, WsHelper::stdGetUrls($image_row));
 
         $image_row['name_raw'] = $image_row['name'];
-        $rendered_name = trigger_change(
+        $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
             'render_element_name',
             $image_row['name'],
             __FUNCTION__
@@ -475,7 +475,7 @@ LIMIT 1
         $image_row['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
 
         $image_row['comment_raw'] = $image_row['comment'];
-        $image_row['comment'] = trigger_change(
+        $image_row['comment'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
             'render_element_description',
             $image_row['comment'],
             __FUNCTION__
@@ -516,7 +516,7 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
 
             $row['id'] = is_numeric($row['id']) ? (int) $row['id'] : 0;
 
-            $rendered_category_name = trigger_change(
+            $rendered_category_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                 'render_category_name',
                 $row['name'],
                 __FUNCTION__
@@ -792,9 +792,9 @@ SELECT *
                     $image[$k] = $row[$k];
                 }
 
-                $rendered_image_name = trigger_change('render_element_name', $image['name'], __FUNCTION__);
+                $rendered_image_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_name', $image['name'], __FUNCTION__);
                 $image['name'] = strip_tags(is_string($rendered_image_name) ? $rendered_image_name : '');
-                $image['comment'] = trigger_change('render_element_description', $image['comment'], __FUNCTION__);
+                $image['comment'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_description', $image['comment'], __FUNCTION__);
 
                 $image = array_merge($image, WsHelper::stdGetUrls($row));
                 assert(is_int($image['id']));
@@ -2880,7 +2880,7 @@ SELECT
         $category_name = new HtmlService()
             ->getCatDisplayNameFromId($params['category_id'], null);
 
-        trigger_notify(
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify(
             'ws_images_uploadCompleted',
             [
                 'image_ids' => $image_ids,

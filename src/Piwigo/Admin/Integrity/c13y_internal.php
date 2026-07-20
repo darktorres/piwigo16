@@ -31,9 +31,9 @@ class c13y_internal
 {
     public function __construct()
     {
-        add_event_handler('list_check_integrity', $this->c13y_version(...));
-        add_event_handler('list_check_integrity', $this->c13y_exif(...));
-        add_event_handler('list_check_integrity', $this->c13y_user(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('list_check_integrity', $this->c13y_version(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('list_check_integrity', $this->c13y_exif(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('list_check_integrity', $this->c13y_user(...));
     }
 
     private static function userService(Connection $conn): UserService

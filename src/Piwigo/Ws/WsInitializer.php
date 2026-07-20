@@ -45,8 +45,8 @@ final class WsInitializer
         // ws_default_methods.inc.php, include_once'd by WsController before
         // this ran); first-class-callable, same pattern as the 2
         // registrations below it.
-        add_event_handler('ws_add_methods', WsDefaultMethods::register(...));
-        add_event_handler('ws_invoke_allowed', WsHelper::isInvokeAllowed(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('ws_add_methods', WsDefaultMethods::register(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('ws_invoke_allowed', WsHelper::isInvokeAllowed(...));
         // P23 batch 8e-4: relocated from include/ws_functions/pwg.php's own
         // top-level add_event_handler('get_history', 'get_history') call --
         // that file's lazy include_once (right before PwgServer::invoke()
@@ -55,7 +55,7 @@ final class WsInitializer
         // call could fire; now that pwg.php's functions are class methods
         // (autoloaded, no include-time side effect to hook this to), it
         // registers here instead, unconditionally, once per WS request.
-        add_event_handler('get_history', PwgCore::historyGet(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('get_history', PwgCore::historyGet(...));
 
         $requestFormat = 'rest';
         $responseFormat = null;

@@ -80,7 +80,7 @@ final readonly class TagService
         $tags = [];
         foreach ($this->repo->findAll() as $row) {
             $row['name_raw'] = $row['name'];
-            $row['name'] = trigger_change('render_tag_name', $row['name'], $row);
+            $row['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $row['name'], $row);
             $tags[] = $row;
         }
 
@@ -234,7 +234,7 @@ final readonly class TagService
             }
             $row['counter'] = $tagCounters[$id];
             $row['name_raw'] = $row['name'];
-            $row['name'] = trigger_change('render_tag_name', $row['name'], $row);
+            $row['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $row['name'], $row);
             $tags[] = $row;
         }
 
@@ -328,7 +328,7 @@ final readonly class TagService
 
         $tags = [];
         foreach ($this->repo->findCommonTags($items, $maxTags, $excludedTagIds) as $row) {
-            $row['name'] = trigger_change('render_tag_name', $row['name'], $row);
+            $row['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $row['name'], $row);
             $tags[] = $row;
         }
 
@@ -435,7 +435,7 @@ final readonly class TagService
         $this->repo->deleteImageTagByTagIds($tagIds);
         $this->repo->deleteByIds($tagIds);
 
-        trigger_notify('delete_tags', $tagIds);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('delete_tags', $tagIds);
         $this->activityLogger->record('tag', $tagIds, 'delete');
 
         $this->newImageService()
@@ -459,7 +459,7 @@ final readonly class TagService
         $existingId = $this->repo->findIdByName($tagName);
 
         if ($existingId === null) {
-            $urlName = trigger_change('render_tag_url', $tagName);
+            $urlName = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_url', $tagName);
             if (! is_string($urlName)) {
                 // a misbehaving plugin handler could return a non-string; fall
                 // back to the untransformed tag name rather than propagate it.
@@ -471,7 +471,7 @@ final readonly class TagService
 
             if ($existingId === null) {
                 // search by extended description (plugin sub name)
-                $subNameWhere = trigger_change('get_tag_name_like_where', [], $tagName);
+                $subNameWhere = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_tag_name_like_where', [], $tagName);
                 $subNameWhere = is_array($subNameWhere) ? array_filter($subNameWhere, is_string(...)) : [];
                 if ($subNameWhere !== []) {
                     $existingId = $this->repo->findIdByWhereFragment(implode(' OR ', $subNameWhere));
@@ -602,7 +602,7 @@ final readonly class TagService
 
         // does the tag already exist?
         if ($this->repo->findIdByName($tagName) === null) {
-            $urlName = trigger_change('render_tag_url', $tagName);
+            $urlName = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_url', $tagName);
             // a misbehaving plugin handler could return a non-string; fall
             // back to the untransformed tag name rather than propagate it
             // (same guard as tagIdFromTagName()'s own url_name resolution).
@@ -638,7 +638,7 @@ final readonly class TagService
 
         foreach ($this->repo->fetchTagListRows($query) as $row) {
             $rawName = $row['name'];
-            $name = trigger_change('render_tag_name', $rawName, $row);
+            $name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $rawName, $row);
             $rowId = is_scalar($row['id']) ? (string) $row['id'] : '';
 
             $taglist[] = [
@@ -647,7 +647,7 @@ final readonly class TagService
             ];
 
             if (! $onlyUserLanguage) {
-                $altNames = trigger_change('get_tag_alt_names', [], $rawName);
+                $altNames = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_tag_alt_names', [], $rawName);
                 $altNames = is_array($altNames) ? array_filter($altNames, is_string(...)) : [];
                 $nameForDiff = is_scalar($name) ? (string) $name : '';
 

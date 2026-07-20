@@ -94,7 +94,7 @@ final class AdminPopuphelpController implements ControllerInterface
                 $help_content = '';
             }
 
-            $help_content = trigger_change('get_popup_help_content', $help_content, $rawPage);
+            $help_content = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_popup_help_content', $help_content, $rawPage);
             if (! is_string($help_content)) {
                 $help_content = '';
             }

@@ -108,7 +108,7 @@ final readonly class RateService
      */
     public function updateRatingScore(int|false $elementId = false): array
     {
-        $altResult = trigger_change('update_rating_score', false, $elementId);
+        $altResult = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('update_rating_score', false, $elementId);
         if ($altResult !== false && is_array($altResult)) {
             /** @var array<string, mixed> $altResult */
             return $altResult;

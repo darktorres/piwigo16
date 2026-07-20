@@ -61,7 +61,7 @@ final class TagsPageRenderer
         $orphan_tag_names_array = '[]';
         $orphan_tag_names = [];
         foreach ($orphan_tags as $tag) {
-            $orphan_tag_names[] = trigger_change('render_tag_name', $tag['name'], $tag);
+            $orphan_tag_names[] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $tag['name'], $tag);
         }
         $orphan_tag_names = array_filter($orphan_tag_names, is_string(...));
 
@@ -120,7 +120,7 @@ SELECT name, id, url_name
             $raw_name = $tag['name'];
             $tag['raw_name'] = $raw_name;
             $raw_name_str = is_scalar($raw_name) ? (string) $raw_name : '';
-            $rendered_name = trigger_change('render_tag_name', $raw_name, $tag);
+            $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $raw_name, $tag);
             $rendered_name = is_string($rendered_name) ? $rendered_name : $raw_name_str;
             $tag['name'] = $rendered_name;
 
@@ -136,7 +136,7 @@ SELECT name, id, url_name
                 $tag['counter'] = $counter;
             }
 
-            $alt_names = trigger_change('get_tag_alt_names', [], $raw_name);
+            $alt_names = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_tag_alt_names', [], $raw_name);
             $alt_names = is_array($alt_names) ? array_filter($alt_names, is_string(...)) : [];
             $alt_names = array_diff(array_unique($alt_names), [$rendered_name]);
             if (count($alt_names) > 0) {

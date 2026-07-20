@@ -254,7 +254,7 @@ final readonly class SectionPopulator
                 $page = array_merge(
                     $page,
                     [
-                        'comment' => trigger_change(
+                        'comment' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                             'render_category_description',
                             $page_category['comment'],
                             'main_page_category_description'
@@ -818,7 +818,7 @@ SELECT id
 
         SectionContextRegistry::set(self::buildSectionContext($page));
 
-        trigger_notify('loc_end_section_init');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_section_init');
     }
 
     /**

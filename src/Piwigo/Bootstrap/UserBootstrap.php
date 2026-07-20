@@ -210,7 +210,7 @@ final class UserBootstrap
                 \Piwigo\Users\CurrentUser::updateLanguage($language);
             }
         }
-        trigger_notify('user_init', $user);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('user_init', $user);
     }
 
     /**

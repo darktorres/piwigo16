@@ -65,9 +65,9 @@ final class AdminShell
         $template = \Piwigo\Template\CurrentTemplate::get();
         $conn = DbConnection::build();
 
-        add_event_handler('tabsheet_before_select', CoreTabs::addCoreTabs(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('tabsheet_before_select', CoreTabs::addCoreTabs(...));
 
-        trigger_notify('loc_begin_admin');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_admin');
 
         // +-------------------------------------------------------------------+
         // | Check Access and exit when user status is not ok                  |
@@ -464,7 +464,7 @@ SELECT COUNT(*)
         // | Include specific page                                             |
         // +-------------------------------------------------------------------+
 
-        trigger_notify('loc_begin_admin_page');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_admin_page');
 
         // SEC-19: sub-controllers read input from this PSR-7 request
         // (getQueryParams()/getParsedBody()), not $_GET/$_POST directly.
@@ -482,7 +482,7 @@ SELECT COUNT(*)
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title);
 
-        trigger_notify('loc_end_admin');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_admin');
 
         new HtmlService()
             ->flushPageMessages();

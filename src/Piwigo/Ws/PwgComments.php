@@ -207,10 +207,10 @@ SELECT
                 'medium_url' => $medium,
                 'file' => $row['file'],
                 'image_date_available' => \Piwigo\Core\DateHelper::formatDate($comment_date_available, ['day_name', 'day', 'month', 'year', 'time']),
-                'author' => trigger_change('render_comment_author', $author_name),
+                'author' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_author', $author_name),
                 'author_status' => is_numeric($row['author_id']) && \Piwigo\Config\Config::webmasterId() === (int) $row['author_id'] ? 'main_user' : $row['status'],
                 'date' => \Piwigo\Core\DateHelper::formatDate($comment_date, ['day_name', 'day', 'month', 'year', 'time']),
-                'content' => trigger_change('render_comment_content', $row['content']),
+                'content' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_content', $row['content']),
                 'raw_content' => $row['content'],
                 'is_pending' => is_string($row['validated']) && $row['validated'] === 'false',
             ];

@@ -36,7 +36,7 @@ final class UserCacheInvalidator
         }
         $persistent_cache->purge(true);
         \Piwigo\Config\ConfigDb::confDeleteParam('count_orphans');
-        trigger_notify('invalidate_user_cache', $full);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('invalidate_user_cache', $full);
     }
 
     /**

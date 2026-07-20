@@ -266,7 +266,7 @@ final readonly class GroupService
         }
 
         $ids = array_keys($deleted);
-        trigger_notify('delete_group', $ids);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('delete_group', $ids);
         $this->activityLogger->record('group', $ids, 'delete');
 
         // [SEC-57] one row per group actually deleted

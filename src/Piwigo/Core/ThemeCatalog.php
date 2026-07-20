@@ -59,7 +59,7 @@ SELECT
         }
 
         // plugins want remove some themes based on user status maybe?
-        $themes = trigger_change('get_pwg_themes', $themes);
+        $themes = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_pwg_themes', $themes);
         if (! is_array($themes)) {
             return [];
         }

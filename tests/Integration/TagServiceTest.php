@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-// getAllTags() calls the real trigger_change() -- always available now via
-// composer autoload.files (src/Piwigo/PluginConfig/functions.php), a pure
-// passthrough with no handlers registered, so no local stub is needed.
+// getAllTags() calls the real Piwigo\PluginConfig\EventDispatcher::get()->
+// triggerChange() directly, a pure passthrough with no handlers
+// registered, so no local stub is needed.
 namespace {
     // Also stubbed: the real tag_alpha_compare() (functions_html.inc.php)
     // delegates to Piwigo\Html\HtmlService::tagAlphaCompare(), which needs

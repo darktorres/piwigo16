@@ -91,7 +91,7 @@ final readonly class MetadataService
         if ((bool) preg_match('/[\x80-\xff]/', $value)) {
             // apparently mac uses some MacRoman crap encoding -- no
             // reliable way to detect it, a plugin should do the trick.
-            $changedValue = trigger_change('clean_iptc_value', $value);
+            $changedValue = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('clean_iptc_value', $value);
             if (is_string($changedValue)) {
                 $value = $changedValue;
             }
@@ -147,13 +147,13 @@ final readonly class MetadataService
         $exif = in_array($extension, ['jpg', 'jpeg', 'tif', 'tiff'], true)
             ? exif_read_data($filename)
             : false;
-        $exif2 = (bool) $exif ? null : trigger_change('format_exif_data', null, $filename, $map);
+        $exif2 = (bool) $exif ? null : \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('format_exif_data', null, $filename, $map);
 
         if ((bool) $exif || (bool) $exif2) {
             if ((bool) $exif2) {
                 $exif = $exif2;
             } else {
-                $exif = trigger_change('format_exif_data', $exif, $filename, $map);
+                $exif = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('format_exif_data', $exif, $filename, $map);
             }
 
             if (! is_array($exif)) {

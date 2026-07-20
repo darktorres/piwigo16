@@ -199,7 +199,7 @@ SELECT id
             }
 
             $pre_hook_data = $data;
-            $data = trigger_change('picture_modify_before_update', $data);
+            $data = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('picture_modify_before_update', $data);
             if (! is_array($data)) {
                 // 'picture_modify_before_update' handlers are documented to filter
                 // the array<string, mixed> $data they receive and return the same
@@ -597,7 +597,7 @@ SELECT id
                 ->getToken(),
         ]);
 
-        trigger_notify('loc_end_picture_modify');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_picture_modify');
 
         // ----------------------------------------------------------- sending html code
         $template->assign_var_from_handle('ADMIN_CONTENT', 'picture_modify');

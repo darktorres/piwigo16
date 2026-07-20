@@ -255,7 +255,7 @@ final readonly class CommentService
         }
 
         // perform more spam check
-        $result = trigger_change('user_comment_check', $commentAction, $comm);
+        $result = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('user_comment_check', $commentAction, $comm);
         // handlers of the user_comment_check event contract MUST return a
         // string (validate/moderate/reject); fail closed if a handler
         // misbehaves
@@ -337,7 +337,7 @@ final readonly class CommentService
             'comment_id' => $commentId,
         ]);
 
-        trigger_notify('user_comment_deletion', $commentId);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('user_comment_deletion', $commentId);
 
         return true;
     }
@@ -370,7 +370,7 @@ final readonly class CommentService
         }
 
         // perform more spam check
-        $result = trigger_change(
+        $result = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
             'user_comment_check',
             $commentAction,
             array_merge($comment, [
@@ -511,7 +511,7 @@ final readonly class CommentService
 
         $this->repo->validate($ids);
         $this->invalidateNbCommentsCache();
-        trigger_notify('user_comment_validation', $commentId);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('user_comment_validation', $commentId);
     }
 
     /**

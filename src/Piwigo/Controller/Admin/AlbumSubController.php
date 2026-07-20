@@ -66,7 +66,7 @@ SELECT *
         $tabsheet->select($tab);
         $tabsheet->assign();
 
-        $category_name = trigger_change('render_category_name', $category['name'], 'get_cat_display_name_cache');
+        $category_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $category['name'], 'get_cat_display_name_cache');
         if (! is_string($category_name)) {
             $category_name = is_string($category['name']) ? $category['name'] : '';
         }

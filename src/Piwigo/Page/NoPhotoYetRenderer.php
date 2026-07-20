@@ -93,7 +93,7 @@ final readonly class NoPhotoYetRenderer
                     );
                 }
 
-                trigger_notify('loc_end_no_photo_yet');
+                \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_no_photo_yet');
 
                 $template->pparse('no_photo_yet');
                 exit();

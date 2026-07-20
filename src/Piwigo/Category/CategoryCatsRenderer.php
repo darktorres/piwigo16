@@ -310,7 +310,7 @@ final readonly class CategoryCatsRenderer
 
             $template->set_filename('index_category_thumbnails', 'mainpage_categories.tpl');
 
-            trigger_notify('loc_begin_index_category_thumbnails', $categories);
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_index_category_thumbnails', $categories);
 
             $tplThumbnailsVar = [];
 
@@ -320,7 +320,7 @@ final readonly class CategoryCatsRenderer
                     continue;
                 }
 
-                $renderedCategoryName = trigger_change(
+                $renderedCategoryName = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                     'render_category_name',
                     $category['name'],
                     'subcatify_category_name'
@@ -370,9 +370,9 @@ final readonly class CategoryCatsRenderer
                         true,
                         '<br>'
                     ),
-                    'DESCRIPTION' => trigger_change(
+                    'DESCRIPTION' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                         'render_category_literal_description',
-                        trigger_change(
+                        \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                             'render_category_description',
                             $category['comment'] ?? null,
                             'subcatify_category_description'
@@ -409,8 +409,8 @@ final readonly class CategoryCatsRenderer
             // pagination
             $tplThumbnailsVarSelection = $tplThumbnailsVar;
 
-            $derivativeParams = trigger_change('get_index_album_derivative_params', ImageStdParams::get_by_type(ImageStdParams::THUMB));
-            $tplThumbnailsVarSelection = trigger_change('loc_end_index_category_thumbnails', $tplThumbnailsVarSelection);
+            $derivativeParams = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_index_album_derivative_params', ImageStdParams::get_by_type(ImageStdParams::THUMB));
+            $tplThumbnailsVarSelection = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('loc_end_index_category_thumbnails', $tplThumbnailsVarSelection);
             $template->assign([
                 'maxRequests' => \Piwigo\Config\Config::maxRequests(),
                 'category_thumbnails' => $tplThumbnailsVarSelection,

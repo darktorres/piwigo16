@@ -71,7 +71,7 @@ final class PopuphelpController implements ControllerInterface
                 $help_content = '';
             }
 
-            $help_content = trigger_change(
+            $help_content = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                 'get_popup_help_content',
                 $help_content,
                 $rawPage

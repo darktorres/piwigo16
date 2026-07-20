@@ -440,6 +440,30 @@ test('src/Piwigo/ contains no global $filter/$pwg_loaded_plugins/$template/$page
     expect(describeCallSites($hits))->toBe([]);
 });
 
+test('src/Piwigo/ contains no bare add_event_handler()/trigger_change()/trigger_notify() calls', function (): void {
+    // Phase 3 event dispatch retarget sweep (2026-07-19): the free-function
+    // bridge (src/Piwigo/PluginConfig/functions.php, a pure 1-line
+    // delegate to EventDispatcher::get()) is deleted -- all 241 real call
+    // sites across 84 files now call
+    // Piwigo\PluginConfig\EventDispatcher::get()->
+    // {addEventHandler,triggerChange,triggerNotify}() directly. Needed a
+    // deptrac.yaml layer split first (EventDispatcher moved
+    // L2bExtendedDomain -> L1Infrastructure, split from its namespace-mate
+    // PluginRepository) since 14 real callers live in L1Infrastructure/
+    // L2aCoreDomain, which the untracked free-function form had been
+    // hiding from deptrac. Zero-tolerance, no allowlist needed -- same
+    // shape as the test above.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'add_event_handler('),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'trigger_change('),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'trigger_notify('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
 /**
  * die() and exit() -- with or without parens/arguments -- both tokenize
  * as T_EXIT, so this catches every real call site (unlike a substring

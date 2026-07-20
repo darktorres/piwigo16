@@ -40,7 +40,7 @@ final class NbmController implements ControllerInterface
         // Translations are in the admin file too.
         Lang::load('admin.lang');
         // Need to update a second time.
-        trigger_notify('loading_lang');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loading_lang');
         Lang::load('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
             'no_fallback' => true,
             'local' => true,

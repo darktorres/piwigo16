@@ -218,9 +218,9 @@ SELECT *
                     $image[$k] = $row[$k];
                 }
 
-                $rendered_name = trigger_change('render_element_name', $image['name'], __FUNCTION__);
+                $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_name', $image['name'], __FUNCTION__);
                 $image['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
-                $image['comment'] = trigger_change('render_element_description', $image['comment'], __FUNCTION__);
+                $image['comment'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_description', $image['comment'], __FUNCTION__);
 
                 $image = array_merge($image, WsHelper::stdGetUrls($row));
 
@@ -400,7 +400,7 @@ SELECT name
             // Bootstrap\UserBootstrap's HTTP_X_PIWIGO_API fix (Phase 1d).
             $update = [
                 'name' => $tag_name,
-                'url_name' => trigger_change('render_tag_url', $tag_name),
+                'url_name' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_url', $tag_name),
             ];
 
         }
@@ -428,8 +428,8 @@ SELECT
         $tag = $conn->fetchAssociative($query);
         assert($tag !== false);
         $tag['raw_name'] = $tag['name'];
-        $tag['name'] = trigger_change('render_tag_name', $tag['raw_name'], $tag);
-        $tag['alt_names'] = trigger_change('get_tag_alt_names', [], $tag['raw_name']);
+        $tag['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $tag['raw_name'], $tag);
+        $tag['alt_names'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_tag_alt_names', [], $tag['raw_name']);
         return $tag;
     }
 
@@ -480,7 +480,7 @@ SELECT COUNT(*)
                 Tables::tags(),
                 [
                     'name' => $copy_name,
-                    'url_name' => trigger_change('render_tag_url', $copy_name),
+                    'url_name' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_url', $copy_name),
                 ]
             );
         $destination_tag_id = (int) $conn->lastInsertId();
@@ -522,7 +522,7 @@ SELECT image_id
         return [
             'id' => $destination_tag_id,
             'name' => $copy_name,
-            'url_name' => trigger_change('render_tag_url', $copy_name),
+            'url_name' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_url', $copy_name),
             'count' => count($inserts),
         ];
     }
@@ -604,7 +604,7 @@ SELECT image_id
             ]);
         }
 
-        trigger_notify('merge_tags', $params['destination_tag_id'], $merge_tag);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('merge_tags', $params['destination_tag_id'], $merge_tag);
 
         self::tagService()->deleteTags($merge_tag);
 

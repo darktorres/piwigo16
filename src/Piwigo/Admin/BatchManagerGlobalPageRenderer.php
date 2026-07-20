@@ -78,7 +78,7 @@ final class BatchManagerGlobalPageRenderer
                 ->checkOrFail(new HtmlService());
         }
 
-        trigger_notify('loc_begin_element_set_global');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_element_set_global');
 
         new \Piwigo\Validation\InputValidator()
             ->validate('del_tags', $_POST, true, ValidationPattern::ID);
@@ -492,7 +492,7 @@ DELETE
                 UserCacheInvalidator::invalidate();
             }
 
-            trigger_notify('element_set_global_action', $action, $collection);
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('element_set_global_action', $action, $collection);
 
             if ($redirect) {
                 redirect($redirect_url);
@@ -689,7 +689,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['tags', 'categories']),
         ]);
 
-        trigger_notify('loc_end_element_set_global');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_element_set_global');
 
         // ----------------------------------------------------------- sending html code
         $template->assign_var_from_handle('ADMIN_CONTENT', 'batch_manager_global');

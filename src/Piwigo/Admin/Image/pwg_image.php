@@ -51,7 +51,7 @@ class pwg_image
         ?string $library = null
     ) {
 
-        trigger_notify('load_image_library', [&$this]);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('load_image_library', [&$this]);
 
         if (is_object($this->image)) {
             return; // A plugin may have load its own library

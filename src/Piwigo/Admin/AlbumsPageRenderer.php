@@ -177,7 +177,7 @@ SELECT id, name, id_uppercat
   WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
             foreach ($conn->fetchAllAssociative($query) as $cat_row) {
-                $rendered_name = trigger_change('render_category_name', $cat_row['name'], 'admin_cat_list');
+                $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $cat_row['name'], 'admin_cat_list');
                 $cat_row['name'] = is_string($rendered_name) ? $rendered_name : $cat_row['name'];
 
                 if ($order_by_date) {
@@ -271,7 +271,7 @@ SELECT id,name,`rank`,status, visible, uppercats, lastmodified
                 /** @var array<string, mixed> $the_place */
             }
 
-            $rendered_name = trigger_change('render_category_name', $album['name'], 'admin_cat_list');
+            $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $album['name'], 'admin_cat_list');
             $album['name'] = is_string($rendered_name) ? $rendered_name : $album['name'];
             $album_lastmodified = $album['lastmodified'];
             $album['lastmodified'] = \Piwigo\Core\DateHelper::timeSince(is_scalar($album_lastmodified) ? (string) $album_lastmodified : '', 'year');

@@ -49,7 +49,7 @@ final class CatListPageRenderer
             new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
         );
 
-        trigger_notify('loc_begin_cat_list');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_cat_list');
 
         if (! empty($_POST) or isset($_GET['delete'])) {
             new \Piwigo\Csrf\CsrfService()
@@ -288,7 +288,7 @@ SELECT
 
             $tpl_cat =
               [
-                  'NAME' => trigger_change(
+                  'NAME' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                       'render_category_name',
                       $category['name'],
                       'admin_cat_list'
@@ -326,7 +326,7 @@ SELECT
             $template->append('categories', $tpl_cat);
         }
 
-        trigger_notify('loc_end_cat_list');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_cat_list');
 
         // +-------------------------------------------------------------------+
         // |                          sending html code                        |

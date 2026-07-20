@@ -106,7 +106,7 @@ SELECT id, file, path, representative_ext
             }
 
             $args = [
-                'subject' => l10n('[%s] Visit album %s', \Piwigo\Config\Config::galleryTitle(), trigger_change('render_category_name', $category['name'], 'admin_cat_list')),
+                'subject' => l10n('[%s] Visit album %s', \Piwigo\Config\Config::galleryTitle(), \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $category['name'], 'admin_cat_list')),
                 // TODO : change this language variable to 'Visit album %s'
                 // TODO : 'language_selected' => ....
             ];
@@ -118,12 +118,12 @@ SELECT id, file, path, representative_ext
                 'filename' => 'cat_group_info',
                 'assign' => [
                     'IMG' => $img,
-                    'CAT_NAME' => trigger_change('render_category_name', $category['name'], 'admin_cat_list'),
+                    'CAT_NAME' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $category['name'], 'admin_cat_list'),
                     'LINK' => make_index_url(
                         [
                             'category' => [
                                 'id' => $category['id'],
-                                'name' => trigger_change('render_category_name', $category['name'], 'admin_cat_list'),
+                                'name' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $category['name'], 'admin_cat_list'),
                                 'permalink' => $category['permalink'],
                             ],
                         ]

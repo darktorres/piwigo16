@@ -36,10 +36,27 @@ deptrac:
     # Piwigo\Core\ValidationPattern (same-layer), calls the free function
     # fatal_error() (not a class dependency deptrac tracks) rather than
     # HtmlService directly.
+    # Piwigo\PluginConfig\EventDispatcher moves here in Phase 3 of
+    # docs/plan/legacy-coupling-retirement.md (Track B) -- split off from
+    # its namespace-mate PluginRepository (stays L2bExtendedDomain, see
+    # its own comment there). Retargeting the free-function event-dispatch
+    # bridge (add_event_handler()/trigger_change()/trigger_notify()) onto
+    # EventDispatcher::get() directly surfaced real L1->L2b and L2a->L2b
+    # callers (Config\ConfigDb, Core\ThemeCatalog, Cache\
+    # UserCacheInvalidator; Auth\AuthService, Users\*, Category\*, Image\*,
+    # Group\GroupService, Tag\TagService) that the untracked free-function
+    # form had been hiding. EventDispatcher.php itself injects nothing (no
+    # `use` statements) and is a generic pub/sub bus reachable from every
+    # layer -- same "technical, cross-cutting capability, injected INTO
+    # L2a/L2b, never the reverse" shape as Cache/Session/Storage/Audit
+    # above, so L1Infrastructure is both the lowest layer that covers
+    # every real caller and the architecturally correct fit.
     - name: L1Infrastructure
       collectors:
         - type: classLike
           value: ^Piwigo\\(Config|Core|Db|Cache|Session|Backup|Migrations|Lang|Storage|Audit|Validation)\\.*
+        - type: classLike
+          value: ^Piwigo\\PluginConfig\\EventDispatcher$
     # L2a Core Domain — Auth/Image land here in P6; Users/Permission/Category/
     # Tag are later-phase additions. Group lands in P18 (Piwigo\Group\
     # GroupRepository/GroupService) -- must sit at this layer, not the more
@@ -107,18 +124,23 @@ deptrac:
     # Url/Csrf/Filter); ContextRegistry is a self-managed singleton, same
     # shape as Storage\StorageRegistry.
     # PluginConfig lands in P20 too (Piwigo\PluginConfig\EventDispatcher/
-    # PluginRepository) -- EventDispatcher is a self-managed singleton
-    # holding the event-handler-registry state (was `global
-    # $pwg_event_handlers`), injects nothing; PluginRepository is a plain
-    # Db\AbstractRepository subclass. Neither depends on Piwigo\Admin\
-    # PluginMaintain -- the dynamic `instanceof PluginMaintain` check in
-    # autoupdate_plugin() stays a free-function/include/ concern (outside
-    # deptrac's `paths: [./src/Piwigo]` scan), so L2b's inability to
-    # depend on L4Integration (Admin) never actually comes into play here.
+    # PluginRepository) -- PluginRepository is a plain Db\AbstractRepository
+    # subclass, doesn't depend on Piwigo\Admin\PluginMaintain (the dynamic
+    # `instanceof PluginMaintain` check in autoupdate_plugin() stays a
+    # free-function/include/ concern, outside deptrac's
+    # `paths: [./src/Piwigo]` scan), so L2b's inability to depend on
+    # L4Integration (Admin) never actually comes into play here.
+    # EventDispatcher moved to L1Infrastructure in Phase 3 of
+    # docs/plan/legacy-coupling-retirement.md (Track B) -- see its own
+    # comment there; PluginRepository stays here since its only 2 real
+    # callers (Admin\PluginLoader, Admin\plugins.php) are both
+    # L4Integration, already legally above L2b.
     - name: L2bExtendedDomain
       collectors:
         - type: classLike
-          value: ^Piwigo\\(Search|Calendar|Site|Url|Csrf|Permalink|Feed|Filter|Comment|Rate|Caddie|History|Activity|Notification|Metadata|Telemetry|Section|PluginConfig)\\.*
+          value: ^Piwigo\\(Search|Calendar|Site|Url|Csrf|Permalink|Feed|Filter|Comment|Rate|Caddie|History|Activity|Notification|Metadata|Telemetry|Section)\\.*
+        - type: classLike
+          value: ^Piwigo\\PluginConfig\\PluginRepository$
     # L3 Presentation — Menu/Template land here in P6; Http (incl.
     # Http\Middleware) and Routing land here in P9 -- Routing wasn't
     # pre-anticipated in P6's list, but Http\RoutingMiddleware depends on

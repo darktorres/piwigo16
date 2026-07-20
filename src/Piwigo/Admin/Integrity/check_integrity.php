@@ -65,7 +65,7 @@ class check_integrity
         $this->retrieve_list = [];
         $this->build_ignore_list = [];
 
-        trigger_notify('list_check_integrity', $this);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('list_check_integrity', $this);
 
         // Information
         if (count($this->retrieve_list) > 0) {

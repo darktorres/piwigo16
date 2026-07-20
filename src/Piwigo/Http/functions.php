@@ -85,7 +85,7 @@ if (! function_exists('redirect_html')) {
             $user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), \Piwigo\Db\DbConnection::build())->buildUser($guest_id, true);
             \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
             \Piwigo\Core\Lang::load('common.lang');
-            trigger_notify('loading_lang');
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loading_lang');
             \Piwigo\Core\Lang::load('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
                 'no_fallback' => true,
                 'local' => true,

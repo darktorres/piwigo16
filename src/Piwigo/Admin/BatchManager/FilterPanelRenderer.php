@@ -93,7 +93,7 @@ final class FilterPanelRenderer
             ];
         }
 
-        $changed_prefilters = trigger_change('get_batch_manager_prefilters', $prefilters);
+        $changed_prefilters = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_batch_manager_prefilters', $prefilters);
 
         // Plugins may return anything from this modifier event; only accept a real
         // array of arrays back, otherwise keep the built-in prefilter list above.

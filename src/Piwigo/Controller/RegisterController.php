@@ -44,7 +44,7 @@ final class RegisterController implements ControllerInterface
                 ->pageForbidden('User registration closed');
         }
 
-        trigger_notify('loc_begin_register');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_register');
 
         if (isset($_POST['submit'])) {
             $post_key = $_POST['key'] ?? null;
@@ -225,7 +225,7 @@ final class RegisterController implements ControllerInterface
 
             new \Piwigo\Page\PageHeaderRenderer()
                 ->render($title);
-            trigger_notify('loc_end_register');
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_register');
             new HtmlService()
                 ->flushPageMessages();
             new HtmlService()

@@ -62,7 +62,7 @@ final readonly class HistoryService
             $doLog = \Piwigo\Config\Config::historyGuest();
         }
 
-        $doLog = trigger_change('pwg_log_allowed', $doLog, $imageId, $imageType);
+        $doLog = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('pwg_log_allowed', $doLog, $imageId, $imageType);
 
         // trigger_change() hands the value through arbitrary registered event
         // handlers (mixed return); the contract of this filter is a bool, so a
@@ -113,7 +113,7 @@ final readonly class HistoryService
         if (empty($lastVisit) or strtotime($lastVisitStr) < time() - $sessionLength) {
             $updateLastVisit = true;
         }
-        $updateLastVisit = trigger_change('pwg_log_update_last_visit', $updateLastVisit);
+        $updateLastVisit = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('pwg_log_update_last_visit', $updateLastVisit);
 
         $userId = $currentUser->id;
 

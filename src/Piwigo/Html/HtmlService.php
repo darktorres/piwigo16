@@ -60,7 +60,7 @@ final class HtmlService implements HtmlRenderingInterface
         $is_first = true;
 
         foreach ($catInformations as $cat) {
-            $cat['name'] = trigger_change(
+            $cat['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                 'render_category_name',
                 $cat['name'],
                 'get_cat_display_name',
@@ -142,7 +142,7 @@ final class HtmlService implements HtmlRenderingInterface
             $cat = $cat_names[$category_id] ?? null;
             $cat = is_array($cat) ? $cat : [];
 
-            $cat['name'] = trigger_change(
+            $cat['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                 'render_category_name',
                 $cat['name'],
                 'get_cat_display_name_cache',
@@ -542,7 +542,7 @@ final class HtmlService implements HtmlRenderingInterface
         }
 
         header("{$protocol} {$code} {$text}", true, $code);
-        trigger_notify('set_status_header', $code, $text);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('set_status_header', $code, $text);
     }
 
     /**
@@ -594,7 +594,7 @@ final class HtmlService implements HtmlRenderingInterface
     public function renderElementName(array $info): string
     {
         if (isset($info['name']) && is_string($info['name']) && $info['name'] !== '') {
-            $rendered_name = trigger_change('render_element_name', $info['name'], $info);
+            $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_name', $info['name'], $info);
             // trigger_change()'s own return type is mixed; fall back to the
             // pre-trigger name if a misbehaving handler returns something else.
             return is_string($rendered_name) ? $rendered_name : $info['name'];
@@ -614,7 +614,7 @@ final class HtmlService implements HtmlRenderingInterface
     public function renderElementDescription(array $info, string $param = ''): string
     {
         if (isset($info['comment']) && is_string($info['comment']) && $info['comment'] !== '') {
-            $rendered_comment = trigger_change('render_element_description', $info['comment'], $param);
+            $rendered_comment = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_description', $info['comment'], $param);
             // trigger_change()'s own return type is mixed; fall back to the
             // pre-trigger comment if a misbehaving handler returns something
             // else.
@@ -657,7 +657,7 @@ final class HtmlService implements HtmlRenderingInterface
         }
 
         $title = htmlspecialchars(strip_tags($title));
-        $rendered_title = trigger_change('get_thumbnail_title', $title, $info);
+        $rendered_title = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_thumbnail_title', $title, $info);
 
         // trigger_change()'s own return type is mixed; fall back to the
         // pre-trigger title if a misbehaving handler returns something else.

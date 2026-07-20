@@ -30,9 +30,9 @@ namespace {
     // scriptBasename() (P23 batch 8d), so a same-named bare-function stub
     // is unreachable dead code, not a spy any real call site depends on.
 
-    // trigger_change() is always available now via composer autoload.files
-    // (src/Piwigo/PluginConfig/functions.php), a pure passthrough with no
-    // handlers registered, so no local stub is needed.
+    // trigger_change() calls go directly through the real
+    // Piwigo\PluginConfig\EventDispatcher::get() singleton now, a pure
+    // passthrough with no handlers registered, so no local stub is needed.
 
     // No get_browser_language() stub: Config::browserLanguage() is
     // overridden to false below, and registerUser()'s own `Config::

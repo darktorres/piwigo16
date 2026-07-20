@@ -1353,23 +1353,99 @@ near-zero given the domain overlap already confirmed above) gets a
 dedicated small sweep here, same investigate → design → implement →
 verify → commit rhythm as the closed-out A-gap G1-G5 batches.
 
-## Phase 3 — Event dispatch retarget sweep (Track B)
+## Phase 3 — Event dispatch retarget sweep (Track B). DONE.
 
-`add_event_handler()`/`trigger_change()`/`trigger_notify()`
-(`PluginConfig/functions.php`) are confirmed pure 1-line delegates to the
-already-real `EventDispatcher::get()` (read the free-function bodies
-directly) — 301 call sites (39+158+104) across ~88 files. Spot-checked a
-sample of real `trigger_change()` call sites: plain positional arguments,
-no by-reference or `func_get_args()` edge cases — safe to mechanically
-retarget onto `EventDispatcher::get()->addEventHandler()`/
-`triggerChange()`/`triggerNotify()` directly, then delete the free
-functions and their `function_exists()` guard. Checked for the same
-Smarty-bare-string-reference risk that hit Phase 4's `l10n()` (every
-`Template.php` `registerPlugin` call and every `.tpl` file) — clean, no
-hits, safe to delete outright once call sites are retargeted. Batch by
-domain; expect most files already touched by Phase 1 (56 of 88 already
-overlap with `MysqliDb::` callers) to need only this one additional
-edit.
+The phase's own pre-Phase-1/2 call-site estimate (301, 39+158+104 across
+~88 files) needed re-verifying, not trusting — same lesson as Phase 2's
+`$filter`/`$page` residuals turning out non-trivial. A fresh comment-aware
+token scan found 241 real call sites (28 `add_event_handler(` + 119
+`trigger_change(` + 94 `trigger_notify(`) across 84 files — same order of
+magnitude, corrected number.
+
+Adversarial validation (re-checking the plan's "safe to mechanically
+retarget" claim against `deptrac.yaml`, same discipline as Phase 2's
+`$filter` catch) found a real design flaw before any code shipped: a free
+function call creates no deptrac dependency edge, but a direct class
+reference does, so the callers' current zero-violation state didn't
+predict the post-retarget state. `Piwigo\PluginConfig` (housing
+`EventDispatcher`) sat at `L2bExtendedDomain`; 3 real callers live in
+`L1Infrastructure` (`Config\ConfigDb`, `Core\ThemeCatalog`,
+`Cache\UserCacheInvalidator`) and 11 in `L2aCoreDomain` (`Auth\AuthService`,
+`Users\UserRepository`/`UserService`, `Category\CategoryDefaultRenderer`/
+`CategoryService`/`CategoryCatsRenderer`, `Image\SrcImage`/`ImageService`/
+`DerivativeImage`, `Group\GroupService`, `Tag\TagService`) — under this
+repo's strict layering (no `skip_violations`), retargeting these 14 files
+onto `EventDispatcher::get()` directly would have been a real L1→L2b/
+L2a→L2b violation for every one of them, invisible today only because the
+untracked free-function form hid it. Fixed by splitting
+`Piwigo\PluginConfig` across two layers in `deptrac.yaml`:
+`EventDispatcher` moved to `L1Infrastructure` (confirmed the lowest layer
+that covers every real caller, and the architecturally correct fit —
+`EventDispatcher.php` itself injects nothing and is a generic pub/sub bus
+reachable from every layer, same shape as `Cache`/`Session`/`Storage`/
+`Audit`'s own L1 placement), `PluginRepository` stayed `L2bExtendedDomain`
+(its only 2 real callers, `Admin\PluginLoader`/`Admin\plugins.php`, are
+both `L4Integration`, already legally above L2b).
+
+Retarget itself was a pure, safe mechanical text substitution — confirmed,
+not assumed: `trigger_change()`'s `func_get_args()`-based forwarding to
+`EventDispatcher::triggerChange(string $event, mixed $data = null, mixed
+...$extra)` means PHP's own variadic parameter-binding captures every
+caller's extra positional arguments automatically, so a literal
+`funcname(` → `EventDispatcher::get()->methodName(` substring swap
+(arguments untouched) is correct even for the 99 multi-arg
+`trigger_change()` call sites. Zero dynamic/variable-name calls, zero
+string-callable references, zero Smarty `.tpl`/`registerPlugin` hits, zero
+test-side stub redeclarations, no by-reference params.
+
+Used a token-aware PHP script (`token_get_all()`-based, not regex — skips
+comments/strings automatically, and skips `->`/`::`/`function`-preceded
+occurrences defensively) to rewrite all 241 sites in one reviewed pass,
+dry-run and diff-reviewed against representative samples first (a
+single-call file, `Bootstrap\RequestBootstrap.php` at 20 calls, the
+closure-callable pattern in `Admin\Integrity\c13y_internal.php`, and the
+multi-arg variadic pattern in `Auth\AuthService.php`). Fully-qualifies
+inline (`\Piwigo\PluginConfig\EventDispatcher::get()->...`) rather than
+adding a `use` import, matching this codebase's own established
+convention for singleton retargets (`CurrentTemplate::get()` is
+fully-qualified inline across all 91 existing call sites, never a `use`
+import, regardless of per-file call count).
+
+Deleted `src/Piwigo/PluginConfig/functions.php` and its `composer.json`
+`autoload.files` entry once a fresh re-scan confirmed zero remaining real
+callers; `composer dump-autoload` regenerated. Swept ~9 stale "no local
+stub needed, always available via composer autoload.files" test-side
+comments (and 2 real-code docblocks, `Controller\ImageDerivativeController.php`
+and `Controller\PictureController.php`, which made present-tense claims
+about the now-deleted mechanism) to describe the real
+`EventDispatcher::get()` singleton instead.
+
+Closed out with a new Arch test (`tests/Arch/StructuralTest.php`)
+asserting zero remaining bare `add_event_handler(`/`trigger_change(`/
+`trigger_notify(` calls in `src/Piwigo/` — genuinely zero-tolerance, no
+allowlist needed.
+
+Full verification gate green: deptrac 0 (both right after the layer split
+alone and again after the full retarget), PHPStan baseline regenerated
+(3034, down from 3039 — the deleted file's own ignored-error entries),
+ECS clean, Unit/Arch 607, Contract 93, Integration 620, Browser 64+1
+skipped, Visual 32/32.
+
+The phase's own original framing, kept for context: `add_event_handler()`/
+`trigger_change()`/`trigger_notify()` (`PluginConfig/functions.php`) are
+confirmed pure 1-line delegates to the already-real `EventDispatcher::get()`
+(read the free-function bodies directly) — 301 call sites (39+158+104)
+across ~88 files. Spot-checked a sample of real `trigger_change()` call
+sites: plain positional arguments, no by-reference or `func_get_args()`
+edge cases — safe to mechanically retarget onto
+`EventDispatcher::get()->addEventHandler()`/`triggerChange()`/
+`triggerNotify()` directly, then delete the free functions and their
+`function_exists()` guard. Checked for the same Smarty-bare-string-reference
+risk that hit Phase 4's `l10n()` (every `Template.php` `registerPlugin`
+call and every `.tpl` file) — clean, no hits, safe to delete outright once
+call sites are retargeted. Batch by domain; expect most files already
+touched by Phase 1 (56 of 88 already overlap with `MysqliDb::` callers) to
+need only this one additional edit.
 
 ## Phase 4 — l10n/URL/redirect/category free-function retarget sweep (Track C)
 

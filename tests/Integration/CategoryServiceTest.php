@@ -10,9 +10,10 @@ declare(strict_types=1);
 // copied verbatim from those files (function_exists() guards mean
 // whichever Integration test file's stub loads first wins for the whole
 // run, so every file declaring these must keep the bodies identical).
-// trigger_change() is always available now via composer autoload.files
-// (src/Piwigo/PluginConfig/functions.php), a pure passthrough with no
-// handlers registered, so no local stub is needed for it anymore.
+// trigger_change() calls go directly through the real
+// Piwigo\PluginConfig\EventDispatcher::get() singleton now, a pure
+// passthrough with no handlers registered, so no local stub is needed for
+// it anymore.
 namespace {
     if (! function_exists('l10n')) {
         function l10n(string $key, mixed ...$args): string
@@ -35,9 +36,9 @@ namespace {
         }
     }
 
-    // trigger_change() is always available now via composer autoload.files
-    // (src/Piwigo/PluginConfig/functions.php), a pure passthrough with no
-    // handlers registered, so no local stub is needed.
+    // trigger_change() calls go directly through the real
+    // Piwigo\PluginConfig\EventDispatcher::get() singleton now, a pure
+    // passthrough with no handlers registered, so no local stub is needed.
 
     // is_admin() -- CategoryService now calls Piwigo\Auth\AccessControl::
     // isAdmin() directly (P23 batch 8d), which reads Piwigo\Users\CurrentUser

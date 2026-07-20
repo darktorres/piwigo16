@@ -212,7 +212,7 @@ SELECT *
         // |                           sending html code                       |
         // +-------------------------------------------------------------------+
 
-        trigger_notify('loc_end_photo_add_direct');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_photo_add_direct');
 
         // \Piwigo\Config\Config::formatExtensions() is read twice below; narrow once and reuse instead of
         // re-reading the offset (each re-read is `mixed`), same pattern as

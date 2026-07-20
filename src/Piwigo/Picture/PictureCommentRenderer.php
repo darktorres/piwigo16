@@ -139,7 +139,7 @@ final class PictureCommentRenderer
             \Piwigo\Core\PageState::current()->errors = $commentErrors;
 
             // allow plugins to notify what's going on
-            trigger_notify(
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify(
                 'user_comment_insertion',
                 array_merge($comm, [
                     'action' => $commentAction,
@@ -230,9 +230,9 @@ final class PictureCommentRenderer
                 $tplComment =
                   [
                       'ID' => $row['id'],
-                      'AUTHOR' => trigger_change('render_comment_author', $row['author']),
+                      'AUTHOR' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_author', $row['author']),
                       'DATE' => \Piwigo\Core\DateHelper::formatDate($row['date'], ['day_name', 'day', 'month', 'year', 'time']),
-                      'CONTENT' => trigger_change('render_comment_content', $row['content']),
+                      'CONTENT' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_content', $row['content']),
                       'WEBSITE_URL' => $row['website_url'],
                   ];
 

@@ -55,7 +55,7 @@ final class SearchController implements ControllerInterface
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        trigger_notify('loc_begin_search');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_search');
 
         // +---------------------------------------------------------------+
         // | Create a default search                                      |

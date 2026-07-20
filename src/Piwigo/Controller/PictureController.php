@@ -284,11 +284,11 @@ SELECT id
         }
 
         // add default event handler for rendering element content
-        add_event_handler('render_element_content', $this->defaultPictureContent(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_element_content', $this->defaultPictureContent(...));
         // add default event handler for rendering element description
-        add_event_handler('render_element_description', new HtmlService()->pwgNl2br(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_element_description', new HtmlService()->pwgNl2br(...));
 
-        trigger_notify('loc_begin_picture');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_picture');
 
         // +-----------------------------------------------------------------+
         // |                            initialization                        |
@@ -600,7 +600,7 @@ UPDATE ' . Tables::categories() . '
             }
 
             // don't increment if adding a comment
-            if ((bool) trigger_change('allow_increment_element_hit_count', $inc_hit_count, $image_id)) {
+            if ((bool) \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('allow_increment_element_hit_count', $inc_hit_count, $image_id)) {
                 new ImageRepository($conn)
                     ->incrementVisitCounter($image_id);
             }
@@ -776,7 +776,7 @@ SELECT *
 
             // do we have a plugin that can show metadata for something
             // else than images?
-            $metadata_showable = trigger_change(
+            $metadata_showable = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                 'get_element_metadata_available',
                 (
                     (\Piwigo\Config\Config::showExif() or \Piwigo\Config\Config::showIptc())
@@ -797,11 +797,11 @@ SELECT *
             // allow plugins to change what we computed before passing data
             // to template
             /**
-             * trigger_change() (src/Piwigo/PluginConfig/functions.php) is
-             * only typed to return mixed -- restate the shape plugins are
-             * expected to preserve: one images-table row (string|null
-             * columns) per navigation slot, plus the computed fields set
-             * on $row above.
+             * EventDispatcher::triggerChange() is only typed to return
+             * mixed -- restate the shape plugins are expected to
+             * preserve: one images-table row (string|null columns) per
+             * navigation slot, plus the computed fields set on $row
+             * above.
              *
              * @var array<string, array{
              *     id: string,
@@ -824,7 +824,7 @@ SELECT *
              *     ...
              * }> $picture
              */
-            $picture = trigger_change('picture_pictures_data', $picture);
+            $picture = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('picture_pictures_data', $picture);
 
             // ---------------------------------------------------- navigation management
             foreach (['first', 'previous', 'next', 'last', 'current'] as $which_image) {
@@ -1073,7 +1073,7 @@ SELECT COUNT(*) AS nb_fav
             if (is_string($current_comment) && $current_comment !== '' && $current_comment !== '0') {
                 $template->assign(
                     'COMMENT_IMG',
-                    trigger_change(
+                    \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                         'render_element_description',
                         $picture['current']['comment'],
                         'picture_page_element_description'
@@ -1217,7 +1217,7 @@ SELECT id, name, permalink
 
             // maybe someone wants a special display (call it before
             // page_header so that they can add stylesheets)
-            $element_content = trigger_change(
+            $element_content = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                 'render_element_content',
                 '',
                 $picture['current']
@@ -1280,7 +1280,7 @@ SELECT id, name, permalink
             /** @var string|null $url_link */
             new \Piwigo\Page\PageHeaderRenderer()
                 ->render($title, $refresh_str, $url_link ?? null);
-            trigger_notify('loc_end_picture');
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_picture');
             new HtmlService()
                 ->flushPageMessages();
             if ($slideshow and \Piwigo\Config\Config::lightSlideshow()) {

@@ -11,9 +11,9 @@ namespace {
         define('PHPWG_ROOT_PATH', './');
     }
 
-    // trigger_change() is always available now via composer autoload.files
-    // (src/Piwigo/PluginConfig/functions.php), a pure passthrough with no
-    // handlers registered, so no local stub is needed.
+    // trigger_change() calls go directly through the real
+    // Piwigo\PluginConfig\EventDispatcher::get() singleton now, a pure
+    // passthrough with no handlers registered, so no local stub is needed.
 }
 
 namespace Piwigo\Tests\Integration {

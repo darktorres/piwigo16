@@ -47,10 +47,11 @@ use Piwigo\Session\SessionUserResolver;
  * Note on plugin events: the old i.php carried a local no-op
  * trigger_notify() stub so that pwg_image's constructor (which fires
  * 'load_image_library') would not explode on this path. Since P23 batch 7
- * the real trigger_notify() is always defined (composer autoload.files
- * loads src/Piwigo/PluginConfig/functions.php at process start -- the
- * stub had in fact become a fatal "cannot redeclare" collision), and on
- * this fast path no plugins are ever loaded, so the dispatcher has no
+ * the real dispatch is always available (pwg_image now calls
+ * Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify() directly, a
+ * plain autoloaded class, not a composer autoload.files free function --
+ * the stub had in fact become a fatal "cannot redeclare" collision), and
+ * on this fast path no plugins are ever loaded, so the dispatcher has no
  * handlers and the event is a natural no-op. The stub is therefore
  * deleted, not replaced: not firing plugin hooks here is achieved by not
  * registering any, which is the fast-bootstrap design itself.

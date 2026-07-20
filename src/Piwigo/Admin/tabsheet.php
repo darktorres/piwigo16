@@ -87,7 +87,7 @@ class tabsheet
     */
     public function select(string $name): void
     {
-        $sheets_after_trigger = trigger_change('tabsheet_before_select', $this->sheets, $this->uniqid);
+        $sheets_after_trigger = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('tabsheet_before_select', $this->sheets, $this->uniqid);
         // 'tabsheet_before_select' handlers are documented to filter/append to
         // the array<string, array{caption: string, url: string}> $sheets they
         // receive and return the same shape, but trigger_change()'s own return

@@ -117,7 +117,7 @@ SELECT param, value
             Config::override($param, $val);
         }
 
-        trigger_notify('load_conf', $condition);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('load_conf', $condition);
     }
 
     /**

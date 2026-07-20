@@ -29,7 +29,7 @@ final class PageHeaderRenderer
             'header' => 'header.tpl',
         ]);
 
-        trigger_notify('loc_begin_page_header');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_page_header');
 
         $show_mobile_app_banner = \Piwigo\Config\ConfigDb::confGetParam('show_mobile_app_banner_in_gallery', false);
         if (defined('IN_ADMIN') and IN_ADMIN) {
@@ -44,7 +44,7 @@ final class PageHeaderRenderer
             [
                 'GALLERY_TITLE' => $conf_gallery_title,
 
-                'PAGE_BANNER' => trigger_change(
+                'PAGE_BANNER' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                     'render_page_banner',
                     str_replace(
                         '%gallery_title%',
@@ -108,12 +108,12 @@ final class PageHeaderRenderer
             );
         }
 
-        trigger_notify('loc_end_page_header');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_page_header');
 
         header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
         $template->parse('header');
 
-        trigger_notify('loc_after_page_header');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_after_page_header');
     }
 
     /**

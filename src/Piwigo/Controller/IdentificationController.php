@@ -49,7 +49,7 @@ final class IdentificationController implements ControllerInterface
             redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
         }
 
-        trigger_notify('loc_begin_identification');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_identification');
 
         unset($_SESSION['reset_password_code']);
 
@@ -201,7 +201,7 @@ final class IdentificationController implements ControllerInterface
 
             new \Piwigo\Page\PageHeaderRenderer()
                 ->render($title);
-            trigger_notify('loc_end_identification');
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_identification');
             new HtmlService()
                 ->flushPageMessages();
             new HtmlService()

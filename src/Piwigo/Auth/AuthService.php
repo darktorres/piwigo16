@@ -171,7 +171,7 @@ final readonly class AuthService
         $_SESSION['pwg_uid'] = (int) $userId;
 
         $user['id'] = $_SESSION['pwg_uid'];
-        trigger_notify('user_login', $user['id']);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('user_login', $user['id']);
         $this->activityLogger->record('user', $user['id'], 'login');
     }
 
@@ -207,7 +207,7 @@ final readonly class AuthService
                             $_SESSION['connected_with'] = 'pwg_ui';
                         }
                         $this->logUser($cookie[0], true);
-                        trigger_notify('login_success', stripslashes($calculated['username']));
+                        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('login_success', stripslashes($calculated['username']));
 
                         return true;
                     }
@@ -233,7 +233,7 @@ final readonly class AuthService
      */
     public function tryLogUser(string $username, ?string $password, bool $rememberMe): bool
     {
-        $result = trigger_change('try_log_user', false, $username, $password, $rememberMe);
+        $result = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('try_log_user', false, $username, $password, $rememberMe);
 
         // trigger_change()'s own return type is mixed; the only registered
         // handler (pwg_login()) returns bool, but fail closed (deny login)
@@ -248,7 +248,7 @@ final readonly class AuthService
     {
 
         $pwg_uid = $_SESSION['pwg_uid'] ?? null;
-        trigger_notify('user_logout', $pwg_uid);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('user_logout', $pwg_uid);
         if (is_int($pwg_uid) || is_string($pwg_uid)) {
             $this->activityLogger->record('user', $pwg_uid, 'logout');
         }
@@ -324,7 +324,7 @@ final readonly class AuthService
                 assert(is_string($found_user_id));
                 $this->activityLogger->record('user', $found_user_id, 'login_failure_wrong_password');
             }
-            trigger_notify('login_failure', stripslashes($username));
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('login_failure', stripslashes($username));
             return false;
         }
 
@@ -349,7 +349,7 @@ final readonly class AuthService
             'reason' => null,
             'authenticated' => false,
         ];
-        $state = trigger_change('finalize_login', $state, $user_found, $rememberMe);
+        $state = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('finalize_login', $state, $user_found, $rememberMe);
 
         // trigger_change()'s own return type is mixed; `&&` always yields a
         // real bool regardless of operand types, which is what narrows
@@ -362,7 +362,7 @@ final readonly class AuthService
             $found_user_id = $user_found['id'];
             assert(is_string($found_user_id));
             $this->activityLogger->record('user', $found_user_id, is_string($reason) ? $reason : 'login_failure_before_log_user');
-            trigger_notify('login_failure_before_log_user', stripslashes($username));
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('login_failure_before_log_user', stripslashes($username));
             return false;
         }
 
@@ -374,7 +374,7 @@ final readonly class AuthService
         }
 
         $this->clearFakeUserCache();
-        trigger_notify('login_success', stripslashes($username));
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('login_success', stripslashes($username));
         return true;
     }
 
@@ -558,7 +558,7 @@ final readonly class AuthService
         }
 
         $this->logUser($key_user_id, false);
-        trigger_notify('login_success', $key['username']);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('login_success', $key['username']);
 
         // to be registered in history table by HistoryService::logVisit()
         \Piwigo\Core\PageState::current()->setAuthKeyId((int) $key['auth_key_id']);

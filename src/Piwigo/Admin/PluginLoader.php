@@ -56,7 +56,7 @@ final class PluginLoader
             foreach ($plugins as $plugin) {// include main from a function to avoid using same function context
                 self::loadPlugin($plugin);
             }
-            trigger_notify('plugins_loaded');
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('plugins_loaded');
         }
     }
 

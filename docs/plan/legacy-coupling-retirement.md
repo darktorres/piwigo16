@@ -1241,11 +1241,115 @@ handling, and every controller's newly-injected-vs-previously-inline
 dependency graph, as a first-class review item per sub-batch — not a
 mechanical find-replace rubber-stamped at the end.
 
-## Phase 2 — Global-residual sweep
+## Phase 2 — Global-residual sweep. DONE.
 
-Whatever `$filter`/`$pwg_loaded_plugins`/`$template`/`$page` residuals
-Phase 1's domain batches didn't already resolve as a side effect (expected
-to be near-zero given the domain overlap already confirmed above) gets a
+The "near-zero" hope in this phase's own original framing (below) did not
+pan out — direct investigation (comment-aware token scan, no subagents)
+found real residual close to the original pre-Phase-1 estimate: `$filter`
+8 sites/7 files, `$pwg_loaded_plugins` 5/4, `$template` 9/7 (8 `global` +
+1 `$GLOBALS[...]`), `$page` 7/7. Confirmed via a repo-wide (not just
+`src/`-scoped) scan that nothing outside `src/Piwigo/`+`tests/` touches
+any of these four.
+
+Each cluster needed a genuinely different fix, not one mechanical
+pattern:
+
+- **`$template`** — pure retarget onto the already-existing
+  `Template\CurrentTemplate` singleton. Most sites were already calling
+  `CurrentTemplate::set()` right after the `global` write, making the
+  `global` declaration itself vestigial. `Bootstrap\RequestBootstrap.php`
+  was the last of the 3 documented dual-write sites (kept live "until
+  every consumer is retargeted" during its own earlier migration) —
+  retired only after a fresh repo-wide grep confirmed zero remaining
+  consumers. `Http\functions.php`'s `redirect_html()` needed care to
+  preserve a real early-crash-before-bootstrap fallback path
+  (`isset($template)` → `CurrentTemplate::isInitialized()`), not a blind
+  swap. Retargeting `Html\HtmlService.php`/`Http\functions.php` gave
+  PHPStan enough type information to *prove* two old defensive
+  re-checks — kept in the original code specifically because they
+  "weren't provable statically" under an untyped raw global — are now
+  genuinely dead code; removed both (retire-the-defensive-check-with-the-
+  retype, not just retarget).
+- **`$page`** — mostly dead or purely local, one real judgment call. 5 of
+  7 files had exactly one method each, so every `$page[...]` access was
+  provably local to that one method's execution — same fix already
+  proven in `Section\SectionPopulator.php` (Track A5.2e): drop `global`,
+  keep a plain local. `Admin\HistoryPageRenderer.php`'s `$page['search']`
+  turned out to be a **confirmed-dead read**: its own docblock's
+  justification named a file (`include/ws_functions/pwg.php`) that no
+  longer exists (migrated to `Ws\PwgCore::historySearch()`, whose own
+  `$page['search']` write has no `global` declaration at all — an
+  unrelated same-named local) — removed the dead branch entirely, same
+  precedent this file's own docblock already set for its dead siblings.
+  `Admin\Maintenance\FilesystemIntegrityChecker::fsQuickCheck()`'s
+  run-once guard, by contrast, was **confirmed genuinely load-bearing**:
+  traced the real call chain and found `admin.php`'s own top-level
+  dispatcher (`AdminShell::run()`) calls it directly, then dispatches to
+  a sub-controller (`Controller\Admin\IntroSubController`) that calls it
+  again in that same request — replaced the global-keyed guard with a
+  private static bool + test-only `reset()`.
+- **`$filter`** — needed a genuinely new singleton
+  (`Piwigo\Core\FilterState`), and its layer placement was the single
+  most consequential decision in this phase. `Piwigo\Filter` sits at
+  `L2bExtendedDomain` in `deptrac.yaml`; 2 of the 5 real readers
+  (`Permission\PermissionService`, `Category\CategoryService`) sit at
+  `L2aCoreDomain`, which may not depend sideways on L2b. A `CurrentFilter`
+  class living in `Piwigo\Filter` (the first draft's plan) would have
+  failed `deptrac` immediately. This is very likely *why* `$filter`
+  survived every one of Phase 1's 11 sub-phases as a raw global:
+  `deptrac.yaml`'s own comment on Filter's layer placement already names
+  the `$filter` global as the reason that domain needed no
+  domain-namespace dependency of its own — i.e. probably a deliberate
+  original workaround for this exact conflict, not an oversight.
+  `FilterState` lives directly in `Piwigo\Core` instead, matching
+  `Core\PageState`'s own precedent (full singleton, not a split
+  interface+impl) — L1Infrastructure sits below every layer, so every
+  reader works regardless of its own layer, with zero constructor
+  ripple into `PermissionService`'s 30+ real construction call sites
+  (confirmed via a real grep, not assumed — adding a required
+  constructor param there would have meant an audit at the same scale as
+  this session's own `UserService.php` constructor change, 39 sites).
+  Preserved a real behavioral subtlety while retargeting
+  `Controller\PictureController.php`: the raw global's occasional `-1`
+  int sentinel (meaning "the filter computed an empty visible-images
+  list") was implicitly excluded by an `is_string()` type check;
+  `FilterState::visibleImages()` always returns a real string, so the
+  sentinel is now excluded by an explicit `!== '-1'` check instead —
+  same behavior, no longer accidental.
+- **`$pwg_loaded_plugins`** — the simplest cluster: writer and all 3
+  readers are all `L4Integration` (`Piwigo\Admin`/`Piwigo\Controller\Admin`),
+  so no cross-layer decision was needed. New `Admin\LoadedPlugins`
+  singleton, same `get()`/`set()`/`isInitialized()`/`reset()` shape as
+  `CurrentTemplate`.
+
+8 test files wrote `$GLOBALS['filter']`/`$GLOBALS['page']` directly;
+6 Integration tests needed real updates (mostly deleting now-redundant
+`$GLOBALS['filter'] = [];` boilerplate once `IntegrationTestCase::setUp()`
+was given its own `FilterState::set(false)` baseline — the same
+per-request-singleton pattern already established there for
+`CurrentUser`/`CurrentLogger`), plus the one Unit test
+(`Filter\FilterServiceTest.php`) exercising `updateCatsWithFilteredData()`
+directly. One test scenario ("filter categories is not an array") became
+unreachable through the new type-safe `FilterState::set()` API and was
+deleted, not preserved artificially — the equivalent defensive guard now
+lives once, at the `FilterState::set()` write site in
+`FilterService::initializeFromRequest()`, not on every read.
+
+Closed out with a new Arch test (`tests/Arch/StructuralTest.php`)
+asserting zero remaining `global $filter`/`$pwg_loaded_plugins`/
+`$template`/`$page` in `src/Piwigo/` — genuinely zero-tolerance, no
+allowlist needed, since every real site turned out to be fixable rather
+than a permanent bridge worth documenting as an exception.
+
+Full verification gate green (deptrac 0, ECS clean, PHPStan baseline
+regenerated — 3039 errors, down from 3051, ratio drift plus real
+dead-code removal — Unit/Arch 606, Contract 93, Integration 620, Browser
+64+1 skipped, Visual 32/32).
+
+The phase's own original framing, kept for context: whatever
+`$filter`/`$pwg_loaded_plugins`/`$template`/`$page` residuals Phase 1's
+domain batches didn't already resolve as a side effect (expected to be
+near-zero given the domain overlap already confirmed above) gets a
 dedicated small sweep here, same investigate → design → implement →
 verify → commit rhythm as the closed-out A-gap G1-G5 batches.
 

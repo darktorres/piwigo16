@@ -50,11 +50,7 @@ final class PluginLoader
      */
     public static function loadPlugins(): void
     {
-        /**
-         * @var array<string, array<string, mixed>>
-         */
-        global $pwg_loaded_plugins;
-        $pwg_loaded_plugins = [];
+        LoadedPlugins::set([]);
         if (\Piwigo\Config\Config::enablePlugins()) {
             $plugins = new PluginRepository(DbConnection::build())->getDbPlugins('active');
             foreach ($plugins as $plugin) {// include main from a function to avoid using same function context
@@ -84,9 +80,7 @@ final class PluginLoader
         $file_name = self::pluginsPath() . $plugin_id . '/main.inc.php';
         if (file_exists($file_name)) {
             self::autoupdatePlugin($plugin);
-            /** @var array<string, array<string, mixed>> $pwg_loaded_plugins */
-            global $pwg_loaded_plugins;
-            $pwg_loaded_plugins[$plugin_id] = $plugin;
+            LoadedPlugins::add($plugin_id, $plugin);
             include_once $file_name;
         }
     }

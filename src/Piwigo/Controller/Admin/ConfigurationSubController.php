@@ -111,8 +111,12 @@ final class ConfigurationSubController implements AdminSubControllerInterface
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
+        // Phase 2 global-residual sweep: $page is a local scratch array
+        // for this method's own body only (no longer `global $page;`),
+        // same shape as Section\SectionPopulator::populate()'s own
+        // equivalent fix (Track A5.2e).
         /** @var array<string, mixed> $page */
-        global $page;
+        $page = [];
 
         $conn = DbConnection::build();
 

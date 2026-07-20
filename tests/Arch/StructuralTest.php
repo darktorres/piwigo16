@@ -415,6 +415,31 @@ test('src/Piwigo/ contains no define() calls', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
+test('src/Piwigo/ contains no global $filter/$pwg_loaded_plugins/$template/$page declarations', function (): void {
+    // Phase 2 global-residual sweep (2026-07-19): all 4 clusters were
+    // fully retired, not just reduced -- $filter/$pwg_loaded_plugins onto
+    // new Piwigo\Core\FilterState/Piwigo\Admin\LoadedPlugins singletons,
+    // $template onto the already-existing Piwigo\Template\CurrentTemplate,
+    // $page either deleted as confirmed-dead code or converted to a
+    // plain per-method local (matching Section\SectionPopulator's own
+    // earlier Track A5.2e precedent) or a private static guard
+    // (Admin\Maintenance\FilesystemIntegrityChecker::fsQuickCheck()).
+    // Zero-tolerance, no allowlist needed -- matches the "no define()
+    // calls" precedent above, not countExitCallsPerFile()'s allowlisted
+    // shape, since nothing here turned out to be a legitimate permanent
+    // bridge.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $filter'),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $pwg_loaded_plugins'),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $template'),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $page'),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
 /**
  * die() and exit() -- with or without parens/arguments -- both tokenize
  * as T_EXIT, so this catches every real call site (unlike a substring

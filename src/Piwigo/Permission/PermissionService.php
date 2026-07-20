@@ -117,20 +117,21 @@ final readonly class PermissionService
         ?string $prefixCondition = null,
         bool $forceOneCondition = false,
     ): string {
-        /** @var array<string, mixed> $filter */
-        global $filter;
-
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
         // image_access_list is a comma-separated id list built with
         // implode(',', ...) in getuserdata(); image_access_type is the
         // literal string 'NOT IN' (see getuserdata()) -- both always
-        // scalar/string-castable.
+        // scalar/string-castable. Phase 2 global-residual sweep:
+        // visible_categories/visible_images retargeted from `global
+        // $filter;` onto Piwigo\Core\FilterState, preserving the same
+        // lenient "not initialized yet -> ''" fallback the old `?? null`
+        // had -- this method is reachable from callers (Search/Calendar/
+        // Notification/CategoryService and their own tests) that don't
+        // always run through RequestBootstrap::finalize() first.
         $userForbiddenCategories = $currentUser->forbiddenCategories;
-        $filterVisibleCategories = $filter['visible_categories'] ?? null;
-        $filterVisibleCategories = is_scalar($filterVisibleCategories) ? (string) $filterVisibleCategories : '';
-        $filterVisibleImages = $filter['visible_images'] ?? null;
-        $filterVisibleImages = is_scalar($filterVisibleImages) ? (string) $filterVisibleImages : '';
+        $filterVisibleCategories = \Piwigo\Core\FilterState::isInitialized() ? \Piwigo\Core\FilterState::visibleCategories() : '';
+        $filterVisibleImages = \Piwigo\Core\FilterState::isInitialized() ? \Piwigo\Core\FilterState::visibleImages() : '';
         $userLevel = (string) $currentUser->level;
         $userImageAccessType = $currentUser->rawAttributes['image_access_type'] ?? null;
         $userImageAccessType = is_scalar($userImageAccessType) ? (string) $userImageAccessType : '';

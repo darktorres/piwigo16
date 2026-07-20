@@ -46,8 +46,6 @@ final readonly class NoPhotoYetRenderer
                 // the "no photo yet" feature
                 $user_theme = \Piwigo\Users\CurrentUser::get()->theme;
                 $user_theme = $user_theme !== '' ? $user_theme : new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), \Piwigo\Db\DbConnection::build())->getDefaultTheme();
-                /** @var Template $template */
-                global $template;
                 $template = new Template(PHPWG_ROOT_PATH . 'themes', $user_theme);
                 \Piwigo\Template\CurrentTemplate::set($template);
 

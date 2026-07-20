@@ -140,8 +140,6 @@ class UpgradeRunner
      */
     public function prepare(Connection $conn): string
     {
-        global $template;
-
         // +-------------------------------------------------------------------+
         // |                        template initialization                     |
         // +-------------------------------------------------------------------+
@@ -303,7 +301,7 @@ SELECT id
      */
     public function performUpgrade(Connection $conn): void
     {
-        global $template;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (\Piwigo\Admin\Install\VersionUpgrade\VersionUpgradeRegistry::has($this->currentRelease)) {
             // reset SQL counters
@@ -430,7 +428,7 @@ REPLACE INTO ' . Tables::plugins() . '
      */
     public function renderIntro(): void
     {
-        global $template;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $languages = new languages();
 
@@ -459,7 +457,7 @@ REPLACE INTO ' . Tables::plugins() . '
      */
     public function finish(): void
     {
-        global $template;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $page_errors = \Piwigo\Core\PageState::current()->errors;
         if (count($page_errors) != 0) {

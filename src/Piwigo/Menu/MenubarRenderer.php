@@ -57,10 +57,6 @@ final class MenubarRenderer
      */
     public function render(): mixed
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $filter;
         $template = \Piwigo\Template\CurrentTemplate::get();
         $section_context = \Piwigo\Section\SectionContextRegistry::current();
 
@@ -124,7 +120,7 @@ final class MenubarRenderer
         $block = $menu->get_block('mbCategories');
         // ------------------------------------------------------------------------ filter
         if (\Piwigo\Config\Config::menubarFilterIcon() and ! self::emptyValue(\Piwigo\Config\Config::filterPages()) and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
-            if ((bool) $filter['enabled']) {
+            if (\Piwigo\Core\FilterState::isEnabled()) {
                 $template->assign(
                     'U_STOP_FILTER',
                     add_url_params(make_index_url([]), [

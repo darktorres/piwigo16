@@ -75,6 +75,15 @@ abstract class IntegrationTestCase extends TestCase
         // (Logger::log() checks severity() >= $level, and OFF is -1, below
         // every real level), so this never touches the filesystem.
         \Piwigo\Core\CurrentLogger::set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
+        // Piwigo\Core\FilterState (Phase 2 global-residual sweep) is the
+        // same shape of per-request singleton -- a disabled-filter
+        // baseline here means tests that construct a domain service
+        // directly (not through a real HTTP request, so
+        // RequestBootstrap::finalize() never runs) still get a valid,
+        // non-throwing FilterState::isEnabled()/visibleCategories()/etc.
+        // A subclass's own setUp() calling FilterState::set() with real
+        // filter values right after parent::setUp() simply overwrites it.
+        \Piwigo\Core\FilterState::set(false);
     }
 
     #[\Override]
@@ -85,6 +94,7 @@ abstract class IntegrationTestCase extends TestCase
         \Piwigo\Core\ProcessCache::reset();
         \Piwigo\Config\Config::reset();
         \Piwigo\Core\PageState::reset();
+        \Piwigo\Core\FilterState::reset();
         parent::tearDown();
     }
 

@@ -213,10 +213,20 @@ SELECT id, file, level
             $row_file = $row['file'];
             $image_file = is_string($row_file) ? $row_file : null;
             if (! isset($rank_of[$image_id])) {// the image can still be non accessible (filter/cat perm) and/or not in the set
-                /** @var array<string, mixed> $filter */
-                global $filter;
-                $visible_images = $filter['visible_images'] ?? null;
-                if (is_string($visible_images) && $visible_images !== '' &&
+                // Phase 2 global-residual sweep: retargeted from `global
+                // $filter;` onto Piwigo\Core\FilterState, preserving the
+                // same lenient "not initialized yet -> no restriction"
+                // fallback the old `?? null` had. FilterState::
+                // visibleImages() always returns a real string (the old
+                // raw global's occasional `-1` int sentinel is now the
+                // string '-1'); the old is_string() check implicitly
+                // excluded that sentinel by type, so exclude it
+                // explicitly here to preserve the exact same behavior --
+                // '-1' means "the filter computed an empty visible-images
+                // list" (see FilterService's own "Must be not empty"
+                // comment), not a real id to match against.
+                $visible_images = \Piwigo\Core\FilterState::isInitialized() ? \Piwigo\Core\FilterState::visibleImages() : '';
+                if ($visible_images !== '' && $visible_images !== '-1' &&
                   ! in_array((string) $image_id, explode(',', $visible_images), true)) {
                     new HtmlService()
                         ->pageNotFound(

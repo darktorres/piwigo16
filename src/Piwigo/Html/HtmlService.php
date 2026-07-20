@@ -492,9 +492,11 @@ final class HtmlService implements HtmlRenderingInterface
                 // free function -- this class is L3Presentation, so it may
                 // read the request's Template instance (also L3) directly,
                 // no ThemeConfProviderInterface indirection needed (unlike
-                // SrcImage, L2a). $GLOBALS['template'] is always a real
-                // Template on any request that renders this markup.
-                $request_template = $GLOBALS['template'] ?? null;
+                // SrcImage, L2a). CurrentTemplate is always initialized on
+                // any request that renders this markup, but this stays
+                // defensive (Phase 2 global-residual sweep: retargeted from
+                // $GLOBALS['template'] ?? null, same defensive shape).
+                $request_template = \Piwigo\Template\CurrentTemplate::isInitialized() ? \Piwigo\Template\CurrentTemplate::get() : null;
                 $icon_dir = $request_template instanceof Template ? $request_template->themeConf('icon_dir') : '';
 
                 $title .=

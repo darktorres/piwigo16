@@ -395,8 +395,6 @@ final class RequestBootstrap
          * @var array<string, mixed>
          */
         global $user;
-        global $template;
-        global $filter;
 
         // Shared for every repository/service constructed for the rest of
         // this method -- same "one Connection per method, not per
@@ -494,12 +492,11 @@ final class RequestBootstrap
             $template = new Template(PHPWG_ROOT_PATH . 'themes', $theme);
         }
 
-        // Legacy Coupling Retirement Track A: CurrentTemplate is the real
-        // target every retargeted consumer reads from now; `global
-        // $template` stays live alongside it (dual-write) until every
-        // consumer is retargeted off the raw global, matching how
-        // CurrentUser/PageState's own attachGlobals() bridges worked during
-        // their migration.
+        // Legacy Coupling Retirement Track A / Phase 2 global-residual
+        // sweep: CurrentTemplate is now the sole target -- the former
+        // `global $template;` dual-write bridge was retired once a
+        // repo-wide scan confirmed every other consumer had already been
+        // retargeted onto CurrentTemplate::get() (this was the last site).
         \Piwigo\Template\CurrentTemplate::set($template);
 
         // P23 batch 8f-4: SrcImage (L2aCoreDomain) reads theme conf through
@@ -560,7 +557,7 @@ final class RequestBootstrap
             new FilterService($conn)
                 ->initializeFromRequest();
         } else {
-            $filter['enabled'] = false;
+            \Piwigo\Core\FilterState::set(false);
         }
 
         if (\Piwigo\Config\Config::has('header_notes') && is_array(\Piwigo\Config\Config::headerNotes())) {

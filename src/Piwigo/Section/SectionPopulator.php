@@ -63,10 +63,6 @@ final readonly class SectionPopulator
 
     public function populate(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $filter;
         $logger = \Piwigo\Core\CurrentLogger::get();
         $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
         $template = $this->template;
@@ -737,8 +733,12 @@ SELECT id
             }
         }
 
-        // add meta robots noindex, nofollow to avoid unnecesary robot crawls
-        $filter_enabled = (bool) ($filter['enabled'] ?? false);
+        // add meta robots noindex, nofollow to avoid unnecesary robot crawls.
+        // Phase 2 global-residual sweep: retargeted from `global $filter;`
+        // onto Piwigo\Core\FilterState, preserving the same lenient
+        // "not initialized yet -> treat as disabled" fallback the old `??
+        // false` had.
+        $filter_enabled = \Piwigo\Core\FilterState::isInitialized() && \Piwigo\Core\FilterState::isEnabled();
         \Piwigo\Core\PageState::current()->setMetaRobots(self::computeMetaRobots($page, $filter_enabled));
 
         // see if we need a redirect because of a permalink

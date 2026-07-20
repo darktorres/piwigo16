@@ -90,7 +90,6 @@ final class NotificationServiceTest extends IntegrationTestCase
             'image_access_type' => 'NOT IN',
             'image_access_list' => '',
         ]));
-        $GLOBALS['filter'] = [];
         Config::override('data_location', '_data/notification-service-test-cache/');
 
         $this->service = new NotificationService(

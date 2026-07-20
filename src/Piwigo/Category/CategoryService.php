@@ -678,10 +678,6 @@ final readonly class CategoryService
      */
     public function getCategoriesMenu(?array $category, FilterUpdaterInterface $filterUpdater): array
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $filter;
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
         $categoryPage = $category;
@@ -703,13 +699,12 @@ final readonly class CategoryService
             CachePools::categoryTree()
         )->getForUser($currentUser->rawAttributes);
 
-        $visibleCategoriesRaw = $filter['visible_categories'] ?? null;
         $rows = self::filterMenuRows(
             $allRows,
             $categoryPage,
             (bool) $currentUser->rawAttributes['expand'],
-            (bool) $filter['enabled'],
-            is_scalar($visibleCategoriesRaw) ? (string) $visibleCategoriesRaw : ''
+            \Piwigo\Core\FilterState::isEnabled(),
+            \Piwigo\Core\FilterState::visibleCategories()
         );
 
         $cats = [];

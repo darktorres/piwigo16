@@ -64,7 +64,6 @@ final class CalendarServiceTest extends IntegrationTestCase
             'image_access_type' => 'NOT IN',
             'image_access_list' => '',
         ]));
-        $GLOBALS['filter'] = [];
     }
 
     public function test_build_inner_sql_for_a_specific_category(): void

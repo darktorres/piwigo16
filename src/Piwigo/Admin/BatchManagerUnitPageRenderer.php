@@ -77,10 +77,6 @@ final class BatchManagerUnitPageRenderer
      */
     public function render(array $catElementsId, int $pageStart): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $pwg_loaded_plugins;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();
@@ -231,7 +227,7 @@ SELECT id, date_creation
         // |                        global mode thumbnails                         |
         // +-------------------------------------------------------------------+
 
-        $template->assign('ACTIVE_PLUGINS', array_keys($pwg_loaded_plugins));
+        $template->assign('ACTIVE_PLUGINS', array_keys(LoadedPlugins::get()));
 
         // how many items to display on this page
         if (isset($_GET['display']) && $_GET['display'] !== '' && $_GET['display'] !== '0') {

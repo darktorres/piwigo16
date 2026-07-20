@@ -122,7 +122,6 @@ final class CategoryServiceTest extends IntegrationTestCase
         );
 
         CurrentUser::set(User::fromUserArray([]));
-        $GLOBALS['filter'] = [];
         Config::override('rate', true);
     }
 

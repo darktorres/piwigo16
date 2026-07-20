@@ -48,10 +48,13 @@ final class FilterService implements FilterUpdaterInterface
      */
     public function initializeFromRequest(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $filter;
+        // Phase 2 global-residual sweep: $filter is now a local scratch
+        // array for this method's own body only (no longer `global
+        // $filter;`) -- the final computed values are published once,
+        // at each of this method's 2 real termination points, to
+        // Piwigo\Core\FilterState, the new cross-file read target.
+        /** @var array<string, mixed> */
+        $filter = [];
 
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
@@ -195,6 +198,13 @@ WHERE ';
                     $filter_recent_period
                 ));
             }
+
+            \Piwigo\Core\FilterState::set(
+                true,
+                is_scalar($filter['visible_categories'] ?? null) ? (string) $filter['visible_categories'] : '',
+                is_scalar($filter['visible_images'] ?? null) ? (string) $filter['visible_images'] : '',
+                is_array($filter['categories'] ?? null) ? $filter['categories'] : []
+            );
         } else {
             if ((bool) SessionService::get()->getSessionVar('filter_enabled', false)) {
                 SessionService::get()->unsetSessionVar('filter_enabled');
@@ -203,6 +213,8 @@ WHERE ';
                 SessionService::get()->unsetSessionVar('filter_visible_categories');
                 SessionService::get()->unsetSessionVar('filter_visible_images');
             }
+
+            \Piwigo\Core\FilterState::set(false);
         }
     }
 
@@ -214,24 +226,19 @@ WHERE ';
     #[\Override]
     public function updateCatsWithFilteredData(array &$cats): void
     {
-        /** @var array<string, mixed> $filter */
-        global $filter;
-
-        if (! (bool) ($filter['enabled'] ?? false)) {
+        // Phase 2 global-residual sweep: retargeted from `global $filter;`
+        // onto Piwigo\Core\FilterState. isInitialized() is checked first
+        // (not just isEnabled()) to preserve the raw global's old lenient
+        // `$filter['enabled'] ?? false` semantics -- a request that never
+        // reaches RequestBootstrap::finalize() at all (no FilterState::set()
+        // call yet) silently does nothing here, same as before.
+        if (! \Piwigo\Core\FilterState::isInitialized() || ! \Piwigo\Core\FilterState::isEnabled()) {
             return;
         }
 
         $upd_fields = ['date_last', 'max_date_last', 'count_images', 'count_categories', 'nb_images'];
 
-        // $filter['categories'] is populated either from
-        // get_computed_categories() (returns array<int|string, array<string,
-        // mixed>>) or from unserialize() of a previously stored copy of that
-        // same data (see include/filter.inc.php) -- unserialize() is not
-        // provably array-shaped to PHPStan, so narrow defensively at runtime.
-        $filter_categories = $filter['categories'] ?? null;
-        if (! is_array($filter_categories)) {
-            return;
-        }
+        $filter_categories = \Piwigo\Core\FilterState::categories();
 
         foreach ($cats as $cat_id => $category) {
             $ref_cat_id = $category['id'] ?? null;

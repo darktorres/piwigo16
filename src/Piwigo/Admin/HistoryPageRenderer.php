@@ -38,16 +38,19 @@ final class HistoryPageRenderer
      * 'history' slug in config/admin_pages.php); selects this page's
      * own tab within the shared 'history' tabsheet group (see
      * StatsPageRenderer, its sibling in that same group).
-     * `search` stays on `global $page;` -- a separate, not-yet-retired
-     * cluster (see this class's own docblock for `search_id`/`nb_lines`/
-     * `start`, all confirmed dead and removed instead).
+     * `search` (Phase 2 global-residual sweep): also confirmed dead, same
+     * as `search_id`/`nb_lines`/`start` above. This docblock's own former
+     * justification (`$page['search']` populated by `include/
+     * ws_functions/pwg.php`'s `ws_history_search()`) named a file that no
+     * longer exists -- it was ported to `Ws\PwgCore::historySearch()`,
+     * whose own `$page['search'] = unserialize(...)` write has no
+     * `global` declaration at all (a same-named but unrelated local
+     * variable), and `ws.php`/`admin.php` are separate HTTP requests
+     * regardless, so there was never a real bridge here even in
+     * principle.
      */
     public function render(string $pageSlug): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
         $conn = DbConnection::build();
 
@@ -84,31 +87,14 @@ final class HistoryPageRenderer
 
         $form = [];
 
-        // $page['search'] is an unserialize()'d value (see ws_history_search() in
-        // include/ws_functions/pwg.php); only provably mixed, so narrow to an
-        // array (and its 'fields' sub-array) before reading nested offsets.
-        $page_search = $page['search'] ?? null;
-        $page_search_fields = is_array($page_search) ? ($page_search['fields'] ?? null) : null;
-        $page_search_fields = is_array($page_search_fields) ? $page_search_fields : null;
-
-        if (is_array($page_search)) {
-            if (isset($page_search_fields['date-after'])) {
-                $form['start'] = $page_search_fields['date-after'];
-            }
-
-            if (isset($page_search_fields['date-before'])) {
-                $form['end'] = $page_search_fields['date-before'];
-            }
-        } else {
-            // by default, at page load, we want the selected date to be the current
-            // date
-            $form['start'] = $form['end'] = Env::now()->format('Y-m-d');
-            $form['types'] = $types;
-            // Hoverbox by default
-            $form['display_thumbnail'] =
-              new CookieService()
-                  ->getCookieVar('display_thumbnail', 'no_display_thumbnail');
-        }
+        // by default, at page load, we want the selected date to be the current
+        // date
+        $form['start'] = $form['end'] = Env::now()->format('Y-m-d');
+        $form['types'] = $types;
+        // Hoverbox by default
+        $form['display_thumbnail'] =
+          new CookieService()
+              ->getCookieVar('display_thumbnail', 'no_display_thumbnail');
 
         $form_param = [];
         $form_param['ip'] = $_GET['filter_ip'] ?? null;
@@ -146,8 +132,8 @@ final class HistoryPageRenderer
                 'USER_NAME' => $form_param['user_name'] ?? null,
                 'IMAGE_ID' => $form_param['image_id'],
                 'IP' => $form_param['ip'],
-                'START' => $form['start'] ?? null,
-                'END' => $form['end'] ?? null,
+                'START' => $form['start'],
+                'END' => $form['end'],
             ]
         );
 

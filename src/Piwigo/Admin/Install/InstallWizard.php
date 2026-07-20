@@ -118,8 +118,6 @@ class InstallWizard
      */
     public function boot(): void
     {
-        global $template;
-
         // download database config file if exists
         new \Piwigo\Validation\InputValidator()
             ->validate('dl', $_GET, false, '/^[a-f0-9]{32}$/');

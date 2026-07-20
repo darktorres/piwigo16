@@ -68,15 +68,18 @@ if (! function_exists('redirect_html')) {
     function redirect_html($url, $msg = '', $refresh_time = 0): never
     {
         global $user;
-        global $template;
 
         // $template/lang_info are genuinely not always set here: this function
         // can be called very early (e.g. a fatal before common.inc.php finishes
-        // bootstrapping), which is exactly what this check detects -- do not
-        // declare $template's type above, it would make PHPStan wrongly treat
-        // this real fallback path as dead code. Lang::isLangInfoInitialized()
-        // (Legacy Coupling Retirement Track A gap-fill batch G5) preserves the
-        // former raw global's isset() semantics exactly (see its own docblock).
+        // bootstrapping), which is exactly what this check detects. Lang::
+        // isLangInfoInitialized() (Legacy Coupling Retirement Track A
+        // gap-fill batch G5) preserves the former raw global's isset()
+        // semantics for $user/lang_info; CurrentTemplate::isInitialized()
+        // does the same for $template (Phase 2 global-residual sweep --
+        // do not simplify the null-coalesce below, it's what makes the
+        // real early-crash fallback path reachable).
+        $template = \Piwigo\Template\CurrentTemplate::isInitialized() ? \Piwigo\Template\CurrentTemplate::get() : null;
+
         if (! \Piwigo\Core\Lang::isLangInfoInitialized() || ! isset($template)) {
             $guest_id = \Piwigo\Config\Config::guestId();
             $user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), \Piwigo\Db\DbConnection::build())->buildUser($guest_id, true);
@@ -94,13 +97,14 @@ if (! function_exists('redirect_html')) {
             \Piwigo\Template\CurrentTemplate::set($template);
         }
 
-        // Neither branch above runs when $template was already set and we're
-        // not in admin -- it's the pre-existing bootstrap Template in that case,
-        // but re-check for real since that isn't provable here statically.
-        if (! ($template instanceof Template)) {
-            $template = new Template(PHPWG_ROOT_PATH . 'themes', new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), \Piwigo\Db\DbConnection::build())->getDefaultTheme());
-            \Piwigo\Template\CurrentTemplate::set($template);
-        }
+        // Neither branch above runs when $template was already set and
+        // we're not in admin -- it's the pre-existing bootstrap Template
+        // in that case. Phase 2 global-residual sweep: now that $template
+        // is a real locally-typed variable (via CurrentTemplate::get())
+        // instead of an untyped global, PHPStan proves this is always a
+        // real Template by this point -- the old defensive re-check (kept
+        // because it "isn't provable statically" under the untyped
+        // global) is provably dead code now, not just redundant.
 
         if (empty($msg)) {
             $msg = nl2br(l10n('Redirection...'));

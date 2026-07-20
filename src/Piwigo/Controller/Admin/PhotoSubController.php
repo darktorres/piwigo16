@@ -43,10 +43,12 @@ final class PhotoSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
+        // Phase 2 global-residual sweep: $page is a local scratch array
+        // for this method's own body only (no longer `global $page;`),
+        // same shape as Section\SectionPopulator::populate()'s own
+        // equivalent fix (Track A5.2e).
+        /** @var array<string, mixed> $page */
+        $page = [];
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);

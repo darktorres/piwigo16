@@ -75,10 +75,7 @@ final class PluginSubController implements AdminSubControllerInterface
                 ->fatalError('Invalid plugin identifier');
         }
 
-        /** @var array<string, mixed> $pwg_loaded_plugins */
-        global $pwg_loaded_plugins;
-
-        if (! isset($pwg_loaded_plugins[$plugin_id])) {
+        if (! isset(\Piwigo\Admin\LoadedPlugins::get()[$plugin_id])) {
             new HtmlService()
                 ->fatalError('Invalid URL - plugin ' . $plugin_id . ' not active');
         }

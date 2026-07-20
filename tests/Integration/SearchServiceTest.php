@@ -164,7 +164,6 @@ final class SearchServiceTest extends IntegrationTestCase
         @mkdir($this->cacheDir . '/cache', 0o777, true);
 
         CurrentUser::set(User::fromUserArray(self::realisticUserGlobal()));
-        $GLOBALS['filter'] = [];
         Config::override('data_location', '_data/search-service-test-cache/');
         Config::override('default_filters_views', '');
         Config::override('filters_views', serialize([

@@ -72,10 +72,6 @@ final class IntroSubController implements AdminSubControllerInterface
          */
         global $link_start;
         $logger = \Piwigo\Core\CurrentLogger::get();
-        /**
-         * @var array<string, mixed>
-         */
-        global $pwg_loaded_plugins;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // A single connection for the whole request -- mirrors the
@@ -229,7 +225,7 @@ SELECT COUNT(*)
                 'NB_GROUPS' => $stats['nb_groups'],
                 'NB_RATES' => $stats['nb_rates'],
                 'NB_VIEWS' => AdminUiHelper::numberFormatHumanReadable($nb_views),
-                'NB_PLUGINS' => count($pwg_loaded_plugins),
+                'NB_PLUGINS' => count(\Piwigo\Admin\LoadedPlugins::get()),
                 'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))),
                 'U_QUICK_SYNC' => PHPWG_ROOT_PATH . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                 'CHECK_FOR_UPDATES' => \Piwigo\Config\Config::dashboardCheckForUpdates(),

@@ -18,27 +18,33 @@ use Piwigo\Db\Tables;
 final class FilesystemIntegrityChecker
 {
     /**
+     * Per-request run-once guard for fsQuickCheck() -- replaces the
+     * former `$page[__FUNCTION__ . '_already_called']` global (Phase 2
+     * global-residual sweep). Genuinely load-bearing, not dead: confirmed
+     * by reading both call chains, not assumed -- admin.php's own
+     * AdminShell::run() calls fsQuickCheck() directly, then dispatches to
+     * a sub-controller (e.g. Controller\Admin\IntroSubController) that
+     * calls it again within that same dispatched request.
+     */
+    private static bool $fsQuickCheckDone = false;
+
+    /**
      * Displays a header warning if we find missing photos on a random sample.
      *
      * @since 13.4.0
      */
     public static function fsQuickCheck(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
-
         $fs_quick_check_period = \Piwigo\Config\Config::fsQuickCheckPeriod();
         if (is_numeric($fs_quick_check_period) && $fs_quick_check_period === 0) {
             return;
         }
 
-        if (isset($page[__FUNCTION__ . '_already_called'])) {
+        if (self::$fsQuickCheckDone) {
             return;
         }
 
-        $page[__FUNCTION__ . '_already_called'] = true;
+        self::$fsQuickCheckDone = true;
         \Piwigo\Config\ConfigDb::confUpdateParam('fs_quick_check_last_check', date('c'));
 
         $conn = DbConnection::build();
@@ -151,5 +157,14 @@ DELETE
 ;';
             $conn->executeStatement($query);
         }
+    }
+
+    /**
+     * Test-only -- restricted to tests/ by an arch test, mirroring the
+     * equivalent guard on SessionService's/Config's own reset() methods.
+     */
+    public static function reset(): void
+    {
+        self::$fsQuickCheckDone = false;
     }
 }

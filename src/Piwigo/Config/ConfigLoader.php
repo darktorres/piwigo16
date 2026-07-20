@@ -51,8 +51,13 @@ final class ConfigLoader
      * first-run state, and seeding null would flip has() permanently to
      * true and break that detection.
      *
-     * Call before applyEnvOverrides() (and, once P14 lands DB-merge,
-     * before that too) so DB/env values win over compile-time defaults.
+     * Call before applyEnvOverrides() and before the DB-merge
+     * (ConfigService::loadConfFromDb(), called separately once
+     * Kernel::boot() makes the container available) so DB/env values win
+     * over compile-time defaults -- CommonBootstrap::run()'s real
+     * sequence is applyDefaults() -> applyEnvOverrides() -> Kernel::boot()
+     * -> ConfigService::loadConfFromDb(), DB-merge genuinely last and
+     * highest-priority.
      */
     public static function applyDefaults(): void
     {

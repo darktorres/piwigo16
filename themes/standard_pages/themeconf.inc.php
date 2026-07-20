@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-// Bootstrap globals, set by include/common.inc.php.
-/** @var array<string, mixed> $conf */
+// Bootstrap global, set by include/common.inc.php.
 /** @var array<string, mixed> $page */
-global $conf, $page;
+global $page;
 
 $themeconf = [
     'name' => 'standard_pages',
@@ -20,7 +19,7 @@ $themeconf = [
 $theme_template_vars = [
     'STD_PGS_SELECTED_SKIN' => \Piwigo\Config\ConfigDb::confGetParam('standard_pages_selected_skin', 'default'),
     'STD_PGS_SELECTED_LOGO' => \Piwigo\Config\ConfigDb::confGetParam('standard_pages_selected_logo', 'piwigo_logo'),
-    'GALLERY_TITLE' => $page['gallery_title'] ?? $conf['gallery_title'],
+    'GALLERY_TITLE' => $page['gallery_title'] ?? \Piwigo\Config\Config::galleryTitle(),
 ];
 
 // Send custom logo path if custom_logo is the selected option

@@ -5,12 +5,21 @@ declare(strict_types=1);
 namespace Piwigo\Config;
 
 /**
- * P13 built confGetParam() only (pure, DB-independent). P14 adds the rest,
- * now that ConfigRepository/DbConnection exist. Every other reference
- * ConfigService method (showMobileAppBannerInGallery,
- * standardPagesSelectedLogo, countOrphans, pdfJpgQuality, ...) backs admin
- * UI / domain features that don't exist until P17-23/P29 -- still not
- * built here.
+ * The DI/Doctrine-backed config persistence layer -- the real writer
+ * behind Piwigo\Config\Config:: (Legacy Coupling Retirement Phase 5).
+ * Three-part split, each part with a real reason to exist:
+ * Piwigo\Config\Config:: is the static typed read layer (SCHEMA-driven
+ * accessors) and in-memory-only write via Config::override();
+ * Piwigo\Config\ConfigService (this class) is the DI/Doctrine-backed
+ * persistence layer, constructor-injected into every real caller that
+ * can reach the container; Piwigo\Config\ConfigDb is the static
+ * DBAL-direct persistence layer for the callers that structurally
+ * cannot -- pre-container bootstrap/install/upgrade code and the frozen
+ * DbPatch/VersionUpgrade set. Not a "deferred to P14" gap: P14 (DB layer
+ * + Doctrine ORM) has been done for a long time, and this class's write
+ * methods already route through a real Doctrine entity
+ * (ConfigEntry/ConfigRepository, mapping the `config` table), matching
+ * every other domain's repository pattern in this codebase.
  *
  * loadConfFromDb()/confUpdateParam() faithfully replicate the CURRENT
  * legacy encoding (include/functions.inc.php's load_conf_from_db()/
@@ -50,6 +59,14 @@ final readonly class ConfigService
      * non-trivial usage (a single-param equality filter), so a
      * parameterized find() covers the real need without a string-
      * interpolation surface.
+     *
+     * Fires the same 'load_conf' plugin hook ConfigDb::loadConfFromDb()
+     * does, payload $param in place of that method's raw SQL $condition
+     * string (the closest equivalent under this method's narrower
+     * by-single-key signature) -- a documented trigger
+     * (tools/triggers_list.php), so a plugin listening for it must keep
+     * being notified regardless of which persistence layer a given
+     * caller routes through.
      */
     public function loadConfFromDb(?string $param = null, bool $dieIfNotFound = true): void
     {
@@ -69,6 +86,8 @@ final readonly class ConfigService
         foreach ($entries as $entry) {
             Config::override($entry->param, self::decodeScalar($entry->value));
         }
+
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('load_conf', $param);
     }
 
     /**

@@ -13,18 +13,18 @@ declare(strict_types=1);
 // |                          define and include                           |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\Tables;
 
 define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
-// Bootstrap globals, set by include/common.inc.php.
+// Bootstrap global, set by include/common.inc.php.
 /**
- * @var array<string, mixed> $conf
- * @var array<string, mixed> $user
+ * @var array<string, mixed>
  */
-global $conf, $user;
+global $user;
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -37,7 +37,7 @@ global $conf, $user;
 
 // top_number/nb_image_page are DB-backed smallint columns (default 15);
 // see include/config_default.inc.php and install/piwigo_structure-mysql.sql.
-$top_number = is_numeric($conf['top_number'] ?? null) ? (int) $conf['top_number'] : 15;
+$top_number = Config::topNumber();
 $nb_image_page = is_numeric($user['nb_image_page'] ?? null) ? (int) $user['nb_image_page'] : 15;
 
 $conn = \Piwigo\Db\DbConnection::build();

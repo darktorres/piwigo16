@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -35,19 +36,18 @@ use Piwigo\Template\Template;
  * needs. The themes class itself stays (real callers remain outside this
  * batch: admin/include/functions_install.inc.php, functions_upgrade.php).
  *
- * Investigated, not fixed: this page's writes go through the legacy store
- * (ConfigDb::confUpdateParam()/confGetParam(), the raw-SQL + global $conf
- * path), not Piwigo\Config\ConfigService -- see the original deferral
- * rationale in this class's predecessor, ThemesStandardPagesSubController
- * (task #343's precedent, re-verified during this port: all 4
- * ConfigDb::confUpdateParam() call sites below still pass only an
- * allowlisted or sanitized value, so still not exploitable here).
+ * Legacy Coupling Retirement Phase 5: the 4 writes below now go through
+ * the DI/Doctrine-backed Piwigo\Config\ConfigService instead of the
+ * static Piwigo\Config\ConfigDb -- this class already receives
+ * RedirectServiceInterface/UrlServiceInterface via constructor
+ * injection, so adding ConfigService the same way is mechanical.
  */
 final class ThemesStandardPagesPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly ConfigService $configService,
     ) {}
 
     public function render(): void
@@ -94,16 +94,16 @@ final class ThemesStandardPagesPageRenderer
             $use_standard_pages_checked = $use_standard_pages_raw !== null
                 && $use_standard_pages_raw !== ''
                 && $use_standard_pages_raw !== '0';
-            \Piwigo\Config\ConfigDb::confUpdateParam('use_standard_pages', $use_standard_pages_checked, true);
+            $this->configService->confUpdateParam('use_standard_pages', $use_standard_pages_checked, true);
 
             // save selected logo
             if (isset($_POST['std_pgs_display_logo']) and in_array($_POST['std_pgs_display_logo'], $std_pgs_logo_options, true)) {
-                \Piwigo\Config\ConfigDb::confUpdateParam('standard_pages_selected_logo', $_POST['std_pgs_display_logo'], true);
+                $this->configService->confUpdateParam('standard_pages_selected_logo', $_POST['std_pgs_display_logo'], true);
             }
 
             // save selected skin
             if (isset($_POST['std_pgs_selected_skin']) and in_array($_POST['std_pgs_selected_skin'], $std_pgs_skin_options, true)) {
-                \Piwigo\Config\ConfigDb::confUpdateParam('standard_pages_selected_skin', $_POST['std_pgs_selected_skin'], true);
+                $this->configService->confUpdateParam('standard_pages_selected_skin', $_POST['std_pgs_selected_skin'], true);
             }
         }
 
@@ -145,7 +145,7 @@ final class ThemesStandardPagesPageRenderer
 
                     $file_path = $upload_dir . '/' . \Piwigo\Core\StringHelper::str2url($pathinfo['filename']) . '.' . $allowed_mimes[$mime_type];
 
-                    \Piwigo\Config\ConfigDb::confUpdateParam('standard_pages_selected_logo_path', $file_path, true);
+                    $this->configService->confUpdateParam('standard_pages_selected_logo_path', $file_path, true);
 
                     // $upload_dir is PWG_LOCAL_DIR . 'logo', a subdirectory of the
                     // 'local' disk's own root -- the disk-relative path needs the

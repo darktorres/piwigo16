@@ -90,6 +90,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Admin\Extensions\ZipExtractor;
     use Piwigo\Config\Config;
     use Piwigo\Config\ConfigLoader;
+    use Piwigo\Config\ConfigService;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
     use Piwigo\Html\HtmlService;
@@ -135,7 +136,7 @@ namespace Piwigo\Tests\Integration {
 
             $this->conn = DbConnection::build();
             $this->repo = new ExtensionRepository($this->conn);
-            $this->lifecycle = new ExtensionLifecycle($this->repo, new PemCatalog(new ZipExtractor()), new UrlService(new HtmlService()));
+            $this->lifecycle = new ExtensionLifecycle($this->repo, new PemCatalog(new ZipExtractor()), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository()));
 
             Config::override('enable_extensions_install', true);
             Config::override('php_extension_in_urls', false);
@@ -342,11 +343,14 @@ namespace Piwigo\Tests\Integration {
 
         public function test_theme_activate_rejects_a_second_mobile_theme(): void
         {
-            // ConfigDb::confUpdateParam('mobile_theme', $id) (called by a
-            // successful mobile-theme activate) is deliberately called
+            // ConfigService::confUpdateParam('mobile_theme', $id) (called by
+            // a successful mobile-theme activate, Legacy Coupling
+            // Retirement Phase 5 -- formerly ConfigDb::confUpdateParam(),
+            // same call shape preserved exactly) is deliberately called
             // WITHOUT updateGlobal=true, matching themes.class.php's own
-            // exact call shape -- it persists to the DB but never updates
-            // the live $conf global or Config::$data. This is a real,
+            // original call shape -- it persists to the DB but never
+            // updates Config::$data (and structurally can't touch the
+            // legacy $conf global at all, unlike ConfigDb). This is a real,
             // faithfully-preserved legacy quirk: the mobile-theme-uniqueness
             // guard only actually takes effect on the NEXT request, once
             // both get freshly reloaded from the DB at bootstrap -- never

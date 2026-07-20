@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Extensions;
 
 use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
@@ -40,6 +41,7 @@ final readonly class CoreUpdateService
         private ZipExtractor $zipExtractor,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly ConfigService $configService,
     ) {}
 
     public function checkPiwigoUpgrade(): void
@@ -150,12 +152,12 @@ final readonly class CoreUpdateService
      */
     public function notifyPiwigoNewVersions(): void
     {
-        if (! \Piwigo\Config\ConfigDb::pwgIsDbconfWriteable()) {
+        if (! $this->configService->pwgIsDbconfWriteable()) {
             return;
         }
 
         $newVersions = $this->getPiwigoNewVersions();
-        \Piwigo\Config\ConfigDb::confUpdateParam('update_notify_last_check', date('c'));
+        $this->configService->confUpdateParam('update_notify_last_check', date('c'));
 
         if ((bool) $newVersions['is_dev']) {
             return;
@@ -232,7 +234,7 @@ final readonly class CoreUpdateService
         new MailService()
             ->switchLangBack();
 
-        \Piwigo\Config\ConfigDb::confUpdateParam(
+        $this->configService->confUpdateParam(
             'update_notify_last_notification',
             [
                 'version' => $newVersionsString,
@@ -351,7 +353,7 @@ final readonly class CoreUpdateService
 
         FilesystemHelper::deltree(PHPWG_ROOT_PATH . $dataLocation . 'update');
         UserCacheInvalidator::invalidate(true);
-        \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', $upgradeTo);
+        $this->configService->confUpdateParam('piwigo_installed_version', $upgradeTo);
         new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Core, 'update', [
             'from_version' => AppInfo::VERSION,
             'to_version' => $upgradeTo,
@@ -359,7 +361,7 @@ final readonly class CoreUpdateService
 
         if ($this->stepIs($step, 2)) {
             $template->delete_compiled_templates();
-            \Piwigo\Config\ConfigDb::confDeleteParam('fs_quick_check_last_check');
+            $this->configService->confDeleteParam('fs_quick_check_last_check');
 
             \Piwigo\Core\PageState::current()->addInfo(Lang::t('Update Complete'));
             \Piwigo\Core\PageState::current()->addInfo($upgradeTo);

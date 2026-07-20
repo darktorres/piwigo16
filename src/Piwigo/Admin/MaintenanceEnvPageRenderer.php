@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -41,6 +42,7 @@ final class MaintenanceEnvPageRenderer
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly ConfigService $configService,
     ) {}
 
     public function render(): void
@@ -48,7 +50,7 @@ final class MaintenanceEnvPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $action = is_string($_GET['action'] ?? null) ? $_GET['action'] : '';
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+

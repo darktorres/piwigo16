@@ -9,6 +9,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -41,6 +42,7 @@ final class UpdatesPwgPageRenderer
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly ConfigService $configService,
     ) {}
 
     public function render(): void
@@ -82,7 +84,7 @@ final class UpdatesPwgPageRenderer
             $upgrade_to = is_string($get_to) ? $get_to : '';
         }
 
-        $core_update_service = new CoreUpdateService(new ZipExtractor(), $this->redirectService, $this->urlService);
+        $core_update_service = new CoreUpdateService(new ZipExtractor(), $this->redirectService, $this->urlService, $this->configService);
         $new_versions = $core_update_service->getPiwigoNewVersions();
 
         // +-----------------------------------------------------------------------+
@@ -132,7 +134,7 @@ final class UpdatesPwgPageRenderer
                 $core_update_service->upgradeTo($_POST['upgrade_to'], $step);
             }
 
-            $extension_update_checker = new ExtensionUpdateChecker(new ExtensionScanner(), new PemCatalog(new ZipExtractor()), $this->urlService);
+            $extension_update_checker = new ExtensionUpdateChecker(new ExtensionScanner(), new PemCatalog(new ZipExtractor()), $this->urlService, $this->configService);
             $template->assign('missing', $extension_update_checker->getMissingExtensions($upgrade_to));
         }
 

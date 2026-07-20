@@ -12,6 +12,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
@@ -69,6 +70,7 @@ final class MaintenanceActionDispatcher
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly ConfigService $configService,
     ) {}
 
     /**
@@ -108,7 +110,7 @@ final class MaintenanceActionDispatcher
 
             case 'lock_gallery':
 
-                \Piwigo\Config\ConfigDb::confUpdateParam('gallery_locked', 'true');
+                $this->configService->confUpdateParam('gallery_locked', 'true');
                 new ActivityService(new ActivityRepository($conn))
                     ->record('system', ActivitySystem::Core, 'maintenance', [
                         'maintenance_action' => $action,
@@ -118,7 +120,7 @@ final class MaintenanceActionDispatcher
                 // no break
             case 'unlock_gallery':
 
-                \Piwigo\Config\ConfigDb::confUpdateParam('gallery_locked', 'false');
+                $this->configService->confUpdateParam('gallery_locked', 'false');
                 $_SESSION['page_infos'] = [Lang::t('Gallery unlocked')];
                 new ActivityService(new ActivityRepository($conn))
                     ->record('system', ActivitySystem::Core, 'maintenance', [

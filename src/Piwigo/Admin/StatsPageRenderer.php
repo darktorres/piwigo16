@@ -8,6 +8,7 @@ use DateInterval;
 use DateTime;
 use Doctrine\DBAL\Connection;
 use InvalidArgumentException;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -39,14 +40,14 @@ final class StatsPageRenderer
      * shared 'history' tabsheet group (see HistoryPageRenderer, its
      * sibling in that same group).
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         $conn = DbConnection::build();
-        new HistoryService(new HistoryRepository($conn))
+        new HistoryService(new HistoryRepository($conn), $configService)
             ->summarize();
 
         $template->set_filename('stats', 'stats.tpl');

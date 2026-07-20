@@ -6,6 +6,7 @@ namespace Piwigo\Group;
 
 use Piwigo\Audit\AuditService;
 use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivityLoggerInterface;
 
 /**
@@ -18,7 +19,9 @@ use Piwigo\Core\ActivityLoggerInterface;
  * same shape as MailerInterface -- see ActivityLoggerInterface's own
  * docblock), and calls Piwigo\Cache\UserCacheInvalidator (L1Infrastructure,
  * P23 batch 8d) directly for cache invalidation -- a real class dependency,
- * always allowed (L2a may depend on L1).
+ * always allowed (L2a may depend on L1). Also constructor-injects
+ * ConfigService (L1Infrastructure, Phase 5 Legacy Coupling Retirement) for
+ * delete()'s email_admin_on_new_user consistency write.
  */
 final readonly class GroupService
 {
@@ -26,6 +29,7 @@ final readonly class GroupService
         private GroupRepository $repo,
         private ActivityLoggerInterface $activityLogger,
         private AuditService $auditService,
+        private ConfigService $configService,
     ) {}
 
     /**
@@ -254,7 +258,7 @@ final readonly class GroupService
         if ((bool) preg_match('/^group:(\d+)$/', $emailAdminOnNewUser, $matches)) {
             foreach ($groupIds as $groupId) {
                 if ($groupId === (int) $matches[1]) {
-                    \Piwigo\Config\ConfigDb::confUpdateParam('email_admin_on_new_user', 'all', true);
+                    $this->configService->confUpdateParam('email_admin_on_new_user', 'all', true);
                 }
             }
         }

@@ -19,6 +19,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Caddie\CaddieRepository;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
@@ -60,6 +61,16 @@ final class PwgCore
     private static function authService(): AuthService
     {
         return new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService(), new PasswordService(new PasswordRepository(DbConnection::build())), new CookieService());
+    }
+
+    /**
+     * Constructed identically 4 times across this file (sessionGetStatus()/
+     * historyLog()/historyGet()/historySearch()) -- same DRY-extraction
+     * shape as authService() above, builds its own connection per call.
+     */
+    private static function historyService(): HistoryService
+    {
+        return new HistoryService(new HistoryRepository(DbConnection::build()), CurrentConfigService::get());
     }
 
     /**
@@ -454,7 +465,7 @@ DELETE FROM ' . Tables::rate() . '
 
         $res['current_datetime'] = DbConnection::build()->fetchOne('SELECT NOW();');
         $res['version'] = AppInfo::VERSION;
-        $res['save_visits'] = new HistoryService(new HistoryRepository(DbConnection::build()))->isLoggingAllowed();
+        $res['save_visits'] = self::historyService()->isLoggingAllowed();
         $res['connected_with'] = $_SESSION['connected_with'] ?? null;
 
         // Piwigo Remote Sync does not support receiving the new (version 14) output "save_visits"
@@ -797,7 +808,7 @@ SELECT
             $image_type = 'high';
         }
 
-        new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit(
+        self::historyService()->logVisit(
             is_numeric($params['image_id']) ? (int) $params['image_id'] : null,
             $image_type,
             section: $section,
@@ -821,7 +832,7 @@ SELECT
      */
     public static function historyGet(array $data, array $search, array $types): array
     {
-        return new HistoryService(new HistoryRepository(DbConnection::build()))
+        return self::historyService()
             ->getHistory($data, $search, $types);
     }
 
@@ -983,7 +994,7 @@ SELECT rules
         // proved each element is an array, not that its keys are strings.
         /** @var array<int, array<string, mixed>> $data */
         $data = array_values(array_filter($data, is_array(...)));
-        $historyService = new HistoryService(new HistoryRepository(DbConnection::build()));
+        $historyService = self::historyService();
         usort($data, $historyService->historyCompare(...));
 
         $page['nb_lines'] = count($data);

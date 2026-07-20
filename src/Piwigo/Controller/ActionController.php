@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
@@ -57,7 +59,13 @@ final class ActionController implements ControllerInterface
 {
     public function __construct(
         private readonly UrlServiceInterface $urlService,
+        private readonly ConfigService $configService,
     ) {}
+
+    private function historyService(Connection $conn): HistoryService
+    {
+        return new HistoryService(new HistoryRepository($conn), $this->configService);
+    }
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -190,10 +198,10 @@ SELECT id
 
         $image_id_val = $_GET['id'];
         if ($get_part === 'e') {
-            new HistoryService(new HistoryRepository($conn))
+            $this->historyService($conn)
                 ->logVisit($image_id_val, 'high');
         } elseif ($get_part === 'r') {
-            new HistoryService(new HistoryRepository($conn))
+            $this->historyService($conn)
                 ->logVisit($image_id_val, 'other');
         } elseif ($get_part === 'f') {
             if ($format_row === null) {
@@ -201,7 +209,7 @@ SELECT id
             }
             $format_id_val = $format_row['format_id'] ?? null;
             $format_id_val = is_string($format_id_val) ? $format_id_val : null;
-            new HistoryService(new HistoryRepository($conn))
+            $this->historyService($conn)
                 ->logVisit($image_id_val, 'high', $format_id_val);
         }
 

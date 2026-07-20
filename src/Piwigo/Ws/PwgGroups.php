@@ -17,6 +17,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
 use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
@@ -281,6 +282,6 @@ final class PwgGroups
      */
     private static function groupService(): GroupService
     {
-        return new GroupService(new GroupRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new AuditService(new AuditRepository(DbConnection::build())));
+        return new GroupService(new GroupRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new AuditService(new AuditRepository(DbConnection::build())), CurrentConfigService::get());
     }
 }

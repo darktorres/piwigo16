@@ -13,6 +13,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -85,6 +86,7 @@ final class PictureController implements ControllerInterface
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly ConfigService $configService,
     ) {}
 
     private static function permissionService(Connection $conn): PermissionService
@@ -558,6 +560,7 @@ UPDATE ' . Tables::categories() . '
         }
 
         $urlService = $this->urlService;
+        $configService = $this->configService;
         $body = LegacyRenderCapture::capture(static function () use (
             $conn,
             $section_context,
@@ -572,7 +575,8 @@ UPDATE ' . Tables::categories() . '
             $last_item,
             $url_up,
             $edit_comment,
-            $urlService
+            $urlService,
+            $configService
         ): void {
             /**
              * @var string
@@ -1305,7 +1309,7 @@ SELECT id, name, permalink
             }
             // -------------------------------------------------- log informations
             $current_image_id = $picture['current']['id'];
-            new HistoryService(new HistoryRepository($conn))
+            new HistoryService(new HistoryRepository($conn), $configService)
                 ->logVisit(
                     is_numeric($current_image_id) ? (int) $current_image_id : null,
                     'picture',

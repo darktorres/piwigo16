@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -93,6 +94,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly ConfigService $configService,
     ) {}
 
     #[\Override]
@@ -202,7 +204,9 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                             continue;
                         }
                         if (isset($_POST[$nbm_user['param']])) {
-                            \Piwigo\Config\ConfigDb::confUpdateParam($nbm_user['param'], $_POST[$nbm_user['param']], true);
+                            $post_value = $_POST[$nbm_user['param']];
+                            $value = is_scalar($post_value) ? (string) $post_value : '';
+                            $this->configService->confUpdateParam($nbm_user['param'], $value, true);
                             $updated_param_count++;
                         }
                     }

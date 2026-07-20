@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Admin\UpdatesPwgPageRenderer;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
@@ -59,6 +60,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly ConfigService $configService,
     ) {}
 
     #[\Override]
@@ -91,9 +93,9 @@ final class UpdatesSubController implements AdminSubControllerInterface
 
         if ($tab === 'ext') {
             new UpdatesExtPageRenderer()
-                ->render('updates', $this->urlService);
+                ->render('updates', $this->urlService, $this->configService);
         } else {
-            new UpdatesPwgPageRenderer($this->redirectService, $this->urlService)
+            new UpdatesPwgPageRenderer($this->redirectService, $this->urlService, $this->configService)
                 ->render();
         }
     }

@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Piwigo\History;
 
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\ConfigService;
 
 /**
  * History domain business logic: page-view search/filtering, the
  * year/month/day/hour summary rollup, autopurge, and visit logging.
- * Constructor-injects only HistoryRepository (plain constructor
- * injection, same shape as PermalinkService).
+ * Constructor-injects HistoryRepository (plain constructor injection,
+ * same shape as PermalinkService) and, since Legacy Coupling Retirement
+ * Phase 5, ConfigService for the history_sections_cache write below.
  *
  * P23 batch 8d: isLoggingAllowed()/logVisit() (ported from
  * include/functions.inc.php's do_log()/pwg_log()). AccessControl
@@ -44,6 +46,7 @@ final readonly class HistoryService
 {
     public function __construct(
         private HistoryRepository $repo,
+        private ConfigService $configService,
     ) {}
 
     /**
@@ -158,7 +161,7 @@ final readonly class HistoryService
         if ($pageSection !== null) {
             // set cache if not available
             if (! \Piwigo\Config\Config::has('history_sections_cache')) {
-                \Piwigo\Config\ConfigDb::confUpdateParam('history_sections_cache', $this->repo->getSectionEnumOptions(), true);
+                $this->configService->confUpdateParam('history_sections_cache', $this->repo->getSectionEnumOptions(), true);
             }
 
             $cachedSections = \Piwigo\Config\Config::historySectionsCache();
@@ -189,7 +192,7 @@ final readonly class HistoryService
                 $this->repo->alterSectionEnum($historySections);
 
                 // and refresh cache
-                \Piwigo\Config\ConfigDb::confUpdateParam('history_sections_cache', $this->repo->getSectionEnumOptions(), true);
+                $this->configService->confUpdateParam('history_sections_cache', $this->repo->getSectionEnumOptions(), true);
 
                 $section = $pageSection;
             }

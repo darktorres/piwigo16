@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
@@ -30,7 +31,7 @@ use Piwigo\Template\Template;
  */
 final class ExtendForTemplatesPageRenderer
 {
-    public function render(UrlServiceInterface $urlService): void
+    public function render(UrlServiceInterface $urlService, ConfigService $configService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
         $conn = DbConnection::build();
@@ -158,11 +159,7 @@ SELECT permalink
             \Piwigo\Config\Config::override('extents_for_templates', $replacements);
             $tpl_extension = $replacements;
             /* ecrire la nouvelle conf */
-            $query = '
-UPDATE ' . Tables::config() . '
-  SET value = \'' . str_replace("\'", "''", $serialized_extents) . '\'
-WHERE param = \'extents_for_templates\';';
-            $conn->executeStatement($query);
+            $configService->confUpdateParam('extents_for_templates', $serialized_extents);
             \Piwigo\Core\PageState::current()->addInfo(Lang::t('Templates configuration has been recorded.'));
         }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Http\HttpClientService;
@@ -30,6 +31,7 @@ final readonly class ExtensionUpdateChecker
         private ExtensionScanner $scanner,
         private PemCatalog $pemCatalog,
         private UrlServiceInterface $urlService,
+        private ConfigService $configService,
     ) {}
 
     /**
@@ -124,7 +126,7 @@ final readonly class ExtensionUpdateChecker
         }
 
         \Piwigo\Config\Config::override('updates_ignored', $updatesIgnored);
-        \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', serialize($updatesIgnored));
+        $this->configService->confUpdateParam('updates_ignored', serialize($updatesIgnored));
     }
 
     /**

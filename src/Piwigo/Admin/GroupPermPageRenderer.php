@@ -11,6 +11,7 @@ use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -35,6 +36,7 @@ final class GroupPermPageRenderer
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly ConfigService $configService,
     ) {}
 
     private static function auditService(Connection $conn): AuditService
@@ -93,7 +95,7 @@ final class GroupPermPageRenderer
 
         $group_id = (int) $_GET['group_id'];
 
-        $group_service = new GroupService(new GroupRepository($conn), new ActivityService(new ActivityRepository($conn)), self::auditService($conn));
+        $group_service = new GroupService(new GroupRepository($conn), new ActivityService(new ActivityRepository($conn)), self::auditService($conn), $this->configService);
 
         // [SEC-57] actor for either branch below
         $actor_id = \Piwigo\Users\CurrentUser::get()->id;

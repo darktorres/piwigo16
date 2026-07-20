@@ -11,6 +11,7 @@ use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -77,6 +78,7 @@ final class GalleryController implements ControllerInterface
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly ConfigService $configService,
     ) {}
 
     private static function permissionService(Connection $conn): PermissionService
@@ -155,7 +157,8 @@ final class GalleryController implements ControllerInterface
 
         $redirectService = $this->redirectService;
         $urlService = $this->urlService;
-        $body = LegacyRenderCapture::capture(static function () use ($conn, $page_items, $page_start, $page_nb_image_page, $section_context, $redirectService, $urlService): void {
+        $configService = $this->configService;
+        $body = LegacyRenderCapture::capture(static function () use ($conn, $page_items, $page_start, $page_nb_image_page, $section_context, $redirectService, $urlService, $configService): void {
             // $title is set and read entirely within this closure (passed
             // straight into PageHeaderRenderer::render() below) -- no
             // other file reads $GLOBALS['title']. Plain local, not global.
@@ -643,7 +646,7 @@ final class GalleryController implements ControllerInterface
             $template->pparse('index');
 
             // ------------------------------------------------ log informations
-            new HistoryService(new HistoryRepository($conn))
+            new HistoryService(new HistoryRepository($conn), $configService)
                 ->logVisit(
                     section: $section_context->section,
                     category: $section_context->category,

@@ -3530,10 +3530,10 @@ final class Config
     public static function extentsForTemplates(): array
     {
         // Stored as a serialize()d string in the config table (see
-        // ExtendForTemplatesPageRenderer's raw SQL UPDATE) -- the original
-        // accessor only handled an already-unserialized array, silently
-        // discarding every DB-loaded value (P24 Track A batch A4 finding,
-        // same shape-mismatch class as Config::orderBy()).
+        // ExtendForTemplatesPageRenderer's ConfigService::confUpdateParam()
+        // call) -- the original accessor only handled an already-unserialized
+        // array, silently discarding every DB-loaded value (P24 Track A
+        // batch A4 finding, same shape-mismatch class as Config::orderBy()).
         $v = self::src()['extents_for_templates'] ?? null;
         if (is_array($v)) {
             return $v;
@@ -3743,11 +3743,11 @@ final class Config
     public static function pictureInformations(): array
     {
         // Stored as a serialize()d string in the config table (see
-        // ConfigurationSubController's own addslashes(serialize(...))
-        // write-back) -- the original accessor only handled an
-        // already-unserialized array, silently discarding every DB-loaded
-        // value (P24 Track A batch A4 finding, same shape-mismatch class
-        // as Config::orderBy()/Config::extentsForTemplates()).
+        // ConfigurationSubController's own serialize() write-back) -- the
+        // original accessor only handled an already-unserialized array,
+        // silently discarding every DB-loaded value (P24 Track A batch A4
+        // finding, same shape-mismatch class as
+        // Config::orderBy()/Config::extentsForTemplates()).
         $v = self::src()['picture_informations'] ?? null;
         if (is_string($v)) {
             $unserialized = \Piwigo\Core\ArrayHelper::safeUnserialize($v);

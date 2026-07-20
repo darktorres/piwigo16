@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Config\ConfigService;
 use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\Lang;
@@ -52,14 +53,15 @@ use Psr\Http\Message\ServerRequestInterface;
  * `ProfileController` (the standalone admin/profile.php page once shared
  * before P23 batch 6c deleted it as upstream-dead code -- bug:3122, 2014:
  * upstream folded "edit a user's profile" into this file's own "default"
- * tab years ago, never as a separate admin page). The one remaining
- * generic-config-row UPDATE loop already double-quotes its value
- * (str_replace("\'", "''", ...)) before splicing it into SQL -- safe,
- * just stylistically raw; left as-is rather than routed through
- * ConfigService (Doctrine ORM + container-injected, unlike every other
- * P21 service so far, which are plain-DBAL and self-construct inline --
- * introducing that plumbing for an already-safe write path isn't
- * proportionate to this batch).
+ * tab years ago, never as a separate admin page).
+ *
+ * Phase 5 (Legacy Coupling Retirement): the generic config-row UPDATE
+ * loop used to splice its value into raw, string-concatenated SQL
+ * (manual str_replace("\'", "''", ...) escaping, not a parameterized
+ * query) -- now routed through the injected ConfigService instead,
+ * along with this file's other two $conf-reinit calls (formerly
+ * ConfigDb::loadConfFromDb()) and its one filters_views default-seed
+ * call (formerly ConfigDb::confUpdateParam()).
  *
  * This batch also fixed a real, verified bug in this file: $lang['day']
  * is never actually defined by any language/*\/common.lang.php (confirmed
@@ -92,6 +94,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly ConfigService $configService,
     ) {}
 
     /**
@@ -222,7 +225,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         ];
 
         if (! \Piwigo\Config\Config::has('filters_views')) {
-            \Piwigo\Config\ConfigDb::confUpdateParam('filters_views', \Piwigo\Config\Config::defaultFiltersViews(), true);
+            $this->configService->confUpdateParam('filters_views', \Piwigo\Config\Config::defaultFiltersViews(), true);
         }
 
         $filters_views_default = \Piwigo\Config\Config::filtersViews() ?? \Piwigo\Config\Config::defaultFiltersViews();
@@ -374,7 +377,15 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         $picture_informations[$checkbox] =
                           empty($picture_informations[$checkbox]) ? false : true;
                     }
-                    $_POST['picture_informations'] = addslashes(serialize($picture_informations));
+                    // Phase 5: no addslashes() -- that was only ever needed
+                    // to survive the old raw-SQL write's quote-doubling
+                    // round trip (see the generic save loop below), which
+                    // incidentally stripped it back out on the way into the
+                    // DB. The parameterized ConfigService write stores
+                    // these bytes verbatim, so a plain serialize() is the
+                    // correct byte-for-byte match to what
+                    // Config::pictureInformations() unserializes back.
+                    $_POST['picture_informations'] = serialize($picture_informations);
                     break;
 
                 case 'search':
@@ -397,7 +408,9 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     }
                     $filters_views_post['last_filters_conf'] =
                       empty($filters_views_post['last_filters_conf']) ? false : true;
-                    $_POST['filters_views'] = addslashes(serialize($filters_views_post));
+                    // Phase 5: no addslashes() -- same reasoning as
+                    // picture_informations above.
+                    $_POST['filters_views'] = serialize($filters_views_post);
 
             }
 
@@ -422,12 +435,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                             }
                         }
 
-                        $query = '
-UPDATE ' . Tables::config() . '
-SET value = \'' . str_replace("\'", "''", $value) . '\'
-WHERE param = \'' . $row['param'] . '\'
-;';
-                        $conn->executeStatement($query);
+                        $this->configService->confUpdateParam($row['param'], $value);
                     }
                 }
                 $template->assign(
@@ -442,7 +450,7 @@ WHERE param = \'' . $row['param'] . '\'
             }
 
             // ------------------------------------------------------ $conf reinitialization
-            \Piwigo\Config\ConfigDb::loadConfFromDb();
+            $this->configService->loadConfFromDb();
         }
 
         // restore default derivatives settings
@@ -455,7 +463,7 @@ WHERE param = \'' . $row['param'] . '\'
                 ->clearDerivativeCache();
 
             // reset conf
-            \Piwigo\Config\ConfigDb::loadConfFromDb();
+            $this->configService->loadConfFromDb();
 
             $template->assign(
                 [

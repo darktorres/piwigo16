@@ -12,6 +12,7 @@ use Piwigo\Admin\DummyTheme_maintain;
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Admin\ThemeMaintain;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
@@ -56,6 +57,7 @@ final readonly class ExtensionLifecycle
         private ExtensionRepository $repo,
         private PemCatalog $pemCatalog,
         private UrlServiceInterface $urlService,
+        private ConfigService $configService,
     ) {}
 
     private static function userService(Connection $conn): UserService
@@ -303,7 +305,7 @@ final readonly class ExtensionLifecycle
                     $activityDetails['version'] = $fsVersion;
 
                     if ($isMobile) {
-                        \Piwigo\Config\ConfigDb::confUpdateParam('mobile_theme', $id);
+                        $this->configService->confUpdateParam('mobile_theme', $id);
                     }
                 }
                 break;
@@ -329,7 +331,7 @@ final readonly class ExtensionLifecycle
                 $this->repo->delete(ExtensionType::Theme, $id);
 
                 if ((bool) ($fsEntry['mobile'] ?? false)) {
-                    \Piwigo\Config\ConfigDb::confUpdateParam('mobile_theme', '');
+                    $this->configService->confUpdateParam('mobile_theme', '');
                 }
                 break;
 

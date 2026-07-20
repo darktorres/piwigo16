@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -42,7 +43,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         $GLOBALS['logger'] = new Logger(['severity' => Logger::OFF]);
 
         $this->conn = DbConnection::build();
-        $this->service = new HistoryService(new HistoryRepository($this->conn));
+        $this->service = new HistoryService(new HistoryRepository($this->conn), new ConfigService($this->buildConfigRepository()));
     }
 
     #[\Override]

@@ -18,6 +18,7 @@ use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Bootstrap\AdminDispatcher;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
@@ -57,6 +58,7 @@ final class AdminShell
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly ConfigService $configService,
     ) {}
 
     /**
@@ -417,7 +419,7 @@ SELECT COUNT(*)
 
         $whats_new_major_version = \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION);
 
-        if ((bool) new PreferencesService(new UserRepository($conn))->getParam('show_whats_new_' . $whats_new_major_version, true) and \Piwigo\Config\ConfigDb::pwgIsDbconfWriteable()) {
+        if ((bool) new PreferencesService(new UserRepository($conn))->getParam('show_whats_new_' . $whats_new_major_version, true) and $this->configService->pwgIsDbconfWriteable()) {
             if (\Piwigo\Users\CurrentUser::get()->rawAttributes['registration_date'] > \Piwigo\Config\Config::lastMajorUpdate()) {
                 new PreferencesService(new UserRepository($conn))
                     ->updateParam('show_whats_new_' . $whats_new_major_version, false);

@@ -37,6 +37,7 @@ use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -84,7 +85,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService()));
+        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository()));
     }
 
     public function test_search_purges_history_and_assigns_the_real_info_message(): void

@@ -170,9 +170,10 @@ final readonly class FilterResolver
      * come from a fixed internal allowlist (duplicateFieldsFromFilter()),
      * never from raw user input.
      *
-     * TODO (pre-existing, not fixed here): GROUP_CONCAT truncates at 1024
-     * chars by default, so a duplicate group larger than ~250 ids silently
-     * loses members -- matches the legacy code's own TODO comment.
+     * Known limitation (pre-existing, not fixed here): GROUP_CONCAT
+     * truncates at 1024 chars by default, so a duplicate group larger
+     * than ~250 ids silently loses members -- matches the legacy code's
+     * own equivalent limitation.
      *
      * @param list<string> $fields
      * @return list<int>

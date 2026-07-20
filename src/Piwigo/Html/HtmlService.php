@@ -261,6 +261,14 @@ final class HtmlService implements HtmlRenderingInterface
      * /word/ becomes italic
      * *word* becomes bolded
      * urls becomes a tags
+     *
+     * This method is itself the default handler for the real
+     * `render_comment_content` plugin hook (registered via
+     * `EventDispatcher::addEventHandler()` in
+     * `Bootstrap\RequestBootstrap::finalize()`) -- every real caller
+     * (Ws\PwgComments, Picture\PictureCommentRenderer,
+     * Controller\CommentsController) reaches it through
+     * `triggerChange('render_comment_content', ...)`, not directly.
      */
     public function renderCommentContent(string $content): ?string
     {
@@ -285,8 +293,6 @@ final class HtmlService implements HtmlRenderingInterface
         $pattern = "/\/(\S*)\/(\s)/";
         $replacement = '<span style="font-style:italic;">$1$2</span>';
         $content = preg_replace($pattern, $replacement, (string) $content);
-
-        // TODO : add a trigger
 
         return $content;
     }

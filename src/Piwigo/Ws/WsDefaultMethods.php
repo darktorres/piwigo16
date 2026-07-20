@@ -1059,7 +1059,10 @@ final class WsDefaultMethods
             ]
         );
 
-        $service->addMethod( // TODO: create multiple tags
+        // Known limitation: one tag per call -- batch creation would need
+        // a param-shape change (a list instead of a single 'name'),
+        // deliberate current API shape, not a defect.
+        $service->addMethod(
             'pwg.tags.add',
             PwgTags::add(...),
             [

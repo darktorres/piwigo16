@@ -765,7 +765,7 @@ SELECT DISTINCT(id)
                 if (empty($forbidden_ids)) {
                     $forbidden_ids[] = '0';
                 }
-                $image_access_type = 'NOT IN'; // TODO maybe later
+                $image_access_type = 'NOT IN';
                 $userdata['image_access_type'] = $image_access_type;
                 $image_access_list = implode(',', $forbidden_ids);
                 $userdata['image_access_list'] = $image_access_list;

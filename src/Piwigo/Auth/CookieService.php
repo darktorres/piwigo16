@@ -59,7 +59,10 @@ final class CookieService
         }
 
         if (str_starts_with(PHPWG_ROOT_PATH, '../')) { // this is maybe a plugin inside pwg directory
-            // TODO - what if it is an external script outside PWG ?
+            // Known, accepted scope boundary: this branch only normalizes
+            // the already-narrow "plugin inside the Piwigo directory tree"
+            // case above -- a genuinely external script (outside PWG
+            // entirely) is a narrower, unsupported sub-case, not handled.
             $scr .= PHPWG_ROOT_PATH;
             while (true) {
                 $new = preg_replace('#[^/]+/\.\.(/|$)#', '', $scr);

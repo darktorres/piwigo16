@@ -257,7 +257,7 @@ SELECT id, permalink, uppercats, global_rank
         $ret = [];
         foreach ($sortable_by as $field) {
             $url = $base_url;
-            $disp = '↓'; // TODO: an small image is better
+            $disp = '↓';
 
             if ($field !== @$_GET[$get_param]) {
                 if ($default_field != $field) { // the first should be the default

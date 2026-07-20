@@ -70,7 +70,13 @@ class image_imagick implements imageInterface
     {
         $this->image->setInterlaceScheme(\Imagick::INTERLACE_LINE);
 
-        // TODO need to explain this condition
+        // Pre-halving pass: for a source more than 3x the target width
+        // (with even dimensions, so halving lands on whole pixels), a
+        // cheap scaleImage() box-filter halving first, then the accurate
+        // but expensive Lanczos resizeImage() below on the now-much-smaller
+        // image, is faster than running Lanczos over the full original
+        // resolution directly. image_gd's resize() has no equivalent step
+        // -- GD's imagecopyresampled() doesn't need it.
         if ($this->get_width() % 2 == 0
             && $this->get_height() % 2 == 0
             && $this->get_width() > 3 * $width) {

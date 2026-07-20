@@ -229,7 +229,10 @@ SELECT id, name, id_uppercat
 
         $template->assign('delay_before_autoOpen', \Piwigo\Config\Config::albumMoveDelayBeforeAutoOpening());
 
-        $template->assign('POS_PREF', \Piwigo\Config\Config::newcatDefaultPosition()); // TODO use user pref if it exists
+        // Known limitation: site-wide only -- Users\PreferencesService
+        // could support a real per-user override of the default new-album
+        // position, but none exists today.
+        $template->assign('POS_PREF', \Piwigo\Config\Config::newcatDefaultPosition());
 
         // +-------------------------------------------------------------------+
         // |                          Album display                            |

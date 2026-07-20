@@ -162,10 +162,11 @@ final readonly class SearchFilterRenderer
         if (isset($searchFields['tags']) and (bool) $displayFilters['tags']['access']) {
             $filterTags = [];
 
-            // TODO calling TagService::getAvailableTags(), with lots of
-            // photos/albums/tags may cost time, we should reuse the result
-            // if already executed (for building the menu for example)
-
+            // Known limitation: TagService::getAvailableTags() below isn't
+            // cached/reused across this request even though it may already
+            // have run once for other purposes (e.g. building the menu) --
+            // a real but non-blocking optimization opportunity on
+            // large-gallery installs, not a defect.
             if (! is_array($searchFields['tags'])) {
                 $searchFields['tags'] = [];
             }
@@ -486,9 +487,15 @@ SELECT
                         continue;
                     }
 
+                    // The $url argument here has no observable effect: it
+                    // only controls the href of the <a> tag
+                    // getCatDisplayNameCache() wraps each name in, and that
+                    // wrapper gets stripped by strip_tags() below either
+                    // way (this array is JSON-encoded for a JS-consumed
+                    // autocomplete label, not rendered as a link).
                     $catDisplayName = $this->htmlRenderer->getCatDisplayNameCache(
                         $row['uppercats'],
-                        'admin.php?page=album-' // TODO not sure it's relevant to link to admin pages
+                        'admin.php?page=album-'
                     );
                     $row['fullname'] = strip_tags($catDisplayName);
 

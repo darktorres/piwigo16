@@ -1028,8 +1028,10 @@ $conf['animated_webp_compression_quality'] = 70;
 // Maximum Ajax requests at once, for thumbnails on-the-fly generation
 $conf['max_requests'] = 3;
 
-// one of '', 'images', 'all'
-// TODO: Put this in admin and also manage .htaccess in #sites and upload folders
+// one of '', 'images', 'all'. Config-file-only by design: no admin UI
+// exposes this setting, and enabling it doesn't automatically manage
+// .htaccess in #sites/upload folders -- the site owner is responsible
+// for that part of the setup.
 $conf['original_url_protection'] = '';
 
 // Default behaviour when a new album is created: should the new album inherit the group/user

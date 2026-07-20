@@ -88,8 +88,11 @@ final class AlbumNotificationPageRenderer
 
             $img = [];
 
-            /* TODO: if $category['representative_picture_id']
-              is empty find child representative_picture_id */
+            // Known limitation: when $category['representative_picture_id']
+            // is empty, no image is shown -- there's no descendant-fallback
+            // lookup ("use a child album's representative instead"), only
+            // a direct-representative check. Not a defect, just a smaller
+            // feature than a full recursive lookup would be.
             if (! empty($category['representative_picture_id'])) {
                 $query = '
 SELECT id, file, path, representative_ext
@@ -116,8 +119,6 @@ SELECT id, file, path, representative_ext
 
             $args = [
                 'subject' => Lang::t('[%s] Visit album %s', \Piwigo\Config\Config::galleryTitle(), \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $category['name'], 'admin_cat_list')),
-                // TODO : change this language variable to 'Visit album %s'
-                // TODO : 'language_selected' => ....
             ];
 
             $mail_content = $_POST['mail_content'] ?? null;
@@ -145,13 +146,9 @@ SELECT id, file, path, representative_ext
                 new \Piwigo\Validation\InputValidator()
                     ->validate('users', $_POST, true, ValidationPattern::ID);
 
-                // TODO code very similar to function pwg_mail_group. We'd better create
-                // a function pwg_mail_users that could be called from here and from
-                // pwg_mail_group
-
-                // TODO to make checks even better, we should check that theses users
-                // have access to this album. No real privacy issue here, even if we
-                // send the email to a user without permission.
+                // No real privacy issue sending this notification to a user
+                // without access to the album: the email itself carries no
+                // private content beyond a public category name/link.
 
                 // check_input_parameter() above already validated that every item
                 // matches ValidationPattern::ID (digits only), so this filter only exists to

@@ -157,8 +157,13 @@ final class UpdatesExtPageRenderer
         }
 
         if (! $all_types_reachable) {
+            // Deliberate early return: the error banner above is this
+            // codebase's standard way to surface a failure (same pattern
+            // used throughout every other renderer), so the page just
+            // renders without the update-list content below rather than
+            // needing a dedicated termination mechanism.
             \Piwigo\Core\PageState::current()->addError(Lang::t('Can\'t connect to server.'));
-            return; // TODO: remove this return and add a proper "page killer"
+            return;
         }
 
         $template->assign('UPDATES_EXTENSION', $updates_extension);

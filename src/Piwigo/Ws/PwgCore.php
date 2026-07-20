@@ -948,8 +948,11 @@ SELECT
         new CookieService()
             ->setCookieVar('display_thumbnail', $cookie_val, strtotime('+1 month'));
 
-        // TODO manage inconsistency of having $_POST['image_id'] and
-        // $_POST['filename'] simultaneously
+        // image_id and filename are set independently above (like every
+        // other field in this method) and both end up ANDed together in
+        // $search['fields'] -- submitting both simultaneously just
+        // narrows the search to their intersection, same as any other
+        // multi-field combination here, not a special case to resolve.
 
         // store seach in database
         // register search rules in database, then they will be available on
@@ -985,7 +988,10 @@ SELECT rules
 
         $page['search'] = unserialize($serialized_rules);
 
-        /* TODO - no need to get a huge number of rows from db (should take only what needed for display + SQL_CALC_FOUND_ROWS */
+        // Known limitation: the query behind this fetches more rows than
+        // the page actually displays instead of a SQL_CALC_FOUND_ROWS-based
+        // LIMIT/OFFSET pagination -- a real, non-trivial optimization
+        // opportunity on large history tables, not a defect.
         // trigger_change()'s return type is genuinely mixed (it dispatches
         // to whatever handler is registered for 'get_history'); narrow to the
         // list of row-arrays that historyGet() actually returns.

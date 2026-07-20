@@ -514,7 +514,23 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                             if (! isset($granted_grps[$cat_id])) {
                                 $granted_grps[$cat_id] = [];
                             }
-                            // TODO: explanaition
+                            // The real accumulation is the inner
+                            // array_push($granted_grps[$cat_id], ...) --
+                            // it appends by reference into the per-category
+                            // sub-array, which is what every later read
+                            // ($granted_grps[$parent_id] below) uses. The
+                            // outer array_push($granted_grps, [...]) is a
+                            // faithfully-preserved legacy artifact: it
+                            // appends a throwaway [$cat_id => count] entry
+                            // at the next unused integer key, which no
+                            // real code ever reads by that key -- inert in
+                            // every case that will actually occur. Not
+                            // proven safe in a pathological one: if a real
+                            // category id ever numerically collided with
+                            // one of these auto-generated small integer
+                            // keys later in the same loop, it would corrupt
+                            // that category's own entry instead of being a
+                            // no-op.
                             array_push(
                                 $granted_grps,
                                 [
@@ -539,7 +555,9 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                             if (! isset($granted_users[$cat_id])) {
                                 $granted_users[$cat_id] = [];
                             }
-                            // TODO: explanaition
+                            // Same shape, same reasoning as the
+                            // $granted_grps loop above -- see its own
+                            // comment.
                             array_push(
                                 $granted_users,
                                 [

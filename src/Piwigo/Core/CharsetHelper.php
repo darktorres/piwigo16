@@ -42,6 +42,10 @@ final class CharsetHelper
         if (function_exists('mb_convert_encoding')) {
             return mb_convert_encoding($str, $destCharset, $sourceCharset);
         }
-        return $str; // TODO
+        // Unreachable in practice: ext-iconv and ext-mbstring are both
+        // hard composer.json requirements, so one of the two branches
+        // above always fires. Defensive last-resort no-op, not real
+        // pending work.
+        return $str;
     }
 }

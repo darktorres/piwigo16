@@ -809,7 +809,9 @@ SELECT
         }
 
         if (! empty($params['position']) and in_array($params['position'], ['first', 'last'])) {
-            // TODO make persistent with user prefs
+            // In-memory override only (this request's own Config::$data),
+            // not a real persisted preference -- known limitation, same as
+            // AlbumsPageRenderer's own POS_PREF assignment.
             \Piwigo\Config\Config::override('newcat_default_position', $params['position']);
         }
 

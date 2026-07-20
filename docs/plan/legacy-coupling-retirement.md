@@ -1447,7 +1447,99 @@ call sites are retargeted. Batch by domain; expect most files already
 touched by Phase 1 (56 of 88 already overlap with `MysqliDb::` callers) to
 need only this one additional edit.
 
-## Phase 4 — l10n/URL/redirect/category free-function retarget sweep (Track C)
+## Phase 4 — l10n/URL/redirect/category free-function retarget sweep (Track C). DONE.
+
+Retired all four remaining `composer.json` `autoload.files` free-function
+bridges, in the dependency order the design required (Category 4a → Http
+4b → Url 4c, since `UrlService` needed `RedirectServiceInterface` before
+its own retarget could land → Lang 4d, independent of the other three).
+Commits `da88ead93` (4a), `29ac1a204` (4b), `9705b7566` (4c), `bfefe6f19`
+(4d) — a full completion write-up for each lives in project memory
+(`project_p24_phase4{a,b,c,d}_complete.md`); summary here:
+
+- **4a (Category, 7 functions)** — `get_uppercat_ids()`'s body moved onto
+  a new `CategoryRepository::findUppercatIds()` to resolve a real
+  `PermissionService` ↔ `CategoryService` circularity;
+  `CategoryAdminServiceTest.php` moved from Unit to Integration (final
+  classes block stubbing once real methods replace free functions). 2
+  real bugs found: an all-unknown-category-list SQL bug the old stubbed
+  test had masked, and a `random.php` construction site with only 2 of 3
+  now-required args (blank-page fatal, caught by Visual regression).
+- **4b (Http, 3 functions)** — new `Piwigo\Core\RedirectServiceInterface`
+  (L1) + `Piwigo\Bootstrap\RedirectService` (L4, body moved verbatim).
+  `HtmlRenderingInterface`'s 4 terminal methods
+  (`accessDenied`/`badRequest`/`pageNotFound`/`pageForbidden`) gained a
+  required `RedirectServiceInterface` *method* parameter instead of a
+  constructor dependency (`HtmlService` has hundreds of construction
+  sites; the concrete class is L4, `HtmlService` is L3, deptrac forbids
+  the direct dependency). 95 files touched (vs. the original plan's "34"
+  estimate) once that ripple was accounted for.
+- **4c (Url, 17 functions after `parse_section_url` was retired in an
+  earlier session)** — new `Piwigo\Core\UrlServiceInterface` (L1) +
+  existing `Piwigo\Url\UrlService` (L2b). Resolved a real
+  `UrlService → HtmlRenderingInterface → HtmlService →
+  UrlServiceInterface → UrlService` cycle: classes inside
+  `RedirectService`'s own construction chain (`HtmlService`,
+  `MailService`, `UserService`, `Template`, `PageHeaderRenderer`)
+  construct a throwaway `new UrlService(new HtmlService())` per call site
+  instead of constructor-injecting the interface; `SrcImage`/
+  `DerivativeImage`/`Template\ScriptLoader` (a `uasort()`-bound
+  first-class-callable with an externally-fixed signature) use the same
+  static-setter pattern already established for other L2a
+  cross-cutting statics. 166 files touched. A live production fatal
+  (`Template.php`'s `'url_is_remote'`/`'get_gallery_home_url'` Smarty
+  modifier registrations were still bare-string references to the
+  deleted free functions) was caught by the Contract suite against the
+  running webserver, not static analysis — fixed with first-class-
+  callable registrations. 3 more real bugs (missed construction sites,
+  a wrong-scope variable reference) caught by 2 successive full-project
+  PHPStan sweeps.
+- **4d (Lang, 2 functions, 850 call sites — the largest single sweep)**
+  — `l10n()` → `Lang::t()` is a true 1:1 rename (`Translator::translate()`
+  already does the same scalar coercion), applied via a reviewed,
+  token-aware batch script across all 817 sites. `l10n_dec()` →
+  `Translator::get()->plural()` needed a strict-`int` third argument,
+  so all 33 sites were reviewed individually rather than scripted; one
+  new `Lang::plural()` thin wrapper (sibling to `Lang::t()`) added
+  specifically for `Template::modcompiler_translate_dec()`'s generated-
+  code fallback, the one call site whose runtime type can't be proven
+  statically. `debug_l10n`'s missing-key diagnostic moved from `l10n()`'s
+  body into `Translator::translate()` itself (more accurate resolution-
+  path check, and now applies to every `Lang::t()` caller, not just former
+  `l10n()` ones).
+- **4e (close-out)** — a new zero-tolerance Arch test
+  (`tests/Arch/StructuralTest.php`, `findBareCallSites()`) asserts no bare
+  call to any of the 29 retired function names remains anywhere under
+  `src/Piwigo/` — token-aware rather than the simpler
+  `findCallSitesOutsideComments()` substring check the Phase 2/3 tests use,
+  since several retired names (`redirect` most visibly) collide as a bare
+  substring with a real, still-legitimate method call of the identical
+  short name (`$this->redirectService->redirect(...)`). `composer.json`'s
+  now-empty `autoload.files` key removed entirely (Track C was the last of
+  its four entries). Two mid-sweep, whole-repo re-verification passes
+  (prompted by an explicit reminder not to scope searches to curated
+  subfolders) confirmed both Phase 4c's and 4d's own closing sweeps had
+  found every real call site — zero stragglers in previously-unscanned
+  directories (`include/`, `language/`, `galleries/`, `doc/`, `.github/`).
+  One of those passes found 2 more `.tpl` bare-call sites from Phase 4c
+  (`url_is_remote` in `picture_modify.tpl`/`batch_manager_unit.tpl`) that
+  turned out, on empirical verification, to already compile safely (Smarty
+  routes a bare `identifier(args)` call through the same
+  `getModifierCallback()` path as `|modifier` pipe syntax whenever
+  `identifier` matches an already-registered modifier plugin name) —
+  rewritten to pipe syntax anyway as a clarity improvement, not reported
+  as a fixed regression.
+
+Full verification gate green at every sub-phase close: `php -l` sweep,
+`deptrac analyse` (0 violations throughout), PHPStan (0 errors against a
+baseline regenerated once per sub-phase, for real ratio-drift/deleted-file
+entries only), ECS, Unit/Arch/Contract, Integration, Browser, and Visual
+(0 pixel diffs) — Smarty's compiled-template cache
+(`_data/templates_c/*.tpl.php`) cleared before every Browser/Visual run
+touching a `Template.php` `registerPlugin()` change, per this phase's own
+cross-cutting finding on exactly that failure mode.
+
+The phase's own original framing, kept for context:
 
 - `Lang/functions.php`'s `l10n()`/`l10n_dec()` → `Piwigo\Core\Lang::t()` —
   841 call sites, the largest single retarget in this plan; spot-checked

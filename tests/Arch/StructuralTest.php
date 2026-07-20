@@ -465,6 +465,123 @@ test('src/Piwigo/ contains no bare add_event_handler()/trigger_change()/trigger_
 });
 
 /**
+ * Token-aware, unlike findCallSitesOutsideComments()'s plain (post-
+ * blanking) substring match: several of Track C's retired free-function
+ * names collide as a bare substring with a real, still-legitimate OOP
+ * method call of the identical short name -- most visibly `redirect(`,
+ * which matches both the retired bare `redirect()` free function AND
+ * every real `$this->redirectService->redirect(...)` call this same
+ * phase (4b) introduced. Reuses the exact "real bare call" token logic
+ * (T_STRING name match, not preceded by ->/::/function/backslash,
+ * immediately followed by `(`) this phase's own scan_url_calls.php/
+ * scan_l10n_calls.php scripts used throughout Phase 4c/4d to find every
+ * real caller in the first place -- same check, now locked in as a
+ * permanent regression guard.
+ *
+ * @param list<string> $names
+ * @return list<array{path: string, line: int}>
+ */
+function findBareCallSites(string $dir, array $names): array
+{
+    $hits = [];
+    if (! is_dir($dir)) {
+        return $hits;
+    }
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+
+    foreach ($iterator as $file) {
+        /** @var SplFileInfo $file RecursiveIteratorIterator loses this over RecursiveDirectoryIterator */
+        if (! $file->isFile() || $file->getExtension() !== 'php') {
+            continue;
+        }
+
+        $source = file_get_contents($file->getPathname());
+        if ($source === false) {
+            continue;
+        }
+
+        $hit = false;
+        foreach ($names as $name) {
+            if (str_contains($source, $name)) {
+                $hit = true;
+                break;
+            }
+        }
+        if (! $hit) {
+            continue;
+        }
+
+        $tokens = token_get_all($source);
+        $n = count($tokens);
+        for ($i = 0; $i < $n; $i++) {
+            $tok = $tokens[$i];
+            if (! is_array($tok) || $tok[0] !== T_STRING || ! in_array($tok[1], $names, true)) {
+                continue;
+            }
+            $j = $i - 1;
+            while ($j >= 0 && is_array($tokens[$j]) && $tokens[$j][0] === T_WHITESPACE) {
+                $j--;
+            }
+            $prev = $j >= 0 ? $tokens[$j] : null;
+            if (is_array($prev) && in_array($prev[0], [T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR, T_DOUBLE_COLON, T_FUNCTION, T_STRING], true)) {
+                continue;
+            }
+            if (is_string($prev) && $prev === '\\') {
+                continue;
+            }
+            $k = $i + 1;
+            while ($k < $n && is_array($tokens[$k]) && $tokens[$k][0] === T_WHITESPACE) {
+                $k++;
+            }
+            $next = $k < $n ? $tokens[$k] : null;
+            if (! (is_string($next) && $next === '(')) {
+                continue;
+            }
+            $hits[] = ['path' => $file->getPathname(), 'line' => $tok[2]];
+        }
+    }
+
+    return $hits;
+}
+
+test('src/Piwigo/ contains no bare calls to any Track C retired free function', function (): void {
+    // Legacy Coupling Retirement Track C (Phases 4a-4d, 2026-07-19/20):
+    // retires the last 4 composer.json autoload.files free-function
+    // bridges -- Category/functions.php (7 remaining functions),
+    // Http/functions.php (3), Url/functions.php (17 -- parse_section_url
+    // was already retired in an earlier session, ahead of this list),
+    // Lang/functions.php (2) -- all 4 files deleted, all their real call
+    // sites (1,349 across 151 files, per the original planning sweep)
+    // retargeted onto real class methods. Zero-tolerance, no allowlist
+    // needed -- same shape as the P16/Phase 3 tests above, using
+    // findBareCallSites() instead of findCallSitesOutsideComments() since
+    // several of these names (most notably `redirect`) collide as a bare
+    // substring with a real, still-legitimate method call of the same
+    // short name.
+    $repoRoot = __DIR__ . '/../..';
+
+    $retiredFunctionNames = [
+        // Phase 4a -- Category/functions.php
+        'get_subcat_ids', 'get_cat_info', 'get_uppercat_ids', 'set_cat_visible',
+        'set_cat_status', 'set_random_representant', 'create_virtual_category',
+        // Phase 4b -- Http/functions.php
+        'redirect', 'redirect_html', 'redirect_http',
+        // Phase 4c -- Url/functions.php
+        'get_root_url', 'get_absolute_root_url', 'add_url_params', 'make_index_url',
+        'duplicate_index_url', 'duplicate_picture_url', 'make_picture_url',
+        'parse_section_url', 'parse_well_known_params_url', 'get_action_url',
+        'get_element_url', 'set_make_full_url', 'unset_make_full_url', 'embellish_url',
+        'get_gallery_home_url', 'get_query_string_diff', 'url_is_remote', 'get_user_favorites',
+        // Phase 4d -- Lang/functions.php
+        'l10n', 'l10n_dec',
+    ];
+
+    $hits = findBareCallSites($repoRoot . '/src/Piwigo', $retiredFunctionNames);
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+/**
  * die() and exit() -- with or without parens/arguments -- both tokenize
  * as T_EXIT, so this catches every real call site (unlike a substring
  * search, immune to a false match on an identifier merely containing

@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
@@ -54,7 +55,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->renderer = new NoPhotoYetRenderer($this->conn);
+        $this->renderer = new NoPhotoYetRenderer($this->conn, new RedirectService());
 
         // NoPhotoYetRenderer calls Piwigo\Auth\AccessControl::isAGuest()/
         // isAdmin() directly (real class methods), which read

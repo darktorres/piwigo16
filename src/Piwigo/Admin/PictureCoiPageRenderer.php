@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -21,6 +22,10 @@ use Piwigo\Image\SrcImage;
  */
 final class PictureCoiPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     public function render(): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
@@ -62,7 +67,7 @@ final class PictureCoiPageRenderer
         $query = 'SELECT * FROM ' . Tables::images() . ' WHERE id=' . $image_id;
         $row = $conn->fetchAssociative($query);
         if ($row === false) {
-            $htmlRenderer->pageNotFound('Requested photo does not exist');
+            $htmlRenderer->pageNotFound($this->redirectService, 'Requested photo does not exist');
         }
 
         if (isset($_POST['submit'])) {

@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -50,6 +51,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class SiteManagerSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
@@ -63,7 +68,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
 
         if (! empty($_POST) or isset($_GET['action'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
         }
 
         $conn = DbConnection::build();

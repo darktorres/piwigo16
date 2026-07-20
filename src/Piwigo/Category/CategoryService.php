@@ -9,6 +9,7 @@ use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -617,13 +618,13 @@ final readonly class CategoryService
      * Is the category accessible to the connected user? If the user is not
      * authorized to see this category, the script exits.
      */
-    public function checkRestrictions(int $categoryId, HtmlRenderingInterface $htmlRenderer): void
+    public function checkRestrictions(int $categoryId, HtmlRenderingInterface $htmlRenderer, RedirectServiceInterface $redirectService): void
     {
         // $filter['visible_categories'] and $filter['visible_images']
         // are not used because it's not necessary (filter <> restriction)
         $forbiddenCategoriesStr = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
         if (in_array($categoryId, explode(',', $forbiddenCategoriesStr))) {
-            $htmlRenderer->accessDenied();
+            $htmlRenderer->accessDenied($redirectService);
         }
     }
 

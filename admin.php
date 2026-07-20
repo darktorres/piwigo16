@@ -23,6 +23,7 @@ require __DIR__ . '/vendor/autoload.php';
 
 use Piwigo\Admin\AdminShell;
 use Piwigo\Bootstrap\CommonBootstrap;
+use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Core\Paths;
 
 $paths = Paths::fromIndex(__FILE__);
@@ -40,5 +41,5 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 // their own docblocks), same ordering index.php already uses.
 CommonBootstrap::run($paths);
 
-new AdminShell()
+new AdminShell(new RedirectService())
     ->run();

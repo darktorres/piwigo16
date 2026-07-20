@@ -11,6 +11,7 @@ use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
@@ -57,6 +58,10 @@ use Piwigo\Template\Template;
  */
 final class BatchManagerGlobalPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     private static function permissionService(Connection $conn): PermissionService
     {
         return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
@@ -90,7 +95,7 @@ final class BatchManagerGlobalPageRenderer
 
         if (count($_POST) > 0) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
         }
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_element_set_global');
@@ -510,7 +515,7 @@ DELETE
             \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('element_set_global_action', $action, $collection);
 
             if ($redirect) {
-                redirect($redirect_url);
+                $this->redirectService->redirect($redirect_url);
             }
         }
 

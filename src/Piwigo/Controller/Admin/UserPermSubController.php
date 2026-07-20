@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\UserPermPageRenderer;
+use Piwigo\Core\RedirectServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -17,10 +18,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class UserPermSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        new UserPermPageRenderer()
+        new UserPermPageRenderer($this->redirectService)
             ->render();
     }
 }

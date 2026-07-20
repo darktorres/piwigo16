@@ -132,7 +132,9 @@ final class RequestBootstrap
         // that can't take constructor/per-method injection without an
         // unreasonable call-site ripple, same reasoning as
         // Piwigo\Core\Lang::setDefaultLanguageProvider() in finalize()
-        // below). Safely post-autoload here: the seam file only calls this
+        // below). AccessControl::setRedirectService() (Legacy Coupling
+        // Retirement Phase 4b) follows right alongside its own
+        // setHtmlRenderer() call, same reasoning. Safely post-autoload here: the seam file only calls this
         // class after its include/env.inc.php include, which is what
         // actually requires vendor/autoload.php -- some entry points (e.g.
         // random.php) rely entirely on that include to make every Piwigo\
@@ -140,6 +142,7 @@ final class RequestBootstrap
         // beforehand, unlike admin.php/index.php's own explicit up-front
         // require (ordering bug caught live via a random.php smoke test).
         \Piwigo\Auth\AccessControl::setHtmlRenderer(new HtmlService());
+        \Piwigo\Auth\AccessControl::setRedirectService(new RedirectService());
         \Piwigo\Core\FilesystemHelper::setHtmlRenderer(new HtmlService());
         Lang::setHtmlRenderer(new HtmlService());
         \Piwigo\Validation\InputValidator::setHtmlRenderer(new HtmlService());
@@ -268,7 +271,8 @@ final class RequestBootstrap
 
         if (! \Piwigo\Config\Config::checkUpgradeFeed()) {
             if (! \Piwigo\Config\Config::has('piwigo_db_version') or \Piwigo\Config\Config::piwigoDbVersion() !== \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)) {
-                redirect(get_root_url() . 'upgrade.php');
+                new RedirectService()
+                    ->redirect(get_root_url() . 'upgrade.php');
             }
         }
 
@@ -340,7 +344,7 @@ final class RequestBootstrap
         $user['email'] = null;
         $user['theme'] = '';
 
-        new UserBootstrap()
+        new UserBootstrap(new RedirectService())
             ->initialize();
 
         // The original file followed this call with a get_defined_vars()
@@ -512,7 +516,7 @@ final class RequestBootstrap
             // Formerly include/no_photo_yet.inc.php, a seam of exactly this
             // one call (deleted, P23 sub-batch 8f-5). render() exits itself
             // when it decides to take over the page.
-            new NoPhotoYetRenderer($conn)
+            new NoPhotoYetRenderer($conn, new RedirectService())
                 ->render();
         }
 

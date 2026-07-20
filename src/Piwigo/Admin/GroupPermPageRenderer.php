@@ -12,6 +12,7 @@ use Piwigo\Audit\AuditService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -29,6 +30,10 @@ use Piwigo\Permission\PermissionService;
  */
 final class GroupPermPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     private static function auditService(Connection $conn): AuditService
     {
         return new AuditService(new AuditRepository($conn));
@@ -48,7 +53,7 @@ final class GroupPermPageRenderer
 
         if ($_POST !== []) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
             new \Piwigo\Validation\InputValidator()
                 ->validate('cat_true', $_POST, true, ValidationPattern::ID);
             new \Piwigo\Validation\InputValidator()

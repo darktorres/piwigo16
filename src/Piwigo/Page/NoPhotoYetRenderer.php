@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Page;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
@@ -24,6 +25,7 @@ final readonly class NoPhotoYetRenderer
 {
     public function __construct(
         private Connection $conn,
+        private readonly RedirectServiceInterface $redirectService,
     ) {}
 
     public function render(): void
@@ -52,12 +54,12 @@ final readonly class NoPhotoYetRenderer
                 if (isset($_GET['no_photo_yet'])) {
                     if ($_GET['no_photo_yet'] === 'browse') {
                         $_SESSION['no_photo_yet'] = 'browse';
-                        redirect(make_index_url());
+                        $this->redirectService->redirect(make_index_url());
                     }
 
                     if ($_GET['no_photo_yet'] === 'deactivate') {
                         \Piwigo\Config\ConfigDb::confUpdateParam('no_photo_yet', 'false');
-                        redirect(make_index_url());
+                        $this->redirectService->redirect(make_index_url());
                     }
                 }
 

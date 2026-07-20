@@ -25,6 +25,19 @@ namespace Piwigo\Core;
  * decoupling benefit. Only methods with a real L1/L2a/L2b caller are
  * included -- the other 9 `HtmlService` methods (L3/L4-only real callers,
  * or event-only) are retargeted/registered directly, no interface needed.
+ *
+ * `accessDenied()`/`badRequest()`/`pageNotFound()` (Legacy Coupling
+ * Retirement Phase 4b) each take a required `RedirectServiceInterface`
+ * parameter -- their real bodies call the former `redirect_http()`/
+ * `redirect_html()` free functions, and `HtmlService` itself can't hold
+ * one as a constructor dependency (same "hundreds of construction sites"
+ * constraint as its own docblock explains for `CategoryRepository`, plus
+ * a real deptrac violation: the concrete `RedirectService` is
+ * L4Integration, above this L3Presentation class). Every real caller
+ * already holds one via its own constructor or can trivially construct a
+ * throwaway instance. `pageForbidden()` needs the identical parameter but
+ * isn't part of this interface -- its only 2 real callers are
+ * L4Integration Controllers with direct concrete-class access already.
  */
 interface HtmlRenderingInterface
 {
@@ -53,11 +66,11 @@ interface HtmlRenderingInterface
      */
     public function tagAlphaCompare(array $a, array $b): int;
 
-    public function accessDenied(): never;
+    public function accessDenied(RedirectServiceInterface $redirectService): never;
 
-    public function badRequest(string $msg, ?string $alternateUrl = null): never;
+    public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never;
 
-    public function pageNotFound(?string $msg, ?string $alternateUrl = null): never;
+    public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never;
 
     public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never;
 

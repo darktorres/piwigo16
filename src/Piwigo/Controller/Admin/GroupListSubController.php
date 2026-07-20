@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\GroupListPageRenderer;
+use Piwigo\Core\RedirectServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -19,10 +20,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class GroupListSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        new GroupListPageRenderer()
+        new GroupListPageRenderer($this->redirectService)
             ->render();
     }
 }

@@ -20,6 +20,7 @@ use Piwigo\Bootstrap\PageTail;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -51,6 +52,10 @@ use Piwigo\Users\UserService;
  */
 final class AdminShell
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     /**
      * DRY extraction (Phase 1k DI-chain audit): the same ImageService
      * recipe was repeated verbatim at 2 sites in this file.
@@ -150,7 +155,7 @@ final class AdminShell
                 $redirect_url .= '?' . implode('&amp;', $url_params);
             }
 
-            redirect($redirect_url);
+            $this->redirectService->redirect($redirect_url);
         }
 
         // +-------------------------------------------------------------------+

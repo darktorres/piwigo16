@@ -59,9 +59,10 @@ SELECT id
 // |                                redirect                               |
 // +-----------------------------------------------------------------------+
 
-redirect(make_index_url([
-    'list' => array_map(
-        static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-        $conn->fetchFirstColumn($query)
-    ),
-]));
+new \Piwigo\Bootstrap\RedirectService()
+    ->redirect(make_index_url([
+        'list' => array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            $conn->fetchFirstColumn($query)
+        ),
+    ]));

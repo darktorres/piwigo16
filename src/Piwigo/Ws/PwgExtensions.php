@@ -19,6 +19,7 @@ use Piwigo\Admin\plugins;
 use Piwigo\Admin\themes;
 use Piwigo\Admin\updates;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Csrf\CsrfService;
@@ -201,17 +202,18 @@ final class PwgExtensions
             ) {
                 $extension->perform_action('deactivate', $extension_id);
 
-                redirect(
-                    PHPWG_ROOT_PATH
-            . 'ws.php'
-            . '?method=pwg.extensions.update'
-            . '&type=plugins'
-            . '&id=' . $extension_id
-            . '&revision=' . $revision
-            . '&reactivate=true'
-            . '&pwg_token=' . new CsrfService()->getToken()
-            . '&format=json'
-                );
+                new RedirectService()
+                    ->redirect(
+                        PHPWG_ROOT_PATH
+                                . 'ws.php'
+                                . '?method=pwg.extensions.update'
+                                . '&type=plugins'
+                                . '&id=' . $extension_id
+                                . '&revision=' . $revision
+                                . '&reactivate=true'
+                                . '&pwg_token=' . new CsrfService()->getToken()
+                                . '&format=json'
+                    );
             }
 
             [$upgrade_status] = $extension->perform_action('update', $extension_id, [
@@ -336,7 +338,7 @@ final class PwgExtensions
      */
     public static function checkUpdates(array $params, PwgServer &$service): array
     {
-        $update = new updates();
+        $update = new updates(new RedirectService());
         $result = [];
 
         if (! isset($_SESSION['need_update' . AppInfo::VERSION])) {

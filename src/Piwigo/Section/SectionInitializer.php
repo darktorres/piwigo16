@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Section;
 
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\RedirectServiceInterface;
 
 /**
  * URL token parser: "category/12-name/start-24" -> a structured
@@ -26,6 +27,7 @@ final readonly class SectionInitializer
     public function __construct(
         private HtmlRenderingInterface $htmlRenderer,
         private SectionRepository $repo,
+        private RedirectServiceInterface $redirectService,
     ) {}
 
     public function parse(): SectionUrlParse
@@ -88,7 +90,7 @@ final readonly class SectionInitializer
             if (is_numeric($token)) {
                 $image_id = $token;
                 if ((int) $image_id === 0) {
-                    $this->htmlRenderer->badRequest('invalid picture identifier');
+                    $this->htmlRenderer->badRequest($this->redirectService, 'invalid picture identifier');
                 }
             } else {
                 preg_match('/^(\d+-)?(.*)?$/', $token, $matches);
@@ -103,7 +105,7 @@ final readonly class SectionInitializer
                     if (! self::emptyValue($match_2)) {
                         $image_file = $match_2;
                     } else {
-                        $this->htmlRenderer->badRequest('picture identifier is missing');
+                        $this->htmlRenderer->badRequest($this->redirectService, 'picture identifier is missing');
                     }
                 }
             }

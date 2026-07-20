@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Ws\WsInitializer;
@@ -40,6 +41,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class WsController implements ControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
@@ -47,7 +52,7 @@ final class WsController implements ControllerInterface
 
         if (! \Piwigo\Config\Config::allowWebServices()) {
             new HtmlService()
-                ->pageForbidden('Web services are disabled');
+                ->pageForbidden($this->redirectService, 'Web services are disabled');
         }
 
         // Formerly `include_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';`

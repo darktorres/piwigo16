@@ -11,6 +11,7 @@ use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Logger;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
 use Piwigo\Ws\PwgCore;
@@ -40,6 +41,10 @@ use Piwigo\Ws\PwgError;
  */
 final class UserBootstrap
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     public function initialize(): void
     {
         /**
@@ -79,7 +84,7 @@ final class UserBootstrap
                 // every real branch of its body actually returns a string, so this narrows locally
                 // rather than widening redirect()'s $url parameter.
                 $gallery_home_url = get_gallery_home_url();
-                redirect(is_string($gallery_home_url) ? $gallery_home_url : '/');
+                $this->redirectService->redirect(is_string($gallery_home_url) ? $gallery_home_url : '/');
             } else {
                 $session_pwg_uid = $_SESSION['pwg_uid'] ?? null;
                 if (! self::emptyValue($session_pwg_uid)) {

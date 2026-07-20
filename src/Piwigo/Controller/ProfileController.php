@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -37,6 +38,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class ProfileController implements ControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
@@ -50,7 +55,7 @@ final class ProfileController implements ControllerInterface
 
         if ($_POST !== []) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
         }
 
         $userdata = $user;
@@ -86,7 +91,7 @@ SELECT ' . implode(',', $fields) . '
             $userdata = array_merge($userdata, $default_user);
         }
 
-        $profileFormHandler = new ProfileFormHandler();
+        $profileFormHandler = new ProfileFormHandler($this->redirectService);
 
         $page_errors = \Piwigo\Core\PageState::current()->errors;
         $profileFormHandler->saveFromPost($userdata, $page_errors);

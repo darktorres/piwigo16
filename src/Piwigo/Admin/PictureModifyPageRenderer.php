@@ -11,6 +11,7 @@ use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
@@ -47,6 +48,10 @@ use Piwigo\Users\UserService;
  */
 final class PictureModifyPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     private static function userService(Connection $conn): UserService
     {
         return new UserService(
@@ -139,7 +144,7 @@ SELECT id
 
         if (isset($_GET['delete'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
 
             $imageService->deleteElements([$image_id], true);
             UserCacheInvalidator::invalidate();
@@ -153,12 +158,12 @@ SELECT id
             if ((bool) ($custom_context = self::userService($conn)->getEditContext($image_id))) {
                 // considering we have a context available, we fake one to build the url
                 // and we replace it with the context found in the session for this image_id
-                redirect(str_replace('list/1,2', $custom_context, make_index_url([
+                $this->redirectService->redirect(str_replace('list/1,2', $custom_context, make_index_url([
                     'list' => [1, 2],
                 ])));
             }
 
-            redirect(make_index_url());
+            $this->redirectService->redirect(make_index_url());
         }
 
         // +-------------------------------------------------------------------+
@@ -167,7 +172,7 @@ SELECT id
 
         if (isset($_GET['sync_metadata'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
 
             new MetadataService(new MetadataRepository($conn))
                 ->syncMetadata([$image_id]);
@@ -179,7 +184,7 @@ SELECT id
         $data = [];
         if (isset($_POST['submit'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
 
             $data = [];
             $data['id'] = $image_id;

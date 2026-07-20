@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -53,6 +54,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class PermalinksSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
@@ -72,7 +77,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         $post_cat_id = isset($_POST['cat_id']) && is_numeric($_POST['cat_id']) ? (int) $_POST['cat_id'] : 0;
         if (isset($_POST['set_permalink']) and $post_cat_id > 0) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail($htmlRenderer);
+                ->checkOrFail($htmlRenderer, $this->redirectService);
             $permalink = $_POST['permalink'] ?? null;
             $permalink = is_string($permalink) ? $permalink : '';
             $permalink_service = new PermalinkService(new PermalinkRepository($conn));
@@ -84,7 +89,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
             $selected_cat = [$post_cat_id];
         } elseif (isset($_GET['delete_permanent'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail($htmlRenderer);
+                ->checkOrFail($htmlRenderer, $this->redirectService);
             $delete_permanent = is_string($_GET['delete_permanent']) ? $_GET['delete_permanent'] : '';
             new PermalinkService(new PermalinkRepository($conn))
                 ->deleteOldPermalinkByValue($delete_permanent);

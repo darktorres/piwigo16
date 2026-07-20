@@ -13,6 +13,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -42,6 +43,10 @@ use Piwigo\Users\UserService;
  */
 final class LanguagesInstalledPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     private static function userService(Connection $conn): UserService
     {
         return new UserService(
@@ -94,7 +99,7 @@ final class LanguagesInstalledPageRenderer
 
         if (isset($_GET['action']) and isset($_GET['language']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
 
             // check_input_parameter() above already fatal_error()s if either value
             // is non-scalar or doesn't match the expected pattern; query string
@@ -109,7 +114,7 @@ final class LanguagesInstalledPageRenderer
                 \Piwigo\Core\PageState::current()->errors = array_values(array_filter($action_errors, is_string(...)));
 
                 if ($action_errors === []) {
-                    redirect($base_url);
+                    $this->redirectService->redirect($base_url);
                 }
             }
         }

@@ -11,6 +11,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
@@ -41,6 +42,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class CommentsController implements ControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     private static function permissionService(Connection $conn): PermissionService
     {
         return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
@@ -64,7 +69,7 @@ final class CommentsController implements ControllerInterface
 
         if (! \Piwigo\Config\Config::activateComments()) {
             new HtmlService()
-                ->pageNotFound(null);
+                ->pageNotFound($this->redirectService, null);
         }
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
@@ -230,7 +235,7 @@ final class CommentsController implements ControllerInterface
                   get_root_url() . 'identification.php?redirect='
                   . urlencode(urlencode($request_uri))
                 ;
-                redirect($login_url);
+                $this->redirectService->redirect($login_url);
             }
 
             $whereClauses[] = 'com.id = ' . $get_comment_id;
@@ -303,14 +308,14 @@ final class CommentsController implements ControllerInterface
 
                 if ($action === 'delete') {
                     new \Piwigo\Csrf\CsrfService()
-                        ->checkOrFail(new HtmlService());
+                        ->checkOrFail(new HtmlService(), $this->redirectService);
                     $commentService->deleteComment($comment_id);
                     $perform_redirect = true;
                 }
 
                 if ($action === 'validate') {
                     new \Piwigo\Csrf\CsrfService()
-                        ->checkOrFail(new HtmlService());
+                        ->checkOrFail(new HtmlService(), $this->redirectService);
                     $commentService->validateComment($comment_id);
                     $perform_redirect = true;
                 }
@@ -319,7 +324,7 @@ final class CommentsController implements ControllerInterface
                     $content_raw = $_POST['content'] ?? null;
                     if (is_scalar($content_raw) && $content_raw !== '' && $content_raw !== '0' && $content_raw !== 0 && $content_raw !== 0.0 && $content_raw !== false) {
                         new \Piwigo\Csrf\CsrfService()
-                            ->checkOrFail(new HtmlService());
+                            ->checkOrFail(new HtmlService(), $this->redirectService);
                         $post_key = $_POST['key'] ?? null;
                         if (! is_string($post_key)) {
                             $post_key = '';
@@ -363,7 +368,7 @@ final class CommentsController implements ControllerInterface
                 }
 
                 if ($perform_redirect) {
-                    redirect($url_self);
+                    $this->redirectService->redirect($url_self);
                 }
             }
         }

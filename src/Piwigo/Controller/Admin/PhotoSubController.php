@@ -9,6 +9,7 @@ use Piwigo\Admin\PictureFormatsPageRenderer;
 use Piwigo\Admin\PictureModifyPageRenderer;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
@@ -39,6 +40,10 @@ use Psr\Http\Message\ServerRequestInterface;
 final class PhotoSubController implements AdminSubControllerInterface
 {
     private const array KNOWN_TABS = ['properties', 'coi', 'formats'];
+
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
@@ -85,10 +90,10 @@ final class PhotoSubController implements AdminSubControllerInterface
         );
 
         if ($tab === 'properties') {
-            new PictureModifyPageRenderer()
+            new PictureModifyPageRenderer($this->redirectService)
                 ->render();
         } elseif ($tab === 'coi') {
-            new PictureCoiPageRenderer()
+            new PictureCoiPageRenderer($this->redirectService)
                 ->render();
         } elseif (\Piwigo\Config\Config::isFormatsEnabled()) {
             new PictureFormatsPageRenderer()

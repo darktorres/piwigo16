@@ -10,6 +10,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Template\Template;
 
@@ -25,6 +26,10 @@ use Piwigo\Template\Template;
  */
 final class LanguagesNewPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     /**
      * Legacy Coupling Retirement Track A: $pageSlug (batch A5.2f) and
      * $tab (batch A5.2h) are explicit params instead of
@@ -74,7 +79,7 @@ final class LanguagesNewPageRenderer
                 \Piwigo\Core\PageState::current()->addError(l10n('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
-                    ->checkOrFail(new \Piwigo\Html\HtmlService());
+                    ->checkOrFail(new \Piwigo\Html\HtmlService(), $this->redirectService);
 
                 // $_GET values are always string|array; 'revision' is only ever
                 // built from $language['revision_id'] in this file's own template
@@ -95,7 +100,7 @@ final class LanguagesNewPageRenderer
                     $extension_lifecycle->performAction(ExtensionType::Language, 'activate', $extraction['id'], $fs_language_entry);
                 }
 
-                redirect($base_url . '&installstatus=' . $install_status);
+                $this->redirectService->redirect($base_url . '&installstatus=' . $install_status);
             }
         }
 

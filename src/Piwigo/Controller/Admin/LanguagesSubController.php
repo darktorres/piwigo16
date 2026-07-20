@@ -8,6 +8,7 @@ use Piwigo\Admin\LanguagesInstalledPageRenderer;
 use Piwigo\Admin\LanguagesNewPageRenderer;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Admin\UpdatesExtPageRenderer;
+use Piwigo\Core\RedirectServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -42,6 +43,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class LanguagesSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
@@ -77,10 +82,10 @@ final class LanguagesSubController implements AdminSubControllerInterface
                 ->render('languages');
             $template->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
         } elseif ($tab === 'new') {
-            new LanguagesNewPageRenderer()
+            new LanguagesNewPageRenderer($this->redirectService)
                 ->render('languages', $tab);
         } else {
-            new LanguagesInstalledPageRenderer()
+            new LanguagesInstalledPageRenderer($this->redirectService)
                 ->render('languages');
         }
     }

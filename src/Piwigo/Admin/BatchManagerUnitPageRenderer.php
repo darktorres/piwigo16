@@ -11,6 +11,7 @@ use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -56,6 +57,10 @@ use Piwigo\Template\Template;
  */
 final class BatchManagerUnitPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     private static function tagService(Connection $conn): TagService
     {
         return new TagService(
@@ -97,7 +102,7 @@ final class BatchManagerUnitPageRenderer
 
         if (isset($_POST['submit'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail($htmlRenderer);
+                ->checkOrFail($htmlRenderer, $this->redirectService);
             new \Piwigo\Validation\InputValidator()
                 ->validate('element_ids', $_POST, false, '/^\d+(,\d+)*$/');
             $element_ids_param = $_POST['element_ids'] ?? null;

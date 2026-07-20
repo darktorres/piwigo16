@@ -47,6 +47,10 @@ namespace Piwigo\Csrf;
  * dep; same per-method-injection style as CategoryService's
  * ActivityLoggerInterface params). Every former check_pwg_token() call
  * site is L3/L4 and constructs the concrete HtmlService inline.
+ * checkOrFail() also takes Piwigo\Core\RedirectServiceInterface per-method
+ * (Legacy Coupling Retirement Phase 4b) -- accessDenied()/badRequest()
+ * both need one to reach the former redirect_http()/redirect_html() free
+ * functions now that they're retired.
  */
 final class CsrfService
 {
@@ -94,13 +98,13 @@ final class CsrfService
      * that doesn't match -> access denied. Both renderer methods are
      * `never`-returning, so this only returns when the token is valid.
      */
-    public function checkOrFail(\Piwigo\Core\HtmlRenderingInterface $renderer): void
+    public function checkOrFail(\Piwigo\Core\HtmlRenderingInterface $renderer, \Piwigo\Core\RedirectServiceInterface $redirectService): void
     {
         $result = $this->check();
         if ($result === null) {
-            $renderer->badRequest('missing token');
+            $renderer->badRequest($redirectService, 'missing token');
         } elseif ($result === false) {
-            $renderer->accessDenied();
+            $renderer->accessDenied($redirectService);
         }
     }
 }

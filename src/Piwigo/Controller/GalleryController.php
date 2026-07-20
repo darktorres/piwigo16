@@ -12,6 +12,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupRepository;
@@ -71,6 +72,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class GalleryController implements ControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     private static function permissionService(Connection $conn): PermissionService
     {
         return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
@@ -108,8 +113,9 @@ final class GalleryController implements ControllerInterface
             self::categoryService($conn),
             self::permissionService($conn),
             self::tagService($conn),
-            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new PersistentFileCache(), new MailService(), new HtmlService()),
+            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new PersistentFileCache(), new MailService(), new HtmlService(), $this->redirectService),
             new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), self::activityService($conn), new HtmlService(), $conn),
+            $this->redirectService,
         )->populate();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
@@ -134,16 +140,17 @@ final class GalleryController implements ControllerInterface
 
         // access authorization check
         if ($section_context->category !== null && is_numeric($section_context->category['id'] ?? null)) {
-            self::categoryService($conn)->checkRestrictions((int) $section_context->category['id'], new HtmlService());
+            self::categoryService($conn)->checkRestrictions((int) $section_context->category['id'], new HtmlService(), $this->redirectService);
         }
         if ($page_start > 0 && $page_start >= count($page_items)) {
             new HtmlService()
-                ->pageNotFound('', duplicate_index_url([
+                ->pageNotFound($this->redirectService, '', duplicate_index_url([
                     'start' => 0,
                 ]));
         }
 
-        $body = LegacyRenderCapture::capture(static function () use ($conn, $page_items, $page_start, $page_nb_image_page, $section_context): void {
+        $redirectService = $this->redirectService;
+        $body = LegacyRenderCapture::capture(static function () use ($conn, $page_items, $page_start, $page_nb_image_page, $section_context, $redirectService): void {
             // $title is set and read entirely within this closure (passed
             // straight into PageHeaderRenderer::render() below) -- no
             // other file reads $GLOBALS['title']. Plain local, not global.
@@ -161,7 +168,7 @@ final class GalleryController implements ControllerInterface
                 } else {
                     SessionService::get()->unsetSessionVar('image_order');
                 }
-                redirect(
+                $redirectService->redirect(
                     duplicate_index_url(
                         [],        // nothing to redefine
                         ['start']  // changing display order goes back to section first page
@@ -188,7 +195,7 @@ final class GalleryController implements ControllerInterface
             // caddie filling :-)
             if (isset($_GET['caddie'])) {
                 \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($page_items);
-                redirect(duplicate_index_url());
+                $redirectService->redirect(duplicate_index_url());
             }
 
             if ($section_context->isHomepage) {
@@ -292,7 +299,7 @@ final class GalleryController implements ControllerInterface
                 new HtmlService(),
                 $template,
                 new SearchRepository($conn),
-                new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new PersistentFileCache(), new MailService(), new HtmlService(), $tagService),
+                new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new PersistentFileCache(), new MailService(), new HtmlService(), $redirectService, $tagService),
                 $tagService,
                 new CategoryRepository($conn),
                 self::permissionService($conn),
@@ -584,7 +591,7 @@ final class GalleryController implements ControllerInterface
             $slideshow_url_present = is_string($slideshow_url) && $slideshow_url !== '' && $slideshow_url !== '0';
             if ($slideshow_url_present) {
                 if (isset($_GET['slideshow'])) {
-                    redirect($slideshow_url);
+                    $redirectService->redirect($slideshow_url);
                 } elseif (\Piwigo\Config\Config::indexSlideShowIcon()) {
                     $template->assign('U_SLIDESHOW', $slideshow_url);
                 }

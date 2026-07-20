@@ -105,6 +105,7 @@ namespace {
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;
+    use Piwigo\Bootstrap\RedirectService;
     use Piwigo\Cache\PersistentFileCache;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\CategoryService;
@@ -199,7 +200,8 @@ final class SearchServiceTest extends IntegrationTestCase
             ),
             new PersistentFileCache(),
             new MailService(),
-            new HtmlService()
+            new HtmlService(),
+            new RedirectService()
         );
     }
 

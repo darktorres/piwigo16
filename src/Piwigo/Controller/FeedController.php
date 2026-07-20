@@ -9,6 +9,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Feed\FeedHelper;
 use Piwigo\Feed\FeedRepository;
@@ -37,6 +38,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class FeedController implements ControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     private static function userService(Connection $conn): \Piwigo\Users\UserService
     {
         return new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), $conn);
@@ -80,7 +85,7 @@ final class FeedController implements ControllerInterface
         if ($feed_id !== '') {
             $feed_row = $feed_repo->findById($feed_id);
             if ($feed_row === null) {
-                $htmlRenderer->pageNotFound(l10n('Unknown feed identifier'));
+                $htmlRenderer->pageNotFound($this->redirectService, l10n('Unknown feed identifier'));
             }
             $feed_last_check = $feed_row['lastCheck'];
             $user_id_before = is_numeric($user['id']) ? (int) $user['id'] : null;

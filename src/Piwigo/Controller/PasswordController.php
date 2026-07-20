@@ -12,6 +12,7 @@ use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -43,6 +44,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class PasswordController implements ControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     /**
      * Field-keyed, controller-local -- read by specific key
      * ('password_page_error'/'password_form_error'/'login_page_error') in
@@ -99,7 +104,7 @@ final class PasswordController implements ControllerInterface
         // ------------------------------------------------------- process form
         if (isset($_POST['submit'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new \Piwigo\Html\HtmlService());
+                ->checkOrFail(new \Piwigo\Html\HtmlService(), $this->redirectService);
 
             if ($action_param === 'lost') {
                 if ($this->processVerificationCode()) {
@@ -159,19 +164,19 @@ final class PasswordController implements ControllerInterface
         if ($this->action === 'reset') {
             if ((! isset($_GET['key']) and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric())) and ! isset($_SESSION['valid_reset_password_code'])) {
                 $gallery_home_url = get_gallery_home_url();
-                redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
+                $this->redirectService->redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
             }
         }
 
         if ($this->action === 'lost' and ! \Piwigo\Auth\AccessControl::isAGuest()) {
             $gallery_home_url = get_gallery_home_url();
-            redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
+            $this->redirectService->redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
         }
 
         if ($this->action === 'lost_code' and ! isset($_SESSION['reset_password_code'])) {
             $gallery_home_url = get_gallery_home_url();
             $gallery_home_url = is_string($gallery_home_url) ? $gallery_home_url : '';
-            redirect($gallery_home_url . 'identification.php');
+            $this->redirectService->redirect($gallery_home_url . 'identification.php');
         }
 
         if ($this->action === 'lost' and isset($_SESSION['reset_password_code'])) {

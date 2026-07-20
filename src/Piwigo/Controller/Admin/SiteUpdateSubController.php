@@ -9,6 +9,7 @@ use Piwigo\Admin\tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
@@ -98,6 +99,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class SiteUpdateSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     private static function permissionService(Connection $conn): PermissionService
     {
         return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
@@ -240,7 +245,7 @@ SELECT galleries_url
 
         if (isset($_GET['quick_sync'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
 
             $_POST['sync'] = 'files';
             $_POST['display_info'] = '1';
@@ -255,7 +260,7 @@ SELECT galleries_url
         $general_failure = true;
         if (isset($_POST['submit'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
 
             if ($site_reader->open()) {
                 $general_failure = false;

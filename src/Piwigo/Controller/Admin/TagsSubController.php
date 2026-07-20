@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\TagsPageRenderer;
+use Piwigo\Core\RedirectServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -15,10 +16,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class TagsSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        new TagsPageRenderer()
+        new TagsPageRenderer($this->redirectService)
             ->render();
     }
 }

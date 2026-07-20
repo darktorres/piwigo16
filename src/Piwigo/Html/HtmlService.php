@@ -7,6 +7,7 @@ namespace Piwigo\Html;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
@@ -24,11 +25,23 @@ use Piwigo\Template\Template;
  * 4d retarget these directly, without adding a constructor dependency --
  * see getCatDisplayNameFromId()'s own docblock for why this specific
  * class can never depend on CategoryService/UrlServiceInterface). This
- * class has 83 real `new HtmlService()` construction sites, so
+ * class has hundreds of real `new HtmlService()` construction sites, so
  * getCatDisplayNameCache()'s own CategoryRepository need (Legacy
  * Coupling Retirement: DI+DBAL migration, Phase 1b) follows
  * MailService::$webmasterMailProvider's established lazy-default
  * pattern rather than a required param.
+ *
+ * accessDenied()/badRequest()/pageNotFound()/pageForbidden() (Legacy
+ * Coupling Retirement Phase 4b) take Piwigo\Core\RedirectServiceInterface
+ * as a required *method* parameter instead, rather than a constructor
+ * dependency -- Piwigo\Bootstrap\RedirectService is L4Integration, and
+ * this class (L3Presentation) may not depend on it directly per
+ * deptrac.yaml's ruleset; the DI container's service-locator accessor on
+ * Piwigo\Core\Kernel (the only other way to reach a concrete L4 instance
+ * from here without a constructor dependency) is arch-test-restricted to
+ * Bootstrap/ and index.php. Every real caller already holds (or can
+ * trivially construct) a RedirectServiceInterface instance of its own to
+ * pass through.
  *
  * Implements HtmlRenderingInterface (P23 batch 8f-3) so L1/L2a/L2b classes
  * that can't depend on this L3Presentation class directly can depend on
@@ -315,7 +328,7 @@ final class HtmlService implements HtmlRenderingInterface
      * Exits the current script.
      */
     #[\Override]
-    public function accessDenied(): never
+    public function accessDenied(RedirectServiceInterface $redirectService): never
     {
         if (\Piwigo\Users\CurrentUser::isInitialized() and ! \Piwigo\Auth\AccessControl::isAGuest()) {
             $this->setStatusHeader(401);
@@ -334,20 +347,20 @@ final class HtmlService implements HtmlRenderingInterface
 
         $request_uri = $_SERVER['REQUEST_URI'] ?? '';
         $request_uri = is_string($request_uri) ? $request_uri : '';
-        redirect_http(get_root_url() . 'identification.php?redirect=' . urlencode(urlencode($request_uri)));
+        $redirectService->redirectHttp(get_root_url() . 'identification.php?redirect=' . urlencode(urlencode($request_uri)));
     }
 
     /**
      * Exits the current script with 403 code.
      * @todo nice display if $template loaded
      */
-    public function pageForbidden(string $msg, ?string $alternateUrl = null): never
+    public function pageForbidden(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
     {
         $this->setStatusHeader(403);
         if ($alternateUrl === null) {
             $alternateUrl = make_index_url();
         }
-        redirect_html(
+        $redirectService->redirectHtml(
             $alternateUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
 <h1 style="text-align:left; font-size:36px;">' . l10n('Forbidden') . '</h1><br>'
@@ -361,13 +374,13 @@ final class HtmlService implements HtmlRenderingInterface
      * @todo nice display if $template loaded
      */
     #[\Override]
-    public function badRequest(string $msg, ?string $alternateUrl = null): never
+    public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
     {
         $this->setStatusHeader(400);
         if ($alternateUrl === null) {
             $alternateUrl = make_index_url();
         }
-        redirect_html(
+        $redirectService->redirectHtml(
             $alternateUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
 <h1 style="text-align:left; font-size:36px;">' . l10n('Bad request') . '</h1><br>'
@@ -384,13 +397,13 @@ final class HtmlService implements HtmlRenderingInterface
      *   concatenation); comments.php passes null when comments are disabled
      */
     #[\Override]
-    public function pageNotFound(?string $msg, ?string $alternateUrl = null): never
+    public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
     {
         $this->setStatusHeader(404);
         if ($alternateUrl === null) {
             $alternateUrl = make_index_url();
         }
-        redirect_html(
+        $redirectService->redirectHtml(
             $alternateUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
 <h1 style="text-align:left; font-size:36px;">' . l10n('Page not found') . '</h1><br>'

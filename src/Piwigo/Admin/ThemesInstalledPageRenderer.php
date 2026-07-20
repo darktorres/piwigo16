@@ -10,6 +10,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
@@ -36,6 +37,10 @@ use Piwigo\Template\Template;
  */
 final class ThemesInstalledPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     /**
      * Legacy Coupling Retirement Track A batch A5.2f: $pageSlug is an
      * explicit param instead of `global $page['page'];` -- the one real
@@ -65,7 +70,7 @@ final class ThemesInstalledPageRenderer
 
         if (isset($_GET['action']) and is_string($_GET['action']) and isset($_GET['theme']) and is_string($_GET['theme']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
 
             $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme)[$_GET['theme']] ?? null;
             $action_errors = $extension_lifecycle->performAction(ExtensionType::Theme, $_GET['action'], $_GET['theme'], $fs_theme_entry);
@@ -75,7 +80,7 @@ final class ThemesInstalledPageRenderer
                 if ($_GET['action'] === 'activate' or $_GET['action'] === 'deactivate') {
                     $template->delete_compiled_templates();
                 }
-                redirect($base_url);
+                $this->redirectService->redirect($base_url);
             }
         }
 

@@ -15,6 +15,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Core\Lang;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -40,6 +41,10 @@ use Piwigo\Users\UserService;
  */
 final class ProfileFormHandler
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
     {
         return new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn));
@@ -297,7 +302,7 @@ final class ProfileFormHandler
 
             $redirect_target = $_POST['redirect'] ?? null;
             if (is_string($redirect_target) and $redirect_target !== '' and $redirect_target !== '0') {
-                redirect($redirect_target);
+                $this->redirectService->redirect($redirect_target);
             }
         }
         return true;

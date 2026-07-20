@@ -10,6 +10,7 @@ use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Image\ImageStdParams;
@@ -36,6 +37,10 @@ use Piwigo\Template\Template;
  */
 final class MaintenanceActionsPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     public function render(): void
     {
         /**
@@ -47,7 +52,7 @@ final class MaintenanceActionsPageRenderer
         FilesystemIntegrityChecker::fsQuickCheck();
 
         $action = is_string($_GET['action'] ?? null) ? $_GET['action'] : '';
-        new MaintenanceActionDispatcher()
+        new MaintenanceActionDispatcher($this->redirectService)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+

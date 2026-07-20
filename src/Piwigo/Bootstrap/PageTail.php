@@ -55,7 +55,7 @@ final class PageTail
             if ($check_for_updates) {
                 $exec_id = UniqueExecLock::begins('check_for_updates');
                 if ($exec_id !== false) {
-                    $updates = new updates();
+                    $updates = new updates(new RedirectService());
                     $updates->notify_piwigo_new_versions();
 
                     UniqueExecLock::ends('check_for_updates');

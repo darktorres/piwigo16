@@ -9,6 +9,7 @@ use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -34,6 +35,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class SearchController implements ControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     private static function permissionService(Connection $conn): PermissionService
     {
         return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
@@ -59,6 +64,7 @@ final class SearchController implements ControllerInterface
             new PersistentFileCache(),
             new MailService(),
             new HtmlService(),
+            $this->redirectService,
         );
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
@@ -171,7 +177,7 @@ SELECT
             $found_categories = $conn->fetchAllAssociative($query);
             if ($found_categories === []) {
                 new HtmlService()
-                    ->pageNotFound(l10n('Requested album does not exist'));
+                    ->pageNotFound($this->redirectService, l10n('Requested album does not exist'));
             }
 
             $cat_ids = [$cat_id];
@@ -255,6 +261,6 @@ SELECT
         }
 
         [$search_uuid, $search_url] = $searchService->saveSearch($search);
-        redirect($search_url);
+        $this->redirectService->redirect($search_url);
     }
 }

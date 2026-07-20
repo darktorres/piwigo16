@@ -14,6 +14,7 @@ namespace Piwigo\Admin\Install;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\languages;
 use Piwigo\Admin\updates;
+use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\AppInfo;
@@ -173,7 +174,7 @@ class UpgradeRunner
         if ($has_remote_site) {
             \Piwigo\Core\PageState::current()->errors = [];
             $step = 3;
-            updates::upgrade_to('2.3.4', $step, false);
+            updates::upgrade_to('2.3.4', $step, new RedirectService(), false);
 
             $upgrade_errors = \Piwigo\Core\PageState::current()->errors;
             if (! empty($upgrade_errors)) {

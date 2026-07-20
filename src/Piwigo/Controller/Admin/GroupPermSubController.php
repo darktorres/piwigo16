@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\GroupPermPageRenderer;
+use Piwigo\Core\RedirectServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -15,10 +16,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class GroupPermSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        new GroupPermPageRenderer()
+        new GroupPermPageRenderer($this->redirectService)
             ->render();
     }
 }

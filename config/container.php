@@ -16,6 +16,7 @@ use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger as MonologLogger;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\PiwigoInfosSender;
+use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\ConfigEntry;
@@ -26,6 +27,7 @@ use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
@@ -108,6 +110,15 @@ return [
     // ruleset. See src/Piwigo/Core/HtmlRenderingInterface.php's own
     // docblock.
     HtmlRenderingInterface::class => \DI\get(HtmlService::class),
+
+    // Interface binding (Legacy Coupling Retirement Phase 4b) --
+    // Piwigo\Bootstrap\RedirectService is L4Integration (its real body
+    // calls Piwigo\Bootstrap\PageTail::render()); real callers span every
+    // layer from L1Infrastructure to L4Integration, so they constructor-
+    // or method-inject RedirectServiceInterface instead of depending on
+    // the concrete class directly, per deptrac.yaml's ruleset. See
+    // src/Piwigo/Core/RedirectServiceInterface.php's own docblock.
+    RedirectServiceInterface::class => \DI\get(RedirectService::class),
 
     // Interface binding (P23 batch 8f-4) -- Piwigo\Admin\PiwigoInfosSender
     // is L4Integration; Piwigo\Page\PageTailRenderer (L3Presentation)

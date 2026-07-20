@@ -6,6 +6,7 @@ namespace Piwigo\Auth;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\RedirectServiceInterface;
 
 /**
  * Current-request access-level checks: status/ACCESS_* introspection,
@@ -29,6 +30,8 @@ final class AccessControl
 
     private static ?HtmlRenderingInterface $htmlRenderer = null;
 
+    private static ?RedirectServiceInterface $redirectService = null;
+
     /**
      * Set once by include/common.inc.php (legacy, not subject to deptrac) --
      * same static-setter shape as Piwigo\Core\Lang::setDefaultLanguageProvider(),
@@ -40,6 +43,16 @@ final class AccessControl
     public static function setHtmlRenderer(HtmlRenderingInterface $renderer): void
     {
         self::$htmlRenderer = $renderer;
+    }
+
+    /**
+     * Set once alongside setHtmlRenderer() above, same reasoning (Legacy
+     * Coupling Retirement Phase 4b) -- accessDenied() needs one to reach
+     * the former redirect_http() free function now that it's retired.
+     */
+    public static function setRedirectService(RedirectServiceInterface $redirectService): void
+    {
+        self::$redirectService = $redirectService;
     }
 
     public static function getUserStatus(string $userStatus = ''): string
@@ -72,8 +85,8 @@ final class AccessControl
     public static function checkStatus(int $accessType, string $userStatus = ''): void
     {
         if (! self::isAuthorizeStatus($accessType, $userStatus)) {
-            if (self::$htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface) {
-                self::$htmlRenderer->accessDenied();
+            if (self::$htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface && self::$redirectService instanceof RedirectServiceInterface) {
+                self::$htmlRenderer->accessDenied(self::$redirectService);
             }
             throw new \RuntimeException('Access denied');
         }

@@ -8,6 +8,7 @@ use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -38,6 +39,10 @@ use Piwigo\Template\Template;
  */
 final class CatListPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     public function render(): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
@@ -53,7 +58,7 @@ final class CatListPageRenderer
 
         if (! empty($_POST) or isset($_GET['delete'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
         }
 
         $sort_orders = [
@@ -134,7 +139,7 @@ SELECT COUNT(*)
             if ($parent_id !== null) {
                 $redirect_url .= '&parent_id=' . $parent_id;
             }
-            redirect($redirect_url);
+            $this->redirectService->redirect($redirect_url);
         }
         // request to add a virtual category
         elseif (isset($_POST['submitAdd'])) {

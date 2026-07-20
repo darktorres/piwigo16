@@ -34,6 +34,7 @@ namespace Piwigo\Tests\Integration {
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
+use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
@@ -81,7 +82,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->dispatcher = new MaintenanceActionDispatcher();
+        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService());
     }
 
     public function test_search_purges_history_and_assigns_the_real_info_message(): void

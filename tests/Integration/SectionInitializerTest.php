@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
+use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
@@ -66,7 +67,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo)
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService())
             ->parse();
 
         self::assertSame('../../', $context->rootPath);
@@ -78,7 +79,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1/start-20';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo)
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService())
             ->parse();
 
         self::assertSame('../../../', $context->rootPath);
@@ -88,7 +89,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo)
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService())
             ->parse();
 
         self::assertNull($context->imageId);
@@ -100,7 +101,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
         $_SERVER['PATH_INFO'] = '/42';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo)
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService())
             ->parse();
 
         self::assertSame('42', $context->imageId);
@@ -113,7 +114,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
         $_SERVER['PATH_INFO'] = '/42-my-photo';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo)
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService())
             ->parse();
 
         self::assertSame('42', $context->imageId);
@@ -128,7 +129,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         // happened rather than this being a hardcoded default.
         $_SERVER['PATH_INFO'] = '/most_visited';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo)
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService())
             ->parse();
 
         self::assertSame('most_visited', $context->parsed['section'] ?? null);

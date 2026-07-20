@@ -8,6 +8,7 @@ use Piwigo\Admin\MaintenanceActionsPageRenderer;
 use Piwigo\Admin\MaintenanceEnvPageRenderer;
 use Piwigo\Admin\MaintenanceSysPageRenderer;
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\RedirectServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -51,6 +52,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class MaintenanceSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
@@ -72,7 +77,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
 
         if (isset($_GET['action'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new \Piwigo\Html\HtmlService());
+                ->checkOrFail(new \Piwigo\Html\HtmlService(), $this->redirectService);
         }
 
         // +-------------------------------------------------------------------+
@@ -169,13 +174,13 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         $tabsheet->assign();
 
         if ($tab === 'env') {
-            new MaintenanceEnvPageRenderer()
+            new MaintenanceEnvPageRenderer($this->redirectService)
                 ->render();
         } elseif ($tab === 'sys') {
             new MaintenanceSysPageRenderer()
                 ->render();
         } else {
-            new MaintenanceActionsPageRenderer()
+            new MaintenanceActionsPageRenderer($this->redirectService)
                 ->render();
         }
 

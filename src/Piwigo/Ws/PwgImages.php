@@ -18,6 +18,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
@@ -85,6 +86,7 @@ final class PwgImages
             new PersistentFileCache(),
             new MailService(),
             new HtmlService(),
+            new RedirectService(),
         );
     }
 

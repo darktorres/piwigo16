@@ -11,6 +11,7 @@ use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -34,6 +35,10 @@ use Piwigo\Users\UserService;
  */
 final class AlbumNotificationPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     public function render(): void
     {
         /**
@@ -74,7 +79,7 @@ final class AlbumNotificationPageRenderer
         // info by email to an access granted group of category informations
         if (isset($_POST['submitEmail'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
             set_make_full_url();
 
             $img = [];

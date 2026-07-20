@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\ThemesStandardPagesPageRenderer;
+use Piwigo\Core\RedirectServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -17,10 +18,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class ThemesStandardPagesSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        new ThemesStandardPagesPageRenderer()
+        new ThemesStandardPagesPageRenderer($this->redirectService)
             ->render();
     }
 }

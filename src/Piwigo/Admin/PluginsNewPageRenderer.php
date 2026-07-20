@@ -11,6 +11,7 @@ use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 
@@ -27,6 +28,10 @@ use Piwigo\Template\Template;
  */
 final class PluginsNewPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     /**
      * Legacy Coupling Retirement Track A: $pageSlug (batch A5.2f) and
      * $tab (batch A5.2h) are explicit params instead of
@@ -64,13 +69,13 @@ final class PluginsNewPageRenderer
                 \Piwigo\Core\PageState::current()->addError(l10n('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
-                    ->checkOrFail(new \Piwigo\Html\HtmlService());
+                    ->checkOrFail(new \Piwigo\Html\HtmlService(), $this->redirectService);
 
                 $extraction = $pem_catalog->extractArchive(ExtensionType::Plugin, 'install', $_GET['revision'], $_GET['extension']);
                 $install_status = $extraction['status'];
                 $plugin_id = $extraction['id'];
 
-                redirect($base_url . '&installstatus=' . $install_status . '&plugin_id=' . $plugin_id);
+                $this->redirectService->redirect($base_url . '&installstatus=' . $install_status . '&plugin_id=' . $plugin_id);
             }
         }
 

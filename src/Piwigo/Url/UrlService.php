@@ -9,6 +9,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -31,12 +32,17 @@ use Piwigo\Tag\TagService;
  * specifically -- `bad_request()`/`page_not_found()`/`fatal_error()` now
  * route through the constructor-injected HtmlRenderingInterface
  * (Piwigo\Core), same pattern as CategoryService/AuthService/CommentService/
- * UserService's own equivalent treatment.
+ * UserService's own equivalent treatment. Legacy Coupling Retirement
+ * Phase 4b: also constructor-injects RedirectServiceInterface, passed
+ * through to its own internal badRequest()/pageNotFound() calls (both
+ * gained a required RedirectServiceInterface parameter -- see
+ * HtmlRenderingInterface's own docblock).
  */
 final class UrlService
 {
     public function __construct(
         private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly RedirectServiceInterface $redirectService,
         private ?Connection $conn = null,
     ) {}
 
@@ -638,7 +644,7 @@ final class UrlService
                                 $combined_category_ids[] = $cat_id;
                             }
                         } else {
-                            $this->htmlRenderer->pageNotFound(l10n('Permalink for album not found'));
+                            $this->htmlRenderer->pageNotFound($this->redirectService, l10n('Permalink for album not found'));
                         }
                     }
                 }
@@ -651,7 +657,7 @@ final class UrlService
             if ($category !== null) {
                 $result = $categoryService->getCategoryInfo((int) $category);
                 if ($result === null || $result === []) {
-                    $this->htmlRenderer->pageNotFound(l10n('Requested album does not exist'));
+                    $this->htmlRenderer->pageNotFound($this->redirectService, l10n('Requested album does not exist'));
                 }
                 $page['category'] = $result;
             }
@@ -662,7 +668,7 @@ final class UrlService
                 foreach ($combined_category_ids as $cat_id) {
                     $result = $categoryService->getCategoryInfo((int) $cat_id);
                     if ($result === null || $result === []) {
-                        $this->htmlRenderer->pageNotFound(l10n('Requested album does not exist'));
+                        $this->htmlRenderer->pageNotFound($this->redirectService, l10n('Requested album does not exist'));
                     }
 
                     $combined_categories[] = $result;
@@ -697,14 +703,14 @@ final class UrlService
             $nextToken = $i;
 
             if ($requested_tag_ids === [] && $requested_tag_url_names === []) {
-                $this->htmlRenderer->badRequest('at least one tag required');
+                $this->htmlRenderer->badRequest($this->redirectService, 'at least one tag required');
             }
 
             $tagConn = DbConnection::build();
             $page['tags'] = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn), new CategoryRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
                 ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
-                $this->htmlRenderer->pageNotFound(l10n('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');
+                $this->htmlRenderer->pageNotFound($this->redirectService, l10n('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');
             }
         } elseif (($tokens[$nextToken] ?? null) === 'favorites') {
             $page['section'] = 'favorites';
@@ -729,7 +735,7 @@ final class UrlService
             if (! isset($matches[1])) {
                 preg_match('/(\d+)/', ($tokens[$nextToken] ?? ''), $matches);
                 if (! isset($matches[1])) {
-                    $this->htmlRenderer->badRequest('search identifier is missing');
+                    $this->htmlRenderer->badRequest($this->redirectService, 'search identifier is missing');
                 }
             }
             $page['search'] = $matches[1];
@@ -748,7 +754,7 @@ final class UrlService
             // With pictures list
             else {
                 if (! (bool) preg_match('/^\d+(,\d+)*$/', $tokens[$nextToken])) {
-                    $this->htmlRenderer->badRequest('wrong format on list GET parameter');
+                    $this->htmlRenderer->badRequest($this->redirectService, 'wrong format on list GET parameter');
                 }
                 foreach (explode(',', $tokens[$nextToken]) as $image_id) {
                     $page['list'][] = $image_id;

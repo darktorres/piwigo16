@@ -14,6 +14,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -79,6 +80,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class PictureController implements ControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     private static function permissionService(Connection $conn): PermissionService
     {
         return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
@@ -129,8 +134,9 @@ final class PictureController implements ControllerInterface
             self::categoryService($conn),
             self::permissionService($conn),
             self::tagService($conn),
-            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new PersistentFileCache(), new MailService(), new HtmlService()),
+            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new PersistentFileCache(), new MailService(), new HtmlService(), $this->redirectService),
             self::userService($conn),
+            $this->redirectService,
         )->populate();
 
         /**
@@ -158,7 +164,7 @@ final class PictureController implements ControllerInterface
         // access authorization check
         if ($page_category !== null) {
             $category_id = $page_category['id'] ?? null;
-            self::categoryService($conn)->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0, new HtmlService());
+            self::categoryService($conn)->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0, new HtmlService(), $this->redirectService);
         }
 
         // $section_context->items is mutated in place below (best_rated
@@ -196,6 +202,7 @@ SELECT id, file, level
             if ($row === false) {// element does not exist
                 new HtmlService()
                     ->pageNotFound(
+                        $this->redirectService,
                         'The requested image does not exist',
                         duplicate_index_url()
                     );
@@ -204,7 +211,7 @@ SELECT id, file, level
             $user_level = $currentUser->level;
             if ((is_numeric($row_level) ? (int) $row_level : 0) > $user_level) {
                 new HtmlService()
-                    ->accessDenied();
+                    ->accessDenied($this->redirectService);
             }
 
             $row_id = $row['id'];
@@ -230,6 +237,7 @@ SELECT id, file, level
                   ! in_array((string) $image_id, explode(',', $visible_images), true)) {
                     new HtmlService()
                         ->pageNotFound(
+                            $this->redirectService,
                             'The requested image is filtered',
                             duplicate_index_url()
                         );
@@ -237,7 +245,7 @@ SELECT id, file, level
                 $page_section = $section_context->section;
                 if ($page_section === 'categories' and $page_category === null) {// flat view - all items
                     new HtmlService()
-                        ->accessDenied();
+                        ->accessDenied($this->redirectService);
                 } else {// try to see if we can access it differently
                     $query = '
 SELECT id
@@ -249,7 +257,7 @@ SELECT id
   LIMIT 1';
                     if ($conn->fetchOne($query) === false) {
                         new HtmlService()
-                            ->accessDenied();
+                            ->accessDenied($this->redirectService);
                     } else {
                         if ($page_section === 'best_rated') {
                             $rank_of[$image_id] = count($items);
@@ -267,7 +275,7 @@ SELECT id
                             );
                             new HtmlService()
                                 ->setStatusHeader($page_section === 'recent_pics' ? 301 : 302);
-                            redirect_http($url);
+                            $this->redirectService->redirectHttp($url);
                         }
                     }
                 }
@@ -361,7 +369,7 @@ INSERT INTO ' . Tables::favorites() . '
 ;';
                     $conn->executeStatement($query);
 
-                    redirect($url_self);
+                    $this->redirectService->redirect($url_self);
 
                     // no break
                 case 'remove_from_favorites':
@@ -374,9 +382,9 @@ DELETE FROM ' . Tables::favorites() . '
                     $conn->executeStatement($query);
 
                     if ($section_context->section === 'favorites') {
-                        redirect($url_up);
+                        $this->redirectService->redirect($url_up);
                     } else {
-                        redirect($url_self);
+                        $this->redirectService->redirect($url_self);
                     }
 
                     // no break
@@ -399,13 +407,13 @@ UPDATE ' . Tables::categories() . '
                         UserCacheInvalidator::invalidate();
                     }
 
-                    redirect($url_self);
+                    $this->redirectService->redirect($url_self);
 
                     // no break
                 case 'add_to_caddie':
 
                     \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie([$image_id]);
-                    redirect($url_self);
+                    $this->redirectService->redirect($url_self);
 
                     // no break
                 case 'rate':
@@ -416,7 +424,7 @@ UPDATE ' . Tables::categories() . '
                     }
                     new RateService(new RateRepository($conn), new CookieService())
                         ->rate($image_id, $rate);
-                    redirect($url_self);
+                    $this->redirectService->redirect($url_self);
 
                     // no break
                 case 'edit_comment':
@@ -439,7 +447,7 @@ UPDATE ' . Tables::categories() . '
                         $edit_content_raw = $_POST['content'] ?? null;
                         if (is_scalar($edit_content_raw) && $edit_content_raw !== '' && $edit_content_raw !== '0' && $edit_content_raw !== 0 && $edit_content_raw !== 0.0 && $edit_content_raw !== false) {
                             new \Piwigo\Csrf\CsrfService()
-                                ->checkOrFail(new HtmlService());
+                                ->checkOrFail(new HtmlService(), $this->redirectService);
                             $post_key = $_POST['key'] ?? null;
                             if (! is_string($post_key)) {
                                 $post_key = '';
@@ -480,7 +488,7 @@ UPDATE ' . Tables::categories() . '
                             }
 
                             if ($perform_redirect) {
-                                redirect($url_self);
+                                $this->redirectService->redirect($url_self);
                             }
                             unset($_POST['content']);
                         }
@@ -494,7 +502,7 @@ UPDATE ' . Tables::categories() . '
                 case 'delete_comment':
 
                     new \Piwigo\Csrf\CsrfService()
-                        ->checkOrFail(new HtmlService());
+                        ->checkOrFail(new HtmlService(), $this->redirectService);
 
                     $commentService = self::commentService($conn);
 
@@ -514,13 +522,13 @@ UPDATE ' . Tables::categories() . '
                         $commentService->deleteComment((int) $_GET['comment_to_delete']);
                     }
 
-                    redirect($url_self);
+                    $this->redirectService->redirect($url_self);
 
                     // no break
                 case 'validate_comment':
 
                     new \Piwigo\Csrf\CsrfService()
-                        ->checkOrFail(new HtmlService());
+                        ->checkOrFail(new HtmlService(), $this->redirectService);
 
                     $commentService = self::commentService($conn);
 
@@ -540,7 +548,7 @@ UPDATE ' . Tables::categories() . '
                         $commentService->validateComment((int) $_GET['comment_to_validate']);
                     }
 
-                    redirect($url_self);
+                    $this->redirectService->redirect($url_self);
 
             }
         }

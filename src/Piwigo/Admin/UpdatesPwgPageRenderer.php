@@ -10,6 +10,7 @@ use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Template\Template;
 
 /**
@@ -35,6 +36,10 @@ use Piwigo\Template\Template;
  */
 final class UpdatesPwgPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     public function render(): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
@@ -74,7 +79,7 @@ final class UpdatesPwgPageRenderer
             $upgrade_to = is_string($get_to) ? $get_to : '';
         }
 
-        $core_update_service = new CoreUpdateService(new ZipExtractor());
+        $core_update_service = new CoreUpdateService(new ZipExtractor(), $this->redirectService);
         $new_versions = $core_update_service->getPiwigoNewVersions();
 
         // +-----------------------------------------------------------------------+
@@ -109,7 +114,7 @@ final class UpdatesPwgPageRenderer
         if ($step === 2 and \Piwigo\Auth\AccessControl::isWebmaster()) {
             if (isset($_POST['submit']) and isset($_POST['upgrade_to']) and is_string($_POST['upgrade_to'])) {
                 new \Piwigo\Csrf\CsrfService()
-                    ->checkOrFail(new \Piwigo\Html\HtmlService());
+                    ->checkOrFail(new \Piwigo\Html\HtmlService(), $this->redirectService);
                 $core_update_service->upgradeTo($_POST['upgrade_to'], $step);
             }
         }
@@ -120,7 +125,7 @@ final class UpdatesPwgPageRenderer
         if ($step === 3 and \Piwigo\Auth\AccessControl::isWebmaster()) {
             if (isset($_POST['submit']) and isset($_POST['upgrade_to']) and is_string($_POST['upgrade_to'])) {
                 new \Piwigo\Csrf\CsrfService()
-                    ->checkOrFail(new \Piwigo\Html\HtmlService());
+                    ->checkOrFail(new \Piwigo\Html\HtmlService(), $this->redirectService);
                 $core_update_service->upgradeTo($_POST['upgrade_to'], $step);
             }
 

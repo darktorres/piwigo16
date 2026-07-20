@@ -10,6 +10,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Core\Env;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
@@ -40,6 +41,10 @@ use Piwigo\Users\UserRepository;
  */
 final class PhotosAddDirectPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     /**
      * P23 batch 8f-1: relocated from admin/include/functions.php's
      * PHOTOS_ADD_BASE_URL define() (formerly relocated there from the
@@ -69,7 +74,7 @@ final class PhotosAddDirectPageRenderer
 
         if (isset($_GET['batch'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
             new \Piwigo\Validation\InputValidator()
                 ->validate('batch', $_GET, false, '/^\d+(,\d+)*$/');
 
@@ -94,7 +99,7 @@ DELETE FROM ' . Tables::caddie() . '
                     $inserts
                 );
 
-            redirect(get_root_url() . 'admin.php?page=batch_manager&filter=prefilter-caddie');
+            $this->redirectService->redirect(get_root_url() . 'admin.php?page=batch_manager&filter=prefilter-caddie');
         }
 
         if ((bool) new PreferencesService(new UserRepository($conn))->getParam('promote-mobile-apps', true)) {

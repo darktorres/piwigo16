@@ -9,6 +9,7 @@ use Piwigo\Admin\ThemesInstalledPageRenderer;
 use Piwigo\Admin\ThemesNewPageRenderer;
 use Piwigo\Admin\ThemesStandardPagesPageRenderer;
 use Piwigo\Admin\UpdatesExtPageRenderer;
+use Piwigo\Core\RedirectServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -46,6 +47,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class ThemesSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
@@ -81,13 +86,13 @@ final class ThemesSubController implements AdminSubControllerInterface
                 ->render('themes');
             $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
         } elseif ($tab === 'new') {
-            new ThemesNewPageRenderer()
+            new ThemesNewPageRenderer($this->redirectService)
                 ->render('themes', $tab);
         } elseif ($tab === 'standard_pages') {
-            new ThemesStandardPagesPageRenderer()
+            new ThemesStandardPagesPageRenderer($this->redirectService)
                 ->render();
         } else {
-            new ThemesInstalledPageRenderer()
+            new ThemesInstalledPageRenderer($this->redirectService)
                 ->render('themes');
         }
     }

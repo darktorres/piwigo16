@@ -14,6 +14,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Http\HttpClientService;
@@ -63,6 +64,10 @@ use Piwigo\Template\FileCombiner;
  */
 final class MaintenanceActionDispatcher
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     /**
      * DRY extraction (Phase 1k DI-chain audit): the same PermissionService
      * recipe was repeated verbatim at 3 sites in this file.
@@ -105,7 +110,7 @@ final class MaintenanceActionDispatcher
                     ->record('system', ActivitySystem::Core, 'maintenance', [
                         'maintenance_action' => $action,
                     ]);
-                redirect(get_root_url() . 'admin.php?page=maintenance');
+                $this->redirectService->redirect(get_root_url() . 'admin.php?page=maintenance');
 
                 // no break
             case 'unlock_gallery':
@@ -116,7 +121,7 @@ final class MaintenanceActionDispatcher
                     ->record('system', ActivitySystem::Core, 'maintenance', [
                         'maintenance_action' => $action,
                     ]);
-                redirect(get_root_url() . 'admin.php?page=maintenance');
+                $this->redirectService->redirect(get_root_url() . 'admin.php?page=maintenance');
 
                 // no break
             case 'categories':

@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\Template;
 
@@ -42,6 +43,10 @@ use Piwigo\Template\Template;
  */
 final class ThemesStandardPagesPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     public function render(): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
@@ -77,7 +82,7 @@ final class ThemesStandardPagesPageRenderer
 
         if (isset($_POST['submit']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new \Piwigo\Html\HtmlService());
+                ->checkOrFail(new \Piwigo\Html\HtmlService(), $this->redirectService);
 
             // use_standard_pages or not -- a checkbox POST value, so "not
             // set"/''/'0' are all "unchecked", matching empty()'s own

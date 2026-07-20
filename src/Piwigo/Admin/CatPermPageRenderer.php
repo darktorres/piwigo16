@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -27,6 +28,10 @@ use Piwigo\Template\Template;
  */
 final class CatPermPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     public function render(): void
     {
         /**
@@ -58,7 +63,7 @@ final class CatPermPageRenderer
 
         if (! empty($_POST)) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
 
             // the status <select> always submits this field; fall back to an empty
             // string (never matches 'public'/'private') on malformed input

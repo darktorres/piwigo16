@@ -8,6 +8,7 @@ use Piwigo\Cache\PersistentCache;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionService;
@@ -59,6 +60,7 @@ final readonly class SectionPopulator
         private TagService $tagService,
         private SearchService $searchService,
         private UserService $userService,
+        private RedirectServiceInterface $redirectService,
     ) {}
 
     public function populate(): void
@@ -107,7 +109,7 @@ final readonly class SectionPopulator
         // execution. No downstream code reads SectionContextRegistry::
         // current() mid-request today (confirmed via a full-repo grep),
         // so deferring the one real set() call to the end is safe.
-        $url_parse = new SectionInitializer($this->htmlRenderer, $this->repo)
+        $url_parse = new SectionInitializer($this->htmlRenderer, $this->repo, $this->redirectService)
             ->parse();
 
         $page['root_path'] = $url_parse->rootPath;
@@ -144,7 +146,7 @@ final readonly class SectionPopulator
                         $random_index_redirect = new RandomIndexRedirectResolver()
                             ->resolveCandidates($redirect_candidates);
                         if ($random_index_redirect !== []) {
-                            redirect($random_index_redirect[random_int(0, count($random_index_redirect) - 1)]);
+                            $this->redirectService->redirect($random_index_redirect[random_int(0, count($random_index_redirect) - 1)]);
                         }
                     }
                     $page['is_homepage'] = true;
@@ -424,7 +426,7 @@ SELECT id
                         'attempt to see the name of the tag #' . implode(', #', array_map(strval(...), $tag_ids))
                 . ' from the address : ' . $remote_addr
                     );
-                    $this->htmlRenderer->accessDenied();
+                    $this->htmlRenderer->accessDenied($this->redirectService);
                 }
 
                 /** @var list<array<string, mixed>> $tags_raw */
@@ -491,7 +493,7 @@ DELETE FROM ' . Tables::favorites() . '
   WHERE user_id = ' . $user_id_sql . '
 ;';
                     $this->repo->executeStatement($query);
-                    redirect(make_index_url([
+                    $this->redirectService->redirect(make_index_url([
                         'section' => 'favorites',
                     ]));
                 } else {
@@ -756,14 +758,14 @@ SELECT id
 
             if (self::needsPermalinkRedirect($category_permalink, $category_url_style, $hit_by_cat_url_name, $hit_by_cat_permalink, $expected_cat_url_name)) {
                 $redirect_category_id = $page_category['id'] ?? null;
-                $this->categoryService->checkRestrictions(is_numeric($redirect_category_id) ? (int) $redirect_category_id : 0, $this->htmlRenderer);
+                $this->categoryService->checkRestrictions(is_numeric($redirect_category_id) ? (int) $redirect_category_id : 0, $this->htmlRenderer, $this->redirectService);
                 $redirect_url = \Piwigo\Core\PageFilterHelper::scriptBasename() === 'picture' ? duplicate_picture_url() : duplicate_index_url();
 
                 if (! headers_sent()) { // this is a permanent redirection
                     $this->htmlRenderer->setStatusHeader(301);
-                    redirect_http($redirect_url);
+                    $this->redirectService->redirectHttp($redirect_url);
                 }
-                redirect($redirect_url);
+                $this->redirectService->redirect($redirect_url);
             }
             unset($page['hit_by']);
         }

@@ -7,6 +7,7 @@ namespace Piwigo\Admin\Category;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -297,7 +298,7 @@ DELETE
      * Consolidates admin/element_set_ranks.php's category image_order
      * UPDATE (own row + optionally every sub-album).
      */
-    public function saveImageOrder(int $catId, ?string $imageOrder, bool $applySubcats): void
+    public function saveImageOrder(int $catId, ?string $imageOrder, bool $applySubcats, RedirectServiceInterface $redirectService): void
     {
         $orderValue = $imageOrder !== null ? '\'' . $imageOrder . '\'' : 'NULL';
 
@@ -313,7 +314,7 @@ UPDATE ' . Tables::categories() . '
         $catInfo = $this->categoryService->getCategoryInfo($catId);
         if (! is_array($catInfo) || ! is_string($catInfo['uppercats'] ?? null)) {
             new HtmlService()
-                ->pageNotFound('Requested album does not exist');
+                ->pageNotFound($redirectService, 'Requested album does not exist');
         }
 
         pwg_query('

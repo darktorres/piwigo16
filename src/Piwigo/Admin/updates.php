@@ -16,6 +16,7 @@ use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Mail\MailService;
@@ -64,8 +65,10 @@ class updates
      */
     public $merged_extension_url = 'https://upstream.example.invalid/merged_extensions.txt';
 
-    public function __construct(string $page = 'updates')
-    {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+        string $page = 'updates',
+    ) {
         $this->types = ['plugins', 'themes', 'languages'];
 
         if (in_array($page, $this->types)) {
@@ -588,7 +591,7 @@ class updates
         }
     }
 
-    public static function upgrade_to(string $upgrade_to, int|string &$step, bool $check_current_version = true): void
+    public static function upgrade_to(string $upgrade_to, int|string &$step, RedirectServiceInterface $redirectService, bool $check_current_version = true): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -598,7 +601,7 @@ class updates
         if ($check_current_version and ! version_compare($upgrade_to, AppInfo::VERSION, '>')) {
             // TODO why redirect to a plugin page? maybe a remaining code from when
             // the update system was provided as a plugin?
-            redirect(get_root_url() . 'admin.php?page=plugin-' . basename(__DIR__));
+            $redirectService->redirect(get_root_url() . 'admin.php?page=plugin-' . basename(__DIR__));
         }
 
         $obsolete_list = null;
@@ -705,7 +708,7 @@ class updates
                             \Piwigo\Core\PageState::current()->setUpdatedVersion($upgrade_to);
                             $step = -1;
                         } else {
-                            redirect(PHPWG_ROOT_PATH . 'upgrade.php?now=');
+                            $redirectService->redirect(PHPWG_ROOT_PATH . 'upgrade.php?now=');
                         }
                     } else {
                         file_put_contents(PHPWG_ROOT_PATH . $data_location . 'update/log_error.txt', $error);

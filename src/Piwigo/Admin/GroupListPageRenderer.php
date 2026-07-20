@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 
@@ -13,6 +14,10 @@ use Piwigo\Group\GroupRepository;
  */
 final class GroupListPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     public function render(): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
@@ -26,7 +31,7 @@ final class GroupListPageRenderer
 
         if ($_POST !== [] or isset($_GET['delete']) or isset($_GET['toggle_is_default'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new \Piwigo\Html\HtmlService());
+                ->checkOrFail(new \Piwigo\Html\HtmlService(), $this->redirectService);
         }
 
         $template->set_filenames([

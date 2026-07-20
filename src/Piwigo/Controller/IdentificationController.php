@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Piwigo\Auth\CookieService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -32,6 +33,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class IdentificationController implements ControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
@@ -46,7 +51,7 @@ final class IdentificationController implements ControllerInterface
         // home instead of displaying the log in form
         if (! \Piwigo\Auth\AccessControl::isAGuest()) {
             $gallery_home_url = get_gallery_home_url();
-            redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
+            $this->redirectService->redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
         }
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_identification');
@@ -113,7 +118,7 @@ final class IdentificationController implements ControllerInterface
 
                     $gallery_home_url = get_gallery_home_url();
 
-                    redirect(
+                    $this->redirectService->redirect(
                         $redirect_to === ''
                         ? (is_string($gallery_home_url) ? $gallery_home_url : '')
                         : substr($root_url, 0, strlen($root_url) - strlen(new CookieService()->cookiePath())) . $redirect_to

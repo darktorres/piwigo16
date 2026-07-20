@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -47,6 +48,10 @@ use Piwigo\Template\Template;
  */
 final class ElementSetRanksPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     public function render(): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
@@ -88,7 +93,7 @@ final class ElementSetRanksPageRenderer
 
         if (isset($_POST['submit'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
 
             if (isset($_POST['rank_of_image']) && is_array($_POST['rank_of_image'])) {
                 $rank_of_image = array_filter($_POST['rank_of_image'], is_numeric(...));
@@ -130,7 +135,7 @@ final class ElementSetRanksPageRenderer
                     new CategoryRepository($conn),
                     new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
                 )
-            )->saveImageOrder((int) $category_id, $image_order, isset($_POST['image_order_subcats']));
+            )->saveImageOrder((int) $category_id, $image_order, isset($_POST['image_order_subcats']), $this->redirectService);
 
             $template->assign(
                 [
@@ -157,7 +162,7 @@ SELECT *
 ;';
         $category = $conn->fetchAssociative($query);
         if ($category === false || ! is_string($category['uppercats'] ?? null)) {
-            $htmlRenderer->pageNotFound('Requested album does not exist');
+            $htmlRenderer->pageNotFound($this->redirectService, 'Requested album does not exist');
         }
 
         if ($category['image_order'] === 'rank ASC' or $category['image_order'] === '`rank` ASC') {

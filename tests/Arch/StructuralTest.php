@@ -539,10 +539,12 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // page routes through this, not a bare die()/exit() of its own.
         'Html/HtmlService.php' => 2,
 
-        // Http/functions.php: redirect_http()/redirect_html(), the
+        // Bootstrap/RedirectService.php: redirectHttp()/redirectHtml(), the
         // canonical redirect() mechanism used throughout the whole
         // codebase -- same class of sanctioned exit point as HtmlService.
-        'Http/functions.php' => 2,
+        // Legacy Coupling Retirement Phase 4b: relocated here verbatim from
+        // the deleted Http/functions.php (same 2-call count).
+        'Bootstrap/RedirectService.php' => 2,
 
         // AJAX/JSON action endpoints: echo a JSON (or CSV/file) body
         // directly and stop, deliberately not falling through to the
@@ -753,7 +755,19 @@ test('src/Piwigo/ does not repeat the same multi-dependency service construction
     // calling `self::permissionService()` instead of repeating its chain).
     $allowlist = [
         // Free functions: no enclosing instance, nothing to inject into.
-        'Http/functions.php|UserService',
+        // Legacy Coupling Retirement Phase 4b: redirect_html()'s early-crash
+        // fallback (2 UserService construction sites) moved verbatim from
+        // the deleted Http/functions.php into Bootstrap/RedirectService.php
+        // -- same structural exemption, new file.
+        'Bootstrap/RedirectService.php|UserService',
+
+        // Free functions: no enclosing instance, nothing to inject into.
+        // Legacy Coupling Retirement Phase 4b: adding the new required
+        // RedirectServiceInterface argument to every `new UrlService(new
+        // HtmlService())` one-liner (18 sites, one per function) crossed
+        // this check's 2-top-level-arg detection threshold -- genuinely
+        // temporary, disappears when Phase 4c retargets/deletes this file.
+        'Url/functions.php|UrlService',
 
         // Pre-installation, no DI container exists yet (matches the
         // Env/FilesystemHelper/MysqliDb precedent documented on this

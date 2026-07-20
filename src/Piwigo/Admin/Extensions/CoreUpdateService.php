@@ -8,6 +8,7 @@ use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Mail\MailService;
@@ -35,6 +36,7 @@ final readonly class CoreUpdateService
 {
     public function __construct(
         private ZipExtractor $zipExtractor,
+        private readonly RedirectServiceInterface $redirectService,
     ) {}
 
     public function checkPiwigoUpgrade(): void
@@ -244,7 +246,7 @@ final readonly class CoreUpdateService
         $dataLocation = $dataLocationRaw;
 
         if ($checkCurrentVersion and ! version_compare($upgradeTo, AppInfo::VERSION, '>')) {
-            redirect(get_root_url() . 'admin.php?page=plugin-' . basename(__DIR__));
+            $this->redirectService->redirect(get_root_url() . 'admin.php?page=plugin-' . basename(__DIR__));
         }
 
         $obsoleteList = null;
@@ -361,7 +363,7 @@ final readonly class CoreUpdateService
             \Piwigo\Core\PageState::current()->setUpdatedVersion($upgradeTo);
             $step = -1;
         } else {
-            redirect(PHPWG_ROOT_PATH . 'upgrade.php?now=');
+            $this->redirectService->redirect(PHPWG_ROOT_PATH . 'upgrade.php?now=');
         }
     }
 

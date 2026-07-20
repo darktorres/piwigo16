@@ -8,6 +8,7 @@ use Piwigo\Admin\tabsheet;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
@@ -86,6 +87,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class NotificationByMailSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
@@ -157,7 +162,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         if (count($_POST) == 0) {
             // No insert data in post mode
-            self::insertNewDataUserMailNotification($nbmSender);
+            self::insertNewDataUserMailNotification($nbmSender, $this->redirectService);
         }
 
         // +-----------------------------------------------------------------------+
@@ -166,7 +171,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
         if (! empty($_POST)) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail($htmlRenderer);
+                ->checkOrFail($htmlRenderer, $this->redirectService);
         }
 
         switch ($page_mode) {
@@ -462,7 +467,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
     /**
      * Inserting News users
      */
-    private static function insertNewDataUserMailNotification(NotificationByMailSender $nbmSender): void
+    private static function insertNewDataUserMailNotification(NotificationByMailSender $nbmSender, RedirectServiceInterface $redirectService): void
     {
         /**
          * @var string $base_url set at the top of handle()
@@ -552,7 +557,7 @@ order by
                     $query = 'delete from ' . Tables::userMailNotification() . ' where check_key in (' . implode(',', $quoted_check_key_list) . ');';
                     $conn->executeStatement($query);
 
-                    redirect($base_url . get_query_string_diff([], false), l10n('Operation in progress') . "\n" . l10n('Please wait...'));
+                    $redirectService->redirect($base_url . get_query_string_diff([], false), l10n('Operation in progress') . "\n" . l10n('Please wait...'));
                 }
             }
         }

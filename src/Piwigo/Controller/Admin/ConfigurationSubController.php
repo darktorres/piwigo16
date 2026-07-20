@@ -10,6 +10,7 @@ use Piwigo\Admin\tabsheet;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -86,6 +87,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class ConfigurationSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     /**
      * Set by processSizes() (a static method) when a submitted "sizes" tab
      * form fails validation, so handle()'s own tab-render branch below
@@ -253,7 +258,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // ------------------------------ verification and registration of modifications
         if (isset($_POST['submit'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
             $int_pattern = '/^\d+$/';
 
             switch ($page['section']) {
@@ -440,7 +445,7 @@ WHERE param = \'' . $row['param'] . '\'
         // restore default derivatives settings
         if ($page['section'] == 'sizes' and isset($_GET['action']) and $_GET['action'] == 'restore_settings' and \Piwigo\Auth\AccessControl::isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
 
             ImageStdParams::restore_default();
             new DerivativeCacheService()
@@ -585,7 +590,7 @@ WHERE param = \'' . $row['param'] . '\'
                 // P22: profile.php's own save_profile_from_post()/
                 // load_profile_in_template() ported to Piwigo\Controller\
                 // ProfileFormHandler in P23 batch 8c.
-                $profileFormHandler = new ProfileFormHandler();
+                $profileFormHandler = new ProfileFormHandler($this->redirectService);
 
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {

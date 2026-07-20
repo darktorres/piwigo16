@@ -8,6 +8,7 @@ use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -57,6 +58,7 @@ final readonly class SearchService
         private PersistentFileCache $cache,
         private MailerInterface $mailer,
         private HtmlRenderingInterface $htmlRenderer,
+        private RedirectServiceInterface $redirectService,
         private ?TagService $tagService = null,
         private ?UserService $userService = null,
         private ?\Piwigo\Users\PreferencesService $preferencesService = null,
@@ -180,7 +182,7 @@ final readonly class SearchService
     {
         $search = $this->getValidatedSearchInfo($searchId, $section, $resolvedSearchId);
         if (empty($search)) {
-            $this->htmlRenderer->badRequest('this search identifier does not exist');
+            $this->htmlRenderer->badRequest($this->redirectService, 'this search identifier does not exist');
         }
 
         $rules = $search['rules'] ?? null;
@@ -1364,7 +1366,7 @@ final readonly class SearchService
     {
         $search = $this->getSearchArray($searchId);
         if ($search === false) {
-            $this->htmlRenderer->badRequest('this search identifier does not exist');
+            $this->htmlRenderer->badRequest($this->redirectService, 'this search identifier does not exist');
         }
 
         if (! isset($search['q']) || ! is_string($search['q'])) {

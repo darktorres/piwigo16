@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -20,6 +21,10 @@ use Piwigo\Tag\TagService;
  */
 final class TagsPageRenderer
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     public function render(): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
@@ -36,11 +41,11 @@ final class TagsPageRenderer
 
         if (($_GET['action'] ?? null) === 'delete_orphans') {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
 
             $tagService->deleteOrphanTags();
             $_SESSION['message_tags'] = l10n('Orphan tags deleted');
-            redirect(get_root_url() . 'admin.php?page=tags');
+            $this->redirectService->redirect(get_root_url() . 'admin.php?page=tags');
         }
 
         $template->set_filenames([

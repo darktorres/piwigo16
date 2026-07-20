@@ -8,6 +8,7 @@ use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -29,6 +30,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class RegisterController implements ControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
@@ -41,7 +46,7 @@ final class RegisterController implements ControllerInterface
 
         if (! \Piwigo\Config\Config::allowUserRegistration()) {
             new HtmlService()
-                ->pageForbidden('User registration closed');
+                ->pageForbidden($this->redirectService, 'User registration closed');
         }
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_register');
@@ -143,7 +148,7 @@ final class RegisterController implements ControllerInterface
                     new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())
                         ->logUser($new_user_id, false);
                 }
-                redirect(make_index_url());
+                $this->redirectService->redirect(make_index_url());
             }
             $registration_post_key = new \Piwigo\Auth\EphemeralKeyService()
                 ->generate(2);

@@ -8,6 +8,7 @@ use Piwigo\Admin\PluginsInstalledPageRenderer;
 use Piwigo\Admin\PluginsNewPageRenderer;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Admin\UpdatesExtPageRenderer;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -43,6 +44,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class PluginsSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
@@ -78,7 +83,7 @@ final class PluginsSubController implements AdminSubControllerInterface
                 ->render('plugins');
             $template->assign('ADMIN_PAGE_TITLE', l10n('Plugins'));
         } elseif ($tab === 'new') {
-            new PluginsNewPageRenderer()
+            new PluginsNewPageRenderer($this->redirectService)
                 ->render('plugins', $tab);
         } else {
             new PluginsInstalledPageRenderer()

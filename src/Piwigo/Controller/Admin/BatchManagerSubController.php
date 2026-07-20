@@ -12,6 +12,7 @@ use Piwigo\Admin\tabsheet;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -61,6 +62,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class BatchManagerSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly RedirectServiceInterface $redirectService,
+    ) {}
+
     private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
     {
         return new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn));
@@ -182,10 +187,10 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         // +-------------------------------------------------------------------+
 
         if ($tab === 'unit') {
-            new BatchManagerUnitPageRenderer()
+            new BatchManagerUnitPageRenderer($this->redirectService)
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer()
+            new BatchManagerGlobalPageRenderer($this->redirectService)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }
@@ -198,7 +203,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
 
         if ($_GET['action'] === 'empty_caddie') {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService());
+                ->checkOrFail(new HtmlService(), $this->redirectService);
 
             $query = '
 DELETE FROM ' . Tables::caddie() . '
@@ -210,7 +215,7 @@ DELETE FROM ' . Tables::caddie() . '
                 l10n('Information data registered in database'),
             ];
 
-            redirect(get_root_url() . 'admin.php?page=' . $getPage);
+            $this->redirectService->redirect(get_root_url() . 'admin.php?page=' . $getPage);
         }
 
         if ($_GET['action'] === 'delete_orphans' and isset($_GET['nb_orphans_deleted'])) {
@@ -228,7 +233,7 @@ DELETE FROM ' . Tables::caddie() . '
                     $nb_orphans_deleted
                 );
 
-                redirect(get_root_url() . 'admin.php?page=' . $getPage);
+                $this->redirectService->redirect(get_root_url() . 'admin.php?page=' . $getPage);
             }
         }
 
@@ -247,7 +252,7 @@ DELETE FROM ' . Tables::caddie() . '
                     $nb_md5sum_added
                 );
 
-                redirect(get_root_url() . 'admin.php?page=' . $getPage);
+                $this->redirectService->redirect(get_root_url() . 'admin.php?page=' . $getPage);
             }
         }
     }
@@ -572,7 +577,7 @@ DELETE FROM ' . Tables::caddie() . '
             // we need to check the category still exists (it may have been deleted since it was added in the session)
             if (! $filterResolver->categoryExists($category_id)) {
                 unset($_SESSION['bulk_manager_filter']);
-                redirect(get_root_url() . 'admin.php?page=' . $getPage);
+                $this->redirectService->redirect(get_root_url() . 'admin.php?page=' . $getPage);
             }
 
             $categories = isset($bulkFilter['category_recursive'])
@@ -653,6 +658,7 @@ DELETE FROM ' . Tables::caddie() . '
                 new PersistentFileCache(),
                 new MailService(),
                 new HtmlService(),
+                $this->redirectService,
             )->getQuickSearchResultsNoCache($bulkFilter['search']['q'], [
                 'permissions' => false,
             ]);

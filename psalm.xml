@@ -12,6 +12,8 @@
     checkForThrowsDocblock="false"
     phpVersion="8.5"
     errorBaseline="psalm-baseline.xml"
+    allConstantsGlobal="true"
+    allFunctionsGlobal="true"
 >
     <projectFiles>
         <directory name="."/>
@@ -25,4 +27,23 @@
             <directory name="_data"/>
         </ignoreFiles>
     </projectFiles>
+    <stubs>
+        <!-- ext-imagick isn't loaded in this environment, but pwg_image.php
+             and MaintenanceActionsPageRenderer.php reference \Imagick;
+             load the bundled stub directly since imagick isn't in Psalm's
+             curated enableExtensions enum. -->
+        <file name="vendor/jetbrains/phpstorm-stubs/imagick/imagick.php"/>
+    </stubs>
+    <issueHandlers>
+        <!-- Pest\Expectation re-exports Pest\Mixins\Expectation via @mixin,
+             but the mixin source class is marked @internal wholesale; Psalm
+             doesn't reconcile the two, flagging every expect()->toBe() call
+             in test files as calling an internal method. No psalm-plugin-pest
+             is installed to teach Psalm the @mixin re-export. -->
+        <InternalMethod>
+            <errorLevel type="suppress">
+                <directory name="tests"/>
+            </errorLevel>
+        </InternalMethod>
+    </issueHandlers>
 </psalm>

@@ -40,6 +40,10 @@ use Piwigo\Db\Tables;
  * PREFIX_TABLE/UPGRADES_PATH/CURRENT_DATE are define()'d by the
  * upgrade.php/upgrade_feed.php entry shells before any method here runs
  * (see tools/phpstan-bootstrap.php for the PREFIX_TABLE analysis stub).
+ *
+ * Legacy Coupling Retirement Phase 5: this same "no DI container exists"
+ * fact is why its extents_for_templates write (Tier 3) stays on ConfigDb
+ * rather than ConfigService.
  */
 class UpgradeService
 {

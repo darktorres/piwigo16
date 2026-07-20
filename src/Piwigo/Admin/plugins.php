@@ -22,6 +22,13 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
 use Piwigo\PluginConfig\PluginRepository;
 
+/**
+ * Legacy Coupling Retirement Phase 5: this class's loadConfFromDb() call
+ * stays on ConfigDb (Tier 3), not ConfigService -- same reasoning as
+ * Admin\themes.php's own docblock: Admin\Install\UpgradeService.php/
+ * InstallService.php construct `plugins` directly, pre-container, in
+ * addition to its normal post-container admin page call sites.
+ */
 class plugins
 {
     /**

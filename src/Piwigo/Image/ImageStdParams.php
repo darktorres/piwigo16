@@ -22,6 +22,13 @@ namespace Piwigo\Image;
  * retargeted in the same pass (all L2a/L2b/L4 callers -- Image/Category/
  * Calendar/Admin/Controller -- none below L2a, so no deptrac layering
  * concern, unlike finding 8's cases).
+ *
+ * Legacy Coupling Retirement Phase 5: its write methods (save()/
+ * save_disabled()/restore_default()/set_and_save()/
+ * set_and_save_disabled()) stay on ConfigDb (Tier 3), not ConfigService --
+ * Admin\Install\DbPatch\Patch177.php and Patch123.php call
+ * set_and_save_disabled()/set_and_save() directly, applied by
+ * Admin\Install\UpgradeRunner pre-container.
  */
 final class ImageStdParams
 {

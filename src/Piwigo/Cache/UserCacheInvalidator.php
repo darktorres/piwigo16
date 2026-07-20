@@ -14,6 +14,11 @@ use Piwigo\Db\DbConnection;
  * Piwigo\Users, same layer) -- this class is already L1Infrastructure,
  * reachable from every layer, resolving the constraint for every caller
  * at once, same pattern as this batch's own Piwigo\Core\FilesystemHelper.
+ *
+ * Legacy Coupling Retirement Phase 5: invalidate()'s confDeleteParam()
+ * call stays on ConfigDb (Tier 3), not ConfigService -- reachable both
+ * directly (Admin\Install\UpgradeRunner.php) and transitively (via
+ * Admin\updates::upgrade_to(), itself pre-container-reachable).
  */
 final class UserCacheInvalidator
 {

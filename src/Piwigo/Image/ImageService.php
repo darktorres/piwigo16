@@ -27,6 +27,16 @@ use Piwigo\Session\SessionService;
  * ActivityLoggerInterface's own docblock) and the 14 real element/lounge/
  * orphan methods below -- every existing no-arg `new ImageService()` call
  * site needed updating for the new required constructor.
+ *
+ * Legacy Coupling Retirement Phase 5: emptyLounge()'s real reads/writes
+ * (empty_lounge_running/count_orphans) stay on Config::/ConfigDb (Tier 3
+ * for the writes), not ConfigService -- Bootstrap\RequestBootstrap.php
+ * calls `new ImageService(...)->emptyLounge()` inline (gated on
+ * LoungeMaintenance::needsEmptying()), pre-container. Every other real
+ * construction site (BatchManagerGlobalPageRenderer, UploadService,
+ * TagService, Ws\PwgImages, etc.) is normal post-container application
+ * code -- only this one bootstrap-triggered path forces the whole class's
+ * config access to stay here.
  */
 final readonly class ImageService
 {

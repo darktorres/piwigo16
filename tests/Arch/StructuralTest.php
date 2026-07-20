@@ -908,6 +908,126 @@ test('src/Piwigo/ does not repeat the same multi-dependency service construction
     expect($actual)->toBe($allowlist);
 });
 
+test('src/Piwigo/ contains no ConfigDb::confGetParam( calls', function (): void {
+    // Legacy Coupling Retirement Phase 5b: every real confGetParam() call
+    // site retargeted onto Config::'s static typed accessors (or its
+    // untyped Config::all() bag, for keys with no SCHEMA entry). Unlike
+    // the write-side test below, reads have no structural pre-container
+    // exception anywhere -- Config:: is itself the static layer, so a
+    // read never needs the DI container. Zero-tolerance, no allowlist.
+    //
+    // Comment-aware (findCallSitesOutsideComments(), not findCallSites()) --
+    // same reasoning as the write-side test below: a future docblock
+    // explaining what replaced ConfigDb::confGetParam() shouldn't have to
+    // tiptoe around the literal substring to keep this test green.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'ConfigDb::confGetParam(');
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('ConfigDb write methods (confUpdateParam/confDeleteParam/loadConfFromDb/pwgIsDbconfWriteable) are only called from genuinely pre-container or frozen-migration code', function (): void {
+    // Legacy Coupling Retirement Phase 5 (5a/5d/5e): every other real write
+    // call site retargeted onto ConfigService (constructor-injected, Tier
+    // 1) or CurrentConfigService::get() (Tier 2 -- static utilities/
+    // throwaway-constructed classes whose write only ever fires
+    // post-container). What's left below is Tier 3: traced, real
+    // pre-container reachability, not an assumption -- ImageService and
+    // Template each also appear in the read-side sweep above (their reads
+    // are fully retargeted onto Config::, only their writes stay here),
+    // which is why this is a method-name-based check, not a file-shape
+    // one -- a per-file allowlist would stop catching a future stray read
+    // reintroduced into either file.
+    //
+    // - The 24 frozen DbPatch/ files + 1 VersionUpgrade/ file (Phase 1j):
+    //   applied by UpgradeRunner pre-container, matching every original
+    //   $conn-passing call exactly.
+    // - Bootstrap/RequestBootstrap.php itself: runs before Kernel::boot()
+    //   by its own docblock.
+    // - Admin/Install/InstallWizard.php, UpgradeRunner.php,
+    //   UpgradeService.php: each confirmed via their own docblocks --
+    //   these scripts never go through Kernel::boot()/ConfigLoader.
+    // - Admin/themes.php, Admin/plugins.php: legacy god-classes genuinely
+    //   constructed from UpgradeService.php/InstallService.php
+    //   (pre-container) in addition to their post-container call sites.
+    // - Admin/updates.php: UpgradeRunner.php calls updates::upgrade_to()
+    //   directly, a bare static call with no construction step.
+    // - Cache/UserCacheInvalidator.php: reachable both directly from
+    //   UpgradeRunner.php and transitively via updates::upgrade_to().
+    // - Image/ImageService.php: RequestBootstrap.php calls
+    //   emptyLounge() inline (gated on LoungeMaintenance::needsEmptying()).
+    // - Page/NoPhotoYetRenderer.php: RequestBootstrap.php calls render()
+    //   inline (gated on !Config::has('no_photo_yet')).
+    // - Template/Template.php: the data_dir_checked write sits directly
+    //   inside __construct() itself, and RequestBootstrap.php (x2),
+    //   InstallWizard.php, and UpgradeRunner.php all construct Template
+    //   directly -- a lazy static registry doesn't help when the write
+    //   fires from the constructor, not a method called later.
+    // - Image/ImageStdParams.php: DbPatch/Patch177.php and
+    //   DbPatch/Patch123.php call its write methods directly, applied by
+    //   UpgradeRunner pre-container.
+    // - Core/UniqueExecLock.php: NOT in the phase plan's original Tier 2
+    //   list -- caught the hard way, via a live HTTP 500 surfacing through
+    //   nearly every Contract test during Phase 5e implementation.
+    //   ends()'s confDeleteParam() call is reachable pre-container through
+    //   Bootstrap\RequestBootstrap::connect() ->
+    //   Bootstrap\UserBootstrap::initialize() ->
+    //   Users\UserService::getUserData() -> begins()'s own timeout branch
+    //   calling ends() -- a path that runs on every single request, before
+    //   Kernel::boot(). See this class's own docblock for the same note.
+    //
+    // Comment-aware (findCallSitesOutsideComments(), not findCallSites()):
+    // several files this phase touched explain, in prose, which
+    // ConfigDb write method a now-retargeted call site used to be --
+    // ConfigurationSubController.php, PwgExtensions.php, and the
+    // BatchManager*/SearchService/SectionPopulator/MailService/
+    // EphemeralKeyService/ConfigService docblocks among them. Demanding
+    // every such comment avoid the literal substring would be more
+    // fragile than just not scanning comment lines.
+    $repoRoot = __DIR__ . '/../..';
+
+    $needles = [
+        'ConfigDb::confUpdateParam(',
+        'ConfigDb::confDeleteParam(',
+        'ConfigDb::loadConfFromDb(',
+        'ConfigDb::pwgIsDbconfWriteable(',
+    ];
+
+    $hits = [];
+    foreach ($needles as $needle) {
+        $hits = [...$hits, ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', $needle)];
+    }
+
+    $allowedFiles = [
+        'Bootstrap/RequestBootstrap.php',
+        'Admin/Install/InstallWizard.php',
+        'Admin/Install/UpgradeRunner.php',
+        'Admin/Install/UpgradeService.php',
+        'Admin/themes.php',
+        'Admin/plugins.php',
+        'Admin/updates.php',
+        'Cache/UserCacheInvalidator.php',
+        'Image/ImageService.php',
+        'Page/NoPhotoYetRenderer.php',
+        'Template/Template.php',
+        'Image/ImageStdParams.php',
+        'Core/UniqueExecLock.php',
+    ];
+
+    $prefixLength = strlen($repoRoot . '/src/Piwigo/');
+    $disallowed = array_values(array_filter($hits, static function (array $hit) use ($prefixLength, $allowedFiles): bool {
+        $relative = substr((string) $hit['path'], $prefixLength);
+        if (str_starts_with($relative, 'Admin/Install/DbPatch/') || str_starts_with($relative, 'Admin/Install/VersionUpgrade/')) {
+            return false;
+        }
+
+        return ! in_array($relative, $allowedFiles, true);
+    }));
+
+    expect(describeCallSites($disallowed))->toBe([]);
+});
+
 test('RequestFactory, ResponseEmitter, CommonBootstrap, and the P9 middleware/pipeline/routing classes declare only readonly state', function (): void {
     // SEC-60 (worker-isolation, partial verification): these classes must stay
     // free of MUTABLE state so a future FrankenPHP worker loop can reuse them

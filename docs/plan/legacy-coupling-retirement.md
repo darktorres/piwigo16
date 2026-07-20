@@ -1579,27 +1579,117 @@ Phase 1 and 3. Checked `redirect_html()`/`redirect_http()`/
 (`Template.php` `registerPlugin` calls and every `.tpl` file) — clean,
 no hits; only `l10n()` and `get_gallery_home_url()` have this problem.
 
-## Phase 5 — ConfigDb direct-call retarget sweep
+## Phase 5 — ConfigDb direct-call retarget sweep. DONE.
 
-`Config::`'s SCHEMA is already 100% complete relative to
-`config_default.inc.php` (verified: zero missing keys) — mechanical
-retarget for real application code. 50 files call `ConfigDb::
-confGetParam()`/`confUpdateParam()` directly instead of the typed
-`Config::` accessor — but **20 of those 50 are inside the 156-file frozen
-DbPatch/VersionUpgrade set already scoped in Phase 1j, and this phase
-explicitly excludes them** (checked all key arguments across the
-remaining 30: every one is a literal string, no dynamic/variable key
-names, so the retarget itself is safe for those). The frozen files are a
-different risk profile: swapping their `MysqliDb::` calls for DBAL
-equivalents (Phase 1j) is a pure execution-API substitution — same SQL,
-same result. Swapping their `ConfigDb::confGetParam('key')` calls for
-`Config::key()` is a data-semantics substitution — it assumes `Config::`'s
-current typed coercion for that key behaves identically to a raw
-DB-row read at whatever historical version that patch targets, which
-isn't guaranteed and wasn't true reasoning G3 already applied when it
-left these files' `$conf` usage alone. Leave their `ConfigDb::` calls
-untouched, matching that same precedent; retarget only the 30 real
-application files, mirroring A4 step 7's already-proven pattern.
+Retargeted every real application caller of `Piwigo\Config\ConfigDb::
+confGetParam()`/`confUpdateParam()`/`confDeleteParam()`/`loadConfFromDb()`/
+`pwgIsDbconfWriteable()` onto typed, DI-friendly alternatives: reads onto
+`Piwigo\Config\Config::`'s static SCHEMA-driven accessors (or its untyped
+`Config::all()` bag for keys with no SCHEMA entry); writes onto
+`Piwigo\Config\ConfigService` (constructor injection for classes with no
+pre-container reachability — Tier 1) or a new
+`Piwigo\Config\CurrentConfigService` static registry (for static
+utilities/throwaway-constructed classes whose write only ever fires
+post-container — Tier 2). A genuinely pre-container remainder (the 20
+already-frozen `DbPatch`/`VersionUpgrade` files from Phase 1j, plus ~13
+individually-traced classes/scripts — Tier 3) stays on `ConfigDb`
+permanently, each documented on its own class docblock and enforced by a
+two-part Arch test (zero `confGetParam(` anywhere; the four write methods
+restricted to exactly the Tier 3 set). Commits `ac88917a8` (5a), `b91efc8e7`
+(5b), `1ca6d140e` (5c), `12c09e0f5` (5d), `2c118a8b5` (5e), plus 5f
+close-out — a full completion write-up for each lives in project memory
+(`project_p24_phase5{a,b,c,d,e,f}_complete.md`); summary here:
+
+- **5a (Step 0 prerequisites)** — retired the last 2 real internal `$conf`
+  reads (`random.php`, `themes/standard_pages/themeconf.inc.php`); fixed
+  `ConfigService::loadConfFromDb()`'s missing `load_conf` plugin-hook
+  dispatch (present in `ConfigDb::loadConfFromDb()`, silently dropped
+  since P13); corrected three stale "deferred to P14" docblocks across
+  `Config.php`/`ConfigService.php`/`ConfigLoader.php` that no longer
+  matched reality.
+- **5b (Reads, 11 files)** — every real `confGetParam()` call site onto
+  `Config::`, no DI changes (both `Config::` and `ConfigDb::` are static).
+  PHPStan-driven cleanup once call sites landed on properly typed
+  accessors: retired now-always-true `is_string()`/`is_array()` guards and
+  a now-redundant `ArrayHelper::safeUnserialize()` call.
+- **5c (`CurrentConfigService` infrastructure)** — new static registry
+  class mirroring `CurrentLogger`'s exact shape, wired from both
+  `CommonBootstrap::run()` and `CliBootstrap::buildApplication()` (the
+  latter deliberately skips the accompanying `loadConfFromDb()` call —
+  HTTP-only, since CLI commands can run pre-migration). New opt-in
+  `IntegrationTestCase::buildConfigRepository()` helper for tests that
+  need a real, DB-backed `ConfigService`.
+- **5d (Tier 1 writes, 10 classes + 2 raw-SQL fixes)** — constructor-
+  injected `ConfigService` into `ThemesStandardPagesPageRenderer`,
+  `ExtensionLifecycle`, `MaintenanceActionDispatcher`, `CoreUpdateService`,
+  `ConfigurationSubController`, `AdminShell`, `ExtensionUpdateChecker`,
+  `HistoryService`, `NotificationByMailSubController`, `GroupService`.
+  Fixed two of the three raw-SQL config-write vulnerabilities discovered
+  while investigating `Config::`'s custom accessors (see below):
+  `ConfigurationSubController`'s generic config-row save loop and the new
+  Tier 1 addition `ExtendForTemplatesPageRenderer`'s `extents_for_templates`
+  write. Two real bugs caught by full-project PHPStan/Arch sweeps: two
+  `static function () use (...)` closures (`GalleryController`,
+  `PictureController`) referencing `$this->configService` — static
+  closures don't capture `$this`, fixed by threading a local copy through
+  `use()` — and a repeated-multi-dependency-chain Arch test violation from
+  `HistoryService`'s now-2-arg constructor, fixed via
+  `self::historyService()`/`$this->historyService()` DRY-extraction
+  helpers in `Ws\PwgCore`/`ActionController`. A third real bug, found only
+  by running the full Browser suite: `ConfigurationSubController`'s
+  `picture_informations`/`filters_views` pre-processing wrapped its
+  `serialize()`d value in `addslashes()` — a workaround that only worked
+  because the old raw-SQL write's quote-doubling transform happened to
+  strip it back out during the MySQL round trip; the new parameterized
+  `ConfigService` write stores the value verbatim, so the wrapper
+  corrupted every subsequent `unserialize()`. Fixed at the source by
+  removing the now-obsolete `addslashes()` call.
+- **5e (Tier 2 writes, 8 classes + 1 raw-SQL fix)** — retargeted
+  `PiwigoInfosSender`, `Admin\Upload\UploadService`,
+  `Admin\Maintenance\FilesystemIntegrityChecker`, `Ws\PwgCore`'s own
+  `cache_sizes` write, `Ws\PwgUsers`, `Ws\PwgExtensions` onto
+  `CurrentConfigService::get()`. Fixed the third raw-SQL fix:
+  `Admin\Integrity\check_integrity::update_conf()` (zero escaping
+  attempted, the worst of the three) onto a parameterized
+  `confUpdateParam()` call. Found and reverted a real reachability gap in
+  this phase's own plan: `Core\UniqueExecLock::ends()` looked
+  post-container-only but is also reachable pre-container via
+  `Bootstrap\RequestBootstrap::connect()` →
+  `Bootstrap\UserBootstrap::initialize()` →
+  `Users\UserService::getUserData()` → `begins()`'s own timeout branch
+  calling `ends()` — a path that runs on every single request, before
+  `Kernel::boot()`. Caught via a live HTTP 500
+  (`CurrentConfigService not initialised`) surfacing through nearly every
+  Contract test; `UniqueExecLock::ends()` stays on `ConfigDb` (Tier 3).
+- **5f (Close-out)** — Tier 3 docblock notes on every stay-on-`ConfigDb`
+  class; the two-part zero-tolerance Arch test (comment-aware, matching
+  this file's existing `findCallSitesOutsideComments()` convention, since
+  several of this phase's own docblocks name the retired accessor in
+  prose); this doc + memory updated.
+
+**Three real, if low-severity/webmaster-gated, security fixes** were
+folded into this phase's scope on direct instruction, discovered while
+investigating `Config::`'s custom accessors (`Config::pictureInformations()`
+and `Config::extentsForTemplates()` both named their real writer files in
+their own docblocks, leading to a broader sweep of every real
+`Tables::config()` reference): `ConfigurationSubController`'s generic
+config-row save loop, `ExtendForTemplatesPageRenderer`'s
+`extents_for_templates` write, and `check_integrity::update_conf()` were
+all writing the `config` table via string-concatenated SQL with manual
+(or, in `check_integrity`'s case, zero) escaping — the same vulnerability
+class this project already fixed once via `MysqliDb`'s deletion (Phase
+1k). All three now go through parameterized `ConfigService` writes.
+
+**Known limitation, not fixed by this phase**: `ConfigRepository::upsert()`
+(`ConfigService`'s write mechanism) does `find()` then branches
+insert-vs-update, then `flush()` — not an atomic upsert, unlike
+`ConfigDb::confUpdateParam()`'s raw `INSERT ... ON DUPLICATE KEY UPDATE`.
+Two concurrent requests both writing the same brand-new key for the first
+time could race. Not worth blocking this phase over — every real write
+key retargeted here is a long-lived, already-existing config row, not a
+first-ever-creation key, and the failure mode if it ever hit would be a
+thrown Doctrine/DBAL exception, not silent data loss. A real atomic-upsert
+fix is a reasonable future improvement to `ConfigService` itself.
 
 ## Phase 6 — TODO/FIXME/XXX triage
 

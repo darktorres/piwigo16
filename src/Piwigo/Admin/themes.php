@@ -32,6 +32,13 @@ use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
+/**
+ * Legacy Coupling Retirement Phase 5: this class's mobile_theme write
+ * stays on ConfigDb::confUpdateParam() (Tier 3), not ConfigService --
+ * Admin\Install\UpgradeService.php/InstallService.php construct `themes`
+ * directly, pre-container, in addition to its normal post-container admin
+ * page call sites.
+ */
 class themes
 {
     /**

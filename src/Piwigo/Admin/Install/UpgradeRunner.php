@@ -47,6 +47,11 @@ use Piwigo\Url\UrlService;
  * `global $conf, $prefixeTable;` declarations, so this method no longer
  * needs to declare those two itself (Legacy Coupling Retirement Track A
  * gap-fill batch G3).
+ *
+ * Legacy Coupling Retirement Phase 5: this same "never goes through
+ * Kernel::boot()" fact (see this class's own comment near its real
+ * pre-container call site) is why every ConfigDb:: call here (Tier 3)
+ * stays on ConfigDb rather than ConfigService.
  */
 class UpgradeRunner
 {

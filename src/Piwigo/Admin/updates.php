@@ -24,6 +24,14 @@ use Piwigo\Http\HttpClientService;
 use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
 
+/**
+ * Legacy Coupling Retirement Phase 5: this class's real ConfigDb writes
+ * (update_notify_last_check/updates_ignored/piwigo_installed_version/
+ * fs_quick_check_last_check) and pwgIsDbconfWriteable() check stay on
+ * ConfigDb (Tier 3), not ConfigService -- Admin\Install\UpgradeRunner.php
+ * calls `updates::upgrade_to()` directly, a bare static call with no
+ * construction step, reachable pre-container.
+ */
 class updates
 {
     /**

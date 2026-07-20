@@ -65,6 +65,11 @@ use Piwigo\Users\UserService;
  * and the other P22 roots call it right after the common.inc.php include)
  * still owns the Kernel/DI-container side of the request; this class owns
  * the legacy $GLOBALS side, same division of labor as before this port.
+ *
+ * Legacy Coupling Retirement Phase 5: this same "before Kernel::boot()"
+ * fact is why every ConfigDb:: call in this file (Tier 3) stays on
+ * ConfigDb rather than ConfigService -- no DI container exists yet at any
+ * point in this class's own body.
  */
 final class RequestBootstrap
 {

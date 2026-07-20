@@ -22,6 +22,11 @@ use Piwigo\Template\Template;
  * guard-condition-false and nb_photos>0 branches (never reach exit()),
  * same "don't stub what would kill the test process" reasoning as
  * fatal_error().
+ *
+ * Legacy Coupling Retirement Phase 5: its no_photo_yet write stays on
+ * ConfigDb (Tier 3), not ConfigService -- Bootstrap\RequestBootstrap.php
+ * calls `new NoPhotoYetRenderer(...)->render()` inline (gated on
+ * !Config::has('no_photo_yet')), pre-container.
  */
 final readonly class NoPhotoYetRenderer
 {

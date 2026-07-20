@@ -22,6 +22,15 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Url\UrlService;
 use Smarty\Smarty;
 
+/**
+ * Legacy Coupling Retirement Phase 5: the data_dir_checked write inside
+ * __construct() stays on ConfigDb (Tier 3), not ConfigService -- a lazy
+ * static registry doesn't help here specifically, since the write fires
+ * from the constructor itself, not a method called later, and
+ * Bootstrap\RequestBootstrap.php (x2), Admin\Install\InstallWizard.php,
+ * and Admin\Install\UpgradeRunner.php all construct Template directly,
+ * pre-container.
+ */
 class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\TemplateInterface
 {
     /**

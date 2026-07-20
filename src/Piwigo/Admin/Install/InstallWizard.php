@@ -43,6 +43,11 @@ use Piwigo\Url\UrlService;
  * AuthService::logUser() and PreferencesService's methods all read/write
  * `global $user`; $template because updates/mail-era template helpers
  * historically resolve the shared instance through the global).
+ *
+ * Legacy Coupling Retirement Phase 5: this same "never goes through
+ * Kernel::boot()/ConfigLoader" fact (see this class's own comments near
+ * its real call sites) is why every ConfigDb:: call here (Tier 3) stays
+ * on ConfigDb rather than ConfigService.
  */
 class InstallWizard
 {

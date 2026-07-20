@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Piwigo\Category\CategoryService;
 use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionService;
 
@@ -20,6 +21,7 @@ final readonly class CalendarService
 {
     public function __construct(
         private PermissionService $permissionService,
+        private CategoryService $categoryService,
     ) {}
 
     /**
@@ -45,7 +47,7 @@ final readonly class CalendarService
             $sql .= "\nINNER JOIN " . Tables::imageCategory() . ' ON id = image_id';
 
             if ($hasCategoryContext) {
-                $subIds = $categoryId === null ? [] : array_diff(get_subcat_ids([$categoryId]), explode(',', $forbiddenCategories));
+                $subIds = $categoryId === null ? [] : array_diff($this->categoryService->getSubcatIds([$categoryId]), explode(',', $forbiddenCategories));
                 if ($subIds === []) {
                     return null;
                 }

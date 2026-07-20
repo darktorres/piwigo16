@@ -69,7 +69,7 @@ final class MaintenanceActionDispatcher
      */
     private static function permissionService(Connection $conn): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
     }
 
     /**

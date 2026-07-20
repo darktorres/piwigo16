@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Category;
 
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
+use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -17,12 +20,11 @@ use Piwigo\Permission\PermissionService;
  * browsing). Matches the doc's own reference file inventory:
  * "Admin/Category/: CategoryAdminService, CreateCategoryResult".
  *
- * createVirtualCategory() wraps the existing create_virtual_category()
- * free function (admin/include/functions.php) rather than reimplementing
- * it -- that function is also called by the WS API
- * (include/ws_functions/pwg.categories.php), out of this phase's scope,
- * so it stays a shared free function; this service only adds a typed
- * return shape for the admin call sites migrated this phase.
+ * createVirtualCategory() delegates to the constructor-injected
+ * CategoryService::createVirtualCategory() (Legacy Coupling Retirement
+ * Phase 4a) rather than reimplementing it -- the same real method the WS
+ * API (Ws\PwgCategories) already calls directly; this service only adds
+ * a typed return shape for the admin call sites.
  *
  * setCategoryOption()/setCategoryPermissions()/saveImageOrder() are real
  * new consolidations: getCategoriesRefDate() existed as two
@@ -36,13 +38,17 @@ use Piwigo\Permission\PermissionService;
  */
 final class CategoryAdminService
 {
+    public function __construct(
+        private CategoryService $categoryService,
+    ) {}
+
     /**
      * @param array{commentable?: bool, visible?: bool, status?: string, comment?: string, inherit?: bool} $options
      */
-    public function createVirtualCategory(string $name, ?int $parentId = null, array $options = []): CreateCategoryResult
+    public function createVirtualCategory(string $name, ActivityLoggerInterface $activityLogger, ?int $parentId = null, array $options = []): CreateCategoryResult
     {
         /** @var array{error?: string, info?: string, id?: int|string} $result */
-        $result = create_virtual_category($name, $parentId, $options);
+        $result = $this->categoryService->createVirtualCategory($name, $activityLogger, $parentId, $options);
 
         if (isset($result['error'])) {
             return CreateCategoryResult::failure($result['error']);
@@ -65,7 +71,24 @@ final class CategoryAdminService
     {
         // we need to work on the whole tree under each category, even if we
         // don't want to sort sub categories
-        $category_ids = get_subcat_ids($ids);
+        $category_ids = $this->categoryService->getSubcatIds($ids);
+
+        // Real pre-existing bug, found by Legacy Coupling Retirement Phase
+        // 4a's Integration-test migration (the old Unit test's
+        // get_subcat_ids() stub always echoed its input back verbatim,
+        // masking this): an empty $category_ids (e.g. every id in $ids is
+        // unknown) built `WHERE category_id IN ()`, invalid SQL. The
+        // method's own closing loop already falls back to null for any id
+        // with no ref_date, so skipping straight there is the correct fix,
+        // not just a guard to avoid the crash.
+        if ($category_ids === []) {
+            $return = [];
+            foreach ($ids as $id) {
+                $return[$id] = null;
+            }
+
+            return $return;
+        }
 
         $query = '
 SELECT
@@ -150,13 +173,13 @@ UPDATE ' . Tables::categories() . '
   SET commentable = \'' . ($value ? 'true' : 'false') . '\'
   WHERE id IN (' . $idList . ')
 ;'),
-            'visible' => set_cat_visible($catIds, $value ? 'true' : 'false'),
-            'status' => set_cat_status($catIds, $value ? 'public' : 'private'),
+            'visible' => $this->categoryService->setCatVisible($catIds, $value ? 'true' : 'false'),
+            'status' => $this->categoryService->setCatStatus($catIds, $value ? 'public' : 'private'),
             'representative' => $value
                 // theoretically, all categories in $catIds contain at least
                 // one element when $value is true, so Piwigo can find a
                 // representant (matches the original's own comment).
-                ? set_random_representant($catIds)
+                ? $this->categoryService->setRandomRepresentant($catIds)
                 : pwg_query('
 UPDATE ' . Tables::categories() . '
   SET representative_picture_id = NULL
@@ -183,9 +206,9 @@ UPDATE ' . Tables::categories() . '
         if ($currentStatus !== $newStatus || ($currentStatus !== 'public' && $applyOnSub)) {
             $catIdsForStatus = [$catId];
             if ($applyOnSub) {
-                $catIdsForStatus = array_merge($catIdsForStatus, get_subcat_ids([$catId]));
+                $catIdsForStatus = array_merge($catIdsForStatus, $this->categoryService->getSubcatIds([$catId]));
             }
-            set_cat_status($catIdsForStatus, $newStatus);
+            $this->categoryService->setCatStatus($catIdsForStatus, $newStatus);
         }
 
         if ($newStatus !== 'private') {
@@ -207,14 +230,14 @@ SELECT group_id
 DELETE
   FROM ' . Tables::groupAccess() . '
   WHERE group_id IN (' . implode(',', $denyGroups) . ')
-    AND cat_id IN (' . implode(',', get_subcat_ids([$catId])) . ')
+    AND cat_id IN (' . implode(',', $this->categoryService->getSubcatIds([$catId])) . ')
 ;');
         }
 
         if (count($groupIds) > 0) {
-            $catIdsForGrant = get_uppercat_ids([$catId]);
+            $catIdsForGrant = $this->categoryService->getUppercatIds([$catId]);
             if ($applyOnSub) {
-                $catIdsForGrant = array_merge($catIdsForGrant, get_subcat_ids([$catId]));
+                $catIdsForGrant = array_merge($catIdsForGrant, $this->categoryService->getSubcatIds([$catId]));
             }
 
             $privateCats = query2array('
@@ -259,13 +282,13 @@ SELECT user_id
 DELETE
   FROM ' . Tables::userAccess() . '
   WHERE user_id IN (' . implode(',', $denyUsers) . ')
-    AND cat_id IN (' . implode(',', get_subcat_ids([$catId])) . ')
+    AND cat_id IN (' . implode(',', $this->categoryService->getSubcatIds([$catId])) . ')
 ;');
         }
 
         if (count($userIds) > 0) {
             $conn = DbConnection::build();
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
                 ->addPermissionOnCategory($catId, $userIds);
         }
     }
@@ -287,7 +310,7 @@ UPDATE ' . Tables::categories() . '
             return;
         }
 
-        $catInfo = get_cat_info($catId);
+        $catInfo = $this->categoryService->getCategoryInfo($catId);
         if (! is_array($catInfo) || ! is_string($catInfo['uppercats'] ?? null)) {
             new HtmlService()
                 ->pageNotFound('Requested album does not exist');

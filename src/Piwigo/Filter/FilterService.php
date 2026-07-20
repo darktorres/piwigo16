@@ -142,7 +142,7 @@ final class FilterService implements FilterUpdaterInterface
                 global $user;
                 $filter['categories'] = new CategoryService(
                     new CategoryRepository($categoryConn),
-                    new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+                    new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn), new CategoryRepository($categoryConn))
                 )->getComputedCategories($user, $filter_recent_period);
                 \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
 

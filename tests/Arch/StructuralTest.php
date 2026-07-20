@@ -741,21 +741,19 @@ test('src/Piwigo/ does not repeat the same multi-dependency service construction
     // already had 5-6 constructor params or the dependency was reachable
     // via already-injected state) -- see UserService::permissionService(),
     // MailService::userService(), and similar. What's left below is
-    // structurally exempt, not overlooked: free-function files and static
-    // Ws/ handler methods have no $this to hang a helper method off of,
-    // and InstallWizard runs before any DI container exists (a
-    // constructor param there would just move the manual construction to
-    // install.php, not remove it).
+    // structurally exempt, not overlooked: the free-function file has no
+    // enclosing instance to hang a helper method off of, and InstallWizard
+    // runs before any DI container exists (a constructor param there would
+    // just move the manual construction to install.php, not remove it).
+    // Static `Ws/*.php` WS-method handlers do NOT get a standing exemption
+    // -- `self::helperMethod()` DRY-extracts a repeated chain exactly the
+    // same way `$this->helperMethod()` would (Legacy Coupling Retirement
+    // Phase 4a fixed several real instances this way, e.g.
+    // `Ws\PwgCategories::categoryService()`/`Ws\PwgImages::searchService()`
+    // calling `self::permissionService()` instead of repeating its chain).
     $allowlist = [
         // Free functions: no enclosing instance, nothing to inject into.
-        'Category/functions.php|CategoryService',
-        'Category/functions.php|PermissionService',
         'Http/functions.php|UserService',
-
-        // Ws/*.php WS-method handlers: every method is `public static`,
-        // no $this, same reasoning as the free functions above.
-        'Ws/PwgImages.php|SearchService',
-        'Ws/PwgCategories.php|PermissionService',
 
         // Pre-installation, no DI container exists yet (matches the
         // Env/FilesystemHelper/MysqliDb precedent documented on this

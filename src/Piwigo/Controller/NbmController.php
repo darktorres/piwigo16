@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Cache\PersistentCache;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
@@ -59,7 +60,7 @@ final class NbmController implements ControllerInterface
             new NotificationByMailService(new NotificationByMailRepository($conn)),
             new NotificationService(
                 new NotificationRepository($conn),
-                new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
+                new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn)),
                 $persistent_cache,
                 $htmlRenderer
             ),

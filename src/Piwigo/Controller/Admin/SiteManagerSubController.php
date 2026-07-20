@@ -130,7 +130,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
 
                     new CategoryService(
                         new CategoryRepository($conn),
-                        new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+                        new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
                     )->deleteSite($site_id, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)));
                     \Piwigo\Core\PageState::current()->addInfo($galleries_url . ' ' . l10n('deleted'));
                     break;

@@ -41,7 +41,7 @@ final class GroupPermPageRenderer
         $conn = DbConnection::build();
         $categoryService = new CategoryService(
             new CategoryRepository($conn),
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
         );
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -94,7 +94,7 @@ final class GroupPermPageRenderer
             and count($cat_true) > 0) {
             // if you forbid access to a category, all sub-categories become
             // automatically forbidden
-            $subcats = get_subcat_ids($cat_true);
+            $subcats = $categoryService->getSubcatIds($cat_true);
             $subcat_ids = array_map(intval(...), $subcats);
             $group_service->removeAccess($group_id, $subcat_ids);
 

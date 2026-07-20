@@ -38,7 +38,7 @@ final class CatOptionsPageRenderer
     {
         return new CategoryService(
             new CategoryRepository($conn),
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
         );
     }
 
@@ -72,7 +72,7 @@ final class CatOptionsPageRenderer
             }
 
             $section_param = $_GET['section'] ?? '';
-            new CategoryAdminService()
+            new CategoryAdminService(self::categoryService($conn))
                 ->setCategoryOption($cat_true, is_string($section_param) ? $section_param : '', false, self::activityService($conn));
         } elseif (isset($_POST['trueify'])
                  and isset($_POST['cat_false'])
@@ -86,7 +86,7 @@ final class CatOptionsPageRenderer
             }
 
             $section_param = $_GET['section'] ?? '';
-            new CategoryAdminService()
+            new CategoryAdminService(self::categoryService($conn))
                 ->setCategoryOption($cat_false, is_string($section_param) ? $section_param : '', true, self::activityService($conn));
         }
 

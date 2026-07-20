@@ -69,6 +69,10 @@ final class AlbumsPageRenderer
         global $my_base_url;
 
         $conn = DbConnection::build();
+        $categoryService = new CategoryService(
+            new CategoryRepository($conn),
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
+        );
 
         $query = '
 SELECT
@@ -147,15 +151,15 @@ SELECT id
             // 'id' is Tables::categories()'s primary key column, always populated
             // per this driver's fetch convention (native int under DBAL, numeric
             // string under mysqli) -- filter out non-scalar values then stringify
-            // so downstream implode()/get_subcat_ids() calls get values castable
-            // to string.
+            // so downstream implode()/CategoryService::getSubcatIds() calls
+            // get values castable to string.
             $category_ids = array_values(array_map(
                 strval(...),
                 array_filter($category_ids_raw, static fn (mixed $v): bool => is_int($v) || is_string($v))
             ));
 
             if (isset($_POST['recursiveAutoOrder'])) {
-                $category_ids = get_subcat_ids($category_ids);
+                $category_ids = $categoryService->getSubcatIds($category_ids);
             }
 
             $categories = [];
@@ -167,7 +171,7 @@ SELECT id
             if (str_starts_with($order_by_field, 'date_')) {
                 $order_by_date = true;
 
-                $ref_dates = new CategoryAdminService()
+                $ref_dates = new CategoryAdminService($categoryService)
                     ->getCategoriesRefDate($category_ids, $order_by_field, $order_by_asc === 'ASC' ? 'min' : 'max');
             }
 
@@ -203,10 +207,7 @@ SELECT id, name, id_uppercat
                 $categories
             );
 
-            new CategoryService(
-                new CategoryRepository($conn),
-                new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
-            )->saveCategoriesOrder($categories);
+            $categoryService->saveCategoriesOrder($categories);
 
             $open_cat = $_POST['id'];
         }

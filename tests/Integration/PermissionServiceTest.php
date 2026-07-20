@@ -10,6 +10,8 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;
+
+use Piwigo\Category\CategoryRepository;
     use Piwigo\Config\Config;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
@@ -48,7 +50,7 @@ namespace Piwigo\Tests\Integration {
             $this->service = new PermissionService(
                 new PermissionRepository($this->conn),
                 new GroupRepository($this->conn)
-            );
+            , new CategoryRepository($this->conn));
         }
 
         #[\Override]

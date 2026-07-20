@@ -48,7 +48,7 @@ final readonly class ImageService
 
         return new CategoryService(
             new CategoryRepository($conn),
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
         );
     }
 

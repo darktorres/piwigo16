@@ -5,14 +5,19 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
 
 /**
@@ -120,8 +125,12 @@ final class ElementSetRanksPageRenderer
 
                 $message = l10n('Images manual order was saved');
             }
-            new CategoryAdminService()
-                ->saveImageOrder((int) $category_id, $image_order, isset($_POST['image_order_subcats']));
+            new CategoryAdminService(
+                new CategoryService(
+                    new CategoryRepository($conn),
+                    new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
+                )
+            )->saveImageOrder((int) $category_id, $image_order, isset($_POST['image_order_subcats']));
 
             $template->assign(
                 [

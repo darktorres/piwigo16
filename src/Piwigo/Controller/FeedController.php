@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentCache;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Feed\FeedHelper;
@@ -61,7 +62,7 @@ final class FeedController implements ControllerInterface
         $feed_repo = new FeedRepository($conn);
         $notificationService = new NotificationService(
             new NotificationRepository($conn),
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn)),
             $persistent_cache,
             $htmlRenderer
         );

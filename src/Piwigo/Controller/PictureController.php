@@ -81,7 +81,7 @@ final class PictureController implements ControllerInterface
 {
     private static function permissionService(Connection $conn): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
     }
 
     private static function categoryService(Connection $conn): CategoryService
@@ -129,7 +129,7 @@ final class PictureController implements ControllerInterface
             self::categoryService($conn),
             self::permissionService($conn),
             self::tagService($conn),
-            new SearchService(new SearchRepository($conn), self::permissionService($conn), new PersistentFileCache(), new MailService(), new HtmlService()),
+            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new PersistentFileCache(), new MailService(), new HtmlService()),
             self::userService($conn),
         )->populate();
 

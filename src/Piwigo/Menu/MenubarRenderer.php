@@ -63,7 +63,7 @@ final class MenubarRenderer
         $conn = DbConnection::build();
         // Built once, reused below -- was the same PermissionService recipe
         // repeated verbatim at 2 sites in this method (Phase 1k DI-chain audit).
-        $permissionService = new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+        $permissionService = new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
         $tagService = new TagService(new TagRepository($conn), $permissionService, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
         $categoryService = new CategoryService(new CategoryRepository($conn), $permissionService);
 

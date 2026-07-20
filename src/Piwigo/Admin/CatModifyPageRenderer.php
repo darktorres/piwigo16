@@ -48,7 +48,7 @@ final class CatModifyPageRenderer
         $categoryConn = DbConnection::build();
         $categoryService = new CategoryService(
             new CategoryRepository($categoryConn),
-            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn), new CategoryRepository($categoryConn))
         );
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_cat_modify');
@@ -83,7 +83,7 @@ final class CatModifyPageRenderer
         // can't see into) always returns it as numeric. Narrow once here and reuse
         // throughout the rest of this method's many uses of the category id.
         $category_id = is_numeric($category['id']) ? (int) $category['id'] : 0;
-        $subcat_ids = get_subcat_ids([$category_id]);
+        $subcat_ids = $categoryService->getSubcatIds([$category_id]);
 
         $category['nb_subcats'] = count($subcat_ids) - 1;
 

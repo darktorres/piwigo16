@@ -100,7 +100,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 {
     private static function permissionService(Connection $conn): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
     }
 
     private static function categoryService(Connection $conn): CategoryService

@@ -1327,19 +1327,7 @@ final readonly class CategoryService
      */
     public function getUppercatIds(array $catIds): array
     {
-        if (count($catIds) < 1) {
-            return [];
-        }
-
-        $uppercats = [];
-        foreach ($this->repo->findUppercatsColumns(array_map(intval(...), $catIds)) as $uppercatsCsv) {
-            $uppercats = array_merge(
-                $uppercats,
-                array_map(intval(...), explode(',', $uppercatsCsv))
-            );
-        }
-
-        return array_unique($uppercats);
+        return $this->repo->findUppercatIds($catIds);
     }
 
     /**

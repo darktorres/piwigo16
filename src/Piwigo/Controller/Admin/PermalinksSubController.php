@@ -123,7 +123,7 @@ FROM ' . Tables::categories();
 
         new CategoryService(
             new CategoryRepository($conn),
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
         )->displaySelectCatWrapper($query, $selected_cat, 'categories', $htmlRenderer, $template, false);
 
         $pwg_token = new \Piwigo\Csrf\CsrfService()

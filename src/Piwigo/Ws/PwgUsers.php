@@ -22,6 +22,7 @@ use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
@@ -872,7 +873,7 @@ SELECT
   FROM ' . Tables::favorites() . '
     INNER JOIN ' . Tables::images() . ' i ON image_id = i.id
   WHERE user_id = ' . $current_user_id . '
-' . new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))->getSqlConditionFandF([
+' . new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new CategoryRepository(DbConnection::build()))->getSqlConditionFandF([
             'visible_images' => 'id',
         ], 'AND') . '
     ' . $order_by . '

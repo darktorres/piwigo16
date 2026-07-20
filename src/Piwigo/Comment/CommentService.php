@@ -6,6 +6,7 @@ namespace Piwigo\Comment;
 
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
@@ -64,7 +65,7 @@ final readonly class CommentService
             if (! AccessControl::isAdmin()) {
                 $where[] = 'validated=\'true\'';
             }
-            $where[] = new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))
+            $where[] = new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new CategoryRepository(DbConnection::build()))
                 ->getSqlConditionFandF([
                     'forbidden_categories' => 'category_id',
                     'forbidden_images' => 'ic.image_id',

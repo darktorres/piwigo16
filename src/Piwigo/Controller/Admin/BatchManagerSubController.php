@@ -10,6 +10,8 @@ use Piwigo\Admin\BatchManagerGlobalPageRenderer;
 use Piwigo\Admin\BatchManagerUnitPageRenderer;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -71,7 +73,17 @@ final class BatchManagerSubController implements AdminSubControllerInterface
 
     private static function tagService(Connection $conn): TagService
     {
-        return new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)), self::activityService($conn));
+        return new TagService(new TagRepository($conn), self::permissionService($conn), self::activityService($conn));
+    }
+
+    private static function permissionService(Connection $conn): PermissionService
+    {
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+    }
+
+    private static function categoryService(Connection $conn): CategoryService
+    {
+        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
     }
 
     #[\Override]
@@ -564,7 +576,7 @@ DELETE FROM ' . Tables::caddie() . '
             }
 
             $categories = isset($bulkFilter['category_recursive'])
-                ? get_subcat_ids([$category_id])
+                ? self::categoryService(DbConnection::build())->getSubcatIds([$category_id])
                 : [$category_id];
             $categories = array_values(array_map(intval(...), array_filter($categories, is_numeric(...))));
 
@@ -636,7 +648,8 @@ DELETE FROM ' . Tables::caddie() . '
             $searchConn = DbConnection::build();
             $res = new SearchService(
                 new SearchRepository($searchConn),
-                new PermissionService(new PermissionRepository($searchConn), new GroupRepository($searchConn)),
+                self::permissionService($searchConn),
+                self::categoryService($searchConn),
                 new PersistentFileCache(),
                 new MailService(),
                 new HtmlService(),

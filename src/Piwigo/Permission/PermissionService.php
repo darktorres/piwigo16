@@ -4,21 +4,29 @@ declare(strict_types=1);
 
 namespace Piwigo\Permission;
 
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Group\GroupRepository;
 
 /**
- * Forbidden-categories computation. Constructor-injects both
- * PermissionRepository and GroupRepository, plain constructor injection
- * (same shape as PermalinkService) -- the group-based access check
- * (calculate_permissions()'s user_group JOIN group_access query) is why
- * Group had to land in this same layer (L2aCoreDomain), see deptrac.yaml's
- * own comment on that namespace.
+ * Forbidden-categories computation. Constructor-injects
+ * PermissionRepository, GroupRepository, and CategoryRepository, plain
+ * constructor injection (same shape as PermalinkService) -- the
+ * group-based access check (calculate_permissions()'s user_group JOIN
+ * group_access query) is why Group had to land in this same layer
+ * (L2aCoreDomain), see deptrac.yaml's own comment on that namespace.
+ * CategoryRepository (not CategoryService) is deliberate:
+ * addPermissionOnCategory() needs uppercat/subcat id lookups, but
+ * CategoryService already constructor-injects PermissionService, so
+ * depending on CategoryService here would cycle -- the repository sits
+ * below both services with no such conflict (Legacy Coupling Retirement
+ * Phase 4a).
  */
 final readonly class PermissionService
 {
     public function __construct(
         private PermissionRepository $repo,
         private GroupRepository $groupRepo,
+        private CategoryRepository $categoryRepo,
     ) {}
 
     /**
@@ -242,10 +250,14 @@ final readonly class PermissionService
      * PermissionService precedent already resolved elsewhere by picking
      * the L2a domain owner as the target instead of Piwigo\Admin.
      *
-     * get_uppercat_ids()/get_subcat_ids() stay bare calls -- they are
-     * settled composer-autoloaded utilities (src/Piwigo/Category/
-     * functions.php, the P23 batch 8c "relocate ubiquitous utilities"
-     * track), not unmigrated legacy.
+     * Calls `CategoryRepository::findUppercatIds()`/`findSubcategoryIds()`
+     * directly rather than `CategoryService::getUppercatIds()`/
+     * `getSubcatIds()` -- `CategoryService` already constructor-injects
+     * `PermissionService`, so depending on it here would cycle (Legacy
+     * Coupling Retirement Phase 4a). `findSubcategoryIds()` needs no
+     * separate numeric-validation pass here (unlike
+     * `CategoryService::getSubcatIds()`'s own wrapper): `$categoryIds` is
+     * already normalized to `int` two lines above.
      *
      * @param int|array<int, int> $categoryIds real callers pass a mix of
      *   `list<int>` and array-key-preserving results of array_map()/
@@ -271,9 +283,9 @@ final readonly class PermissionService
         $categoryIds = array_map(intval(...), $categoryIds);
 
         // make sure categories are private and select uppercats or subcats
-        $catIds = get_uppercat_ids($categoryIds);
+        $catIds = $this->categoryRepo->findUppercatIds($categoryIds);
         if (isset($_POST['apply_on_sub'])) {
-            $catIds = array_merge($catIds, get_subcat_ids($categoryIds));
+            $catIds = array_merge($catIds, $this->categoryRepo->findSubcategoryIds($categoryIds));
         }
 
         $catIdsForQuery = array_values(array_map(

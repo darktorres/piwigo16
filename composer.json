@@ -87,7 +87,6 @@
     },
     "files": [
       "src/Piwigo/Url/functions.php",
-      "src/Piwigo/Category/functions.php",
       "src/Piwigo/Lang/functions.php",
       "src/Piwigo/Http/functions.php"
     ]

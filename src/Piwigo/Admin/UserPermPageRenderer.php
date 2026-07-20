@@ -39,7 +39,7 @@ final class UserPermPageRenderer
         $conn = DbConnection::build();
         // Built once, reused below -- was the same PermissionService recipe
         // repeated verbatim at 2 sites in this method (Phase 1k DI-chain audit).
-        $permissionService = new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+        $permissionService = new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
         $categoryService = new CategoryService(
             new CategoryRepository($conn),
             $permissionService
@@ -77,7 +77,7 @@ final class UserPermPageRenderer
             and count($cat_true) > 0) {
             // if you forbid access to a category, all sub-categories become
             // automatically forbidden
-            $subcats = array_map(intval(...), get_subcat_ids($cat_true));
+            $subcats = array_map(intval(...), $categoryService->getSubcatIds($cat_true));
             $permissionService->removeUserAccess($user_id, $subcats);
         } elseif (isset($_POST['trueify'])
             and count($cat_false) > 0) {

@@ -2,13 +2,11 @@
 
 declare(strict_types=1);
 
-// get_subcat_ids() is a real, stable, already-migrated free function --
-// always available now via composer autoload.files
-// (src/Piwigo/Category/functions.php, P23 batch 8c), no explicit require
-// needed.
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;
+    use Piwigo\Category\CategoryRepository;
+    use Piwigo\Category\CategoryService;
     use Piwigo\Calendar\CalendarService;
     use Piwigo\Config\Config;
     use Piwigo\Config\ConfigLoader;
@@ -50,7 +48,11 @@ final class CalendarServiceTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->service = new CalendarService(
-            new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn))
+            new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn)),
+            new CategoryService(
+                new CategoryRepository($this->conn),
+                new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn))
+            )
         );
 
         // Matches getuserdata()'s own guaranteed shape -- an incomplete

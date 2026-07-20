@@ -529,7 +529,7 @@ ALTER TABLE ' . $prefixeTable . $table . '
         // refresh calculated datas
         $upgradeCategoryService = new CategoryService(
             new CategoryRepository($conn),
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
         );
         $upgradeCategoryService->updateGlobalRank();
         $upgradeCategoryService->updateCategory();

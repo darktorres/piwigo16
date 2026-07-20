@@ -9,6 +9,8 @@ use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
@@ -55,12 +57,25 @@ use Piwigo\Template\Template;
  */
 final class BatchManagerGlobalPageRenderer
 {
+    private static function permissionService(Connection $conn): PermissionService
+    {
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+    }
+
     private static function tagService(Connection $conn): TagService
     {
         return new TagService(
             new TagRepository($conn),
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
+            self::permissionService($conn),
             new ActivityService(new ActivityRepository($conn))
+        );
+    }
+
+    private static function categoryService(Connection $conn): CategoryService
+    {
+        return new CategoryService(
+            new CategoryRepository($conn),
+            self::permissionService($conn)
         );
     }
 
@@ -261,7 +276,7 @@ DELETE
                         // before "associate" became a multi-value field).
                         $first_associate_category = reset($associate_categories);
                         if ($first_associate_category !== false) {
-                            $category_info = get_cat_info($first_associate_category);
+                            $category_info = self::categoryService($conn)->getCategoryInfo($first_associate_category);
                             if (($category_info['dir'] ?? '') === '') {
                                 $redirect = true;
                             }
@@ -281,7 +296,7 @@ DELETE
                     $redirect = true;
                 } elseif ($prefilter_value === 'no_virtual_album') {
                     if ($move_category !== null) {
-                        $category_info = get_cat_info($move_category);
+                        $category_info = self::categoryService($conn)->getCategoryInfo($move_category);
                         if (($category_info['dir'] ?? '') === '') {
                             $redirect = true;
                         }
@@ -624,7 +639,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
   FROM ' . Tables::images();
 
             if ($is_category) {
-                $category_info = get_cat_info($filter_category_id);
+                $category_info = self::categoryService($conn)->getCategoryInfo($filter_category_id);
 
                 $order_by_inside_category_conf = \Piwigo\Config\Config::all()['order_by_inside_category'] ?? null;
                 $order_by = is_string($order_by_inside_category_conf) ? $order_by_inside_category_conf : '';

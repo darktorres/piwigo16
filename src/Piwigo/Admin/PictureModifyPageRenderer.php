@@ -74,7 +74,7 @@ final class PictureModifyPageRenderer
      */
     private static function permissionService(Connection $conn): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
     }
 
     public function render(): void

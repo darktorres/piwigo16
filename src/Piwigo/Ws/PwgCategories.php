@@ -42,7 +42,7 @@ final class PwgCategories
     {
         return new CategoryService(
             new CategoryRepository($conn),
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+            self::permissionService($conn)
         );
     }
 
@@ -55,7 +55,7 @@ final class PwgCategories
      */
     private static function permissionService(Connection $conn): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
     }
 
     /**
@@ -987,7 +987,7 @@ SELECT *
         }
 
         if (isset($params['commentable']) && isset($params['apply_commentable_to_subalbums']) && (bool) $params['apply_commentable_to_subalbums']) {
-            $subcats = get_subcat_ids([$params['category_id']]);
+            $subcats = $categoryService->getSubcatIds([$params['category_id']]);
             if (count($subcats) > 0) {
                 $query = '
 UPDATE ' . Tables::categories() . '
@@ -1174,7 +1174,7 @@ SELECT *
         // in between could have deleted it
         assert(is_array($category));
 
-        // set_random_representant() is expected to have populated
+        // setRandomRepresentant() is expected to have populated
         // representative_picture_id above, but it's not a NOT NULL column, so
         // guard for real instead of assuming the update landed. Native
         // int|string under DBAL (vs. guaranteed string under legacy
@@ -1363,7 +1363,7 @@ SELECT id, name, dir, uppercats
         // move_categories function, not here
         // 0 as parent means "move categories at gallery root"
         if ($params['parent'] != 0) {
-            $subcat_ids = get_subcat_ids([$params['parent']]);
+            $subcat_ids = self::categoryService($categoryConn)->getSubcatIds([$params['parent']]);
             if (count($subcat_ids) == 0) {
                 return new PwgError(403, 'Unknown parent category id');
             }
@@ -1422,7 +1422,7 @@ SELECT
         $update_cats = [];
         foreach (array_unique($update_cat_ids) as $update_cat) {
             $nb_sub_photos = 0;
-            $sub_cat_without_parent = array_diff(get_subcat_ids([$update_cat]), [$update_cat]);
+            $sub_cat_without_parent = array_diff(self::categoryService($categoryConn)->getSubcatIds([$update_cat]), [$update_cat]);
 
             foreach ($sub_cat_without_parent as $id_sub_cat) {
                 $nb_photos_for_sub_cat = $nb_photos_in[$id_sub_cat] ?? 0;
@@ -1469,7 +1469,7 @@ SELECT DISTINCT
         $category['has_images'] = $conn->fetchOne($query) !== false;
 
         // number of sub-categories
-        $subcat_ids = get_subcat_ids([$category_id]);
+        $subcat_ids = self::categoryService($conn)->getSubcatIds([$category_id]);
 
         $category['nb_subcats'] = count($subcat_ids) - 1;
 

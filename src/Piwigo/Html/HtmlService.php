@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Html;
 
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\SrcImage;
@@ -17,9 +18,12 @@ use Piwigo\Template\Template;
  *
  * Takes only an optional, lazy-defaulted CategoryRepository -- same
  * "no *required* constructor deps" shape as Piwigo\Url\UrlService (its
- * P17 sibling namespace): the remaining bare calls (trigger_change(),
- * get_cat_info(), get_root_url()/add_url_params(), l10n()) are all
- * settled composer-autoloaded utilities, not unmigrated legacy. This
+ * P17 sibling namespace): the remaining bare calls (get_root_url()/
+ * add_url_params(), l10n()) are all settled composer-autoloaded
+ * utilities, not unmigrated legacy (Legacy Coupling Retirement Phase 4c/
+ * 4d retarget these directly, without adding a constructor dependency --
+ * see getCatDisplayNameFromId()'s own docblock for why this specific
+ * class can never depend on CategoryService/UrlServiceInterface). This
  * class has 83 real `new HtmlService()` construction sites, so
  * getCatDisplayNameCache()'s own CategoryRepository need (Legacy
  * Coupling Retirement: DI+DBAL migration, Phase 1b) follows
@@ -193,7 +197,21 @@ final class HtmlService implements HtmlRenderingInterface
      */
     public function getCatDisplayNameFromId(int $catId, ?string $url = ''): string
     {
-        $cat_info = get_cat_info($catId);
+        // Throwaway CategoryService construction, not constructor injection
+        // -- HtmlService can never depend on CategoryService (Legacy
+        // Coupling Retirement Phase 4c: CategoryService needs
+        // UrlServiceInterface, which needs HtmlRenderingInterface, which
+        // HtmlService implements -- a real cycle). Reuses this class's own
+        // lazy categoryRepo() rather than building a second repository.
+        $categoryConn = DbConnection::build();
+        $cat_info = new CategoryService(
+            $this->categoryRepo(),
+            new \Piwigo\Permission\PermissionService(
+                new \Piwigo\Permission\PermissionRepository($categoryConn),
+                new \Piwigo\Group\GroupRepository($categoryConn),
+                new CategoryRepository($categoryConn)
+            )
+        )->getCategoryInfo($catId);
         // $catId isn't existence-validated by callers (WS/URL param) -- a
         // stale/forged id falls back to an empty breadcrumb.
         $upper_names = $cat_info['upper_names'] ?? [];

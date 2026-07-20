@@ -16,6 +16,7 @@ namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;
     use Piwigo\Cache\PersistentFileCache;
+    use Piwigo\Category\CategoryRepository;
     use Piwigo\Config\Config;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
@@ -94,7 +95,7 @@ final class NotificationServiceTest extends IntegrationTestCase
 
         $this->service = new NotificationService(
             new NotificationRepository($this->conn),
-            new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn)),
+            new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn)),
             new PersistentFileCache(),
             new HtmlService()
         );

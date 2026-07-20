@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\BatchWriter;
@@ -27,6 +29,16 @@ use Piwigo\Permission\PermissionService;
  */
 final class PwgPermissions
 {
+    private static function permissionService(\Doctrine\DBAL\Connection $conn): PermissionService
+    {
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+    }
+
+    private static function categoryService(\Doctrine\DBAL\Connection $conn): CategoryService
+    {
+        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
+    }
+
     /**
      * API method
      * Returns permissions
@@ -164,9 +176,9 @@ SELECT group_id, cat_id
         $conn = DbConnection::build();
 
         if (! empty($params['group_id'])) {
-            $cat_ids = get_uppercat_ids($params['cat_id']);
+            $cat_ids = self::categoryService($conn)->getUppercatIds($params['cat_id']);
             if ($params['recursive']) {
-                $cat_ids = array_merge($cat_ids, get_subcat_ids($params['cat_id']));
+                $cat_ids = array_merge($cat_ids, self::categoryService($conn)->getSubcatIds($params['cat_id']));
             }
 
             $query = '
@@ -202,7 +214,7 @@ SELECT id
             if ($params['recursive']) {
                 $_POST['apply_on_sub'] = true;
             }
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+            self::permissionService($conn)
                 ->addPermissionOnCategory($params['cat_id'], $params['user_id']);
         }
 
@@ -229,7 +241,7 @@ SELECT id
         }
 
         $conn = DbConnection::build();
-        $cat_ids = get_subcat_ids($params['cat_id']);
+        $cat_ids = self::categoryService($conn)->getSubcatIds($params['cat_id']);
 
         if (! empty($params['group_id'])) {
             $query = '

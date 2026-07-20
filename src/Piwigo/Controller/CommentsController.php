@@ -43,7 +43,12 @@ final class CommentsController implements ControllerInterface
 {
     private static function permissionService(Connection $conn): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+    }
+
+    private static function categoryService(Connection $conn): CategoryService
+    {
+        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
     }
 
     #[\Override]
@@ -177,7 +182,7 @@ final class CommentsController implements ControllerInterface
             $cat_id = $_GET['cat'];
             $cat_id = is_scalar($cat_id) ? (string) $cat_id : '0';
 
-            $category_ids = get_subcat_ids([$cat_id]);
+            $category_ids = self::categoryService($conn)->getSubcatIds([$cat_id]);
             if ($category_ids === []) {
                 $category_ids = [-1];
             }
@@ -421,10 +426,8 @@ SELECT id, name, uppercats, global_rank
                 'visible_categories' => 'id',
             ], 'WHERE') . '
 ;';
-            new CategoryService(
-                new CategoryRepository($conn),
-                self::permissionService($conn)
-            )->displaySelectCatWrapper($query, [@$_GET['cat']], $blockname, new HtmlService(), $template, true);
+            self::categoryService($conn)
+                ->displaySelectCatWrapper($query, [@$_GET['cat']], $blockname, new HtmlService(), $template, true);
 
             // Filter on recent comments...
             $tpl_var = [];

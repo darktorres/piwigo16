@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace Piwigo\Calendar;
 
 use Piwigo\Cache\PersistentCache;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Db\DbConnection;
@@ -74,7 +76,11 @@ final readonly class CalendarRenderer
 
         // ------------------ initialize the condition on items to take into account ---
         $conn = DbConnection::build();
-        $calendarService = new CalendarService(new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)));
+        $permissionService = new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+        $calendarService = new CalendarService(
+            $permissionService,
+            new CategoryService(new CategoryRepository($conn), $permissionService)
+        );
 
         if ($section === 'categories') { // we will regenerate the items by including subcats elements
             $items = [];

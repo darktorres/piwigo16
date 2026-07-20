@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Rate\RateRepository;
 
 /**
@@ -50,9 +55,15 @@ final class RatingPageRenderer
         $conf_guest_id = \Piwigo\Config\Config::guestId();
         $guest_id = $conf_guest_id;
 
+        $conn = DbConnection::build();
+
         $cat_ids = [];
         if (isset($_GET['cat']) and is_numeric($_GET['cat'])) {
-            $cat_ids = array_values(array_map(intval(...), array_filter(get_subcat_ids([(int) $_GET['cat']]), is_numeric(...))));
+            $categoryService = new CategoryService(
+                new CategoryRepository($conn),
+                new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
+            );
+            $cat_ids = array_values(array_map(intval(...), array_filter($categoryService->getSubcatIds([(int) $_GET['cat']]), is_numeric(...))));
         }
 
         $filter_user_id = null;
@@ -69,7 +80,7 @@ final class RatingPageRenderer
 
         /** @var array<string, string> $user_fields */
         $user_fields = \Piwigo\Config\Config::userFields();
-        $rate_repository = new RateRepository(DbConnection::build());
+        $rate_repository = new RateRepository($conn);
 
         $usernames_by_id = $rate_repository->findUsernamesById($user_fields['id'], $user_fields['username']);
         $users = [];

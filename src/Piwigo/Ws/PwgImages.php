@@ -68,7 +68,24 @@ final class PwgImages
      */
     private static function permissionService(Connection $conn): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+    }
+
+    private static function categoryService(Connection $conn): CategoryService
+    {
+        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
+    }
+
+    private static function searchService(Connection $conn): SearchService
+    {
+        return new SearchService(
+            new SearchRepository($conn),
+            self::permissionService($conn),
+            self::categoryService($conn),
+            new PersistentFileCache(),
+            new MailService(),
+            new HtmlService(),
+        );
     }
 
     /**
@@ -738,13 +755,7 @@ SELECT DISTINCT id
         }
 
         $searchConn = DbConnection::build();
-        $search_result = new SearchService(
-            new SearchRepository($searchConn),
-            self::permissionService($searchConn),
-            new PersistentFileCache(),
-            new MailService(),
-            new HtmlService(),
-        )->getQuickSearchResults(
+        $search_result = self::searchService($searchConn)->getQuickSearchResults(
             $params['query'],
             [
                 'super_order_by' => $super_order_by,
@@ -838,13 +849,7 @@ SELECT *
     {
 
         $searchConn = DbConnection::build();
-        $searchService = new SearchService(
-            new SearchRepository($searchConn),
-            self::permissionService($searchConn),
-            new PersistentFileCache(),
-            new MailService(),
-            new HtmlService(),
-        );
+        $searchService = self::searchService($searchConn);
 
         // * check the search exists
         $search_info = null;

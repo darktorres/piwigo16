@@ -6,6 +6,8 @@ namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
@@ -34,7 +36,12 @@ final class SearchController implements ControllerInterface
 {
     private static function permissionService(Connection $conn): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+    }
+
+    private static function categoryService(Connection $conn): CategoryService
+    {
+        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
     }
 
     #[\Override]
@@ -48,6 +55,7 @@ final class SearchController implements ControllerInterface
         $searchService = new SearchService(
             new SearchRepository($conn),
             self::permissionService($conn),
+            self::categoryService($conn),
             new PersistentFileCache(),
             new MailService(),
             new HtmlService(),

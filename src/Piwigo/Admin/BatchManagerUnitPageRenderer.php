@@ -9,6 +9,8 @@ use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -69,7 +71,12 @@ final class BatchManagerUnitPageRenderer
      */
     private static function permissionService(Connection $conn): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn));
+        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+    }
+
+    private static function categoryService(Connection $conn): CategoryService
+    {
+        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
     }
 
     /**
@@ -288,7 +295,7 @@ SELECT *
   FROM ' . Tables::images();
 
             if ($is_category) {
-                $category_info = get_cat_info($filter_category_id);
+                $category_info = self::categoryService($conn)->getCategoryInfo($filter_category_id);
 
                 $order_by_inside_category_conf = \Piwigo\Config\Config::all()['order_by_inside_category'] ?? null;
                 $order_by = is_string($order_by_inside_category_conf) ? $order_by_inside_category_conf : '';

@@ -46,7 +46,7 @@ final class CatListPageRenderer
         $categoryConn = DbConnection::build();
         $categoryService = new CategoryService(
             new CategoryRepository($categoryConn),
-            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn), new CategoryRepository($categoryConn))
         );
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_cat_list');
@@ -139,8 +139,12 @@ SELECT COUNT(*)
         // request to add a virtual category
         elseif (isset($_POST['submitAdd'])) {
             $virtual_name = is_string($_POST['virtual_name'] ?? null) ? $_POST['virtual_name'] : '';
-            $output_create = new CategoryAdminService()
-                ->createVirtualCategory($virtual_name, $parent_id);
+            $output_create = new CategoryAdminService($categoryService)
+                ->createVirtualCategory(
+                    $virtual_name,
+                    new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($categoryConn)),
+                    $parent_id
+                );
 
             UserCacheInvalidator::invalidate();
             $output_create_message = is_string($output_create->message) ? $output_create->message : '';

@@ -757,6 +757,34 @@ SELECT uppercats
 ;')->fetchFirstColumn());
     }
 
+    /**
+     * Flattens every category's `uppercats` CSV column into a single
+     * deduplicated list of uppercat ids. Shared by `CategoryService::
+     * getUppercatIds()` and `PermissionService::addPermissionOnCategory()`
+     * -- the latter can't depend on `CategoryService` (which already
+     * constructor-injects `PermissionService`, a real circular-construction
+     * risk), so this lives at the repository layer both can reach.
+     *
+     * @param array<int> $catIds
+     * @return array<int>
+     */
+    public function findUppercatIds(array $catIds): array
+    {
+        if (count($catIds) < 1) {
+            return [];
+        }
+
+        $uppercats = [];
+        foreach ($this->findUppercatsColumns(array_map(intval(...), $catIds)) as $uppercatsCsv) {
+            $uppercats = array_merge(
+                $uppercats,
+                array_map(intval(...), explode(',', $uppercatsCsv))
+            );
+        }
+
+        return array_unique($uppercats);
+    }
+
     public function findRandomImageIdInCategory(int $categoryId): ?int
     {
         $value = $this->conn->executeQuery('

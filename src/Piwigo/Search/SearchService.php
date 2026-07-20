@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Search;
 
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Db\DbConnection;
@@ -52,6 +53,7 @@ final readonly class SearchService
     public function __construct(
         private SearchRepository $repo,
         private PermissionService $permissionService,
+        private CategoryService $categoryService,
         private PersistentFileCache $cache,
         private MailerInterface $mailer,
         private HtmlRenderingInterface $htmlRenderer,
@@ -312,7 +314,7 @@ final readonly class SearchService
         if (isset($searchFields['cat']) && $catWords !== [] && (bool) ($displayFilters['album']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $catIds = (is_array($catField) && (bool) ($catField['sub_inc'] ?? false))
-                ? get_subcat_ids($catWords)
+                ? $this->categoryService->getSubcatIds($catWords)
                 : $catWords;
 
             if ($catIds !== []) {
@@ -967,7 +969,7 @@ final readonly class SearchService
 
             if ($catIds !== []) {
                 if (\Piwigo\Config\Config::quickSearchIncludeSubAlbums()) {
-                    $subcatIds = get_subcat_ids($catIds);
+                    $subcatIds = $this->categoryService->getSubcatIds($catIds);
                     $catIds = $subcatIds !== []
                         ? $this->repo->findIdsByClause(
                             'id',

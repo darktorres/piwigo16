@@ -16,12 +16,13 @@ declare(strict_types=1);
 // passthroughs with no handlers registered, so no local stubs are needed
 // for them anymore.
 //
-// get_subcat_ids() is NOT stubbed -- always available now via composer
-// autoload.files (src/Piwigo/Category/functions.php, P23 batch 8c), no
-// explicit require needed. functions_search.inc.php itself is gone (P23
-// batch 8c) -- SearchService now calls the real Piwigo\Search\SearchService
-// methods directly; the QST_* bitmask flags it needs are class constants
-// on Piwigo\Search\QSingleToken (P23 batch 8f-4), autoloaded.
+// get_subcat_ids() calls go through the real, constructor-injected
+// Piwigo\Category\CategoryService directly now (Legacy Coupling
+// Retirement Phase 4a), no stub needed. functions_search.inc.php itself
+// is gone (P23 batch 8c) -- SearchService now calls the real
+// Piwigo\Search\SearchService methods directly; the QST_* bitmask flags
+// it needs are class constants on Piwigo\Search\QSingleToken (P23 batch
+// 8f-4), autoloaded.
 //
 // get_image_ids_for_tags()'s own stub was removed (P23 batch 8c) --
 // SearchService now calls the real Piwigo\Tag\TagService::getImageIdsForTags()
@@ -105,6 +106,8 @@ namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;
     use Piwigo\Cache\PersistentFileCache;
+    use Piwigo\Category\CategoryRepository;
+    use Piwigo\Category\CategoryService;
     use Piwigo\Config\Config;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
@@ -189,7 +192,11 @@ final class SearchServiceTest extends IntegrationTestCase
 
         $this->service = new SearchService(
             $this->repo,
-            new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn)),
+            new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn)),
+            new CategoryService(
+                new CategoryRepository($this->conn),
+                new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn))
+            ),
             new PersistentFileCache(),
             new MailService(),
             new HtmlService()

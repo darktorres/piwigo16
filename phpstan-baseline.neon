@@ -1813,12 +1813,6 @@ parameters:
 			path: src/Piwigo/Bootstrap/RequestBootstrap.php
 
 		-
-			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: src/Piwigo/Bootstrap/RequestBootstrap.php
-
-		-
 			rawMessage: 'Parameter #2 $theme of class Piwigo\Template\Template constructor expects string, mixed given.'
 			identifier: argument.type
 			count: 1

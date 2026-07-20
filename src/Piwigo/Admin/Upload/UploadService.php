@@ -1151,9 +1151,6 @@ SELECT
             return false;
         }
 
-        // TODO : the resize check should take the orientation into account. If a
-        // rotation must be applied to the resized photo, then we should test
-        // invert width and height.
         $image_size = getimagesize($image_filepath);
         if ($image_size === false) {
             // can't determine dimensions, so we can't tell whether a resize
@@ -1161,6 +1158,16 @@ SELECT
             return false;
         }
         [$width, $height] = $image_size;
+
+        // getimagesize() reports raw pixel dimensions, not the visually
+        // correct ones -- a portrait photo stored with landscape raw
+        // pixels plus a 90/270 EXIF rotation flag needs width/height
+        // swapped before comparing against the max thresholds, or the
+        // check (and the resize it gates) runs against the wrong axis.
+        $rotation_angle = pwg_image::get_rotation_angle($image_filepath);
+        if (in_array($rotation_angle, [90, 270], true)) {
+            [$width, $height] = [$height, $width];
+        }
 
         if ($width > $max_width or $height > $max_height) {
             $logger->info(__METHOD__ . ' ' . $image_filepath . ' is too big (current=' . $width . 'x' . $height . 'px Vs max=' . $max_width . 'x' . $max_height . 'px)');

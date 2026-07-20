@@ -610,9 +610,14 @@ class updates
         $data_location = $data_location_raw;
 
         if ($check_current_version and ! version_compare($upgrade_to, AppInfo::VERSION, '>')) {
-            // TODO why redirect to a plugin page? maybe a remaining code from when
-            // the update system was provided as a plugin?
-            $redirectService->redirect($urlService->getRootUrl() . 'admin.php?page=plugin-' . basename(__DIR__));
+            // $upgrade_to isn't actually newer than the installed version
+            // (a stale page, a resubmitted form, or a hand-crafted
+            // request) -- back to the real Updates page, not the
+            // '?page=plugin-<basename(__DIR__)>' dead link this used to
+            // build (a leftover from when the update system was itself
+            // shipped as a plugin; no such page slug has existed for a
+            // long time).
+            $redirectService->redirect($urlService->getRootUrl() . 'admin.php?page=updates');
         }
 
         $obsolete_list = null;

@@ -242,9 +242,14 @@ SELECT id, path, representative_ext, width, height, rotation
             $infos['nb_unvalidated_comments'] = $conn->fetchOne($query);
         }
 
-        // Cache size
-        // TODO for real later
-        $infos['cache_size'] = 4242;
+        // Cache size: not computed here on purpose. A real answer means
+        // shelling out to `du` (see getCacheSize() below, the real
+        // pwg.getCacheSize API method) -- too expensive to pay on every
+        // pwg.getInfos call, and exec() isn't guaranteed to be enabled.
+        // null (not a fake number) matches getCacheSize()'s own sentinel
+        // for "couldn't determine size"; callers that need the real value
+        // should call pwg.getCacheSize directly.
+        $infos['cache_size'] = null;
 
         $output = [];
         foreach ($infos as $name => $value) {

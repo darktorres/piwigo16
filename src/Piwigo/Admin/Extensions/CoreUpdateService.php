@@ -251,7 +251,12 @@ final readonly class CoreUpdateService
         $dataLocation = $dataLocationRaw;
 
         if ($checkCurrentVersion and ! version_compare($upgradeTo, AppInfo::VERSION, '>')) {
-            $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=plugin-' . basename(__DIR__));
+            // $upgradeTo isn't actually newer than the installed version
+            // (a stale page, a resubmitted form, or a hand-crafted
+            // request) -- back to the real Updates page. Reachable in
+            // practice: UpdatesPwgPageRenderer's form submission calls
+            // this with the default $checkCurrentVersion=true.
+            $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=updates');
         }
 
         $obsoleteList = null;

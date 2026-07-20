@@ -308,18 +308,6 @@ final class RequestBootstrap
             \Piwigo\Config\ConfigDb::confUpdateParam('last_major_update', $dbnow, true, conn: $conn);
         }
 
-        // 2022-02-25 due to escape on "rank" (becoming a mysql keyword in version 8), the (\Piwigo\Config\Config::all()['order_by'] ?? null) might
-        // use a "rank", even if admin/configuration.php should have removed it. We must remove it.
-        // TODO remove this data update as soon as 2025 arrives
-        $conf_order_by = (\Piwigo\Config\Config::all()['order_by'] ?? null);
-        if (is_string($conf_order_by) && (bool) preg_match('/(, )?`rank` ASC/', $conf_order_by)) {
-            $order_by = preg_replace('/(, )?`rank` ASC/', '', $conf_order_by);
-            if ($order_by == 'ORDER BY ') {
-                $order_by = 'ORDER BY id ASC';
-            }
-            \Piwigo\Config\ConfigDb::confUpdateParam('order_by', $order_by, true, conn: $conn);
-        }
-
         // users can have defined a custom order pattern, incompatible with GUI form.
         // Config::orderByCustom()/orderByInsideCategoryCustom() (the typed SCHEMA
         // accessors) model a structured {field,dir}[] shape that no real code

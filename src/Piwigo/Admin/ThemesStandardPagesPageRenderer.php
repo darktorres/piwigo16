@@ -196,14 +196,14 @@ final class ThemesStandardPagesPageRenderer
         // Send all info to template
         $template->assign(
             [
-                'use_standard_pages' => \Piwigo\Config\ConfigDb::confGetParam('use_standard_pages', true),
-                'std_pgs_selected_logo' => \Piwigo\Config\ConfigDb::confGetParam('standard_pages_selected_logo', 'piwigo_logo'),
+                'use_standard_pages' => \Piwigo\Config\Config::all()['use_standard_pages'] ?? true,
+                'std_pgs_selected_logo' => \Piwigo\Config\Config::all()['standard_pages_selected_logo'] ?? 'piwigo_logo',
                 'std_pgs_logo_options' => $std_pgs_logo_options,
-                'std_pgs_selected_skin' => \Piwigo\Config\ConfigDb::confGetParam('standard_pages_selected_skin', 'default'),
+                'std_pgs_selected_skin' => \Piwigo\Config\Config::all()['standard_pages_selected_skin'] ?? 'default',
                 'std_pgs_skin_options' => $std_pgs_skin_options,
                 'is_standard_pages_used' => $is_standard_pages_used,
                 'standard_pages_used_by' => $standard_pages_used_by,
-                'std_pgs_selected_logo_path' => \Piwigo\Config\ConfigDb::confGetParam('standard_pages_selected_logo_path', null),
+                'std_pgs_selected_logo_path' => \Piwigo\Config\Config::all()['standard_pages_selected_logo_path'] ?? null,
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
             ]

@@ -534,14 +534,14 @@ final readonly class ImageService
 
     public function countOrphans(): mixed
     {
-        if (\Piwigo\Config\ConfigDb::confGetParam('count_orphans') === null) {
+        if ((\Piwigo\Config\Config::all()['count_orphans'] ?? null) === null) {
             // we don't care about the list of image_ids, we only care about the number
             // of orphans, so let's use a faster method than calling count(getOrphans())
             $counter = $this->repo->countAllImages() - $this->repo->countImagesInCategories();
             \Piwigo\Config\ConfigDb::confUpdateParam('count_orphans', $counter, true);
         }
 
-        return \Piwigo\Config\ConfigDb::confGetParam('count_orphans');
+        return \Piwigo\Config\Config::all()['count_orphans'] ?? null;
     }
 
     /**

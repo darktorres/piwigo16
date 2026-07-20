@@ -47,9 +47,9 @@ final class PageHeaderRenderer
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_page_header');
 
-        $show_mobile_app_banner = \Piwigo\Config\ConfigDb::confGetParam('show_mobile_app_banner_in_gallery', false);
+        $show_mobile_app_banner = \Piwigo\Config\Config::all()['show_mobile_app_banner_in_gallery'] ?? false;
         if (defined('IN_ADMIN') and IN_ADMIN) {
-            $show_mobile_app_banner = \Piwigo\Config\ConfigDb::confGetParam('show_mobile_app_banner_in_admin', true);
+            $show_mobile_app_banner = \Piwigo\Config\Config::all()['show_mobile_app_banner_in_admin'] ?? true;
         }
 
         /** @var string $conf_gallery_title */

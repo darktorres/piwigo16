@@ -629,8 +629,7 @@ SELECT
     {
         $news = null;
 
-        $data_location = \Piwigo\Config\ConfigDb::confGetParam('data_location');
-        $data_location = is_string($data_location) ? $data_location : '';
+        $data_location = \Piwigo\Config\Config::dataLocation();
         $lang_code = \Piwigo\Core\Lang::langInfo()['code'] ?? null;
         $lang_code = is_string($lang_code) ? $lang_code : '';
         $cache_path = PHPWG_ROOT_PATH . $data_location . 'cache/piwigo_latest_news-' . $lang_code . '.cache.php';

@@ -250,8 +250,7 @@ final readonly class GroupService
             return false;
         }
 
-        $emailAdminOnNewUser = \Piwigo\Config\ConfigDb::confGetParam('email_admin_on_new_user', 'undefined');
-        $emailAdminOnNewUser = is_scalar($emailAdminOnNewUser) ? (string) $emailAdminOnNewUser : 'undefined';
+        $emailAdminOnNewUser = \Piwigo\Config\Config::emailAdminOnNewUser();
         if ((bool) preg_match('/^group:(\d+)$/', $emailAdminOnNewUser, $matches)) {
             foreach ($groupIds as $groupId) {
                 if ($groupId === (int) $matches[1]) {

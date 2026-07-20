@@ -219,7 +219,7 @@ final class GalleryController implements ControllerInterface
             // Standard Pages
             // Some themes will want to use standard pages so this will let
             // them know
-            $template->assign('use_standard_pages', \Piwigo\Config\ConfigDb::confGetParam('use_standard_pages', false));
+            $template->assign('use_standard_pages', \Piwigo\Config\Config::all()['use_standard_pages'] ?? false);
 
             // -------------------------------------------------- page title
             $title = $section_context->title;

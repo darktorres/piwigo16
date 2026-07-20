@@ -660,14 +660,14 @@ SELECT
      */
     public function addFormat(string $source_filepath, string $format_ext, int|string $format_of): string
     {
-        if (! (bool) \Piwigo\Config\ConfigDb::confGetParam('enable_formats', false)) {
+        if (! \Piwigo\Config\Config::isFormatsEnabled()) {
             die('[' . __METHOD__ . '] formats are disabled');
         }
 
-        $authorized_format_exts = \Piwigo\Config\ConfigDb::confGetParam('format_ext', ['cr2']);
-        // ConfigDb::confGetParam() is inherently mixed (config values come straight
-        // from the $conf global); only elements that are actually strings can
-        // be safely passed to in_array()/implode() below.
+        $authorized_format_exts = \Piwigo\Config\Config::all()['format_ext'] ?? ['cr2'];
+        // Config::all() is inherently mixed (an untyped bag); only elements
+        // that are actually strings can be safely passed to
+        // in_array()/implode() below.
         $authorized_format_exts = is_array($authorized_format_exts) ? array_filter($authorized_format_exts, is_string(...)) : ['cr2'];
 
         if (! in_array($format_ext, $authorized_format_exts, true)) {
@@ -782,11 +782,11 @@ SELECT
             return $representative_ext;
         }
 
-        $ext = \Piwigo\Config\ConfigDb::confGetParam('pdf_representative_ext', 'jpg');
+        $ext = \Piwigo\Config\Config::all()['pdf_representative_ext'] ?? 'jpg';
         if (! is_string($ext)) {
             $ext = 'jpg';
         }
-        $jpg_quality = \Piwigo\Config\ConfigDb::confGetParam('pdf_jpg_quality', 90);
+        $jpg_quality = \Piwigo\Config\Config::all()['pdf_jpg_quality'] ?? 90;
         if (! is_numeric($jpg_quality)) {
             $jpg_quality = 90;
         }

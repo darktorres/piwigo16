@@ -260,7 +260,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         if (
             $theme != 'default'
             and in_array(\Piwigo\Core\PageFilterHelper::scriptBasename(), ['identification', 'register', 'password', 'profile'])
-            and ((bool) ($themeconf['use_standard_pages'] ?? false) or (bool) \Piwigo\Config\ConfigDb::confGetParam('use_standard_pages', false))
+            and ((bool) ($themeconf['use_standard_pages'] ?? false) or (bool) (\Piwigo\Config\Config::all()['use_standard_pages'] ?? false))
         ) {
             $theme = 'standard_pages';
             $themeconf = $this->load_themeconf($root . '/' . $theme);

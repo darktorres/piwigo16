@@ -84,10 +84,7 @@ final class SearchController implements ControllerInterface
         ];
 
         // list of filters in user preferences
-        $raw_filters_views = \Piwigo\Config\ConfigDb::confGetParam('filters_views', \Piwigo\Config\Config::defaultFiltersViews());
-        $filters_views = (is_array($raw_filters_views) or is_string($raw_filters_views))
-            ? \Piwigo\Core\ArrayHelper::safeUnserialize($raw_filters_views)
-            : [];
+        $filters_views = \Piwigo\Config\Config::filtersViews() ?? \Piwigo\Config\Config::defaultFiltersViews();
 
         // change the name of the keys so that they can be used with this
         // part of the program
@@ -103,12 +100,10 @@ final class SearchController implements ControllerInterface
         ];
 
         $filters_conf = [];
-        if (is_array($filters_views)) {
-            foreach ($filters_views as $filter_name => $filter_value) {
-                $key = $filter_rename_for[$filter_name] ?? $filter_name;
+        foreach ($filters_views as $filter_name => $filter_value) {
+            $key = $filter_rename_for[$filter_name] ?? $filter_name;
 
-                $filters_conf[$key] = $filter_value;
-            }
+            $filters_conf[$key] = $filter_value;
         }
 
         // get all default filters

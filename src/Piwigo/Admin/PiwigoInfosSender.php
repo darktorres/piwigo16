@@ -89,7 +89,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
             // its return stays mixed even though this specific param is always
             // an int of seconds; narrow it before splicing into strtotime()'s
             // relative-time string.
-            $period = \Piwigo\Config\ConfigDb::confGetParam('send_piwigo_infos_period', 7 * 24 * 60 * 60);
+            $period = \Piwigo\Config\Config::all()['send_piwigo_infos_period'] ?? 7 * 24 * 60 * 60;
             $period = is_numeric($period) ? (int) $period : 7 * 24 * 60 * 60;
             if (strtotime($lastNoticeStr) < strtotime($period . ' second ago')) {
                 $doSend = true;
@@ -591,7 +591,7 @@ SELECT
 
         // conf_get_param() reads $conf with a dynamic (non-literal) key, so its
         // return stays mixed even though this param is always a URL string.
-        $updateUrlBase = \Piwigo\Config\ConfigDb::confGetParam('send_piwigo_infos_update_url', PHPWG_URL);
+        $updateUrlBase = \Piwigo\Config\Config::all()['send_piwigo_infos_update_url'] ?? PHPWG_URL;
         $updateUrlBase = is_string($updateUrlBase) ? $updateUrlBase : PHPWG_URL;
         $url = $updateUrlBase . '/ws.php';
 

@@ -4,7 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Events;
+use Doctrine\ORM\ORMSetup;
 use PHPUnit\Framework\TestCase;
+use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigRepository;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\TablePrefixListener;
 
 /**
  * Shared infrastructure for integration tests.
@@ -93,9 +100,37 @@ abstract class IntegrationTestCase extends TestCase
         \Piwigo\Core\CurrentLogger::reset();
         \Piwigo\Core\ProcessCache::reset();
         \Piwigo\Config\Config::reset();
+        // Harmless even for test classes that never call
+        // buildConfigRepository()/wire CurrentConfigService::set() at
+        // all -- reset() on an already-unset registry is a no-op, same
+        // nullable-safe shape as CurrentPersistentCache::reset().
+        \Piwigo\Config\CurrentConfigService::reset();
         \Piwigo\Core\PageState::reset();
         \Piwigo\Core\FilterState::reset();
         parent::tearDown();
+    }
+
+    /**
+     * Opt-in helper for the Integration tests that need a real, DB-backed
+     * ConfigRepository -- Doctrine's ORM stack isn't part of this base
+     * class's own setUp() (most Integration tests never touch it), so
+     * this mirrors setUpConnectionFromEnv()'s own not-auto-called shape:
+     * call it explicitly from a subclass's setUp() when the test actually
+     * exercises a Tier 2 class's write path (Legacy Coupling Retirement
+     * Phase 5) or otherwise needs a real ConfigService/ConfigRepository.
+     */
+    protected function buildConfigRepository(): ConfigRepository
+    {
+        $conn = DbConnection::build();
+        $ormConfig = ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 2) . '/src/Piwigo'], isDevMode: true);
+        $ormConfig->enableNativeLazyObjects(true);
+        $em = new EntityManager($conn, $ormConfig);
+        $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener());
+
+        $repo = $em->getRepository(ConfigEntry::class);
+        self::assertInstanceOf(ConfigRepository::class, $repo);
+
+        return $repo;
     }
 
     protected function setUpConnectionFromEnv(): void

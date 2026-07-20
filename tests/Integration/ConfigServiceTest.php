@@ -4,17 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Events;
-use Doctrine\ORM\ORMSetup;
 use Piwigo\Config\Config;
-use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
-use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\TablePrefixListener;
 
 final class ConfigServiceTest extends IntegrationTestCase
 {
@@ -38,7 +30,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $this->service = new ConfigService($this->buildRepo());
+        $this->service = new ConfigService($this->buildConfigRepository());
     }
 
     public function test_loadConfFromDb_merges_every_row_with_boolean_coercion(): void
@@ -90,7 +82,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         $this->service->confDeleteParam($param);
         self::assertFalse(Config::has($param));
 
-        $freshService = new ConfigService($this->buildRepo());
+        $freshService = new ConfigService($this->buildConfigRepository());
         $freshService->loadConfFromDb($param, false);
         self::assertFalse(Config::has($param));
     }
@@ -101,7 +93,7 @@ final class ConfigServiceTest extends IntegrationTestCase
 
         $this->service->confUpdateParam($param, ['a', 'b', 'c']);
 
-        $repo = $this->buildRepo();
+        $repo = $this->buildConfigRepository();
         $entry = $repo->find($param);
         self::assertNotNull($entry);
         self::assertSame(serialize(['a', 'b', 'c']), $entry->value);
@@ -115,7 +107,7 @@ final class ConfigServiceTest extends IntegrationTestCase
 
         $this->service->confUpdateParam($param, false);
 
-        $repo = $this->buildRepo();
+        $repo = $this->buildConfigRepository();
         $entry = $repo->find($param);
         self::assertNotNull($entry);
         self::assertSame('false', $entry->value);
@@ -126,19 +118,5 @@ final class ConfigServiceTest extends IntegrationTestCase
     public function test_pwgIsDbconfWriteable_returns_true_against_a_real_writable_db(): void
     {
         self::assertTrue($this->service->pwgIsDbconfWriteable());
-    }
-
-    private function buildRepo(): ConfigRepository
-    {
-        $conn = DbConnection::build();
-        $ormConfig = ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 2) . '/src/Piwigo'], isDevMode: true);
-        $ormConfig->enableNativeLazyObjects(true);
-        $em = new EntityManager($conn, $ormConfig);
-        $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener());
-
-        $repo = $em->getRepository(ConfigEntry::class);
-        self::assertInstanceOf(ConfigRepository::class, $repo);
-
-        return $repo;
     }
 }

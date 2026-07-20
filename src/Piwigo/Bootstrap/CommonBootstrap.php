@@ -6,6 +6,7 @@ namespace Piwigo\Bootstrap;
 
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -59,6 +60,13 @@ use Piwigo\Users\CurrentUser;
  * DB), where an unconditional loadConfFromDb() would throw; every real
  * request reaching here has already passed common.inc.php's
  * install-check, so the table is guaranteed to exist.
+ *
+ * Phase 5 adds CurrentConfigService::set($configService), right after
+ * the same resolution -- wires the per-request static registry Tier 2
+ * classes (static utilities, or classes constructed throwaway/pre-
+ * container so a constructor-injected ConfigService is impossible) read
+ * lazily via CurrentConfigService::get() when they need to persist a
+ * config write. See CurrentConfigService's own docblock.
  */
 final class CommonBootstrap
 {
@@ -74,6 +82,7 @@ final class CommonBootstrap
         if (! $configService instanceof ConfigService) {
             throw new \LogicException('Container returned an unexpected type for ' . ConfigService::class);
         }
+        CurrentConfigService::set($configService);
         $configService->loadConfFromDb();
         CurrentUser::attachGlobals();
         PageState::attachGlobals();

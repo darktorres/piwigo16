@@ -324,6 +324,19 @@ test('StorageRegistry::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
+test('CurrentConfigService::reset() is only called from tests/', function (): void {
+    // Same test-isolation rationale as Config::reset() above.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'CurrentConfigService::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'CurrentConfigService::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'CurrentConfigService::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
 // P16: src/Piwigo/ is the typed source of truth for the 52 retired
 // include/constants.php constants (AppInfo/AccessLevel/ActivitySystem/
 // ValidationPattern/Tables/Config accessors) -- a regression guard, not a

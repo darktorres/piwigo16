@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Bootstrap;
 
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ShutdownHandler;
@@ -34,6 +36,15 @@ use Symfony\Component\Console\Input\ArgvInput;
  * directly via DbCredentials::fromEnv(), never through Config, so this
  * never surfaced before). Mirrors CommonBootstrap::run()'s equivalent
  * P13 addition on the HTTP path exactly.
+ *
+ * Phase 5 adds CurrentConfigService::set($configService) -- resolve-and-
+ * set only, deliberately not followed by ConfigService::loadConfFromDb()
+ * the way CommonBootstrap::run() also calls it: that call is HTTP-only,
+ * since CLI commands can run before the `config` table exists (e.g.
+ * migrations:migrate on a fresh DB), where an unconditional
+ * loadConfFromDb() would throw. Merely resolving/injecting ConfigService
+ * doesn't touch the DB (Doctrine repositories are lazy), so that part is
+ * safe here even pre-migration.
  */
 final class CliBootstrap
 {
@@ -65,6 +76,11 @@ final class CliBootstrap
         Kernel::boot($paths);
         CurrentUser::attachGlobals();
         $container = Kernel::container();
+        $configService = $container->get(ConfigService::class);
+        if (! $configService instanceof ConfigService) {
+            throw new \LogicException('Container returned an unexpected type for ' . ConfigService::class);
+        }
+        CurrentConfigService::set($configService);
 
         $commandClasses = require dirname(__DIR__, 3) . '/config/commands.php';
         if (! is_array($commandClasses)) {

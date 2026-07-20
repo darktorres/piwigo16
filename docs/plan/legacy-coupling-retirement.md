@@ -1691,11 +1691,70 @@ first-ever-creation key, and the failure mode if it ever hit would be a
 thrown Doctrine/DBAL exception, not silent data loss. A real atomic-upsert
 fix is a reasonable future improvement to `ConfigService` itself.
 
-## Phase 6 — TODO/FIXME/XXX triage
+## Phase 6 — TODO/FIXME/XXX triage. DONE.
 
-27 markers found across `src/Piwigo/`. Read each individually: fix
-genuine leftover work, or convert to a proper explanatory comment (or
-delete) if stale/already resolved.
+Triaged all 28 real TODO/FIXME/XXX markers (27 originally scoped across
+`src/Piwigo/` + 1 found outside that scoping, in `include/`, during
+planning — the same "search the whole repo, not just curated subfolders"
+gap Phase 4's own retrospective already flagged). Every marker got a
+concrete verdict reached through individual investigation (tracing real
+call sites, cross-referencing the `16.x-rewrite` reference branch,
+`tools/triggers_list.php`, and `composer.json`'s required extensions),
+not a pattern-matched guess — an adversarial validation pass after the
+initial triage caught and corrected several conclusions before any code
+changed (see below). Commits `5d59879c2` (6a, real fixes) and `69d5b966f`
+(6b, cleanup) — full write-up in project memory
+(`project_p24_phase6_complete.md`); summary here:
+
+- **6a (4 real bugs fixed, 5 files)** — `Bootstrap/RequestBootstrap.php`:
+  removed a one-time 2022 `order_by` data migration whose own comment
+  asked for removal once 2025 arrived (self-healed on every request
+  since). `Ws/PwgCore.php`: `pwg.getInfos`'s `cache_size` field returned
+  a hardcoded `4242` — replaced with `null` (matching the real
+  `pwg.getCacheSize` method's own "couldn't determine" sentinel), not the
+  real computation, which shells out via `exec('du -sk ...')` and would
+  have been a real performance/security-surface regression on a
+  general-purpose endpoint. `Admin/updates.php` +
+  `Admin/Extensions/CoreUpdateService.php` (the latter had no TODO
+  marker, found while investigating the former): both redirected to a
+  never-real `?page=plugin-<dirname>` URL, a leftover from when the
+  update system was itself shipped as a plugin — live-verified the old
+  target actually threw a real HTTP 500; both now redirect to the real
+  Updates page, confirmed reachable via `UpdatesPwgPageRenderer`'s real
+  form submission. `Admin/Upload/UploadService.php`: `needResize()`'s
+  max-dimension check didn't account for EXIF orientation, so a portrait
+  photo stored with landscape raw pixels could be compared on the wrong
+  axis — and this check gates a permanent resize of the stored original,
+  not just a derivative. Fixed by reusing the existing
+  `pwg_image::get_rotation_angle()` detection already used elsewhere in
+  the same file.
+- **6b (19 locations cleaned up, 16 files)** — 5 stale TODOs deleted
+  (confirmed already-resolved: a trigger dispatch that already exists one
+  layer up, a language string the code already matches, references to
+  functions that never existed in this codebase, a privacy concern its
+  own next sentence already answered, a hardcoded value with no pending
+  alternate branch). 13 items (14 locations) converted into accurate,
+  individually-verified explanatory comments — including three
+  deliberate "real gap, not implemented" scope calls matching this
+  phase's own discipline (a per-user album-position preference, a
+  config-file-only setting missing its admin UI, a missing
+  descendant-representative fallback) and a legacy `array_push()`
+  pattern's real (traced, not assumed) behavior.
+
+**Adversarial validation caught real errors before they shipped**: a
+reclassification (`Search/SearchFilterRenderer.php`'s admin-page link
+"bug" turned out to be functionally inert — a `strip_tags()` call one
+line later in its own caller strips whatever URL was passed, a fact the
+initial read never traced far enough to notice), a wrong proposed fix
+(the obvious "just call the real cache-size method" fix for
+`Ws/PwgCore.php` would have introduced a real `exec()`-shell-out
+performance regression), and an overstated safety claim (a legacy
+`array_push()` pattern first declared "harmless no-op" was, on closer
+inspection with concrete example values, only harmless in every
+realistic case — not provably safe in a pathological one). Same
+discipline this project's Phase 5 adversarial-validation rounds already
+established: verify every claim against the actual code, not against how
+plausible it sounds.
 
 ## Phase 7 — Unit test coverage expansion
 

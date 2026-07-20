@@ -8,6 +8,7 @@ use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -50,6 +51,7 @@ final class ElementSetRanksPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     public function render(): void
@@ -153,7 +155,7 @@ final class ElementSetRanksPageRenderer
             ]
         );
 
-        $base_url = get_root_url() . 'admin.php';
+        $base_url = $this->urlService->getRootUrl() . 'admin.php';
 
         $query = '
 SELECT *
@@ -174,13 +176,13 @@ SELECT *
         // Navigation path
         $navigation = $htmlRenderer->getCatDisplayNameCache(
             $category['uppercats'],
-            get_root_url() . 'admin.php?page=album-'
+            $this->urlService->getRootUrl() . 'admin.php?page=album-'
         );
 
         $template->assign(
             [
                 'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
-                'F_ACTION' => $base_url . get_query_string_diff([]),
+                'F_ACTION' => $base_url . $this->urlService->getQueryStringDiff([]),
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
             ]

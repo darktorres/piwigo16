@@ -11,6 +11,7 @@ use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -89,6 +90,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     /**
@@ -475,12 +477,12 @@ WHERE param = \'' . $row['param'] . '\'
         $tabsheet->select($page_section);
         $tabsheet->assign();
 
-        $action = get_root_url() . 'admin.php?page=configuration';
+        $action = $this->urlService->getRootUrl() . 'admin.php?page=configuration';
         $action .= '&amp;section=' . $page_section;
 
         $template->assign(
             [
-                'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=configuration',
+                'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=configuration',
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
                 'F_ACTION' => $action,

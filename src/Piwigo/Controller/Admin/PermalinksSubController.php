@@ -8,6 +8,7 @@ use Piwigo\Admin\tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -56,6 +57,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     #[\Override]
@@ -101,7 +103,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         // | tabs                                                                  |
         // +-----------------------------------------------------------------------+
 
-        $my_base_url = get_root_url() . 'admin.php?page=';
+        $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=';
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('albums');
@@ -177,7 +179,7 @@ SELECT id, permalink, uppercats, global_rank
             '#old_permalinks'
         );
 
-        $url_del_base = get_root_url() . 'admin.php?page=permalinks';
+        $url_del_base = $this->urlService->getRootUrl() . 'admin.php?page=permalinks';
         $query = 'SELECT * FROM ' . Tables::oldPermalinks();
         if ((bool) count($sort_by)) {
             $query .= ' ORDER BY ' . $sort_by[0];
@@ -192,7 +194,7 @@ SELECT id, permalink, uppercats, global_rank
             $cat_id_str = (is_int($cat_id_raw) || is_string($cat_id_raw)) ? (string) $cat_id_raw : '';
             $row['name'] = $htmlRenderer->getCatDisplayNameCache($cat_id_str);
             $row['U_DELETE'] =
-                add_url_params(
+                $this->urlService->addUrlParams(
                     $url_del_base,
                     [
                         'delete_permanent' => $row['permalink'],
@@ -204,7 +206,7 @@ SELECT id, permalink, uppercats, global_rank
 
         $template->assign([
             'PWG_TOKEN' => $pwg_token,
-            'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=permalinks',
+            'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=permalinks',
             'deleted_permalinks' => $deleted_permalinks,
             'ADMIN_PAGE_TITLE' => l10n('Albums'),
         ]);
@@ -258,7 +260,7 @@ SELECT id, permalink, uppercats, global_rank
 
             if ($field !== @$_GET[$get_param]) {
                 if ($default_field != $field) { // the first should be the default
-                    $url = add_url_params($url, [
+                    $url = $this->urlService->addUrlParams($url, [
                         $get_param => $field,
                     ]);
                 } elseif (! isset($_GET[$get_param])) {

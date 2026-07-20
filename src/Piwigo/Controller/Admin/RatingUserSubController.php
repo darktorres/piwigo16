@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\RatingUserPageRenderer;
+use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -16,10 +17,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class RatingUserSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly UrlServiceInterface $urlService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new RatingUserPageRenderer()
-            ->render();
+            ->render($this->urlService);
     }
 }

@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
@@ -20,7 +21,7 @@ use Piwigo\Rate\RateRepository;
  */
 final class RatingPageRenderer
 {
-    public function render(): void
+    public function render(UrlServiceInterface $urlService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -96,12 +97,12 @@ final class RatingPageRenderer
         $template->assign(
             [
                 'navbar' => new \Piwigo\Core\PaginationService()
-                    ->createNavigationBar(PHPWG_ROOT_PATH . 'admin.php' . get_query_string_diff(['start', 'del']), $nb_images, $start, $elements_per_page),
+                    ->createNavigationBar(PHPWG_ROOT_PATH . 'admin.php' . $urlService->getQueryStringDiff(['start', 'del']), $nb_images, $start, $elements_per_page),
                 'F_ACTION' => PHPWG_ROOT_PATH . 'admin.php',
                 'DISPLAY' => $elements_per_page,
                 'NB_ELEMENTS' => $nb_elements,
                 'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []),
-                'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['categories']),
+                'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($urlService, ['categories']),
             ]
         );
 
@@ -147,7 +148,7 @@ final class RatingPageRenderer
         foreach ($images as $image) {
             $thumbnail_src = DerivativeImage::thumb_url($image);
 
-            $image_url = get_root_url() . 'admin.php?page=photo-' . $image['id'];
+            $image_url = $urlService->getRootUrl() . 'admin.php?page=photo-' . $image['id'];
 
             $rates = $rate_repository->findRateRowsForElement($image['id']);
             $nb_rates = count($rates);

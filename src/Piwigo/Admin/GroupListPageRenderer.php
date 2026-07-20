@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 
@@ -16,6 +17,7 @@ final class GroupListPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     public function render(): void
@@ -40,17 +42,17 @@ final class GroupListPageRenderer
 
         $template->assign(
             [
-                'F_ADD_ACTION' => get_root_url() . 'admin.php?page=group_list',
+                'F_ADD_ACTION' => $this->urlService->getRootUrl() . 'admin.php?page=group_list',
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
-                'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['groups', 'users']),
+                'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),
             ]
         );
 
         $group_repo = new GroupRepository(DbConnection::build());
         $groups = $group_repo->findAllBasic();
 
-        $admin_url = get_root_url() . 'admin.php?page=';
+        $admin_url = $this->urlService->getRootUrl() . 'admin.php?page=';
         $perm_url = $admin_url . 'group_perm&amp;group_id=';
         $users_url = $admin_url . 'user_list&amp;group=';
         $del_url = $admin_url . 'group_list&amp;delete=';

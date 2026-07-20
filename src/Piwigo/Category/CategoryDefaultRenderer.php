@@ -7,6 +7,7 @@ namespace Piwigo\Category;
 use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\TemplateInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -27,6 +28,7 @@ final readonly class CategoryDefaultRenderer
         private TemplateInterface $template,
         private ImageRepository $imageRepo,
         private CommentCounterInterface $commentCounter,
+        private UrlServiceInterface $urlService,
     ) {}
 
     /**
@@ -95,8 +97,8 @@ final readonly class CategoryDefaultRenderer
             // define category slideshow url
             $row = reset($pictures);
             $slideshowUrl =
-              add_url_params(
-                  duplicate_picture_url(
+              $this->urlService->addUrlParams(
+                  $this->urlService->duplicatePictureUrl(
                       [
                           'image_id' => $row['id'],
                           'image_file' => $row['file'],
@@ -129,7 +131,7 @@ final readonly class CategoryDefaultRenderer
             $imageId = $row['id'] ?? '';
 
             // link on picture.php page
-            $url = duplicate_picture_url(
+            $url = $this->urlService->duplicatePictureUrl(
                 [
                     'image_id' => $imageId,
                     'image_file' => $row['file'],

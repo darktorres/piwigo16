@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\CommentsPageRenderer;
+use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -14,10 +15,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class CommentsSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly UrlServiceInterface $urlService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new CommentsPageRenderer()
-            ->render();
+            ->render($this->urlService);
     }
 }

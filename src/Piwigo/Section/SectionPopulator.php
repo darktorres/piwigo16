@@ -10,6 +10,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TemplateInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Search\SearchService;
@@ -61,6 +62,7 @@ final readonly class SectionPopulator
         private SearchService $searchService,
         private UserService $userService,
         private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
     ) {}
 
     public function populate(): void
@@ -109,7 +111,7 @@ final readonly class SectionPopulator
         // execution. No downstream code reads SectionContextRegistry::
         // current() mid-request today (confirmed via a full-repo grep),
         // so deferring the one real set() call to the end is safe.
-        $url_parse = new SectionInitializer($this->htmlRenderer, $this->repo, $this->redirectService)
+        $url_parse = new SectionInitializer($this->htmlRenderer, $this->repo, $this->redirectService, $this->urlService)
             ->parse();
 
         $page['root_path'] = $url_parse->rootPath;
@@ -160,13 +162,16 @@ final readonly class SectionPopulator
             }
         }
 
-        $page = array_merge($page, parse_well_known_params_url($tokens, $next_token));
+        $page = array_merge($page, $this->urlService->parseWellKnownParamsUrl($tokens, $next_token));
 
         // $page['section'] is set exactly once, above (or already set by
-        // parse_section_url()/SectionInitializer before this method ran) --
-        // never reassigned again below, so a single snapshot is safe and
-        // matches every $page['section'] read for the rest of this method.
-        $section = is_string($page['section'] ?? null) ? $page['section'] : '';
+        // UrlService::parseSectionUrl()/SectionInitializer before this method
+        // ran) -- never reassigned again below, so a single snapshot is safe
+        // and matches every $page['section'] read for the rest of this
+        // method. PHPStan proves the offset always exists at this point now
+        // that parseWellKnownParamsUrl()'s return shape is precise (it never
+        // sets 'section' -- see that method's own docblock).
+        $section = is_string($page['section']) ? $page['section'] : '';
 
         // access a picture only by id, file or id-file without given section
         if (\Piwigo\Core\PageFilterHelper::scriptBasename() === 'picture' and $section === 'categories' and
@@ -463,7 +468,7 @@ SELECT id
                     $page,
                     [
                         'items' => $search_result['items'],
-                        'title' => '<a href="' . duplicate_index_url([
+                        'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
                                     . l10n('Search results') . '</a>',
@@ -479,7 +484,7 @@ SELECT id
                 $page = array_merge(
                     $page,
                     [
-                        'title' => '<a href="' . duplicate_index_url([
+                        'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
                                     . l10n('Favorites') . '</a>',
@@ -493,7 +498,7 @@ DELETE FROM ' . Tables::favorites() . '
   WHERE user_id = ' . $user_id_sql . '
 ;';
                     $this->repo->executeStatement($query);
-                    $this->redirectService->redirect(make_index_url([
+                    $this->redirectService->redirect($this->urlService->makeIndexUrl([
                         'section' => 'favorites',
                     ]));
                 } else {
@@ -518,8 +523,8 @@ SELECT image_id
                         $template->assign(
                             'favorite',
                             [
-                                'U_FAVORITE' => add_url_params(
-                                    make_index_url([
+                                'U_FAVORITE' => $this->urlService->addUrlParams(
+                                    $this->urlService->makeIndexUrl([
                                         'section' => 'favorites',
                                     ]),
                                     [
@@ -562,7 +567,7 @@ SELECT id
                 $page = array_merge(
                     $page,
                     [
-                        'title' => '<a href="' . duplicate_index_url([
+                        'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
                                     . l10n('Recent photos') . '</a>',
@@ -577,7 +582,7 @@ SELECT id
                 $page = array_merge(
                     $page,
                     [
-                        'title' => '<a href="' . duplicate_index_url([
+                        'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
                                     . l10n('Recent albums') . '</a>',
@@ -609,7 +614,7 @@ SELECT id
                 $page = array_merge(
                     $page,
                     [
-                        'title' => '<a href="' . duplicate_index_url([
+                        'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
                                     . $top_number . ' ' . l10n('Most visited') . '</a>',
@@ -642,7 +647,7 @@ SELECT id
                 $page = array_merge(
                     $page,
                     [
-                        'title' => '<a href="' . duplicate_index_url([
+                        'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
                                     . $top_number . ' ' . l10n('Best rated') . '</a>',
@@ -674,7 +679,7 @@ SELECT id
                 $page = array_merge(
                     $page,
                     [
-                        'title' => '<a href="' . duplicate_index_url([
+                        'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
                                     . l10n('Random photos') . '</a>',
@@ -690,15 +695,21 @@ SELECT id
         if (isset($page['chronology_field'])) {
             unset($page['is_homepage']);
 
-            $calendar_field = is_string($page['chronology_field']) ? $page['chronology_field'] : '';
+            // parseWellKnownParamsUrl()'s return shape guarantees
+            // chronology_field is a real string whenever set (the
+            // enclosing isset() above already proved it's set).
+            $calendar_field = $page['chronology_field'];
             $calendar_style = is_string($page['chronology_style'] ?? null) ? $page['chronology_style'] : null;
             $calendar_view = is_string($page['chronology_view'] ?? null) ? $page['chronology_view'] : null;
-            $calendar_date_raw = is_array($page['chronology_date'] ?? null) ? $page['chronology_date'] : [];
-            $calendar_date = array_values(array_filter($calendar_date_raw, static fn (mixed $v): bool => is_int($v) || is_string($v)));
+            // parseWellKnownParamsUrl()'s return shape guarantees
+            // chronology_date is already a real list<string> whenever set --
+            // unlike $page['items'] below, no further element filtering is
+            // needed.
+            $calendar_date = is_array($page['chronology_date'] ?? null) ? $page['chronology_date'] : [];
             $calendar_items_raw = is_array($page['items'] ?? null) ? $page['items'] : [];
             $calendar_items = array_values(array_filter($calendar_items_raw, static fn (mixed $v): bool => is_int($v) || is_string($v)));
 
-            $calendar_result = new CalendarRenderer($this->htmlRenderer, $this->template)
+            $calendar_result = new CalendarRenderer($this->htmlRenderer, $this->template, $this->urlService)
                 ->render(
                     $section,
                     $page_category,
@@ -719,11 +730,11 @@ SELECT id
 
         // title update
         if (isset($page['title'])) {
-            // get_gallery_home_url() is declared to return `mixed`
-            // (include/functions_url.inc.php); every real branch of its body
-            // actually returns a string, so this narrows locally rather than
+            // getGalleryHomeUrl() is declared to return `mixed`
+            // (Url\UrlService); every real branch of its body actually
+            // returns a string, so this narrows locally rather than
             // widening this concatenation's context
-            $gallery_home_url = get_gallery_home_url();
+            $gallery_home_url = $this->urlService->getGalleryHomeUrl();
             $gallery_home_url = is_string($gallery_home_url) ? $gallery_home_url : '';
             $page['section_title'] = '<a href="' . $gallery_home_url . '">' . l10n('Home') . '</a>';
             $title_value = is_string($page['title']) ? $page['title'] : '';
@@ -759,7 +770,7 @@ SELECT id
             if (self::needsPermalinkRedirect($category_permalink, $category_url_style, $hit_by_cat_url_name, $hit_by_cat_permalink, $expected_cat_url_name)) {
                 $redirect_category_id = $page_category['id'] ?? null;
                 $this->categoryService->checkRestrictions(is_numeric($redirect_category_id) ? (int) $redirect_category_id : 0, $this->htmlRenderer, $this->redirectService);
-                $redirect_url = \Piwigo\Core\PageFilterHelper::scriptBasename() === 'picture' ? duplicate_picture_url() : duplicate_index_url();
+                $redirect_url = \Piwigo\Core\PageFilterHelper::scriptBasename() === 'picture' ? $this->urlService->duplicatePictureUrl() : $this->urlService->duplicateIndexUrl();
 
                 if (! headers_sent()) { // this is a permanent redirection
                     $this->htmlRenderer->setStatusHeader(301);

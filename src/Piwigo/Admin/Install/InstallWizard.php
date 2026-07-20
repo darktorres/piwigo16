@@ -28,6 +28,7 @@ use Piwigo\Http\HttpClientService;
 use Piwigo\Mail\MailService;
 use Piwigo\Session\PwgSession;
 use Piwigo\Template\Template;
+use Piwigo\Url\UrlService;
 
 /**
  * install.php's orchestration, ported verbatim from that script's former
@@ -670,7 +671,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
                     Lang::buildArgs('', ''),
                     Lang::buildArgs('Here are your connection settings', ''),
                     Lang::buildArgs('', ''),
-                    Lang::buildArgs('Link: %s', get_absolute_root_url()),
+                    Lang::buildArgs('Link: %s', new UrlService(new HtmlService())->getAbsoluteRootUrl()),
                     Lang::buildArgs('Username: %s', $this->adminName),
                     Lang::buildArgs('Password: ********** (no copy by email)', ''),
                     Lang::buildArgs('Email: %s', $this->adminMail),

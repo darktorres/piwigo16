@@ -12,6 +12,7 @@ use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
@@ -60,6 +61,7 @@ final class BatchManagerGlobalPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     private static function permissionService(Connection $conn): PermissionService
@@ -170,7 +172,7 @@ final class BatchManagerGlobalPageRenderer
         }
 
         $get_page = isset($_GET['page']) && is_string($_GET['page']) ? $_GET['page'] : '';
-        $redirect_url = get_root_url() . 'admin.php?page=' . $get_page;
+        $redirect_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $get_page;
 
         // $prefilter never changes after the assignment above; narrowed once
         // here and reused for every `== 'xxx'` comparison below ($bulk_manager_filter
@@ -468,7 +470,7 @@ DELETE
                             count($collection)
                         );
 
-                        $redirect_url = get_root_url() . 'admin.php?page=' . $get_page;
+                        $redirect_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $get_page;
                         $redirect = true;
                     } else {
                         \Piwigo\Core\PageState::current()->addError(l10n('No photo can be deleted'));
@@ -526,7 +528,7 @@ DELETE
             'batch_manager_global' => 'batch_manager_global.tpl',
         ]);
 
-        $base_url = get_root_url() . 'admin.php';
+        $base_url = $this->urlService->getRootUrl() . 'admin.php';
 
         // $catElementsId is a list of scalar image ids; narrowed once here
         // for every use below (including the FilterPanelRenderer call).
@@ -534,7 +536,7 @@ DELETE
         $page_start = $pageStart;
 
         new FilterPanelRenderer()
-            ->render($template, $base_url, $collection, $cat_elements_id, $page_start);
+            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService);
 
         // +-------------------------------------------------------------------+
         // |                            caddie options                             |
@@ -610,7 +612,7 @@ DELETE
 
         if (count($cat_elements_id) > 0) {
             $nav_bar = new \Piwigo\Core\PaginationService()
-                ->createNavigationBar($base_url . get_query_string_diff(['start']), count($cat_elements_id), $page_start, $nb_images);
+                ->createNavigationBar($base_url . $this->urlService->getQueryStringDiff(['start']), count($cat_elements_id), $page_start, $nb_images);
             $template->assign('navbar', $nav_bar);
 
             $is_category = false;
@@ -695,7 +697,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
                             'thumb' => new DerivativeImage($thumb_params, $src_image),
                             'TITLE' => $ttitle,
                             'FILE_SRC' => DerivativeImage::url(ImageStdParams::LARGE, $src_image),
-                            'U_EDIT' => get_root_url() . 'admin.php?page=photo-' . $row_id,
+                            'U_EDIT' => $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $row_id,
                         ]
                     )
                 );
@@ -706,7 +708,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
         $template->assign([
             'nb_thumbs_page' => $nb_thumbs_page,
             'nb_thumbs_set' => count($cat_elements_id),
-            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['tags', 'categories']),
+            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
         ]);
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_element_set_global');

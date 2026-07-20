@@ -58,6 +58,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Group\GroupRepository;
     use Piwigo\Html\HtmlService;
     use Piwigo\Mail\MailService;
+    use Piwigo\Url\UrlService;
     use Piwigo\Users\UserRepository;
     use Piwigo\Users\UserService;
 
@@ -169,7 +170,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_register_user_rejects_an_empty_login(): void
         {
-            $result = $this->service->registerUser('', 'password123', null);
+            $result = $this->service->registerUser('', 'password123', null, new UrlService(new HtmlService()));
 
             self::assertNull($result['userId']);
             self::assertNotSame([], $result['errors']);
@@ -180,7 +181,7 @@ namespace Piwigo\Tests\Integration {
         {
             // 'guest' (fixture) has no email on file, so the SEC-31 notice
             // email is never attempted here.
-            $result = $this->service->registerUser('guest', 'password123', null);
+            $result = $this->service->registerUser('guest', 'password123', null, new UrlService(new HtmlService()));
 
             self::assertNull($result['userId']);
             self::assertTrue($result['duplicateUsername']);
@@ -195,7 +196,7 @@ namespace Piwigo\Tests\Integration {
                 ->executeQuery()
                 ->fetchOne();
 
-            $this->service->registerUser('guest', 'password123', null);
+            $this->service->registerUser('guest', 'password123', null, new UrlService(new HtmlService()));
 
             $countAfter = $this->conn->createQueryBuilder()
                 ->select('COUNT(*)')

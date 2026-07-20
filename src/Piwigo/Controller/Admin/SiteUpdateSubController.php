@@ -10,6 +10,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
@@ -101,6 +102,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     private static function permissionService(Connection $conn): PermissionService
@@ -172,7 +174,7 @@ SELECT galleries_url
             new HtmlService()
                 ->fatalError('site ' . $site_id . ' does not exist');
         }
-        $site_is_remote = url_is_remote($site_url);
+        $site_is_remote = $this->urlService->urlIsRemote($site_url);
 
         $dbnow = $conn->fetchOne('SELECT NOW();');
 
@@ -232,7 +234,7 @@ SELECT galleries_url
         // tabsheet::select() below -- must be set before that call, not
         // dead code (see this class's own docblock).
         global $my_base_url;
-        $my_base_url = get_root_url() . 'admin.php?page=';
+        $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=';
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('site_update');
@@ -610,7 +612,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
 
             if (count($to_delete) > 0) {
                 if (! $simulate) {
-                    self::categoryService($conn)->deleteCategories($to_delete, self::activityService($conn));
+                    self::categoryService($conn)->deleteCategories($to_delete, self::activityService($conn), $this->urlService);
                     foreach ($to_delete_derivative_dirs as $to_delete_dir) {
                         if (is_dir($to_delete_dir)) {
                             new DerivativeCacheService()
@@ -891,7 +893,7 @@ DELETE
             if (count($to_delete_elements) > 0) {
                 if (! $simulate) {
                     new ImageService(new ImageRepository($conn), self::activityService($conn))
-                        ->deleteElements($to_delete_elements);
+                        ->deleteElements($to_delete_elements, $this->urlService);
                 }
                 $counts['del_elements'] = count($to_delete_elements);
             }
@@ -1126,11 +1128,11 @@ DELETE
         $template->assign(
             [
                 'SITE_URL' => $site_url,
-                'U_SITE_MANAGER' => get_root_url() . 'admin.php?page=site_manager',
+                'U_SITE_MANAGER' => $this->urlService->getRootUrl() . 'admin.php?page=site_manager',
                 'L_RESULT_UPDATE' => $result_title . l10n('Search for new images in the directories'),
                 'L_RESULT_METADATA' => $result_title . l10n('Metadata synchronization results'),
                 'METADATA_LIST' => $used_metadata,
-                'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=synchronize',
+                'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=synchronize',
                 'ADMIN_PAGE_TITLE' => l10n('Synchronize'),
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),

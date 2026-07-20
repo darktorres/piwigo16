@@ -10,6 +10,7 @@ use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Template\Template;
 
 /**
@@ -26,6 +27,7 @@ final class ThemesNewPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     /**
@@ -46,7 +48,7 @@ final class ThemesNewPageRenderer
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }
 
-        $base_url = get_root_url() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;
+        $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;
 
         $pem_catalog = new PemCatalog(new ZipExtractor());
         $extension_scanner = new ExtensionScanner();
@@ -91,7 +93,7 @@ final class ThemesNewPageRenderer
                     \Piwigo\Core\PageState::current()->addInfo(l10n('Theme has been successfully installed'));
 
                     $installed_theme_id = $_GET['theme_id'] ?? null;
-                    $installed_fs_theme = is_string($installed_theme_id) ? ($extension_scanner->scan(ExtensionType::Theme)[$installed_theme_id] ?? null) : null;
+                    $installed_fs_theme = is_string($installed_theme_id) ? ($extension_scanner->scan(ExtensionType::Theme, $this->urlService)[$installed_theme_id] ?? null) : null;
                     if ($installed_fs_theme !== null) {
                         new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Theme, 'install', [
                             'theme_id' => $installed_theme_id,
@@ -133,7 +135,7 @@ final class ThemesNewPageRenderer
         ]);
 
         $fs_theme_ids = [];
-        foreach ($extension_scanner->scan(ExtensionType::Theme) as $fs_theme) {
+        foreach ($extension_scanner->scan(ExtensionType::Theme, $this->urlService) as $fs_theme) {
             $extension = $fs_theme['extension'] ?? null;
             if (is_scalar($extension)) {
                 $fs_theme_ids[] = (string) $extension;
@@ -175,7 +177,7 @@ final class ThemesNewPageRenderer
         $admin_theme_pref = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('admin_theme', 'clear');
         $template->assign(
             'default_screenshot',
-            get_root_url() . 'admin/themes/' . (is_string($admin_theme_pref) ? $admin_theme_pref : 'clear') . '/images/missing_screenshot.png'
+            $this->urlService->getRootUrl() . 'admin/themes/' . (is_string($admin_theme_pref) ? $admin_theme_pref : 'clear') . '/images/missing_screenshot.png'
         );
         $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
 

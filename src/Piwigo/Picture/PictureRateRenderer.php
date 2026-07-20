@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Picture;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Rate\RateRepository;
 
 /**
@@ -28,7 +29,7 @@ final class PictureRateRenderer
      * file name before this call), so this reads that directly instead
      * of a shared registry.
      */
-    public function render(int $imageId): void
+    public function render(int $imageId, UrlServiceInterface $urlService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
         // Set by picture.php/PictureController, right before this call.
@@ -85,7 +86,7 @@ final class PictureRateRenderer
             $template->assign(
                 'rating',
                 [
-                    'F_ACTION' => add_url_params(
+                    'F_ACTION' => $urlService->addUrlParams(
                         $url_self,
                         [
                             'action' => 'rate',

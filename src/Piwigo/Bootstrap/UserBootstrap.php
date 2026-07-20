@@ -12,8 +12,10 @@ use Piwigo\Auth\PasswordService;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Logger;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
+use Piwigo\Url\UrlService;
 use Piwigo\Ws\PwgCore;
 use Piwigo\Ws\PwgError;
 
@@ -43,6 +45,7 @@ final class UserBootstrap
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     public function initialize(): void
@@ -80,10 +83,11 @@ final class UserBootstrap
         if ($session_cookie_name !== '' && isset($_COOKIE[$session_cookie_name])) {
             if (($_GET['act'] ?? null) === 'logout') { // logout
                 $authService->logoutUser();
-                // get_gallery_home_url() is declared to return `mixed` (include/functions_url.inc.php);
-                // every real branch of its body actually returns a string, so this narrows locally
-                // rather than widening redirect()'s $url parameter.
-                $gallery_home_url = get_gallery_home_url();
+                // getGalleryHomeUrl() is declared to return `mixed`
+                // (Url\UrlService); every real branch of its body actually
+                // returns a string, so this narrows locally rather than
+                // widening redirect()'s $url parameter.
+                $gallery_home_url = $this->urlService->getGalleryHomeUrl();
                 $this->redirectService->redirect(is_string($gallery_home_url) ? $gallery_home_url : '/');
             } else {
                 $session_pwg_uid = $_SESSION['pwg_uid'] ?? null;
@@ -106,7 +110,7 @@ final class UserBootstrap
             if ($remote_user !== null) {
                 if (! (bool) ($user['id'] = $userService->getUserId($remote_user))) {
                     $user['id'] = $userService
-                        ->registerUser($remote_user, '', '', false)['userId'] ?? false;
+                        ->registerUser($remote_user, '', '', new UrlService(new HtmlService()), false)['userId'] ?? false;
                 }
             }
         }

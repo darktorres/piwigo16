@@ -14,6 +14,7 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -45,6 +46,7 @@ final class LanguagesInstalledPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     private static function userService(Connection $conn): UserService
@@ -80,15 +82,15 @@ final class LanguagesInstalledPageRenderer
             'languages' => 'languages_installed.tpl',
         ]);
 
-        $base_url = get_root_url() . 'admin.php?page=' . $pageSlug;
+        $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug;
 
         $conn = DbConnection::build();
         $extension_repository = new ExtensionRepository($conn);
         $pem_catalog = new PemCatalog(new ZipExtractor());
         $extension_scanner = new ExtensionScanner();
-        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog);
+        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService);
 
-        $fs_languages = $extension_scanner->scan(ExtensionType::Language);
+        $fs_languages = $extension_scanner->scan(ExtensionType::Language, $this->urlService);
         $db_languages = $extension_repository->findAll(ExtensionType::Language);
 
         // --------------------------------------------------perform requested actions
@@ -127,7 +129,7 @@ final class LanguagesInstalledPageRenderer
         $tpl_languages = [];
 
         foreach ($fs_languages as $language_id => $language) {
-            $language['u_action'] = add_url_params($base_url, [
+            $language['u_action'] = $this->urlService->addUrlParams($base_url, [
                 'language' => $language_id,
                 'pwg_token' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),

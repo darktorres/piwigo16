@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\Template;
 
@@ -45,6 +46,7 @@ final class ThemesStandardPagesPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     public function render(): void
@@ -174,7 +176,7 @@ final class ThemesStandardPagesPageRenderer
 
         // We want to now if any themes use standard pages and which ones
         $fs_themes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme);
+            ->scan(ExtensionType::Theme, $this->urlService);
 
         $is_standard_pages_used = false;
         $standard_pages_used_by = [];

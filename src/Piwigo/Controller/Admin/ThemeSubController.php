@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Config\Config;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -23,6 +24,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class ThemeSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly UrlServiceInterface $urlService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
@@ -34,7 +39,7 @@ final class ThemeSubController implements AdminSubControllerInterface
         $theme = $theme_raw;
 
         $fs_themes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme);
+            ->scan(ExtensionType::Theme, $this->urlService);
         if (! in_array($theme, array_keys($fs_themes), true)) {
             new HtmlService()
                 ->fatalError('Invalid theme');

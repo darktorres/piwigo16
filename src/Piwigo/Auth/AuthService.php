@@ -7,6 +7,7 @@ namespace Piwigo\Auth;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Session\SessionService;
 
 /**
@@ -645,7 +646,7 @@ final readonly class AuthService
      * @since 15
      * @return array{time_validation: string, password_link: string}
      */
-    public function generatePasswordLink(int $userId, bool $firstLogin = false): array
+    public function generatePasswordLink(int $userId, UrlServiceInterface $urlService, bool $firstLogin = false): array
     {
 
         $activation_key = SessionService::get()->generateKey(20);
@@ -661,11 +662,11 @@ final readonly class AuthService
 
         $this->repo->setActivationKey($userId, $this->passwordService->hash($activation_key), $expire);
 
-        set_make_full_url();
+        $urlService->setMakeFullUrl();
 
-        $password_link = get_root_url() . 'password.php?key=' . $activation_key;
+        $password_link = $urlService->getRootUrl() . 'password.php?key=' . $activation_key;
 
-        unset_make_full_url();
+        $urlService->unsetMakeFullUrl();
 
         $validation_timestamp = strtotime('now -' . $duration . ' second');
         if ($validation_timestamp === false) {

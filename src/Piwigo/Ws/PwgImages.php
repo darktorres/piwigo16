@@ -49,6 +49,7 @@ use Piwigo\Search\SearchService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
+use Piwigo\Url\UrlService;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 
 /**
@@ -420,7 +421,7 @@ SELECT DISTINCT image_id
         ];
 
         $infos = [];
-        $comment_action = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService())
+        $comment_action = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()))
             ->insertComment($comm, $params['key'], $infos);
 
         switch ($comment_action) {
@@ -483,7 +484,7 @@ LIMIT 1
         // open tail for the rest of the row and the page_url/element_url/
         // download_url/derivatives keys WsHelper::stdGetUrls() injects.
         /** @var array{id: int, file: string, name: string|null, comment: string|null, rating_score: string|null, ...} $image_row */
-        $image_row = array_merge($image_row, WsHelper::stdGetUrls($image_row));
+        $image_row = array_merge($image_row, WsHelper::stdGetUrls($image_row, new UrlService(new HtmlService())));
 
         $image_row['name_raw'] = $image_row['name'];
         $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
@@ -519,13 +520,13 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
             }
             unset($row['commentable']);
 
-            $row['url'] = make_index_url(
+            $row['url'] = new UrlService(new HtmlService())->makeIndexUrl(
                 [
                     'category' => $row,
                 ]
             );
 
-            $row['page_url'] = make_picture_url(
+            $row['page_url'] = new UrlService(new HtmlService())->makePictureUrl(
                 [
                     'image_id' => $image_row['id'],
                     'image_file' => $image_row['file'],
@@ -556,12 +557,12 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
         $related_tags = self::tagService($conn)
             ->getCommonTags([$image_id], -1, new HtmlService());
         foreach ($related_tags as $i => $tag) {
-            $tag['url'] = make_index_url(
+            $tag['url'] = new UrlService(new HtmlService())->makeIndexUrl(
                 [
                     'tags' => [$tag],
                 ]
             );
-            $tag['page_url'] = make_picture_url(
+            $tag['page_url'] = new UrlService(new HtmlService())->makePictureUrl(
                 [
                     'image_id' => $image_row['id'],
                     'image_file' => $image_row['file'],
@@ -790,7 +791,8 @@ SELECT *
   WHERE id IN (' . implode(',', $image_ids) . ')
 ;';
             $image_ids = array_flip($image_ids);
-            $favorite_ids = get_user_favorites();
+            $favorite_ids = new UrlService(new HtmlService())
+                ->getUserFavorites();
 
             foreach ($searchConn->fetchAllAssociative($query) as $row) {
                 $image = [];
@@ -809,7 +811,7 @@ SELECT *
                 $image['name'] = strip_tags(is_string($rendered_image_name) ? $rendered_image_name : '');
                 $image['comment'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_description', $image['comment'], __FUNCTION__);
 
-                $image = array_merge($image, WsHelper::stdGetUrls($row));
+                $image = array_merge($image, WsHelper::stdGetUrls($row, new UrlService(new HtmlService())));
                 assert(is_int($image['id']));
                 $images[$image_ids[$image['id']]] = $image;
             }
@@ -1114,7 +1116,7 @@ SELECT *
 
         $search_info_id = $search_info['id'] ?? null;
         $forked_from = is_numeric($search_info_id) ? (int) $search_info_id : null;
-        [$search_uuid, $search_url] = $searchService->saveSearch($search, $forked_from);
+        [$search_uuid, $search_url] = $searchService->saveSearch($search, new UrlService(new HtmlService()), $forked_from);
 
         return [
             'search_id' => $search_uuid,
@@ -1405,6 +1407,7 @@ SELECT
         $image_id = new UploadService()
             ->addUploadedFile(
                 $file_path,
+                new UrlService(new HtmlService()),
                 is_string($image['file']) ? $image['file'] : null,
                 null,
                 null,
@@ -1498,6 +1501,7 @@ SELECT COUNT(*)
         $image_id = new UploadService()
             ->addUploadedFile(
                 $file_path,
+                new UrlService(new HtmlService()),
                 $params['original_filename'],
                 null, // categories
                 $params['level'],
@@ -1566,7 +1570,8 @@ SELECT id, name, permalink
 
         return [
             'image_id' => $image_id,
-            'url' => make_picture_url($url_params),
+            'url' => new UrlService(new HtmlService())
+                ->makePictureUrl($url_params),
         ];
     }
 
@@ -1636,6 +1641,7 @@ SELECT COUNT(*)
         $image_id = new UploadService()
             ->addUploadedFile(
                 $uploaded_tmp_name,
+                new UrlService(new HtmlService()),
                 is_string($uploaded_name) ? $uploaded_name : null,
                 $params['category'],
                 8,
@@ -1712,7 +1718,8 @@ SELECT id, name, permalink
 
         return [
             'image_id' => $image_id,
-            'url' => make_picture_url($url_params),
+            'url' => new UrlService(new HtmlService())
+                ->makePictureUrl($url_params),
         ];
     }
 
@@ -1877,6 +1884,7 @@ SELECT
             $image_id = new UploadService()
                 ->addUploadedFile(
                     $filePath,
+                    new UrlService(new HtmlService()),
                     $name, // function add_uploaded_file will secure before insert
                     $params['category'],
                     $params['level'],
@@ -2132,6 +2140,7 @@ SELECT COUNT(*)
         $image_id = new UploadService()
             ->addUploadedFile(
                 $output_filepath,
+                new UrlService(new HtmlService()),
                 $params['filename'],
                 $params['category'],
                 $params['level'],
@@ -2490,14 +2499,15 @@ SELECT
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $image_ids) . ')
 ;';
+        $urlService = new UrlService(new HtmlService());
         foreach ($conn->fetchAllAssociative($query) as $image_row) {
             assert(is_string($image_row['path']));
-            if (url_is_remote($image_row['path'])) {
+            if ($urlService->urlIsRemote($image_row['path'])) {
                 continue;
             }
 
             $files = [];
-            $image_path = \Piwigo\Image\ImagePathHelper::getElementPath($image_row);
+            $image_path = \Piwigo\Image\ImagePathHelper::getElementPath($image_row, $urlService);
 
             assert(is_int($image_row['id']) || is_string($image_row['id']));
             if (isset($formats_of[$image_row['id']])) {
@@ -2783,7 +2793,7 @@ SELECT *
 
         $imageConn = DbConnection::build();
         $ret = self::imageService($imageConn)
-            ->deleteElements($image_ids, true);
+            ->deleteElements($image_ids, new UrlService(new HtmlService()), true);
         UserCacheInvalidator::invalidate();
 
         return $ret;
@@ -3019,7 +3029,7 @@ SELECT id
         $imageService = self::imageService($imageConn);
 
         $orphan_ids_to_delete = array_slice($imageService->getOrphans(), 0, $params['block_size']);
-        $deleted_count = $imageService->deleteElements($orphan_ids_to_delete, true);
+        $deleted_count = $imageService->deleteElements($orphan_ids_to_delete, new UrlService(new HtmlService()), true);
         UserCacheInvalidator::invalidate();
 
         return [

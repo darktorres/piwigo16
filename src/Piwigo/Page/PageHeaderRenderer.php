@@ -4,15 +4,31 @@ declare(strict_types=1);
 
 namespace Piwigo\Page;
 
+use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Html\HtmlService;
+use Piwigo\Url\UrlService;
+
 /**
  * Renders the page `<head>`/opening chrome into $template. Injects
  * nothing -- same "no constructor deps" shape as Html\HtmlService/
  * Menu\MenubarRenderer: cross-domain calls (get_pwg_charset(),
- * get_gallery_home_url(), trigger_notify()) stay as plain
- * global-function calls to modules migrated in earlier phases.
+ * trigger_notify()) stay as plain global-function calls to modules
+ * migrated in earlier phases; the one real Url-family call
+ * (getGalleryHomeUrl()) goes through a throwaway UrlService construction
+ * instead (Legacy Coupling Retirement Phase 4c) -- this class has no
+ * constructor at all today, so no dependency is added.
+ * Piwigo\Bootstrap\RedirectService's own redirectHtml() early-crash
+ * fallback constructs this class directly (`new PageHeaderRenderer()`),
+ * same PHP-DI-autowiring-only-inspects-constructors reasoning as
+ * Html\HtmlService::urlService().
  */
 final class PageHeaderRenderer
 {
+    private static function urlService(): UrlServiceInterface
+    {
+        return new UrlService(new HtmlService());
+    }
+
     /**
      * @param string $title set by the including page script, right before
      *   the original page_header.php include.
@@ -58,7 +74,7 @@ final class PageHeaderRenderer
                 'CONTENT_ENCODING' => \Piwigo\Core\CharsetHelper::getPwgCharset(),
                 'PAGE_TITLE' => strip_tags($title),
 
-                'U_HOME' => get_gallery_home_url(),
+                'U_HOME' => self::urlService()->getGalleryHomeUrl(),
 
                 'LEVEL_SEPARATOR' => \Piwigo\Config\Config::levelSeparator(),
 

@@ -27,6 +27,7 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
+use Piwigo\Url\UrlService;
 
 /**
  * P23 batch 8e-3: relocated from include/ws_functions/pwg.tags.php.
@@ -74,10 +75,11 @@ final class PwgTags
             usort($tags, new HtmlService()->tagAlphaCompare(...));
         }
 
+        $urlService = new UrlService(new HtmlService());
         for ($i = 0; $i < count($tags); $i++) {
             $tags[$i]['id'] = is_numeric($tags[$i]['id']) ? (int) $tags[$i]['id'] : 0;
             $tags[$i]['counter'] = is_numeric($tags[$i]['counter']) ? (int) $tags[$i]['counter'] : 0;
-            $tags[$i]['url'] = make_index_url(
+            $tags[$i]['url'] = $urlService->makeIndexUrl(
                 [
                     'section' => 'tags',
                     'tags' => [$tags[$i]],
@@ -190,9 +192,10 @@ SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
         }
 
         $images = [];
+        $urlService = new UrlService(new HtmlService());
         if (! empty($image_ids)) {
             $rank_of = array_flip($image_ids);
-            $favorite_ids = get_user_favorites();
+            $favorite_ids = $urlService->getUserFavorites();
 
             $query = '
 SELECT *
@@ -223,18 +226,18 @@ SELECT *
                 $image['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
                 $image['comment'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_description', $image['comment'], __FUNCTION__);
 
-                $image = array_merge($image, WsHelper::stdGetUrls($row));
+                $image = array_merge($image, WsHelper::stdGetUrls($row, $urlService));
 
                 $image_tag_ids = ($params['tag_mode_and']) ? $tag_ids : $image_tag_map[$row_id];
                 $image_tags = [];
                 foreach ($image_tag_ids as $tag_id) {
-                    $url = make_index_url(
+                    $url = $urlService->makeIndexUrl(
                         [
                             'section' => 'tags',
                             'tags' => [$tags_by_id[$tag_id]],
                         ]
                     );
-                    $page_url = make_picture_url(
+                    $page_url = $urlService->makePictureUrl(
                         [
                             'section' => 'tags',
                             'tags' => [$tags_by_id[$tag_id]],

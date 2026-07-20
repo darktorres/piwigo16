@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\UrlServiceInterface;
 
 /**
  * Holds information (path, url, dimensions) about a derivative image.
@@ -21,6 +22,29 @@ use Piwigo\Config\Config;
 final class DerivativeImage
 {
     private ?DerivativeParams $params = null;
+
+    private static ?UrlServiceInterface $urlService = null;
+
+    /**
+     * Set once by Bootstrap\RequestBootstrap (Legacy Coupling Retirement
+     * Phase 4c) -- same static-setter shape as Image\SrcImage::
+     * setUrlService(), for the same reason: this L2aCoreDomain class may
+     * not depend on Piwigo\Url\UrlService (L2bExtendedDomain) directly
+     * (deptrac).
+     */
+    public static function setUrlService(UrlServiceInterface $urlService): void
+    {
+        self::$urlService = $urlService;
+    }
+
+    private static function urlService(): UrlServiceInterface
+    {
+        if (! self::$urlService instanceof UrlServiceInterface) {
+            throw new \RuntimeException('DerivativeImage: no URL service set (RequestBootstrap not run yet?)');
+        }
+
+        return self::$urlService;
+    }
 
     /**
      * @var string
@@ -77,7 +101,7 @@ final class DerivativeImage
         if ($params == null) {
             return $src_image->get_url();
         }
-        $default_url = get_root_url() . $rel_url;
+        $default_url = self::urlService()->getRootUrl() . $rel_url;
         $filtered_url = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
             'get_derivative_url',
             $default_url,
@@ -88,7 +112,7 @@ final class DerivativeImage
         // trigger_change() hands the value through arbitrary registered
         // event handlers (mixed return); fall back to the pre-filter url
         // if a misbehaving handler returns a non-string.
-        return embellish_url(is_string($filtered_url) ? $filtered_url : $default_url);
+        return self::urlService()->embellishUrl(is_string($filtered_url) ? $filtered_url : $default_url);
     }
 
     /**
@@ -249,7 +273,7 @@ final class DerivativeImage
         if ($this->params == null) {
             return $this->src_image->get_url();
         }
-        $default_url = get_root_url() . $this->rel_url;
+        $default_url = self::urlService()->getRootUrl() . $this->rel_url;
         $filtered_url = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
             'get_derivative_url',
             $default_url,
@@ -260,7 +284,7 @@ final class DerivativeImage
         // trigger_change() hands the value through arbitrary registered
         // event handlers (mixed return); fall back to the pre-filter url
         // if a misbehaving handler returns a non-string.
-        return embellish_url(is_string($filtered_url) ? $filtered_url : $default_url);
+        return self::urlService()->embellishUrl(is_string($filtered_url) ? $filtered_url : $default_url);
     }
 
     public function same_as_source(): bool

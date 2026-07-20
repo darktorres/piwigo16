@@ -10,6 +10,7 @@ use Piwigo\Admin\CatPermPageRenderer;
 use Piwigo\Admin\ElementSetRanksPageRenderer;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -38,6 +39,7 @@ final class AlbumSubController implements AdminSubControllerInterface
 
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     #[\Override]
@@ -49,7 +51,7 @@ final class AlbumSubController implements AdminSubControllerInterface
         $cat_id_param = $query_params['cat_id'] ?? null;
         $cat_id = is_numeric($cat_id_param) ? (int) $cat_id_param : 0;
 
-        $GLOBALS['admin_album_base_url'] = get_root_url() . 'admin.php?page=album-' . $cat_id;
+        $GLOBALS['admin_album_base_url'] = $this->urlService->getRootUrl() . 'admin.php?page=album-' . $cat_id;
 
         $query = '
 SELECT *
@@ -84,16 +86,16 @@ SELECT *
 
         if ($tab === 'properties') {
             new CatModifyPageRenderer()
-                ->render();
+                ->render($this->urlService);
         } elseif ($tab === 'sort_order') {
-            new ElementSetRanksPageRenderer($this->redirectService)
+            new ElementSetRanksPageRenderer($this->redirectService, $this->urlService)
                 ->render();
         } elseif ($tab === 'permissions') {
             $_GET['cat'] = $cat_id;
-            new CatPermPageRenderer($this->redirectService)
+            new CatPermPageRenderer($this->redirectService, $this->urlService)
                 ->render();
         } else {
-            new AlbumNotificationPageRenderer($this->redirectService)
+            new AlbumNotificationPageRenderer($this->redirectService, $this->urlService)
                 ->render();
         }
     }

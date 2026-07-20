@@ -9,6 +9,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
@@ -167,7 +168,7 @@ final readonly class ImageService
      * @return array<int, int> image ids where files were successfully deleted (always
      *   int-keyed: $newIds is only ever appended to via [] on a plain array)
      */
-    public function deleteElementFiles(array $ids): array
+    public function deleteElementFiles(array $ids, UrlServiceInterface $urlService): array
     {
 
         if ($ids === []) {
@@ -195,7 +196,7 @@ final readonly class ImageService
             assert(is_numeric($rowId) && is_string($rowPath));
             $rowId = (int) $rowId;
 
-            if (url_is_remote($rowPath)) {
+            if ($urlService->urlIsRemote($rowPath)) {
                 continue;
             }
 
@@ -203,7 +204,7 @@ final readonly class ImageService
             $representativeExt = is_string($representativeExt) && $representativeExt !== '' ? $representativeExt : null;
 
             $files = [];
-            $files[] = ImagePathHelper::getElementPath($row);
+            $files[] = ImagePathHelper::getElementPath($row, $urlService);
 
             if ($representativeExt !== null) {
                 $files[] = ImagePathHelper::originalToRepresentative($files[0], $representativeExt);
@@ -254,7 +255,7 @@ final readonly class ImageService
      * @param array<int, int|string> $ids
      * @return int number of deleted elements
      */
-    public function deleteElements(array $ids, bool $physicalDeletion = false): int
+    public function deleteElements(array $ids, UrlServiceInterface $urlService, bool $physicalDeletion = false): int
     {
         if ($ids === []) {
             return 0;
@@ -262,7 +263,7 @@ final readonly class ImageService
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('begin_delete_elements', $ids);
 
         if ($physicalDeletion) {
-            $ids = $this->deleteElementFiles($ids);
+            $ids = $this->deleteElementFiles($ids, $urlService);
             if ($ids === []) {
                 return 0;
             }

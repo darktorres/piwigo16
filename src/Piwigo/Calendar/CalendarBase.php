@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Template\Template;
 
 /**
@@ -124,6 +125,7 @@ abstract class CalendarBase
 
     public function __construct(
         protected readonly CalendarRepository $calendarRepository,
+        protected readonly UrlServiceInterface $urlService,
     ) {}
 
     /**
@@ -176,7 +178,7 @@ abstract class CalendarBase
             $date_component = (string) $page_chronology_date[$i];
             if (isset($page_chronology_date[$i + 1])) {
                 $chronology_date_slice = array_slice($page_chronology_date, 0, $i + 1);
-                $url = duplicate_index_url(
+                $url = $this->urlService->duplicateIndexUrl(
                     [
                         'chronology_date' => $chronology_date_slice,
                     ],
@@ -272,7 +274,7 @@ abstract class CalendarBase
                     'LABEL' => $label,
                 ];
             } else {
-                $url = duplicate_index_url(
+                $url = $this->urlService->duplicateIndexUrl(
                     [
                         'chronology_date' => array_merge($date_components, [$item]),
                     ],
@@ -292,7 +294,7 @@ abstract class CalendarBase
 
         if (\Piwigo\Config\Config::calendarShowAny() and $show_any and count($items) > 1 and
               count($date_components) < count($this->calendar_levels) - 1) {
-            $url = duplicate_index_url(
+            $url = $this->urlService->duplicateIndexUrl(
                 [
                     'chronology_date' => array_merge($date_components, ['any']),
                 ],
@@ -421,7 +423,7 @@ GROUP BY period';
             $tpl_var['previous'] =
               [
                   'LABEL' => $this->get_date_nice_name($prev),
-                  'URL' => duplicate_index_url(
+                  'URL' => $this->urlService->duplicateIndexUrl(
                       [
                           'chronology_date' => $chronology_date,
                       ],
@@ -436,7 +438,7 @@ GROUP BY period';
             $tpl_var['next'] =
               [
                   'LABEL' => $this->get_date_nice_name($next),
-                  'URL' => duplicate_index_url(
+                  'URL' => $this->urlService->duplicateIndexUrl(
                       [
                           'chronology_date' => $chronology_date,
                       ],

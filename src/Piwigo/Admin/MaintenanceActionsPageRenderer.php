@@ -11,6 +11,7 @@ use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Image\ImageStdParams;
@@ -39,6 +40,7 @@ final class MaintenanceActionsPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     public function render(): void
@@ -52,7 +54,7 @@ final class MaintenanceActionsPageRenderer
         FilesystemIntegrityChecker::fsQuickCheck();
 
         $action = is_string($_GET['action'] ?? null) ? $_GET['action'] : '';
-        new MaintenanceActionDispatcher($this->redirectService)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+
@@ -64,7 +66,7 @@ final class MaintenanceActionsPageRenderer
         ]);
         $pwg_token = new \Piwigo\Csrf\CsrfService()
             ->getToken();
-        $url_format = get_root_url() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken();
+        $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
@@ -121,7 +123,7 @@ final class MaintenanceActionsPageRenderer
                 'U_MAINT_COMPILED_TEMPLATES' => sprintf($url_format, 'compiled-templates'),
                 'U_MAINT_DERIVATIVES' => sprintf($url_format, 'derivatives'),
                 'purge_derivatives' => $purge_urls,
-                'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=maintenance',
+                'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=maintenance',
 
                 'PHPWG_URL' => PHPWG_URL,
                 'PWG_VERSION' => AppInfo::VERSION,

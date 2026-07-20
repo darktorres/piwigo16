@@ -6,6 +6,7 @@ namespace Piwigo\Notification;
 
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Permission\PermissionService;
 
@@ -26,6 +27,7 @@ final readonly class NotificationService
         private PermissionService $permissionService,
         private PersistentCache $cache,
         private HtmlRenderingInterface $htmlRenderer,
+        private UrlServiceInterface $urlService,
     ) {}
 
     /**
@@ -233,7 +235,7 @@ final readonly class NotificationService
                 $this->nbNewElements($start, $end),
                 '%d new photo',
                 '%d new photos',
-                add_url_params(make_index_url([
+                $this->urlService->addUrlParams($this->urlService->makeIndexUrl([
                     'section' => 'recent_pics',
                 ]), $addUrlParams),
                 $addUrl
@@ -244,7 +246,7 @@ final readonly class NotificationService
                 $this->nbUpdatedCategories($start, $end),
                 '%d album updated',
                 '%d albums updated',
-                add_url_params(make_index_url([
+                $this->urlService->addUrlParams($this->urlService->makeIndexUrl([
                     'section' => 'recent_cats',
                 ]), $addUrlParams),
                 $addUrl
@@ -256,7 +258,7 @@ final readonly class NotificationService
             $this->nbNewComments($start, $end),
             '%d new comment',
             '%d new comments',
-            add_url_params(get_root_url() . 'comments.php', $addUrlParams),
+            $this->urlService->addUrlParams($this->urlService->getRootUrl() . 'comments.php', $addUrlParams),
             $addUrl
         );
 
@@ -266,7 +268,7 @@ final readonly class NotificationService
                 $this->nbUnvalidatedComments($start, $end),
                 '%d comment to validate',
                 '%d comments to validate',
-                get_root_url() . 'admin.php?page=comments',
+                $this->urlService->getRootUrl() . 'admin.php?page=comments',
                 $addUrl
             );
 
@@ -275,7 +277,7 @@ final readonly class NotificationService
                 $this->nbNewUsers($start, $end),
                 '%d new user',
                 '%d new users',
-                get_root_url() . 'admin.php?page=user_list',
+                $this->urlService->getRootUrl() . 'admin.php?page=user_list',
                 $addUrl
             );
         }
@@ -306,7 +308,7 @@ final readonly class NotificationService
               '<li>'
               . l10n_dec('%d new photo', '%d new photos', $nbElements)
               . ' ('
-              . '<a href="' . add_url_params(make_index_url([
+              . '<a href="' . $this->urlService->addUrlParams($this->urlService->makeIndexUrl([
                   'section' => 'recent_pics',
               ]), $addUrlParams) . '">'
                 . l10n('Recent photos') . '</a>'
@@ -322,8 +324,8 @@ final readonly class NotificationService
             /** @var array<string, mixed> $element */
             $tnSrc = DerivativeImage::thumb_url($element);
             $description .= '<a href="' .
-              add_url_params(
-                  make_picture_url(
+              $this->urlService->addUrlParams(
+                  $this->urlService->makePictureUrl(
                       [
                           'image_id' => $element['id'],
                           'image_file' => $element['file'],

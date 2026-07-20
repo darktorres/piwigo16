@@ -10,6 +10,7 @@ use Piwigo\Admin\ThemesNewPageRenderer;
 use Piwigo\Admin\ThemesStandardPagesPageRenderer;
 use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -49,6 +50,7 @@ final class ThemesSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     #[\Override]
@@ -61,7 +63,7 @@ final class ThemesSubController implements AdminSubControllerInterface
         // tabsheet::select() below -- must be set before that call, not
         // dead code (see this class's own docblock).
         global $my_base_url;
-        $my_base_url = get_root_url() . 'admin.php?page=themes';
+        $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=themes';
 
         if (isset($_GET['tab'])) {
             new \Piwigo\Validation\InputValidator()
@@ -83,16 +85,16 @@ final class ThemesSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render('themes');
+                ->render('themes', $this->urlService);
             $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
         } elseif ($tab === 'new') {
-            new ThemesNewPageRenderer($this->redirectService)
+            new ThemesNewPageRenderer($this->redirectService, $this->urlService)
                 ->render('themes', $tab);
         } elseif ($tab === 'standard_pages') {
-            new ThemesStandardPagesPageRenderer($this->redirectService)
+            new ThemesStandardPagesPageRenderer($this->redirectService, $this->urlService)
                 ->render();
         } else {
-            new ThemesInstalledPageRenderer($this->redirectService)
+            new ThemesInstalledPageRenderer($this->redirectService, $this->urlService)
                 ->render('themes');
         }
     }

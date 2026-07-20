@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\MenubarLayoutRepository;
@@ -25,7 +26,7 @@ use Piwigo\Menu\MenubarLayoutRepository;
  */
 final class MenubarPageRenderer
 {
-    public function render(): void
+    public function render(UrlServiceInterface $urlService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -107,7 +108,7 @@ final class MenubarPageRenderer
             );
         }
 
-        $action = get_root_url() . 'admin.php?page=menubar';
+        $action = $urlService->getRootUrl() . 'admin.php?page=menubar';
         $template->assign([
             'F_ACTION' => $action,
         ]);

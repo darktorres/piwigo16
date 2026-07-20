@@ -6,6 +6,7 @@ namespace Piwigo\Page;
 
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\TelemetrySenderInterface;
+use Piwigo\Core\UrlServiceInterface;
 
 /**
  * Renders the page footer into $template.
@@ -24,11 +25,23 @@ use Piwigo\Core\TelemetrySenderInterface;
  * -- injected here as Piwigo\Core\TelemetrySenderInterface (constructor
  * injection: exactly one construction site, Bootstrap\PageTail::render(),
  * which passes the concrete Piwigo\Admin\PiwigoInfosSender).
+ *
+ * Legacy Coupling Retirement Phase 4c: UrlServiceInterface is also
+ * real constructor injection here, unlike Html\HtmlService/
+ * Mail\MailService/Users\UserService/Template\Template/
+ * PageHeaderRenderer's throwaway-per-call pattern -- this class's own one
+ * real construction site is Bootstrap\PageTail::render() itself, already
+ * an established composition root manually wiring
+ * TelemetrySenderInterface's concrete implementation; wiring a second
+ * interface there the same way is consistent, not circular (unlike those
+ * other classes, this one isn't reachable from
+ * Piwigo\Bootstrap\RedirectService's own construction chain).
  */
 final readonly class PageTailRenderer
 {
     public function __construct(
         private TelemetrySenderInterface $telemetrySender,
+        private UrlServiceInterface $urlService,
     ) {}
 
     public function render(float $startTime): void
@@ -48,7 +61,7 @@ final readonly class PageTailRenderer
                 // web-vitals RUM beacon (docs/PLAN-REPLAY.md P1, item 11b) --
                 // fixed, non-hashed filename (vite.config.ts), so no
                 // manifest.json lookup is needed to reference it.
-                'VITALS_SCRIPT_URL' => get_root_url() . 'dist/vitals.js',
+                'VITALS_SCRIPT_URL' => $this->urlService->getRootUrl() . 'dist/vitals.js',
             ]
         );
 
@@ -95,7 +108,7 @@ final readonly class PageTailRenderer
             $request_uri = $_SERVER['REQUEST_URI'] ?? '';
             $template->assign(
                 'TOGGLE_MOBILE_THEME_URL',
-                add_url_params(
+                $this->urlService->addUrlParams(
                     htmlspecialchars(is_string($request_uri) ? $request_uri : ''),
                     [
                         'mobile' => \Piwigo\Core\DeviceHelper::mobileTheme() ? 'false' : 'true',

@@ -13,6 +13,7 @@ namespace Piwigo\Image;
 
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\ThemeConfProviderInterface;
+use Piwigo\Core\UrlServiceInterface;
 
 /**
  * A source image is used to get a derivative image. It is either
@@ -89,6 +90,31 @@ final class SrcImage
     public static function setImageRepository(ImageRepository $repo): void
     {
         self::$imageRepository = $repo;
+    }
+
+    private static ?UrlServiceInterface $urlService = null;
+
+    /**
+     * Set once by Bootstrap\RequestBootstrap (Legacy Coupling Retirement
+     * Phase 4c) -- same static-setter shape as setHtmlRenderer()/
+     * setThemeConfProvider()/setImageRepository() above, for the same
+     * reason: this L2aCoreDomain class may not depend on
+     * Piwigo\Url\UrlService (L2bExtendedDomain) directly (deptrac), and
+     * its ~20 real construction sites make constructor injection an
+     * unreasonable ripple.
+     */
+    public static function setUrlService(UrlServiceInterface $urlService): void
+    {
+        self::$urlService = $urlService;
+    }
+
+    private static function urlService(): UrlServiceInterface
+    {
+        if (! self::$urlService instanceof UrlServiceInterface) {
+            throw new \RuntimeException('SrcImage: no URL service set (RequestBootstrap not run yet?)');
+        }
+
+        return self::$urlService;
     }
 
     public const int IS_ORIGINAL = 0x01;
@@ -206,7 +232,7 @@ final class SrcImage
 
     public function get_url(): string
     {
-        $url = get_root_url() . $this->rel_path;
+        $url = self::urlService()->getRootUrl() . $this->rel_path;
         if (! (bool) ($this->flags & self::IS_MIMETYPE)) {
             $filtered_url = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_src_image_url', $url, $this);
             // trigger_change() hands the value through arbitrary registered
@@ -214,7 +240,7 @@ final class SrcImage
             // url if a misbehaving handler returns a non-string.
             $url = is_string($filtered_url) ? $filtered_url : $url;
         }
-        return embellish_url($url);
+        return self::urlService()->embellishUrl($url);
     }
 
     public function has_size(): bool

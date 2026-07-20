@@ -9,6 +9,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
 use Piwigo\Session\SessionService;
@@ -48,7 +49,7 @@ final class PluginsInstalledPageRenderer
      * slug statically (it's the only class registered for the 'plugins'
      * slug in config/admin_pages.php).
      */
-    public function render(string $pageSlug): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -67,7 +68,7 @@ final class PluginsInstalledPageRenderer
             $show_details = false;
         }
 
-        $base_url = get_root_url() . 'admin.php?page=' . $pageSlug;
+        $base_url = $urlService->getRootUrl() . 'admin.php?page=' . $pageSlug;
         $pwg_token = new \Piwigo\Csrf\CsrfService()
             ->getToken();
 
@@ -75,7 +76,7 @@ final class PluginsInstalledPageRenderer
         $extension_repository = new ExtensionRepository($conn);
         $pem_catalog = new PemCatalog(new ZipExtractor());
         $fs_plugins = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin);
+            ->scan(ExtensionType::Plugin, $urlService);
         uasort($fs_plugins, new HtmlService()->nameCompare(...));
         $db_plugins_by_id = $extension_repository->findAll(ExtensionType::Plugin);
 

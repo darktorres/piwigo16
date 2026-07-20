@@ -16,6 +16,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\TemplateInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
@@ -48,6 +49,7 @@ final readonly class CalendarRenderer
     public function __construct(
         private HtmlRenderingInterface $htmlRenderer,
         private TemplateInterface $template,
+        private UrlServiceInterface $urlService,
     ) {}
 
     /**
@@ -144,7 +146,7 @@ final readonly class CalendarRenderer
         $cal_style = $chronology_style;
         $classname = $styles[$cal_style]['classname'];
 
-        $calendar = new $classname(new CalendarRepository($conn));
+        $calendar = new $classname(new CalendarRepository($conn), $this->urlService);
         $calendar->chronology_field = $chronologyField;
 
         // Retrieve view
@@ -222,7 +224,7 @@ final readonly class CalendarRenderer
                         } else {
                             $chronology_date = $page_chronology_date;
                         }
-                        $url = duplicate_index_url(
+                        $url = $this->urlService->duplicateIndexUrl(
                             [
                                 'chronology_style' => $style,
                                 'chronology_view' => $view,
@@ -245,7 +247,7 @@ final readonly class CalendarRenderer
                     }
                 }
             }
-            $url = duplicate_index_url(
+            $url = $this->urlService->duplicateIndexUrl(
                 [],
                 ['start', 'chronology_date']
             );

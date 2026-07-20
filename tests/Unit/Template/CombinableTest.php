@@ -2,11 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Html\HtmlService;
 use Piwigo\Template\Combinable;
-
-// Combinable::is_remote() calls the free function url_is_remote() --
-// always available now via composer autoload.files
-// (src/Piwigo/Url/functions.php, P23 batch 8c), no explicit require needed.
+use Piwigo\Url\UrlService;
 
 test('constructor sets id, path and version', function (): void {
     $combinable = new Combinable('my-id', 'themes/default/js/foo.js', '1.2.3');
@@ -49,17 +47,17 @@ test('set_path overwrites a non-empty path', function (): void {
 test('is_remote is true for an absolute URL', function (): void {
     $combinable = new Combinable('my-id', 'https://cdn.example.com/foo.js');
 
-    expect($combinable->is_remote())->toBeTrue();
+    expect($combinable->is_remote(new UrlService(new HtmlService())))->toBeTrue();
 });
 
 test('is_remote is true for a protocol-relative URL', function (): void {
     $combinable = new Combinable('my-id', '//cdn.example.com/foo.js');
 
-    expect($combinable->is_remote())->toBeTrue();
+    expect($combinable->is_remote(new UrlService(new HtmlService())))->toBeTrue();
 });
 
 test('is_remote is false for a local path', function (): void {
     $combinable = new Combinable('my-id', 'themes/default/js/foo.js');
 
-    expect($combinable->is_remote())->toBeFalse();
+    expect($combinable->is_remote(new UrlService(new HtmlService())))->toBeFalse();
 });

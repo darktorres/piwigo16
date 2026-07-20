@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -23,7 +24,7 @@ use Piwigo\Template\Template;
  */
 final class UserActivityPageRenderer
 {
-    public function render(): void
+    public function render(UrlServiceInterface $urlService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -44,7 +45,7 @@ final class UserActivityPageRenderer
         // tab-nav hrefs (see feedback_admindispatcher_breaks_bare_global_bootstrap).
         global $my_base_url;
 
-        $my_base_url = get_root_url() . 'admin.php?page=';
+        $my_base_url = $urlService->getRootUrl() . 'admin.php?page=';
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('users');
@@ -105,7 +106,7 @@ final class UserActivityPageRenderer
             'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                 ->getToken(),
             'INHERIT' => \Piwigo\Config\Config::inheritanceByDefault(),
-            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['users']),
+            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($urlService, ['users']),
         ]);
 
         $nb_lines_for_user = $activity_service->getCountByUser();

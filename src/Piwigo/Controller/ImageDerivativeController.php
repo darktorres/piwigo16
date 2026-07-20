@@ -14,6 +14,7 @@ use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\ImageRepository;
@@ -22,6 +23,7 @@ use Piwigo\Image\SizingParams;
 use Piwigo\Permission\ImageVisibilityChecker;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionUserResolver;
+use Piwigo\Url\UrlService;
 
 /**
  * The derivative image server -- P23 batch 8f: ported from i.php's ~900
@@ -781,8 +783,9 @@ final class ImageDerivativeController
         $derivative_path = $this->derivativePath;
 
         if (isset($_GET['ajaxload']) and $_GET['ajaxload'] == 'true') {
+            $urlService = new UrlService(new HtmlService());
             echo json_encode([
-                'url' => embellish_url(get_absolute_root_url() . $derivative_path),
+                'url' => $urlService->embellishUrl($urlService->getAbsoluteRootUrl() . $derivative_path),
             ]);
             return;
         }

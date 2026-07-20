@@ -9,6 +9,7 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Mail\MailService;
@@ -37,6 +38,7 @@ final readonly class CoreUpdateService
     public function __construct(
         private ZipExtractor $zipExtractor,
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     public function checkPiwigoUpgrade(): void
@@ -79,7 +81,7 @@ final readonly class CoreUpdateService
         $url .= $env === 'Official' ? '&docker' : '&show_requirements';
         $secretKeyRaw = \Piwigo\Config\Config::secretKey();
         $secretKey = $secretKeyRaw;
-        $url .= '&origin_hash=' . sha1($secretKey . get_absolute_root_url());
+        $url .= '&origin_hash=' . sha1($secretKey . $this->urlService->getAbsoluteRootUrl());
 
         if (! is_string($result = @HttpClientService::fetch($url))) {
             return $newVersions;
@@ -207,7 +209,7 @@ final readonly class CoreUpdateService
         $content .= "\n\n" . l10n(
             'Time has come to update your Piwigo with version %s, go to %s',
             $newVersionsString,
-            get_absolute_root_url() . 'admin.php?page=updates'
+            $this->urlService->getAbsoluteRootUrl() . 'admin.php?page=updates'
         );
         $content .= "\n\n" . l10n('It only takes a few clicks.');
         $content .= "\n\n" . l10n('Running on an up-to-date Piwigo is important for security.');
@@ -246,7 +248,7 @@ final readonly class CoreUpdateService
         $dataLocation = $dataLocationRaw;
 
         if ($checkCurrentVersion and ! version_compare($upgradeTo, AppInfo::VERSION, '>')) {
-            $this->redirectService->redirect(get_root_url() . 'admin.php?page=plugin-' . basename(__DIR__));
+            $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=plugin-' . basename(__DIR__));
         }
 
         $obsoleteList = null;
@@ -337,7 +339,7 @@ final readonly class CoreUpdateService
 
             \Piwigo\Core\PageState::current()->addError(l10n(
                 'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
-                get_root_url() . $dataLocation . 'update/log_error.txt'
+                $this->urlService->getRootUrl() . $dataLocation . 'update/log_error.txt'
             ));
             return;
         }

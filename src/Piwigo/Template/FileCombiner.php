@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Template;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\UrlServiceInterface;
 
 final class FileCombiner
 {
@@ -23,7 +24,8 @@ final class FileCombiner
      */
     public function __construct(
         private $type,
-        private $combinables = []
+        private readonly UrlServiceInterface $urlService,
+        private $combinables = [],
     ) {
         $this->is_css = $this->type == 'css';
     }
@@ -70,11 +72,11 @@ final class FileCombiner
 
         $result = [];
         $pending = [];
-        $ini_key = $this->is_css ? [get_absolute_root_url(false)] : []; // because for css we modify bg url;
+        $ini_key = $this->is_css ? [$this->urlService->getAbsoluteRootUrl(false)] : []; // because for css we modify bg url;
         $key = $ini_key;
 
         foreach ($this->combinables as $combinable) {
-            if ($combinable->is_remote()) {
+            if ($combinable->is_remote($this->urlService)) {
                 $this->flush_pending($result, $pending, $key, $force);
                 $key = $ini_key;
                 $result[] = $combinable;
@@ -170,7 +172,7 @@ final class FileCombiner
             $content = $template->parse($handle, true);
 
             if ($this->is_css) {
-                $content = self::process_css($content, $combinable->path, $header);
+                $content = self::process_css($content, $combinable->path, $header, $this->urlService);
             } else {
                 $content = self::process_js($content);
             }
@@ -189,7 +191,7 @@ final class FileCombiner
                 throw new \Exception('do_combine(): unable to read ' . $combinable->path);
             }
             if ($this->is_css) {
-                $content = self::process_css($content, $combinable->path, $header);
+                $content = self::process_css($content, $combinable->path, $header, $this->urlService);
             } else {
                 $content = self::process_js($content);
             }
@@ -217,9 +219,9 @@ final class FileCombiner
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
      */
-    private static function process_css(?string $css, $file, string &$header): string
+    private static function process_css(?string $css, $file, string &$header, UrlServiceInterface $urlService): string
     {
-        $css = self::process_css_rec($css, dirname($file), $header);
+        $css = self::process_css_rec($css, dirname($file), $header, $urlService);
         $css = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('combined_css_postfilter', $css);
         if (! is_string($css)) {
             throw new \Exception("process_css(): a 'combined_css_postfilter' event listener returned a non-string value");
@@ -234,7 +236,7 @@ final class FileCombiner
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
      */
-    private static function process_css_rec(?string $css, string $dir, &$header): ?string
+    private static function process_css_rec(?string $css, string $dir, &$header, UrlServiceInterface $urlService): ?string
     {
         /** @var string */
         static $PATTERN_URL = "#url\(\s*['|\"]{0,1}(.*?)['|\"]{0,1}\s*\)#";
@@ -244,10 +246,10 @@ final class FileCombiner
         if ((bool) preg_match_all($PATTERN_URL, $css ?? '', $matches, PREG_SET_ORDER)) {
             $search = $replace = [];
             foreach ($matches as $match) {
-                if (! url_is_remote($match[1]) && $match[1][0] != '/' && ! str_contains($match[1], 'data:image/')) {
+                if (! $urlService->urlIsRemote($match[1]) && $match[1][0] != '/' && ! str_contains($match[1], 'data:image/')) {
                     $relative = $dir . "/{$match[1]}";
                     $search[] = $match[0];
-                    $replace[] = 'url(' . embellish_url(get_absolute_root_url(false) . $relative) . ')';
+                    $replace[] = 'url(' . $urlService->embellishUrl($urlService->getAbsoluteRootUrl(false) . $relative) . ')';
                 }
             }
             $css = str_replace($search, $replace, $css ?? '');
@@ -275,7 +277,7 @@ final class FileCombiner
                     if ($sub_css === false) {
                         throw new \Exception('process_css_rec(): unable to read ' . $dir . "/{$match[1]}");
                     }
-                    $replace[] = self::process_css_rec($sub_css, dirname($dir . "/{$match[1]}"), $header) ?? '';
+                    $replace[] = self::process_css_rec($sub_css, dirname($dir . "/{$match[1]}"), $header, $urlService) ?? '';
                 }
             }
             $css = str_replace($search, $replace, $css ?? '');

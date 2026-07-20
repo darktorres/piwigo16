@@ -10,6 +10,7 @@ use Piwigo\Admin\PhotosAddFtpPageRenderer;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -32,6 +33,7 @@ final class PhotosAddSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     #[\Override]
@@ -75,7 +77,7 @@ final class PhotosAddSubController implements AdminSubControllerInterface
         ]);
 
         if ($tab === 'direct') {
-            new PhotosAddDirectPageRenderer($this->redirectService)
+            new PhotosAddDirectPageRenderer($this->redirectService, $this->urlService)
                 ->render();
         } elseif ($tab === 'applications') {
             new PhotosAddApplicationsPageRenderer()

@@ -12,6 +12,7 @@ use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
@@ -44,6 +45,7 @@ final class CommentsController implements ControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     private static function permissionService(Connection $conn): PermissionService
@@ -75,7 +77,7 @@ final class CommentsController implements ControllerInterface
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         $url_self = PHPWG_ROOT_PATH . 'comments.php'
-          . get_query_string_diff(['delete', 'edit', 'validate', 'pwg_token']);
+          . $this->urlService->getQueryStringDiff(['delete', 'edit', 'validate', 'pwg_token']);
 
         $sort_order = [
             'DESC' => l10n('descending'),
@@ -232,7 +234,7 @@ final class CommentsController implements ControllerInterface
                 $request_uri = $_SERVER['REQUEST_URI'] ?? '';
                 $request_uri = is_string($request_uri) ? $request_uri : '';
                 $login_url =
-                  get_root_url() . 'identification.php?redirect='
+                  $this->urlService->getRootUrl() . 'identification.php?redirect='
                   . urlencode(urlencode($request_uri))
                 ;
                 $this->redirectService->redirect($login_url);
@@ -281,7 +283,7 @@ final class CommentsController implements ControllerInterface
         $action = null;
         $edit_comment = null;
 
-        $commentService = new CommentService(new CommentRepository($conn), new EphemeralKeyService(), new MailService(), new HtmlService());
+        $commentService = new CommentService(new CommentRepository($conn), new EphemeralKeyService(), new MailService(), new HtmlService(), $this->urlService);
 
         $actions = ['delete', 'validate', 'edit'];
         foreach ($actions as $loop_action) {
@@ -373,6 +375,8 @@ final class CommentsController implements ControllerInterface
             }
         }
 
+        $urlService = $this->urlService;
+
         $body = LegacyRenderCapture::capture(static function () use (
             $conn,
             $url_self,
@@ -387,7 +391,8 @@ final class CommentsController implements ControllerInterface
             $sort_order_value,
             $selected_items_number,
             $whereClauses,
-            $edit_comment
+            $edit_comment,
+            $urlService
         ): void {
             // $title is set and read entirely within this closure (passed
             // straight into PageHeaderRenderer::render() below) -- no
@@ -535,7 +540,7 @@ SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
             $counter = is_numeric($counter_raw) ? (int) $counter_raw : 0;
 
             $url = PHPWG_ROOT_PATH . 'comments.php'
-              . get_query_string_diff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
+              . $urlService->getQueryStringDiff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
 
             // when 'all' items are shown there is no real page size;
             // PHP_INT_MAX makes create_navigation_bar's own "more than one
@@ -589,7 +594,7 @@ SELECT *
                     $src_image = new SrcImage($elements[$image_id]);
 
                     // link to the full size picture
-                    $url = make_picture_url(
+                    $url = $urlService->makePictureUrl(
                         [
                             'category' => $categories[$category_id],
                             'image_id' => $image_id,
@@ -632,7 +637,7 @@ SELECT *
                     }
 
                     if (\Piwigo\Auth\AccessControl::canManageComment('delete', $author_id)) {
-                        $tpl_comment['U_DELETE'] = add_url_params(
+                        $tpl_comment['U_DELETE'] = $urlService->addUrlParams(
                             $url_self,
                             [
                                 'delete' => $comment['comment_id'],
@@ -643,7 +648,7 @@ SELECT *
                     }
 
                     if (\Piwigo\Auth\AccessControl::canManageComment('edit', $author_id)) {
-                        $tpl_comment['U_EDIT'] = add_url_params(
+                        $tpl_comment['U_EDIT'] = $urlService->addUrlParams(
                             $url_self,
                             [
                                 'edit' => $comment['comment_id'],
@@ -665,7 +670,7 @@ SELECT *
 
                     if (\Piwigo\Auth\AccessControl::canManageComment('validate', $author_id)) {
                         if ($comment['validated'] !== 'true') {
-                            $tpl_comment['U_VALIDATE'] = add_url_params(
+                            $tpl_comment['U_VALIDATE'] = $urlService->addUrlParams(
                                 $url_self,
                                 [
                                     'validate' => $comment['comment_id'],
@@ -687,7 +692,7 @@ SELECT *
             $themeconf = is_array($themeconf) ? $themeconf : [];
             if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theCommentsPage', $themeconf['hide_menu_on'], true)) {
                 new MenubarRenderer()
-                    ->render();
+                    ->render($urlService);
             }
 
             // +---------------------------------------------------------------+

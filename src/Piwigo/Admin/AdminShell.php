@@ -21,6 +21,7 @@ use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -54,6 +55,7 @@ final class AdminShell
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     /**
@@ -70,6 +72,7 @@ final class AdminShell
         $template = \Piwigo\Template\CurrentTemplate::get();
         $conn = DbConnection::build();
 
+        CoreTabs::setUrlService($this->urlService);
         \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('tabsheet_before_select', CoreTabs::addCoreTabs(...));
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_admin');
@@ -288,7 +291,7 @@ final class AdminShell
                 'U_TAGS' => $link_start . 'tags',
                 'U_USERS' => $link_start . 'user_list',
                 'U_GROUPS' => $link_start . 'group_list',
-                'U_RETURN' => get_gallery_home_url(),
+                'U_RETURN' => $this->urlService->getGalleryHomeUrl(),
                 'U_ADMIN' => PHPWG_ROOT_PATH . 'admin.php',
                 'U_LOGOUT' => PHPWG_ROOT_PATH . 'index.php?act=logout',
                 'U_PLUGINS' => $link_start . 'plugins',

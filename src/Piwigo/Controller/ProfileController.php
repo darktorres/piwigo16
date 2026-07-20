@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -40,6 +41,7 @@ final class ProfileController implements ControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     #[\Override]
@@ -102,13 +104,14 @@ SELECT ' . implode(',', $fields) . '
         $template->set_filename('profile_content', 'profile_content.tpl');
 
         $profileFormHandler->loadIntoTemplate(
-            get_root_url() . 'profile.php', // action
-            make_index_url(), // for redirect
+            $this->urlService->getRootUrl() . 'profile.php', // action
+            $this->urlService->makeIndexUrl(), // for redirect
             $userdata
         );
         $template->assign_var_from_handle('PROFILE_CONTENT', 'profile_content');
 
-        $body = LegacyRenderCapture::capture(static function (): void {
+        $urlService = $this->urlService;
+        $body = LegacyRenderCapture::capture(static function () use ($urlService): void {
             // $title is set and read entirely within this closure (passed
             // straight into PageHeaderRenderer::render() below) -- no
             // other file reads $GLOBALS['title']. Plain local, not global.
@@ -123,7 +126,7 @@ SELECT ' . implode(',', $fields) . '
             if (! is_array($hide_menu_on) or ! in_array('theProfilePage', $hide_menu_on, true)) {
                 if (($themeconf['id'] ?? null) !== 'standard_pages') {
                     new MenubarRenderer()
-                        ->render();
+                        ->render($urlService);
                 }
             }
 

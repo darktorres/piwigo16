@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Core\UrlServiceInterface;
+
 /**
  * Ported from admin/include/add_core_tabs.inc.php (P23 batch 8b-6). Its
  * one function is reached exclusively via the `tabsheet_before_select`
@@ -32,6 +34,30 @@ namespace Piwigo\Admin;
  */
 final class CoreTabs
 {
+    private static ?UrlServiceInterface $urlService = null;
+
+    /**
+     * Set once by Piwigo\Admin\AdminShell::run(), right before registering
+     * addCoreTabs() as the 'tabsheet_before_select' event handler --
+     * addCoreTabs() is only ever reached via that event (fixed callback
+     * signature, no room for a new method param), so it needs the same
+     * static-setter shape as Image\SrcImage::setUrlService() (Legacy
+     * Coupling Retirement Phase 4c).
+     */
+    public static function setUrlService(UrlServiceInterface $urlService): void
+    {
+        self::$urlService = $urlService;
+    }
+
+    private static function urlService(): UrlServiceInterface
+    {
+        if (! self::$urlService instanceof UrlServiceInterface) {
+            throw new \RuntimeException('CoreTabs: no URL service set (AdminShell::run() not run yet?)');
+        }
+
+        return self::$urlService;
+    }
+
     /**
      * @param array<string, array{caption: string, url: string}> $sheets
      * @return array<string, array{caption: string, url: string}>
@@ -295,16 +321,16 @@ final class CoreTabs
             case 'photos_add':
                 $sheets['direct'] = [
                     'caption' => '<span class="icon-upload"></span>' . l10n('Web Form'),
-                    'url' => PhotosAddDirectPageRenderer::baseUrl() . '&amp;section=direct',
+                    'url' => PhotosAddDirectPageRenderer::baseUrl(self::urlService()) . '&amp;section=direct',
                 ];
                 $sheets['applications'] = [
                     'caption' => '<span class="icon-network"></span>' . l10n('Applications'),
-                    'url' => PhotosAddDirectPageRenderer::baseUrl() . '&amp;section=applications',
+                    'url' => PhotosAddDirectPageRenderer::baseUrl(self::urlService()) . '&amp;section=applications',
                 ];
                 if (\Piwigo\Config\Config::enableSynchronization()) {
                     $sheets['ftp'] = [
                         'caption' => '<span class="icon-exchange"></span>' . l10n('FTP + Synchronization'),
-                        'url' => PhotosAddDirectPageRenderer::baseUrl() . '&amp;section=ftp',
+                        'url' => PhotosAddDirectPageRenderer::baseUrl(self::urlService()) . '&amp;section=ftp',
                     ];
                 }
                 break;
@@ -331,11 +357,11 @@ final class CoreTabs
             case 'rating':
                 $sheets['rating'] = [
                     'caption' => l10n('Photos'),
-                    'url' => get_root_url() . 'admin.php?page=rating',
+                    'url' => self::urlService()->getRootUrl() . 'admin.php?page=rating',
                 ];
                 $sheets['rating_user'] = [
                     'caption' => l10n('Users'),
-                    'url' => get_root_url() . 'admin.php?page=rating_user',
+                    'url' => self::urlService()->getRootUrl() . 'admin.php?page=rating_user',
                 ];
                 break;
 

@@ -8,6 +8,7 @@ use Piwigo\Admin\tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -53,6 +54,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     #[\Override]
@@ -77,7 +79,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             'site_manager' => 'site_manager.tpl',
         ]);
 
-        $my_base_url = get_root_url() . 'admin.php?page=';
+        $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=';
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('site_update');
@@ -91,7 +93,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         // +-----------------------------------------------------------------------+
         if (isset($_POST['submit']) and ! empty($_POST['galleries_url']) and is_string($_POST['galleries_url'])) {
             $galleries_url_input = $_POST['galleries_url'];
-            $is_remote = url_is_remote($galleries_url_input);
+            $is_remote = $this->urlService->urlIsRemote($galleries_url_input);
             if ($is_remote) {
                 new HtmlService()
                     ->fatalError('remote sites not supported');
@@ -136,7 +138,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
                     new CategoryService(
                         new CategoryRepository($conn),
                         new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
-                    )->deleteSite($site_id, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)));
+                    )->deleteSite($site_id, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), $this->urlService);
                     \Piwigo\Core\PageState::current()->addInfo($galleries_url . ' ' . l10n('deleted'));
                     break;
 
@@ -145,7 +147,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
 
         $template->assign(
             [
-                'F_ACTION' => get_root_url() . 'admin.php' . get_query_string_diff(['action', 'site', 'pwg_token']),
+                'F_ACTION' => $this->urlService->getRootUrl() . 'admin.php' . $this->urlService->getQueryStringDiff(['action', 'site', 'pwg_token']),
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
                 'ADMIN_PAGE_TITLE' => l10n('Synchronize'),
@@ -168,7 +170,7 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
             // returns null for either of these keys here.
             $id = is_scalar($row['id']) ? (string) $row['id'] : '';
             $galleries_url = is_string($row['galleries_url']) ? $row['galleries_url'] : '';
-            $is_remote = url_is_remote($galleries_url);
+            $is_remote = $this->urlService->urlIsRemote($galleries_url);
             $base_url = PHPWG_ROOT_PATH . 'admin.php';
             $base_url .= '?page=site_manager';
             $base_url .= '&amp;site=' . $id;

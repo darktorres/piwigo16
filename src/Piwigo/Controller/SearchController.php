@@ -10,6 +10,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -37,6 +38,7 @@ final class SearchController implements ControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     private static function permissionService(Connection $conn): PermissionService
@@ -260,7 +262,7 @@ SELECT
             }
         }
 
-        [$search_uuid, $search_url] = $searchService->saveSearch($search);
+        [$search_uuid, $search_url] = $searchService->saveSearch($search, $this->urlService);
         $this->redirectService->redirect($search_url);
     }
 }

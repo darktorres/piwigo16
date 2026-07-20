@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -27,6 +28,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class TagsController implements ControllerInterface
 {
+    public function __construct(
+        private readonly UrlServiceInterface $urlService,
+    ) {}
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
@@ -35,8 +40,9 @@ final class TagsController implements ControllerInterface
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_tags');
 
         $displayModeParam = $request->getQueryParams()['display_mode'] ?? null;
+        $urlService = $this->urlService;
 
-        $body = LegacyRenderCapture::capture(static function () use ($displayModeParam): void {
+        $body = LegacyRenderCapture::capture(static function () use ($displayModeParam, $urlService): void {
             // $title is set and read entirely within this closure (passed
             // straight into PageHeaderRenderer::render() below) -- no
             // other file reads $GLOBALS['title']. Plain local, not global.
@@ -59,7 +65,7 @@ final class TagsController implements ControllerInterface
             foreach (['cloud', 'letters'] as $mode) {
                 $template->assign(
                     'U_' . strtoupper($mode),
-                    get_root_url() . 'tags.php' . ($default_display_mode === $mode ? '' : '?display_mode=' . $mode)
+                    $urlService->getRootUrl() . 'tags.php' . ($default_display_mode === $mode ? '' : '?display_mode=' . $mode)
                 );
             }
 
@@ -122,7 +128,7 @@ final class TagsController implements ControllerInterface
                     $letter['tags'][] = array_merge(
                         $tag,
                         [
-                            'URL' => make_index_url([
+                            'URL' => $urlService->makeIndexUrl([
                                 'tags' => [$tag],
                             ]),
                         ]
@@ -164,7 +170,7 @@ final class TagsController implements ControllerInterface
                         array_merge(
                             $tag,
                             [
-                                'URL' => make_index_url(
+                                'URL' => $urlService->makeIndexUrl(
                                     [
                                         'tags' => [$tag],
                                     ]
@@ -179,7 +185,7 @@ final class TagsController implements ControllerInterface
             $themeconf = is_array($themeconf) ? $themeconf : [];
             if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theTagsPage', $themeconf['hide_menu_on'], true)) {
                 new MenubarRenderer()
-                    ->render();
+                    ->render($urlService);
             }
 
             new \Piwigo\Page\PageHeaderRenderer()

@@ -92,6 +92,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
+    use Piwigo\Html\HtmlService;
+    use Piwigo\Url\UrlService;
 
     /**
      * Adversarial coverage for ExtensionLifecycle's real state-machine
@@ -133,7 +135,7 @@ namespace Piwigo\Tests\Integration {
 
             $this->conn = DbConnection::build();
             $this->repo = new ExtensionRepository($this->conn);
-            $this->lifecycle = new ExtensionLifecycle($this->repo, new PemCatalog(new ZipExtractor()));
+            $this->lifecycle = new ExtensionLifecycle($this->repo, new PemCatalog(new ZipExtractor()), new UrlService(new HtmlService()));
 
             Config::override('enable_extensions_install', true);
             Config::override('php_extension_in_urls', false);

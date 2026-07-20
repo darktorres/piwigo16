@@ -6,6 +6,7 @@ namespace Piwigo\Section;
 
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 
 /**
  * URL token parser: "category/12-name/start-24" -> a structured
@@ -28,6 +29,7 @@ final readonly class SectionInitializer
         private HtmlRenderingInterface $htmlRenderer,
         private SectionRepository $repo,
         private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
     ) {}
 
     public function parse(): SectionUrlParse
@@ -111,7 +113,7 @@ final readonly class SectionInitializer
             }
         }
 
-        $parsed = parse_section_url($tokens, $next_token);
+        $parsed = $this->urlService->parseSectionUrl($tokens, $next_token, $this->redirectService);
 
         return new SectionUrlParse($root_path, $section_url, $tokens, $next_token, $image_id, $image_file, $parsed);
     }

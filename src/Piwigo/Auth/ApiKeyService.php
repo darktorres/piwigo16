@@ -6,6 +6,7 @@ namespace Piwigo\Auth;
 
 use Piwigo\Core\Env;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Session\SessionService;
 
 /**
@@ -27,6 +28,7 @@ final readonly class ApiKeyService
         private MailerInterface $mailer,
         private ApiKeyRepository $repo,
         private PasswordService $passwordService,
+        private UrlServiceInterface $urlService,
     ) {}
 
     /**
@@ -223,7 +225,7 @@ final readonly class ApiKeyService
         $message = '<p style="margin: 20px 0">' . l10n('Hello %s,', $username) . '</p>';
         $message .= '<p style="margin: 20px 0">' . $days_left_str . '</p>';
         $message .= '<p style="margin: 20px 0">' . l10n('To continue using the API, please renew your key before it expires.') . '</p>';
-        $message .= '<p style="margin: 20px 0">' . l10n('You can manage your API keys in your <a href="%s">account settings.</a>', get_absolute_root_url() . 'profile.php') . '</p>';
+        $message .= '<p style="margin: 20px 0">' . l10n('You can manage your API keys in your <a href="%s">account settings.</a>', $this->urlService->getAbsoluteRootUrl() . 'profile.php') . '</p>';
 
         $gallery_title = \Piwigo\Config\Config::galleryTitle();
 

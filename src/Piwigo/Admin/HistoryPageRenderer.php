@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Auth\CookieService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Env;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
@@ -49,7 +50,7 @@ final class HistoryPageRenderer
      * regardless, so there was never a real bridge here even in
      * principle.
      */
-    public function render(string $pageSlug): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
         $conn = DbConnection::build();
@@ -80,7 +81,7 @@ final class HistoryPageRenderer
 
         $template->assign(
             [
-                'F_ACTION' => get_root_url() . 'admin.php?page=history',
+                'F_ACTION' => $urlService->getRootUrl() . 'admin.php?page=history',
                 'API_METHOD' => 'ws.php?format=json&method=pwg.history.search',
             ]
         );

@@ -21,7 +21,9 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
+use Piwigo\Url\UrlService;
 
 /**
  * upgrade.php's orchestration, ported verbatim from that script's former
@@ -166,7 +168,7 @@ class UpgradeRunner
         $query = 'SELECT galleries_url FROM ' . Tables::sites() . ';';
         foreach ($conn->fetchAllAssociative($query) as $row) {
             $galleries_url = $row['galleries_url'] ?? null;
-            if (is_string($galleries_url) && url_is_remote($galleries_url)) {
+            if (is_string($galleries_url) && new UrlService(new HtmlService())->urlIsRemote($galleries_url)) {
                 $has_remote_site = true;
             }
         }
@@ -174,7 +176,7 @@ class UpgradeRunner
         if ($has_remote_site) {
             \Piwigo\Core\PageState::current()->errors = [];
             $step = 3;
-            updates::upgrade_to('2.3.4', $step, new RedirectService(), false);
+            updates::upgrade_to('2.3.4', $step, new RedirectService(), new UrlService(new HtmlService()), false);
 
             $upgrade_errors = \Piwigo\Core\PageState::current()->errors;
             if (! empty($upgrade_errors)) {

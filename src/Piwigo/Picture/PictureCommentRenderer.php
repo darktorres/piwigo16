@@ -7,6 +7,7 @@ namespace Piwigo\Picture;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
 use Piwigo\Mail\MailService;
@@ -56,7 +57,7 @@ final class PictureCommentRenderer
      * nav-bar URL below stripping+reusing it), so both come from the
      * caller directly rather than a registry read.
      */
-    public function render(?int $editCommentId, int $imageId, int $start): void
+    public function render(?int $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
         /**
@@ -71,7 +72,7 @@ final class PictureCommentRenderer
         global $url_self;
 
         $commentRepository = new CommentRepository(DbConnection::build());
-        $commentService = new CommentService($commentRepository, new EphemeralKeyService(), new MailService(), new HtmlService());
+        $commentService = new CommentService($commentRepository, new EphemeralKeyService(), new MailService(), new HtmlService(), $urlService);
 
         $commentAction = null;
 
@@ -164,7 +165,7 @@ final class PictureCommentRenderer
         $nbCommentPage = \Piwigo\Config\Config::nbCommentPage();
 
         $navigationBar = new \Piwigo\Core\PaginationService()
-            ->createNavigationBar(duplicate_picture_url([], ['start']), $nbComments, $start, $nbCommentPage, true);
+            ->createNavigationBar($urlService->duplicatePictureUrl([], ['start']), $nbComments, $start, $nbCommentPage, true);
 
         $template->assign(
             [
@@ -184,7 +185,7 @@ final class PictureCommentRenderer
             $commentsOrder = is_string($commentsOrder) ? $commentsOrder : 'ASC';
 
             $template->assign([
-                'COMMENTS_ORDER_URL' => add_url_params(duplicate_picture_url(), [
+                'COMMENTS_ORDER_URL' => $urlService->addUrlParams($urlService->duplicatePictureUrl(), [
                     'comments_order' => ($commentsOrder === 'ASC' ? 'DESC' : 'ASC'),
                 ]),
                 'COMMENTS_ORDER_TITLE' => $commentsOrder === 'ASC' ? l10n('Show latest comments first') : l10n('Show oldest comments first'),
@@ -242,7 +243,7 @@ final class PictureCommentRenderer
                 $commentAuthorId = is_numeric($row['author_id']) ? (int) $row['author_id'] : -1;
 
                 if (\Piwigo\Auth\AccessControl::canManageComment('delete', $commentAuthorId)) {
-                    $tplComment['U_DELETE'] = add_url_params(
+                    $tplComment['U_DELETE'] = $urlService->addUrlParams(
                         $url_self,
                         [
                             'action' => 'delete_comment',
@@ -253,7 +254,7 @@ final class PictureCommentRenderer
                     );
                 }
                 if (\Piwigo\Auth\AccessControl::canManageComment('edit', $commentAuthorId)) {
-                    $tplComment['U_EDIT'] = add_url_params(
+                    $tplComment['U_EDIT'] = $urlService->addUrlParams(
                         $url_self,
                         [
                             'action' => 'edit_comment',
@@ -274,7 +275,7 @@ final class PictureCommentRenderer
                     $tplComment['EMAIL'] = $email;
 
                     if ($row['validated'] !== 'true') {
-                        $tplComment['U_VALIDATE'] = add_url_params(
+                        $tplComment['U_VALIDATE'] = $urlService->addUrlParams(
                             $url_self,
                             [
                                 'action' => 'validate_comment',

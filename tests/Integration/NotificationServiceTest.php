@@ -27,6 +27,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Notification\NotificationService;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
+    use Piwigo\Url\UrlService;
     use Piwigo\Users\CurrentUser;
     use Piwigo\Users\User;
     use Piwigo\Users\UserStatus;
@@ -97,7 +98,8 @@ final class NotificationServiceTest extends IntegrationTestCase
             new NotificationRepository($this->conn),
             new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn)),
             new PersistentFileCache(),
-            new HtmlService()
+            new HtmlService(),
+            new UrlService(new HtmlService())
         );
     }
 

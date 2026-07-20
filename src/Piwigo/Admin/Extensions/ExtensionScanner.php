@@ -6,6 +6,7 @@ namespace Piwigo\Admin\Extensions;
 
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Html\HtmlService;
 
@@ -26,7 +27,7 @@ final class ExtensionScanner
      * @return array<string, array<string, mixed>> keyed by extension id
      *   (directory name)
      */
-    public function scan(ExtensionType $type, ?string $targetCharset = null): array
+    public function scan(ExtensionType $type, UrlServiceInterface $urlService, ?string $targetCharset = null): array
     {
         $dir = opendir($type->scanDirectory());
         if ($dir === false) {
@@ -44,7 +45,7 @@ final class ExtensionScanner
 
             $entry = match ($type) {
                 ExtensionType::Plugin => $this->scanPlugin($file),
-                ExtensionType::Theme => $this->scanTheme($file),
+                ExtensionType::Theme => $this->scanTheme($file, $urlService),
                 ExtensionType::Language => $this->scanLanguage($file, $targetCharset),
             };
 
@@ -135,7 +136,7 @@ final class ExtensionScanner
     /**
      * @return array<string, mixed>|null
      */
-    private function scanTheme(string $themeId): ?array
+    private function scanTheme(string $themeId, UrlServiceInterface $urlService): ?array
     {
         $path = ExtensionType::Theme->scanDirectory() . $themeId;
         if (! is_dir($path) || ! file_exists($path . '/themeconf.inc.php')) {
@@ -208,7 +209,7 @@ final class ExtensionScanner
         }
 
         if (file_exists($path . '/admin/admin.inc.php')) {
-            $theme['admin_uri'] = get_root_url() . 'admin.php?page=theme&theme=' . $themeId;
+            $theme['admin_uri'] = $urlService->getRootUrl() . 'admin.php?page=theme&theme=' . $themeId;
         }
 
         // IMPORTANT SECURITY! (only string fields -- mobile/activable/

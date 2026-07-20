@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\ExtendForTemplatesPageRenderer;
+use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -18,10 +19,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class ExtendForTemplatesSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly UrlServiceInterface $urlService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new ExtendForTemplatesPageRenderer()
-            ->render();
+            ->render($this->urlService);
     }
 }

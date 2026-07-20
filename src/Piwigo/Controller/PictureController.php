@@ -15,6 +15,7 @@ use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -82,6 +83,7 @@ final class PictureController implements ControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     private static function permissionService(Connection $conn): PermissionService
@@ -114,9 +116,9 @@ final class PictureController implements ControllerInterface
         return new ImageService(new ImageRepository($conn), self::activityService($conn));
     }
 
-    private static function commentService(Connection $conn): CommentService
+    private static function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
     {
-        return new CommentService(new CommentRepository($conn), new EphemeralKeyService(), new MailService(), new HtmlService());
+        return new CommentService(new CommentRepository($conn), new EphemeralKeyService(), new MailService(), new HtmlService(), $urlService);
     }
 
     #[\Override]
@@ -137,6 +139,7 @@ final class PictureController implements ControllerInterface
             new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new PersistentFileCache(), new MailService(), new HtmlService(), $this->redirectService),
             self::userService($conn),
             $this->redirectService,
+            $this->urlService,
         )->populate();
 
         /**
@@ -204,7 +207,7 @@ SELECT id, file, level
                     ->pageNotFound(
                         $this->redirectService,
                         'The requested image does not exist',
-                        duplicate_index_url()
+                        $this->urlService->duplicateIndexUrl()
                     );
             }
             $row_level = $row['level'];
@@ -239,7 +242,7 @@ SELECT id, file, level
                         ->pageNotFound(
                             $this->redirectService,
                             'The requested image is filtered',
-                            duplicate_index_url()
+                            $this->urlService->duplicateIndexUrl()
                         );
                 }
                 $page_section = $section_context->section;
@@ -265,7 +268,7 @@ SELECT id
                             $section_context = $section_context->withItems($items);
                             SectionContextRegistry::set($section_context);
                         } else {
-                            $url = make_picture_url(
+                            $url = $this->urlService->makePictureUrl(
                                 [
                                     'image_id' => $image_id,
                                     'image_file' => $image_file,
@@ -328,7 +331,7 @@ SELECT id
         }
 
         $nb_image_page = $section_context->nbImagePage;
-        $url_up = duplicate_index_url(
+        $url_up = $this->urlService->duplicateIndexUrl(
             [
                 'start' => floor($current_rank / $nb_image_page)
                   * $nb_image_page,
@@ -338,7 +341,7 @@ SELECT id
             ]
         );
 
-        $url_self = duplicate_picture_url();
+        $url_self = $this->urlService->duplicatePictureUrl();
 
         // +-----------------------------------------------------------------+
         // |                                actions                           |
@@ -429,7 +432,7 @@ UPDATE ' . Tables::categories() . '
                     // no break
                 case 'edit_comment':
 
-                    $commentService = self::commentService($conn);
+                    $commentService = self::commentService($conn, $this->urlService);
                     new \Piwigo\Validation\InputValidator()
                         ->validate('comment_to_edit', $_GET, false, ValidationPattern::ID);
                     // check_input_parameter() validated this against
@@ -504,7 +507,7 @@ UPDATE ' . Tables::categories() . '
                     new \Piwigo\Csrf\CsrfService()
                         ->checkOrFail(new HtmlService(), $this->redirectService);
 
-                    $commentService = self::commentService($conn);
+                    $commentService = self::commentService($conn, $this->urlService);
 
                     new \Piwigo\Validation\InputValidator()
                         ->validate('comment_to_delete', $_GET, false, ValidationPattern::ID);
@@ -530,7 +533,7 @@ UPDATE ' . Tables::categories() . '
                     new \Piwigo\Csrf\CsrfService()
                         ->checkOrFail(new HtmlService(), $this->redirectService);
 
-                    $commentService = self::commentService($conn);
+                    $commentService = self::commentService($conn, $this->urlService);
 
                     new \Piwigo\Validation\InputValidator()
                         ->validate('comment_to_validate', $_GET, false, ValidationPattern::ID);
@@ -553,6 +556,7 @@ UPDATE ' . Tables::categories() . '
             }
         }
 
+        $urlService = $this->urlService;
         $body = LegacyRenderCapture::capture(static function () use (
             $conn,
             $section_context,
@@ -566,7 +570,8 @@ UPDATE ' . Tables::categories() . '
             $next_item,
             $last_item,
             $url_up,
-            $edit_comment
+            $edit_comment,
+            $urlService
         ): void {
             /**
              * @var string
@@ -678,7 +683,7 @@ SELECT *
                 $row['file_ext'] = strtolower(\Piwigo\Core\StringHelper::getExtension($row_file));
 
                 if ($i === 'current') {
-                    $row['element_path'] = \Piwigo\Image\ImagePathHelper::getElementPath($row);
+                    $row['element_path'] = \Piwigo\Image\ImagePathHelper::getElementPath($row, $urlService);
 
                     $row_id = $row['id'];
                     assert(is_string($row_id)); // images.id is the NOT NULL primary key
@@ -686,15 +691,15 @@ SELECT *
                     if ($row['src_image']->is_original()) {// we have a photo
                         if (\Piwigo\Users\CurrentUser::get()->enabledHigh) {
                             $row['element_url'] = $row['src_image']->get_url();
-                            $row['download_url'] = get_action_url($row_id, 'e', true);
+                            $row['download_url'] = $urlService->getActionUrl($row_id, 'e', true);
                         }
                     } else { // not a pic - need download link
-                        $row['element_url'] = get_element_url($row);
-                        $row['download_url'] = get_action_url($row_id, 'e', true);
+                        $row['element_url'] = $urlService->getElementUrl($row);
+                        $row['download_url'] = $urlService->getActionUrl($row_id, 'e', true);
                     }
                 }
 
-                $row['url'] = duplicate_picture_url(
+                $row['url'] = $urlService->duplicatePictureUrl(
                     [
                         'image_id' => $row['id'],
                         'image_file' => $row['file'],
@@ -750,7 +755,7 @@ SELECT *
                         // creating an automated refresh page in
                         // header.tpl
                         $refresh = $slideshow_params['period'];
-                        $url_link = add_url_params(
+                        $url_link = $urlService->addUrlParams(
                             $picture[$id_pict_redirect]['url'],
                             $slideshow_url_params
                         );
@@ -777,8 +782,8 @@ SELECT *
             $title_nb = ($current_rank + 1) . '/' . count($items);
 
             // metadata
-            $url_metadata = duplicate_picture_url();
-            $url_metadata = add_url_params($url_metadata, [
+            $url_metadata = $urlService->duplicatePictureUrl();
+            $url_metadata = $urlService->addUrlParams($url_metadata, [
                 'metadata' => null,
             ]);
 
@@ -844,7 +849,7 @@ SELECT *
                             [
                                 // Params slideshow was transmit to
                                 // navigation buttons
-                                'U_IMG' => add_url_params(
+                                'U_IMG' => $urlService->addUrlParams(
                                     $picture[$which_image]['url'],
                                     $slideshow_url_params
                                 ),
@@ -927,7 +932,7 @@ SELECT *
                       . strtoupper($p);
 
                     $tpl_slideshow[$var_name] =
-                          add_url_params(
+                          $urlService->addUrlParams(
                               $picture['current']['url'],
                               [
                                   'slideshow' => self::imageService($conn)
@@ -966,7 +971,7 @@ SELECT *
                     if ($new_slideshow_params['period'] === $new_period) {
                         $var_name = 'U_' . strtoupper($op) . '_PERIOD';
                         $tpl_slideshow[$var_name] =
-                              add_url_params(
+                              $urlService->addUrlParams(
                                   $picture['current']['url'],
                                   [
                                       'slideshow' => self::imageService($conn)
@@ -979,7 +984,7 @@ SELECT *
             } elseif (\Piwigo\Config\Config::pictureSlideShowIcon()) {
                 $template->assign(
                     [
-                        'U_SLIDESHOW_START' => add_url_params(
+                        'U_SLIDESHOW_START' => $urlService->addUrlParams(
                             $picture['current']['url'],
                             [
                                 'slideshow' => '',
@@ -1014,7 +1019,7 @@ SELECT *
                 if ($page_category !== null and \Piwigo\Config\Config::pictureRepresentativeIcon()) {
                     $template->assign(
                         [
-                            'U_SET_AS_REPRESENTATIVE' => add_url_params(
+                            'U_SET_AS_REPRESENTATIVE' => $urlService->addUrlParams(
                                 $url_self,
                                 [
                                     'action' => 'set_as_representative',
@@ -1025,13 +1030,13 @@ SELECT *
                 }
 
                 if (\Piwigo\Config\Config::pictureEditIcon()) {
-                    $template->assign('U_PHOTO_ADMIN', get_root_url() . 'admin.php?page=photo-' . $image_id);
+                    $template->assign('U_PHOTO_ADMIN', $urlService->getRootUrl() . 'admin.php?page=photo-' . $image_id);
                 }
 
                 if (\Piwigo\Config\Config::pictureCaddieIcon()) {
                     $template->assign(
                         'U_CADDIE',
-                        add_url_params($url_self, [
+                        $urlService->addUrlParams($url_self, [
                             'action' => 'add_to_caddie',
                         ])
                     );
@@ -1060,7 +1065,7 @@ SELECT COUNT(*) AS nb_fav
                     'favorite',
                     [
                         'IS_FAVORITE' => $is_favorite,
-                        'U_FAVORITE' => add_url_params(
+                        'U_FAVORITE' => $urlService->addUrlParams(
                             $url_self,
                             [
                                 'action' => ! $is_favorite ? 'add_to_favorites' : 'remove_from_favorites',
@@ -1099,7 +1104,7 @@ SELECT COUNT(*) AS nb_fav
             $date_creation = $picture['current']['date_creation'] ?? null;
             if (is_string($date_creation) && $date_creation !== '' && $date_creation !== '0') {
                 $val = \Piwigo\Core\DateHelper::formatDate($date_creation);
-                $url = make_index_url(
+                $url = $urlService->makeIndexUrl(
                     [
                         'chronology_field' => 'created',
                         'chronology_style' => 'monthly',
@@ -1113,7 +1118,7 @@ SELECT COUNT(*) AS nb_fav
 
             // date of availability
             $val = \Piwigo\Core\DateHelper::formatDate($picture['current']['date_available']);
-            $url = make_index_url(
+            $url = $urlService->makeIndexUrl(
                 [
                     'chronology_field' => 'posted',
                     'chronology_style' => 'monthly',
@@ -1157,12 +1162,12 @@ SELECT COUNT(*) AS nb_fav
                         array_merge(
                             $tag,
                             [
-                                'URL' => make_index_url(
+                                'URL' => $urlService->makeIndexUrl(
                                     [
                                         'tags' => [$tag],
                                     ]
                                 ),
-                                'U_TAG_IMAGE' => duplicate_picture_url(
+                                'U_TAG_IMAGE' => $urlService->duplicatePictureUrl(
                                     [
                                         'section' => 'tags',
                                         'tags' => [$tag],
@@ -1250,7 +1255,7 @@ SELECT id, name, permalink
 
             $template->assign(
                 'U_CANONICAL',
-                make_picture_url(
+                $urlService->makePictureUrl(
                     [
                         'image_id' => $picture['current']['id'],
                         'image_file' => $picture['current']['file'],
@@ -1263,10 +1268,10 @@ SELECT id, name, permalink
             // +-------------------------------------------------------------+
 
             new PictureRateRenderer(new RateRepository($conn))
-                ->render($image_id);
+                ->render($image_id, $urlService);
             if (\Piwigo\Config\Config::activateComments()) {
                 new PictureCommentRenderer()
-                    ->render($edit_comment, $image_id, $section_context->start);
+                    ->render($edit_comment, $image_id, $section_context->start, $urlService);
             }
             if ((bool) $metadata_showable and SessionService::get()->getSessionVar('show_metadata') !== null) {
                 new PictureMetadataRenderer()
@@ -1278,7 +1283,7 @@ SELECT id, name, permalink
             $themeconf = is_array($themeconf) ? $themeconf : [];
             if (\Piwigo\Config\Config::pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
                 new MenubarRenderer()
-                    ->render();
+                    ->render($urlService);
             }
 
             // The slideshow branch above may have set $refresh/$url_link

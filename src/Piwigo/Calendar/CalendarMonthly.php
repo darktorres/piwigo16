@@ -257,7 +257,7 @@ class CalendarMonthly extends CalendarBase
         $calendar_bars = [];
         foreach ($items as $year => $year_data) {
             $chronology_date = [$year];
-            $url = duplicate_index_url([
+            $url = $this->urlService->duplicateIndexUrl([
                 'chronology_date' => $chronology_date,
             ]);
 
@@ -335,7 +335,7 @@ class CalendarMonthly extends CalendarBase
         $year = is_int($year) || is_string($year) ? $year : 0;
         foreach ($items as $month => $month_data) {
             $chronology_date = [$year, $month];
-            $url = duplicate_index_url([
+            $url = $this->urlService->duplicateIndexUrl([
                 'chronology_date' => $chronology_date,
             ]);
 
@@ -465,7 +465,7 @@ class CalendarMonthly extends CalendarBase
                           'DAY' => $day,
                       ];
                 } else {
-                    $url = duplicate_index_url(
+                    $url = $this->urlService->duplicateIndexUrl(
                         [
                             'chronology_date' => [
                                 $year,

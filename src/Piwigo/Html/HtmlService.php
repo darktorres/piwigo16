@@ -8,28 +8,24 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\RegisteredBlock;
 use Piwigo\Template\Template;
+use Piwigo\Url\UrlService;
 
 /**
  * HTML rendering helpers, error pages, and status/header utilities.
  *
  * Takes only an optional, lazy-defaulted CategoryRepository -- same
  * "no *required* constructor deps" shape as Piwigo\Url\UrlService (its
- * P17 sibling namespace): the remaining bare calls (get_root_url()/
- * add_url_params(), l10n()) are all settled composer-autoloaded
- * utilities, not unmigrated legacy (Legacy Coupling Retirement Phase 4c/
- * 4d retarget these directly, without adding a constructor dependency --
- * see getCatDisplayNameFromId()'s own docblock for why this specific
- * class can never depend on CategoryService/UrlServiceInterface). This
- * class has hundreds of real `new HtmlService()` construction sites, so
- * getCatDisplayNameCache()'s own CategoryRepository need (Legacy
- * Coupling Retirement: DI+DBAL migration, Phase 1b) follows
- * MailService::$webmasterMailProvider's established lazy-default
- * pattern rather than a required param.
+ * P17 sibling namespace). This class has hundreds of real
+ * `new HtmlService()` construction sites, so getCatDisplayNameCache()'s
+ * own CategoryRepository need (Legacy Coupling Retirement: DI+DBAL
+ * migration, Phase 1b) follows MailService::$webmasterMailProvider's
+ * established lazy-default pattern rather than a required param.
  *
  * accessDenied()/badRequest()/pageNotFound()/pageForbidden() (Legacy
  * Coupling Retirement Phase 4b) take Piwigo\Core\RedirectServiceInterface
@@ -42,6 +38,18 @@ use Piwigo\Template\Template;
  * Bootstrap/ and index.php. Every real caller already holds (or can
  * trivially construct) a RedirectServiceInterface instance of its own to
  * pass through.
+ *
+ * The remaining Url-family calls (Legacy Coupling Retirement Phase 4c)
+ * go through the private urlService() helper below -- a throwaway,
+ * non-constructor `new UrlService($this)` per call, not a constructor
+ * property: `UrlService` requires `HtmlRenderingInterface` (this class
+ * implements it), so a constructor-injected `UrlServiceInterface` here
+ * would close a real cycle (`UrlService -> HtmlRenderingInterface ->
+ * HtmlService -> UrlServiceInterface -> UrlService`). PHP-DI's
+ * reflection-based autowiring only ever inspects class constructors,
+ * never ordinary methods, so a private helper method sidesteps that --
+ * unlike an optional/nullable constructor property of the same type,
+ * which PHP-DI may still attempt to autowire.
  *
  * Implements HtmlRenderingInterface (P23 batch 8f-3) so L1/L2a/L2b classes
  * that can't depend on this L3Presentation class directly can depend on
@@ -57,6 +65,11 @@ final class HtmlService implements HtmlRenderingInterface
     {
         return $this->categoryRepo
             ?? new CategoryRepository(DbConnection::build());
+    }
+
+    private function urlService(): UrlServiceInterface
+    {
+        return new UrlService($this);
     }
 
     /**
@@ -99,7 +112,7 @@ final class HtmlService implements HtmlRenderingInterface
                 $output .= $cat['name'];
             } elseif ($url === '') {
                 $output .= '<a href="'
-                      . make_index_url(
+                      . $this->urlService()->makeIndexUrl(
                           [
                               'category' => $cat,
                           ],
@@ -147,7 +160,8 @@ final class HtmlService implements HtmlRenderingInterface
         $output = '';
         if ($singleLink) {
             $uppercats_array = explode(',', $uppercats);
-            $single_url = add_url_params(get_root_url() . $url . array_pop($uppercats_array), $add_url_params);
+            $single_url = $this->urlService()
+                ->addUrlParams($this->urlService()->getRootUrl() . $url . array_pop($uppercats_array), $add_url_params);
             $output .= '<a href="' . $single_url . '"';
             if (isset($linkClass)) {
                 $output .= ' class="' . $linkClass . '"';
@@ -182,12 +196,13 @@ final class HtmlService implements HtmlRenderingInterface
             } elseif ($url === '') {
                 $output .= '
 <a href="'
-                . add_url_params(
-                    make_index_url(
-                        [
-                            'category' => $cat,
-                        ],
-                    ),
+                . $this->urlService()->addUrlParams(
+                    $this->urlService()
+                        ->makeIndexUrl(
+                            [
+                                'category' => $cat,
+                            ],
+                        ),
                     $add_url_params,
                 )
                 . '">' . $cat['name'] . '</a>';
@@ -339,7 +354,7 @@ final class HtmlService implements HtmlRenderingInterface
   <div style="text-align:center;">
     <img src="themes/default/icon/warning-triangle.svg" alt="warning-triangle" >
     <p style="max-width: 400px; margin-top 20px;">' . l10n('You are not authorized to access the requested page') . '</p>
-    <a href="' . make_index_url() . '" style="display: inline-block;padding: 10px 20px;margin: 10px;margin-top: 50px;border-radius: 7px;cursor: pointer;width: 150px;background-color: #F77000;color: #fff;text-decoration: none;border: 2px solid #F77000;">' . l10n('Home') . '</a>
+    <a href="' . $this->urlService()->makeIndexUrl() . '" style="display: inline-block;padding: 10px 20px;margin: 10px;margin-top: 50px;border-radius: 7px;cursor: pointer;width: 150px;background-color: #F77000;color: #fff;text-decoration: none;border: 2px solid #F77000;">' . l10n('Home') . '</a>
   </div>
 </div>';
             exit();
@@ -347,7 +362,7 @@ final class HtmlService implements HtmlRenderingInterface
 
         $request_uri = $_SERVER['REQUEST_URI'] ?? '';
         $request_uri = is_string($request_uri) ? $request_uri : '';
-        $redirectService->redirectHttp(get_root_url() . 'identification.php?redirect=' . urlencode(urlencode($request_uri)));
+        $redirectService->redirectHttp($this->urlService()->getRootUrl() . 'identification.php?redirect=' . urlencode(urlencode($request_uri)));
     }
 
     /**
@@ -358,7 +373,8 @@ final class HtmlService implements HtmlRenderingInterface
     {
         $this->setStatusHeader(403);
         if ($alternateUrl === null) {
-            $alternateUrl = make_index_url();
+            $alternateUrl = $this->urlService()
+                ->makeIndexUrl();
         }
         $redirectService->redirectHtml(
             $alternateUrl,
@@ -378,7 +394,8 @@ final class HtmlService implements HtmlRenderingInterface
     {
         $this->setStatusHeader(400);
         if ($alternateUrl === null) {
-            $alternateUrl = make_index_url();
+            $alternateUrl = $this->urlService()
+                ->makeIndexUrl();
         }
         $redirectService->redirectHtml(
             $alternateUrl,
@@ -401,7 +418,8 @@ final class HtmlService implements HtmlRenderingInterface
     {
         $this->setStatusHeader(404);
         if ($alternateUrl === null) {
-            $alternateUrl = make_index_url();
+            $alternateUrl = $this->urlService()
+                ->makeIndexUrl();
         }
         $redirectService->redirectHtml(
             $alternateUrl,
@@ -474,7 +492,7 @@ final class HtmlService implements HtmlRenderingInterface
     #[\Override]
     public function getTagsContentTitle(array $tags): string
     {
-        return '<a href="' . get_root_url() . 'tags.php" title="' . l10n('display available tags') . '">'
+        return '<a href="' . $this->urlService()->getRootUrl() . 'tags.php" title="' . l10n('display available tags') . '">'
           . l10n(count($tags) > 1 ? 'Tags' : 'Tag')
           . '</a> ';
     }
@@ -517,7 +535,8 @@ final class HtmlService implements HtmlRenderingInterface
                 if (count($other_cats) > 0) {
                     $params['combined_categories'] = $other_cats;
                 }
-                $remove_url = make_index_url($params);
+                $remove_url = $this->urlService()
+                    ->makeIndexUrl($params);
 
                 // P23 batch 8f-4: replaces the deleted get_themeconf()
                 // free function -- this class is L3Presentation, so it may
@@ -534,7 +553,7 @@ final class HtmlService implements HtmlRenderingInterface
                   '<a id="TagsGroupRemoveTag" href="' . $remove_url . '" style="border:none;" title="'
                   . l10n('remove this tag from the list')
                   . '"><img src="'
-                    . get_root_url() . $icon_dir . '/remove_s.png'
+                    . $this->urlService()->getRootUrl() . $icon_dir . '/remove_s.png'
                   . '" alt="x" style="vertical-align:bottom;" >'
                   . '<span class="pwg-icon pwg-icon-close" ></span>'
                   . '</a>';
@@ -700,7 +719,8 @@ final class HtmlService implements HtmlRenderingInterface
      */
     public function getSrcImageUrlProtectionHandler(string $url, SrcImage $srcImage): string
     {
-        return get_action_url($srcImage->id, $srcImage->is_original() ? 'e' : 'r', false);
+        return $this->urlService()
+            ->getActionUrl($srcImage->id, $srcImage->is_original() ? 'e' : 'r', false);
     }
 
     /**
@@ -721,7 +741,8 @@ final class HtmlService implements HtmlRenderingInterface
         $id = $infos['id'] ?? '';
         $id = is_int($id) || is_string($id) ? $id : '';
 
-        return get_action_url($id, 'e', false);
+        return $this->urlService()
+            ->getActionUrl($id, 'e', false);
     }
 
     /**

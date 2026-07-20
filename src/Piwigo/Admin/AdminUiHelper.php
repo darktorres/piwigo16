@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\StringHelper;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
@@ -130,7 +131,7 @@ final class AdminUiHelper
      *   (categories,groups,images,tags,users)
      * @return string[]
      */
-    public static function getAdminClientCacheKeys(string|array $requested = []): array
+    public static function getAdminClientCacheKeys(UrlServiceInterface $urlService, string|array $requested = []): array
     {
         $tables = [
             'categories' => Tables::categories(),
@@ -150,7 +151,7 @@ final class AdminUiHelper
         }
 
         $keys = [
-            '_hash' => md5(get_absolute_root_url()),
+            '_hash' => md5($urlService->getAbsoluteRootUrl()),
         ];
 
         $conn = DbConnection::build();

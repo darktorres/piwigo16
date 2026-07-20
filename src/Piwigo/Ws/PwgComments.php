@@ -21,6 +21,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Mail\MailService;
+use Piwigo\Url\UrlService;
 
 /**
  * P23 batch 8e-2: relocated from include/ws_functions/pwg.comments.php.
@@ -203,7 +204,8 @@ SELECT
 
             $list[] = [
                 'id' => $row['id'],
-                'admin_link' => get_root_url() . 'admin.php?page=photo-' . (is_scalar($row_image_id) ? $row_image_id : ''),
+                'admin_link' => new UrlService(new HtmlService())
+                    ->getRootUrl() . 'admin.php?page=photo-' . (is_scalar($row_image_id) ? $row_image_id : ''),
                 'medium_url' => $medium,
                 'file' => $row['file'],
                 'image_date_available' => \Piwigo\Core\DateHelper::formatDate($comment_date_available, ['day_name', 'day', 'month', 'year', 'time']),
@@ -316,6 +318,6 @@ GROUP BY author_id
      */
     private static function commentService(): CommentService
     {
-        return new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService());
+        return new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()));
     }
 }

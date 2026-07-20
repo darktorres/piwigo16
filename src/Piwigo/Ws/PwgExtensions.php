@@ -24,7 +24,9 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
+use Piwigo\Url\UrlService;
 
 /**
  * P23 batch 8e-2: relocated from include/ws_functions/pwg.extensions.php.
@@ -338,7 +340,7 @@ final class PwgExtensions
      */
     public static function checkUpdates(array $params, PwgServer &$service): array
     {
-        $update = new updates(new RedirectService());
+        $update = new updates(new RedirectService(), new UrlService(new HtmlService()));
         $result = [];
 
         if (! isset($_SESSION['need_update' . AppInfo::VERSION])) {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\HistoryPageRenderer;
+use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -23,10 +24,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class HistorySubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly UrlServiceInterface $urlService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new HistoryPageRenderer()
-            ->render('history');
+            ->render('history', $this->urlService);
     }
 }

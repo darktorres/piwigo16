@@ -10,6 +10,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
@@ -44,6 +45,7 @@ final readonly class CommentService
         private EphemeralKeyService $ephemeralKeys,
         private MailerInterface $mailer,
         private HtmlRenderingInterface $htmlRenderer,
+        private UrlServiceInterface $urlService,
     ) {}
 
     /**
@@ -285,7 +287,7 @@ final readonly class CommentService
             $emailAdminOnComment = \Piwigo\Config\Config::emailAdminOnComment() && $commentAction === 'validate';
             $emailAdminOnValidation = \Piwigo\Config\Config::emailAdminOnCommentValidation() && $commentAction === 'moderate';
             if ($emailAdminOnComment || $emailAdminOnValidation) {
-                $commentUrl = get_absolute_root_url() . 'comments.php?comment_id=' . $id;
+                $commentUrl = $this->urlService->getAbsoluteRootUrl() . 'comments.php?comment_id=' . $id;
 
                 $keyargsContent = [
                     Lang::buildArgs('Author: %s', stripslashes($author)),
@@ -420,7 +422,7 @@ final readonly class CommentService
 
             // mail admin and ask to validate the comment
             if ($updated && \Piwigo\Config\Config::emailAdminOnCommentValidation() && $commentAction === 'moderate') {
-                $commentUrl = get_absolute_root_url() . 'comments.php?comment_id=' . $commentId;
+                $commentUrl = $this->urlService->getAbsoluteRootUrl() . 'comments.php?comment_id=' . $commentId;
 
                 $keyargsContent = [
                     Lang::buildArgs('Author: %s', stripslashes($username)),

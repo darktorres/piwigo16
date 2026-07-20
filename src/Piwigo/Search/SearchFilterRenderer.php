@@ -9,6 +9,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\TemplateInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Section\SectionContext;
@@ -37,6 +38,7 @@ final readonly class SearchFilterRenderer
         private TagService $tagService,
         private CategoryRepository $categoryRepo,
         private PermissionService $permissionService,
+        private UrlServiceInterface $urlService,
     ) {}
 
     /**
@@ -1029,7 +1031,7 @@ SELECT
                 continue;
             }
 
-            $url = make_index_url(
+            $url = $this->urlService->makeIndexUrl(
                 [
                     'tags' => [$tag],
                 ]

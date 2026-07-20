@@ -9,6 +9,7 @@ use Piwigo\Admin\MaintenanceEnvPageRenderer;
 use Piwigo\Admin\MaintenanceSysPageRenderer;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -54,6 +55,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     #[\Override]
@@ -73,7 +75,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         // tabsheet::select() below -- must be set before that call, not
         // dead code (see this class's own docblock).
         global $my_base_url;
-        $my_base_url = get_root_url() . 'admin.php?page=';
+        $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=';
 
         if (isset($_GET['action'])) {
             new \Piwigo\Csrf\CsrfService()
@@ -174,13 +176,13 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         $tabsheet->assign();
 
         if ($tab === 'env') {
-            new MaintenanceEnvPageRenderer($this->redirectService)
+            new MaintenanceEnvPageRenderer($this->redirectService, $this->urlService)
                 ->render();
         } elseif ($tab === 'sys') {
             new MaintenanceSysPageRenderer()
                 ->render();
         } else {
-            new MaintenanceActionsPageRenderer($this->redirectService)
+            new MaintenanceActionsPageRenderer($this->redirectService, $this->urlService)
                 ->render();
         }
 

@@ -7,7 +7,9 @@ namespace Piwigo\Bootstrap;
 use Piwigo\Admin\PiwigoInfosSender;
 use Piwigo\Admin\updates;
 use Piwigo\Core\UniqueExecLock;
+use Piwigo\Html\HtmlService;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Url\UrlService;
 
 /**
  * The page-footer orchestration of the deleted include/page_tail.php (P23
@@ -55,7 +57,7 @@ final class PageTail
             if ($check_for_updates) {
                 $exec_id = UniqueExecLock::begins('check_for_updates');
                 if ($exec_id !== false) {
-                    $updates = new updates(new RedirectService());
+                    $updates = new updates(new RedirectService(), new UrlService(new HtmlService()));
                     $updates->notify_piwigo_new_versions();
 
                     UniqueExecLock::ends('check_for_updates');
@@ -66,8 +68,9 @@ final class PageTail
         // P23 batch 8f-4: PageTailRenderer (L3) receives the telemetry
         // sender through Piwigo\Core\TelemetrySenderInterface -- this class
         // (L4) is the one place the concrete L4 implementation gets
-        // constructed.
-        new PageTailRenderer(new PiwigoInfosSender())
+        // constructed. Legacy Coupling Retirement Phase 4c: UrlServiceInterface
+        // is wired the same way, see PageTailRenderer's own docblock.
+        new PageTailRenderer(new PiwigoInfosSender(), new UrlService(new HtmlService()))
             ->render(\Piwigo\Core\PageState::current()->requestStart);
     }
 }

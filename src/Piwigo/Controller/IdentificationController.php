@@ -8,6 +8,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -35,6 +36,7 @@ final class IdentificationController implements ControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     #[\Override]
@@ -50,7 +52,7 @@ final class IdentificationController implements ControllerInterface
         // but if the user is already identified, we redirect to gallery
         // home instead of displaying the log in form
         if (! \Piwigo\Auth\AccessControl::isAGuest()) {
-            $gallery_home_url = get_gallery_home_url();
+            $gallery_home_url = $this->urlService->getGalleryHomeUrl();
             $this->redirectService->redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
         }
 
@@ -112,11 +114,11 @@ final class IdentificationController implements ControllerInterface
                     // {cookie_path = /piwigo/git/}
                     // {host = http://localhost}
                     // {redirect (final) = http://localhost/piwigo/git/admin.php}
-                    $root_url = get_absolute_root_url();
+                    $root_url = $this->urlService->getAbsoluteRootUrl();
 
                     $_SESSION['connected_with'] = 'pwg_ui';
 
-                    $gallery_home_url = get_gallery_home_url();
+                    $gallery_home_url = $this->urlService->getGalleryHomeUrl();
 
                     $this->redirectService->redirect(
                         $redirect_to === ''
@@ -129,7 +131,8 @@ final class IdentificationController implements ControllerInterface
             }
         }
 
-        $body = LegacyRenderCapture::capture(static function () use ($redirect_to, $errors): void {
+        $urlService = $this->urlService;
+        $body = LegacyRenderCapture::capture(static function () use ($redirect_to, $errors, $urlService): void {
             // $title is set and read entirely within this closure (passed
             // straight into PageHeaderRenderer::render() below) -- no
             // other file reads $GLOBALS['title']. Plain local, not global.
@@ -146,17 +149,17 @@ final class IdentificationController implements ControllerInterface
                 [
                     'U_REDIRECT' => $redirect_to,
 
-                    'F_LOGIN_ACTION' => get_root_url() . 'identification.php',
+                    'F_LOGIN_ACTION' => $urlService->getRootUrl() . 'identification.php',
                     'authorize_remembering' => \Piwigo\Config\Config::authorizeRemembering(),
                 ]
             );
 
             if (! \Piwigo\Config\Config::galleryLocked() && \Piwigo\Config\Config::allowUserRegistration()) {
-                $template->assign('U_REGISTER', get_root_url() . 'register.php');
+                $template->assign('U_REGISTER', $urlService->getRootUrl() . 'register.php');
             }
 
             if (! \Piwigo\Config\Config::galleryLocked()) {
-                $template->assign('U_LOST_PASSWORD', get_root_url() . 'password.php');
+                $template->assign('U_LOST_PASSWORD', $urlService->getRootUrl() . 'password.php');
             }
 
             $themeconf = $template->get_template_vars('themeconf');
@@ -164,7 +167,7 @@ final class IdentificationController implements ControllerInterface
             $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
             if (! \Piwigo\Config\Config::galleryLocked() && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on, true))) {
                 new MenubarRenderer()
-                    ->render();
+                    ->render($urlService);
             }
 
             // Load language if cookie is set from login/register/password

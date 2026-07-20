@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
 
 class ScriptLoader
@@ -56,6 +57,33 @@ class ScriptLoader
     public function __construct()
     {
         $this->clear();
+    }
+
+    private static ?UrlServiceInterface $urlService = null;
+
+    /**
+     * Set once by Bootstrap\RequestBootstrap (Legacy Coupling Retirement
+     * Phase 4c) -- same static-setter shape as Image\SrcImage/
+     * Image\DerivativeImage, but for a different reason: cmp_by_mode_and_order()
+     * below is passed to uasort() as a first-class callable, so its
+     * `(Script, Script): int` signature is externally fixed and cannot gain
+     * a new param; check_load_dep() is grouped the same way for consistency,
+     * and both statics avoid rippling a constructor param across this
+     * class's ~12 zero-arg Unit test construction sites for a dependency
+     * only these 2 comparator/validation helpers need.
+     */
+    public static function setUrlService(UrlServiceInterface $urlService): void
+    {
+        self::$urlService = $urlService;
+    }
+
+    private static function urlService(): UrlServiceInterface
+    {
+        if (! self::$urlService instanceof UrlServiceInterface) {
+            throw new \RuntimeException('ScriptLoader: no URL service set (RequestBootstrap not run yet?)');
+        }
+
+        return self::$urlService;
     }
 
     public function clear(): void
@@ -220,7 +248,7 @@ class ScriptLoader
      */
     private static function do_combine(array $scripts, int $load_mode): array
     {
-        $combiner = new FileCombiner('js', $scripts);
+        $combiner = new FileCombiner('js', self::urlService(), $scripts);
         return $combiner->combine();
     }
 
@@ -244,7 +272,7 @@ class ScriptLoader
                         $scripts[$precedent]->load_mode = $load;
                         $changed = true;
                     }
-                    if ($load == 2 && $scripts[$precedent]->load_mode == 2 && ($scripts[$precedent]->is_remote() or ! \Piwigo\Config\Config::templateCombineFiles())) {// we are async -> a predecessor cannot be async unlesss it can be merged; otherwise script execution order is not guaranteed
+                    if ($load == 2 && $scripts[$precedent]->load_mode == 2 && ($scripts[$precedent]->is_remote(self::urlService()) or ! \Piwigo\Config\Config::templateCombineFiles())) {// we are async -> a predecessor cannot be async unlesss it can be merged; otherwise script execution order is not guaranteed
                         $scripts[$precedent]->load_mode = 1;
                         $changed = true;
                     }
@@ -355,8 +383,8 @@ class ScriptLoader
             return $ret;
         }
 
-        if ($s1->extra['order'] == 0 and ($s1->is_remote() xor $s2->is_remote())) {
-            return $s1->is_remote() ? -1 : 1;
+        if ($s1->extra['order'] == 0 and ($s1->is_remote(self::urlService()) xor $s2->is_remote(self::urlService()))) {
+            return $s1->is_remote(self::urlService()) ? -1 : 1;
         }
         return strcmp($s1->id, $s2->id);
     }

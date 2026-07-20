@@ -7,6 +7,7 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Html\HtmlService;
+use Piwigo\Url\UrlService;
 
 // convert_charset()/name_compare() are real, legacy free functions defined
 // in include/functions.inc.php / include/functions_html.inc.php -- this
@@ -53,7 +54,7 @@ afterEach(function (): void {
 });
 
 test('scan finds the real bundled en_UK language via its common.po header', function (): void {
-    $found = new ExtensionScanner()->scan(ExtensionType::Language, 'utf-8');
+    $found = new ExtensionScanner()->scan(ExtensionType::Language, new UrlService(new HtmlService()), 'utf-8');
 
     expect($found)->toHaveKey('en_UK')
         ->and($found['en_UK']['name'])->toBe('English (Great Britain)')
@@ -62,7 +63,7 @@ test('scan finds the real bundled en_UK language via its common.po header', func
 });
 
 test('scan skips a language directory with no common.po', function (): void {
-    $found = new ExtensionScanner()->scan(ExtensionType::Language, 'utf-8');
+    $found = new ExtensionScanner()->scan(ExtensionType::Language, new UrlService(new HtmlService()), 'utf-8');
 
     // index.php sits alongside the real locale directories under language/
     // but isn't itself an extension -- also fails the [a-zA-Z0-9-_]+ id

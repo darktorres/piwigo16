@@ -12,6 +12,7 @@ use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -44,9 +45,9 @@ use Piwigo\Template\Template;
  * Preserves 2 pre-existing quirks unchanged (a mechanical port doesn't fold
  * in unrelated fixes, same discipline as every prior sub-batch):
  *  - $base_url is built from PHPWG_ROOT_PATH (a filesystem path constant),
- *    not get_root_url() like every sibling renderer -- almost certainly a
- *    pre-existing bug (U_ELEMENTS_PAGE/F_ACTION would render a filesystem
- *    path, not a URL), but out of scope for this port.
+ *    not UrlServiceInterface::getRootUrl() like every sibling renderer --
+ *    almost certainly a pre-existing bug (U_ELEMENTS_PAGE/F_ACTION would
+ *    render a filesystem path, not a URL), but out of scope for this port.
  *  - the "$storage_category_id" block below the images query reads
  *    whatever $row the earlier "unit mode form submission" while-loop left
  *    behind (or undefined, if that block didn't run) rather than the
@@ -59,6 +60,7 @@ final class BatchManagerUnitPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     private static function tagService(Connection $conn): TagService
@@ -220,7 +222,7 @@ SELECT id, date_creation
         $template->assign(
             [
 
-                'U_ELEMENTS_PAGE' => $base_url . get_query_string_diff(['display', 'start']),
+                'U_ELEMENTS_PAGE' => $base_url . $this->urlService->getQueryStringDiff(['display', 'start']),
                 'level_options' => \Piwigo\Permission\PermissionService::getPrivacyLevelOptions(),
                 'ADMIN_PAGE_TITLE' => l10n('Batch Manager'),
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
@@ -234,7 +236,7 @@ SELECT id, date_creation
         $page_start = $pageStart;
 
         new FilterPanelRenderer()
-            ->render($template, $base_url, $collection, $cat_elements_id, $page_start);
+            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService);
         // +-------------------------------------------------------------------+
         // |                        global mode thumbnails                         |
         // +-------------------------------------------------------------------+
@@ -257,7 +259,7 @@ SELECT id, date_creation
             $page_nb_images = $nb_images;
 
             $nav_bar = new \Piwigo\Core\PaginationService()
-                ->createNavigationBar($base_url . get_query_string_diff(['start']), count($cat_elements_id), $page_start, $page_nb_images);
+                ->createNavigationBar($base_url . $this->urlService->getQueryStringDiff(['start']), count($cat_elements_id), $page_start, $page_nb_images);
             $template->assign([
                 'navbar' => $nav_bar,
             ]);
@@ -438,7 +440,7 @@ SELECT
                     $name =
                       $htmlRenderer->getCatDisplayNameCache(
                           $item['uppercats'],
-                          get_root_url() . 'admin.php?page=album-'
+                          $this->urlService->getRootUrl() . 'admin.php?page=album-'
                       );
 
                     if ($item_category_id === $storage_category_id) {
@@ -494,7 +496,7 @@ SELECT
 
                 if ($row_cat_id !== null
                 and in_array($row_cat_id, $authorizeds, true)) {
-                    $url_img = make_picture_url(
+                    $url_img = $this->urlService->makePictureUrl(
                         [
                             'image_id' => $row_id,
                             'image_file' => $image_file,
@@ -503,7 +505,7 @@ SELECT
                     );
                 } else {
                     foreach ($authorizeds as $category) {
-                        $url_img = make_picture_url(
+                        $url_img = $this->urlService->makePictureUrl(
                             [
                                 'image_id' => $row_id, // utile ?
                                 'image_file' => $image_file,
@@ -513,7 +515,7 @@ SELECT
                         break;
                     }
                 }
-                $admin_photo_base_url = get_root_url() . 'admin.php?page=photo-' . $row_id_str;
+                $admin_photo_base_url = $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $row_id_str;
                 $admin_url_start = $admin_photo_base_url . '-properties';
                 $admin_url_start .= $row_cat_id !== null ? '&amp;cat_id=' . $row_cat_id : '';
                 $selected_level = $row['level'] ?? null;
@@ -536,7 +538,7 @@ SELECT
                             'TN_SRC' => DerivativeImage::url(ImageStdParams::MEDIUM, $src_image),
                             'FILE_SRC' => DerivativeImage::url(ImageStdParams::LARGE, $src_image),
                             'LEGEND' => $legend,
-                            'U_EDIT' => get_root_url() . 'admin.php?page=photo-' . $row_id_str,
+                            'U_EDIT' => $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $row_id_str,
                             'NAME' => htmlspecialchars($row_name),
                             'AUTHOR' => htmlspecialchars($row_author),
                             'LEVEL' => ($row['level'] ?? '') !== '' && $row['level'] !== '0' ? $row['level'] : '0',
@@ -560,8 +562,8 @@ SELECT
                             'U_JUMPTO' => (isset($url_img) and $currentUser->level >= $media['image']['level']) ? $url_img : null,
                             'tag_selection' => $tag_selection,
                             'U_DOWNLOAD' => 'action.php?id=' . $row_id_str . '&amp;part=e&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken() . '&amp;download',
-                            'U_HISTORY' => get_root_url() . 'admin.php?page=history&amp;filter_image_id=' . $row_id_str,
-                            'U_ACTIVITY' => get_root_url() . 'admin.php?page=user_activity&photo=' . $row_id_str,
+                            'U_HISTORY' => $this->urlService->getRootUrl() . 'admin.php?page=history&amp;filter_image_id=' . $row_id_str,
+                            'U_ACTIVITY' => $this->urlService->getRootUrl() . 'admin.php?page=user_activity&photo=' . $row_id_str,
                             'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                             'U_SYNC' => $admin_url_start . '&amp;sync_metadata=1',
                             'PATH' => $row['path'],
@@ -578,7 +580,7 @@ SELECT
         }
 
         $template->assign([
-            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['tags', 'categories']),
+            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
         ]);
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_element_set_unit');

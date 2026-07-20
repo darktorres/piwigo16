@@ -6,6 +6,7 @@ namespace Piwigo\Admin\BatchManager;
 
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\Lang;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -46,6 +47,7 @@ final class FilterPanelRenderer
         array $collection,
         array $catElementsId,
         int $pageStart,
+        UrlServiceInterface $urlService,
     ): void {
         $conn = DbConnection::build();
 
@@ -115,8 +117,8 @@ final class FilterPanelRenderer
                 'START' => $pageStart,
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
-                'U_DISPLAY' => $baseUrl . get_query_string_diff(['display']),
-                'F_ACTION' => $baseUrl . get_query_string_diff(['cat', 'start', 'tag', 'filter']),
+                'U_DISPLAY' => $baseUrl . $urlService->getQueryStringDiff(['display']),
+                'F_ACTION' => $baseUrl . $urlService->getQueryStringDiff(['cat', 'start', 'tag', 'filter']),
                 'ADMIN_PAGE_TITLE' => l10n('Batch Manager'),
             ]
         );

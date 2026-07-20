@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Mail;
 
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\Tables;
 use Piwigo\Notification\NotificationByMailService;
 use Piwigo\Notification\NotificationService;
@@ -42,8 +43,10 @@ use Piwigo\Template\Template;
  * P23 batch 8c) -- `Notification` is L2bExtendedDomain, this class is
  * L3Presentation, same allowed downward direction as
  * `NotificationByMailService` above.
- * `set_make_full_url()`/`unset_make_full_url()` have no `src/Piwigo/`
- * equivalent yet and stay bare free-function calls, unchanged.
+ * `set_make_full_url()`/`unset_make_full_url()`/`get_gallery_home_url()`/
+ * `add_url_params()` now call the constructor-injected
+ * `Piwigo\Core\UrlServiceInterface` directly, same allowed L3->L1 direction
+ * as every other Url-family retarget this phase.
  * `\Piwigo\Db\MysqliDb::massUpdates()`/`::booleanToString()`/`::getBoolean()`
  * retargeted onto `Piwigo\Db\BatchWriter`/`Piwigo\Db\SqlDialect`
  * (Legacy Coupling Retirement: DI+DBAL migration, Phase 1b).
@@ -89,6 +92,7 @@ final class NotificationByMailSender
         private readonly \Piwigo\Db\BatchWriter $batchWriter,
         private readonly \Piwigo\Users\UserService $userService,
         private readonly \Piwigo\Auth\AuthService $authService,
+        private readonly UrlServiceInterface $urlService,
     ) {
         // \Piwigo\Config\Config::nbmMaxTreatmentTimeoutPercent()/'nbm_treatment_timeout_default'
         // are always numeric (config_default.inc.php: 0.8 and 20
@@ -306,12 +310,12 @@ final class NotificationByMailSender
      */
     public function assignVarsNbmMailContent(array $nbmUser): void
     {
-        set_make_full_url();
+        $this->urlService->setMakeFullUrl();
 
-        // get_gallery_home_url() is declared to return mixed; real callers
+        // getGalleryHomeUrl() is declared to return mixed; real callers
         // always get back a string URL, but that isn't visible through its
         // own signature.
-        $galleryHomeUrl = get_gallery_home_url();
+        $galleryHomeUrl = $this->urlService->getGalleryHomeUrl();
         $galleryHomeUrlStr = is_string($galleryHomeUrl) ? $galleryHomeUrl : '';
 
         $emailFormat = $this->emailFormat ?? new MailService()
@@ -325,17 +329,17 @@ final class NotificationByMailSender
 
                 'SEND_AS_NAME' => $this->sendAsName,
 
-                'UNSUBSCRIBE_LINK' => add_url_params($galleryHomeUrlStr . '/nbm.php', [
+                'UNSUBSCRIBE_LINK' => $this->urlService->addUrlParams($galleryHomeUrlStr . '/nbm.php', [
                     'unsubscribe' => $nbmUser['check_key'],
                 ]),
-                'SUBSCRIBE_LINK' => add_url_params($galleryHomeUrlStr . '/nbm.php', [
+                'SUBSCRIBE_LINK' => $this->urlService->addUrlParams($galleryHomeUrlStr . '/nbm.php', [
                     'subscribe' => $nbmUser['check_key'],
                 ]),
                 'CONTACT_EMAIL' => $this->sendAsMailAddress,
             ]
         );
 
-        unset_make_full_url();
+        $this->urlService->unsetMakeFullUrl();
     }
 
     /**
@@ -346,7 +350,7 @@ final class NotificationByMailSender
      */
     public function doSubscribeUnsubscribeNotificationByMail(bool $isAdminRequest, bool $isSubscribe, array $checkKeyList): array
     {
-        set_make_full_url();
+        $this->urlService->setMakeFullUrl();
 
         // \Piwigo\Config\Config::galleryTitle() is always a string (config_default.inc.php),
         // but that isn't visible through $conf's own array<string, mixed> type.
@@ -403,7 +407,7 @@ final class NotificationByMailSender
                         [
                             $sectionActionBy => true,
                             'GOTO_GALLERY_TITLE' => $galleryTitle,
-                            'GOTO_GALLERY_URL' => get_gallery_home_url(),
+                            'GOTO_GALLERY_URL' => $this->urlService->getGalleryHomeUrl(),
                         ]
                     );
 
@@ -475,7 +479,7 @@ final class NotificationByMailSender
             ));
         }
 
-        unset_make_full_url();
+        $this->urlService->unsetMakeFullUrl();
 
         return $checkKeyTreated;
     }
@@ -561,7 +565,7 @@ final class NotificationByMailSender
                                 $addUrlParams['auth'] = $auth;
                             }
 
-                            set_make_full_url();
+                            $this->urlService->setMakeFullUrl();
                             // Fill return list of "treated" check_key for 'send'
                             $returnList[] = $nbmUser['check_key'];
 
@@ -663,11 +667,11 @@ final class NotificationByMailSender
                                     }
                                 }
 
-                                $galleryHomeUrl = get_gallery_home_url();
+                                $galleryHomeUrl = $this->urlService->getGalleryHomeUrl();
                                 $mailTemplate->assign(
                                     [
                                         'GOTO_GALLERY_TITLE' => $galleryTitle,
-                                        'GOTO_GALLERY_URL' => add_url_params(is_string($galleryHomeUrl) ? $galleryHomeUrl : '', $addUrlParams),
+                                        'GOTO_GALLERY_URL' => $this->urlService->addUrlParams(is_string($galleryHomeUrl) ? $galleryHomeUrl : '', $addUrlParams),
                                         'SEND_AS_NAME' => $this->sendAsName,
                                     ]
                                 );
@@ -703,7 +707,7 @@ final class NotificationByMailSender
                                     $this->incMailSentFailed($nbmUser);
                                 }
 
-                                unset_make_full_url();
+                                $this->urlService->unsetMakeFullUrl();
                             }
                         } else {
                             if ($this->notificationService->newsExists($nbmUser['last_send'], $dbnow)) {

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-// parse_section_url()'s own stub was removed (P23 batch 8c) -- always
-// available now via composer autoload.files (src/Piwigo/Url/functions.php),
-// same real Piwigo\Url\UrlService::parseSectionUrl() delegate this stub
-// used to hand-duplicate.
+// parse_section_url() (the former free-function bridge) was retired
+// (Legacy Coupling Retirement Phase 4c) -- SectionInitializer now calls
+// Piwigo\Url\UrlService::parseSectionUrl() directly via a constructor-
+// injected UrlServiceInterface, same as every other real caller.
 
 namespace Piwigo\Tests\Integration {
 
@@ -16,6 +16,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
 use Piwigo\Section\SectionInitializer;
 use Piwigo\Section\SectionRepository;
+use Piwigo\Url\UrlService;
 
 /**
  * Forces the $_SERVER['PATH_INFO'] branch (question_mark_in_urls=false)
@@ -67,7 +68,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(), new UrlService(new HtmlService()))
             ->parse();
 
         self::assertSame('../../', $context->rootPath);
@@ -79,7 +80,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1/start-20';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(), new UrlService(new HtmlService()))
             ->parse();
 
         self::assertSame('../../../', $context->rootPath);
@@ -89,7 +90,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(), new UrlService(new HtmlService()))
             ->parse();
 
         self::assertNull($context->imageId);
@@ -101,7 +102,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
         $_SERVER['PATH_INFO'] = '/42';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(), new UrlService(new HtmlService()))
             ->parse();
 
         self::assertSame('42', $context->imageId);
@@ -114,7 +115,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
         $_SERVER['PATH_INFO'] = '/42-my-photo';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(), new UrlService(new HtmlService()))
             ->parse();
 
         self::assertSame('42', $context->imageId);
@@ -129,7 +130,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         // happened rather than this being a hardcoded default.
         $_SERVER['PATH_INFO'] = '/most_visited';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(), new UrlService(new HtmlService()))
             ->parse();
 
         self::assertSame('most_visited', $context->parsed['section'] ?? null);

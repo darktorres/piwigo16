@@ -8,6 +8,7 @@ use Piwigo\Admin\tabsheet;
 use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Admin\UpdatesPwgPageRenderer;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -57,6 +58,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     #[\Override]
@@ -72,7 +74,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
         // tabsheet::select() below -- must be set before that call, not
         // dead code (see this class's own docblock).
         global $my_base_url;
-        $my_base_url = get_root_url() . 'admin.php?page=updates';
+        $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=updates';
 
         new \Piwigo\Validation\InputValidator()
             ->validate('tab', $_GET, false, '/^(pwg|ext)$/');
@@ -89,9 +91,9 @@ final class UpdatesSubController implements AdminSubControllerInterface
 
         if ($tab === 'ext') {
             new UpdatesExtPageRenderer()
-                ->render('updates');
+                ->render('updates', $this->urlService);
         } else {
-            new UpdatesPwgPageRenderer($this->redirectService)
+            new UpdatesPwgPageRenderer($this->redirectService, $this->urlService)
                 ->render();
         }
     }

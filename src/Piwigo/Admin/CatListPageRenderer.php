@@ -9,6 +9,7 @@ use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -41,6 +42,7 @@ final class CatListPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     public function render(): void
@@ -88,7 +90,7 @@ final class CatListPageRenderer
 
         $categories = [];
 
-        $base_url = get_root_url() . 'admin.php?page=cat_list';
+        $base_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_list';
         $navigation = '<a href="' . $base_url . '">';
         $navigation .= l10n('Home');
         $navigation .= '</a>';
@@ -97,7 +99,7 @@ final class CatListPageRenderer
         // | tabs                                                              |
         // +-------------------------------------------------------------------+
 
-        $my_base_url = get_root_url() . 'admin.php?page=';
+        $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=';
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('albums');
@@ -128,6 +130,7 @@ SELECT COUNT(*)
             $categoryService->deleteCategories(
                 [(int) $_GET['delete']],
                 new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($categoryConn)),
+                $this->urlService,
                 $photo_deletion_mode
             );
 
@@ -135,7 +138,7 @@ SELECT COUNT(*)
             $categoryService->updateGlobalRank();
             UserCacheInvalidator::invalidate();
 
-            $redirect_url = get_root_url() . 'admin.php?page=cat_list';
+            $redirect_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_list';
             if ($parent_id !== null) {
                 $redirect_url .= '&parent_id=' . $parent_id;
             }
@@ -156,7 +159,7 @@ SELECT COUNT(*)
             if (! $output_create->success) {
                 \Piwigo\Core\PageState::current()->addError($output_create_message);
             } else {
-                $edit_url = get_root_url() . 'admin.php?page=album-' . $output_create->categoryId;
+                $edit_url = $this->urlService->getRootUrl() . 'admin.php?page=album-' . $output_create->categoryId;
                 \Piwigo\Core\PageState::current()->addInfo($output_create_message . ' <a class="icon-pencil" href="' . $edit_url . '">' . l10n('Edit album') . '</a>');
             }
         }
@@ -269,7 +272,7 @@ SELECT
         }
 
         $template->assign('categories', []);
-        $base_url = get_root_url() . 'admin.php?page=';
+        $base_url = $this->urlService->getRootUrl() . 'admin.php?page=';
 
         if ($parent_id !== null) {
             $template->assign(
@@ -308,7 +311,7 @@ SELECT
                   'ID' => $cat_id,
                   'RANK' => is_numeric($category['rank']) ? ((int) $category['rank']) * 10 : 0,
 
-                  'U_JUMPTO' => make_index_url(
+                  'U_JUMPTO' => $this->urlService->makeIndexUrl(
                       [
                           'category' => $category,
                       ]

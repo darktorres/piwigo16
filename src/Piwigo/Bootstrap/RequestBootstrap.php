@@ -37,6 +37,7 @@ use Piwigo\Mail\MailService;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
@@ -148,6 +149,9 @@ final class RequestBootstrap
         \Piwigo\Validation\InputValidator::setHtmlRenderer(new HtmlService());
         \Piwigo\Image\SrcImage::setHtmlRenderer(new HtmlService());
         \Piwigo\Image\SrcImage::setImageRepository(new ImageRepository(DbConnection::build()));
+        \Piwigo\Image\SrcImage::setUrlService(new UrlService(new HtmlService()));
+        \Piwigo\Image\DerivativeImage::setUrlService(new UrlService(new HtmlService()));
+        \Piwigo\Template\ScriptLoader::setUrlService(new UrlService(new HtmlService()));
         \Piwigo\Config\ConfigDb::setHtmlRenderer(new HtmlService());
 
         // Piwigo\Db\Tables::*()/other Piwigo\Config\Config::* accessors used
@@ -272,7 +276,7 @@ final class RequestBootstrap
         if (! \Piwigo\Config\Config::checkUpgradeFeed()) {
             if (! \Piwigo\Config\Config::has('piwigo_db_version') or \Piwigo\Config\Config::piwigoDbVersion() !== \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)) {
                 new RedirectService()
-                    ->redirect(get_root_url() . 'upgrade.php');
+                    ->redirect(new UrlService(new HtmlService())->getRootUrl() . 'upgrade.php');
             }
         }
 
@@ -344,7 +348,7 @@ final class RequestBootstrap
         $user['email'] = null;
         $user['theme'] = '';
 
-        new UserBootstrap(new RedirectService())
+        new UserBootstrap(new RedirectService(), new UrlService(new HtmlService()))
             ->initialize();
 
         // The original file followed this call with a get_defined_vars()
@@ -445,7 +449,7 @@ final class RequestBootstrap
         if ($pageState->authKeyInvalid) {
             $pageState->addError(
                 l10n('Your authentication key is no longer valid.')
-              . sprintf(' <a href="%s">%s</a>', get_root_url() . 'identification.php', l10n('Login'))
+              . sprintf(' <a href="%s">%s</a>', new UrlService(new HtmlService())->getRootUrl() . 'identification.php', l10n('Login'))
             );
         }
 
@@ -461,7 +465,7 @@ final class RequestBootstrap
             $notify_email = $user['email'];
             $notify_email = is_string($notify_email) ? $notify_email : '';
             $apiKeyRepo = new \Piwigo\Auth\ApiKeyRepository($conn);
-            $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)))
+            $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new UrlService(new HtmlService()))
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
 
             if ($is_mail_send) {
@@ -516,7 +520,7 @@ final class RequestBootstrap
             // Formerly include/no_photo_yet.inc.php, a seam of exactly this
             // one call (deleted, P23 sub-batch 8f-5). render() exits itself
             // when it decides to take over the page.
-            new NoPhotoYetRenderer($conn, new RedirectService())
+            new NoPhotoYetRenderer($conn, new RedirectService(), new UrlService(new HtmlService()))
                 ->render();
         }
 
@@ -533,7 +537,7 @@ final class RequestBootstrap
                     ->setStatusHeader(503, 'Service Unavailable');
                 @header('Retry-After: 900');
                 header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
-                echo '<a href="' . get_absolute_root_url(false) . 'identification.php">' . l10n('The gallery is locked for maintenance. Please, come back later.') . '</a>';
+                echo '<a href="' . new UrlService(new HtmlService())->getAbsoluteRootUrl(false) . 'identification.php">' . l10n('The gallery is locked for maintenance. Please, come back later.') . '</a>';
                 echo str_repeat(' ', 512); // IE6 doesn't error output if below a size
                 exit();
             }
@@ -546,7 +550,7 @@ final class RequestBootstrap
             // delegates this path doesn't need).
             if (\Piwigo\Admin\Install\UpgradeService::checkUpgradeFeed($conn)) {
                 $pageState->addHeaderMessage('Some database upgrades are missing, '
-                  . '<a href="' . get_absolute_root_url(false) . 'upgrade_feed.php">upgrade now</a>');
+                  . '<a href="' . new UrlService(new HtmlService())->getAbsoluteRootUrl(false) . 'upgrade_feed.php">upgrade now</a>');
             }
         }
 
@@ -594,7 +598,7 @@ final class RequestBootstrap
         // (unlike UploadService's static upload_file handlers below), hence the
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('user_comment_check', new CommentService(new CommentRepository($conn), new EphemeralKeyService(), new MailService(), new HtmlService())->checkForSpam(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('user_comment_check', new CommentService(new CommentRepository($conn), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()))->checkForSpam(...));
         // Relocated from include/functions_user.inc.php (deleted, P23 batch 8d) --
         // same reasoning as user_comment_check above: every real caller of
         // AuthService::tryLogUser() now constructs AuthService directly instead of

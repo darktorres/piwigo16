@@ -13,6 +13,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupRepository;
@@ -74,6 +75,7 @@ final class GalleryController implements ControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     private static function permissionService(Connection $conn): PermissionService
@@ -116,6 +118,7 @@ final class GalleryController implements ControllerInterface
             new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new PersistentFileCache(), new MailService(), new HtmlService(), $this->redirectService),
             new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), self::activityService($conn), new HtmlService(), $conn),
             $this->redirectService,
+            $this->urlService,
         )->populate();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
@@ -144,13 +147,14 @@ final class GalleryController implements ControllerInterface
         }
         if ($page_start > 0 && $page_start >= count($page_items)) {
             new HtmlService()
-                ->pageNotFound($this->redirectService, '', duplicate_index_url([
+                ->pageNotFound($this->redirectService, '', $this->urlService->duplicateIndexUrl([
                     'start' => 0,
                 ]));
         }
 
         $redirectService = $this->redirectService;
-        $body = LegacyRenderCapture::capture(static function () use ($conn, $page_items, $page_start, $page_nb_image_page, $section_context, $redirectService): void {
+        $urlService = $this->urlService;
+        $body = LegacyRenderCapture::capture(static function () use ($conn, $page_items, $page_start, $page_nb_image_page, $section_context, $redirectService, $urlService): void {
             // $title is set and read entirely within this closure (passed
             // straight into PageHeaderRenderer::render() below) -- no
             // other file reads $GLOBALS['title']. Plain local, not global.
@@ -169,7 +173,7 @@ final class GalleryController implements ControllerInterface
                     SessionService::get()->unsetSessionVar('image_order');
                 }
                 $redirectService->redirect(
-                    duplicate_index_url(
+                    $urlService->duplicateIndexUrl(
                         [],        // nothing to redefine
                         ['start']  // changing display order goes back to section first page
                     )
@@ -187,7 +191,7 @@ final class GalleryController implements ControllerInterface
             $navigationBar = [];
             if (count($page_items) > $page_nb_image_page) {
                 $navigationBar = new \Piwigo\Core\PaginationService()
-                    ->createNavigationBar(duplicate_index_url([], ['start']), count($page_items), $page_start, $page_nb_image_page, true, 'start');
+                    ->createNavigationBar($urlService->duplicateIndexUrl([], ['start']), count($page_items), $page_start, $page_nb_image_page, true, 'start');
             }
 
             $template->assign('thumb_navbar', $navigationBar);
@@ -195,17 +199,17 @@ final class GalleryController implements ControllerInterface
             // caddie filling :-)
             if (isset($_GET['caddie'])) {
                 \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($page_items);
-                $redirectService->redirect(duplicate_index_url());
+                $redirectService->redirect($urlService->duplicateIndexUrl());
             }
 
             if ($section_context->isHomepage) {
-                $canonical_url = get_gallery_home_url();
+                $canonical_url = $urlService->getGalleryHomeUrl();
             } else {
                 $start = $page_nb_image_page * round($page_start / $page_nb_image_page);
                 if ($start > 0 && $start >= count($page_items)) {
                     $start -= $page_nb_image_page;
                 }
-                $canonical_url = duplicate_index_url([
+                $canonical_url = $urlService->duplicateIndexUrl([
                     'start' => $start,
                 ]);
             }
@@ -225,7 +229,7 @@ final class GalleryController implements ControllerInterface
 
             // -------------------------------------------------- menubar
             $categoryCountCategories = new MenubarRenderer()
-                ->render();
+                ->render($urlService);
 
             $template->set_filename('index', 'index.tpl');
 
@@ -243,14 +247,14 @@ final class GalleryController implements ControllerInterface
             if ($section_context->flat or $section_context->chronologyField !== null) {
                 $template->assign(
                     'U_MODE_NORMAL',
-                    duplicate_index_url([], ['chronology_field', 'start', 'flat'])
+                    $urlService->duplicateIndexUrl([], ['chronology_field', 'start', 'flat'])
                 );
             }
 
             if (\Piwigo\Config\Config::indexFlatIcon() and ! $section_context->flat and $section_context->section === 'categories') {
                 $template->assign(
                     'U_MODE_FLAT',
-                    duplicate_index_url([
+                    $urlService->duplicateIndexUrl([
                         'flat' => '',
                     ], ['start', 'chronology_field'])
                 );
@@ -265,14 +269,14 @@ final class GalleryController implements ControllerInterface
                 if (\Piwigo\Config\Config::indexCreatedDateIcon()) {
                     $template->assign(
                         'U_MODE_CREATED',
-                        duplicate_index_url($chronology_params, ['start', 'flat'])
+                        $urlService->duplicateIndexUrl($chronology_params, ['start', 'flat'])
                     );
                 }
                 if (\Piwigo\Config\Config::indexPostedDateIcon()) {
                     $chronology_params['chronology_field'] = 'posted';
                     $template->assign(
                         'U_MODE_POSTED',
-                        duplicate_index_url($chronology_params, ['start', 'flat'])
+                        $urlService->duplicateIndexUrl($chronology_params, ['start', 'flat'])
                     );
                 }
             } else {
@@ -282,7 +286,7 @@ final class GalleryController implements ControllerInterface
                     $chronology_field = 'created';
                 }
                 if ((bool) (\Piwigo\Config\Config::all()['index_' . $chronology_field . '_date_icon'] ?? null)) {
-                    $url = duplicate_index_url(
+                    $url = $urlService->duplicateIndexUrl(
                         [
                             'chronology_field' => $chronology_field,
                         ],
@@ -303,6 +307,7 @@ final class GalleryController implements ControllerInterface
                 $tagService,
                 new CategoryRepository($conn),
                 self::permissionService($conn),
+                $urlService,
             )->render($section_context);
 
             if ($section_context->section === 'categories' and $section_context->category !== null and $section_context->combinedCategories === null) {
@@ -310,7 +315,7 @@ final class GalleryController implements ControllerInterface
                     [
                         'SEARCH_IN_SET_BUTTON' => \Piwigo\Config\Config::indexSearchInSetButton(),
                         'SEARCH_IN_SET_ACTION' => \Piwigo\Config\Config::indexSearchInSetAction(),
-                        'SEARCH_IN_SET_URL' => get_root_url() . 'search.php?cat_id=' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0),
+                        'SEARCH_IN_SET_URL' => $urlService->getRootUrl() . 'search.php?cat_id=' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0),
                     ]
                 );
             }
@@ -345,7 +350,7 @@ final class GalleryController implements ControllerInterface
                     $related_tags[] = array_merge(
                         $tag,
                         [
-                            'U_ADD' => make_index_url(
+                            'U_ADD' => $urlService->makeIndexUrl(
                                 [
                                     'tags' => array_merge(
                                         $page_tags,
@@ -353,7 +358,7 @@ final class GalleryController implements ControllerInterface
                                     ),
                                 ]
                             ),
-                            'URL' => make_index_url(
+                            'URL' => $urlService->makeIndexUrl(
                                 [
                                     'tags' => [$tag],
                                 ]
@@ -382,12 +387,12 @@ final class GalleryController implements ControllerInterface
                     [
                         'tag_name' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $selectedTag['name'], $selectedTag),
                         'item_count' => '',
-                        'index_url' => make_index_url(
+                        'index_url' => $urlService->makeIndexUrl(
                             [
                                 'tags' => [$selectedTag],
                             ]
                         ),
-                        'remove_url' => make_index_url(
+                        'remove_url' => $urlService->makeIndexUrl(
                             [
                                 'tags' => $otherSelectedTags,
                             ]
@@ -410,7 +415,7 @@ final class GalleryController implements ControllerInterface
                     [
                         'SEARCH_IN_SET_BUTTON' => \Piwigo\Config\Config::indexSearchInSetButton(),
                         'SEARCH_IN_SET_ACTION' => \Piwigo\Config\Config::indexSearchInSetAction(),
-                        'SEARCH_IN_SET_URL' => get_root_url() . 'search.php?tag_id=' . implode(',', $body_data_tag_ids),
+                        'SEARCH_IN_SET_URL' => $urlService->getRootUrl() . 'search.php?tag_id=' . implode(',', $body_data_tag_ids),
                         'COMBINABLE_TAGS' => $related_tags,
                     ]
                 );
@@ -419,14 +424,14 @@ final class GalleryController implements ControllerInterface
             if ($section_context->category !== null and \Piwigo\Auth\AccessControl::isAdmin() and \Piwigo\Config\Config::indexEditIcon()) {
                 $template->assign(
                     'U_EDIT',
-                    get_root_url() . 'admin.php?page=album-' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0)
+                    $urlService->getRootUrl() . 'admin.php?page=album-' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0)
                 );
             }
 
             if (\Piwigo\Auth\AccessControl::isAdmin() and $page_items !== [] and \Piwigo\Config\Config::indexCaddieIcon()) {
                 $template->assign(
                     'U_CADDIE',
-                    add_url_params(duplicate_index_url(), [
+                    $urlService->addUrlParams($urlService->duplicateIndexUrl(), [
                         'caddie' => 1,
                     ])
                 );
@@ -455,7 +460,7 @@ final class GalleryController implements ControllerInterface
                 $matching_tags = is_array($qsearchDetails['matching_tags'] ?? null) ? array_values(array_filter($qsearchDetails['matching_tags'], is_array(...))) : [];
                 /** @var array<int, array<string, mixed>> $matching_tags */
                 foreach ($matching_tags as $tag) {
-                    $tag['URL'] = make_index_url([
+                    $tag['URL'] = $urlService->makeIndexUrl([
                         'tags' => [$tag],
                     ]);
                     $template->append('tag_search_results', $tag);
@@ -490,8 +495,8 @@ final class GalleryController implements ControllerInterface
                 }
                 $first_order = trim($first_order);
 
-                $url = add_url_params(
-                    duplicate_index_url(),
+                $url = $urlService->addUrlParams(
+                    $urlService->duplicateIndexUrl(),
                     [
                         'image_order' => '',
                     ]
@@ -545,7 +550,8 @@ final class GalleryController implements ControllerInterface
                     new CategoryRepository($conn),
                     $categoryService,
                     self::permissionService($conn),
-                    new ImageRepository($conn)
+                    new ImageRepository($conn),
+                    $urlService
                 )->render($section_context->section, $section_context->category, $section_context->startcat);
             }
 
@@ -555,12 +561,13 @@ final class GalleryController implements ControllerInterface
                     new HtmlService(),
                     $template,
                     new ImageRepository($conn),
-                    new CommentRepository($conn)
+                    new CommentRepository($conn),
+                    $urlService
                 )->render($page_items, $page_start, $page_nb_image_page, $section_context->section);
 
                 if (\Piwigo\Config\Config::indexSizesIcon()) {
-                    $url = add_url_params(
-                        duplicate_index_url(),
+                    $url = $urlService->addUrlParams(
+                        $urlService->duplicateIndexUrl(),
                         [
                             'display' => '',
                         ]
@@ -610,7 +617,7 @@ final class GalleryController implements ControllerInterface
                     array_merge(
                         $tag,
                         [
-                            'URL' => make_index_url([
+                            'URL' => $urlService->makeIndexUrl([
                                 'tags' => [$tag],
                             ]),
                         ]

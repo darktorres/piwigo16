@@ -9,6 +9,7 @@ use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
@@ -89,6 +90,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     #[\Override]
@@ -113,11 +115,13 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 new NotificationRepository($conn),
                 new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn)),
                 $persistent_cache,
-                $htmlRenderer
+                $htmlRenderer,
+                $this->urlService
             ),
             new \Piwigo\Db\BatchWriter($conn),
             new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), $htmlRenderer, $conn),
-            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), $htmlRenderer, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())
+            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), $htmlRenderer, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService()),
+            $this->urlService
         );
 
         new \Piwigo\Validation\InputValidator()
@@ -133,7 +137,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // would only be local to this call frame, invisible to that
         // method's own `global` read.
         global $base_url;
-        $base_url = get_root_url() . 'admin.php';
+        $base_url = $this->urlService->getRootUrl() . 'admin.php';
         $must_repost = false;
 
         // +-----------------------------------------------------------------------+
@@ -162,7 +166,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         if (count($_POST) == 0) {
             // No insert data in post mode
-            self::insertNewDataUserMailNotification($nbmSender, $this->redirectService);
+            self::insertNewDataUserMailNotification($nbmSender, $this->redirectService, $this->urlService);
         }
 
         // +-----------------------------------------------------------------------+
@@ -261,8 +265,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
             [
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
-                'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=notification_by_mail',
-                'F_ACTION' => $base_url . get_query_string_diff([]),
+                'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=notification_by_mail',
+                'F_ACTION' => $base_url . $this->urlService->getQueryStringDiff([]),
             ]
         );
 
@@ -467,7 +471,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
     /**
      * Inserting News users
      */
-    private static function insertNewDataUserMailNotification(NotificationByMailSender $nbmSender, RedirectServiceInterface $redirectService): void
+    private static function insertNewDataUserMailNotification(NotificationByMailSender $nbmSender, RedirectServiceInterface $redirectService, UrlServiceInterface $urlService): void
     {
         /**
          * @var string $base_url set at the top of handle()
@@ -557,7 +561,7 @@ order by
                     $query = 'delete from ' . Tables::userMailNotification() . ' where check_key in (' . implode(',', $quoted_check_key_list) . ');';
                     $conn->executeStatement($query);
 
-                    $redirectService->redirect($base_url . get_query_string_diff([], false), l10n('Operation in progress') . "\n" . l10n('Please wait...'));
+                    $redirectService->redirect($base_url . $urlService->getQueryStringDiff([], false), l10n('Operation in progress') . "\n" . l10n('Please wait...'));
                 }
             }
         }

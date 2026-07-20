@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
@@ -28,7 +29,7 @@ use Piwigo\Template\Template;
  */
 final class ExtendForTemplatesPageRenderer
 {
-    public function render(): void
+    public function render(UrlServiceInterface $urlService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
         $conn = DbConnection::build();
@@ -182,7 +183,7 @@ WHERE param = \'extents_for_templates\';';
 
         $template->assign(
             [
-                'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=extend_for_templates',
+                'U_HELP' => $urlService->getRootUrl() . 'admin/popuphelp.php?page=extend_for_templates',
             ]
         );
         ksort($tpl_extension);

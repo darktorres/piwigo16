@@ -12,6 +12,7 @@ use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 
@@ -30,6 +31,7 @@ final class PluginsNewPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     /**
@@ -56,7 +58,7 @@ final class PluginsNewPageRenderer
             'plugins' => 'plugins_new.tpl',
         ]);
 
-        $base_url = get_root_url() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;
+        $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;
 
         $pem_catalog = new PemCatalog(new ZipExtractor());
         $extension_scanner = new ExtensionScanner();
@@ -87,13 +89,13 @@ final class PluginsNewPageRenderer
                     // a JS action, no need to provide plugin_id in URL, just link to the page of installed
                     // plugins, filtered on deactivated plugins. The webmaster will have to find its newly
                     // installed plugin and click on the activation switch.
-                    $activate_url = get_root_url() . 'admin.php?page=plugins&amp;filter=deactivated';
+                    $activate_url = $this->urlService->getRootUrl() . 'admin.php?page=plugins&amp;filter=deactivated';
 
                     \Piwigo\Core\PageState::current()->addInfo(l10n('Plugin has been successfully copied'));
                     \Piwigo\Core\PageState::current()->addInfo('<a href="' . $activate_url . '">' . l10n('Activate it now') . '</a>');
 
                     $installed_plugin_id = $_GET['plugin_id'] ?? null;
-                    $installed_fs_plugin = is_string($installed_plugin_id) ? ($extension_scanner->scan(ExtensionType::Plugin)[$installed_plugin_id] ?? null) : null;
+                    $installed_fs_plugin = is_string($installed_plugin_id) ? ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService)[$installed_plugin_id] ?? null) : null;
                     if ($installed_fs_plugin !== null) {
                         new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Plugin, 'install', [
                             'plugin_id' => $installed_plugin_id,
@@ -153,7 +155,7 @@ final class PluginsNewPageRenderer
         $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
 
         $fs_plugin_ids = [];
-        foreach ($extension_scanner->scan(ExtensionType::Plugin) as $fs_plugin) {
+        foreach ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService) as $fs_plugin) {
             $extension = $fs_plugin['extension'] ?? null;
             if (is_scalar($extension)) {
                 $fs_plugin_ids[] = (string) $extension;

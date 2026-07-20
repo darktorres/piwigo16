@@ -11,6 +11,7 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
@@ -39,6 +40,7 @@ final class ThemesInstalledPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     /**
@@ -56,13 +58,13 @@ final class ThemesInstalledPageRenderer
             \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
-        $base_url = get_root_url() . 'admin.php?page=' . $pageSlug;
+        $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug;
 
         $conn = DbConnection::build();
         $extension_repository = new ExtensionRepository($conn);
         $pem_catalog = new PemCatalog(new ZipExtractor());
         $extension_scanner = new ExtensionScanner();
-        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog);
+        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService);
 
         // +-----------------------------------------------------------------------+
         // |                          perform actions                              |
@@ -72,7 +74,7 @@ final class ThemesInstalledPageRenderer
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(new HtmlService(), $this->redirectService);
 
-            $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme)[$_GET['theme']] ?? null;
+            $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme, $this->urlService)[$_GET['theme']] ?? null;
             $action_errors = $extension_lifecycle->performAction(ExtensionType::Theme, $_GET['action'], $_GET['theme'], $fs_theme_entry);
             \Piwigo\Core\PageState::current()->errors = array_values(array_filter($action_errors, is_string(...)));
 
@@ -88,7 +90,7 @@ final class ThemesInstalledPageRenderer
         // |                     start template output                             |
         // +-----------------------------------------------------------------------+
 
-        $fs_themes = $extension_scanner->scan(ExtensionType::Theme);
+        $fs_themes = $extension_scanner->scan(ExtensionType::Theme, $this->urlService);
         uasort($fs_themes, new HtmlService()->nameCompare(...));
 
         $default_theme = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), $conn)

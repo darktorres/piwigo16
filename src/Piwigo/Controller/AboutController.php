@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -29,12 +30,18 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class AboutController implements ControllerInterface
 {
+    public function __construct(
+        private readonly UrlServiceInterface $urlService,
+    ) {}
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        $body = LegacyRenderCapture::capture(static function (): void {
+        $urlService = $this->urlService;
+
+        $body = LegacyRenderCapture::capture(static function () use ($urlService): void {
             // $title is set and read entirely within this closure (passed
             // straight into PageHeaderRenderer::render() below) -- no
             // other file reads $GLOBALS['title']. Plain local, not global.
@@ -64,7 +71,7 @@ final class AboutController implements ControllerInterface
             $themeconf = is_array($themeconf) ? $themeconf : [];
             if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theAboutPage', $themeconf['hide_menu_on'], true)) {
                 new MenubarRenderer()
-                    ->render();
+                    ->render($urlService);
             }
 
             new \Piwigo\Page\PageHeaderRenderer()

@@ -9,6 +9,7 @@ use Piwigo\Core\Env;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\TemplateInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -57,6 +58,7 @@ final readonly class CategoryCatsRenderer
         private CategoryService $categoryService,
         private PermissionService $permissionService,
         private ImageRepository $imageRepo,
+        private UrlServiceInterface $urlService,
     ) {}
 
     /**
@@ -358,7 +360,7 @@ final readonly class CategoryCatsRenderer
                     'representative' => $representativeInfos,
                     'TN_ALT' => strip_tags($category['name']),
 
-                    'URL' => make_index_url(
+                    'URL' => $this->urlService->makeIndexUrl(
                         [
                             'category' => $category,
                         ]
@@ -423,7 +425,7 @@ final readonly class CategoryCatsRenderer
             $catsNavigationBar = [];
             if ($totalCategories > $nbCategoriesPage) {
                 $catsNavigationBar = new \Piwigo\Core\PaginationService()
-                    ->createNavigationBar(duplicate_index_url([], ['startcat']), $totalCategories, $startcat, $nbCategoriesPage, true, 'startcat');
+                    ->createNavigationBar($this->urlService->duplicateIndexUrl([], ['startcat']), $totalCategories, $startcat, $nbCategoriesPage, true, 'startcat');
             }
 
             $template->assign('cats_navbar', $catsNavigationBar);

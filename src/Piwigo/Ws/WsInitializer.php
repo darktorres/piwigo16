@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Piwigo\Html\HtmlService;
+use Piwigo\Url\UrlService;
 use Piwigo\Ws\Protocol\PwgJsonEncoder;
 use Piwigo\Ws\Protocol\PwgRestEncoder;
 use Piwigo\Ws\Protocol\PwgRestRequestHandler;
@@ -102,7 +104,8 @@ final class WsInitializer
         }
         $service->setEncoder($responseFormat, $encoder);
 
-        set_make_full_url();
+        new UrlService(new HtmlService())
+            ->setMakeFullUrl();
 
         self::$server = $service;
         $GLOBALS['service'] = $service;

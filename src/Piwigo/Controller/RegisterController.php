@@ -9,6 +9,7 @@ use Piwigo\Audit\AuditService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -32,6 +33,7 @@ final class RegisterController implements ControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     #[\Override]
@@ -103,6 +105,7 @@ final class RegisterController implements ControllerInterface
                     $post_login,
                     $post_password,
                     $post_mail_address,
+                    $this->urlService,
                     true,
                     isset($_POST['send_password_by_mail'])
                 );
@@ -148,7 +151,7 @@ final class RegisterController implements ControllerInterface
                     new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())
                         ->logUser($new_user_id, false);
                 }
-                $this->redirectService->redirect(make_index_url());
+                $this->redirectService->redirect($this->urlService->makeIndexUrl());
             }
             $registration_post_key = new \Piwigo\Auth\EphemeralKeyService()
                 ->generate(2);
@@ -163,7 +166,8 @@ final class RegisterController implements ControllerInterface
         $mail_raw = $_POST['mail_address'] ?? null;
         $email = is_string($mail_raw) && $mail_raw !== '' && $mail_raw !== '0' ? htmlspecialchars(stripslashes($mail_raw)) : '';
 
-        $body = LegacyRenderCapture::capture(static function () use ($registration_post_key, $login, $email, $errors): void {
+        $urlService = $this->urlService;
+        $body = LegacyRenderCapture::capture(static function () use ($registration_post_key, $login, $email, $errors, $urlService): void {
             // $title is set and read entirely within this closure (passed
             // straight into PageHeaderRenderer::render() below) -- no
             // other file reads $GLOBALS['title']. Plain local, not global.
@@ -176,7 +180,7 @@ final class RegisterController implements ControllerInterface
                 'register' => 'register.tpl',
             ]);
             $template->assign([
-                'U_HOME' => make_index_url(),
+                'U_HOME' => $urlService->makeIndexUrl(),
                 'F_KEY' => $registration_post_key,
                 'F_ACTION' => 'register.php',
                 'F_LOGIN' => $login,
@@ -188,7 +192,7 @@ final class RegisterController implements ControllerInterface
             $hide_menu_on = is_array($themeconf) ? ($themeconf['hide_menu_on'] ?? null) : null;
             if (! is_array($hide_menu_on) or ! in_array('theRegisterPage', $hide_menu_on, true)) {
                 new MenubarRenderer()
-                    ->render();
+                    ->render($urlService);
             }
 
             // Load language if cookie is set from login/register/password

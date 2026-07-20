@@ -11,6 +11,7 @@ use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TemplateInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
@@ -677,7 +678,7 @@ final readonly class CategoryService
      * @param array<string, mixed>|null $category
      * @return array{menu: array<int, array<string, mixed>>, categoryCountCategories: mixed}
      */
-    public function getCategoriesMenu(?array $category, FilterUpdaterInterface $filterUpdater): array
+    public function getCategoriesMenu(?array $category, FilterUpdaterInterface $filterUpdater, UrlServiceInterface $urlService): array
     {
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
@@ -738,7 +739,7 @@ final readonly class CategoryService
                         false,
                         ' / '
                     ),
-                    'URL' => make_index_url([
+                    'URL' => $urlService->makeIndexUrl([
                         'category' => $row,
                     ]),
                     'LEVEL' => substr_count(is_scalar($rowGlobalRank) ? (string) $rowGlobalRank : '', '.') + 1,
@@ -867,7 +868,7 @@ final readonly class CategoryService
      * @param  list<array<string, mixed>>|null  $combinedCategories
      * @return list<array<string, mixed>>
      */
-    public function getRelatedCategoriesMenuWithUrls(array $items, array $excludedCatIds = [], ?array $category = null, ?array $combinedCategories = null): array
+    public function getRelatedCategoriesMenuWithUrls(array $items, UrlServiceInterface $urlService, array $excludedCatIds = [], ?array $category = null, ?array $combinedCategories = null): array
     {
         $cats = $this->getRelatedCategoriesMenu(
             array_values(array_map(intval(...), $items)),
@@ -891,7 +892,7 @@ final readonly class CategoryService
                 $urlParams['category'] = $cat;
             }
 
-            $cats[$idx]['url'] = make_index_url($urlParams);
+            $cats[$idx]['url'] = $urlService->makeIndexUrl($urlParams);
         }
 
         return $cats;
@@ -900,10 +901,10 @@ final readonly class CategoryService
     /**
      * Deletes a site and its primary categories.
      */
-    public function deleteSite(int $id, ActivityLoggerInterface $activityLogger): void
+    public function deleteSite(int $id, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService): void
     {
         $categoryIds = $this->repo->findCategoryIdsBySite($id);
-        $this->deleteCategories($categoryIds, $activityLogger);
+        $this->deleteCategories($categoryIds, $activityLogger, $urlService);
 
         $this->repo->deleteSiteRow($id);
     }
@@ -921,7 +922,7 @@ final readonly class CategoryService
      *    - delete_orphans: delete photos that are no longer linked to any category
      *    - force_delete: delete photos even if they are linked to another category
      */
-    public function deleteCategories(array $ids, ActivityLoggerInterface $activityLogger, string $photoDeletionMode = 'no_delete'): void
+    public function deleteCategories(array $ids, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, string $photoDeletionMode = 'no_delete'): void
     {
         if (count($ids) === 0) {
             return;
@@ -935,7 +936,7 @@ final readonly class CategoryService
 
         // destruction of all photos physically linked to the category
         $elementIds = $this->repo->findStorageLinkedImageIds($ids);
-        $imageService->deleteElements($elementIds);
+        $imageService->deleteElements($elementIds, $urlService);
 
         // now, should we delete photos that are virtually linked to the category?
         if ($photoDeletionMode === 'delete_orphans' || $photoDeletionMode === 'force_delete') {
@@ -949,7 +950,7 @@ final readonly class CategoryService
                     $imageIdsToDelete = $imageIdsLinked;
                 }
 
-                $imageService->deleteElements(array_map(intval(...), $imageIdsToDelete), true);
+                $imageService->deleteElements(array_map(intval(...), $imageIdsToDelete), $urlService, true);
             }
         }
 
@@ -1334,7 +1335,7 @@ final readonly class CategoryService
     /**
      * @return array{src: string|array<int|string, mixed>, url: string}
      */
-    public function getCategoryRepresentantProperties(int|string $imageId, ?string $size = null): array
+    public function getCategoryRepresentantProperties(int|string $imageId, UrlServiceInterface $urlService, ?string $size = null): array
     {
         $row = new ImageRepository(DbConnection::build())->findById($imageId);
         if ($row === null) {
@@ -1345,7 +1346,7 @@ final readonly class CategoryService
         } else {
             $src = DerivativeImage::url($size, $row);
         }
-        $url = get_root_url() . 'admin.php?page=photo-' . $imageId;
+        $url = $urlService->getRootUrl() . 'admin.php?page=photo-' . $imageId;
 
         return [
             'src' => $src,

@@ -11,6 +11,7 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Template\Template;
 
@@ -28,6 +29,7 @@ final class LanguagesNewPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     /**
@@ -54,12 +56,12 @@ final class LanguagesNewPageRenderer
             'languages' => 'languages_new.tpl',
         ]);
 
-        $base_url = get_root_url() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;
+        $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;
 
         $extension_repository = new ExtensionRepository(DbConnection::build());
         $pem_catalog = new PemCatalog(new ZipExtractor());
         $extension_scanner = new ExtensionScanner();
-        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog);
+        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService);
 
         // +-----------------------------------------------------------------------+
         // |                           setup check                                 |
@@ -96,7 +98,7 @@ final class LanguagesNewPageRenderer
                 // PemCatalog::extractArchive() only extracts, it doesn't know about
                 // the lifecycle state machine.
                 if ($install_status === 'ok' && $extraction['id'] !== null) {
-                    $fs_language_entry = $extension_scanner->scan(ExtensionType::Language)[$extraction['id']] ?? null;
+                    $fs_language_entry = $extension_scanner->scan(ExtensionType::Language, $this->urlService)[$extraction['id']] ?? null;
                     $extension_lifecycle->performAction(ExtensionType::Language, 'activate', $extraction['id'], $fs_language_entry);
                 }
 
@@ -124,7 +126,7 @@ final class LanguagesNewPageRenderer
         // |                     start template output                             |
         // +-----------------------------------------------------------------------+
         $fs_language_ids = [];
-        foreach ($extension_scanner->scan(ExtensionType::Language) as $fs_language) {
+        foreach ($extension_scanner->scan(ExtensionType::Language, $this->urlService) as $fs_language) {
             $extension = $fs_language['extension'] ?? null;
             if (is_scalar($extension)) {
                 $fs_language_ids[] = (string) $extension;

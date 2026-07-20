@@ -36,6 +36,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
+use Piwigo\Url\UrlService;
 
 /**
  * P23 batch 8e-4: relocated from include/ws_functions/pwg.php.
@@ -1282,11 +1283,12 @@ SELECT
             $cat_name = '';
             if ($line_image_id !== null) {
                 $image_edit_string = PHPWG_ROOT_PATH . 'admin.php?page=photo-' . $line_image_id;
-                $picture_url = make_picture_url(
-                    [
-                        'image_id' => $line_image_id,
-                    ]
-                );
+                $picture_url = new UrlService(new HtmlService())
+                    ->makePictureUrl(
+                        [
+                            'image_id' => $line_image_id,
+                        ]
+                    );
 
                 $element = [];
                 if (isset($image_infos[$line_image_id])) {

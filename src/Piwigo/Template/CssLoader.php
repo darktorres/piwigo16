@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Core\UrlServiceInterface;
+
 class CssLoader
 {
     /**
@@ -37,10 +39,10 @@ class CssLoader
     /**
      * @return Combinable[] array of combined CSS.
      */
-    public function get_css(): array
+    public function get_css(UrlServiceInterface $urlService): array
     {
         uasort($this->registered_css, self::cmp_by_order(...));
-        $combiner = new FileCombiner('css', $this->registered_css);
+        $combiner = new FileCombiner('css', $urlService, $this->registered_css);
         return $combiner->combine();
     }
 

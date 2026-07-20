@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -54,6 +55,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class ActionController implements ControllerInterface
 {
+    public function __construct(
+        private readonly UrlServiceInterface $urlService,
+    ) {}
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
@@ -147,7 +152,7 @@ SELECT id
                         $this->doError(401, 'Access denied e');
                     }
                 }
-                $file = \Piwigo\Image\ImagePathHelper::getElementPath($element_info);
+                $file = \Piwigo\Image\ImagePathHelper::getElementPath($element_info, $this->urlService);
                 break;
             case 'r':
                 $representative_ext = $element_info['representative_ext'] ?? null;
@@ -158,7 +163,7 @@ SELECT id
                 if (! is_string($representative_ext) || $representative_ext === '' || $representative_ext === '0') {
                     $this->doError(404, 'Requested file not found');
                 }
-                $file = \Piwigo\Image\ImagePathHelper::originalToRepresentative(\Piwigo\Image\ImagePathHelper::getElementPath($element_info), $representative_ext);
+                $file = \Piwigo\Image\ImagePathHelper::originalToRepresentative(\Piwigo\Image\ImagePathHelper::getElementPath($element_info, $this->urlService), $representative_ext);
                 break;
             case 'f':
                 if ($format_row === null) {
@@ -169,7 +174,7 @@ SELECT id
                 // schema -- a genuine DB row for this format always
                 // carries a string here.
                 assert(is_string($format_ext));
-                $file = \Piwigo\Image\ImagePathHelper::originalToFormat(\Piwigo\Image\ImagePathHelper::getElementPath($element_info), $format_ext);
+                $file = \Piwigo\Image\ImagePathHelper::originalToFormat(\Piwigo\Image\ImagePathHelper::getElementPath($element_info, $this->urlService), $format_ext);
                 $original_file = $element_info['file'];
                 // images.file is `varchar(255) NOT NULL` in the schema --
                 // a genuine DB row for this element always carries a
@@ -205,7 +210,7 @@ SELECT id
         $http_headers = [];
 
         $ctype = null;
-        if (! url_is_remote($file)) {
+        if (! $this->urlService->urlIsRemote($file)) {
             if (! @is_readable($file)) {
                 $this->doError(404, "Requested file not found - {$file}");
             }

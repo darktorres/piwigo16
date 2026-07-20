@@ -7,9 +7,11 @@ namespace Piwigo\Mail;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\Mailer;
@@ -34,9 +36,11 @@ use Symfony\Component\Mime\Email;
  *
  * Injects only the optional WebmasterMailProviderInterface test seam (P23
  * batch 8f-4, see the constructor's own docblock) -- remaining cross-domain
- * calls (l10n(), trigger_notify()/trigger_change(), get_root_url(), ...)
- * stay as plain global-function calls to the settled composer-autoloaded
- * procedural helpers, matching every other P17/P18-era service. l10n_args()/load_language()
+ * calls (l10n(), trigger_notify()/trigger_change()) stay as plain
+ * global-function calls to the settled composer-autoloaded procedural
+ * helpers, matching every other P17/P18-era service; Url-family calls go
+ * through the private urlService() helper below (Legacy Coupling
+ * Retirement Phase 4c, see its own docblock). l10n_args()/load_language()
  * calls above were retargeted to Piwigo\Core\Lang::args()/::load() in
  * P23 batch 8d -- l10n() itself stays a bare call (track-2 relocated,
  * too widely used to retarget, see src/Piwigo/Lang/functions.php).
@@ -114,6 +118,23 @@ final class MailService implements MailerInterface
                 new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())),
                 new \Piwigo\Auth\CookieService(),
             );
+    }
+
+    /**
+     * Throwaway construction, not a constructor property -- this class
+     * has ~98 `new MailService()` construction sites, several of them
+     * inside Piwigo\Bootstrap\RedirectService's own early-crash fallback
+     * chain (RedirectService -> UserService -> MailService, all literal
+     * `new` calls). PHP-DI's reflection-based autowiring only ever
+     * inspects class constructors, never ordinary methods, so a private
+     * helper method is safe from re-closing that chain even though an
+     * optional/nullable constructor property of the same type would not
+     * be (PHP-DI may still attempt to autowire an optional typed
+     * constructor param). Legacy Coupling Retirement Phase 4c.
+     */
+    private function urlService(): UrlServiceInterface
+    {
+        return new UrlService(new HtmlService());
     }
 
     /**
@@ -628,13 +649,13 @@ final class MailService implements MailerInterface
 
                 if ($authkey !== false) {
                     $link = $tpl['assign']['LINK'] ?? null;
-                    $userTpl['assign']['LINK'] = add_url_params(is_string($link) ? $link : '', [
+                    $userTpl['assign']['LINK'] = $this->urlService()->addUrlParams(is_string($link) ? $link : '', [
                         'auth' => $authkey['auth_key'] ?? null,
                     ]);
 
                     $img = $userTpl['assign']['IMG'] ?? null;
                     if (is_array($img) && isset($img['link']) && is_string($img['link'])) {
-                        $img['link'] = add_url_params(
+                        $img['link'] = $this->urlService()->addUrlParams(
                             $img['link'],
                             [
                                 'auth' => $authkey['auth_key'] ?? null,
@@ -698,7 +719,8 @@ final class MailService implements MailerInterface
         }
 
         // Compute root_path in order to have a complete path.
-        set_make_full_url();
+        $this->urlService()
+            ->setMakeFullUrl();
 
         if (! isset($args['from']) || self::emptyValue($args['from'])) {
             $from = [
@@ -805,12 +827,14 @@ final class MailService implements MailerInterface
                     $addUrlParams['auth'] = $args['auth_key'];
                 }
 
-                $galleryHomeUrl = get_gallery_home_url();
+                $galleryHomeUrl = $this->urlService()
+                    ->getGalleryHomeUrl();
                 $galleryHomeUrl = is_string($galleryHomeUrl) ? $galleryHomeUrl : '';
 
                 $template->assign(
                     [
-                        'GALLERY_URL' => add_url_params($galleryHomeUrl, $addUrlParams),
+                        'GALLERY_URL' => $this->urlService()
+                            ->addUrlParams($galleryHomeUrl, $addUrlParams),
                         'GALLERY_TITLE' => \Piwigo\Config\Config::galleryTitle(),
                         'VERSION' => ((bool) (\Piwigo\Config\Config::showVersion())) ? AppInfo::VERSION : '',
                         'PHPWG_URL' => defined('PHPWG_URL') ? PHPWG_URL : '',
@@ -890,7 +914,8 @@ final class MailService implements MailerInterface
         }
 
         // Undo compute-root_path.
-        unset_make_full_url();
+        $this->urlService()
+            ->unsetMakeFullUrl();
 
         // Send content. 'text/plain' is always present in $contents
         // (unconditionally in $contentTypeList above); 'text/html' is
@@ -1008,7 +1033,8 @@ final class MailService implements MailerInterface
      */
     public function generateResetPasswordMail(string $username, string $passwordLink, string $galleryTitle, string $remainingTime): array
     {
-        set_make_full_url();
+        $this->urlService()
+            ->setMakeFullUrl();
 
         $message = '<p style="margin: 20px 0">';
         $message = l10n('Someone requested that the password be reset for the following user account:') . ' ' . $username . '</p>';
@@ -1020,7 +1046,8 @@ final class MailService implements MailerInterface
         $message .= ' ';
         $message .= l10n('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
 
-        unset_make_full_url();
+        $this->urlService()
+            ->unsetMakeFullUrl();
 
         $messageAfterTrigger = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_lost_password_mail_content', $message);
         $message = is_string($messageAfterTrigger) ? $messageAfterTrigger : $message;
@@ -1039,7 +1066,8 @@ final class MailService implements MailerInterface
      */
     public function generateSetPasswordMail(string $username, string $setPasswordLink, string $galleryTitle, string $remainingTime): array
     {
-        set_make_full_url();
+        $this->urlService()
+            ->setMakeFullUrl();
 
         $message = '<p style="margin: 20px 0">';
         $message .= l10n('A photo library administrator has created the following account for you:') . ' ' . $username . '</p>';
@@ -1051,7 +1079,8 @@ final class MailService implements MailerInterface
         $message .= ' ';
         $message .= l10n('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
 
-        unset_make_full_url();
+        $this->urlService()
+            ->unsetMakeFullUrl();
 
         $messageAfterTrigger = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_lost_password_mail_content', $message);
         $message = is_string($messageAfterTrigger) ? $messageAfterTrigger : $message;
@@ -1070,13 +1099,15 @@ final class MailService implements MailerInterface
      */
     public function generateCodeVerificationMail(string $code): array
     {
-        set_make_full_url();
+        $this->urlService()
+            ->setMakeFullUrl();
         $message = '<p style="margin: 20px 0">';
         $message .= l10n('Here is your verification code:') . ' <br />';
         $message .= '<span style="font-size: 16px">' . $code . '</span></p>';
         $message .= '<p style="margin: 20px 0;">';
         $message .= l10n('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
-        unset_make_full_url();
+        $this->urlService()
+            ->unsetMakeFullUrl();
 
         $galleryTitle = \Piwigo\Config\Config::galleryTitle();
 
@@ -1094,8 +1125,10 @@ final class MailService implements MailerInterface
      */
     public function generateSuccessResetPasswordMail(string $username, int $nbOfApikeys): array
     {
-        set_make_full_url();
-        $profileUrl = get_root_url() . 'profile.php';
+        $this->urlService()
+            ->setMakeFullUrl();
+        $profileUrl = $this->urlService()
+            ->getRootUrl() . 'profile.php';
 
         $message = '<p style="margin-top: 20px;">' . l10n('Hello %s,', $username) . '</p>';
         $message .= '<p style="margin-bottom: 20px;">' . l10n('Your password was successfully reset') . '.</p>';
@@ -1112,7 +1145,8 @@ final class MailService implements MailerInterface
             );
             $message .= '</p>';
         }
-        unset_make_full_url();
+        $this->urlService()
+            ->unsetMakeFullUrl();
 
         $galleryTitle = \Piwigo\Config\Config::galleryTitle();
 

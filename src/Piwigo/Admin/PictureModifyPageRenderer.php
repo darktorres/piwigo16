@@ -12,6 +12,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
@@ -50,6 +51,7 @@ final class PictureModifyPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     private static function userService(Connection $conn): UserService
@@ -146,7 +148,7 @@ SELECT id
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(new HtmlService(), $this->redirectService);
 
-            $imageService->deleteElements([$image_id], true);
+            $imageService->deleteElements([$image_id], $this->urlService, true);
             UserCacheInvalidator::invalidate();
 
             // where to redirect the user now?
@@ -158,12 +160,12 @@ SELECT id
             if ((bool) ($custom_context = self::userService($conn)->getEditContext($image_id))) {
                 // considering we have a context available, we fake one to build the url
                 // and we replace it with the context found in the session for this image_id
-                $this->redirectService->redirect(str_replace('list/1,2', $custom_context, make_index_url([
+                $this->redirectService->redirect(str_replace('list/1,2', $custom_context, $this->urlService->makeIndexUrl([
                     'list' => [1, 2],
                 ])));
             }
 
-            $this->redirectService->redirect(make_index_url());
+            $this->redirectService->redirect($this->urlService->makeIndexUrl());
         }
 
         // +-------------------------------------------------------------------+
@@ -373,8 +375,8 @@ SELECT
                 'U_DOWNLOAD' => 'action.php?id=' . $image_id . '&amp;part=e&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                 'U_SYNC' => $admin_url_start . '&amp;sync_metadata=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                 'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
-                'U_HISTORY' => get_root_url() . 'admin.php?page=history&amp;filter_image_id=' . $image_id,
-                'U_ACTIVITY' => get_root_url() . 'admin.php?page=user_activity&photo=' . $image_id,
+                'U_HISTORY' => $this->urlService->getRootUrl() . 'admin.php?page=history&amp;filter_image_id=' . $image_id,
+                'U_ACTIVITY' => $this->urlService->getRootUrl() . 'admin.php?page=user_activity&photo=' . $image_id,
 
                 'PATH' => $row['path'],
 
@@ -399,8 +401,8 @@ SELECT
 
                 'DESCRIPTION' => htmlspecialchars($comment_value),
 
-                'F_ACTION' => get_root_url() . 'admin.php'
-                    . get_query_string_diff(['sync_metadata']),
+                'F_ACTION' => $this->urlService->getRootUrl() . 'admin.php'
+                    . $this->urlService->getQueryStringDiff(['sync_metadata']),
             ]
         );
 
@@ -473,7 +475,7 @@ SELECT *
         $row_path = is_string($row['path']) ? $row['path'] : null;
         $picture_ext = is_array(\Piwigo\Config\Config::pictureExtensions()) ? \Piwigo\Config\Config::pictureExtensions() : [];
         if (in_array(\Piwigo\Core\StringHelper::getExtension($row_path), $picture_ext)) {
-            $template->assign('U_COI', get_root_url() . 'admin.php?page=picture_coi&amp;image_id=' . $image_id);
+            $template->assign('U_COI', $this->urlService->getRootUrl() . 'admin.php?page=picture_coi&amp;image_id=' . $image_id);
         }
 
         // image level options
@@ -504,7 +506,7 @@ SELECT category_id, uppercats, dir
             $name =
               $htmlRenderer->getCatDisplayNameCache(
                   $row_uppercats,
-                  get_root_url() . 'admin.php?page=album-'
+                  $this->urlService->getRootUrl() . 'admin.php?page=album-'
               );
 
             if ($row_category_id === $storage_category_id) {
@@ -536,7 +538,7 @@ SELECT category_id, uppercats, dir
         }
 
         if ((bool) ($custom_context = self::userService($conn)->getEditContext($image_id))) {
-            $template->assign('U_JUMPTO', make_picture_url([
+            $template->assign('U_JUMPTO', $this->urlService->makePictureUrl([
                 'image_id' => $image_id,
             ]) . '/' . $custom_context);
         } elseif (\Piwigo\Users\CurrentUser::get()->level >= $image_level) {
@@ -572,7 +574,7 @@ SELECT category_id
 
                 $cat_names_raw = \Piwigo\Core\ProcessCache::get('cat_names');
                 $cat_names = is_array($cat_names_raw) ? $cat_names_raw : [];
-                $url_img = make_picture_url(
+                $url_img = $this->urlService->makePictureUrl(
                     [
                         'image_id' => $image_id,
                         'image_file' => $image_file,
@@ -597,7 +599,7 @@ SELECT id
             'associated_albums' => $associated_albums,
             'represented_albums' => $represented_albums,
             'STORAGE_ALBUM' => $storage_category_id,
-            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['tags', 'categories']),
+            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
             'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                 ->getToken(),
         ]);

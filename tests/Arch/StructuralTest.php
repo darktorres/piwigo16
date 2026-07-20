@@ -761,14 +761,6 @@ test('src/Piwigo/ does not repeat the same multi-dependency service construction
         // -- same structural exemption, new file.
         'Bootstrap/RedirectService.php|UserService',
 
-        // Free functions: no enclosing instance, nothing to inject into.
-        // Legacy Coupling Retirement Phase 4b: adding the new required
-        // RedirectServiceInterface argument to every `new UrlService(new
-        // HtmlService())` one-liner (18 sites, one per function) crossed
-        // this check's 2-top-level-arg detection threshold -- genuinely
-        // temporary, disappears when Phase 4c retargets/deletes this file.
-        'Url/functions.php|UrlService',
-
         // Pre-installation, no DI container exists yet (matches the
         // Env/FilesystemHelper/MysqliDb precedent documented on this
         // class's own docblock).

@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Http\ControllerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -21,6 +22,7 @@ final class QSearchController implements ControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     #[\Override]
@@ -31,6 +33,6 @@ final class QSearchController implements ControllerInterface
         $q = $request->getQueryParams()['q'] ?? '';
         $q = is_string($q) ? $q : '';
 
-        $this->redirectService->redirect(get_root_url() . 'search.php?q=' . $q);
+        $this->redirectService->redirect($this->urlService->getRootUrl() . 'search.php?q=' . $q);
     }
 }

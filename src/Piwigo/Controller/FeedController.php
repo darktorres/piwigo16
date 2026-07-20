@@ -10,6 +10,7 @@ use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Feed\FeedHelper;
 use Piwigo\Feed\FeedRepository;
@@ -40,6 +41,7 @@ final class FeedController implements ControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     private static function userService(Connection $conn): \Piwigo\Users\UserService
@@ -69,7 +71,8 @@ final class FeedController implements ControllerInterface
             new NotificationRepository($conn),
             new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn)),
             $persistent_cache,
-            $htmlRenderer
+            $htmlRenderer,
+            $this->urlService
         );
 
         new \Piwigo\Validation\InputValidator()
@@ -116,7 +119,7 @@ final class FeedController implements ControllerInterface
         // datetime value, never a nullable column read.
         assert(is_string($dbnow));
 
-        set_make_full_url();
+        $this->urlService->setMakeFullUrl();
 
         $rss_encoding = \Piwigo\Core\CharsetHelper::getPwgCharset();
 
@@ -129,7 +132,7 @@ final class FeedController implements ControllerInterface
         $user_username = \Piwigo\Users\CurrentUser::get()->username;
 
         $rss_title = $conf_gallery_title . ' (as ' . stripslashes($user_username) . ')';
-        $rss_link = get_gallery_home_url();
+        $rss_link = $this->urlService->getGalleryHomeUrl();
         $rss_items = [];
 
         // +-------------------------------------------------------------------+
@@ -155,7 +158,7 @@ final class FeedController implements ControllerInterface
 
                 $rss_items[] = [
                     'title' => l10n('New on %s', \Piwigo\Core\DateHelper::formatDate($dbnow)),
-                    'link' => get_gallery_home_url(),
+                    'link' => $this->urlService->getGalleryHomeUrl(),
                     'description' => $description,
                     'html' => true,
                     'date' => $feed_helper->ts8601($dbnow_ts),
@@ -203,7 +206,7 @@ final class FeedController implements ControllerInterface
             // date_available is a NOT NULL datetime column, always a
             // string.
             assert(is_string($date));
-            $link = make_index_url(
+            $link = $this->urlService->makeIndexUrl(
                 [
                     'chronology_field' => 'posted',
                     'chronology_style' => 'monthly',
@@ -212,7 +215,7 @@ final class FeedController implements ControllerInterface
                 ]
             );
 
-            $description = '<a href="' . make_index_url() . '">' . $conf_gallery_title . '</a><br> ';
+            $description = '<a href="' . $this->urlService->makeIndexUrl() . '">' . $conf_gallery_title . '</a><br> ';
             $description .= $notificationService->getHtmlDescriptionRecentPostDate($date_detail);
 
             $date_ts = $feed_helper->datetimeToTs($date);

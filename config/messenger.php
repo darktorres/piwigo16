@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Db\DbConnection;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Job\BatchUploadJob;
 use Piwigo\Job\GenerateDerivativeJob;
@@ -17,6 +18,7 @@ use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Mail\MailService;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\Url\UrlService;
 
 /**
  * Transport + routing + handler-factory configuration for
@@ -44,7 +46,7 @@ return [
 
     // message class => handler factory
     'handlers' => [
-        BatchUploadJob::class => static fn (): callable => new BatchUploadHandler(),
+        BatchUploadJob::class => static fn (): callable => new BatchUploadHandler(new UrlService(new HtmlService())),
         GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService()),
         RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService()),
         ReindexImagesJob::class => static fn (): callable => new ReindexImagesHandler(new MetadataService(new MetadataRepository(DbConnection::build()))),

@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -23,6 +24,7 @@ final class TagsPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     public function render(): void
@@ -45,7 +47,7 @@ final class TagsPageRenderer
 
             $tagService->deleteOrphanTags();
             $_SESSION['message_tags'] = l10n('Orphan tags deleted');
-            $this->redirectService->redirect(get_root_url() . 'admin.php?page=tags');
+            $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=tags');
         }
 
         $template->set_filenames([
@@ -77,7 +79,7 @@ final class TagsPageRenderer
                 count($orphan_tag_names),
                 '<a
       class="icon-eye"
-      data-url="' . get_root_url() . 'admin.php?page=tags&amp;action=delete_orphans&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken() . '">'
+      data-url="' . $this->urlService->getRootUrl() . 'admin.php?page=tags&amp;action=delete_orphans&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken() . '">'
                 . l10n('Review') . '</a>'
             );
 

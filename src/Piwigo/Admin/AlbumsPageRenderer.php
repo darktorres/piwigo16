@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -45,7 +46,7 @@ use Piwigo\Template\Template;
  */
 final class AlbumsPageRenderer
 {
-    public function render(): void
+    public function render(UrlServiceInterface $urlService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -89,7 +90,7 @@ SELECT
         // | tabs                                                              |
         // +-------------------------------------------------------------------+
 
-        $my_base_url = get_root_url() . 'admin.php?page=';
+        $my_base_url = $urlService->getRootUrl() . 'admin.php?page=';
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('albums');
@@ -221,7 +222,7 @@ SELECT id, name, id_uppercat
 
         $template->assign(
             [
-                'F_ACTION' => get_root_url() . 'admin.php?page=albums',
+                'F_ACTION' => $urlService->getRootUrl() . 'admin.php?page=albums',
             ]
         );
 

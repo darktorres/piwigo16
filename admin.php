@@ -25,6 +25,8 @@ use Piwigo\Admin\AdminShell;
 use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Core\Paths;
+use Piwigo\Html\HtmlService;
+use Piwigo\Url\UrlService;
 
 $paths = Paths::fromIndex(__FILE__);
 define('PHPWG_ROOT_PATH', './');
@@ -41,5 +43,5 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 // their own docblocks), same ordering index.php already uses.
 CommonBootstrap::run($paths);
 
-new AdminShell(new RedirectService())
+new AdminShell(new RedirectService(), new UrlService(new HtmlService()))
     ->run();

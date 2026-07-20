@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Job\Handler;
 
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Job\BatchUploadJob;
 
 /**
@@ -27,11 +28,16 @@ use Piwigo\Job\BatchUploadJob;
  */
 final class BatchUploadHandler
 {
+    public function __construct(
+        private readonly UrlServiceInterface $urlService,
+    ) {}
+
     public function __invoke(BatchUploadJob $job): int
     {
         $imageId = new UploadService()
             ->addUploadedFile(
                 $job->sourceFilepath,
+                $this->urlService,
                 $job->originalFilename,
                 $job->categories,
                 $job->level,

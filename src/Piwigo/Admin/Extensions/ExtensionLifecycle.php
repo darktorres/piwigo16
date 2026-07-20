@@ -14,6 +14,7 @@ use Piwigo\Admin\ThemeMaintain;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -53,6 +54,7 @@ final readonly class ExtensionLifecycle
     public function __construct(
         private ExtensionRepository $repo,
         private PemCatalog $pemCatalog,
+        private UrlServiceInterface $urlService,
     ) {}
 
     private static function userService(Connection $conn): UserService
@@ -156,7 +158,7 @@ final readonly class ExtensionLifecycle
 
                 if ($errors[0] === 'ok') {
                     $newFsEntry = new ExtensionScanner()
-                        ->scan(ExtensionType::Plugin)[$id] ?? null;
+                        ->scan(ExtensionType::Plugin, $this->urlService)[$id] ?? null;
                     $newVersion = $this->stringOrDefault($newFsEntry['version'] ?? null, '0');
                     $activityDetails['to_version'] = $newVersion;
 
@@ -436,7 +438,7 @@ final readonly class ExtensionLifecycle
         }
 
         $parentFsEntry = new ExtensionScanner()
-            ->scan(ExtensionType::Theme)[$parent] ?? null;
+            ->scan(ExtensionType::Theme, $this->urlService)[$parent] ?? null;
         if ($parentFsEntry === null) {
             return $parent;
         }
@@ -453,7 +455,7 @@ final readonly class ExtensionLifecycle
     public function getChildrenThemes(string $themeId): array
     {
         $children = [];
-        foreach (new ExtensionScanner()->scan(ExtensionType::Theme) as $candidate) {
+        foreach (new ExtensionScanner()->scan(ExtensionType::Theme, $this->urlService) as $candidate) {
             if (($candidate['parent'] ?? null) === $themeId) {
                 $name = $candidate['name'] ?? null;
                 if (is_string($name)) {

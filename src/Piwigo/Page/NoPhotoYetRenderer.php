@@ -6,6 +6,7 @@ namespace Piwigo\Page;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
@@ -26,6 +27,7 @@ final readonly class NoPhotoYetRenderer
     public function __construct(
         private Connection $conn,
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     public function render(): void
@@ -54,12 +56,12 @@ final readonly class NoPhotoYetRenderer
                 if (isset($_GET['no_photo_yet'])) {
                     if ($_GET['no_photo_yet'] === 'browse') {
                         $_SESSION['no_photo_yet'] = 'browse';
-                        $this->redirectService->redirect(make_index_url());
+                        $this->redirectService->redirect($this->urlService->makeIndexUrl());
                     }
 
                     if ($_GET['no_photo_yet'] === 'deactivate') {
                         \Piwigo\Config\ConfigDb::confUpdateParam('no_photo_yet', 'false');
-                        $this->redirectService->redirect(make_index_url());
+                        $this->redirectService->redirect($this->urlService->makeIndexUrl());
                     }
                 }
 
@@ -71,7 +73,7 @@ final readonly class NoPhotoYetRenderer
                 if (\Piwigo\Auth\AccessControl::isAdmin()) {
                     $url = \Piwigo\Config\Config::noPhotoYetUrl();
                     if (! str_starts_with($url, 'http')) {
-                        $url = get_root_url() . $url;
+                        $url = $this->urlService->getRootUrl() . $url;
                     }
 
                     $template->assign(
@@ -82,7 +84,7 @@ final readonly class NoPhotoYetRenderer
                                 \Piwigo\Users\CurrentUser::get()->username
                             ),
                             'next_step_url' => $url,
-                            'deactivate_url' => get_root_url() . '?no_photo_yet=deactivate',
+                            'deactivate_url' => $this->urlService->getRootUrl() . '?no_photo_yet=deactivate',
                         ]
                     );
                 } else {
@@ -90,7 +92,7 @@ final readonly class NoPhotoYetRenderer
                         [
                             'step' => 1,
                             'U_LOGIN' => 'identification.php',
-                            'deactivate_url' => get_root_url() . '?no_photo_yet=browse',
+                            'deactivate_url' => $this->urlService->getRootUrl() . '?no_photo_yet=browse',
                         ]
                     );
                 }

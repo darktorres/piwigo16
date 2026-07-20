@@ -9,6 +9,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -1336,7 +1337,7 @@ final readonly class SearchService
      * @param  array<string, mixed>  $rules
      * @return array{0: string, 1: string}
      */
-    public function saveSearch(array $rules, ?int $forkedFrom = null): array
+    public function saveSearch(array $rules, UrlServiceInterface $urlService, ?int $forkedFrom = null): array
     {
         $dbNow = $this->repo->now();
         $searchUuid = $this->getAvailableSearchUuid();
@@ -1351,7 +1352,7 @@ final readonly class SearchService
             $preferencesService->updateParam('gallery_search_filters', array_keys(is_array($rulesFields) ? $rulesFields : []));
         }
 
-        $url = make_index_url([
+        $url = $urlService->makeIndexUrl([
             'section' => 'search',
             'search' => $searchUuid,
         ]);

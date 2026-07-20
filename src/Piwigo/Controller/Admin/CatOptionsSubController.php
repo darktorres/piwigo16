@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\CatOptionsPageRenderer;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -19,12 +20,13 @@ final class CatOptionsSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        new CatOptionsPageRenderer($this->redirectService)
+        new CatOptionsPageRenderer($this->redirectService, $this->urlService)
             ->render();
     }
 }

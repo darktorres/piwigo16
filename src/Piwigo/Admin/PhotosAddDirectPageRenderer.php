@@ -11,6 +11,7 @@ use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Core\Env;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
@@ -43,6 +44,7 @@ final class PhotosAddDirectPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     /**
@@ -52,11 +54,12 @@ final class PhotosAddDirectPageRenderer
      * request-time value, not a compile-time constant expression, so this
      * can't become a real class `const`; a static method is the SEC-60-
      * compliant equivalent (src/Piwigo/ forbids define()). CoreTabs
-     * (the other real reader) calls this directly.
+     * (the other real reader) calls this directly, supplying its own
+     * UrlServiceInterface (Legacy Coupling Retirement Phase 4c).
      */
-    public static function baseUrl(): string
+    public static function baseUrl(UrlServiceInterface $urlService): string
     {
-        return get_root_url() . 'admin.php?page=photos_add';
+        return $urlService->getRootUrl() . 'admin.php?page=photos_add';
     }
 
     public function render(): void
@@ -99,7 +102,7 @@ DELETE FROM ' . Tables::caddie() . '
                     $inserts
                 );
 
-            $this->redirectService->redirect(get_root_url() . 'admin.php?page=batch_manager&filter=prefilter-caddie');
+            $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=batch_manager&filter=prefilter-caddie');
         }
 
         if ((bool) new PreferencesService(new UserRepository($conn))->getParam('promote-mobile-apps', true)) {
@@ -199,7 +202,7 @@ SELECT *
 
                 $formats_original_info['ext'] = l10n('%s file type', strtoupper(end($extTab)));
 
-                $formats_original_info['u_edit'] = get_root_url() . 'admin.php?page=photo-' . $formats_image_id;
+                $formats_original_info['u_edit'] = $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $formats_image_id;
 
                 $have_formats_original = true;
             } else {
@@ -230,7 +233,7 @@ SELECT *
             'HAVE_FORMATS_ORIGINAL' => $have_formats_original,
             'FORMATS_ORIGINAL_INFO' => $formats_original_info,
             'FORMATS_EXT_INFO' => $formats_ext_info,
-            'SWITCH_FORMAT_MODE_URL' => get_root_url() . 'admin.php?page=photos_add' . ($display_formats ? '' : '&formats'),
+            'SWITCH_FORMAT_MODE_URL' => $this->urlService->getRootUrl() . 'admin.php?page=photos_add' . ($display_formats ? '' : '&formats'),
             'format_ext' => implode(',', array_filter($conf_format_ext, is_string(...))),
             'str_format_ext' => implode(', ', array_filter($conf_format_ext, is_string(...))),
         ]);
@@ -259,7 +262,7 @@ SELECT *
 
         $template->assign(
             [
-                'F_ADD_ACTION' => self::baseUrl(),
+                'F_ADD_ACTION' => self::baseUrl($this->urlService),
                 'chunk_size' => \Piwigo\Config\Config::uploadFormChunkSize(),
                 'max_file_size' => \Piwigo\Config\Config::uploadFormMaxFileSize(),
                 'ADMIN_PAGE_TITLE' => l10n('Upload Photos'),
@@ -306,7 +309,7 @@ SELECT *
 
         $template->assign(
             [
-                'form_action' => self::baseUrl(),
+                'form_action' => self::baseUrl($this->urlService),
                 'pwg_token' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
             ]
@@ -424,7 +427,7 @@ SELECT
 
         $template->assign([
             'setup_errors' => $setup_errors,
-            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['categories']),
+            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['categories']),
         ]);
 
         // Warnings
@@ -462,7 +465,7 @@ SELECT
             $template->assign(
                 [
                     'setup_warnings' => $setup_warnings,
-                    'hide_warnings_link' => self::baseUrl() . '&amp;hide_warnings=1',
+                    'hide_warnings_link' => self::baseUrl($this->urlService) . '&amp;hide_warnings=1',
                 ]
             );
         }

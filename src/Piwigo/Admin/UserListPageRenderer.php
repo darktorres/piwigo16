@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
@@ -43,7 +44,7 @@ final class UserListPageRenderer
         return new PreferencesService(new UserRepository($conn));
     }
 
-    public function render(): void
+    public function render(UrlServiceInterface $urlService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
         $conn = DbConnection::build();
@@ -61,7 +62,7 @@ final class UserListPageRenderer
         // tab-nav hrefs (see feedback_admindispatcher_breaks_bare_global_bootstrap).
         global $my_base_url;
 
-        $my_base_url = get_root_url() . 'admin.php?page=';
+        $my_base_url = $urlService->getRootUrl() . 'admin.php?page=';
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('users');
@@ -190,7 +191,7 @@ SELECT
 
         $template->assign(
             [
-                'U_HISTORY' => get_root_url() . 'admin.php?page=history&filter_user_id=',
+                'U_HISTORY' => $urlService->getRootUrl() . 'admin.php?page=history&filter_user_id=',
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
                 'NB_IMAGE_PAGE' => $default_user['nb_image_page'],

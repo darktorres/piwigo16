@@ -13,6 +13,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -32,6 +33,7 @@ final class GroupPermPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     private static function auditService(Connection $conn): AuditService
@@ -153,7 +155,7 @@ SELECT id
                 'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
                 'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
 
-                'F_ACTION' => get_root_url() .
+                'F_ACTION' => $this->urlService->getRootUrl() .
                     'admin.php?page=group_perm&amp;group_id=' .
                     $group_id,
             ]

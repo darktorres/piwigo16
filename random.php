@@ -60,7 +60,7 @@ SELECT id
 // +-----------------------------------------------------------------------+
 
 new \Piwigo\Bootstrap\RedirectService()
-    ->redirect(make_index_url([
+    ->redirect(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService())->makeIndexUrl([
         'list' => array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
             $conn->fetchFirstColumn($query)

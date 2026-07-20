@@ -15,9 +15,11 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DeviceHelper;
 use Piwigo\Core\Lang;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Url\UrlService;
 use Smarty\Smarty;
 
 class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\TemplateInterface
@@ -181,7 +183,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         $this->smarty->registerPlugin('compiler', 'get_combined_css', $this->func_get_combined_css(...));
         $this->smarty->registerPlugin('block', 'footer_script', $this->block_footer_script(...));
         $this->smarty->registerFilter('pre', self::prefilter_white_space(...));
-        $this->smarty->registerPlugin('modifier', 'url_is_remote', 'url_is_remote');
+        $this->smarty->registerPlugin('modifier', 'url_is_remote', self::urlService()->urlIsRemote(...));
         $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
         $this->smarty->registerPlugin('modifier', 'l10n', 'l10n');
         $this->smarty->registerPlugin('modifier', 'str_replace', 'str_replace');
@@ -191,7 +193,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         $this->smarty->registerPlugin('modifier', 'is_file', 'is_file');
         $this->smarty->registerPlugin('modifier', 'strpos', 'strpos');
         $this->smarty->registerPlugin('modifier', 'preg_match', 'preg_match');
-        $this->smarty->registerPlugin('modifier', 'get_gallery_home_url', 'get_gallery_home_url');
+        $this->smarty->registerPlugin('modifier', 'get_gallery_home_url', self::urlService()->getGalleryHomeUrl(...));
         $this->smarty->registerPlugin('modifier', 'sizeOf', 'sizeOf');
         $this->smarty->registerPlugin('modifier', 'array_key_exists', 'array_key_exists');
 
@@ -224,6 +226,19 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         if (! defined('IN_ADMIN') and \Piwigo\Config\Config::has('extents_for_templates')) {
             $this->set_extents(\Piwigo\Config\Config::extentsForTemplates(), './template-extension/', true, $theme);
         }
+    }
+
+    /**
+     * Throwaway construction, not a constructor property -- this
+     * constructor takes only 3 plain strings and has 8 real construction
+     * sites; none of its own methods run during construction, so a new
+     * required dependency would ripple for no benefit. `private static`
+     * (not `private`) so it's reachable from make_script_src() below,
+     * which is itself static. Legacy Coupling Retirement Phase 4c.
+     */
+    private static function urlService(): UrlServiceInterface
+    {
+        return new UrlService(new HtmlService());
     }
 
     /**
@@ -563,7 +578,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
                 ->fatalError("Template->parse(): Couldn't load template file for handle {$handle}");
         }
 
-        $this->smarty->assign('ROOT_URL', get_root_url());
+        $this->smarty->assign('ROOT_URL', self::urlService()->getRootUrl());
 
         $save_compile_id = $this->smarty->compile_id;
         $this->load_external_filters($handle);
@@ -617,11 +632,11 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
             } // else maybe error or warning ?
         }
 
-        $css = $this->cssLoader->get_css();
+        $css = $this->cssLoader->get_css(self::urlService());
 
         $content = [];
         foreach ($css as $combi) {
-            $href = embellish_url(get_root_url() . $combi->path);
+            $href = self::urlService()->embellishUrl(self::urlService()->getRootUrl() . $combi->path);
             if ($combi->version !== false) {
                 $href .= '?v' . ((bool) $combi->version ? $combi->version : AppInfo::VERSION);
             }
@@ -1031,10 +1046,10 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     private static function make_script_src($script): string
     {
         $ret = '';
-        if ($script->is_remote()) {
+        if ($script->is_remote(self::urlService())) {
             $ret = $script->path;
         } else {
-            $ret = get_root_url() . $script->path;
+            $ret = self::urlService()->getRootUrl() . $script->path;
             if ($script->version !== false) {
                 $ret .= '?v' . ((bool) $script->version ? $script->version : AppInfo::VERSION);
             }
@@ -1047,7 +1062,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         if (! is_string($ret)) {
             throw new \Exception("make_script_src(): a 'combined_script' event listener returned a non-string value");
         }
-        return embellish_url($ret);
+        return self::urlService()->embellishUrl($ret);
     }
 
     /**

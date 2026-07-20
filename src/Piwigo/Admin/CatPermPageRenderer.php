@@ -8,6 +8,7 @@ use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -30,6 +31,7 @@ final class CatPermPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     public function render(): void
@@ -117,7 +119,7 @@ final class CatPermPageRenderer
                         $page['cat'],
                         'admin.php?page=album-'
                     ),
-                'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=cat_perm',
+                'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=cat_perm',
                 'F_ACTION' => $admin_album_base_url . '-permissions',
                 'private' => ($category['status'] === 'private'),
             ]
@@ -260,7 +262,7 @@ SELECT user_id, group_id
             'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                 ->getToken(),
             'INHERIT' => \Piwigo\Config\Config::inheritanceByDefault(),
-            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['groups', 'users']),
+            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),
         ]);
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'cat_perm');

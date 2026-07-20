@@ -17,6 +17,7 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Mail\MailService;
@@ -67,6 +68,7 @@ class updates
 
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
         string $page = 'updates',
     ) {
         $this->types = ['plugins', 'themes', 'languages'];
@@ -140,7 +142,7 @@ class updates
             $url .= ($env === 'Official') ? '&docker' : '&show_requirements'; // Check docker version if in container
             $secret_key_raw = \Piwigo\Config\Config::secretKey();
             $secret_key = $secret_key_raw;
-            $url .= '&origin_hash=' . sha1($secret_key . get_absolute_root_url());
+            $url .= '&origin_hash=' . sha1($secret_key . $this->urlService->getAbsoluteRootUrl());
 
             if (is_string($result = @HttpClientService::fetch($url))) {
                 $all_versions = explode("\n", $result);
@@ -280,7 +282,7 @@ class updates
             $content .= "\n\n" . l10n(
                 'Time has come to update your Piwigo with version %s, go to %s',
                 $new_versions_string,
-                get_absolute_root_url() . 'admin.php?page=updates'
+                $this->urlService->getAbsoluteRootUrl() . 'admin.php?page=updates'
             );
             $content .= "\n\n" . l10n('It only takes a few clicks.');
             $content .= "\n\n" . l10n('Running on an up-to-date Piwigo is important for security.');
@@ -591,7 +593,7 @@ class updates
         }
     }
 
-    public static function upgrade_to(string $upgrade_to, int|string &$step, RedirectServiceInterface $redirectService, bool $check_current_version = true): void
+    public static function upgrade_to(string $upgrade_to, int|string &$step, RedirectServiceInterface $redirectService, UrlServiceInterface $urlService, bool $check_current_version = true): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -601,7 +603,7 @@ class updates
         if ($check_current_version and ! version_compare($upgrade_to, AppInfo::VERSION, '>')) {
             // TODO why redirect to a plugin page? maybe a remaining code from when
             // the update system was provided as a plugin?
-            $redirectService->redirect(get_root_url() . 'admin.php?page=plugin-' . basename(__DIR__));
+            $redirectService->redirect($urlService->getRootUrl() . 'admin.php?page=plugin-' . basename(__DIR__));
         }
 
         $obsolete_list = null;
@@ -715,7 +717,7 @@ class updates
 
                         \Piwigo\Core\PageState::current()->addError(l10n(
                             'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
-                            get_root_url() . $data_location . 'update/log_error.txt'
+                            $urlService->getRootUrl() . $data_location . 'update/log_error.txt'
                         ));
                     }
                 } else {

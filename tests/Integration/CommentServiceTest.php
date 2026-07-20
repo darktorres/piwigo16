@@ -56,6 +56,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\Tables;
     use Piwigo\Html\HtmlService;
     use Piwigo\Mail\MailService;
+    use Piwigo\Url\UrlService;
     use Piwigo\Users\CurrentUser;
     use Piwigo\Users\User;
     use Piwigo\Users\UserStatus;
@@ -113,7 +114,7 @@ namespace Piwigo\Tests\Integration {
             $_POST['cr'] = [];
 
             $this->conn = DbConnection::build();
-            $this->service = new CommentService(new CommentRepository($this->conn), new EphemeralKeyService(), new MailService(), new HtmlService());
+            $this->service = new CommentService(new CommentRepository($this->conn), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()));
         }
 
         // --- checkForSpam() -------------------------------------------------

@@ -9,6 +9,7 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Template\Template;
 
 /**
@@ -40,7 +41,7 @@ final class UpdatesExtPageRenderer
      * slug statically (config/admin_pages.php registers each of those 4
      * controllers for exactly one slug), so each passes its own literal.
      */
-    public function render(string $pageSlug): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -69,7 +70,7 @@ final class UpdatesExtPageRenderer
             ? array_filter(ExtensionType::cases(), static fn (ExtensionType $type): bool => $plural_by_type[$type->value] === $pageSlug)
             : ExtensionType::cases();
 
-        $extension_update_checker = new ExtensionUpdateChecker(new ExtensionScanner(), new PemCatalog(new ZipExtractor()));
+        $extension_update_checker = new ExtensionUpdateChecker(new ExtensionScanner(), new PemCatalog(new ZipExtractor()), $urlService);
 
         // Investigated, not reproduced exactly: updates.class.php::get_server_extensions()
         // makes ONE combined, uncategorized (no pem_*_category get_data key) PEM

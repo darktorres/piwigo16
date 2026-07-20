@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
@@ -17,7 +18,7 @@ use Piwigo\Rate\RateRepository;
  */
 final class RatingUserPageRenderer
 {
-    public function render(): void
+    public function render(UrlServiceInterface $urlService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -103,7 +104,7 @@ final class RatingUserPageRenderer
             foreach ($rate_repository->findImageThumbInfoByIds(array_keys($image_ids)) as $thumb_row) {
                 $image_urls[$thumb_row['id']] = [
                     'tn' => DerivativeImage::url($params, $thumb_row),
-                    'page' => make_picture_url([
+                    'page' => $urlService->makePictureUrl([
                         'image_id' => $thumb_row['id'],
                         'image_file' => $thumb_row['file'],
                     ]),
@@ -194,7 +195,7 @@ final class RatingUserPageRenderer
         $nb_elements = $rate_repository->countAllRates();
 
         $template->assign([
-            'F_ACTION' => get_root_url() . 'admin.php',
+            'F_ACTION' => $urlService->getRootUrl() . 'admin.php',
             'F_MIN_RATES' => $filter_min_rates,
             'CONSENSUS_TOP_NUMBER' => $consensus_top_number,
             'available_rates' => \Piwigo\Config\Config::rateItems(),

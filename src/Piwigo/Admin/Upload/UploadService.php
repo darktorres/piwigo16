@@ -10,6 +10,7 @@ use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Config\Config;
 use Piwigo\Core\Env;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
@@ -205,7 +206,7 @@ final class UploadService
      *
      * @param int[]|null $categories
      */
-    public function addUploadedFile(string $source_filepath, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null): int|string
+    public function addUploadedFile(string $source_filepath, UrlServiceInterface $urlService, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null): int|string
     {
         $logger = \Piwigo\Core\CurrentLogger::get();
         $conn = DbConnection::build();
@@ -271,7 +272,7 @@ SELECT
 
             // delete all physical files related to the photo (thumbnail, web site, HD)
             new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)))
-                ->deleteElementFiles([$image_id]);
+                ->deleteElementFiles([$image_id], $urlService);
         } else {
             // this photo is new
 
@@ -532,11 +533,11 @@ SELECT
         }
         $src_image = new SrcImage($image_infos);
 
-        set_make_full_url();
+        $urlService->setMakeFullUrl();
         // in case we are on uploadify.php, we have to replace the false path
         $derivative_url = preg_replace('#admin/include/i#', 'i', DerivativeImage::url(ImageStdParams::MEDIUM, $src_image));
         assert($derivative_url !== null);
-        unset_make_full_url();
+        $urlService->unsetMakeFullUrl();
 
         $logger->info(__METHOD__ . ' : force cache generation, derivative_url = ' . $derivative_url);
 

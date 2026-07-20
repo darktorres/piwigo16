@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Bootstrap\RedirectService;
+use Piwigo\Html\HtmlService;
+use Piwigo\Url\UrlService;
 
 // Only containerVersionCompare() is covered here -- checkPiwigoUpgrade()/
 // getPiwigoNewVersions()/notifyPiwigoNewVersions()/upgradeTo() all talk to
@@ -15,7 +17,7 @@ use Piwigo\Bootstrap\RedirectService;
 // flakiness class -- not exercised here.
 function core_update_service(): CoreUpdateService
 {
-    return new CoreUpdateService(new ZipExtractor(), new RedirectService());
+    return new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService()));
 }
 
 test('containerVersionCompare orders by semantic version first', function (): void {

@@ -10,6 +10,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -32,17 +33,22 @@ use Piwigo\Tag\TagService;
  * specifically -- `bad_request()`/`page_not_found()`/`fatal_error()` now
  * route through the constructor-injected HtmlRenderingInterface
  * (Piwigo\Core), same pattern as CategoryService/AuthService/CommentService/
- * UserService's own equivalent treatment. Legacy Coupling Retirement
- * Phase 4b: also constructor-injects RedirectServiceInterface, passed
- * through to its own internal badRequest()/pageNotFound() calls (both
- * gained a required RedirectServiceInterface parameter -- see
- * HtmlRenderingInterface's own docblock).
+ * UserService's own equivalent treatment. parseSectionUrl() alone reaches
+ * badRequest()/pageNotFound() (both now take a required
+ * RedirectServiceInterface parameter -- see HtmlRenderingInterface's own
+ * docblock) -- Legacy Coupling Retirement Phase 4c passes
+ * RedirectServiceInterface into that one method as a parameter instead of
+ * a constructor dependency: this class can't hold RedirectServiceInterface
+ * as a constructor property without HtmlService's own throwaway
+ * UrlService construction (Legacy Coupling Retirement Phase 4c, see its
+ * own docblock) needing a concrete L4 Piwigo\Bootstrap\RedirectService,
+ * which HtmlService (L3Presentation) may not depend on directly per
+ * deptrac.yaml's ruleset.
  */
-final class UrlService
+final class UrlService implements UrlServiceInterface
 {
     public function __construct(
         private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly RedirectServiceInterface $redirectService,
         private ?Connection $conn = null,
     ) {}
 
@@ -50,6 +56,7 @@ final class UrlService
      * Returns a prefix for each url link on displayed page and returns an
      * empty string for current path.
      */
+    #[\Override]
     public function getRootUrl(): string
     {
         // Legacy Coupling Retirement Track A batch A5.2e: root_path comes
@@ -76,6 +83,7 @@ final class UrlService
      *
      * @param bool $withScheme if false - does not add http://toto.com
      */
+    #[\Override]
     public function getAbsoluteRootUrl(bool $withScheme = true): string
     {
         // Support X-Forwarded-Proto header for HTTPS detection in PHP
@@ -192,6 +200,7 @@ final class UrlService
      *
      * @param array<int|string, mixed> $params
      */
+    #[\Override]
     public function addUrlParams(string $url, array $params, string $argSeparator = '&amp;'): string
     {
         if ($params !== []) {
@@ -222,6 +231,7 @@ final class UrlService
      *
      * @param array<string, mixed> $params
      */
+    #[\Override]
     public function makeIndexUrl(array $params = []): string
     {
         $url = $this->getRootUrl() . 'index';
@@ -257,6 +267,7 @@ final class UrlService
      * @param array<string, mixed> $redefined keys
      * @param array<int, string> $removed keys
      */
+    #[\Override]
     public function duplicateIndexUrl(array $redefined = [], array $removed = []): string
     {
         return $this->makeIndexUrl(
@@ -306,6 +317,7 @@ final class UrlService
      * @param array<string, mixed> $redefined keys
      * @param array<int, string> $removed keys
      */
+    #[\Override]
     public function duplicatePictureUrl(array $redefined = [], array $removed = []): string
     {
         return $this->makePictureUrl(
@@ -318,6 +330,7 @@ final class UrlService
      *
      * @param array<string, mixed> $params
      */
+    #[\Override]
     public function makePictureUrl(array $params): string
     {
         $url = $this->getRootUrl() . 'picture';
@@ -560,7 +573,8 @@ final class UrlService
      * @param int $nextToken the index in the array of url tokens; in/out
      * @return array<string, mixed>
      */
-    public function parseSectionUrl(array $tokens, &$nextToken): array
+    #[\Override]
+    public function parseSectionUrl(array $tokens, &$nextToken, RedirectServiceInterface $redirectService): array
     {
         $page = [];
         if (isset($tokens[$nextToken]) and str_starts_with($tokens[$nextToken], 'categor')) {
@@ -644,7 +658,7 @@ final class UrlService
                                 $combined_category_ids[] = $cat_id;
                             }
                         } else {
-                            $this->htmlRenderer->pageNotFound($this->redirectService, l10n('Permalink for album not found'));
+                            $this->htmlRenderer->pageNotFound($redirectService, l10n('Permalink for album not found'));
                         }
                     }
                 }
@@ -657,7 +671,7 @@ final class UrlService
             if ($category !== null) {
                 $result = $categoryService->getCategoryInfo((int) $category);
                 if ($result === null || $result === []) {
-                    $this->htmlRenderer->pageNotFound($this->redirectService, l10n('Requested album does not exist'));
+                    $this->htmlRenderer->pageNotFound($redirectService, l10n('Requested album does not exist'));
                 }
                 $page['category'] = $result;
             }
@@ -668,7 +682,7 @@ final class UrlService
                 foreach ($combined_category_ids as $cat_id) {
                     $result = $categoryService->getCategoryInfo((int) $cat_id);
                     if ($result === null || $result === []) {
-                        $this->htmlRenderer->pageNotFound($this->redirectService, l10n('Requested album does not exist'));
+                        $this->htmlRenderer->pageNotFound($redirectService, l10n('Requested album does not exist'));
                     }
 
                     $combined_categories[] = $result;
@@ -703,14 +717,14 @@ final class UrlService
             $nextToken = $i;
 
             if ($requested_tag_ids === [] && $requested_tag_url_names === []) {
-                $this->htmlRenderer->badRequest($this->redirectService, 'at least one tag required');
+                $this->htmlRenderer->badRequest($redirectService, 'at least one tag required');
             }
 
             $tagConn = DbConnection::build();
             $page['tags'] = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn), new CategoryRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
                 ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
-                $this->htmlRenderer->pageNotFound($this->redirectService, l10n('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');
+                $this->htmlRenderer->pageNotFound($redirectService, l10n('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');
             }
         } elseif (($tokens[$nextToken] ?? null) === 'favorites') {
             $page['section'] = 'favorites';
@@ -735,7 +749,7 @@ final class UrlService
             if (! isset($matches[1])) {
                 preg_match('/(\d+)/', ($tokens[$nextToken] ?? ''), $matches);
                 if (! isset($matches[1])) {
-                    $this->htmlRenderer->badRequest($this->redirectService, 'search identifier is missing');
+                    $this->htmlRenderer->badRequest($redirectService, 'search identifier is missing');
                 }
             }
             $page['search'] = $matches[1];
@@ -754,7 +768,7 @@ final class UrlService
             // With pictures list
             else {
                 if (! (bool) preg_match('/^\d+(,\d+)*$/', $tokens[$nextToken])) {
-                    $this->htmlRenderer->badRequest($this->redirectService, 'wrong format on list GET parameter');
+                    $this->htmlRenderer->badRequest($redirectService, 'wrong format on list GET parameter');
                 }
                 foreach (explode(',', $tokens[$nextToken]) as $image_id) {
                     $page['list'][] = $image_id;
@@ -771,8 +785,9 @@ final class UrlService
      * Parses start, flat and chronology from url tokens.
      *
      * @param string[] $tokens
-     * @return list<string>[]|string[]|true[]
+     * @return array{flat?: true, chronology_field?: string, chronology_style?: string, chronology_view?: string, chronology_date?: list<string>, start?: string, startcat?: string}
      */
+    #[\Override]
     public function parseWellKnownParamsUrl(array $tokens, int &$i): array
     {
         $page = [];
@@ -823,6 +838,7 @@ final class UrlService
      * @param int|string $id image id
      * @param string $whatPart one of 'e' (element), 'r' (representative)
      */
+    #[\Override]
     public function getActionUrl($id, $whatPart, bool $download): string
     {
         $params = [
@@ -840,6 +856,7 @@ final class UrlService
      * @param array<string, mixed> $elementInfo containing element information
      * from db; at least 'id', 'path' should be present
      */
+    #[\Override]
     public function getElementUrl(array $elementInfo): mixed
     {
         $url = $elementInfo['path'];
@@ -853,6 +870,7 @@ final class UrlService
     /**
      * Indicate to build url with full path.
      */
+    #[\Override]
     public function setMakeFullUrl(): void
     {
         RootPathOverride::push($this->getAbsoluteRootUrl());
@@ -861,6 +879,7 @@ final class UrlService
     /**
      * Restore old parameter to build url with full path.
      */
+    #[\Override]
     public function unsetMakeFullUrl(): void
     {
         RootPathOverride::pop();
@@ -869,6 +888,7 @@ final class UrlService
     /**
      * Embellish the url argument.
      */
+    #[\Override]
     public function embellishUrl(string $url): string
     {
         $url = str_replace('/./', '/', $url);
@@ -887,6 +907,7 @@ final class UrlService
     /**
      * Returns the 'home page' of this gallery.
      */
+    #[\Override]
     public function getGalleryHomeUrl(): mixed
     {
         $gallery_url = \Piwigo\Config\Config::galleryUrl() ?? null;
@@ -907,6 +928,7 @@ final class UrlService
      * @param string[] $rejects
      * @param bool $escape escape *&* to *&amp;*
      */
+    #[\Override]
     public function getQueryStringDiff(array $rejects = [], bool $escape = true): string
     {
         $query_string = $_SERVER['QUERY_STRING'] ?? null;
@@ -924,6 +946,7 @@ final class UrlService
     /**
      * Returns true if the url is absolute (begins with http).
      */
+    #[\Override]
     public function urlIsRemote(string $url): bool
     {
         return str_starts_with($url, 'http://')
@@ -936,6 +959,7 @@ final class UrlService
      *
      * @return array<int|string, mixed>
      */
+    #[\Override]
     public function getUserFavorites(): array
     {
         if (\Piwigo\Auth\AccessControl::isAGuest()) {

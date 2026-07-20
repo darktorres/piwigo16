@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use Piwigo\Config\Config;
+use Piwigo\Html\HtmlService;
 use Piwigo\Template\Combinable;
 use Piwigo\Template\FileCombiner;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 
 // combine()'s multi-item merge path (mkgetdir()+file_put_contents() under
@@ -36,14 +38,14 @@ afterEach(function (): void {
 });
 
 test('combine returns an empty array for no combinables', function (): void {
-    $combiner = new FileCombiner('js', []);
+    $combiner = new FileCombiner('js', new UrlService(new HtmlService()), []);
 
     expect($combiner->combine())->toBe([]);
 });
 
 test('combine returns a single non-template combinable unchanged', function (): void {
     $combinable = new Combinable('my-script', 'themes/default/js/foo.js');
-    $combiner = new FileCombiner('js', [$combinable]);
+    $combiner = new FileCombiner('js', new UrlService(new HtmlService()), [$combinable]);
 
     $result = $combiner->combine();
 
@@ -54,7 +56,7 @@ test('combine returns a single non-template combinable unchanged', function (): 
 test('combine passes remote combinables through without combining them', function (): void {
     $remote = new Combinable('remote-script', 'https://cdn.example.com/foo.js');
     $local = new Combinable('local-script', 'themes/default/js/bar.js');
-    $combiner = new FileCombiner('js', [$remote, $local]);
+    $combiner = new FileCombiner('js', new UrlService(new HtmlService()), [$remote, $local]);
 
     $result = $combiner->combine();
 
@@ -64,7 +66,7 @@ test('combine passes remote combinables through without combining them', functio
 });
 
 test('add appends a single combinable', function (): void {
-    $combiner = new FileCombiner('js', []);
+    $combiner = new FileCombiner('js', new UrlService(new HtmlService()), []);
     $combinable = new Combinable('my-script', 'themes/default/js/foo.js');
 
     $combiner->add($combinable);
@@ -73,7 +75,7 @@ test('add appends a single combinable', function (): void {
 });
 
 test('add merges an array of combinables', function (): void {
-    $combiner = new FileCombiner('js', []);
+    $combiner = new FileCombiner('js', new UrlService(new HtmlService()), []);
     $first = new Combinable('first', 'themes/default/js/a.js');
     $second = new Combinable('second', 'themes/default/js/b.js');
 

@@ -13,6 +13,7 @@ use Piwigo\Auth\PasswordService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -46,6 +47,7 @@ final class PasswordController implements ControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     /**
@@ -163,18 +165,18 @@ final class PasswordController implements ControllerInterface
 
         if ($this->action === 'reset') {
             if ((! isset($_GET['key']) and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric())) and ! isset($_SESSION['valid_reset_password_code'])) {
-                $gallery_home_url = get_gallery_home_url();
+                $gallery_home_url = $this->urlService->getGalleryHomeUrl();
                 $this->redirectService->redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
             }
         }
 
         if ($this->action === 'lost' and ! \Piwigo\Auth\AccessControl::isAGuest()) {
-            $gallery_home_url = get_gallery_home_url();
+            $gallery_home_url = $this->urlService->getGalleryHomeUrl();
             $this->redirectService->redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
         }
 
         if ($this->action === 'lost_code' and ! isset($_SESSION['reset_password_code'])) {
-            $gallery_home_url = get_gallery_home_url();
+            $gallery_home_url = $this->urlService->getGalleryHomeUrl();
             $gallery_home_url = is_string($gallery_home_url) ? $gallery_home_url : '';
             $this->redirectService->redirect($gallery_home_url . 'identification.php');
         }
@@ -186,7 +188,8 @@ final class PasswordController implements ControllerInterface
         $formErrors = $this->errors;
         $action = $this->action;
         $username = $this->username;
-        $body = LegacyRenderCapture::capture(static function () use ($first_login, $formErrors, $action, $username): void {
+        $urlService = $this->urlService;
+        $body = LegacyRenderCapture::capture(static function () use ($first_login, $formErrors, $action, $username, $urlService): void {
             // $title is set and read entirely within this closure (passed
             // straight into PageHeaderRenderer::render() below) -- no
             // other file reads $GLOBALS['title']. Plain local, not global.
@@ -212,7 +215,7 @@ final class PasswordController implements ControllerInterface
             $template->assign(
                 [
                     'title' => $title,
-                    'form_action' => get_root_url() . 'password.php',
+                    'form_action' => $urlService->getRootUrl() . 'password.php',
                     'action' => $action,
                     'username' => $username ?? \Piwigo\Users\CurrentUser::get()->username,
                     'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
@@ -225,7 +228,7 @@ final class PasswordController implements ControllerInterface
             $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
             if (! is_array($hide_menu_on) or ! in_array('thePasswordPage', $hide_menu_on, true)) {
                 new MenubarRenderer()
-                    ->render();
+                    ->render($urlService);
             }
 
             // Load language if cookie is set from login/register/password
@@ -604,7 +607,7 @@ SELECT
 
             $reset_user_id = $reset_session['user_id'] ?? null;
             $reset_user_id_str = is_numeric($reset_user_id) ? (string) $reset_user_id : '';
-            $api_keys = new \Piwigo\Auth\ApiKeyService(new \Piwigo\Mail\MailService(), new \Piwigo\Auth\ApiKeyRepository($conn), self::passwordService($conn))
+            $api_keys = new \Piwigo\Auth\ApiKeyService(new \Piwigo\Mail\MailService(), new \Piwigo\Auth\ApiKeyRepository($conn), self::passwordService($conn), $this->urlService)
                 ->getAvailable($reset_user_id_str);
             $nb_of_apikeys = (bool) $api_keys ? count($api_keys) : 0;
 
@@ -627,7 +630,7 @@ SELECT
         self::activityService($conn)->record('user', (int) $user_id, 'reset_password_success');
 
         \Piwigo\Core\PageState::current()->addInfo(l10n('Your password has been reset'));
-        \Piwigo\Core\PageState::current()->addInfo('<a href="' . get_root_url() . 'identification.php">' . l10n('Login') . '</a>');
+        \Piwigo\Core\PageState::current()->addInfo('<a href="' . $this->urlService->getRootUrl() . 'identification.php">' . l10n('Login') . '</a>');
 
         return true;
     }

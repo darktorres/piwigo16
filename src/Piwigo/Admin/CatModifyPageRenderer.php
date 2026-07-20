@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
@@ -34,7 +35,7 @@ use Piwigo\Template\Template;
  */
 final class CatModifyPageRenderer
 {
-    public function render(): void
+    public function render(UrlServiceInterface $urlService): void
     {
         /**
          * @var string
@@ -91,7 +92,7 @@ final class CatModifyPageRenderer
         $category_uppercats = is_string($category['uppercats']) ? $category['uppercats'] : '';
         $navigation = $htmlRenderer->getCatDisplayNameCache(
             $category_uppercats,
-            get_root_url() . 'admin.php?page=album-'
+            $urlService->getRootUrl() . 'admin.php?page=album-'
         );
 
         // Parent navigation path
@@ -100,7 +101,7 @@ final class CatModifyPageRenderer
             array_pop($uppercats_array);
             $parent_navigation = $htmlRenderer->getCatDisplayNameCache(
                 implode(',', $uppercats_array),
-                get_root_url() . 'admin.php?page=album-'
+                $urlService->getRootUrl() . 'admin.php?page=album-'
             );
         } else {
             $parent_navigation = l10n('Root');
@@ -109,7 +110,7 @@ final class CatModifyPageRenderer
         // ----------------------------------------------------- template initialization
         $template->set_filename('album_properties', 'cat_modify.tpl');
 
-        $base_url = get_root_url() . 'admin.php?page=';
+        $base_url = $urlService->getRootUrl() . 'admin.php?page=';
         $cat_list_url = $base_url . 'albums';
 
         // 'id_uppercat' is one of the nullable fields normalized to '' above;
@@ -137,7 +138,7 @@ final class CatModifyPageRenderer
 
                 'U_DELETE' => $base_url . 'albums',
 
-                'U_JUMPTO' => make_index_url(
+                'U_JUMPTO' => $urlService->makeIndexUrl(
                     [
                         'category' => $category,
                     ]
@@ -146,7 +147,7 @@ final class CatModifyPageRenderer
                 'U_ADD_PHOTOS_ALBUM' => $base_url . 'photos_add&amp;album=' . $category_id,
                 'U_CHILDREN' => $cat_list_url . '&amp;parent_id=' . $category_id,
                 'U_MOVE' => $base_url . 'albums&amp;parent_id=' . $category_id,
-                'U_ACTIVITY' => get_root_url() . 'admin.php?page=user_activity&album=' . $category_id,
+                'U_ACTIVITY' => $urlService->getRootUrl() . 'admin.php?page=user_activity&album=' . $category_id,
             ]
         );
 
@@ -286,7 +287,7 @@ SELECT COUNT(*)
 
         $template->assign([
             'U_MANAGE_RANKS' => $base_url . 'element_set_ranks&amp;cat_id=' . $category_id,
-            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['categories']),
+            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($urlService, ['categories']),
         ]);
 
         if (! (bool) $category['is_virtual']) {
@@ -325,7 +326,7 @@ SELECT COUNT(*)
             // picture to display : the identified representant or the generic random
             // representant ?
             if (! empty($category_representative_picture_id)) {
-                $tpl_representant['picture'] = $categoryService->getCategoryRepresentantProperties($category_representative_picture_id, ImageStdParams::MEDIUM);
+                $tpl_representant['picture'] = $categoryService->getCategoryRepresentantProperties($category_representative_picture_id, $urlService, ImageStdParams::MEDIUM);
             }
 
             // can the admin choose to set a new random representant ?

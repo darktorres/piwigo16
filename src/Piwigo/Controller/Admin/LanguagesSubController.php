@@ -9,6 +9,7 @@ use Piwigo\Admin\LanguagesNewPageRenderer;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -45,6 +46,7 @@ final class LanguagesSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     #[\Override]
@@ -57,7 +59,7 @@ final class LanguagesSubController implements AdminSubControllerInterface
         // tabsheet::select() below -- must be set before that call, not
         // dead code (see this class's own docblock).
         global $my_base_url;
-        $my_base_url = get_root_url() . 'admin.php?page=languages';
+        $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=languages';
 
         if (isset($_GET['tab'])) {
             new \Piwigo\Validation\InputValidator()
@@ -79,13 +81,13 @@ final class LanguagesSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render('languages');
+                ->render('languages', $this->urlService);
             $template->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
         } elseif ($tab === 'new') {
-            new LanguagesNewPageRenderer($this->redirectService)
+            new LanguagesNewPageRenderer($this->redirectService, $this->urlService)
                 ->render('languages', $tab);
         } else {
-            new LanguagesInstalledPageRenderer($this->redirectService)
+            new LanguagesInstalledPageRenderer($this->redirectService, $this->urlService)
                 ->render('languages');
         }
     }

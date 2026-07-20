@@ -10,6 +10,7 @@ use Piwigo\Admin\PictureModifyPageRenderer;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
@@ -43,6 +44,7 @@ final class PhotoSubController implements AdminSubControllerInterface
 
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     #[\Override]
@@ -68,7 +70,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         // (or arrays, for foo[]=... params) so is_string() is the real narrowing.
         $get_image_id = is_string($_GET['image_id'] ?? null) ? $_GET['image_id'] : '';
 
-        $GLOBALS['admin_photo_base_url'] = get_root_url() . 'admin.php?page=photo-' . $get_image_id;
+        $GLOBALS['admin_photo_base_url'] = $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $get_image_id;
 
         // retrieving direct information about picture
         $imageConn = DbConnection::build();
@@ -90,14 +92,14 @@ final class PhotoSubController implements AdminSubControllerInterface
         );
 
         if ($tab === 'properties') {
-            new PictureModifyPageRenderer($this->redirectService)
+            new PictureModifyPageRenderer($this->redirectService, $this->urlService)
                 ->render();
         } elseif ($tab === 'coi') {
             new PictureCoiPageRenderer($this->redirectService)
                 ->render();
         } elseif (\Piwigo\Config\Config::isFormatsEnabled()) {
             new PictureFormatsPageRenderer()
-                ->render();
+                ->render($this->urlService);
         }
     }
 }

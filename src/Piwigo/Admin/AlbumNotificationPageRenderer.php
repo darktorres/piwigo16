@@ -12,6 +12,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -37,6 +38,7 @@ final class AlbumNotificationPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     public function render(): void
@@ -80,7 +82,7 @@ final class AlbumNotificationPageRenderer
         if (isset($_POST['submitEmail'])) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(new HtmlService(), $this->redirectService);
-            set_make_full_url();
+            $this->urlService->setMakeFullUrl();
 
             $img = [];
 
@@ -98,7 +100,7 @@ SELECT id, file, path, representative_ext
                     $element = $img_rows[0];
 
                     $img = [
-                        'link' => make_picture_url(
+                        'link' => $this->urlService->makePictureUrl(
                             [
                                 'image_id' => $element['id'],
                                 'image_file' => $element['file'],
@@ -124,7 +126,7 @@ SELECT id, file, path, representative_ext
                 'assign' => [
                     'IMG' => $img,
                     'CAT_NAME' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $category['name'], 'admin_cat_list'),
-                    'LINK' => make_index_url(
+                    'LINK' => $this->urlService->makeIndexUrl(
                         [
                             'category' => [
                                 'id' => $category['id'],
@@ -186,12 +188,12 @@ SELECT
                     $user_tpl = $tpl;
 
                     if ($authkey !== false) {
-                        $user_tpl['assign']['LINK'] = add_url_params($tpl['assign']['LINK'], [
+                        $user_tpl['assign']['LINK'] = $this->urlService->addUrlParams($tpl['assign']['LINK'], [
                             'auth' => $authkey['auth_key'],
                         ]);
 
                         if (isset($user_tpl['assign']['IMG']['link'])) {
-                            $user_tpl['assign']['IMG']['link'] = add_url_params(
+                            $user_tpl['assign']['IMG']['link'] = $this->urlService->addUrlParams(
                                 $user_tpl['assign']['IMG']['link'],
                                 [
                                     'auth' => $authkey['auth_key'],
@@ -252,7 +254,7 @@ SELECT
                 );
             }
 
-            unset_make_full_url();
+            $this->urlService->unsetMakeFullUrl();
         }
 
         // +-------------------------------------------------------------------+

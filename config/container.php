@@ -30,6 +30,7 @@ use Piwigo\Core\MailerInterface;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Core\TemplateInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\TablePrefixListener;
@@ -38,6 +39,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Mail\MailService;
 use Piwigo\Routing\Router;
 use Piwigo\Template\Template;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Cache\CacheItemPoolInterface;
@@ -119,6 +121,14 @@ return [
     // the concrete class directly, per deptrac.yaml's ruleset. See
     // src/Piwigo/Core/RedirectServiceInterface.php's own docblock.
     RedirectServiceInterface::class => \DI\get(RedirectService::class),
+
+    // Interface binding (Legacy Coupling Retirement Phase 4c) --
+    // Piwigo\Url\UrlService is L2bExtendedDomain; real callers span every
+    // layer, so they constructor- or method-inject UrlServiceInterface
+    // instead of depending on the concrete class directly, per
+    // deptrac.yaml's ruleset. See src/Piwigo/Core/UrlServiceInterface.php's
+    // own docblock.
+    UrlServiceInterface::class => \DI\get(UrlService::class),
 
     // Interface binding (P23 batch 8f-4) -- Piwigo\Admin\PiwigoInfosSender
     // is L4Integration; Piwigo\Page\PageTailRenderer (L3Presentation)

@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Piwigo\Core\UrlServiceInterface;
+
 /**
  * P23 batch 8d: pure image-path helpers relocated from
  * include/functions.inc.php -- Piwigo\Image already hosts every other
  * path/derivative concern (SrcImage/DerivativeImage/DerivativeUrlCodec),
  * a real caller (SrcImage itself), and these 3 functions have zero
- * dependency beyond string manipulation (getElementPath()'s own
- * url_is_remote() call stays bare -- a relocate-only free function,
- * functions_url.inc.php, batch 8c).
+ * dependency beyond string manipulation. getElementPath()'s own
+ * url_is_remote() call now takes an explicit UrlServiceInterface method
+ * param -- Image is L2aCoreDomain and Url is L2bExtendedDomain, so a
+ * constructor/static-property dependency isn't legal here, matching the
+ * per-method-injection convention used elsewhere for a static method with
+ * several real callers.
  */
 final class ImagePathHelper
 {
@@ -49,14 +54,14 @@ final class ImagePathHelper
      *
      * @param array<string, mixed> $elementInfo element information from db (at least 'path')
      */
-    public static function getElementPath(array $elementInfo): string
+    public static function getElementPath(array $elementInfo, UrlServiceInterface $urlService): string
     {
         $path = $elementInfo['path'];
         // images.path is `varchar(255) NOT NULL` in the schema — a genuine DB
         // row for this element always carries a string here.
         assert(is_string($path));
 
-        if (! url_is_remote($path)) {
+        if (! $urlService->urlIsRemote($path)) {
             $path = PHPWG_ROOT_PATH . $path;
         }
         return $path;

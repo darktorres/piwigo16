@@ -27,6 +27,7 @@ use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Mail\MailService;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -487,7 +488,7 @@ SELECT
 
                     $admin_file = $path . '/admin/admin.inc.php';
                     if (file_exists($admin_file)) {
-                        $theme['admin_uri'] = get_root_url() . 'admin.php?page=theme&theme=' . $file;
+                        $theme['admin_uri'] = new UrlService(new HtmlService())->getRootUrl() . 'admin.php?page=theme&theme=' . $file;
                     }
 
                     // IMPORTANT SECURITY ! (only string fields — 'mobile'/

@@ -13,6 +13,7 @@ namespace Piwigo\Ws;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\DateHelper;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
@@ -161,11 +162,11 @@ final class WsHelper
      * @param array<string, mixed> $image_row
      * @return array<string, mixed>
      */
-    public static function stdGetUrls(array $image_row): array
+    public static function stdGetUrls(array $image_row, UrlServiceInterface $urlService): array
     {
         $ret = [];
 
-        $ret['page_url'] = make_picture_url(
+        $ret['page_url'] = $urlService->makePictureUrl(
             [
                 'image_id' => $image_row['id'],
                 'image_file' => $image_row['file'],
@@ -182,7 +183,7 @@ final class WsHelper
                 $provide_download_url = true;
             }
         } else {
-            $ret['element_url'] = get_element_url($image_row);
+            $ret['element_url'] = $urlService->getElementUrl($image_row);
             $provide_download_url = true;
         }
 
@@ -190,7 +191,7 @@ final class WsHelper
         if ($provide_download_url) {
             $image_id = $image_row['id'];
             if (is_int($image_id) || is_string($image_id)) {
-                $ret['download_url'] = get_action_url($image_id, 'e', true);
+                $ret['download_url'] = $urlService->getActionUrl($image_id, 'e', true);
             }
         }
 

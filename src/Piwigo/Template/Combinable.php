@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Core\UrlServiceInterface;
+
 class Combinable
 {
     /**
@@ -49,8 +51,8 @@ class Combinable
         }
     }
 
-    public function is_remote(): bool
+    public function is_remote(UrlServiceInterface $urlService): bool
     {
-        return url_is_remote($this->path) || str_starts_with($this->path, '//');
+        return $urlService->urlIsRemote($this->path) || str_starts_with($this->path, '//');
     }
 }

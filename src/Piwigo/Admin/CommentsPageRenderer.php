@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Template\Template;
 
 /**
@@ -14,7 +15,7 @@ use Piwigo\Template\Template;
  */
 final class CommentsPageRenderer
 {
-    public function render(): void
+    public function render(UrlServiceInterface $urlService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -26,7 +27,7 @@ final class CommentsPageRenderer
 
         $template->assign(
             [
-                'F_ACTION' => get_root_url() . 'admin.php?page=comments',
+                'F_ACTION' => $urlService->getRootUrl() . 'admin.php?page=comments',
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
             ]

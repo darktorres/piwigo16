@@ -21,6 +21,7 @@ use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\SqlDialect;
@@ -224,6 +225,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         #[\SensitiveParameter]
         string $password,
         ?string $mailAddress,
+        UrlServiceInterface $urlService,
         bool $notifyAdmin = true,
         bool $notifyUser = false
     ): array {
@@ -304,12 +306,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $emailAdminOnNewUserSetting = \Piwigo\Config\Config::emailAdminOnNewUser();
         $emailAdminOnNewUserSetting = is_scalar($emailAdminOnNewUserSetting) ? (string) $emailAdminOnNewUserSetting : 'none';
         if ($notifyAdmin && $emailAdminOnNewUserSetting !== 'none') {
-            $this->notifyAdminsOfNewRegistration($userId, $login, $mailAddress);
+            $this->notifyAdminsOfNewRegistration($userId, $login, $mailAddress, $urlService);
         }
 
         if ($notifyUser && \Piwigo\Validation\InputValidator::checkEmailFormat($mailAddress)) {
             assert($mailAddress !== null);
-            $this->sendWelcomeEmail($login, $mailAddress);
+            $this->sendWelcomeEmail($login, $mailAddress, $urlService);
         }
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify(
@@ -481,10 +483,10 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         );
     }
 
-    private function notifyAdminsOfNewRegistration(int $userId, string $login, ?string $mailAddress): void
+    private function notifyAdminsOfNewRegistration(int $userId, string $login, ?string $mailAddress, UrlServiceInterface $urlService): void
     {
 
-        $adminUrl = get_absolute_root_url() . 'admin.php?page=user_list&user_id=' . $userId;
+        $adminUrl = $urlService->getAbsoluteRootUrl() . 'admin.php?page=user_list&user_id=' . $userId;
 
         $keyargsContent = [
             Lang::buildArgs('User: %s', stripslashes($login)),
@@ -508,7 +510,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         );
     }
 
-    private function sendWelcomeEmail(string $login, string $mailAddress): void
+    private function sendWelcomeEmail(string $login, string $mailAddress, UrlServiceInterface $urlService): void
     {
 
         $length = mt_rand(10, 15);
@@ -518,7 +520,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             Lang::buildArgs('', ''),
             Lang::buildArgs('Here are your connection settings', ''),
             Lang::buildArgs('', ''),
-            Lang::buildArgs('Link: %s', get_absolute_root_url()),
+            Lang::buildArgs('Link: %s', $urlService->getAbsoluteRootUrl()),
             Lang::buildArgs('Username: %s', stripslashes($login)),
             Lang::buildArgs('Password: %s', str_repeat('*', $length)),
             Lang::buildArgs('Email: %s', $mailAddress),

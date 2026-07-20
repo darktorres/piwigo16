@@ -18,7 +18,9 @@ use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Page\NoPhotoYetRenderer;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 
@@ -55,7 +57,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->renderer = new NoPhotoYetRenderer($this->conn, new RedirectService());
+        $this->renderer = new NoPhotoYetRenderer($this->conn, new RedirectService(), new UrlService(new HtmlService()));
 
         // NoPhotoYetRenderer calls Piwigo\Auth\AccessControl::isAGuest()/
         // isAdmin() directly (real class methods), which read

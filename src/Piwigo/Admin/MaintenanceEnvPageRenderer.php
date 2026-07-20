@@ -8,6 +8,7 @@ use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Image\ImageStdParams;
@@ -38,6 +39,7 @@ final class MaintenanceEnvPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     public function render(): void
@@ -45,7 +47,7 @@ final class MaintenanceEnvPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $action = is_string($_GET['action'] ?? null) ? $_GET['action'] : '';
-        new MaintenanceActionDispatcher($this->redirectService)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+
@@ -56,7 +58,7 @@ final class MaintenanceEnvPageRenderer
             'maintenance' => 'maintenance_env.tpl',
         ]);
 
-        $url_format = get_root_url() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken();
+        $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken();
 
         /** @var array<string, string> $purge_urls */
         $purge_urls = [];
@@ -102,7 +104,7 @@ final class MaintenanceEnvPageRenderer
                 'U_MAINT_COMPILED_TEMPLATES' => sprintf($url_format, 'compiled-templates'),
                 'U_MAINT_DERIVATIVES' => sprintf($url_format, 'derivatives'),
                 'purge_derivatives' => $purge_urls,
-                'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=maintenance',
+                'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=maintenance',
 
                 'PHPWG_URL' => PHPWG_URL,
                 'PWG_VERSION' => AppInfo::VERSION,

@@ -38,6 +38,7 @@ use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Session\SessionService;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -76,7 +77,7 @@ final class PwgUsers
      */
     private static function apiKeyService(): ApiKeyService
     {
-        return new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())));
+        return new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())), new UrlService(new HtmlService()));
     }
 
     /**
@@ -480,6 +481,7 @@ SELECT DISTINCT ';
                 $params['username'],
                 $params['password'],
                 $params['email'],
+                new UrlService(new HtmlService()),
                 false, // notify admin
                 false // $params['send_password_by_mail']
             );
@@ -892,7 +894,7 @@ SELECT
                 $image[$k] = $row[$k];
             }
 
-            $images[] = array_merge($image, WsHelper::stdGetUrls($row));
+            $images[] = array_merge($image, WsHelper::stdGetUrls($row, new UrlService(new HtmlService())));
         }
 
         $count = count($images);
@@ -960,7 +962,7 @@ SELECT
 
         new MailService()
             ->switchLangTo($lang_to_use);
-        $generate_link = self::authService($conn)->generatePasswordLink($params['user_id'], $first_login);
+        $generate_link = self::authService($conn)->generatePasswordLink($params['user_id'], new UrlService(new HtmlService()), $first_login);
 
         $user_lost_email = is_string($user_lost['email']) ? $user_lost['email'] : null;
 

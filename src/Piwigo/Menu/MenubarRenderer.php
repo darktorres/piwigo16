@@ -7,6 +7,7 @@ namespace Piwigo\Menu;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupRepository;
@@ -16,10 +17,10 @@ use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 
 /**
- * Builds the main menubar's blocks. Injects nothing -- same "no
- * constructor deps" shape as Html\HtmlService/Url\UrlService: cross-
- * domain calls (is_a_guest(), get_filter_page_value(), add_url_params(),
- * make_index_url(), script_basename(), l10n(), get_root_url(),
+ * Builds the main menubar's blocks. Injects nothing on its own
+ * constructor -- same "no constructor deps" shape as
+ * Html\HtmlService/Url\UrlService: cross-domain calls (is_a_guest(),
+ * get_filter_page_value(), script_basename(), l10n(),
  * get_nb_available_comments(), is_autorize_status(), is_admin()) stay as
  * plain global-function calls to modules migrated in earlier phases.
  * get_available_tags()/get_nb_available_tags()/tags_counter_compare()
@@ -27,7 +28,9 @@ use Piwigo\Tag\TagService;
  * get_related_categories_menu() (functions_category.inc.php) were ported
  * to real TagService/CategoryService methods in P23 batch 8c -- both
  * constructed locally in render() since this renderer itself takes no
- * constructor deps.
+ * constructor deps. Legacy Coupling Retirement Phase 4c: render() takes
+ * UrlServiceInterface as a method parameter instead (its own former
+ * add_url_params()/make_index_url()/get_root_url() calls, 24 real sites).
  *
  * The `eval($url_data['eval_visible'])` call for the external-links block
  * is preserved unmodified -- the reference doc's own fix for this
@@ -55,7 +58,7 @@ final class MenubarRenderer
      * write to, this method returns that value instead; every caller but
      * GalleryController ignores it.
      */
-    public function render(): mixed
+    public function render(UrlServiceInterface $urlService): mixed
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
         $section_context = \Piwigo\Section\SectionContextRegistry::current();
@@ -123,7 +126,7 @@ final class MenubarRenderer
             if (\Piwigo\Core\FilterState::isEnabled()) {
                 $template->assign(
                     'U_STOP_FILTER',
-                    add_url_params(make_index_url([]), [
+                    $urlService->addUrlParams($urlService->makeIndexUrl([]), [
                         'filter' => 'stop',
                     ])
                 );
@@ -132,7 +135,7 @@ final class MenubarRenderer
                 $recent_period = is_numeric($recent_period) ? (int) $recent_period : (is_string($recent_period) ? $recent_period : 0);
                 $template->assign(
                     'U_START_FILTER',
-                    add_url_params(make_index_url([]), [
+                    $urlService->addUrlParams($urlService->makeIndexUrl([]), [
                         'filter' => 'start-recent-' . $recent_period,
                     ])
                 );
@@ -141,12 +144,12 @@ final class MenubarRenderer
 
         $categoryCountCategories = null;
         if ($block !== null) {
-            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService());
+            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService(), $urlService);
             $categoryCountCategories = $categoriesMenu['categoryCountCategories'];
             $block->data = [
                 'NB_PICTURE' => \Piwigo\Users\CurrentUser::get()->rawAttributes['nb_total_images'] ?? null,
                 'MENU_CATEGORIES' => $categoriesMenu['menu'],
-                'U_CATEGORIES' => make_index_url([
+                'U_CATEGORIES' => $urlService->makeIndexUrl([
                     'section' => 'categories',
                 ]),
             ];
@@ -183,7 +186,7 @@ final class MenubarRenderer
             $related_items = $page_items;
 
             $block->data = [
-                'MENU_CATEGORIES' => $categoryService->getRelatedCategoriesMenuWithUrls($related_items, $exclude_cat_ids, $page_category, $combined_categories),
+                'MENU_CATEGORIES' => $categoryService->getRelatedCategoriesMenuWithUrls($related_items, $urlService, $exclude_cat_ids, $page_category, $combined_categories),
             ];
 
             if (! self::emptyValue($block->data['MENU_CATEGORIES'])) {
@@ -203,7 +206,7 @@ final class MenubarRenderer
                 $block->data[] = array_merge(
                     $tag,
                     [
-                        'URL' => make_index_url([
+                        'URL' => $urlService->makeIndexUrl([
                             'tags' => [$tag],
                         ]),
                     ]
@@ -221,7 +224,7 @@ final class MenubarRenderer
             if (! \Piwigo\Auth\AccessControl::isAGuest()) {// favorites
                 $block->data['favorites'] =
                   [
-                      'URL' => make_index_url([
+                      'URL' => $urlService->makeIndexUrl([
                           'section' => 'favorites',
                       ]),
                       'TITLE' => l10n('display your favorites photos'),
@@ -231,7 +234,7 @@ final class MenubarRenderer
 
             $block->data['most_visited'] =
               [
-                  'URL' => make_index_url([
+                  'URL' => $urlService->makeIndexUrl([
                       'section' => 'most_visited',
                   ]),
                   'TITLE' => l10n('display most visited photos'),
@@ -241,7 +244,7 @@ final class MenubarRenderer
             if (\Piwigo\Config\Config::rateEnabled()) {
                 $block->data['best_rated'] =
                  [
-                     'URL' => make_index_url([
+                     'URL' => $urlService->makeIndexUrl([
                          'section' => 'best_rated',
                      ]),
                      'TITLE' => l10n('display best rated photos'),
@@ -251,7 +254,7 @@ final class MenubarRenderer
 
             $block->data['recent_pics'] =
               [
-                  'URL' => make_index_url([
+                  'URL' => $urlService->makeIndexUrl([
                       'section' => 'recent_pics',
                   ]),
                   'TITLE' => l10n('display most recent photos'),
@@ -260,7 +263,7 @@ final class MenubarRenderer
 
             $block->data['recent_cats'] =
               [
-                  'URL' => make_index_url([
+                  'URL' => $urlService->makeIndexUrl([
                       'section' => 'recent_cats',
                   ]),
                   'TITLE' => l10n('display recently updated albums'),
@@ -269,7 +272,7 @@ final class MenubarRenderer
 
             $block->data['random'] =
               [
-                  'URL' => get_root_url() . 'random.php',
+                  'URL' => $urlService->getRootUrl() . 'random.php',
                   'TITLE' => l10n('display a set of random photos'),
                   'NAME' => l10n('Random photos'),
                   'REL' => 'rel="nofollow"',
@@ -277,7 +280,7 @@ final class MenubarRenderer
 
             $block->data['calendar'] =
               [
-                  'URL' => make_index_url(
+                  'URL' => $urlService->makeIndexUrl(
                       [
                           'chronology_field' => (\Piwigo\Config\Config::calendarDatefield() === 'date_available'
                                                   ? 'posted' : 'created'),
@@ -304,7 +307,7 @@ final class MenubarRenderer
               [
                   'TITLE' => l10n('display available tags'),
                   'NAME' => l10n('Tags'),
-                  'URL' => get_root_url() . 'tags.php',
+                  'URL' => $urlService->getRootUrl() . 'tags.php',
                   'COUNTER' => $tagService->getNbAvailableTags(),
               ];
 
@@ -313,7 +316,7 @@ final class MenubarRenderer
               [
                   'TITLE' => l10n('search'),
                   'NAME' => l10n('Search'),
-                  'URL' => get_root_url() . 'search.php',
+                  'URL' => $urlService->getRootUrl() . 'search.php',
                   'REL' => 'rel="search"',
               ];
 
@@ -323,7 +326,7 @@ final class MenubarRenderer
                   [
                       'TITLE' => l10n('display last user comments'),
                       'NAME' => l10n('Comments'),
-                      'URL' => get_root_url() . 'comments.php',
+                      'URL' => $urlService->getRootUrl() . 'comments.php',
                       'COUNTER' => \Piwigo\Comment\CommentService::getNbAvailableComments(),
                   ];
             }
@@ -333,7 +336,7 @@ final class MenubarRenderer
               [
                   'TITLE' => l10n('About Piwigo'),
                   'NAME' => l10n('About'),
-                  'URL' => get_root_url() . 'about.php',
+                  'URL' => $urlService->getRootUrl() . 'about.php',
               ];
 
             // notification
@@ -341,7 +344,7 @@ final class MenubarRenderer
               [
                   'TITLE' => l10n('RSS feed'),
                   'NAME' => l10n('Notification'),
-                  'URL' => get_root_url() . 'notification.php',
+                  'URL' => $urlService->getRootUrl() . 'notification.php',
                   'REL' => 'rel="nofollow"',
               ];
             $block->template = 'menubar_menu.tpl';
@@ -351,28 +354,28 @@ final class MenubarRenderer
         if (\Piwigo\Auth\AccessControl::isAGuest()) {
             $template->assign(
                 [
-                    'U_LOGIN' => get_root_url() . 'identification.php',
-                    'U_LOST_PASSWORD' => get_root_url() . 'password.php',
+                    'U_LOGIN' => $urlService->getRootUrl() . 'identification.php',
+                    'U_LOST_PASSWORD' => $urlService->getRootUrl() . 'password.php',
                     'AUTHORIZE_REMEMBERING' => \Piwigo\Config\Config::authorizeRemembering(),
                 ]
             );
             if (\Piwigo\Config\Config::allowUserRegistration()) {
-                $template->assign('U_REGISTER', get_root_url() . 'register.php');
+                $template->assign('U_REGISTER', $urlService->getRootUrl() . 'register.php');
             }
         } else {
             $username = \Piwigo\Users\CurrentUser::get()->username;
             $template->assign('USERNAME', stripslashes($username));
             if (\Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic)) {
-                $template->assign('U_PROFILE', get_root_url() . 'profile.php');
+                $template->assign('U_PROFILE', $urlService->getRootUrl() . 'profile.php');
             }
 
             // the logout link has no meaning with Apache authentication : it is not
             // possible to logout with this kind of authentication.
             if (! \Piwigo\Config\Config::apacheAuthentication()) {
-                $template->assign('U_LOGOUT', get_root_url() . '?act=logout');
+                $template->assign('U_LOGOUT', $urlService->getRootUrl() . '?act=logout');
             }
             if (\Piwigo\Auth\AccessControl::isAdmin()) {
-                $template->assign('U_ADMIN', get_root_url() . 'admin.php');
+                $template->assign('U_ADMIN', $urlService->getRootUrl() . 'admin.php');
             }
         }
         if (($block = $menu->get_block('mbIdentification')) !== null) {

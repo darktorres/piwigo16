@@ -30,6 +30,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Url\UrlService;
 
 /**
  * P23 batch 8e-5: relocated from include/ws_functions/pwg.categories.php.
@@ -83,6 +84,7 @@ final class PwgCategories
     public static function getImages(array $params, PwgServer &$service): PwgError|array
     {
         $conn = DbConnection::build();
+        $urlService = new UrlService(new HtmlService());
 
         $params['cat_id'] = array_unique($params['cat_id']);
 
@@ -152,7 +154,7 @@ SELECT
                 $order_by = $cats[$params['cat_id'][0]]['image_order'];
             }
             $order_by = empty($order_by) ? (is_string((\Piwigo\Config\Config::all()['order_by'] ?? null)) ? (\Piwigo\Config\Config::all()['order_by'] ?? null) : '') : 'ORDER BY ' . $order_by;
-            $favorite_ids = get_user_favorites();
+            $favorite_ids = $urlService->getUserFavorites();
 
             $query = '
 SELECT SQL_CALC_FOUND_ROWS i.*
@@ -195,7 +197,7 @@ SELECT SQL_CALC_FOUND_ROWS i.*
                 $image['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
                 $image['comment'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_description', $image['comment'], __FUNCTION__);
 
-                $image = array_merge($image, WsHelper::stdGetUrls($image_row));
+                $image = array_merge($image, WsHelper::stdGetUrls($image_row, $urlService));
 
                 $images[] = $image;
             }
@@ -256,11 +258,11 @@ SELECT
                     }
 
                     foreach ($categories_of_image[$image_id] as $cat_id) {
-                        $url = make_index_url([
+                        $url = $urlService->makeIndexUrl([
                             'category' => $details_for_category[$cat_id],
                         ]);
 
-                        $page_url = make_picture_url(
+                        $page_url = $urlService->makePictureUrl(
                             [
                                 'category' => $details_for_category[$cat_id],
                                 'image_id' => $image_id,
@@ -418,8 +420,9 @@ SELECT SQL_CALC_FOUND_ROWS
         // management of the album thumbnail -- stops here
 
         $cats = [];
+        $urlService = new UrlService(new HtmlService());
         foreach ($rows as $row) {
-            $row['url'] = make_index_url(
+            $row['url'] = $urlService->makeIndexUrl(
                 [
                     'category' => $row,
                 ]
@@ -1185,7 +1188,7 @@ SELECT *
             return new PwgError(500, 'unable to determine a new representative picture for this category');
         }
 
-        return $categoryService->getCategoryRepresentantProperties($representative_picture_id, ImageStdParams::SMALL);
+        return $categoryService->getCategoryRepresentantProperties($representative_picture_id, new UrlService(new HtmlService()), ImageStdParams::SMALL);
     }
 
     /**
@@ -1258,6 +1261,7 @@ SELECT id
         $categoryService->deleteCategories(
             $category_ids,
             new ActivityService(new ActivityRepository($categoryConn)),
+            new UrlService(new HtmlService()),
             $params['photo_deletion_mode']
         );
         $categoryService->updateGlobalRank();

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Html\HtmlService;
@@ -27,6 +28,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class NotificationController implements ControllerInterface
 {
+    public function __construct(
+        private readonly UrlServiceInterface $urlService,
+    ) {}
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
@@ -36,8 +41,9 @@ final class NotificationController implements ControllerInterface
 
         $feedRepo = new FeedRepository(DbConnection::build());
         $feedId = $this->findAvailableFeedId($feedRepo);
+        $urlService = $this->urlService;
 
-        $body = LegacyRenderCapture::capture(static function () use ($feedRepo, $feedId): void {
+        $body = LegacyRenderCapture::capture(static function () use ($feedRepo, $feedId, $urlService): void {
             // $title is set and read entirely within this closure (passed
             // straight into PageHeaderRenderer::render() below) -- no
             // other file reads $GLOBALS['title']. Plain local, not global.
@@ -78,7 +84,7 @@ final class NotificationController implements ControllerInterface
             $themeconf = is_array($themeconf) ? $themeconf : [];
             if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theNotificationPage', $themeconf['hide_menu_on'], true)) {
                 new MenubarRenderer()
-                    ->render();
+                    ->render($urlService);
             }
 
             new \Piwigo\Page\PageHeaderRenderer()

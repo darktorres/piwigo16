@@ -9,6 +9,7 @@ use DateTime;
 use Doctrine\DBAL\Connection;
 use InvalidArgumentException;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
@@ -37,7 +38,7 @@ final class StatsPageRenderer
      * shared 'history' tabsheet group (see HistoryPageRenderer, its
      * sibling in that same group).
      */
-    public function render(string $pageSlug): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -54,11 +55,11 @@ final class StatsPageRenderer
         $tabsheet->select($pageSlug);
         $tabsheet->assign();
 
-        $base_url = get_root_url() . 'admin.php?page=history';
+        $base_url = $urlService->getRootUrl() . 'admin.php?page=history';
 
         $template->assign(
             [
-                'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=history',
+                'U_HELP' => $urlService->getRootUrl() . 'admin/popuphelp.php?page=history',
                 'F_ACTION' => $base_url,
             ]
         );

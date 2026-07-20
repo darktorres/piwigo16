@@ -8,6 +8,7 @@ use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -33,6 +34,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class NbmController implements ControllerInterface
 {
+    public function __construct(
+        private readonly UrlServiceInterface $urlService,
+    ) {}
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
@@ -62,18 +67,21 @@ final class NbmController implements ControllerInterface
                 new NotificationRepository($conn),
                 new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn)),
                 $persistent_cache,
-                $htmlRenderer
+                $htmlRenderer,
+                $this->urlService
             ),
             new \Piwigo\Db\BatchWriter($conn),
             new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), $htmlRenderer, $conn),
-            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), $htmlRenderer, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())
+            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), $htmlRenderer, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService()),
+            $this->urlService
         );
 
         $queryParams = $request->getQueryParams();
         $subscribe = $queryParams['subscribe'] ?? null;
         $unsubscribe = $queryParams['unsubscribe'] ?? null;
+        $urlService = $this->urlService;
 
-        $body = LegacyRenderCapture::capture(static function () use ($subscribe, $unsubscribe, $nbmSender): void {
+        $body = LegacyRenderCapture::capture(static function () use ($subscribe, $unsubscribe, $nbmSender, $urlService): void {
             // $title is set and read entirely within this closure (passed
             // straight into PageHeaderRenderer::render() below) -- no
             // other file reads $GLOBALS['title']. Plain local, not global.
@@ -99,7 +107,7 @@ final class NbmController implements ControllerInterface
             $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
             if (! is_array($hide_menu_on) or ! in_array('theNBMPage', $hide_menu_on, true)) {
                 new MenubarRenderer()
-                    ->render();
+                    ->render($urlService);
             }
 
             new \Piwigo\Page\PageHeaderRenderer()

@@ -12,11 +12,12 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Config\Config;
 use Piwigo\Db\Tables;
 
 /**
  * Former install/db/143-database.php (P23 sub-batch 8g-3). The users
- * table keeps its $prefixeTable construction (the original deliberately
+ * table keeps its raw prefix construction (the original deliberately
  * avoided the USERS_TABLE constant, which may point at an external user
  * table).
  */
@@ -37,11 +38,8 @@ final class Patch143 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var string $prefixeTable */
-        global $prefixeTable;
-
-        // we use PREFIX_TABLE, in case Piwigo uses an external user table
-        $conn->executeStatement('ALTER TABLE ' . $prefixeTable . 'users CHANGE id id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT;');
+        // we use the raw db prefix, in case Piwigo uses an external user table
+        $conn->executeStatement('ALTER TABLE ' . Config::dbPrefix() . 'users CHANGE id id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT;');
         $conn->executeStatement('ALTER TABLE ' . Tables::images() . ' CHANGE added_by added_by MEDIUMINT UNSIGNED NOT NULL DEFAULT \'0\';');
         $conn->executeStatement('ALTER TABLE ' . Tables::comments() . ' CHANGE author_id author_id MEDIUMINT UNSIGNED DEFAULT NULL;');
 

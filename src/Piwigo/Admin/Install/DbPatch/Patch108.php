@@ -20,7 +20,10 @@ use Piwigo\Db\Tables;
  * var_dump() debug leftover (its output went into the upgrade progress
  * stream on real 2010-era upgrades, so dropping it would change output)
  * and the null $replacement args to preg_replace/str_ireplace (PHP 8
- * deprecation-warns but behaves as '').
+ * deprecation-warns but behaves as ''). order_by_inside_category is read
+ * via LegacyFileConf::read() -- Config::orderByInsideCategory() doesn't
+ * see a site's local/config/config.inc.php override on this path (same
+ * reasoning as Patch106).
  */
 final class Patch108 implements DbPatchInterface
 {
@@ -39,8 +42,8 @@ final class Patch108 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
+        $localConf = LegacyFileConf::read();
+        $orderByInsideCategory = is_scalar($localConf['order_by_inside_category'] ?? null) ? $localConf['order_by_inside_category'] : '';
 
         $order_regex = '#^(( *)(id|file|name|date_available|date_creation|hit|average_rate|comment|author|filesize|width|height|high_filesize|high_width|high_height|rank) (ASC|DESC),{1}){1,}$#';
 
@@ -49,7 +52,7 @@ final class Patch108 implements DbPatchInterface
             $order_by = str_ireplace(
                 ['order by ', 'asc', 'desc'],
                 [null, 'ASC', 'DESC'],
-                trim((string) $conf['order_by_inside_category'])
+                trim((string) $orderByInsideCategory)
             );
 
             // for a simple patern

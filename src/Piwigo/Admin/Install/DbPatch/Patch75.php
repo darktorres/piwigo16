@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Config\Config;
 
 /**
  * Former install/db/75-database.php (P23 sub-batch 8g-1). The original
@@ -19,6 +20,8 @@ use Doctrine\DBAL\Connection;
  * echo, so the ledger row and the progress output both carry the SQL --
  * description() reproduces that exact final value (the initial
  * 'Add blk_menubar config' copy-paste value was never observable).
+ * ws_access has no Piwigo\Db\Tables::() accessor -- it's a table this
+ * patch drops, not one the current schema still carries.
  */
 final class Patch75 implements DbPatchInterface
 {
@@ -31,10 +34,7 @@ final class Patch75 implements DbPatchInterface
     #[\Override]
     public function description(): string
     {
-        /** @var string $prefixeTable */
-        global $prefixeTable;
-
-        return 'DROP TABLE IF EXISTS ' . $prefixeTable . 'ws_access';
+        return 'DROP TABLE IF EXISTS ' . Config::dbPrefix() . 'ws_access';
     }
 
     #[\Override]

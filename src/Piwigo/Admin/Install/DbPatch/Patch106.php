@@ -16,8 +16,11 @@ use Piwigo\Db\Tables;
 
 /**
  * Former install/db/106-database.php (P23 sub-batch 8g-2). Reads the
- * file-config $conf['order_by']/$conf['order_by_inside_category'] values
- * from the true global to seed the DB rows, as the original did.
+ * file-config order_by/order_by_inside_category values via
+ * LegacyFileConf::read() to seed the DB rows -- Config::orderBy()/
+ * Config::orderByInsideCategory() don't see a site's
+ * local/config/config.inc.php override on this path (same reasoning as
+ * ConfigurationSubController::orderByIsLocal()).
  */
 final class Patch106 implements DbPatchInterface
 {
@@ -36,18 +39,19 @@ final class Patch106 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
+        $localConf = LegacyFileConf::read();
+        $orderBy = is_scalar($localConf['order_by'] ?? null) ? $localConf['order_by'] : '';
+        $orderByInsideCategory = is_scalar($localConf['order_by_inside_category'] ?? null) ? $localConf['order_by_inside_category'] : '';
 
         $query = '
 INSERT INTO ' . Tables::config() . '(param,value,comment)
-  VALUES (\'order_by\', \'' . $conf['order_by'] . '\', \'default photos order\')
+  VALUES (\'order_by\', \'' . $orderBy . '\', \'default photos order\')
 ;';
         $conn->executeStatement($query);
 
         $query = '
 INSERT INTO ' . Tables::config() . '(param,value,comment)
-  VALUES (\'order_by_inside_category\', \'' . $conf['order_by_inside_category'] . '\', \'default photos order inside category\')
+  VALUES (\'order_by_inside_category\', \'' . $orderByInsideCategory . '\', \'default photos order inside category\')
 ;';
         $conn->executeStatement($query);
 

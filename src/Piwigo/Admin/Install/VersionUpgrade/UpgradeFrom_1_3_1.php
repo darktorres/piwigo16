@@ -15,6 +15,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Install\DbPatch\DatabaseConfigChanges;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
@@ -40,15 +41,10 @@ final class UpgradeFrom_1_3_1 implements VersionUpgradeInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /**
-         * @var string
-         */
-        global $prefixeTable;
-
         // save data before deletion
         $query = '
 SELECT prefix_thumbnail, mail_webmaster
-  FROM ' . $prefixeTable . 'config
+  FROM ' . Tables::config() . '
 ;';
         $save = $conn->fetchAssociative($query);
         if ($save === false) {
@@ -319,7 +315,7 @@ DELETE FROM phpwebgallery_group_access
         ];
 
         foreach ($queries as $query) {
-            $query = str_replace('phpwebgallery_', $prefixeTable, $query);
+            $query = str_replace('phpwebgallery_', Config::dbPrefix(), $query);
             $conn->executeStatement($query);
         }
 
@@ -350,14 +346,14 @@ DELETE FROM phpwebgallery_group_access
 
             $query = '
 SHOW INDEX
-  FROM ' . $prefixeTable . $table . '
+  FROM ' . Config::dbPrefix() . $table . '
 ;';
             foreach ($conn->fetchAllAssociative($query) as $row) {
                 $key_name = is_scalar($row['Key_name']) ? (string) $row['Key_name'] : '';
                 if ($key_name !== 'PRIMARY') {
                     if (! in_array($key_name, array_keys($indexes_of[$table]))) {
                         $query = '
-ALTER TABLE ' . $prefixeTable . $table . '
+ALTER TABLE ' . Config::dbPrefix() . $table . '
   DROP INDEX ' . $key_name . '
 ;';
                         $conn->executeStatement($query);
@@ -370,7 +366,7 @@ ALTER TABLE ' . $prefixeTable . $table . '
             foreach ($indexes_of[$table] as $index_name => $index) {
                 if (! in_array($index_name, $existing_indexes)) {
                     $query = '
-ALTER TABLE ' . $prefixeTable . $table . '
+ALTER TABLE ' . Config::dbPrefix() . $table . '
   ADD ' . ($index['unique'] ? 'UNIQUE' : 'INDEX') . ' '
                       . $index_name . ' (' . implode(',', $index['columns']) . ')
 ;';

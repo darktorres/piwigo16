@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Db\Tables;
 
 /**
  * Former install/upgrade_1.6.0.php (P23 sub-batch 8g-4): upgrade from
@@ -28,16 +29,13 @@ final class UpgradeFrom_1_6_0 implements VersionUpgradeInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var string $prefixeTable */
-        global $prefixeTable;
-
         $queries = [
             '
-ALTER TABLE ' . $prefixeTable . 'user_infos
+ALTER TABLE ' . Tables::userInfos() . '
   ADD auto_login_key varchar(64) NOT NULL
 ;',
             '
-ALTER TABLE ' . $prefixeTable . 'users
+ALTER TABLE ' . Tables::users() . '
   CHANGE username username VARCHAR(100) binary NOT NULL
 ;',
         ];

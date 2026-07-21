@@ -36,16 +36,15 @@ final class Patch101 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
+        $dblayer = LegacyDbLayer::value();
 
         // add column
-        if ($conf['dblayer'] == 'mysql') {
+        if ($dblayer === 'mysql') {
             $conn->executeStatement('
     ALTER TABLE ' . Tables::userInfos() . '
       ADD COLUMN `nb_image_page` smallint(3) unsigned NOT NULL default \'15\'
   ;');
-        } elseif (in_array($conf['dblayer'], ['pgsql', 'sqlite', 'pdo-sqlite'])) {
+        } elseif (in_array($dblayer, ['pgsql', 'sqlite', 'pdo-sqlite'])) {
             $conn->executeStatement('
     ALTER TABLE ' . Tables::userInfos() . '
       ADD COLUMN "nb_image_page" INTEGER default 15 NOT NULL

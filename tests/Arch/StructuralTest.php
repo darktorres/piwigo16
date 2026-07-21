@@ -459,6 +459,31 @@ test('src/Piwigo/ contains no global $filter/$pwg_loaded_plugins/$template/$page
     expect(describeCallSites($hits))->toBe([]);
 });
 
+test('src/Piwigo/ contains no global $conf/$prefixeTable/$last_time/$t2 declarations', function (): void {
+    // Legacy Coupling Retirement "fix all" gap-closure (2026-07-20): the
+    // 36 remaining global statements across the 151 frozen DbPatch/
+    // VersionUpgrade migration files (plus InstallWizard's constructor and
+    // RequestBootstrap::configure()'s $t2) are retired -- Tables::/
+    // Config::dbPrefix() for the table-prefix reads, and, for the handful
+    // of keys genuinely only ever set by a site's own
+    // local/config/config.inc.php (never mirrored into Config:: mid-
+    // migration), Piwigo\Admin\Install\DbPatch\LegacyFileConf::read()/
+    // LegacyDbLayer::value(). $t2 (RequestBootstrap::configure()) is now
+    // an explicit parameter instead, passed straight through from
+    // include/common.inc.php's own capture. Zero-tolerance, no allowlist
+    // needed -- same shape as the test above.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $conf'),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $prefixeTable'),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $last_time'),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $t2'),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
 test('src/Piwigo/ contains no bare add_event_handler()/trigger_change()/trigger_notify() calls', function (): void {
     // Phase 3 event dispatch retarget sweep (2026-07-19): the free-function
     // bridge (src/Piwigo/PluginConfig/functions.php, a pure 1-line

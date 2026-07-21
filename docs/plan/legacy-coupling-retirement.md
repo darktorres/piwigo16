@@ -1756,6 +1756,93 @@ discipline this project's Phase 5 adversarial-validation rounds already
 established: verify every claim against the actual code, not against how
 plausible it sounds.
 
+## Gap-closure: DbPatch/VersionUpgrade `global` retirement ("fix all"). DONE.
+
+The 151 frozen `DbPatch`/`VersionUpgrade` migration files (Phase 1j) and
+`VersionUpgradeInterface`'s own docblock had framed keeping `global
+$conf, $prefixeTable, $page, $template, $persistent_cache, $last_time;`
+as a deliberate "verbatim port" trade-off, never in scope for any later
+phase. Direct re-investigation (triggered by a user challenge to the
+"100+ globals" count) found this framing was only half right: an
+anchored, comment-aware count showed exactly 36 real remaining `global`
+statements (not the 144-256 an unanchored grep suggests) — 34 of them
+`$conf`/`$prefixeTable` in the migration files, plus `InstallWizard.php`'s
+constructor and `RequestBootstrap::configure()`'s `$t2`. Of those 34, one
+(`UpgradeFrom_1_4_0.php`'s dead `$last_time`) was a genuine, previously
+undelivered fix from 8d's own original design that never got executed
+when 8d's scope narrowed to `ConfigDb::` retirement only — not a
+deliberate keep. Instructed to fix all 36 regardless of which category
+each fell into.
+
+Two small shared helpers, both `Piwigo\Admin\Install\DbPatch\` (matching
+the already-established `UpgradeCharset`/`DatabaseConfigChanges`
+precedent of small state/utility classes for this exact file family, and
+already imported cross-namespace by `VersionUpgrade` classes the same way
+`DbPatchRegistry`/`DatabaseConfigChanges` already were):
+
+- **`LegacyFileConf::read()`** — the raw, file-sourced `$conf` for keys
+  Config:: can't be trusted for mid-migration: `Config::$data` during a
+  real `DbPatch`/`VersionUpgrade` `apply()` run holds only SCHEMA
+  defaults + env overrides (`UpgradeRunner`'s own entry-shell seeding),
+  never a site's `local/config/config.inc.php` customization nor the
+  DB-persisted config (that loads later, in `finish()`). Same 3-step
+  layering as the already-reviewed live precedent,
+  `UserListPageRenderer::webmasterIdIsLocal()`/
+  `ConfigurationSubController::orderByIsLocal()`: `config_default.inc.php`,
+  then `local/config/config.inc.php`, then — only if that revealed a
+  `local_dir_site` override — the site's real dir-site config file too.
+  Caught and corrected a real mistake mid-pass: an initial swap of
+  `$conf['guest_id']`/`['webmaster_id']` for bare `Config::guestId()`/
+  `webmasterId()` calls would have silently used the schema default
+  instead of a site's real file override — `Patch171.php`'s own comment
+  ("If the webmaster_id has been modified, it must be present in
+  local/config/config.inc.php") proved these keys are genuinely
+  site-customizable, not just schema defaults.
+- **`LegacyDbLayer::value()`** — the raw `dblayer` string (`'mysql'`/
+  `'pgsql'`/`'sqlite'`/`'pdo-sqlite'`), read the same way `upgrade.php`/
+  `upgrade_feed.php`'s own entry-shell `$dblayer = $conf['dblayer'];`
+  read does. No `Config::` equivalent exists at all: `dblayer` isn't in
+  `config_default.inc.php` (confirmed via grep, only ever set in
+  `database.inc.php`), and the nearest modern accessor,
+  `Config::dbDriver()`, uses an incompatible value space (`'mysqli'`/
+  `'pgsql'`) that would silently break the `== 'mysql'`-style checks 9
+  frozen patches still make.
+
+Every `$prefixeTable` site got `Tables::tableName()` (when a live
+accessor exists and there's no "might be an external table" risk — the
+`Patch132.php`/`Patch143.php` exception for `users` is preserved verbatim,
+per their own original comments) or `Config::dbPrefix() . 'literal'`
+(defunct tables, bulk `str_replace()`, dynamic table-name variables).
+`InstallWizard.php`'s constructor and `RequestBootstrap::configure()`'s
+`$t2` turned out fixable too, once looked at directly instead of
+re-accepting the earlier Phase 8 "genuinely load-bearing" framing:
+`InstallWizard` now calls `LegacyFileConf::read()` the same as the
+migration files (same `data_location` concern, same fix), and
+`$t2` — captured at `include/common.inc.php`'s true top-level scope,
+before `RequestBootstrap` is even autoloadable — is now an explicit
+second parameter to `configure()` instead of a `global` bridge, since
+the one real call site already has it in scope.
+
+Surfaced one real, independent code-quality fix along the way: making
+`dblayer` a genuine typed `string` (instead of `mixed` off a raw global)
+let PHPStan see 9 `== 'mysql'` comparisons as real string-vs-string loose
+comparisons for the first time — converted to `===`, per this project's
+own standing strict-comparison policy.
+
+Closed out with a new Arch test (`tests/Arch/StructuralTest.php`)
+asserting zero remaining `global $conf`/`$prefixeTable`/`$last_time`/`$t2`
+in `src/Piwigo/` — zero-tolerance, no allowlist, matching Phase 2's own
+`$filter`/`$pwg_loaded_plugins`/`$template`/`$page` test.
+
+Full verification gate green: ECS clean, PHPStan baseline regenerated
+(1031 → 1011 entries — real reduction from the fixes, plus 5 new entries
+for `LegacyFileConf.php`/`LegacyDbLayer.php`'s own genuinely-unresolvable
+`include.fileNotFound` cascade, same accepted class of finding
+`UserListPageRenderer.php`/`ConfigurationSubController.php` already
+carry), deptrac 0 violations, Unit/Arch 602, Contract 93, Integration
+632, Browser 66+1 skipped (including `UpgradePathTest`'s real
+`upgrade.php`/`upgrade_feed.php` connection smoke test).
+
 ## Phase 7 — Unit test coverage expansion
 
 Once Phase 1 makes the ~40-45 domain classes and controller layer

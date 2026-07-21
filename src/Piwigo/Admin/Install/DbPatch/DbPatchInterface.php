@@ -23,8 +23,12 @@ use Doctrine\DBAL\Connection;
  *
  * apply() bodies are verbatim ports of the original scripts (raw
  * MysqliDb SQL preserved exactly, per the standing 8f-2 "no DBAL rewrite
- * in this phase" rule), including their own progress echoes and their
- * load-bearing `global $conf, $prefixeTable;` declarations.
+ * in this phase" rule), including their own progress echoes. The former
+ * `global $conf, $prefixeTable;` declarations are gone -- each site reads
+ * Tables::/Config::dbPrefix() directly, or, for the handful of keys
+ * genuinely only ever set by a site's own local/config/config.inc.php
+ * (never mirrored into Config::), LegacyFileConf::read()/LegacyDbLayer::
+ * value() (Legacy Coupling Retirement gap-closure, "fix all" pass).
  */
 interface DbPatchInterface
 {

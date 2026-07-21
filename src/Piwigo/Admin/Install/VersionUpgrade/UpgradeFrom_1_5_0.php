@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\Install\DbPatch\LegacyFileConf;
+use Piwigo\Config\Config;
 use Piwigo\Core\StringHelper;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
@@ -19,13 +21,13 @@ use Piwigo\Db\Tables;
 /**
  * Former install/upgrade_1.5.0.php (P23 sub-batch 8g-4): upgrade from
  * 1.5.0 to 1.6.0-era schema, then chain to UpgradeFrom_1_6_0. The local
- * tag_replace_keywords() function became a private method. The
- * $conf_save/unset($conf)/@include/restore dance is verbatim: inside a
- * method with `global $conf`, unset() unbinds only the local alias, the
- * include then reads local/config/config.inc.php into an isolated local
- * $conf, and the restore re-fills the local -- the true global is never
- * modified, which is also exactly what the original scope achieved
- * (saved and restored values are identical by construction).
+ * tag_replace_keywords() function became a private method. The former
+ * $conf_save/unset($conf)/@include/restore dance (needed because
+ * `global $conf` meant unset()/re-include/restore only ever touched a
+ * local alias, never the true global) is gone -- guest_id/webmaster_id/
+ * gallery_url/rate/rate_anonymous are read via LegacyFileConf::read(),
+ * same reasoning as the rest of this file family (Config:: doesn't see a
+ * site's local/config/config.inc.php override on this path).
  */
 final class UpgradeFrom_1_5_0 implements VersionUpgradeInterface
 {
@@ -38,20 +40,15 @@ final class UpgradeFrom_1_5_0 implements VersionUpgradeInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-        /**
-         * @var string
-         */
-        global $prefixeTable;
-
         $this->tagReplaceKeywords($conn);
+
+        $localConf = LegacyFileConf::read();
+        $guest_id = is_scalar($localConf['guest_id'] ?? null) ? (string) $localConf['guest_id'] : (string) Config::guestId();
+        $webmaster_id = is_scalar($localConf['webmaster_id'] ?? null) ? (string) $localConf['webmaster_id'] : (string) Config::webmasterId();
 
         $queries = [
             '
-CREATE TABLE ' . $prefixeTable . 'search (
+CREATE TABLE ' . Config::dbPrefix() . 'search (
   id int UNSIGNED NOT NULL AUTO_INCREMENT,
   last_seen date DEFAULT NULL,
   rules text,
@@ -59,7 +56,7 @@ CREATE TABLE ' . $prefixeTable . 'search (
 );',
 
             '
-CREATE TABLE ' . $prefixeTable . "user_mail_notification (
+CREATE TABLE ' . Config::dbPrefix() . "user_mail_notification (
   user_id smallint(5) NOT NULL default '0',
   check_key varchar(16) binary NOT NULL default '',
   enabled enum('true','false') NOT NULL default 'false',
@@ -69,7 +66,7 @@ CREATE TABLE ' . $prefixeTable . "user_mail_notification (
 );",
 
             '
-CREATE TABLE ' . $prefixeTable . "upgrade (
+CREATE TABLE ' . Config::dbPrefix() . "upgrade (
   id varchar(20) NOT NULL default '',
   applied datetime NOT NULL default '0000-00-00 00:00:00',
   description varchar(255) default NULL,
@@ -77,106 +74,106 @@ CREATE TABLE ' . $prefixeTable . "upgrade (
 );",
 
             '
-ALTER TABLE ' . $prefixeTable . 'config
+ALTER TABLE ' . Config::dbPrefix() . 'config
   MODIFY COLUMN value TEXT
 ;',
 
             '
-ALTER TABLE ' . $prefixeTable . "images
+ALTER TABLE ' . Config::dbPrefix() . "images
   ADD COLUMN has_high enum('true') default NULL
 ;",
 
             '
-ALTER TABLE ' . $prefixeTable . "rate
+ALTER TABLE ' . Config::dbPrefix() . "rate
   ADD COLUMN anonymous_id varchar(45) NOT NULL default ''
 ;",
             '
-ALTER TABLE ' . $prefixeTable . "rate
+ALTER TABLE ' . Config::dbPrefix() . "rate
   ADD COLUMN date date NOT NULL default '0000-00-00'
 ;",
             '
-ALTER TABLE ' . $prefixeTable . 'rate
+ALTER TABLE ' . Config::dbPrefix() . 'rate
   DROP PRIMARY KEY
 ;',
             '
-ALTER TABLE ' . $prefixeTable . 'rate
+ALTER TABLE ' . Config::dbPrefix() . 'rate
   ADD PRIMARY KEY (element_id,user_id,anonymous_id)
 ;',
             '
-UPDATE ' . $prefixeTable . 'rate
+UPDATE ' . Config::dbPrefix() . 'rate
   SET date = CURDATE()
 ;',
 
             '
 DELETE
-  FROM ' . $prefixeTable . 'sessions
+  FROM ' . Config::dbPrefix() . 'sessions
 ;',
             '
-ALTER TABLE ' . $prefixeTable . 'sessions
+ALTER TABLE ' . Config::dbPrefix() . 'sessions
   DROP COLUMN user_id
 ;',
             '
-ALTER TABLE ' . $prefixeTable . 'sessions
+ALTER TABLE ' . Config::dbPrefix() . 'sessions
   ADD COLUMN data text NOT NULL
 ;',
 
             '
-ALTER TABLE ' . $prefixeTable . 'user_cache
+ALTER TABLE ' . Config::dbPrefix() . 'user_cache
   ADD COLUMN nb_total_images mediumint(8) unsigned default NULL
 ;',
 
             '
-ALTER TABLE ' . $prefixeTable . "user_infos
+ALTER TABLE ' . Config::dbPrefix() . "user_infos
   CHANGE COLUMN status
      status enum('webmaster','admin','normal','generic','guest')
      NOT NULL default 'guest'
 ;",
             '
-UPDATE ' . $prefixeTable . "user_infos
+UPDATE ' . Config::dbPrefix() . "user_infos
   SET status = 'normal'
   WHERE status = 'guest'
 ;",
             '
-UPDATE ' . $prefixeTable . "user_infos
+UPDATE ' . Config::dbPrefix() . "user_infos
   SET status = 'guest'
-  WHERE user_id = " . $conf['guest_id'] . '
+  WHERE user_id = " . $guest_id . '
 ;',
             '
-UPDATE ' . $prefixeTable . "user_infos
+UPDATE ' . Config::dbPrefix() . "user_infos
   SET status = 'webmaster'
-  WHERE user_id = " . $conf['webmaster_id'] . '
+  WHERE user_id = " . $webmaster_id . '
 ;',
 
             '
-ALTER TABLE ' . $prefixeTable . "user_infos
+ALTER TABLE ' . Config::dbPrefix() . "user_infos
    CHANGE COLUMN template template varchar(255) NOT NULL default 'yoga/clear'
 ;",
 
             '
-UPDATE ' . $prefixeTable . "user_infos
+UPDATE ' . Config::dbPrefix() . "user_infos
   SET template = 'yoga/dark'
   WHERE template = 'yoga-dark'
 ;",
             '
-UPDATE ' . $prefixeTable . "user_infos
+UPDATE ' . Config::dbPrefix() . "user_infos
   SET template = 'yoga/clear'
   WHERE template != 'yoga/dark'
 ;",
             '
-ALTER TABLE ' . $prefixeTable . "user_infos
+ALTER TABLE ' . Config::dbPrefix() . "user_infos
   ADD COLUMN adviser enum('true','false') NOT NULL default 'false'
 ;",
             '
-ALTER TABLE ' . $prefixeTable . "user_infos
+ALTER TABLE ' . Config::dbPrefix() . "user_infos
   ADD COLUMN enabled_high enum('true','false') NOT NULL default 'true'
 ;",
             '
-ALTER TABLE ' . $prefixeTable . 'categories
+ALTER TABLE ' . Config::dbPrefix() . 'categories
   CHANGE COLUMN rank rank SMALLINT(5) UNSIGNED DEFAULT NULL
 ;',
             // configuration table
             '
-UPDATE ' . $prefixeTable . "config
+UPDATE ' . Config::dbPrefix() . "config
   SET value = 'yoga/clear'
   WHERE param = 'default_template'
 ;",
@@ -203,23 +200,24 @@ UPDATE ' . $prefixeTable . "config
                 'Rating pictures feature is also enabled for visitors',
             ],
         ];
-        // Get real values from config file
-        $conf_save = $conf;
-        unset($conf);
-        @include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
-        if (isset($conf['gallery_url'])) {
-            $params['gallery_url'][0] = $conf['gallery_url'];
+        // Get real values from config file via LegacyFileConf::read() --
+        // gallery_url's config_default.inc.php default is null, so isset()
+        // still correctly reads false unless a site's local file overrides
+        // it to a non-null value; rate/rate_anonymous have no
+        // config_default.inc.php default at all.
+        $localConf = LegacyFileConf::read();
+        if (isset($localConf['gallery_url'])) {
+            $params['gallery_url'][0] = $localConf['gallery_url'];
         }
-        if (isset($conf['rate']) and is_bool($conf['rate'])) {
-            $params['rate'][0] = $conf['rate'] ? 'true' : 'false';
+        if (isset($localConf['rate']) and is_bool($localConf['rate'])) {
+            $params['rate'][0] = $localConf['rate'] ? 'true' : 'false';
         }
-        if (isset($conf['rate_anonymous']) and is_bool($conf['rate_anonymous'])) {
-            $params['rate_anonymous'][0] = $conf['rate_anonymous'] ? 'true' : 'false';
+        if (isset($localConf['rate_anonymous']) and is_bool($localConf['rate_anonymous'])) {
+            $params['rate_anonymous'][0] = $localConf['rate_anonymous'] ? 'true' : 'false';
         }
-        $conf = $conf_save;
 
         // Do I already have them in DB ?
-        $query = 'SELECT param FROM ' . $prefixeTable . 'config';
+        $query = 'SELECT param FROM ' . Config::dbPrefix() . 'config';
         foreach ($conn->fetchAllAssociative($query) as $row) {
             $param_name = is_scalar($row['param']) ? (string) $row['param'] : '';
             unset($params[$param_name]);
@@ -228,7 +226,7 @@ UPDATE ' . $prefixeTable . "config
         // Perform the insert query
         foreach ($params as $param_key => $param_values) {
             $query = '
-INSERT INTO ' . $prefixeTable . 'config
+INSERT INTO ' . Config::dbPrefix() . 'config
   (param,value,comment)
   VALUES
  (' . "'{$param_key}','{$param_values[0]}','{$param_values[1]}')
@@ -237,7 +235,7 @@ INSERT INTO ' . $prefixeTable . 'config
         }
 
         $query = '
-ALTER TABLE ' . $prefixeTable . 'config MODIFY COLUMN `value` TEXT;';
+ALTER TABLE ' . Config::dbPrefix() . 'config MODIFY COLUMN `value` TEXT;';
         $conn->executeStatement($query);
 
         //
@@ -245,7 +243,7 @@ ALTER TABLE ' . $prefixeTable . 'config MODIFY COLUMN `value` TEXT;';
         //
         $query = '
 SELECT value
-  FROM ' . $prefixeTable . 'config
+  FROM ' . Config::dbPrefix() . 'config
   WHERE param=\'gallery_title\'
 ;';
         $t = array_map(
@@ -255,7 +253,7 @@ SELECT value
 
         $query = '
 SELECT value
-  FROM ' . $prefixeTable . 'config
+  FROM ' . Config::dbPrefix() . 'config
   WHERE param=\'gallery_description\'
 ;';
         $d = array_map(
@@ -266,7 +264,7 @@ SELECT value
         $page_banner = '<h1>' . $t . '</h1><p>' . $d . '</p>';
         $page_banner = addslashes($page_banner);
         $query = '
-INSERT INTO ' . $prefixeTable . 'config
+INSERT INTO ' . Config::dbPrefix() . 'config
   (param,value,comment)
   VALUES
   (
@@ -278,7 +276,7 @@ INSERT INTO ' . $prefixeTable . 'config
         $conn->executeStatement($query);
 
         $query = '
-DELETE FROM ' . $prefixeTable . 'config
+DELETE FROM ' . Config::dbPrefix() . 'config
   WHERE param=\'gallery_description\'
 ;';
         $conn->executeStatement($query);
@@ -312,7 +310,7 @@ INSERT INTO ' . Tables::config() . "
         // the database structure has small differences that should be corrected.
 
         $query = '
-ALTER TABLE ' . $prefixeTable . 'users
+ALTER TABLE ' . Config::dbPrefix() . 'users
   CHANGE COLUMN password password varchar(32) default NULL
 ;';
         $conn->executeStatement($query);
@@ -320,14 +318,14 @@ ALTER TABLE ' . $prefixeTable . 'users
         $to_keep = ['id', 'username', 'password', 'mail_address'];
 
         $query = '
-DESC ' . $prefixeTable . 'users
+DESC ' . Config::dbPrefix() . 'users
 ;';
 
         foreach ($conn->fetchAllAssociative($query) as $row) {
             $field = is_scalar($row['Field']) ? (string) $row['Field'] : '';
             if (! in_array($field, $to_keep)) {
                 $query = '
-ALTER TABLE ' . $prefixeTable . 'users
+ALTER TABLE ' . Config::dbPrefix() . 'users
   DROP COLUMN ' . $field . '
 ;';
                 $conn->executeStatement($query);
@@ -345,13 +343,10 @@ ALTER TABLE ' . $prefixeTable . 'users
      */
     private function tagReplaceKeywords(Connection $conn): void
     {
-        /** @var string $prefixeTable */
-        global $prefixeTable;
-
         // code taken from upgrades 19 and 22
 
         $query = '
-CREATE TABLE ' . $prefixeTable . 'tags (
+CREATE TABLE ' . Config::dbPrefix() . 'tags (
   id smallint(5) UNSIGNED NOT NULL auto_increment,
   name varchar(255) BINARY NOT NULL,
   url_name varchar(255) BINARY NOT NULL,
@@ -361,7 +356,7 @@ CREATE TABLE ' . $prefixeTable . 'tags (
         $conn->executeStatement($query);
 
         $query = '
-CREATE TABLE ' . $prefixeTable . 'image_tag (
+CREATE TABLE ' . Config::dbPrefix() . 'image_tag (
   image_id mediumint(8) UNSIGNED NOT NULL,
   tag_id smallint(5) UNSIGNED NOT NULL,
   PRIMARY KEY (image_id,tag_id)
@@ -382,7 +377,7 @@ CREATE TABLE ' . $prefixeTable . 'image_tag (
 
         $query = '
 SELECT id, keywords
-  FROM ' . $prefixeTable . 'images
+  FROM ' . Config::dbPrefix() . 'images
   WHERE keywords IS NOT NULL
 ;';
         foreach ($conn->fetchAllAssociative($query) as $row) {
@@ -419,7 +414,7 @@ SELECT id, keywords
         if (! empty($datas)) {
             new BatchWriter($conn)
                 ->massInsert(
-                    $prefixeTable . 'tags',
+                    Config::dbPrefix() . 'tags',
                     array_keys($datas[0]),
                     $datas
                 );
@@ -441,7 +436,7 @@ SELECT id, keywords
         if (! empty($datas)) {
             new BatchWriter($conn)
                 ->massInsert(
-                    $prefixeTable . 'image_tag',
+                    Config::dbPrefix() . 'image_tag',
                     array_keys($datas[0]),
                     $datas
                 );
@@ -451,7 +446,7 @@ SELECT id, keywords
         // Delete images.keywords
         //
         $query = '
-ALTER TABLE ' . $prefixeTable . 'images DROP COLUMN keywords
+ALTER TABLE ' . Config::dbPrefix() . 'images DROP COLUMN keywords
 ;';
         $conn->executeStatement($query);
 
@@ -459,13 +454,13 @@ ALTER TABLE ' . $prefixeTable . 'images DROP COLUMN keywords
         // Add useful indexes
         //
         $query = '
-ALTER TABLE ' . $prefixeTable . 'tags
+ALTER TABLE ' . Config::dbPrefix() . 'tags
   ADD INDEX tags_i1(url_name)
 ;';
         $conn->executeStatement($query);
 
         $query = '
-ALTER TABLE ' . $prefixeTable . 'image_tag
+ALTER TABLE ' . Config::dbPrefix() . 'image_tag
   ADD INDEX image_tag_i1(tag_id)
 ;';
         $conn->executeStatement($query);

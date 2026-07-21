@@ -12,13 +12,14 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Config\Config;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
  * Former install/upgrade_1.3.0.php (P23 sub-batch 8g-4): upgrade from
  * 1.3.0 to 1.3.1, then chain to UpgradeFrom_1_3_1. The hardcoded
- * phpwebgallery_ prefix + str_replace(PREFIX_TABLE) dance is verbatim
+ * phpwebgallery_ prefix + str_replace(real prefix) dance is verbatim
  * original (those literal names are what a 1.3.0-era dump contains).
  */
 final class UpgradeFrom_1_3_0 implements VersionUpgradeInterface
@@ -32,9 +33,6 @@ final class UpgradeFrom_1_3_0 implements VersionUpgradeInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var string $prefixeTable */
-        global $prefixeTable;
-
         $queries = [
             "
 ALTER TABLE phpwebgallery_categories
@@ -69,7 +67,7 @@ ALTER TABLE phpwebgallery_image_category
         ];
 
         foreach ($queries as $query) {
-            $query = str_replace('phpwebgallery_', $prefixeTable, $query);
+            $query = str_replace('phpwebgallery_', Config::dbPrefix(), $query);
             $conn->executeStatement($query);
         }
         // filling the new column categories.uppercats

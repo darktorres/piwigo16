@@ -18,7 +18,10 @@ use Piwigo\Db\Tables;
  * Former install/db/110-database.php (P23 sub-batch 8g-2). Error lines are
  * both pushed onto PageState (safe even when this patch runs outside an
  * HTTP request -- PageState::current() always returns a usable instance)
- * and echoed, as before.
+ * and echoed, as before. local_dir_site is read via LegacyFileConf::read()
+ * -- there's no Config:: equivalent at all (include/config_default.inc.php
+ * never sets this key, same reasoning as
+ * UserListPageRenderer::webmasterIdIsLocal()).
  */
 final class Patch110 implements DbPatchInterface
 {
@@ -37,10 +40,7 @@ final class Patch110 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
+        $localConf = LegacyFileConf::read();
 
         $query = '
 SELECT
@@ -54,7 +54,7 @@ SELECT
         if (! empty($gallery_url)) {
             // let's try to write it in the local configuration file
             $local_conf = PHPWG_ROOT_PATH . 'local/config/config.inc.php';
-            if (isset($conf['local_dir_site'])) {
+            if (isset($localConf['local_dir_site'])) {
                 $local_conf = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.inc.php';
             }
 

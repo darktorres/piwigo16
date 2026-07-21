@@ -34,17 +34,16 @@ final class Patch111 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
+        $dblayer = LegacyDbLayer::value();
 
         // Add column
         $query = 'ALTER TABLE ' . Tables::userInfos() . ' ADD COLUMN ';
 
-        if ($conf['dblayer'] == 'mysql') {
+        if ($dblayer === 'mysql') {
             $query .= ' `activation_key` char(20) default NULL';
         }
 
-        if (in_array($conf['dblayer'], ['pgsql', 'sqlite', 'pdo-sqlite'])) {
+        if (in_array($dblayer, ['pgsql', 'sqlite', 'pdo-sqlite'])) {
             $query .= ' "activation_key" CHAR(20) default NULL';
         }
 

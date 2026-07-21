@@ -37,17 +37,16 @@ final class Patch92 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
+        $dblayer = LegacyDbLayer::value();
 
         // Add column
         $query = 'ALTER TABLE ' . Tables::images() . ' ADD COLUMN ';
 
-        if ($conf['dblayer'] == 'mysql') {
+        if ($dblayer === 'mysql') {
             $query .= ' added_by smallint(5)';
         }
 
-        if (in_array($conf['dblayer'], ['pgsql', 'sqlite', 'pdo-sqlite'])) {
+        if (in_array($dblayer, ['pgsql', 'sqlite', 'pdo-sqlite'])) {
             $query .= ' "added_by" INTEGER default 0';
         }
 
@@ -55,8 +54,16 @@ final class Patch92 implements DbPatchInterface
 
         $conn->executeStatement($query);
 
+        // If the webmaster_id has been modified, it must be present in
+        // local/config/config.inc.php, so read it from there directly --
+        // Config::webmasterId() doesn't see a site's
+        // local/config/config.inc.php override on this path (same
+        // reasoning as Patch171).
+        $localConf = LegacyFileConf::read();
+        $webmasterId = $localConf['webmaster_id'] ?? 1;
+
         // set the existing photos with the webmaster_id as added_by
-        $query = 'UPDATE ' . Tables::images() . ' SET added_by = ' . $conf['webmaster_id'] . ';';
+        $query = 'UPDATE ' . Tables::images() . ' SET added_by = ' . (is_scalar($webmasterId) ? $webmasterId : 1) . ';';
         $conn->executeStatement($query);
 
         echo "\n"

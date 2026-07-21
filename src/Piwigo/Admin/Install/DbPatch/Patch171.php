@@ -33,12 +33,13 @@ final class Patch171 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
-        // If the webmaster_id has been modified, it must be present in local/config/config.inc.php
-        // so we retrieve it and insert it into the database.
-        $webmasterId = $conf['webmaster_id'] ?? 1;
+        // If the webmaster_id has been modified, it must be present in
+        // local/config/config.inc.php, so read it from there directly --
+        // Config::webmasterId() doesn't see a site's
+        // local/config/config.inc.php override on this path (same
+        // reasoning as the rest of this file family).
+        $localConf = LegacyFileConf::read();
+        $webmasterId = $localConf['webmaster_id'] ?? 1;
         \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('webmaster_id', is_scalar($webmasterId) ? $webmasterId : 1);
 
         echo "\n" . $this->description() . "\n";

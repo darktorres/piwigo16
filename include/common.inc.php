@@ -62,9 +62,11 @@ include PHPWG_ROOT_PATH . 'include/env.inc.php';
 // Config seeding, install-sentinel check (redirects to install.php and
 // exits when Piwigo isn't installed yet). $paths is already in scope here
 // -- every real entry point mints it via Paths::fromIndex(__FILE__) before
-// including this file, and PHP `include` shares the including scope.
+// including this file, and PHP `include` shares the including scope. $t2,
+// captured above at true top-level scope for maximum precision, is passed
+// straight through instead of relying on a `global $t2;` bridge.
 /** @var \Piwigo\Core\Paths $paths */
-\Piwigo\Bootstrap\RequestBootstrap::configure($paths);
+\Piwigo\Bootstrap\RequestBootstrap::configure($paths, $t2);
 
 defined('PHPWG_INSTALLED') or define('PHPWG_INSTALLED', true);
 

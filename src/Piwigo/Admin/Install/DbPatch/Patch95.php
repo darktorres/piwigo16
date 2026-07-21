@@ -36,17 +36,16 @@ final class Patch95 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
+        $dblayer = LegacyDbLayer::value();
 
         // Add column
         $query = 'ALTER TABLE ' . Tables::userCacheCategories() . ' ADD COLUMN ';
 
-        if ($conf['dblayer'] == 'mysql') {
+        if ($dblayer === 'mysql') {
             $query .= ' `user_representative_picture_id` mediumint(8) unsigned default NULL';
         }
 
-        if (in_array($conf['dblayer'], ['pgsql', 'sqlite', 'pdo-sqlite'])) {
+        if (in_array($dblayer, ['pgsql', 'sqlite', 'pdo-sqlite'])) {
             $query .= ' "user_representative_picture_id" INTEGER';
         }
 

@@ -27,11 +27,17 @@ use Doctrine\DBAL\Connection;
  * src/Piwigo carry no top-level side effects, so the guard's job is moot
  * -- the runner (behind checkUpgradeAccessRights()) is the only caller.
  * apply() bodies are otherwise verbatim ports: raw MysqliDb SQL preserved
- * exactly, `global` declarations carrying the former include-scope
- * contract ($conf/$prefixeTable/$page/$template/$persistent_cache/
- * $last_time), and database.inc.php snippets pushed through
+ * exactly, and database.inc.php snippets pushed through
  * {@see \Piwigo\Admin\Install\DbPatch\DatabaseConfigChanges} instead of
- * the former runner-scope-local $mysql_changes array.
+ * the former runner-scope-local $mysql_changes array. The former
+ * `global` declarations carrying the include-scope contract ($conf/
+ * $prefixeTable/$page/$template/$persistent_cache/$last_time) are gone --
+ * each site reads Tables::/Config::dbPrefix() directly, or, for the
+ * handful of keys genuinely only ever set by a site's own
+ * local/config/config.inc.php (never mirrored into Config::),
+ * {@see \Piwigo\Admin\Install\DbPatch\LegacyFileConf::read()}/
+ * {@see \Piwigo\Admin\Install\DbPatch\LegacyDbLayer::value()} (Legacy
+ * Coupling Retirement gap-closure, "fix all" pass).
  */
 interface VersionUpgradeInterface
 {

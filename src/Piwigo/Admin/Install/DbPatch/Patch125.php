@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Config\Config;
 use Piwigo\Db\BatchWriter;
 
 /**
@@ -50,11 +51,6 @@ final class Patch125 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /**
-         * @var string
-         */
-        global $prefixeTable;
-
         $prefixThumbnail = 'TN-';
         $dirThumbnail = 'thumbnail';
 
@@ -71,7 +67,7 @@ final class Patch125 implements DbPatchInterface
         // Additional Pages
         //
         $is_plugin_installed = false;
-        $plugin_table = $prefixeTable . 'additionalpages';
+        $plugin_table = Config::dbPrefix() . 'additionalpages';
 
         $query = 'SHOW TABLES LIKE \'' . $plugin_table . '\';';
 
@@ -112,7 +108,7 @@ SELECT
         // PWG Stuffs
         //
         $is_plugin_installed = false;
-        $plugin_table = $prefixeTable . 'stuffs';
+        $plugin_table = Config::dbPrefix() . 'stuffs';
 
         $query = 'SHOW TABLES LIKE \'' . $plugin_table . '\';';
 

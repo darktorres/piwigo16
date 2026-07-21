@@ -107,7 +107,7 @@ final class RequestBootstrap
      * booting this early changes nothing observable until something
      * actually resolves a service.
      */
-    public static function configure(Paths $paths): void
+    public static function configure(Paths $paths, float $requestStart): void
     {
         Kernel::boot($paths);
 
@@ -119,16 +119,12 @@ final class RequestBootstrap
         // CurrentUser::reset() (arch-test-restricted to tests/).
         \Piwigo\Users\CurrentUser::resetRealUserResolvedFlag();
 
-        /**
-         * @var float
-         */
-        global $t2;
-
-        // include/common.inc.php captures $t2 = microtime(true) at true
-        // top-level scope (before this class is even autoloadable) for
-        // maximum precision; this is the one-time handoff into
-        // PageState, which every other consumer reads from instead.
-        \Piwigo\Core\PageState::current()->requestStart = $t2;
+        // include/common.inc.php captures $requestStart = microtime(true)
+        // at true top-level scope (before this class is even autoloadable)
+        // for maximum precision, and passes it straight through as a
+        // parameter -- this is the one-time handoff into PageState, which
+        // every other consumer reads from instead.
+        \Piwigo\Core\PageState::current()->requestStart = $requestStart;
 
         // @set_magic_quotes_runtime(0); // Disable magic_quotes_runtime
         //

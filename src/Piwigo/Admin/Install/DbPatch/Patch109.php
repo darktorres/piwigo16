@@ -36,10 +36,7 @@ final class Patch109 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
-        if ($conf['dblayer'] == 'mysql') {
+        if (LegacyDbLayer::value() === 'mysql') {
             $q = 'ALTER TABLE ' . Tables::images() . ' CHANGE average_rate rating_score float(5,2) unsigned default NULL';
         } else {
             $q = 'ALTER TABLE ' . Tables::images() . ' RENAME average_rate TO rating_score';

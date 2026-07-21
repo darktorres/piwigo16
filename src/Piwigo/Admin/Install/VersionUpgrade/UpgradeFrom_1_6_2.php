@@ -39,38 +39,33 @@ final class UpgradeFrom_1_6_2 implements VersionUpgradeInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /**
-         * @var string
-         */
-        global $prefixeTable;
-
         $queries = [
             '
-ALTER TABLE `' . $prefixeTable . 'categories`
+ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'categories`
   ADD COLUMN `permalink` varchar(64) default NULL
 ;',
 
             '
-ALTER TABLE `' . $prefixeTable . 'categories`
+ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'categories`
   ADD COLUMN `image_order` varchar(128) default NULL
 ;',
 
             '
-ALTER TABLE `' . $prefixeTable . 'categories`
+ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'categories`
   ADD UNIQUE `categories_i3` (`permalink`)
 ;',
 
             '
-ALTER TABLE `' . $prefixeTable . "groups`
+ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . "groups`
   ADD COLUMN `is_default` enum('true','false') NOT NULL default 'false'
 ;",
 
             '
-RENAME TABLE `' . $prefixeTable . 'history` TO `' . $prefixeTable . 'history_backup`
+RENAME TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'history` TO `' . \Piwigo\Config\Config::dbPrefix() . 'history_backup`
 ;',
 
             '
-CREATE TABLE `' . $prefixeTable . "history` (
+CREATE TABLE `' . \Piwigo\Config\Config::dbPrefix() . "history` (
   `id` int(10) unsigned NOT NULL auto_increment,
   `date` date NOT NULL default '0000-00-00',
   `time` time NOT NULL default '00:00:00',
@@ -92,53 +87,53 @@ CREATE TABLE `' . $prefixeTable . "history` (
 ;",
 
             '
-ALTER TABLE `' . $prefixeTable . 'image_category`
+ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'image_category`
   DROP INDEX `image_category_i1`
 ;',
 
             '
-ALTER TABLE `' . $prefixeTable . 'image_category`
+ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'image_category`
   ADD INDEX `image_category_i1` (`category_id`)
 ;',
 
             '
-ALTER TABLE `' . $prefixeTable . 'image_category`
+ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'image_category`
   DROP INDEX `image_category_i2`
 ;',
 
             '
-ALTER TABLE `' . $prefixeTable . 'images`
+ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'images`
   ADD COLUMN `high_filesize` mediumint(9) unsigned default NULL
 ;',
 
             '
-ALTER TABLE `' . $prefixeTable . "user_infos`
+ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . "user_infos`
   CHANGE COLUMN `language`
     `language` varchar(50) NOT NULL default 'en_UK.iso-8859-1'
 ;",
 
             '
-ALTER TABLE `' . $prefixeTable . 'user_infos`
+ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'user_infos`
   DROP COLUMN `auto_login_key`
 ;',
 
             '
-ALTER TABLE `' . $prefixeTable . "user_infos`
+ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . "user_infos`
   ADD COLUMN `show_nb_hits` enum('true','false') NOT NULL default 'false'
 ;",
 
             '
-ALTER TABLE `' . $prefixeTable . 'user_mail_notification`
+ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'user_mail_notification`
   DROP INDEX `uidx_check_key`
 ;',
 
             '
-ALTER TABLE `' . $prefixeTable . 'user_mail_notification`
+ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'user_mail_notification`
   ADD UNIQUE `user_mail_notification_ui1` (`check_key`)
 ;',
 
             '
-CREATE TABLE `' . $prefixeTable . "history_summary` (
+CREATE TABLE `' . \Piwigo\Config\Config::dbPrefix() . "history_summary` (
   `id` varchar(13) NOT NULL default '',
   `year` smallint(4) NOT NULL default '0',
   `month` tinyint(2) default NULL,
@@ -150,7 +145,7 @@ CREATE TABLE `' . $prefixeTable . "history_summary` (
 ;",
 
             '
-CREATE TABLE `' . $prefixeTable . "old_permalinks` (
+CREATE TABLE `' . \Piwigo\Config\Config::dbPrefix() . "old_permalinks` (
   `cat_id` smallint(5) unsigned NOT NULL default '0',
   `permalink` varchar(64) NOT NULL default '',
   `date_deleted` datetime NOT NULL default '0000-00-00 00:00:00',
@@ -161,7 +156,7 @@ CREATE TABLE `' . $prefixeTable . "old_permalinks` (
 ;",
 
             '
-CREATE TABLE `' . $prefixeTable . "plugins` (
+CREATE TABLE `' . \Piwigo\Config\Config::dbPrefix() . "plugins` (
   `id` varchar(64) binary NOT NULL default '',
   `state` enum('inactive','active') NOT NULL default 'inactive',
   `version` varchar(64) NOT NULL default '0',
@@ -170,7 +165,7 @@ CREATE TABLE `' . $prefixeTable . "plugins` (
 ;",
 
             '
-CREATE TABLE `' . $prefixeTable . "user_cache_categories` (
+CREATE TABLE `' . \Piwigo\Config\Config::dbPrefix() . "user_cache_categories` (
   `user_id` smallint(5) NOT NULL default '0',
   `cat_id` smallint(5) unsigned NOT NULL default '0',
   `max_date_last` datetime default NULL,
@@ -197,84 +192,84 @@ CREATE TABLE `' . $prefixeTable . "user_cache_categories` (
         ;",*/
 
             '
-INSERT INTO ' . $prefixeTable . "config
+INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
   (param,value,comment)
   VALUES
   ('show_nb_hits', 'false', 'Show hits count under thumbnails')
 ;",
 
             '
-INSERT INTO ' . $prefixeTable . "config
+INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
   (param,value,comment)
   VALUES
   ('history_admin','false','keep a history of administrator visits on your website')
 ;",
 
             '
-INSERT INTO ' . $prefixeTable . "config
+INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
   (param,value,comment)
   VALUES
   ('history_guest','true','keep a history of guest visits on your website')
 ;",
 
             '
-INSERT INTO ' . $prefixeTable . "config
+INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
   (param,value,comment)
   VALUES
   ('allow_user_registration','true','allow visitors to register?')
 ;",
 
             '
-INSERT INTO ' . $prefixeTable . "config
+INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
   (param,value,comment)
   VALUES
   ('secret_key', MD5(RAND()), 'a secret key specific to the gallery for internal use')
 ;",
 
             '
-INSERT INTO ' . $prefixeTable . "config
+INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
   (param,value,comment)
   VALUES
   ('nbm_send_html_mail','true','Send mail on HTML format for notification by mail')
 ;",
 
             '
-INSERT INTO ' . $prefixeTable . "config
+INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
   (param,value,comment)
   VALUES
   ('nbm_send_recent_post_dates','true','Send recent post by dates for notification by mail')
 ;",
 
             '
-INSERT INTO ' . $prefixeTable . "config
+INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
   (param,value,comment)
   VALUES
   ('email_admin_on_new_user','false','Send an email to theadministrators when a user registers')
 ;",
 
             '
-INSERT INTO ' . $prefixeTable . "config
+INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
   (param,value,comment)
   VALUES
   ('email_admin_on_comment','false','Send an email to the administrators when a valid comment is entered')
 ;",
 
             '
-INSERT INTO ' . $prefixeTable . "config
+INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
   (param,value,comment)
   VALUES
   ('email_admin_on_comment_validation','false','Send an email to the administrators when a comment requires validation')
 ;",
 
             '
-INSERT INTO ' . $prefixeTable . "config
+INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
   (param,value,comment)
   VALUES
   ('email_admin_on_picture_uploaded','false','Send an email to the administrators when a picture is uploaded')
 ;",
 
             '
-UPDATE ' . $prefixeTable . "user_cache
+UPDATE ' . \Piwigo\Config\Config::dbPrefix() . "user_cache
   SET need_update = 'true'
 ;",
 
@@ -294,7 +289,7 @@ UPDATE ' . $prefixeTable . "user_cache
 
         foreach ($replacements as $replacement) {
             $query = '
-UPDATE ' . $prefixeTable . 'comments
+UPDATE ' . \Piwigo\Config\Config::dbPrefix() . 'comments
   SET content = REPLACE(content, "' .
               addslashes($replacement[0]) .
               '", "' .

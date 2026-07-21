@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Core\TimingHelper;
+use Piwigo\Config\Config;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
@@ -21,8 +21,10 @@ use Piwigo\Db\Tables;
  * 1.4.0 to 1.5.0-era schema, then chain to UpgradeFrom_1_5_0. The
  * original's include_once of admin/include/functions.php (needed for
  * mass_inserts() back when it lived there) is gone -- the call targets
- * MysqliDb::massInserts() directly. $last_time is the true global the
- * runner declares (the top-level assignment fed later timing echoes).
+ * MysqliDb::massInserts() directly. The former `global $last_time;` was
+ * confirmed provably dead (assigned, never read anywhere in the repo --
+ * the runner-scope timing echo it fed no longer exists) and deleted
+ * outright, not retargeted.
  */
 final class UpgradeFrom_1_4_0 implements VersionUpgradeInterface
 {
@@ -35,14 +37,6 @@ final class UpgradeFrom_1_4_0 implements VersionUpgradeInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /**
-         * @var string
-         */
-        global $prefixeTable;
-        global $last_time;
-
-        $last_time = TimingHelper::getMoment();
-
         // will the user have to edit include/config_local.inc.php for
         // prefix_thumbnail configuration parameter
         $query = '
@@ -56,7 +50,7 @@ SELECT value
         // delete obsolete configuration
         $query = '
 DELETE
-  FROM ' . $prefixeTable . 'config
+  FROM ' . Tables::config() . '
   WHERE param IN (
    \'prefix_thumbnail\',
    \'mail_webmaster\',
@@ -188,7 +182,7 @@ CREATE TABLE piwigo_user_infos (
         ];
 
         foreach ($queries as $query) {
-            $query = str_replace('piwigo_', $prefixeTable, $query);
+            $query = str_replace('piwigo_', Config::dbPrefix(), $query);
             $conn->executeStatement($query);
         }
 
@@ -279,7 +273,7 @@ INSERT INTO ' . Tables::config() . "
         ];
 
         foreach ($queries as $query) {
-            $query = str_replace('piwigo_', $prefixeTable, $query);
+            $query = str_replace('piwigo_', Config::dbPrefix(), $query);
             $conn->executeStatement($query);
         }
 

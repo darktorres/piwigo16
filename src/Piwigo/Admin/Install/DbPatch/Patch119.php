@@ -18,7 +18,10 @@ use Piwigo\Image\DerivativeCacheService;
  * Former install/db/119-database.php (P23 sub-batch 8g-2). The bare
  * clear_derivative_cache() call became
  * DerivativeCacheService::clearDerivativeCache() (same target its
- * frozen-script delegate forwarded to).
+ * frozen-script delegate forwarded to). data_location is read via
+ * LegacyFileConf::read() -- Config::dataLocation() doesn't see a site's
+ * local/config/config.inc.php override on this path (see InstallWizard's
+ * own constructor docblock).
  */
 final class Patch119 implements DbPatchInterface
 {
@@ -37,13 +40,13 @@ final class Patch119 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         new DerivativeCacheService()
             ->clearDerivativeCache();
 
-        $derivative_conf_file = PHPWG_ROOT_PATH . $conf['data_location'] . 'derivatives.dat';
+        $localConf = LegacyFileConf::read();
+        $data_location = is_string($localConf['data_location'] ?? null) ? $localConf['data_location'] : '_data/';
+
+        $derivative_conf_file = PHPWG_ROOT_PATH . $data_location . 'derivatives.dat';
         if (is_file($derivative_conf_file)) {
             unlink($derivative_conf_file);
         }

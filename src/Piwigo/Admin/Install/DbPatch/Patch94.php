@@ -12,19 +12,20 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Config\Config;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Db\Tables;
 
 /**
- * Former install/db/94-database.php (P23 sub-batch 8g-1). $conf stays
- * global for data_location (still genuinely file-config-sourced -- see
- * InstallWizard's own constructor docblock: Config::dataLocation() doesn't
- * see local/config/config.inc.php overrides on this path). The former
- * $conf_orig capture-then-restore around load_conf_from_db() (Legacy
- * Coupling Retirement Phase 8, 8d) is gone: ConfigService::loadConfFromDb()
- * never touches $conf at all (writes Config::$data only), so there is
- * nothing left to restore -- upload_user_access is read straight off
- * Config:: right after the load instead.
+ * Former install/db/94-database.php (P23 sub-batch 8g-1). data_location is
+ * read via LegacyFileConf::read() -- Config::dataLocation() doesn't see a
+ * site's local/config/config.inc.php override on this path (see
+ * InstallWizard's own constructor docblock). The former $conf_orig
+ * capture-then-restore around load_conf_from_db() (Legacy Coupling
+ * Retirement Phase 8, 8d) is gone: ConfigService::loadConfFromDb() never
+ * touches $conf at all (writes Config::$data only), so there is nothing
+ * left to restore -- upload_user_access is read straight off Config::
+ * right after the load instead.
  */
 final class Patch94 implements DbPatchInterface
 {
@@ -43,15 +44,6 @@ final class Patch94 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-        /**
-         * @var string
-         */
-        global $prefixeTable;
-
         $user_upload_conf = [];
 
         // upload_user_access
@@ -62,7 +54,7 @@ final class Patch94 implements DbPatchInterface
         // unvalidated photos submitted by users
         $query = '
 SELECT *
-  FROM ' . $prefixeTable . 'waiting
+  FROM ' . Config::dbPrefix() . 'waiting
 ;';
         $user_upload_conf['waiting_rows'] = $conn->fetchAllAssociative($query);
 
@@ -75,13 +67,15 @@ SELECT id
         $user_upload_conf['uploadable_categories'] = $conn->fetchFirstColumn($query);
 
         // save configuration for a future use by the Community plugin
-        $backup_filepath = PHPWG_ROOT_PATH . $conf['data_location'] . 'plugins/core_user_upload_to_community.php';
+        $localConf = LegacyFileConf::read();
+        $data_location = is_string($localConf['data_location'] ?? null) ? $localConf['data_location'] : '_data/';
+        $backup_filepath = PHPWG_ROOT_PATH . $data_location . 'plugins/core_user_upload_to_community.php';
         $save_conf = true;
         if (is_dir(dirname($backup_filepath))) {
             if (! is_writable(dirname($backup_filepath))) {
                 $save_conf = false;
             }
-        } elseif (! is_writable(PHPWG_ROOT_PATH . $conf['data_location'])) {
+        } elseif (! is_writable(PHPWG_ROOT_PATH . $data_location)) {
             $save_conf = false;
         }
 
@@ -102,7 +96,7 @@ SELECT id
         $conn->executeStatement('ALTER TABLE ' . Tables::categories() . ' DROP COLUMN uploadable;');
 
         // waiting
-        $conn->executeStatement('DROP TABLE ' . $prefixeTable . 'waiting;');
+        $conn->executeStatement('DROP TABLE ' . Config::dbPrefix() . 'waiting;');
 
         // config parameter settings : upload_user_access, upload_link_everytime
         $query = '

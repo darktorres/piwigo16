@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Config\Config;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
 
@@ -29,9 +30,9 @@ use Piwigo\Db\Tables;
  *   moment it ran), became DbInfo::version();
  * - the final `DB_CHARSET != ''` re-read of the just-defined constant
  *   reads the $db_charset local instead -- same value by construction.
- * The include of config_default.inc.php (a kept plain-data file) is
- * original behavior: with `global $conf` in scope it repopulates the
- * true global, exactly as when this body ran at include scope.
+ * webmaster_id is read via LegacyFileConf::read() -- Config::webmasterId()
+ * doesn't see a site's local/config/config.inc.php override on this path
+ * (same reasoning as the rest of this file family).
  */
 final class Patch65 implements DbPatchInterface
 {
@@ -50,15 +51,6 @@ final class Patch65 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-        /**
-         * @var string
-         */
-        global $prefixeTable;
-
         if (UpgradeCharset::isResolved()) {
             echo 'PWG_CHARSET already defined - nada';
 
@@ -94,12 +86,12 @@ SELECT language, COUNT(user_id) AS count FROM ' . Tables::userInfos() . '
 
         // +-----------------------------------------------------------------------+
         // get admin charset
-        include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
-        @include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
+        $localConf = LegacyFileConf::read();
         $admin_charset = 'iso-8859-1';
+        $webmaster_id = is_scalar($localConf['webmaster_id'] ?? null) ? (string) $localConf['webmaster_id'] : '2';
         $query = '
 SELECT language FROM ' . Tables::userInfos() . '
-  WHERE user_id=' . $conf['webmaster_id'];
+  WHERE user_id=' . $webmaster_id;
         $rows = $conn->fetchAllAssociative($query);
         if (count($rows) === 0) {
             $query = '
@@ -123,7 +115,7 @@ SELECT language FROM ' . Tables::userInfos() . '
             ->version();
         $upgrade_log .= ">>mysql_ver\t" . $mysql_version . "\n";
 
-        $query = 'SHOW TABLES LIKE "' . $prefixeTable . '%"';
+        $query = 'SHOW TABLES LIKE "' . Config::dbPrefix() . '%"';
         $all_tables = array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
             $conn->fetchFirstColumn($query)
@@ -173,7 +165,7 @@ SELECT language FROM ' . Tables::userInfos() . '
             $pwg_charset = 'utf-8';
             $db_charset = 'utf8';
             foreach ($all_tables as $table) {
-                if (! isset($safe_tables[substr($table, strlen($prefixeTable))])) {
+                if (! isset($safe_tables[substr($table, strlen(Config::dbPrefix()))])) {
                     $this->changeTableToBlob($conn, $table, $all_tables_definition[$table]);
                 }
                 $this->changeTableToCharset($conn, $table, $all_tables_definition[$table], 'utf8');
@@ -186,7 +178,7 @@ SELECT language FROM ' . Tables::userInfos() . '
             $pwg_charset = 'utf-8';
             $db_charset = 'utf8';
             foreach ($all_tables as $table) {
-                if (! isset($safe_tables[substr($table, strlen($prefixeTable))])) {
+                if (! isset($safe_tables[substr($table, strlen(Config::dbPrefix()))])) {
                     $this->changeTableToBlob($conn, $table, $all_tables_definition[$table]);
                     $this->changeTableToCharset($conn, $table, $all_tables_definition[$table], 'latin2');
                 }

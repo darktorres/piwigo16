@@ -34,11 +34,8 @@ final class Patch96 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         // Only MySQL is concerned, other DB engines are already "timestamp"
-        if ($conf['dblayer'] == 'mysql') {
+        if (LegacyDbLayer::value() === 'mysql') {
             $query = '
 ALTER TABLE ' . Tables::images() . '
   MODIFY date_creation datetime

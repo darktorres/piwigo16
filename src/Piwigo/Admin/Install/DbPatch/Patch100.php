@@ -36,16 +36,15 @@ final class Patch100 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
+        $dblayer = LegacyDbLayer::value();
 
-        if ($conf['dblayer'] == 'mysql') {
+        if ($dblayer === 'mysql') {
             $query = 'ALTER TABLE ' . Tables::images() . '
     ADD COLUMN `high_width` smallint(9) unsigned default NULL,
     ADD COLUMN `high_height` smallint(9) unsigned default NULL;';
         }
 
-        if (in_array($conf['dblayer'], ['pgsql', 'sqlite', 'pdo-sqlite'])) {
+        if (in_array($dblayer, ['pgsql', 'sqlite', 'pdo-sqlite'])) {
             $query = 'ALTER TABLE ' . Tables::images() . '
     ADD COLUMN "high_width" INTEGER,
     ADD COLUMN "high_height" INTEGER;';

@@ -16,7 +16,10 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
- * Former install/db/97-database.php (P23 sub-batch 8g-1).
+ * Former install/db/97-database.php (P23 sub-batch 8g-1). default_user_id
+ * is read via LegacyFileConf::read() -- Config::defaultUserId() doesn't
+ * see a site's local/config/config.inc.php override on this path (same
+ * reasoning as the rest of this file family).
  */
 final class Patch97 implements DbPatchInterface
 {
@@ -35,22 +38,22 @@ final class Patch97 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
+        $localConf = LegacyFileConf::read();
+        $defaultUserId = is_scalar($localConf['default_user_id'] ?? null) ? $localConf['default_user_id'] : 2;
 
         $query = '
 SELECT
     theme,
     language
   FROM ' . Tables::userInfos() . '
-  WHERE user_id = ' . $conf['default_user_id'] . '
+  WHERE user_id = ' . $defaultUserId . '
 ;';
         $row = $conn->fetchNumeric($query);
         $theme = $row !== false && is_scalar($row[0]) ? (string) $row[0] : '';
         $language = $row !== false && is_scalar($row[1]) ? (string) $row[1] : '';
 
         $data = [
-            'user_id' => $conf['default_user_id'],
+            'user_id' => $defaultUserId,
             'theme' => empty($theme) ? 'Sylvia' : $theme,
             'language' => empty($language) ? 'en_UK' : $language,
         ];

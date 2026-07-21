@@ -23,9 +23,10 @@ use Piwigo\Db\Tables;
  * existence check (Legacy Coupling Retirement Phase 8, 8d) moved onto a
  * direct row fetch for the same reason as Patch104's: Config::has() can't
  * distinguish "no DB row" from "SCHEMA default only" now that Config::$data
- * is pre-populated with every SCHEMA default at boot. $conf stays global
- * for default_filters_views -- still genuinely file-config-sourced (same
- * InstallWizard precedent as Patch94/Patch119's data_location reads).
+ * is pre-populated with every SCHEMA default at boot. default_filters_views
+ * is read via LegacyFileConf::read() -- Config::defaultFiltersViews()
+ * doesn't see a site's local/config/config.inc.php override on this path
+ * (same reasoning as the rest of this file family).
  */
 final class Patch181 implements DbPatchInterface
 {
@@ -44,8 +45,7 @@ final class Patch181 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
+        $localConf = LegacyFileConf::read();
 
         $configService = \Piwigo\Config\CurrentConfigService::get();
         $configService->loadConfFromDb();
@@ -59,7 +59,8 @@ final class Patch181 implements DbPatchInterface
             $filtersViews = ArrayHelper::safeUnserialize(is_scalar($row['value']) ? (string) $row['value'] : '');
 
             if (is_array($filtersViews) && ! isset($filtersViews['expert'])) {
-                $filtersViews['expert'] = $conf['default_filters_views']['expert'];
+                $defaultFiltersViews = is_array($localConf['default_filters_views'] ?? null) ? $localConf['default_filters_views'] : [];
+                $filtersViews['expert'] = $defaultFiltersViews['expert'] ?? null;
                 $configService->confUpdateParam('filters_views', $filtersViews);
             }
         }

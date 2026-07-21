@@ -51,10 +51,10 @@ use Piwigo\Url\UrlService;
  * Legacy Coupling Retirement Phase 8, 8b: upgrade.php now calls
  * InstallBootstrap::boot($paths) early (before this class is even
  * constructed), so the DI container is available by the time this class's
- * methods run. Every ConfigDb:: call here (Tier 3) still stays on
- * ConfigDb rather than ConfigService for now, though -- 8b only boots the
- * container, it doesn't yet retarget these calls (Legacy Coupling
- * Retirement Phase 8, 8d).
+ * methods run -- and (Phase 8, 8d) upgrade.php also calls
+ * InstallBootstrap::activateConfigService() right after its own db_*
+ * credential seeding, so every real ConfigDb:: call here has been
+ * retargeted onto CurrentConfigService::get().
  */
 final class UpgradeRunner
 {
@@ -270,7 +270,7 @@ SELECT id
                 $current_release = '15.0.0';
             } else {
                 // confirm that the database is in the same version as source code files
-                \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION), conn: $conn);
+                \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION));
 
                 header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
                 echo 'No upgrade required, the database structure is up to date';
@@ -330,10 +330,10 @@ SELECT id
                 ->apply($conn);
             $mysql_changes = \Piwigo\Admin\Install\DbPatch\DatabaseConfigChanges::drain();
 
-            \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION), conn: $conn);
+            \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION));
 
             // Conf delete param on last major update for whats new popin to be displayed when changing major version
-            \Piwigo\Config\ConfigDb::confDeleteParam('last_major_update', $conn);
+            \Piwigo\Config\CurrentConfigService::get()->confDeleteParam('last_major_update');
 
             // Something to add in database.inc.php? (install/upgrade_*.php
             // scripts may push onto $mysql_changes)
@@ -356,7 +356,7 @@ SELECT id
             // Deactivate non standard extensions
             UpgradeService::deactivateNonStandardPlugins($conn);
             UpgradeService::deactivateNonStandardThemes($conn);
-            UpgradeService::deactivateTemplates($conn);
+            UpgradeService::deactivateTemplates();
 
             $upgrade_end = \Piwigo\Core\TimingHelper::getMoment();
 
@@ -401,7 +401,7 @@ REPLACE INTO ' . Tables::plugins() . '
                     $conn->executeStatement($query);
 
                     // we need the secret key for get_pwg_token()
-                    \Piwigo\Config\ConfigDb::loadConfFromDb(conn: $conn);
+                    \Piwigo\Config\CurrentConfigService::get()->loadConfFromDb();
 
                     $template->assign(
                         [

@@ -220,9 +220,9 @@ UPDATE ' . PREFIX_TABLE . 'user_infos
     }
 
     // Deactivate all templates
-    public static function deactivateTemplates(Connection $conn): void
+    public static function deactivateTemplates(): void
     {
-        \Piwigo\Config\ConfigDb::confUpdateParam('extents_for_templates', [], conn: $conn);
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('extents_for_templates', []);
     }
 
     /**

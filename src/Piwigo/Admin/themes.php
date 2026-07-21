@@ -33,11 +33,13 @@ use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
- * Legacy Coupling Retirement Phase 5: this class's mobile_theme write
- * stays on ConfigDb::confUpdateParam() (Tier 3), not ConfigService --
- * Admin\Install\UpgradeService.php/InstallService.php construct `themes`
- * directly, pre-container, in addition to its normal post-container admin
- * page call sites.
+ * Legacy Coupling Retirement Phase 8, 8d: this class's mobile_theme write
+ * goes through CurrentConfigService::get() (Tier 2), not a constructor
+ * param -- constructed throwaway at ~8 real sites, and its two
+ * install/upgrade-path construction sites (Admin\Install\UpgradeService.php/
+ * InstallService.php) are covered by InstallBootstrap::activateConfigService()
+ * the same way its normal post-container admin page call sites are covered
+ * by RequestBootstrap::connect().
  */
 class themes
 {
@@ -205,7 +207,7 @@ INSERT INTO ' . Tables::themes() . '
                     $activity_details['version'] = $fs_version;
 
                     if ((bool) $this->fs_themes[$theme_id]['mobile']) {
-                        \Piwigo\Config\ConfigDb::confUpdateParam('mobile_theme', $theme_id);
+                        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('mobile_theme', $theme_id);
                     }
                 }
                 break;
@@ -255,7 +257,7 @@ DELETE
                 $conn->executeStatement($query);
 
                 if ((bool) $this->fs_themes[$theme_id]['mobile']) {
-                    \Piwigo\Config\ConfigDb::confUpdateParam('mobile_theme', '');
+                    \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('mobile_theme', '');
                 }
                 break;
 

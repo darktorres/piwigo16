@@ -41,6 +41,18 @@ final class CurrentConfigService
         return self::$instance;
     }
 
+    /**
+     * Legacy Coupling Retirement Phase 8, 8d -- lets CommonBootstrap::run()
+     * reuse the instance RequestBootstrap::connect() already resolved
+     * earlier in the same request instead of redoing the DB read, while
+     * staying callable standalone (tests/Unit/Bootstrap/CommonBootstrapTest.php's
+     * own contract) when nothing has set one yet.
+     */
+    public static function isSet(): bool
+    {
+        return self::$instance instanceof ConfigService;
+    }
+
     public static function set(ConfigService $configService): void
     {
         self::$instance = $configService;

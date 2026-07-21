@@ -23,11 +23,12 @@ use Piwigo\Http\HttpClientService;
 use Piwigo\PluginConfig\PluginRepository;
 
 /**
- * Legacy Coupling Retirement Phase 5: this class's loadConfFromDb() call
- * stays on ConfigDb (Tier 3), not ConfigService -- same reasoning as
- * Admin\themes.php's own docblock: Admin\Install\UpgradeService.php/
- * InstallService.php construct `plugins` directly, pre-container, in
- * addition to its normal post-container admin page call sites.
+ * Legacy Coupling Retirement Phase 8, 8d: this class's loadConfFromDb()
+ * call goes through CurrentConfigService::get() (Tier 2), same reasoning
+ * as Admin\themes.php's own docblock -- constructed throwaway at ~6 real
+ * sites, its install/upgrade-path construction sites
+ * (Admin\Install\UpgradeService.php/InstallService.php) covered by
+ * InstallBootstrap::activateConfigService().
  */
 class plugins
 {
@@ -211,7 +212,7 @@ UPDATE ' . Tables::plugins() . '
                     $matching_db_plugins = new PluginRepository($conn)
                         ->getDbPlugins('', $plugin_id);
                     [$crt_db_plugin] = $matching_db_plugins;
-                    \Piwigo\Config\ConfigDb::loadConfFromDb();
+                    \Piwigo\Config\CurrentConfigService::get()->loadConfFromDb();
                 } elseif ($crt_db_plugin['state'] == 'active') {
                     break;
                 }

@@ -28,15 +28,15 @@ use Piwigo\Session\SessionService;
  * orphan methods below -- every existing no-arg `new ImageService()` call
  * site needed updating for the new required constructor.
  *
- * Legacy Coupling Retirement Phase 5: emptyLounge()'s real reads/writes
- * (empty_lounge_running/count_orphans) stay on Config::/ConfigDb (Tier 3
- * for the writes), not ConfigService -- Bootstrap\RequestBootstrap.php
- * calls `new ImageService(...)->emptyLounge()` inline (gated on
- * LoungeMaintenance::needsEmptying()), pre-container. Every other real
- * construction site (BatchManagerGlobalPageRenderer, UploadService,
- * TagService, Ws\PwgImages, etc.) is normal post-container application
- * code -- only this one bootstrap-triggered path forces the whole class's
- * config access to stay here.
+ * Legacy Coupling Retirement Phase 8, 8d: emptyLounge()'s real writes
+ * (empty_lounge_running/count_orphans) go through CurrentConfigService::get()
+ * (Tier 2) -- constructed throwaway at ~33 real sites, including
+ * Bootstrap\RequestBootstrap.php's own `new ImageService(...)->emptyLounge()`
+ * inline call (gated on LoungeMaintenance::needsEmptying()), which runs
+ * after connect() has already resolved and set a real ConfigService.
+ * Every other real construction site (BatchManagerGlobalPageRenderer,
+ * UploadService, TagService, Ws\PwgImages, etc.) is normal post-container
+ * application code, covered the same way.
  */
 final readonly class ImageService
 {
@@ -333,7 +333,7 @@ final readonly class ImageService
             [$runningExecId, $runningExecStartTime] = explode('-', $emptyLoungeRunning);
             if (time() - (int) $runningExecStartTime > 60) {
                 $logger->debug(__FUNCTION__ . ', exec=' . $runningExecId . ', timeout stopped by another call to the function');
-                \Piwigo\Config\ConfigDb::confDeleteParam('empty_lounge_running');
+                \Piwigo\Config\CurrentConfigService::get()->confDeleteParam('empty_lounge_running');
             }
         }
 
@@ -386,7 +386,7 @@ final readonly class ImageService
             UserCacheInvalidator::invalidate();
         }
 
-        \Piwigo\Config\ConfigDb::confDeleteParam('empty_lounge_running');
+        \Piwigo\Config\CurrentConfigService::get()->confDeleteParam('empty_lounge_running');
 
         $logger->debug(__FUNCTION__ . ', exec=' . $execId . ', ends');
 
@@ -548,7 +548,7 @@ final readonly class ImageService
             // we don't care about the list of image_ids, we only care about the number
             // of orphans, so let's use a faster method than calling count(getOrphans())
             $counter = $this->repo->countAllImages() - $this->repo->countImagesInCategories();
-            \Piwigo\Config\ConfigDb::confUpdateParam('count_orphans', $counter, true);
+            \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('count_orphans', $counter, updateGlobal: true);
         }
 
         return \Piwigo\Config\Config::all()['count_orphans'] ?? null;

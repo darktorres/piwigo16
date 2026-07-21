@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ServerTiming;
@@ -14,6 +15,12 @@ beforeEach(function (): void {
     ServerTiming::reset();
     Config::reset();
     CurrentUser::reset();
+    // Legacy Coupling Retirement Phase 8, 8d: CommonBootstrap::run() now
+    // reuses an already-set CurrentConfigService instead of always
+    // resolving+loading its own -- without this reset, a set() left over
+    // from an earlier test would make these tests skip that resolve-and-load
+    // path entirely and silently pass/fail on stale state.
+    CurrentConfigService::reset();
 });
 
 afterEach(function (): void {
@@ -21,6 +28,7 @@ afterEach(function (): void {
     ServerTiming::reset();
     Config::reset();
     CurrentUser::reset();
+    CurrentConfigService::reset();
 });
 
 test('run boots the Kernel', function (): void {

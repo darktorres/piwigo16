@@ -3,12 +3,11 @@
 declare(strict_types=1);
 
 // P23 batch 8f-4: the conf_update_param() function stub is gone --
-// NoPhotoYetRenderer now calls Piwigo\Config\ConfigDb::confUpdateParam()
-// directly, a real static method a bare-function stub can no longer
-// intercept. That method is DBAL-based (Legacy Coupling Retirement gap-fill,
-// ConfigDb.php migration), so the genuine write path runs against the same
-// config table via $this->conn below -- no separate MysqliDb connection
-// needed any more.
+// NoPhotoYetRenderer now calls its own constructor-injected ConfigService
+// (Legacy Coupling Retirement Phase 8, 8d), a real DBAL-based write no
+// bare-function stub can intercept, so the genuine write path runs
+// against the same config table via $this->conn below -- no separate
+// MysqliDb connection needed any more.
 
 namespace Piwigo\Tests\Integration {
 
@@ -16,6 +15,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -57,7 +57,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->renderer = new NoPhotoYetRenderer($this->conn, new RedirectService(), new UrlService(new HtmlService()));
+        $this->renderer = new NoPhotoYetRenderer($this->conn, new ConfigService($this->buildConfigRepository()), new RedirectService(), new UrlService(new HtmlService()));
 
         // NoPhotoYetRenderer calls Piwigo\Auth\AccessControl::isAGuest()/
         // isAdmin() directly (real class methods), which read

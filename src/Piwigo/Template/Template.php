@@ -23,13 +23,16 @@ use Piwigo\Url\UrlService;
 use Smarty\Smarty;
 
 /**
- * Legacy Coupling Retirement Phase 5: the data_dir_checked write inside
- * __construct() stays on ConfigDb (Tier 3), not ConfigService -- a lazy
- * static registry doesn't help here specifically, since the write fires
- * from the constructor itself, not a method called later, and
- * Bootstrap\RequestBootstrap.php (x2), Admin\Install\InstallWizard.php,
- * and Admin\Install\UpgradeRunner.php all construct Template directly,
- * pre-container.
+ * Legacy Coupling Retirement Phase 8, 8d: the data_dir_checked write
+ * inside __construct() goes through CurrentConfigService::get() (Tier 2)
+ * -- safe even though the write fires from the constructor itself, not a
+ * method called later, because every real construction site
+ * (Bootstrap\RequestBootstrap.php x2, Admin\Install\InstallWizard.php,
+ * Admin\Install\UpgradeRunner.php) now runs after its own path has
+ * already activated CurrentConfigService (RequestBootstrap::connect()
+ * resolves one before finalize() ever constructs a Template;
+ * InstallWizard/UpgradeRunner are only ever constructed after
+ * InstallBootstrap::activateConfigService()).
  */
 class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\TemplateInterface
 {
@@ -143,8 +146,34 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
                         false // show trace
                     );
             }
-            if (function_exists('pwg_query')) {
-                \Piwigo\Config\ConfigDb::confUpdateParam('data_dir_checked', 1);
+            // Legacy Coupling Retirement Phase 8, 8d: the former
+            // `if (function_exists('pwg_query'))` guard here was provably
+            // dead (pwg_query is never defined anywhere in this codebase,
+            // confirmed by a full-repo grep) -- meaning this write never
+            // actually persisted, and the mkgetdir()/is_writable() check
+            // above silently re-ran on every single request instead of
+            // once, since Config::has('data_dir_checked') could never
+            // become true. Removed the guard and retargeted onto
+            // CurrentConfigService::get() (Tier 2 -- constructed throwaway
+            // at ~8 real sites).
+            //
+            // The try/catch is real, not defensive-for-its-own-sake: found
+            // live via composer test:fixture-regen. Admin\Install\InstallWizard::boot()
+            // constructs a Template (this class) *before*
+            // performInstall() creates the schema -- on a genuinely fresh
+            // install, the config table doesn't exist yet at this exact
+            // call site (confirmed via a real TableNotFoundException, not
+            // assumed). Every other real construction site
+            // (Bootstrap\RequestBootstrap.php x2, Admin\Install\UpgradeRunner.php)
+            // always has an existing config table by the time it runs.
+            // Harmless to skip here: this write is purely a "don't repeat
+            // this filesystem check" cache -- the very next real request
+            // (post-install, table now exists) sees Config::has('data_dir_checked')
+            // still false and simply redoes the cheap mkgetdir/is_writable
+            // check once more, no different from before this write existed.
+            try {
+                \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('data_dir_checked', 1);
+            } catch (\Doctrine\DBAL\Exception\TableNotFoundException) {
             }
         }
 

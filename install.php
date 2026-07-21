@@ -105,6 +105,10 @@ define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
 
 // ---------------------------------------------------------------- orchestration
 $wizard = new InstallWizard($prefixeTable);
+// InstallWizard::boot() itself calls InstallBootstrap::activateConfigService()
+// partway through its own body (Legacy Coupling Retirement Phase 8, 8d) --
+// its own Template construction at the end needs it active before this
+// call returns, so it can't wait until here.
 $wizard->boot();
 
 if (isset($_POST['install'])) {

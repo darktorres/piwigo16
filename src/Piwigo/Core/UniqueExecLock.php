@@ -20,14 +20,20 @@ use Piwigo\Db\Tables;
  * exact original SQL text (a pure execution-API swap), not rewritten
  * through QueryBuilder or newly parameterized.
  *
- * Phase 5 (ConfigDb retarget sweep): ends()'s confDeleteParam() call
- * deliberately stays on ConfigDb, not CurrentConfigService -- confirmed
- * (the hard way, via a live 500) reachable pre-container through
+ * Phase 5 (ConfigDb retarget sweep) found ends()'s confDeleteParam() call
+ * reachable (the hard way, via a live 500) through
  * `Bootstrap\RequestBootstrap::connect()` ->
  * `Bootstrap\UserBootstrap::initialize()` ->
  * `Users\UserService::getUserData()` -> `begins()`'s own timeout branch
- * calling `ends()`, all of which run before `Kernel::boot()` on every
- * single request.
+ * calling `ends()` -- pre-`Kernel::boot()` at the time, on every single
+ * request. Legacy Coupling Retirement Phase 8, 8d: that's no longer true
+ * -- `RequestBootstrap::configure()` now calls `Kernel::boot()` as its own
+ * first statement (Phase 8a), well before `connect()` (and everything it
+ * calls, including this chain) ever runs, and `connect()` itself now
+ * resolves and `CurrentConfigService::set()`s a real `ConfigService`
+ * early, before `UserBootstrap::initialize()` -- so `ends()` now goes
+ * through `CurrentConfigService::get()` (Tier 2) like every other
+ * retargeted call in this batch.
  */
 final class UniqueExecLock
 {
@@ -87,7 +93,7 @@ SELECT
     {
         $logger = \Piwigo\Core\CurrentLogger::get();
 
-        \Piwigo\Config\ConfigDb::confDeleteParam($tokenName . '_running');
+        \Piwigo\Config\CurrentConfigService::get()->confDeleteParam($tokenName . '_running');
         $logger->info('[' . $tokenName . '] ends now');
     }
 }

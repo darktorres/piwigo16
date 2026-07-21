@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Page;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -23,15 +24,18 @@ use Piwigo\Template\Template;
  * same "don't stub what would kill the test process" reasoning as
  * fatal_error().
  *
- * Legacy Coupling Retirement Phase 5: its no_photo_yet write stays on
- * ConfigDb (Tier 3), not ConfigService -- Bootstrap\RequestBootstrap.php
- * calls `new NoPhotoYetRenderer(...)->render()` inline (gated on
- * !Config::has('no_photo_yet')), pre-container.
+ * Legacy Coupling Retirement Phase 8, 8d: its no_photo_yet write takes a
+ * real constructor-injected ConfigService -- only 2 real construction
+ * sites (Bootstrap\RequestBootstrap.php's own `new NoPhotoYetRenderer(...)
+ * ->render()` inline call, gated on !Config::has('no_photo_yet'), plus
+ * this class's own test), low enough to thread properly rather than reach
+ * for CurrentConfigService::get().
  */
 final readonly class NoPhotoYetRenderer
 {
     public function __construct(
         private Connection $conn,
+        private ConfigService $configService,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
     ) {}
@@ -66,7 +70,7 @@ final readonly class NoPhotoYetRenderer
                     }
 
                     if ($_GET['no_photo_yet'] === 'deactivate') {
-                        \Piwigo\Config\ConfigDb::confUpdateParam('no_photo_yet', 'false');
+                        $this->configService->confUpdateParam('no_photo_yet', 'false');
                         $this->redirectService->redirect($this->urlService->makeIndexUrl());
                     }
                 }
@@ -108,7 +112,7 @@ final readonly class NoPhotoYetRenderer
                 $template->pparse('no_photo_yet');
                 exit();
             } else {
-                \Piwigo\Config\ConfigDb::confUpdateParam('no_photo_yet', 'false');
+                $this->configService->confUpdateParam('no_photo_yet', 'false');
             }
         }
     }

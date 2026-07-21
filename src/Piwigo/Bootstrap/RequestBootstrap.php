@@ -75,13 +75,13 @@ use Piwigo\Users\UserService;
  * self::$booted) -- kept there for the standalone-callable contract
  * tests/Unit/Bootstrap/CommonBootstrapTest.php exercises directly.
  *
- * Every ConfigDb:: call in this file (Tier 3) still stays on ConfigDb
- * rather than ConfigService for now -- 8a only boots the container, it
- * doesn't yet retarget these calls (see Phase 8's 8c/8d: this file still
- * reads a few `$conf[...]` keys ConfigDb::loadConfFromDb()'s dual-write
- * populates, and ConfigService::loadConfFromDb() only ever writes
- * Config::override(), never $conf -- swapping the call before those reads
- * are retargeted would silently stop populating $conf from the DB).
+ * Legacy Coupling Retirement Phase 8, 8d: every real ConfigDb:: call in
+ * this file has been retargeted onto a container-resolved ConfigService
+ * (connect() resolves it once and reuses the same instance for all 3
+ * writes) -- safe only because 8c first retargeted every real
+ * `$conf[...]` read out of this file onto Config:: accessors;
+ * ConfigService::loadConfFromDb() only ever writes Config::override(),
+ * never $conf, unlike ConfigDb::loadConfFromDb()'s dual-write.
  */
 final class RequestBootstrap
 {
@@ -255,7 +255,19 @@ final class RequestBootstrap
                 ->fatalError(Lang::t($e->getMessage()));
         }
 
-        \Piwigo\Config\ConfigDb::loadConfFromDb(conn: $conn);
+        // Legacy Coupling Retirement Phase 8, 8d: safe now that 8c retargeted
+        // every $conf[...] read out of this file -- ConfigService::loadConfFromDb()
+        // only ever writes Config::override(), never global $conf, unlike
+        // ConfigDb::loadConfFromDb()'s dual-write. CurrentConfigService::set()
+        // here lets CommonBootstrap::run() (which runs later in the same
+        // request) reuse this same instance instead of resolving+loading a
+        // second time -- see its own docblock.
+        $configService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\ConfigService::class);
+        if (! $configService instanceof \Piwigo\Config\ConfigService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\ConfigService::class);
+        }
+        \Piwigo\Config\CurrentConfigService::set($configService);
+        $configService->loadConfFromDb();
 
         // \Piwigo\Config\Config::dataLocation()/'log_dir' lost their specific string types the same
         // way $conf['dblayer'] did above (see comment near the dblayer include); we
@@ -292,21 +304,21 @@ final class RequestBootstrap
         PluginLoader::loadPlugins();
 
         if (! \Piwigo\Config\Config::has('piwigo_installed_version')) {
-            \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', AppInfo::VERSION, conn: $conn);
+            $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         } elseif (\Piwigo\Config\Config::piwigoInstalledVersion() !== AppInfo::VERSION) {
             // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
             self::activityService($conn)->record('system', ActivitySystem::Core, 'autoupdate', [
                 'from_version' => \Piwigo\Config\Config::piwigoInstalledVersion(),
                 'to_version' => AppInfo::VERSION,
             ]);
-            \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', AppInfo::VERSION, conn: $conn);
+            $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         }
 
         // Check if last major update conf is set if not set it
         if (! \Piwigo\Config\Config::has('last_major_update')) {
             $dbnow = $conn->fetchOne('SELECT NOW()');
             assert(is_string($dbnow));
-            \Piwigo\Config\ConfigDb::confUpdateParam('last_major_update', $dbnow, true, conn: $conn);
+            $configService->confUpdateParam('last_major_update', $dbnow, updateGlobal: true);
         }
 
         // users can have defined a custom order pattern, incompatible with GUI form.
@@ -507,8 +519,10 @@ final class RequestBootstrap
         if (! \Piwigo\Config\Config::has('no_photo_yet')) {
             // Formerly include/no_photo_yet.inc.php, a seam of exactly this
             // one call (deleted, P23 sub-batch 8f-5). render() exits itself
-            // when it decides to take over the page.
-            new NoPhotoYetRenderer($conn, new RedirectService(), new UrlService(new HtmlService()))
+            // when it decides to take over the page. CurrentConfigService::get()
+            // reuses the instance connect() already resolved earlier in the
+            // same request (Legacy Coupling Retirement Phase 8, 8d).
+            new NoPhotoYetRenderer($conn, \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()))
                 ->render();
         }
 

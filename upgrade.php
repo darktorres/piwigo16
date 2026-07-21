@@ -105,6 +105,10 @@ foreach (['db_host', 'db_user', 'db_password', 'db_base'] as $dbConfKey) {
 // Tables::*() call downstream would fall back to whatever
 // InstallBootstrap::boot() left in place instead of the real prefix.
 Config::override('db_prefix', $prefixeTable);
+// Legacy Coupling Retirement Phase 8, 8d: must run after the real db_*
+// seeding above, not before -- see InstallBootstrap::activateConfigService()'s
+// own docblock.
+InstallBootstrap::activateConfigService();
 define('PREFIX_TABLE', $prefixeTable);
 // P23 sub-batch 8g-6: replaces the former define('UPGRADES_PATH', ...) as
 // the "this request is the upgrade flow" marker Lang::loadLanguage() reads

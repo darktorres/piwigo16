@@ -172,6 +172,17 @@ final class InstallWizard
         Config::override('db_password', $this->dbpasswd);
         Config::override('db_base', $this->dbname);
 
+        // Must run right here, not from install.php after boot() returns:
+        // this method's own Template construction at the end of its body
+        // (self::$template below) needs CurrentConfigService already
+        // active (Legacy Coupling Retirement Phase 8, 8d -- Template's
+        // data_dir_checked write), and that construction happens before
+        // install.php regains control. Placed after the credential seeding
+        // above, not before, for the same stale-credentials reason
+        // InstallBootstrap::activateConfigService()'s own docblock
+        // documents.
+        \Piwigo\Bootstrap\InstallBootstrap::activateConfigService();
+
         // Same reasoning again, different dependency: this request never
         // goes through CommonBootstrap::run() (only InstallBootstrap::boot(),
         // which doesn't touch CurrentUser), so CurrentUser is never guest-

@@ -15,10 +15,11 @@ use Piwigo\Db\DbConnection;
  * reachable from every layer, resolving the constraint for every caller
  * at once, same pattern as this batch's own Piwigo\Core\FilesystemHelper.
  *
- * Legacy Coupling Retirement Phase 5: invalidate()'s confDeleteParam()
- * call stays on ConfigDb (Tier 3), not ConfigService -- reachable both
+ * Legacy Coupling Retirement Phase 8, 8d: invalidate()'s confDeleteParam()
+ * call goes through CurrentConfigService::get() (Tier 2) -- reachable both
  * directly (Admin\Install\UpgradeRunner.php) and transitively (via
- * Admin\updates::upgrade_to(), itself pre-container-reachable).
+ * Admin\updates::upgrade_to()), both covered by
+ * InstallBootstrap::activateConfigService() on the install/upgrade path.
  */
 final class UserCacheInvalidator
 {
@@ -40,7 +41,7 @@ final class UserCacheInvalidator
             throw new \LogicException('Piwigo\Cache\CurrentPersistentCache not initialised.');
         }
         $persistent_cache->purge(true);
-        \Piwigo\Config\ConfigDb::confDeleteParam('count_orphans');
+        \Piwigo\Config\CurrentConfigService::get()->confDeleteParam('count_orphans');
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('invalidate_user_cache', $full);
     }
 

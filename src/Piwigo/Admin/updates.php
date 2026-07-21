@@ -25,12 +25,14 @@ use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
 
 /**
- * Legacy Coupling Retirement Phase 5: this class's real ConfigDb writes
+ * Legacy Coupling Retirement Phase 8, 8d: this class's real config writes
  * (update_notify_last_check/updates_ignored/piwigo_installed_version/
- * fs_quick_check_last_check) and pwgIsDbconfWriteable() check stay on
- * ConfigDb (Tier 3), not ConfigService -- Admin\Install\UpgradeRunner.php
+ * fs_quick_check_last_check) and pwgIsDbconfWriteable() check go through
+ * CurrentConfigService::get() (Tier 2) -- Admin\Install\UpgradeRunner.php
  * calls `updates::upgrade_to()` directly, a bare static call with no
- * construction step, reachable pre-container.
+ * construction step, but InstallBootstrap::activateConfigService() (called
+ * from upgrade.php before UpgradeRunner is even constructed) makes it
+ * safe.
  */
 class updates
 {
@@ -218,12 +220,12 @@ class updates
      */
     public function notify_piwigo_new_versions(): void
     {
-        if (! \Piwigo\Config\ConfigDb::pwgIsDbconfWriteable()) {
+        if (! \Piwigo\Config\CurrentConfigService::get()->pwgIsDbconfWriteable()) {
             return;
         }
 
         $new_versions = $this->get_piwigo_new_versions();
-        \Piwigo\Config\ConfigDb::confUpdateParam('update_notify_last_check', date('c'));
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('update_notify_last_check', date('c'));
 
         if ((bool) $new_versions['is_dev']) {
             return;
@@ -314,7 +316,7 @@ class updates
                 ->switchLangBack();
 
             // save notify
-            \Piwigo\Config\ConfigDb::confUpdateParam(
+            \Piwigo\Config\CurrentConfigService::get()->confUpdateParam(
                 'update_notify_last_notification',
                 [
                     'version' => $new_versions_string,
@@ -503,7 +505,12 @@ class updates
             $updates_ignored[$type] = $ignore_list;
         }
         \Piwigo\Config\Config::override('updates_ignored', $updates_ignored);
-        \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', serialize($updates_ignored));
+        // Legacy Coupling Retirement Phase 8, 8d: pass the raw array, not a
+        // pre-serialize()'d string -- ConfigService::confUpdateParam()'s own
+        // encode() already serializes array values, producing the identical
+        // stored string (same serialize() call, same input) without the
+        // redundant manual step ConfigDb::confUpdateParam() needed.
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('updates_ignored', $updates_ignored);
     }
 
     // Check if extension have been upgraded since last check
@@ -705,7 +712,7 @@ class updates
 
                         FilesystemHelper::deltree(PHPWG_ROOT_PATH . $data_location . 'update');
                         UserCacheInvalidator::invalidate(true);
-                        \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', $upgrade_to);
+                        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('piwigo_installed_version', $upgrade_to);
                         new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Core, 'update', [
                             'from_version' => AppInfo::VERSION,
                             'to_version' => $upgrade_to,
@@ -717,7 +724,7 @@ class updates
                             // changes. Anyway, a compiled template purge will be performed
                             // by upgrade.php
                             $template->delete_compiled_templates();
-                            \Piwigo\Config\ConfigDb::confDeleteParam('fs_quick_check_last_check');
+                            \Piwigo\Config\CurrentConfigService::get()->confDeleteParam('fs_quick_check_last_check');
 
                             \Piwigo\Core\PageState::current()->addInfo(Lang::t('Update Complete'));
                             \Piwigo\Core\PageState::current()->addInfo($upgrade_to);

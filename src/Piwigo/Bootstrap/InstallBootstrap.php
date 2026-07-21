@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Bootstrap;
 
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 
@@ -16,29 +18,32 @@ use Piwigo\Core\Paths;
  * before anything else" shape as both of those, applied to the one
  * remaining family of entry points that didn't have it yet.
  *
- * Kept deliberately minimal (boot only, no service resolution) -- unlike
- * RequestBootstrap.php/RedirectService.php (Phase 8, 8a), nothing in
- * InstallWizard/UpgradeRunner/UpgradeFeedRunner/UpgradeService needs a
- * container-resolved dependency yet: InstallWizard's own former
- * UserService duplicate-construction-chain violation was fixed with a
- * plain private DRY-extraction helper instead (matching
- * RequestBootstrap::activityService()'s own precedent), not a container
- * lookup -- a container-resolved UserService would be unsafe here
- * regardless, since PHP-DI treats it as request-shared and it would cache
- * a Connection built from stale/default Config::dbHost() etc. if resolved
- * before InstallWizard::boot()'s own Config::override('db_host', ...)
- * calls (from the submitted install form) have run.
+ * boot() itself stays deliberately minimal (container boot only, no
+ * service resolution) and must run before any real credentials are known
+ * -- InstallWizard's own former UserService duplicate-construction-chain
+ * violation was fixed with a plain private DRY-extraction helper instead
+ * (matching RequestBootstrap::activityService()'s own precedent), not a
+ * container lookup, for exactly this reason: a container-resolved
+ * UserService would unsafely cache a Connection built from stale/default
+ * Config::dbHost() etc. if resolved before InstallWizard::boot()'s own
+ * Config::override('db_host', ...) calls (from the submitted install
+ * form) have run.
  *
- * This class exists now anyway, ahead of any real caller needing
- * Kernel::container(), because the whole point of booting early is to
- * make the container reliably available by the time later work (Legacy
- * Coupling Retirement Phase 8, 8d) retargets UpgradeRunner.php/
- * UpgradeService.php/Admin/themes.php/plugins.php/updates.php/
- * Cache/UserCacheInvalidator.php/Image/ImageService.php/
- * Page/NoPhotoYetRenderer.php/Template/Template.php/Image/ImageStdParams.php/
- * Core/UniqueExecLock.php onto ConfigService -- those retargets need a
- * booted container, not a newly-booted one at the point each finally
- * needs it.
+ * activateConfigService() (Legacy Coupling Retirement Phase 8, 8d) is the
+ * install/upgrade-path counterpart to CommonBootstrap::run()'s/
+ * CliBootstrap::buildApplication()'s own CurrentConfigService::set() call
+ * -- called separately, and later, than boot() for the identical reason:
+ * it must run after real DB credentials are seeded (install.php: after
+ * InstallWizard::boot(); upgrade.php/upgrade_feed.php: after their own
+ * db_host/db_user/db_password/db_base Config::override() seeding), or the
+ * ConfigService/Connection resolved and cached here would carry stale
+ * ones for the rest of the request. Once called, every Tier-2 class
+ * reachable from either path (UpgradeRunner.php/UpgradeService.php/
+ * Admin/themes.php/plugins.php/updates.php/Cache/UserCacheInvalidator.php/
+ * Image/ImageService.php/Page/NoPhotoYetRenderer.php/Template/Template.php/
+ * Image/ImageStdParams.php/Core/UniqueExecLock.php) can safely call
+ * CurrentConfigService::get() the same way they already do when reached
+ * from the HTTP path (RequestBootstrap::connect() activates it there).
  */
 final class InstallBootstrap
 {
@@ -47,5 +52,14 @@ final class InstallBootstrap
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot($paths);
+    }
+
+    public static function activateConfigService(): void
+    {
+        $configService = Kernel::container()->get(ConfigService::class);
+        if (! $configService instanceof ConfigService) {
+            throw new \LogicException('Container returned an unexpected type for ' . ConfigService::class);
+        }
+        CurrentConfigService::set($configService);
     }
 }

@@ -23,12 +23,13 @@ namespace Piwigo\Image;
  * Calendar/Admin/Controller -- none below L2a, so no deptrac layering
  * concern, unlike finding 8's cases).
  *
- * Legacy Coupling Retirement Phase 5: its write methods (save()/
+ * Legacy Coupling Retirement Phase 8, 8d: its write methods (save()/
  * save_disabled()/restore_default()/set_and_save()/
- * set_and_save_disabled()) stay on ConfigDb (Tier 3), not ConfigService --
- * Admin\Install\DbPatch\Patch177.php and Patch123.php call
+ * set_and_save_disabled()) go through CurrentConfigService::get()
+ * (Tier 2) -- Admin\Install\DbPatch\Patch177.php and Patch123.php call
  * set_and_save_disabled()/set_and_save() directly, applied by
- * Admin\Install\UpgradeRunner pre-container.
+ * Admin\Install\UpgradeRunner, covered by
+ * InstallBootstrap::activateConfigService() on the upgrade path.
  */
 final class ImageStdParams
 {
@@ -292,13 +293,20 @@ final class ImageStdParams
      */
     public static function save(bool $save_disabled = true): void
     {
-        $ser = serialize([
+        // Legacy Coupling Retirement Phase 8, 8d: pass the raw array, not a
+        // manually serialize()'d + addslashes()'d string -- ConfigService::
+        // confUpdateParam()'s own encode() already serializes array values
+        // (same serialize() call, same input, identical stored string) and
+        // never needs addslashes() (Doctrine parameterizes values safely;
+        // that escaping was only ever needed for ConfigDb's raw SQL
+        // concatenation -- passing an already-escaped string through here
+        // would have baked stray backslashes into the stored data).
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('derivatives', [
             'd' => self::$type_map,
             'q' => self::$quality,
             'w' => self::$watermark,
             'c' => self::$custom,
         ]);
-        \Piwigo\Config\ConfigDb::confUpdateParam('derivatives', addslashes($ser));
 
         if ($save_disabled) {
             self::save_disabled();
@@ -311,10 +319,9 @@ final class ImageStdParams
     public static function save_disabled(): void
     {
         if (count(self::$disabled_type_map) > 0) {
-            $disabled = addslashes(serialize(self::$disabled_type_map));
-            \Piwigo\Config\ConfigDb::confUpdateParam('disabled_derivatives', $disabled);
+            \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('disabled_derivatives', self::$disabled_type_map);
         } else {
-            \Piwigo\Config\ConfigDb::confDeleteParam('disabled_derivatives');
+            \Piwigo\Config\CurrentConfigService::get()->confDeleteParam('disabled_derivatives');
         }
     }
 

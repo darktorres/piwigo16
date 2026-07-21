@@ -67,6 +67,20 @@ use Piwigo\Users\CurrentUser;
  * container so a constructor-injected ConfigService is impossible) read
  * lazily via CurrentConfigService::get() when they need to persist a
  * config write. See CurrentConfigService's own docblock.
+ *
+ * Legacy Coupling Retirement Phase 8, 8d: RequestBootstrap::configure()
+ * now calls Kernel::boot() as its own first statement (Phase 8a), and
+ * RequestBootstrap::connect() (which always runs before this method, via
+ * the common.inc.php seam) now resolves its own ConfigService and calls
+ * CurrentConfigService::set() + loadConfFromDb() already. On the real HTTP
+ * path this method's own resolve-and-load below would just repeat that
+ * exact work -- CurrentConfigService::isSet() lets it reuse the existing
+ * instance instead, so the DB's config table is read once per request,
+ * not twice. The full resolve-and-load path stays for the standalone-
+ * callable contract tests/Unit/Bootstrap/CommonBootstrapTest.php exercises
+ * directly (calling this method with no RequestBootstrap::connect() run
+ * first) and for CLI-adjacent callers that reach this method without ever
+ * having gone through the legacy $GLOBALS bootstrap.
  */
 final class CommonBootstrap
 {
@@ -78,12 +92,16 @@ final class CommonBootstrap
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot($paths);
-        $configService = Kernel::container()->get(ConfigService::class);
-        if (! $configService instanceof ConfigService) {
-            throw new \LogicException('Container returned an unexpected type for ' . ConfigService::class);
+        if (CurrentConfigService::isSet()) {
+            $configService = CurrentConfigService::get();
+        } else {
+            $configService = Kernel::container()->get(ConfigService::class);
+            if (! $configService instanceof ConfigService) {
+                throw new \LogicException('Container returned an unexpected type for ' . ConfigService::class);
+            }
+            CurrentConfigService::set($configService);
+            $configService->loadConfFromDb();
         }
-        CurrentConfigService::set($configService);
-        $configService->loadConfFromDb();
         CurrentUser::attachGlobals();
         PageState::attachGlobals();
         Lang::attachGlobals();

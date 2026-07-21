@@ -116,6 +116,10 @@ if (! (bool) $conf['check_upgrade_feed']) {
 // would fall back to whatever InstallBootstrap::boot() left in place
 // instead of the real prefix.
 \Piwigo\Config\Config::override('db_prefix', $prefixeTable);
+// Legacy Coupling Retirement Phase 8, 8d: must run after the real db_*
+// seeding above, not before -- see InstallBootstrap::activateConfigService()'s
+// own docblock.
+\Piwigo\Bootstrap\InstallBootstrap::activateConfigService();
 
 // Read by UpgradeFeedRunner's ledger SQL (SEC-60 keeps the define() here).
 define('PREFIX_TABLE', $prefixeTable);

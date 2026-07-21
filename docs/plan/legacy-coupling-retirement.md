@@ -2015,6 +2015,72 @@ workstreams:
   dedicated planning pass rather than blocking 0/A/C1/C2/D-partial from
   landing.
 
+## Gap-closure: install/upgrade-flow legacy constants + a real PWG_CHARSET bug. DONE.
+
+Asked what's left among `include_once`/`require_once`/`define()`
+repo-wide, after the round above. First pass (a token-level scan
+matching `tests/Arch/StructuralTest.php`'s own
+`findCallSitesOutsideComments()`, run repo-wide) concluded everything
+remaining was legitimate. **That conclusion was wrong and directly
+corrected**: several "SEC-60 keeps this" justifications were themselves
+stale, claiming a constant "must stay because the frozen
+install/upgrade_X.Y.Z.php scripts read it" — those scripts don't exist
+any more (P23 sub-batch 8g already ported them to real classes; this
+round's own earlier Workstream B already proved their SQL isn't frozen
+either). Re-investigated every real reader (not the stale comments) and
+found `PREFIX_TABLE`/`CURRENT_DATE`/`PHPWG_IN_UPGRADE` were read
+exclusively by real, already-DI-shaped classes
+(`UpgradeRunner`/`UpgradeService`/`UpgradeFeedRunner`/
+`AbstractRangeVersionUpgrade`) that could just call
+`Config::dbPrefix()`/`Tables::*()` directly or take the value as a
+parameter — commit `7a4188751`:
+
+- `PREFIX_TABLE` (~30 sites across `UpgradeRunner::prepare()`'s
+  release-detection chain, `UpgradeService`'s
+  `getTables()`/`deactivateNonStandardPlugins()`/
+  `deactivateNonStandardThemes()`, `UpgradeFeedRunner::run()`) →
+  `Config::dbPrefix()`/`Tables::*()`.
+- `CURRENT_DATE` (`AbstractRangeVersionUpgrade::markPreRangeNotApplied()`)
+  → new `Piwigo\Admin\Install\UpgradeRunDate`, matching `UpgradeCharset`'s
+  own established single-write/multi-read static-holder precedent for
+  the exact same shape.
+- `PHPWG_IN_UPGRADE` — `upgrade.php`'s own `checkUpgradeAccessRights()`
+  result was thrown into a `define()` and immediately re-read via
+  `UpgradeService::checkUpgrade()` a few lines later, then again inside
+  `UpgradeRunner::renderIntro()` — captured into `$isAuthorized` and
+  threaded as a real parameter into `renderIntro(bool $isAuthorized)`;
+  `checkUpgrade()` deleted outright (zero remaining callers).
+- `DEFAULT_PREFIX_TABLE` (a fixed `'piwigo_'` literal) → `InstallWizard::DEFAULT_PREFIX_TABLE`.
+- Found while touching these files anyway: `UpgradeService`/
+  `UpgradeFeedRunner`/`AbstractRangeVersionUpgrade` all had raw
+  string-interpolated DML Workstream B's own grep never reached (not in
+  the `DbPatch`/`VersionUpgrade` directories) — bound-parameterized the
+  same way.
+- `tools/phpstan-bootstrap.php` deleted outright (its entire purpose —
+  stubbing `PREFIX_TABLE`/`CURRENT_DATE` for PHPStan — is gone); removed
+  its registration from `phpstan.neon` and `rector.php`.
+
+**Also found while investigating, a real live bug**: `TagsController.php`'s
+letters-display-mode branch read the bare `PWG_CHARSET` constant with no
+guard — never defined on a normal request. `GET
+/tags.php?display_mode=letters` 500'd (confirmed live,
+`_data/logs/piwigo-*.log` showed `Undefined constant
+"Piwigo\Controller\PWG_CHARSET"`). Every other `PWG_CHARSET` read already
+goes through a `defined()` guard or `CharsetHelper`/`UpgradeCharset`;
+this was the one bypass. Fixed with `CharsetHelper::getPwgCharset()`,
+commit `47c5412d9`.
+
+**And one genuinely dead leftover**: `Controller/Admin/NotificationByMailSubController.php`
+re-`include_once`d `include/common.inc.php` inside `handle()` — the only
+site inside `src/Piwigo/` doing this; its one real caller (`admin.php`)
+already ran that same `include_once` at top level before the DI
+container this controller resolves through even boots, so the second
+call was a guaranteed silent no-op. Deleted, commit `adb9a223a`.
+
+PHPStan baseline: 6025 → 6019 (real reduction — deleted
+`UpgradeService::checkUpgrade()` carried a now-moot `is_bool()`
+suppression), diffed, zero new suppressions. Full gate green throughout.
+
 ## Phase 7 — Unit test coverage expansion
 
 Once Phase 1 makes the ~40-45 domain classes and controller layer

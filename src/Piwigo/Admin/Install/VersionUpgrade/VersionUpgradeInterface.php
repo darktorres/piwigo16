@@ -26,8 +26,8 @@ use Doctrine\DBAL\Connection;
  * guards blocked direct HTTP loads of the script files; class files under
  * src/Piwigo carry no top-level side effects, so the guard's job is moot
  * -- the runner (behind checkUpgradeAccessRights()) is the only caller.
- * apply() bodies are otherwise verbatim ports: raw MysqliDb SQL preserved
- * exactly, and database.inc.php snippets pushed through
+ * apply() bodies are otherwise verbatim ports: database.inc.php snippets
+ * pushed through
  * {@see \Piwigo\Admin\Install\DbPatch\DatabaseConfigChanges} instead of
  * the former runner-scope-local $mysql_changes array. The former
  * `global` declarations carrying the include-scope contract ($conf/
@@ -38,6 +38,19 @@ use Doctrine\DBAL\Connection;
  * {@see \Piwigo\Admin\Install\DbPatch\LegacyFileConf::read()}/
  * {@see \Piwigo\Admin\Install\DbPatch\LegacyDbLayer::value()} (Legacy
  * Coupling Retirement gap-closure, "fix all" pass).
+ *
+ * DML values are no longer raw-interpolated SQL text either: Legacy
+ * Coupling Retirement Workstream B (gap-closure round 2) converted every
+ * INSERT/UPDATE/DELETE/REPLACE's hardcoded or computed value onto a
+ * bound parameter via `Connection::executeStatement()`'s/`fetch*()`'s
+ * own `$params` argument, or {@see \Piwigo\Db\BatchWriter::singleInsert()}/
+ * {@see \Piwigo\Db\BatchWriter::massInsert()} for plain config-table
+ * inserts. DDL and identifier concatenation (table/column names) are
+ * unchanged raw SQL text. See
+ * `docs/plan/legacy-coupling-retirement.md`'s "Gap-closure: repo-wide
+ * legacy sweep round 2" section for the full per-file rationale,
+ * including the two real double-escaping bugs (stray `addslashes()`
+ * calls) it fixed along the way.
  */
 interface VersionUpgradeInterface
 {

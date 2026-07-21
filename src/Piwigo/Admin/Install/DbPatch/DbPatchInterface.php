@@ -21,14 +21,25 @@ use Doctrine\DBAL\Connection;
  * (available - applied) and runs the difference in natcasesort order via
  * {@see DbPatchRegistry}.
  *
- * apply() bodies are verbatim ports of the original scripts (raw
- * MysqliDb SQL preserved exactly, per the standing 8f-2 "no DBAL rewrite
- * in this phase" rule), including their own progress echoes. The former
+ * apply() bodies are otherwise verbatim ports of the original scripts,
+ * including their own progress echoes. The former
  * `global $conf, $prefixeTable;` declarations are gone -- each site reads
  * Tables::/Config::dbPrefix() directly, or, for the handful of keys
  * genuinely only ever set by a site's own local/config/config.inc.php
  * (never mirrored into Config::), LegacyFileConf::read()/LegacyDbLayer::
  * value() (Legacy Coupling Retirement gap-closure, "fix all" pass).
+ *
+ * The earlier "no DBAL rewrite in this phase" rule (8f-2) has since been
+ * superseded: Legacy Coupling Retirement Workstream B (gap-closure round
+ * 2) converted every DML statement's interpolated/hardcoded values onto
+ * bound parameters via `Connection::executeStatement()`'s/`fetch*()`'s
+ * own `$params` argument, or `Piwigo\Db\BatchWriter::singleInsert()`/
+ * `massInsert()` for plain config-table inserts. DDL (CREATE/ALTER/DROP
+ * TABLE) and identifier concatenation (table/column names, which SQL
+ * can't parameterize) are unchanged raw SQL text -- only genuine DML
+ * *values* were touched. See `docs/plan/legacy-coupling-retirement.md`'s
+ * "Gap-closure: repo-wide legacy sweep round 2" section for the full
+ * per-batch rationale.
  */
 interface DbPatchInterface
 {

@@ -112,8 +112,6 @@ final class RequestBootstrap
     {
         Kernel::boot($paths);
 
-        /** @var array<string, mixed> $conf */
-        global $conf;
         /**
          * @var float
          */
@@ -144,15 +142,6 @@ final class RequestBootstrap
         }
 
         Env::loadEnvFile(PHPWG_ROOT_PATH);
-        // Env::applyEnvToConf(array &$conf, string &$prefixeTable)'s
-        // second by-ref param is dead here (Legacy Coupling Retirement
-        // Track A gap-fill batch G5: every real $prefixeTable read was
-        // already the same value as Piwigo\Config\Config::dbPrefix(),
-        // synced independently a few lines below via
-        // ConfigLoader::applyEnvOverrides(), so consumers were retargeted
-        // there directly) -- kept only to satisfy the by-ref signature.
-        $prefixeTable_unused = '';
-        Env::applyEnvToConf($conf, $prefixeTable_unused);
 
         // P23 batch 8f-3: wires the static-setter HtmlRenderingInterface
         // consumers (Piwigo\Core class-level fatal-error/access-denied paths
@@ -212,10 +201,6 @@ final class RequestBootstrap
         /**
          * @var array<string, mixed>
          */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
         global $user;
 
         // P23 sub-batch 8g-6: the dynamic include of include/dblayer/
@@ -269,11 +254,6 @@ final class RequestBootstrap
             new HtmlService()
                 ->fatalError(Lang::t($e->getMessage()));
         }
-
-        // in Piwigo 15, configuration setting webmaster_id is moved from config files
-        // to database. It may be undefined at some point, with Piwigo 15+ scripts and
-        // a Piwigo 14 database schema not upgraded yet. Let's avoid any problem.
-        $conf['webmaster_id'] ??= 1;
 
         \Piwigo\Config\ConfigDb::loadConfFromDb(conn: $conn);
 
@@ -337,12 +317,10 @@ final class RequestBootstrap
         // the untyped bag like ConfigService::confGetParam() does for keys
         // without a compatible accessor.
         if (\Piwigo\Config\Config::has('order_by_custom')) {
-            $conf['order_by'] = \Piwigo\Config\Config::all()['order_by_custom'] ?? null;
-            \Piwigo\Config\Config::override('order_by', $conf['order_by']);
+            \Piwigo\Config\Config::override('order_by', \Piwigo\Config\Config::all()['order_by_custom'] ?? null);
         }
         if (\Piwigo\Config\Config::has('order_by_inside_category_custom')) {
-            $conf['order_by_inside_category'] = \Piwigo\Config\Config::all()['order_by_inside_category_custom'] ?? null;
-            \Piwigo\Config\Config::override('order_by_inside_category', $conf['order_by_inside_category']);
+            \Piwigo\Config\Config::override('order_by_inside_category', \Piwigo\Config\Config::all()['order_by_inside_category_custom'] ?? null);
         }
 
         if (\Piwigo\Core\LoungeMaintenance::needsEmptying()) {
@@ -409,10 +387,6 @@ final class RequestBootstrap
      */
     public static function finalize(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         /**
          * @var array<string, mixed>
          */

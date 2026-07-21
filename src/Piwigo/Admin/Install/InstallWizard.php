@@ -350,9 +350,6 @@ final class InstallWizard
      */
     public function performInstall(): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         // Only called by the entry shell after hasErrors() is false, which
         // means analyzeForm() -> InstallService::installDbConnect() already
         // built this successfully.
@@ -570,10 +567,6 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
         /**
          * @var array<string, mixed>
          */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
         global $user;
 
         $template = $this->template;
@@ -635,22 +628,12 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             // session_save_handler === 'db' guard)
             session_set_save_handler(new PwgSession());
             if (function_exists('ini_set')) {
-                $session_use_cookies = $conf['session_use_cookies'];
-                $session_use_cookies = is_scalar($session_use_cookies) ? $session_use_cookies : null;
-                ini_set('session.use_cookies', $session_use_cookies);
-
-                $session_use_only_cookies = $conf['session_use_only_cookies'];
-                $session_use_only_cookies = is_scalar($session_use_only_cookies) ? $session_use_only_cookies : null;
-                ini_set('session.use_only_cookies', $session_use_only_cookies);
-
-                $session_use_trans_sid = $conf['session_use_trans_sid'];
-                $session_use_trans_sid = is_scalar($session_use_trans_sid) ? $session_use_trans_sid : 0;
-                ini_set('session.use_trans_sid', intval($session_use_trans_sid));
+                ini_set('session.use_cookies', Config::sessionUseCookies());
+                ini_set('session.use_only_cookies', Config::sessionUseOnlyCookies());
+                ini_set('session.use_trans_sid', (int) Config::sessionUseTransSid());
                 ini_set('session.cookie_httponly', 1);
             }
-            $session_name = $conf['session_name'];
-            $session_name = is_string($session_name) ? $session_name : null;
-            session_name($session_name);
+            session_name(Config::sessionName());
             session_set_cookie_params(0, new CookieService()->cookiePath());
             register_shutdown_function(session_write_close(...));
 

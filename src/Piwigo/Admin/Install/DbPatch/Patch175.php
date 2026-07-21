@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 
 /**
  * Former install/db/175-database.php (P23 sub-batch 8g-3).
@@ -35,7 +34,7 @@ final class Patch175 implements DbPatchInterface
     public function apply(Connection $conn): void
     {
         // Force use of standard pages on update
-        ConfigDb::confUpdateParam('use_standard_pages', true, conn: $conn);
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('use_standard_pages', true);
 
         echo "\n" . $this->description() . "\n";
     }

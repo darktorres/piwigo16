@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 use Piwigo\Db\Tables;
 
 /**
@@ -43,7 +42,7 @@ final class Patch165 implements DbPatchInterface
             $new_value = 'none';
         }
 
-        ConfigDb::confUpdateParam('email_admin_on_new_user', $new_value, conn: $conn);
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('email_admin_on_new_user', $new_value);
 
         echo "\n"
         . $this->description()

@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 
 /**
  * Former install/db/170-database.php (P23 sub-batch 8g-3).
@@ -36,7 +35,7 @@ final class Patch170 implements DbPatchInterface
     {
         // we set it to false in this upgrade script, as opposed to the default value
         // for a new installation, because it was the default behavior before Piwigo 14
-        ConfigDb::confUpdateParam('upload_detect_duplicate', false, conn: $conn);
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('upload_detect_duplicate', false);
 
         echo "\n" . $this->description() . "\n";
     }

@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 
 /**
  * Former install/db/131-database.php (P23 sub-batch 8g-2).
@@ -34,7 +33,7 @@ final class Patch131 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('nb_categories_page', '50', conn: $conn);
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('nb_categories_page', '50');
 
         echo "\n" . $this->description() . "\n";
     }

@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 use Piwigo\Core\ArrayHelper;
 use Piwigo\Image\ImageStdParams;
 
@@ -41,7 +40,7 @@ final class Patch177 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::loadConfFromDb(conn: $conn);
+        \Piwigo\Config\CurrentConfigService::get()->loadConfFromDb();
 
         // get default sizes from derivative_std_params
         $default_sizes = ImageStdParams::get_default_sizes();

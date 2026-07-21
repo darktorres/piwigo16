@@ -117,10 +117,8 @@ define('PREFIX_TABLE', $prefixeTable);
 
 // P23 sub-batch 8f-5: the former include/functions_session.inc.php include
 // became Piwigo\Bootstrap\SessionBootstrap::register() (same body, same
-// guards). Piwigo\Config\ConfigDb (the former conf_* free functions) keeps
-// its fatal-error renderer wired for this non-common.inc.php entry path.
+// guards).
 \Piwigo\Bootstrap\SessionBootstrap::register();
-\Piwigo\Config\ConfigDb::setHtmlRenderer(new \Piwigo\Html\HtmlService());
 // Pre-existing gap, found live while verifying Legacy Coupling Retirement
 // Phase 8, 8b (renderIntro() below reaches upgrade.tpl's unconditional
 // {get_combined_scripts load='footer'} -- unrelated to 8a/8b themselves,

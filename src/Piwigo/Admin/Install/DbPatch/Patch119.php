@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 use Piwigo\Image\DerivativeCacheService;
 
 /**
@@ -49,7 +48,7 @@ final class Patch119 implements DbPatchInterface
             unlink($derivative_conf_file);
         }
 
-        ConfigDb::confUpdateParam('derivatives', '', conn: $conn);
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('derivatives', '');
 
         echo "\n"
         . $this->description()

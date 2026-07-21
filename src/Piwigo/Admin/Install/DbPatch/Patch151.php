@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 
 /**
  * Former install/db/151-database.php (P23 sub-batch 8g-3).
@@ -34,8 +33,9 @@ final class Patch151 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('index_sizes_icon', 'true', conn: $conn);
-        ConfigDb::confUpdateParam('picture_sizes_icon', 'true', conn: $conn);
+        $configService = \Piwigo\Config\CurrentConfigService::get();
+        $configService->confUpdateParam('index_sizes_icon', 'true');
+        $configService->confUpdateParam('picture_sizes_icon', 'true');
 
         echo "\n" . $this->description() . "\n";
     }

@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 
@@ -20,9 +19,14 @@ use Piwigo\Db\Tables;
  * Former install/upgrade_1.6.2.php (P23 sub-batch 8g-4): upgrade from
  * 1.6.2 to 1.7.0-era schema, then chain to UpgradeFrom_1_7_0. The bare
  * load_conf_from_db()/boolean_to_string() calls became
- * ConfigDb::loadConfFromDb()/MysqliDb::booleanToString(); the commented-out
- * ws_access CREATE (dropped upstream before the Butterfly release) is
- * preserved as history.
+ * ConfigDb::loadConfFromDb()/MysqliDb::booleanToString(), later retargeted
+ * onto CurrentConfigService::get() (Legacy Coupling Retirement Phase 8,
+ * 8d) -- ConfigService::loadConfFromDb() never dual-writes $conf, so the
+ * bulk of DB-persisted keys this step reads straight afterward are
+ * captured once via Config::all() into a local $dbconf instead, same
+ * shape as the dbconf capture already used by Patch123/Patch125. The
+ * commented-out ws_access CREATE (dropped upstream before the Butterfly
+ * release) is preserved as history.
  */
 final class UpgradeFrom_1_6_2 implements VersionUpgradeInterface
 {
@@ -35,10 +39,6 @@ final class UpgradeFrom_1_6_2 implements VersionUpgradeInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         /**
          * @var string
          */
@@ -304,31 +304,32 @@ UPDATE ' . $prefixeTable . 'comments
             $conn->executeStatement($query);
         }
 
-        ConfigDb::loadConfFromDb(conn: $conn);
+        \Piwigo\Config\CurrentConfigService::get()->loadConfFromDb();
+        $dbconf = \Piwigo\Config\Config::all();
 
         $query = '
 UPDATE ' . Tables::userInfos() . "
 SET
-  template = '" . $conf['default_template'] . "',
-  nb_image_line = " . $conf['nb_image_line'] . ',
-  nb_line_page = ' . $conf['nb_line_page'] . ",
-  language = '" . $conf['default_language'] . "',
+  template = '" . $dbconf['default_template'] . "',
+  nb_image_line = " . $dbconf['nb_image_line'] . ',
+  nb_line_page = ' . $dbconf['nb_line_page'] . ",
+  language = '" . $dbconf['default_language'] . "',
   maxwidth = " .
-          (empty($conf['default_maxwidth']) ? 'NULL' : $conf['default_maxwidth']) .
+          (empty($dbconf['default_maxwidth']) ? 'NULL' : $dbconf['default_maxwidth']) .
           ',
   maxheight = ' .
-          (empty($conf['default_maxheight']) ? 'NULL' : $conf['default_maxheight']) .
+          (empty($dbconf['default_maxheight']) ? 'NULL' : $dbconf['default_maxheight']) .
           ',
-  recent_period = ' . $conf['recent_period'] . ",
-  expand = '" . SqlDialect::booleanToString($conf['auto_expand']) . "',
-  show_nb_comments = '" . SqlDialect::booleanToString($conf['show_nb_comments']) . "',
-  show_nb_hits = '" . SqlDialect::booleanToString($conf['show_nb_hits']) . "',
+  recent_period = ' . $dbconf['recent_period'] . ",
+  expand = '" . SqlDialect::booleanToString($dbconf['auto_expand']) . "',
+  show_nb_comments = '" . SqlDialect::booleanToString($dbconf['show_nb_comments']) . "',
+  show_nb_hits = '" . SqlDialect::booleanToString($dbconf['show_nb_hits']) . "',
   enabled_high = '" . SqlDialect::booleanToString(
-              ($conf['newuser_default_enabled_high'] ?? true)
+              ($dbconf['newuser_default_enabled_high'] ?? true)
           ) .
           "'
 WHERE
-  user_id = " . $conf['default_user_id'] . ';';
+  user_id = " . $dbconf['default_user_id'] . ';';
         $conn->executeStatement($query);
 
         $query = '

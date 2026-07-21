@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 
 /**
  * Former install/db/113-database.php (P23 sub-batch 8g-2).
@@ -34,10 +33,11 @@ final class Patch113 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('original_resize', 'false', conn: $conn);
-        ConfigDb::confUpdateParam('original_resize_maxwidth', 2016, conn: $conn);
-        ConfigDb::confUpdateParam('original_resize_maxheight', 2016, conn: $conn);
-        ConfigDb::confUpdateParam('original_resize_quality', 95, conn: $conn);
+        $configService = \Piwigo\Config\CurrentConfigService::get();
+        $configService->confUpdateParam('original_resize', 'false');
+        $configService->confUpdateParam('original_resize_maxwidth', 2016);
+        $configService->confUpdateParam('original_resize_maxheight', 2016);
+        $configService->confUpdateParam('original_resize_quality', 95);
 
         echo "\n"
         . $this->description()

@@ -167,7 +167,6 @@ final class RequestBootstrap
         \Piwigo\Image\SrcImage::setUrlService(new UrlService(new HtmlService()));
         \Piwigo\Image\DerivativeImage::setUrlService(new UrlService(new HtmlService()));
         \Piwigo\Template\ScriptLoader::setUrlService(new UrlService(new HtmlService()));
-        \Piwigo\Config\ConfigDb::setHtmlRenderer(new HtmlService());
 
         // Piwigo\Db\Tables::*()/other Piwigo\Config\Config::* accessors used
         // further down in this bootstrap's own body (not just by code that

@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
@@ -20,7 +19,15 @@ use Piwigo\Db\Tables;
 /**
  * Former install/db/104-database.php (P23 sub-batch 8g-2). The bare
  * load_conf_from_db()/boolean_to_string() calls became
- * ConfigDb::loadConfFromDb(conn: $conn)/MysqliDb::booleanToString().
+ * ConfigDb::loadConfFromDb(conn: $conn)/MysqliDb::booleanToString(),
+ * later retargeted onto CurrentConfigService::get() (Legacy Coupling
+ * Retirement Phase 8, 8d). The "is this param already in the config
+ * table" check moved off `isset($conf[$param_name])` onto a direct row
+ * fetch: Config::$data is pre-populated with every SCHEMA default at
+ * boot, so Config::has() can't tell "no DB row" from "SCHEMA default,
+ * no DB row" the way the old bare-$conf dual-write could -- this patch's
+ * whole point is inserting a DB row for params an old install never got,
+ * so the row's real existence is what has to be tested.
  */
 final class Patch104 implements DbPatchInterface
 {
@@ -39,10 +46,9 @@ final class Patch104 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
+        \Piwigo\Config\CurrentConfigService::get()->loadConfFromDb();
 
-        ConfigDb::loadConfFromDb(conn: $conn);
+        $existingParams = $conn->fetchFirstColumn('SELECT param FROM ' . Tables::config() . ';');
 
         $upload_form_config = [
             'websize_resize' => true,
@@ -66,9 +72,7 @@ final class Patch104 implements DbPatchInterface
         foreach ($upload_form_config as $param_shortname => $param) {
             $param_name = 'upload_form_' . $param_shortname;
 
-            if (! isset($conf[$param_name])) {
-                $conf[$param_name] = $param;
-
+            if (! in_array($param_name, $existingParams, true)) {
                 array_push(
                     $inserts,
                     [

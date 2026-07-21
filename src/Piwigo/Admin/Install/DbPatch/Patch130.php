@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 use Piwigo\Db\Tables;
 
 /**
@@ -38,8 +37,9 @@ final class Patch130 implements DbPatchInterface
         $query = 'ALTER TABLE `' . Tables::comments() . '` ADD `email` varchar(255) default NULL;';
         $conn->executeStatement($query);
 
-        ConfigDb::confUpdateParam('comments_author_mandatory', 'false', conn: $conn);
-        ConfigDb::confUpdateParam('comments_email_mandatory', 'false', conn: $conn);
+        $configService = \Piwigo\Config\CurrentConfigService::get();
+        $configService->confUpdateParam('comments_author_mandatory', 'false');
+        $configService->confUpdateParam('comments_email_mandatory', 'false');
 
         echo "\n" . $this->description() . "\n";
     }

@@ -12,17 +12,19 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Db\Tables;
 
 /**
- * Former install/db/94-database.php (P23 sub-batch 8g-1). The
- * $conf_orig swap operates on the true global (declared below), and the
- * bare load_conf_from_db() call became ConfigDb::loadConfFromDb(conn: $conn) --
- * identical semantics, both mutate global $conf. The long-dropped
- * 'waiting' table has no Tables:: accessor; its name is built from
- * $prefixeTable exactly as the original's PREFIX_TABLE concatenation did.
+ * Former install/db/94-database.php (P23 sub-batch 8g-1). $conf stays
+ * global for data_location (still genuinely file-config-sourced -- see
+ * InstallWizard's own constructor docblock: Config::dataLocation() doesn't
+ * see local/config/config.inc.php overrides on this path). The former
+ * $conf_orig capture-then-restore around load_conf_from_db() (Legacy
+ * Coupling Retirement Phase 8, 8d) is gone: ConfigService::loadConfFromDb()
+ * never touches $conf at all (writes Config::$data only), so there is
+ * nothing left to restore -- upload_user_access is read straight off
+ * Config:: right after the load instead.
  */
 final class Patch94 implements DbPatchInterface
 {
@@ -53,10 +55,9 @@ final class Patch94 implements DbPatchInterface
         $user_upload_conf = [];
 
         // upload_user_access
-        $conf_orig = $conf;
-        ConfigDb::loadConfFromDb(conn: $conn);
-        $user_upload_conf['upload_user_access'] = $conf['upload_user_access'];
-        $conf = $conf_orig;
+        $configService = \Piwigo\Config\CurrentConfigService::get();
+        $configService->loadConfFromDb();
+        $user_upload_conf['upload_user_access'] = $configService->confGetParam('upload_user_access');
 
         // unvalidated photos submitted by users
         $query = '

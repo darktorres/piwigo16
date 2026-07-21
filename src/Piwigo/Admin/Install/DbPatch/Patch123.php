@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeParams;
@@ -43,14 +42,15 @@ final class Patch123 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
+        $configService = \Piwigo\Config\CurrentConfigService::get();
+        $configService->loadConfFromDb();
+        $dbconf = \Piwigo\Config\Config::all();
 
-        $dbconf = [];
-        $conf_orig = $conf;
-        ConfigDb::loadConfFromDb(conn: $conn);
-        $dbconf = $conf;
-        $conf = $conf_orig;
+        // Config::all() is array<string, mixed> -- DB-loaded config values
+        // are always array|scalar|null in practice (ConfigService::decodeScalar()),
+        // this just makes that fact visible to confUpdateParam()'s stricter,
+        // typed $value parameter.
+        $asConfigValue = static fn (mixed $v): array|bool|float|int|string|null => is_array($v) || is_scalar($v) || $v === null ? $v : null;
 
         //
         // Piwigo 2.3 "HD resize" settings become "original resize" settings in Piwigo 2.4
@@ -58,30 +58,28 @@ final class Patch123 implements DbPatchInterface
 
         if ($dbconf['upload_form_hd_keep']) {
             if ($dbconf['upload_form_hd_resize']) {
-                ConfigDb::confUpdateParam('original_resize', 'true', conn: $conn);
-                ConfigDb::confUpdateParam('original_resize_maxwidth', $dbconf['upload_form_hd_maxwidth'], conn: $conn);
-                ConfigDb::confUpdateParam('original_resize_maxheight', $dbconf['upload_form_hd_maxheight'], conn: $conn);
-                ConfigDb::confUpdateParam('original_resize_quality', $dbconf['upload_form_hd_quality'], conn: $conn);
+                $configService->confUpdateParam('original_resize', 'true');
+                $configService->confUpdateParam('original_resize_maxwidth', $asConfigValue($dbconf['upload_form_hd_maxwidth']));
+                $configService->confUpdateParam('original_resize_maxheight', $asConfigValue($dbconf['upload_form_hd_maxheight']));
+                $configService->confUpdateParam('original_resize_quality', $asConfigValue($dbconf['upload_form_hd_quality']));
             }
         } else {
             // The user has decided to remove the high quality. In Piwigo 2.4, this
             // setting does not exists anymore, but we can simulate it by an original
             // resize with 2.3 websize dimensions
-            ConfigDb::confUpdateParam('original_resize', 'true', conn: $conn);
+            $configService->confUpdateParam('original_resize', 'true');
 
-            ConfigDb::confUpdateParam(
+            $configService->confUpdateParam(
                 'original_resize_maxwidth',
-                is_numeric($dbconf['upload_form_websize_maxwidth']) ? $dbconf['upload_form_websize_maxwidth'] : 800,
-                conn: $conn
+                is_numeric($dbconf['upload_form_websize_maxwidth']) ? $dbconf['upload_form_websize_maxwidth'] : 800
             );
 
-            ConfigDb::confUpdateParam(
+            $configService->confUpdateParam(
                 'original_resize_maxheight',
-                is_numeric($dbconf['upload_form_websize_maxheight']) ? $dbconf['upload_form_websize_maxheight'] : 600,
-                conn: $conn
+                is_numeric($dbconf['upload_form_websize_maxheight']) ? $dbconf['upload_form_websize_maxheight'] : 600
             );
 
-            ConfigDb::confUpdateParam('original_resize_quality', $dbconf['upload_form_hd_quality'], conn: $conn);
+            $configService->confUpdateParam('original_resize_quality', $asConfigValue($dbconf['upload_form_hd_quality']));
         }
 
         $types = ImageStdParams::get_default_sizes();

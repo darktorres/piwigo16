@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 
 /**
  * Former install/db/115-database.php (P23 sub-batch 8g-2).
@@ -34,7 +33,7 @@ final class Patch115 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('comments_order', 'ASC', conn: $conn);
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('comments_order', 'ASC');
 
         echo "\n"
         . $this->description()

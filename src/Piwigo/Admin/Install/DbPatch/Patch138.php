@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 
 /**
  * Former install/db/138-database.php (P23 sub-batch 8g-2).
@@ -34,7 +33,7 @@ final class Patch138 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('mail_theme', 'clear', conn: $conn);
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('mail_theme', 'clear');
 
         echo "\n" . $this->description() . "\n";
     }

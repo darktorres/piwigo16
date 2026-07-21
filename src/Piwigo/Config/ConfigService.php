@@ -6,20 +6,23 @@ namespace Piwigo\Config;
 
 /**
  * The DI/Doctrine-backed config persistence layer -- the real writer
- * behind Piwigo\Config\Config:: (Legacy Coupling Retirement Phase 5).
- * Three-part split, each part with a real reason to exist:
- * Piwigo\Config\Config:: is the static typed read layer (SCHEMA-driven
- * accessors) and in-memory-only write via Config::override();
- * Piwigo\Config\ConfigService (this class) is the DI/Doctrine-backed
- * persistence layer, constructor-injected into every real caller that
- * can reach the container; Piwigo\Config\ConfigDb is the static
- * DBAL-direct persistence layer for the callers that structurally
- * cannot -- pre-container bootstrap/install/upgrade code and the frozen
- * DbPatch/VersionUpgrade set. Not a "deferred to P14" gap: P14 (DB layer
- * + Doctrine ORM) has been done for a long time, and this class's write
- * methods already route through a real Doctrine entity
- * (ConfigEntry/ConfigRepository, mapping the `config` table), matching
- * every other domain's repository pattern in this codebase.
+ * behind Piwigo\Config\Config:: (Legacy Coupling Retirement Phase 5,
+ * narrowed to a two-part split in Phase 8, 8d). Piwigo\Config\Config:: is
+ * the static typed read layer (SCHEMA-driven accessors) and in-memory-only
+ * write via Config::override(); Piwigo\Config\ConfigService (this class)
+ * is the DI/Doctrine-backed persistence layer for every real writer --
+ * constructor-injected where a class can be container-built, or reached
+ * via Piwigo\Config\CurrentConfigService::get() otherwise (static
+ * utilities, throwaway-constructed classes, and every pre-container
+ * bootstrap/install/upgrade call site, including the frozen
+ * DbPatch/VersionUpgrade set: Kernel::boot() now runs early enough on
+ * every real entry path that a container-free writer is never actually
+ * needed, so the former third leg, Piwigo\Config\ConfigDb, is gone). Not
+ * a "deferred to P14" gap: P14 (DB layer + Doctrine ORM) has been done
+ * for a long time, and this class's write methods already route through
+ * a real Doctrine entity (ConfigEntry/ConfigRepository, mapping the
+ * `config` table), matching every other domain's repository pattern in
+ * this codebase.
  *
  * loadConfFromDb()/confUpdateParam() faithfully replicate the CURRENT
  * legacy encoding (include/functions.inc.php's load_conf_from_db()/

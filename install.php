@@ -84,11 +84,8 @@ global $conf;
 // P23 sub-batch 8f-5: the former include/functions_session.inc.php include
 // became Piwigo\Bootstrap\SessionBootstrap::register() (same internal
 // PHPWG_INSTALLED guard, so it stays the no-op it always was at this point
-// of a fresh install). Piwigo\Config\ConfigDb (the former conf_* free
-// functions) keeps its fatal-error renderer wired for this
-// non-common.inc.php entry path.
+// of a fresh install).
 \Piwigo\Bootstrap\SessionBootstrap::register();
-\Piwigo\Config\ConfigDb::setHtmlRenderer(new \Piwigo\Html\HtmlService());
 // Pre-existing gap, found live while verifying Legacy Coupling Retirement
 // Phase 8, 8b (this file's own render() call always reaches install.tpl's
 // unconditional {get_combined_scripts load='footer'} -- unrelated to 8a/8b

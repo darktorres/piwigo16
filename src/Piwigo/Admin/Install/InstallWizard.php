@@ -52,10 +52,11 @@ use Piwigo\Users\UserService;
  *
  * Legacy Coupling Retirement Phase 8, 8b: install.php now calls
  * InstallBootstrap::boot($paths) before this wizard is even constructed,
- * so the DI container is available throughout. Every ConfigDb:: call here
- * (Tier 3) still stays on ConfigDb rather than ConfigService for now,
- * though -- 8b only boots the container, it doesn't yet retarget these
- * calls (Legacy Coupling Retirement Phase 8, 8d).
+ * so the DI container is available throughout. Phase 8, 8d retargeted
+ * every ConfigDb:: call here onto CurrentConfigService::get() -- safe
+ * by the time performInstall() reaches them, since boot() already calls
+ * InstallBootstrap::activateConfigService() and the config table exists
+ * (piwigo_structure-mysql.sql/config.sql ran immediately above).
  */
 final class InstallWizard
 {
@@ -488,20 +489,20 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
    \'a secret key specific to the gallery for internal use\');';
         $conn->executeStatement($query);
 
-        \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION), conn: $conn);
-        \Piwigo\Config\ConfigDb::confUpdateParam('gallery_title', Lang::t('Just another Piwigo gallery'), conn: $conn);
+        $configService = \Piwigo\Config\CurrentConfigService::get();
+        $configService->confUpdateParam('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION));
+        $configService->confUpdateParam('gallery_title', Lang::t('Just another Piwigo gallery'));
 
-        \Piwigo\Config\ConfigDb::confUpdateParam(
+        $configService->confUpdateParam(
             'page_banner',
-            '<h1>%gallery_title%</h1>' . "\n\n<p>" . Lang::t('Welcome to my photo gallery') . '</p>',
-            conn: $conn
+            '<h1>%gallery_title%</h1>' . "\n\n<p>" . Lang::t('Welcome to my photo gallery') . '</p>'
         );
 
         // fill languages table, only activate the current language
         $this->languages->perform_action('activate', $this->language);
 
-        // fill $conf global array
-        \Piwigo\Config\ConfigDb::loadConfFromDb(conn: $conn);
+        // fill Config::$data from the freshly-seeded config table
+        $configService->loadConfFromDb();
 
         // PWG_CHARSET (required for building the fs_themes array in the
         // themes class) is guaranteed defined here: the entry shell

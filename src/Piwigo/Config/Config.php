@@ -20,15 +20,19 @@ namespace Piwigo\Config;
  *
  * self::$data is the single source of truth. ConfigLoader populates it at
  * boot (defaults + env overrides); callers mutate it via Config::override().
- * DB-backed persistence is a three-part split, each part with a real
- * reason to exist (Legacy Coupling Retirement Phase 5): this class is the
- * static typed read layer (and in-memory-only write via override());
- * Piwigo\Config\ConfigService is the DI/Doctrine-backed persistence layer
- * for real callers that can reach the container; Piwigo\Config\ConfigDb
- * is the static DBAL-direct persistence layer for the callers that
- * structurally cannot (pre-container bootstrap/install/upgrade code, the
- * frozen DbPatch/VersionUpgrade set) — see ConfigService.php's own
- * docblock.
+ * DB-backed persistence is a two-part split (Legacy Coupling Retirement
+ * Phase 5, narrowed to two parts in Phase 8, 8d): this class is the static
+ * typed read layer (and in-memory-only write via override());
+ * Piwigo\Config\ConfigService is the DI/Doctrine-backed persistence layer,
+ * constructor-injected where possible and reached via
+ * Piwigo\Config\CurrentConfigService::get() everywhere else, including
+ * every pre-container bootstrap/install/upgrade call site and the frozen
+ * DbPatch/VersionUpgrade set — see ConfigService.php's own docblock. The
+ * former third leg, Piwigo\Config\ConfigDb (a static DBAL-direct layer for
+ * callers that couldn't yet reach the container), is gone: Kernel::boot()
+ * now runs early enough on every real path (install.php/upgrade.php/
+ * upgrade_feed.php's own InstallBootstrap::boot() calls included) that
+ * nothing genuinely needs a container-free config writer any more.
  */
 final class Config
 {

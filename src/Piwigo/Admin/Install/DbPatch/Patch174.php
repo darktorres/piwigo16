@@ -12,12 +12,14 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 
 /**
  * Former install/db/174-database.php (P23 sub-batch 8g-3). The third
  * argument (updateGlobal=true) is original -- the fresh secret_key must
- * be visible in $conf for the remainder of the upgrade request.
+ * stay visible via Config:: for the remainder of the upgrade request
+ * (Legacy Coupling Retirement Phase 8, 8d: ConfigService::confUpdateParam()'s
+ * own $updateGlobal branch calls Config::override(), the same sync target
+ * ConfigDb::confUpdateParam()'s dual-write used).
  */
 final class Patch174 implements DbPatchInterface
 {
@@ -36,7 +38,7 @@ final class Patch174 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('secret_key', sha1(random_bytes(1000)), true, conn: $conn);
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('secret_key', sha1(random_bytes(1000)), true);
 
         echo "\n" . $this->description() . "\n";
     }

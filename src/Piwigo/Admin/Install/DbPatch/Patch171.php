@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 
 /**
  * Former install/db/171-database.php (P23 sub-batch 8g-3).
@@ -39,7 +38,8 @@ final class Patch171 implements DbPatchInterface
 
         // If the webmaster_id has been modified, it must be present in local/config/config.inc.php
         // so we retrieve it and insert it into the database.
-        ConfigDb::confUpdateParam('webmaster_id', $conf['webmaster_id'] ?? 1, conn: $conn);
+        $webmasterId = $conf['webmaster_id'] ?? 1;
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('webmaster_id', is_scalar($webmasterId) ? $webmasterId : 1);
 
         echo "\n" . $this->description() . "\n";
     }

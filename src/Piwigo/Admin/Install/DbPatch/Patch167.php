@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 
 /**
  * Former install/db/167-database.php (P23 sub-batch 8g-3).
@@ -34,8 +33,9 @@ final class Patch167 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('index_search_in_set_button', true, conn: $conn);
-        ConfigDb::confUpdateParam('index_search_in_set_action', true, conn: $conn);
+        $configService = \Piwigo\Config\CurrentConfigService::get();
+        $configService->confUpdateParam('index_search_in_set_button', true);
+        $configService->confUpdateParam('index_search_in_set_action', true);
 
         echo "\n" . $this->description() . "\n";
     }

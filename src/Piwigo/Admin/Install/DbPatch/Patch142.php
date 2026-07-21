@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigDb;
 
 /**
  * Former install/db/142-database.php (P23 sub-batch 8g-3).
@@ -34,7 +33,7 @@ final class Patch142 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        ConfigDb::confUpdateParam('comments_enable_website', 'true', conn: $conn);
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('comments_enable_website', 'true');
 
         echo "\n" . $this->description() . "\n";
     }

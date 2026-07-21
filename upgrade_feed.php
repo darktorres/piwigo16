@@ -93,10 +93,8 @@ if (! is_string($dblayer)) {
 
 // P23 sub-batch 8f-5: the former include/functions_session.inc.php include
 // became Piwigo\Bootstrap\SessionBootstrap::register() (same body, same
-// guards). Piwigo\Config\ConfigDb (the former conf_* free functions) keeps
-// its fatal-error renderer wired for this non-common.inc.php entry path.
+// guards).
 \Piwigo\Bootstrap\SessionBootstrap::register();
-\Piwigo\Config\ConfigDb::setHtmlRenderer(new \Piwigo\Html\HtmlService());
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when it is not ok                               |

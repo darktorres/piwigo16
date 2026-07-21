@@ -1843,6 +1843,145 @@ carry), deptrac 0 violations, Unit/Arch 602, Contract 93, Integration
 632, Browser 66+1 skipped (including `UpgradePathTest`'s real
 `upgrade.php`/`upgrade_feed.php` connection smoke test).
 
+## Gap-closure: repo-wide legacy sweep round 2 — Workstreams 0/A/C1-C2/D (partial). Workstreams B and C3 NOT started.
+
+Following the DbPatch/VersionUpgrade gap-closure above, asked for a
+complete list of remaining legacy files/code again; direct
+re-investigation (still no subagents) found the earlier inventory had
+scoped itself to `src/Piwigo/` and stopped at "not the DI/DBAL/globals
+debt this plan targets" for `die()`/`exit()` and `LegacyRenderCapture`
+(see this doc's own "Cross-cutting notes" section above — now out of
+date, superseded by Workstream D below). Instructed to investigate and
+design everything upfront, check the whole repo not just `src/`, and aim
+for the objectively most-correct answer regardless of churn. Full design
+recorded in a session plan file (`streamed-snuggling-tarjan.md`, not
+committed to this repo) before any code changed; split into 5
+workstreams:
+
+- **Workstream 0 — `local/config/config.inc.php` bridge fix. DONE,
+  commit `338217f48`.** Found a real, previously-undetected functional
+  bug: nothing in `src/Piwigo/` ever read a site's
+  `local/config/config.inc.php` on a real request — `Config::` only ever
+  saw `Config::SCHEMA` defaults, env overrides, and the DB-config merge,
+  so every non-DB-credential key a site customized in that file
+  (`order_by_custom`, `data_location`, etc.) was silently ignored. New
+  `Piwigo\Config\LocalConfigOverrides::read(Paths $paths)` reads that
+  file (+ conditionally its `local_dir_site` sibling) into an isolated
+  `$conf = []` — no `config_default.inc.php` in this read, unlike
+  `LegacyFileConf::read()` above, since that would make ~277 SCHEMA
+  defaults look "overridden" and risk silently drifting from
+  `Config::SCHEMA`'s own hardcoded values (189 origin keys → 277 rewrite
+  keys, per this doc's own "Config key evolution" elsewhere). New
+  `ConfigLoader::applyLocalFileOverrides(Paths $paths)`, wired into
+  `CommonBootstrap::run()` between `applyEnvOverrides()` and
+  `Kernel::boot()`. Caught and fixed a real bug during verification:
+  `@include` doesn't reliably suppress warnings under Pest's own error
+  handler — replaced with explicit `is_file()` guards.
+- **Workstream A — repo-wide `global` cleanup outside `src/Piwigo/`.
+  DONE, commit `fe2906dce`.** 6 real sites: 3 true top-level-scope no-ops
+  (`install.php`/`upgrade.php`/`upgrade_feed.php`), `random.php`'s
+  `$user['nb_image_page']` (retargeted to
+  `CurrentUser::get()->rawAttributes['nb_image_page']` — confirmed via
+  `User`'s own docblock that a named property needs a real audited
+  13/9/10/13+-read promotion bar this 1-reader key doesn't clear),
+  `themes/standard_pages/themeconf.inc.php`'s dead
+  `$page['gallery_title']` branch (nothing writes it anymore), and
+  `tools/test_piwigo.php`'s `$mysqli` global (threaded as an explicit
+  parameter instead). Also deleted 4 fully-dead orphaned P23 one-shot
+  Rector codemod files found during the same repo-wide pass, and fixed a
+  stale `MysqliDb::connect()` docblock reference in `ready.php`.
+- **Workstream C1 — verified correct as-is, no code change.** The
+  `ShutdownHandler`'s `exit(143)` inside its `SIGTERM` handler, and the
+  pre-`Kernel::boot()` sites in `upgrade.php`/`upgrade_feed.php`/
+  `tools/*.php`, all confirmed to run outside any context a real
+  return/exception path could reach.
+- **Workstream C2 — `Ws/PwgImages.php` die() retarget. DONE, commit
+  `08985a2fd`.** 5 raw `die('{"jsonrpc"...}')` calls in `upload()` bypassed
+  the file's own `PwgError` typed-error path with hand-built,
+  protocol-format-ignorant JSON — retargeted onto
+  `return new PwgError(...)`, matching the other 25+ call sites in the
+  same file. Incidentally fixed a real latent bug: the old `die()` always
+  emitted JSON even when the client requested `format=rest`. New
+  Contract test covers both formats. Also removed the now-zero
+  `'Ws/PwgImages.php' => 5` entry from `StructuralTest`'s die()/exit()
+  allowlist count.
+- **Workstream D — `LegacyRenderCapture` void-renderer → return-string
+  conversion. 10 of 13 controllers DONE** (foundation `1c1703ce1`;
+  `AboutController` `28fd1667a`; `IdentificationController` `c7462c47a`;
+  `Notification`/`Password`/`Profile`/`Tags` `46c11fe44`;
+  `Comments`/`Gallery`/`Nbm`/`Register` `5b013c91d`). This directly
+  supersedes the "Cross-cutting notes" section's earlier "not a
+  contradiction with Phase 1... revisit only if a later phase reveals
+  this assumption was wrong" framing — Phase 1-8 completion did reveal
+  it: with every domain now real DI/DBAL, `LegacyRenderCapture`'s
+  `ob_start()`/`ob_get_contents()` capture around a `render(): void`
+  closure was the one remaining structural oddity in the controller
+  layer. Tracing all 13 render chains (not sampled) found the actual
+  mechanism: `Template::parse($handle, $return)` with `$return = false`
+  (the default, and what `pparse()` uses) appends to `$this->output`, an
+  instance-level accumulator, rather than returning; the real single
+  echo point for all 13 is `PageTailRenderer`'s trailing `p()`
+  (`flush()` with debug info) — or, for the 9 controllers still calling
+  `pparse()` on their own main template, an *earlier*, separate flush
+  too (2 passes, not 1). New `Template::fetchOutput()`/private
+  `finalizeOutput()` (drains the whole accumulator, does the same
+  script/CSS/head substitution `flush()` already did, returns instead of
+  echoing) plus new `PageTailRenderer::renderToString()`/
+  `PageTail::renderToString()` (additive siblings — the existing
+  `render()` methods are untouched, since `Admin/AdminShell.php` and
+  `Bootstrap/RedirectService.php` both call `PageTail::render()`
+  independently of these 13 controllers and still need it to echo
+  immediately). Per controller: `pparse($handle)`/bare `parse($handle)`
+  → `parse($handle, false)`, `PageTail::render()` →
+  `$body = PageTail::renderToString()`, `LegacyRenderCapture::capture()`
+  closure removed and its body inlined into `__invoke()`.
+  `GalleryController` (the largest, most involved conversion) preserves
+  `MenubarRenderer::render()`'s `mixed` return value
+  (`$categoryCountCategories`) exactly as before. `notification.php` and
+  `nbm.php` had no prior `VisualRegressionTest` coverage — added
+  baselines for both as part of this batch; `notification.php`'s page
+  mints a new random per-request feed ID but only ever places it inside
+  `href` attributes (never visible text), so pixel screenshots are
+  stable regardless — confirmed both pages byte-identical before/after
+  via a direct controller-file swap + curl diff (normalizing the one
+  legitimately-random token for notification.php, no normalization
+  needed for nbm.php) rather than trusting a first-run snapshot alone.
+  Every other converted controller already had a VR baseline and passed
+  pixel-identical, including `GalleryController` despite its size. Full
+  verification gate green throughout: ECS clean, PHPStan 0 errors
+  (unchanged baseline), deptrac 0 violations, Unit/Arch 607, Contract 94,
+  Integration 632, Browser 66+1 skipped, every targeted VR pass green.
+  **Remaining 3 — `PopuphelpController`, `AdminPopuphelpController`,
+  `PictureController` (via `PictureCommentRenderer::render()`) — stay on
+  `LegacyRenderCapture`**, blocked on Workstream C3: each has a mid-chain
+  `die()` that today relies on `LegacyRenderCapture`'s open output buffer
+  auto-flushing on `exit()`; the new accumulator design never echoes
+  incrementally, so a `die()` firing mid-chain would silently discard
+  everything accumulated so far until C3 turns those `die()` calls into
+  a real return/exception path. `LegacyRenderCapture` itself stays until
+  all 13 convert.
+- **Workstream B — 145-file DbPatch/VersionUpgrade raw-SQL-to-DBAL
+  bound-parameter refactor. NOT STARTED.** Design already complete (bound
+  parameters via `Connection::executeStatement($sql, $params)` for DML;
+  raw SQL text stays for DDL — Doctrine's Schema API was checked and
+  rejected, per `Version20260711150857.php`'s own documented
+  `mediumint`/`smallint`/`tinyint`-collapse bug against these files'
+  legacy FK-width-matched columns).
+- **Workstream C3 — the `header()`+`echo`+`exit()`/`: never`-return
+  request-lifecycle architecture (`RedirectServiceInterface`,
+  `RequestBootstrap::finalize()`'s 503 page, `UserBootstrap::initialize()`'s
+  early exit, `UploadService`, etc.). NOT STARTED — investigated and
+  designed in outline only. Confirmed to be architecturally deeper than
+  a cleanup item: `ExceptionHandlerMiddleware` can't help here since
+  these sites run before the pipeline/controller-dispatch step exists at
+  all; a real fix means changing `RedirectServiceInterface`'s contract
+  from `: never` to `: ResponseInterface` and restructuring how
+  bootstrap-phase short-circuits hand a response to something that can
+  emit it. Realistically closer in scope to one of the master roadmap's
+  own epochs than a sub-workstream — deliberately deferred to its own
+  dedicated planning pass rather than blocking 0/A/C1/C2/D-partial from
+  landing.
+
 ## Phase 7 — Unit test coverage expansion
 
 Once Phase 1 makes the ~40-45 domain classes and controller layer
@@ -1859,16 +1998,15 @@ both the densest and least-covered layers per the domain table above.
   + `RequestPipeline::handle()` dispatch through the real routing/
   middleware pipeline. Not legacy debt.
 - **`LegacyRenderCapture` and the `void` return signature of its ~50
-  renderer classes** — Smarty's inherently echo-based rendering, already
-  covered by Browser/Visual-regression suites, not the DI/DBAL/globals
-  debt this plan targets. Not a contradiction with Phase 1: many of these
-  same classes (e.g. `Admin/HistoryPageRenderer.php`) live inside domains
-  Phase 1 touches anyway and will get their construction/globals/
-  `MysqliDb::` fixed there — only their `render(): void` signature itself
-  stays untouched. The bundled `themes/` Smarty `.tpl` templates
-  themselves are also out of scope, same reasoning. Revisit the
-  `void`-signature question only if Phase 1-7 completion reveals this
-  assumption was wrong.
+  renderer classes** — **superseded, see "Gap-closure: repo-wide legacy
+  sweep round 2" above (Workstream D).** This assumption held through
+  Phase 1-6, but Phase 1-8 completion did reveal it wrong for the
+  specific `ob_start()`/`ob_get_contents()` capture wrapper around each
+  of the 13 controllers' top-level `render(): void` chain (not the ~50
+  renderer classes themselves, nor the `themes/` `.tpl` templates, both
+  of which remain correctly out of scope, unchanged) — 10 of 13
+  converted to return the rendered string directly; the remaining 3
+  wait on Workstream C3.
 
 ## Verification (baseline, every phase)
 

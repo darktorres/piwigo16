@@ -1966,10 +1966,6 @@ SELECT
      */
     public static function uploadAsync(array $params, PwgServer &$service): mixed
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $user;
         $logger = \Piwigo\Core\CurrentLogger::get();
 
         // the username/password parameters have been used in include/user.inc.php
@@ -2190,13 +2186,11 @@ SELECT COUNT(*)
         UserCacheInvalidator::invalidate();
 
         // trick to bypass get_sql_condition_FandF
-        if (! empty($params['level']) and $params['level'] > $user['level']) {
-            // this will not persist
-            $user['level'] = $params['level'];
-            // Legacy Coupling Retirement Track A batch A3: dual-write,
-            // matching RequestBootstrap's own sync points -- downstream
-            // readers of the elevated level are being retargeted onto
-            // CurrentUser too.
+        if (! empty($params['level']) and $params['level'] > \Piwigo\Users\CurrentUser::get()->level) {
+            // this will not persist -- Legacy Coupling Retirement Phase 8,
+            // 8i: CurrentUser is the only real reader now (the parallel
+            // `global $user;` array was never read by anything else in
+            // src/Piwigo/, confirmed via grep before deleting it).
             \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withLevel($params['level']));
         }
 

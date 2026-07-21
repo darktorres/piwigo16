@@ -55,11 +55,7 @@ final readonly class CategoryTreeCache
             }
         }
 
-        // getComputedCategories(array &$userdata, ...) mutates its argument
-        // (sets 'last_photo_date') -- pass a copy so that mutation never
-        // leaks into the caller's own (often global $user) array.
-        $userdataCopy = $userdata;
-        $rollup = $this->service->getComputedCategories($userdataCopy, null);
+        $rollup = $this->service->getComputedCategories($userdata, null)['categories'];
 
         // Rekeyed by a real int (getComputedCategories()'s own docblock
         // widens the key to int|string) -- both the findNamesByIds() call

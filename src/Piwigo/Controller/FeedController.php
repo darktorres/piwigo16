@@ -53,10 +53,6 @@ final class FeedController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $user;
         $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
 
         $htmlRenderer = new HtmlService();
@@ -92,23 +88,18 @@ final class FeedController implements ControllerInterface
                 $htmlRenderer->pageNotFound($this->redirectService, Lang::t('Unknown feed identifier'));
             }
             $feed_last_check = $feed_row['lastCheck'];
-            $user_id_before = is_numeric($user['id']) ? (int) $user['id'] : null;
-            if ($feed_row['userId'] !== $user_id_before) { // new user
-                $user = self::userService($conn)->buildUser($feed_row['userId'], true);
+            if ($feed_row['userId'] !== \Piwigo\Users\CurrentUser::get()->id) { // new user
+                $feed_owner = self::userService($conn)->buildUser($feed_row['userId'], true);
                 // The feed is per-user-token, so this request's "current user"
-                // genuinely becomes the feed owner, not the real session user
-                // -- sync CurrentUser too (dual-write, matching
-                // RequestBootstrap's own pattern), since checkStatus() below
-                // and every retargeted consumer now read CurrentUser, not
-                // this raw array.
-                \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
+                // genuinely becomes the feed owner, not the real session user.
+                \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($feed_owner));
             }
         } else {
             $image_only = true;
             if (! \Piwigo\Auth\AccessControl::isAGuest()) {// auto session was created - so switch to guest
                 $guest_id = \Piwigo\Config\Config::guestId();
-                $user = self::userService($conn)->buildUser($guest_id, true);
-                \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
+                $guest_user = self::userService($conn)->buildUser($guest_id, true);
+                \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($guest_user));
             }
         }
 
@@ -124,10 +115,6 @@ final class FeedController implements ControllerInterface
 
         $rss_encoding = \Piwigo\Core\CharsetHelper::getPwgCharset();
 
-        // $conf/$user are typed array<string, mixed> (see the global
-        // declaration above); each of these values is read again later in
-        // this method, so narrow once here and reuse the local variable at
-        // every later read.
         $conf_gallery_title = \Piwigo\Config\Config::galleryTitle();
         $conf_rss_feed_author = \Piwigo\Config\Config::rssReedAuthor();
         $user_username = \Piwigo\Users\CurrentUser::get()->username;

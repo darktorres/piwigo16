@@ -61,11 +61,6 @@ final class NotificationByMailSender
 
     private bool $isSendmailTimeout = false;
 
-    /**
-     * @var array<string, mixed>
-     */
-    private array $saveUser = [];
-
     private ?\Piwigo\Users\User $saveCurrentUser = null;
 
     private bool $isToSendMail = false;
@@ -152,12 +147,6 @@ final class NotificationByMailSender
 
     public function beginUsersEnv(bool $isToSendMail = false): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $user;
-
-        $this->saveUser = $user;
         $this->saveCurrentUser = \Piwigo\Users\CurrentUser::get();
         $userLanguage = $this->saveCurrentUser->language;
         new MailService()
@@ -193,10 +182,6 @@ final class NotificationByMailSender
 
     public function endUsersEnv(): void
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
-        $user = $this->saveUser;
         if ($this->saveCurrentUser instanceof \Piwigo\Users\User) {
             \Piwigo\Users\CurrentUser::set($this->saveCurrentUser);
         }
@@ -214,7 +199,6 @@ final class NotificationByMailSender
             $this->msgError = null;
         }
 
-        $this->saveUser = [];
         $this->saveCurrentUser = null;
         $this->isToSendMail = false;
     }
@@ -224,9 +208,6 @@ final class NotificationByMailSender
      */
     public function setUserOnEnv(array &$nbmUser, bool $isActionSend): void
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
         // user_id is Tables::userMailNotification()'s primary key (NOT NULL
         // per install/piwigo_structure-mysql.sql), always a non-null
         // numeric value.

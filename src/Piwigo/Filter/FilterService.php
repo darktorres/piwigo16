@@ -132,20 +132,20 @@ final class FilterService implements FilterUpdaterInterface
                 ];
 
                 $categoryConn = $this->conn ??= DbConnection::build();
-                // getComputedCategories() mutates its $userdata argument by
-                // reference (sets 'last_photo_date') -- pass the still-live
-                // legacy array (dual-write source of truth alongside
-                // CurrentUser, see RequestBootstrap) so the mutation is
-                // real, then re-sync CurrentUser so every other retargeted
+                // getComputedCategories() no longer mutates its $userdata
+                // argument (Legacy Coupling Retirement Phase 8, 8i) -- it
+                // returns the computed 'last_photo_date' alongside the
+                // categories instead, re-synced onto CurrentUser (via
+                // withRawAttribute(), the generic escape hatch: User has no
+                // named lastPhotoDate property) so every other retargeted
                 // consumer (e.g. CategoryCatsRenderer) observes the same
                 // value.
-                /** @var array<string, mixed> $user */
-                global $user;
-                $filter['categories'] = new CategoryService(
+                $computedCategories = new CategoryService(
                     new CategoryRepository($categoryConn),
                     new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn), new CategoryRepository($categoryConn))
-                )->getComputedCategories($user, $filter_recent_period);
-                \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
+                )->getComputedCategories($currentUser->toUserArray(), $filter_recent_period);
+                $filter['categories'] = $computedCategories['categories'];
+                \Piwigo\Users\CurrentUser::set($currentUser->withRawAttribute('last_photo_date', $computedCategories['lastPhotoDate']));
 
                 $filter['visible_categories'] = implode(',', array_keys($filter['categories']));
                 if (empty($filter['visible_categories'])) {

@@ -782,16 +782,11 @@ SELECT COUNT(DISTINCT(image_id)) as total
                 $userdata['nb_total_images'] = $nb_total_images;
 
                 // now we update user cache categories
-                // CategoryService::getComputedCategories() takes $userdata by
-                // reference and is declared with a generic array<string,
-                // mixed> shape, so PHPStan can no longer track any of
-                // $userdata's per-key types after this call -- every
-                // subsequent read below goes through a freshly-narrowed
-                // local variable instead of re-reading $userdata.
-                $user_cache_cats = new CategoryService(
+                $computed_categories = new CategoryService(
                     new CategoryRepository($this->conn),
                     $this->permissionService()
                 )->getComputedCategories($userdata, null);
+                $user_cache_cats = $computed_categories['categories'];
                 if (! AccessControl::isAdmin($status)) { // for non admins we forbid categories with no image (feature 1053)
                     $forbidden_ids = [];
                     foreach ($user_cache_cats as $cat) {
@@ -812,7 +807,7 @@ SELECT COUNT(DISTINCT(image_id)) as total
                     }
                 }
 
-                $last_photo_date = $userdata['last_photo_date'];
+                $last_photo_date = $computed_categories['lastPhotoDate'];
                 assert($last_photo_date === null || is_string($last_photo_date));
 
                 // delete user cache

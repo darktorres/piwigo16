@@ -47,10 +47,6 @@ final class ProfileController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $user;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Classic);
@@ -60,7 +56,7 @@ final class ProfileController implements ControllerInterface
                 ->checkOrFail(new HtmlService(), $this->redirectService);
         }
 
-        $userdata = $user;
+        $userdata = \Piwigo\Users\CurrentUser::get()->toUserArray();
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_profile');
 

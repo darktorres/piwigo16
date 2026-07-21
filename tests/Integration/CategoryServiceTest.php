@@ -282,14 +282,15 @@ final class CategoryServiceTest extends IntegrationTestCase
     {
         $userdata = ['id' => 1, 'level' => 0, 'forbidden_categories' => ''];
 
-        $cats = $this->service->getComputedCategories($userdata);
+        $result = $this->service->getComputedCategories($userdata);
+        $cats = $result['categories'];
 
         // category 1 (root) should count its own 3 images plus category
         // 2's 2 images in its subtree total.
         self::assertSame(5, $cats[1]['count_images']);
         self::assertSame(1, $cats[1]['count_categories']);
         self::assertSame(2, $cats[2]['count_images']);
-        self::assertNotNull($userdata['last_photo_date']);
+        self::assertNotNull($result['lastPhotoDate']);
     }
 
     public function test_get_computed_categories_prunes_categories_with_no_recent_activity(): void
@@ -298,9 +299,9 @@ final class CategoryServiceTest extends IntegrationTestCase
 
         // filterDays=0 against fixture dates in the past means nothing
         // qualifies as "recent" -- every category should be pruned.
-        $cats = $this->service->getComputedCategories($userdata, 0);
+        $result = $this->service->getComputedCategories($userdata, 0);
 
-        self::assertSame([], $cats);
+        self::assertSame([], $result['categories']);
     }
 
     public function test_remove_computed_category_decrements_parent_counters(): void

@@ -99,11 +99,6 @@ final readonly class AuthService
      */
     public function logUser(int|string|false $userId, bool $rememberMe): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $user;
-
         // false is not reachable in practice -- see this method's own
         // docblock on $userId
         assert($userId !== false);
@@ -171,9 +166,8 @@ final readonly class AuthService
         }
         $_SESSION['pwg_uid'] = (int) $userId;
 
-        $user['id'] = $_SESSION['pwg_uid'];
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('user_login', $user['id']);
-        $this->activityLogger->record('user', $user['id'], 'login');
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('user_login', $_SESSION['pwg_uid']);
+        $this->activityLogger->record('user', $_SESSION['pwg_uid'], 'login');
     }
 
     /**
@@ -456,11 +450,6 @@ final readonly class AuthService
      */
     public function authKeyLogin(mixed $authKey, bool $connectionByHeader = false): bool
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $user;
-
         // see UserService::validateMailAddress() for why this is string=>string
         /** @var array<string, string> $user_fields */
         $user_fields = \Piwigo\Config\Config::userFields();
@@ -543,7 +532,6 @@ final readonly class AuthService
         // user_id is a NOT NULL FK column, always a numeric string --
         // narrows for logUser()'s own numeric-string docblock type.
         assert(is_numeric($key_user_id));
-        $user['id'] = $key_user_id;
 
         // update last used key
         $this->repo->touchAuthKeyLastUsed($key_user_id, $key['auth_key'], $now);

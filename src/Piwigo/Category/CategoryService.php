@@ -358,9 +358,9 @@ final readonly class CategoryService
 
     /**
      * @param  array<string, mixed>  $userdata
-     * @return array<int|string, array<string, mixed>>
+     * @return array{categories: array<int|string, array<string, mixed>>, lastPhotoDate: mixed}
      */
-    public function getComputedCategories(array &$userdata, ?int $filterDays = null): array
+    public function getComputedCategories(array $userdata, ?int $filterDays = null): array
     {
         $level = $userdata['level'];
         $level = is_numeric($level) ? (int) $level : 0;
@@ -370,7 +370,7 @@ final readonly class CategoryService
 
         $rows = $this->repo->findComputedCategoriesRollup($level, $filterDays, $forbiddenCategoriesCsv);
 
-        $userdata['last_photo_date'] = null;
+        $lastPhotoDate = null;
         $cats = [];
         foreach ($rows as $row) {
             $catId = is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0;
@@ -387,8 +387,8 @@ final readonly class CategoryService
             $row['count_categories'] = 0;
             $row['count_images'] = $nbImages;
             $row['max_date_last'] = $dateLast;
-            if ($dateLast !== null && ($userdata['last_photo_date'] === null || $dateLast > $userdata['last_photo_date'])) {
-                $userdata['last_photo_date'] = $dateLast;
+            if ($dateLast !== null && ($lastPhotoDate === null || $dateLast > $lastPhotoDate)) {
+                $lastPhotoDate = $dateLast;
             }
 
             $cats[$catId] = $row;
@@ -439,7 +439,10 @@ final readonly class CategoryService
             }
         }
 
-        return $cats;
+        return [
+            'categories' => $cats,
+            'lastPhotoDate' => $lastPhotoDate,
+        ];
     }
 
     /**

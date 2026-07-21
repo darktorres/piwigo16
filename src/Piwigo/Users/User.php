@@ -67,6 +67,32 @@ final readonly class User
         );
     }
 
+    /**
+     * The inverse of fromUserArray() -- rawAttributes already carries the
+     * full legacy array and every wither above keeps it in sync with this
+     * object's own named properties, but this overlays them explicitly
+     * anyway so the guarantee holds regardless of construction path (e.g.
+     * a direct `new self(...)` call that didn't go through a wither).
+     *
+     * @return array<string, mixed>
+     */
+    public function toUserArray(): array
+    {
+        return array_merge($this->rawAttributes, [
+            'id' => $this->id,
+            'username' => $this->username,
+            'email' => $this->email,
+            'language' => $this->language,
+            'theme' => $this->theme,
+            'status' => $this->status->value,
+            'enabled_high' => $this->enabledHigh,
+            'forbidden_categories' => $this->forbiddenCategories,
+            'level' => $this->level,
+            'cache_update_time' => $this->cacheUpdateTime,
+            'preferences' => $this->preferences,
+        ]);
+    }
+
     public function withLanguage(string $language): self
     {
         $rawAttributes = $this->rawAttributes;

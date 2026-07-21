@@ -30,10 +30,8 @@ parameters:
             # but our root autoloader can't see them, so PHPStan types every
             # ::class reference here as plain class-string instead of
             # class-string<FixerInterface>. Tooling config, not application
-            # code — same rationale as tools/phpstan-bootstrap.php below.
+            # code.
             - ecs.php
-    bootstrapFiles:
-        - tools/phpstan-bootstrap.php
 
 rules:
     - Piwigo\Tools\PhpStan\ConfigKeyExistsRule

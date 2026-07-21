@@ -70,6 +70,16 @@ use Piwigo\Users\UserService;
  */
 final class InstallWizard
 {
+    /**
+     * Legacy Coupling Retirement gap-closure (install/upgrade-flow
+     * constants round): used to be install.php's own
+     * `define('DEFAULT_PREFIX_TABLE', 'piwigo_')` -- a fixed literal, not
+     * a real global concern. install.php (which already directly
+     * orchestrates this class) reads this constant too, at the one point
+     * it computes the site's actual chosen prefix.
+     */
+    public const string DEFAULT_PREFIX_TABLE = 'piwigo_';
+
     private readonly string $confDataLocation;
 
     private readonly string $configFile;
@@ -478,7 +488,7 @@ define(\'DB_COLLATE\', \'\');
         InstallService::executeSqlfile(
             $conn,
             PHPWG_ROOT_PATH . 'install/piwigo_structure-mysql.sql',
-            DEFAULT_PREFIX_TABLE,
+            self::DEFAULT_PREFIX_TABLE,
             $this->prefixeTable,
             'mysql'
         );
@@ -486,7 +496,7 @@ define(\'DB_COLLATE\', \'\');
         InstallService::executeSqlfile(
             $conn,
             PHPWG_ROOT_PATH . 'install/config.sql',
-            DEFAULT_PREFIX_TABLE,
+            self::DEFAULT_PREFIX_TABLE,
             $this->prefixeTable,
             'mysql'
         );

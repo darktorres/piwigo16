@@ -31,11 +31,17 @@ use Piwigo\Url\UrlService;
 /**
  * upgrade.php's orchestration, ported verbatim from that script's former
  * top-level code (P23 sub-batch 8f-6). The upgrade.php entry shell keeps
- * only bootstrap (config/database includes, the SEC-60-constrained
- * define()s, session/renderer wiring, DB connection) and drives this
- * runner: loadLanguage() -> prepare() -> [shell: access-rights check +
- * PHPWG_IN_UPGRADE define] -> performUpgrade() or renderIntro() ->
- * finish().
+ * only bootstrap (config/database includes, session/renderer wiring, DB
+ * connection) and drives this runner: loadLanguage() -> prepare() ->
+ * [shell: access-rights check] -> performUpgrade() or
+ * renderIntro($isAuthorized) -> finish(). Legacy Coupling Retirement
+ * gap-closure (install/upgrade-flow constants round): the access-rights
+ * result used to round-trip through a `define('PHPWG_IN_UPGRADE', ...)`
+ * the shell set and `UpgradeService::checkUpgrade()` re-read -- the
+ * shell already has the boolean in scope from its own
+ * `checkUpgradeAccessRights()` call, so it's now passed straight into
+ * `renderIntro()` as a parameter instead (`checkUpgrade()` itself is
+ * gone, it had exactly these two callers).
  *
  * Every method declares the $template global the code it calls still
  * needs -- updates/mail-era template helpers historically resolve the
@@ -210,51 +216,58 @@ final class UpgradeRunner
         $tables = UpgradeService::getTables($conn);
         $columns_of = UpgradeService::getColumnsOf($conn, $tables);
 
+        // Legacy Coupling Retirement gap-closure (install/upgrade-flow
+        // constants round): PREFIX_TABLE used to be a SEC-60 global the
+        // entry shell define()d -- this class is real, already-DI-shaped
+        // src/Piwigo/ code, so it reads Config::dbPrefix() directly like
+        // everything else in the codebase instead.
+        $dbPrefix = \Piwigo\Config\Config::dbPrefix();
+
         // find the current release
-        if (! in_array('param', $columns_of[PREFIX_TABLE . 'config'])) {
+        if (! in_array('param', $columns_of[$dbPrefix . 'config'])) {
             // we're in branch 1.3, important upgrade, isn't it?
-            if (in_array(PREFIX_TABLE . 'user_category', $tables)) {
+            if (in_array($dbPrefix . 'user_category', $tables)) {
                 $current_release = '1.3.1';
             } else {
                 $current_release = '1.3.0';
             }
-        } elseif (! in_array(PREFIX_TABLE . 'user_cache', $tables)) {
+        } elseif (! in_array($dbPrefix . 'user_cache', $tables)) {
             $current_release = '1.4.0';
-        } elseif (! in_array(PREFIX_TABLE . 'tags', $tables)) {
+        } elseif (! in_array($dbPrefix . 'tags', $tables)) {
             $current_release = '1.5.0';
-        } elseif (! in_array(PREFIX_TABLE . 'plugins', $tables)) {
-            if (! in_array('auto_login_key', $columns_of[PREFIX_TABLE . 'user_infos'])) {
+        } elseif (! in_array($dbPrefix . 'plugins', $tables)) {
+            if (! in_array('auto_login_key', $columns_of[$dbPrefix . 'user_infos'])) {
                 $current_release = '1.6.0';
             } else {
                 $current_release = '1.6.2';
             }
-        } elseif (! in_array('md5sum', $columns_of[PREFIX_TABLE . 'images'])) {
+        } elseif (! in_array('md5sum', $columns_of[$dbPrefix . 'images'])) {
             $current_release = '1.7.0';
-        } elseif (! in_array(PREFIX_TABLE . 'themes', $tables)) {
+        } elseif (! in_array($dbPrefix . 'themes', $tables)) {
             $current_release = '2.0.0';
-        } elseif (! in_array('added_by', $columns_of[PREFIX_TABLE . 'images'])) {
+        } elseif (! in_array('added_by', $columns_of[$dbPrefix . 'images'])) {
             $current_release = '2.1.0';
-        } elseif (! in_array('rating_score', $columns_of[PREFIX_TABLE . 'images'])) {
+        } elseif (! in_array('rating_score', $columns_of[$dbPrefix . 'images'])) {
             $current_release = '2.2.0';
-        } elseif (! in_array('rotation', $columns_of[PREFIX_TABLE . 'images'])) {
+        } elseif (! in_array('rotation', $columns_of[$dbPrefix . 'images'])) {
             $current_release = '2.3.0';
-        } elseif (! in_array('website_url', $columns_of[PREFIX_TABLE . 'comments'])) {
+        } elseif (! in_array('website_url', $columns_of[$dbPrefix . 'comments'])) {
             $current_release = '2.4.0';
-        } elseif (! in_array('nb_available_tags', $columns_of[PREFIX_TABLE . 'user_cache'])) {
+        } elseif (! in_array('nb_available_tags', $columns_of[$dbPrefix . 'user_cache'])) {
             $current_release = '2.5.0';
-        } elseif (! in_array('activation_key_expire', $columns_of[PREFIX_TABLE . 'user_infos'])) {
+        } elseif (! in_array('activation_key_expire', $columns_of[$dbPrefix . 'user_infos'])) {
             $current_release = '2.6.0';
-        } elseif (! in_array('auth_key_id', $columns_of[PREFIX_TABLE . 'history'])) {
+        } elseif (! in_array('auth_key_id', $columns_of[$dbPrefix . 'history'])) {
             $current_release = '2.7.0';
-        } elseif (! in_array('history_id_to', $columns_of[PREFIX_TABLE . 'history_summary'])) {
+        } elseif (! in_array('history_id_to', $columns_of[$dbPrefix . 'history_summary'])) {
             $current_release = '2.8.0';
-        } elseif (! in_array(PREFIX_TABLE . 'activity', $tables)) {
+        } elseif (! in_array($dbPrefix . 'activity', $tables)) {
             $current_release = '2.9.0';
         } else {
             // retrieve already applied upgrades
             $query = '
 SELECT id
-  FROM ' . PREFIX_TABLE . 'upgrade
+  FROM ' . Tables::upgrade() . '
 ;';
             // Loose in_array() below tolerates either native int or string
             // ids from the DBAL fetch, same as it always tolerated mysqli's
@@ -440,9 +453,13 @@ REPLACE INTO ' . Tables::plugins() . '
      * output" else-branch). The `defined('PWG_CHARSET') or define(...)`
      * that used to open this branch stays in the upgrade.php entry shell
      * (SEC-60 forbids define() in src/Piwigo), at the exact same branch
-     * position.
+     * position. $isAuthorized is the same `checkUpgradeAccessRights()`
+     * result the entry shell already computed for its own access-gate
+     * check just above this call -- see this class's own docblock for
+     * why it's a parameter now instead of the former
+     * `UpgradeService::checkUpgrade()` re-read.
      */
-    public function renderIntro(): void
+    public function renderIntro(bool $isAuthorized): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -463,7 +480,7 @@ REPLACE INTO ' . Tables::plugins() . '
             'F_ACTION' => 'upgrade.php?language=' . $this->language,
         ]);
 
-        if (! UpgradeService::checkUpgrade()) {
+        if (! $isAuthorized) {
             $template->assign('login', true);
         }
     }

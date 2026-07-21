@@ -53,14 +53,12 @@ InstallBootstrap::boot($paths);
 
 // ----------------------------------------------------- variable initialization
 
-define('DEFAULT_PREFIX_TABLE', 'piwigo_');
-
 if (isset($_POST['install'])) {
     // Narrow to string (and guard the possibly-missing array key) rather than
     // trusting raw POST data downstream in SQL/file-content concatenation.
-    $prefixeTable = is_string($_POST['prefix'] ?? null) ? $_POST['prefix'] : DEFAULT_PREFIX_TABLE;
+    $prefixeTable = is_string($_POST['prefix'] ?? null) ? $_POST['prefix'] : InstallWizard::DEFAULT_PREFIX_TABLE;
 } else {
-    $prefixeTable = DEFAULT_PREFIX_TABLE;
+    $prefixeTable = InstallWizard::DEFAULT_PREFIX_TABLE;
 }
 
 // Piwigo\Db\Tables::*() (used throughout the wizard) reads

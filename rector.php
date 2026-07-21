@@ -23,7 +23,4 @@ return RectorConfig::configure()
     ])
     ->withPhpSets(php85: true)
     ->withPreparedSets(typeDeclarations: true, instanceOf: true)
-    ->withBootstrapFiles([
-        __DIR__ . '/tools/phpstan-bootstrap.php',
-    ])
     ->withParallel(timeoutSeconds: 300);

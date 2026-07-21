@@ -15,19 +15,20 @@ use Exception;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 
 /**
  * upgrade_feed.php's orchestration, ported verbatim from that script's
  * former top-level code (P23 sub-batch 8f-6). The upgrade_feed.php entry
  * shell keeps only bootstrap (config/database/dblayer includes, the
- * check_upgrade_feed gate, the SEC-60-constrained define()s including the
- * former prepare_conf_upgrade() block) and then calls run().
+ * check_upgrade_feed gate) and then calls run().
  *
  * The frozen install/db/*-database.php scripts this class used to include
- * are gone (P23 sub-batch 8g-6 replaced them with real DbPatch classes),
- * so run() itself only reads the PREFIX_TABLE constant the entry shell
- * already define()'d -- no $conf/$prefixeTable global needed here anymore
- * (Legacy Coupling Retirement Track A gap-fill batch G5).
+ * are gone (P23 sub-batch 8g-6 replaced them with real DbPatch classes) --
+ * Legacy Coupling Retirement gap-closure (install/upgrade-flow constants
+ * round): run() no longer reads a `PREFIX_TABLE` global either, it calls
+ * Tables::upgrade() directly like the rest of this codebase, and its own
+ * ledger INSERT is bound-parameterized instead of raw string-interpolated.
  */
 final class UpgradeFeedRunner
 {
@@ -83,7 +84,7 @@ final class UpgradeFeedRunner
         // retrieve already applied upgrades
         $query = '
 SELECT id
-  FROM ' . PREFIX_TABLE . 'upgrade
+  FROM ' . Tables::upgrade() . '
 ;';
         $applied = array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
@@ -114,12 +115,15 @@ SELECT id
 
             // notify upgrade
             $query = '
-INSERT INTO ' . PREFIX_TABLE . 'upgrade
+INSERT INTO ' . Tables::upgrade() . '
   (id, applied, description)
   VALUES
-  (\'' . $upgrade_id . '\', NOW(), \'' . $upgrade_description . '\')
+  (:id, NOW(), :description)
 ;';
-            $conn->executeStatement($query);
+            $conn->executeStatement($query, [
+                'id' => $upgrade_id,
+                'description' => $upgrade_description,
+            ]);
         }
 
         echo '</pre>';

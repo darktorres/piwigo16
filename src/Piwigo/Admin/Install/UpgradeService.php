@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Exception;
 use Piwigo\Admin\Extensions\ExtensionLifecycle;
@@ -38,16 +39,20 @@ use Piwigo\Url\UrlService;
  * matching the Env/FilesystemHelper/MysqliDb precedent for
  * legacy-reachable stateless machinery.
  *
- * PHPWG_IN_UPGRADE note: the former check_upgrade_access_rights() used to
- * define() PHPWG_IN_UPGRADE itself; SEC-60 forbids define() inside
- * src/Piwigo, so checkUpgradeAccessRights() now RETURNS the authorization
- * verdict and the upgrade.php entry shell performs the define() (the frozen
- * install/upgrade_*.php scripts read that constant at include time, so it
- * must stay a real global constant). checkUpgrade() still reads it.
- *
- * PREFIX_TABLE/UPGRADES_PATH/CURRENT_DATE are define()'d by the
- * upgrade.php/upgrade_feed.php entry shells before any method here runs
- * (see tools/phpstan-bootstrap.php for the PREFIX_TABLE analysis stub).
+ * checkUpgradeAccessRights() RETURNS the authorization verdict rather than
+ * define()ing PHPWG_IN_UPGRADE itself (SEC-60 forbids define() inside
+ * src/Piwigo). Legacy Coupling Retirement gap-closure (install/upgrade-flow
+ * constants round): the former `PHPWG_IN_UPGRADE` global + this class's own
+ * `checkUpgrade()` re-read of it are both gone -- the upgrade.php entry
+ * shell already has the boolean in scope from its own
+ * checkUpgradeAccessRights() call and passes it straight into
+ * UpgradeRunner::renderIntro() as a parameter instead. `PREFIX_TABLE` is
+ * gone too: every method here that used to read it now calls
+ * Config::dbPrefix()/Tables::*() directly, same as the rest of this
+ * codebase (neither the frozen install/db/*.php scripts nor
+ * install/upgrade_X.Y.Z.php scripts these constants used to serve still
+ * exist -- P23 sub-batch 8g already ported them to real DbPatch/
+ * VersionUpgrade classes).
  *
  * Legacy Coupling Retirement Phase 5: this same "no DI container exists"
  * fact is why its extents_for_templates write (Tier 3) stays on ConfigDb
@@ -55,20 +60,6 @@ use Piwigo\Url\UrlService;
  */
 final class UpgradeService
 {
-    public static function checkUpgrade(): bool
-    {
-        if (defined('PHPWG_IN_UPGRADE')) {
-            // PHPWG_IN_UPGRADE is only ever define()'d with a bool literal
-            // `true` (see the upgrade.php entry shell, fed by
-            // checkUpgradeAccessRights() below); is_bool() reflects that
-            // real invariant without resorting to an unsafe cast on a mixed
-            // constant.
-            $in_upgrade = PHPWG_IN_UPGRADE;
-            return is_bool($in_upgrade) && $in_upgrade;
-        }
-        return false;
-    }
-
     /**
      * list all tables in an array
      *
@@ -81,11 +72,12 @@ final class UpgradeService
         $query = '
 SHOW TABLES
 ;';
+        $dbPrefix = \Piwigo\Config\Config::dbPrefix();
         foreach ($conn->fetchFirstColumn($query) as $table_name) {
             if (! is_string($table_name)) {
                 continue;
             }
-            if ((bool) preg_match('/^' . PREFIX_TABLE . '/', $table_name)) {
+            if ((bool) preg_match('/^' . preg_quote($dbPrefix, '/') . '/', $table_name)) {
                 $tables[] = $table_name;
             }
         }
@@ -132,23 +124,33 @@ DESC `' . $table . '`
 
         $query = '
 SELECT id
-FROM ' . PREFIX_TABLE . 'plugins
-WHERE state = \'active\'
-AND id NOT IN (\'' . implode('\',\'', $standard_plugins) . '\')
+FROM ' . Tables::plugins() . '
+WHERE state = :state
+AND id NOT IN (:standardPlugins)
 ;';
 
         $plugins = array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            $conn->fetchFirstColumn($query)
+            $conn->fetchFirstColumn($query, [
+                'state' => 'active',
+                'standardPlugins' => $standard_plugins,
+            ], [
+                'standardPlugins' => ArrayParameterType::STRING,
+            ])
         );
 
         if (! empty($plugins)) {
             $query = '
-UPDATE ' . PREFIX_TABLE . 'plugins
-SET state=\'inactive\'
-WHERE id IN (\'' . implode('\',\'', $plugins) . '\')
+UPDATE ' . Tables::plugins() . '
+SET state = :state
+WHERE id IN (:plugins)
 ;';
-            $conn->executeStatement($query);
+            $conn->executeStatement($query, [
+                'state' => 'inactive',
+                'plugins' => $plugins,
+            ], [
+                'plugins' => ArrayParameterType::STRING,
+            ]);
 
             \Piwigo\Core\PageState::current()->addInfo(Lang::t('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:')
                                 . '<p><i>' . implode(', ', $plugins) . '</i></p>');
@@ -168,12 +170,16 @@ WHERE id IN (\'' . implode('\',\'', $plugins) . '\')
 SELECT
     id,
     name
-  FROM ' . PREFIX_TABLE . 'themes
-  WHERE id NOT IN (\'' . implode("','", $standard_themes) . '\')
+  FROM ' . Tables::themes() . '
+  WHERE id NOT IN (:standardThemes)
 ;';
         $theme_ids = [];
         $theme_names = [];
-        foreach ($conn->fetchAllAssociative($query) as $row) {
+        foreach ($conn->fetchAllAssociative($query, [
+            'standardThemes' => $standard_themes,
+        ], [
+            'standardThemes' => ArrayParameterType::STRING,
+        ]) as $row) {
             $theme_ids[] = is_scalar($row['id']) ? (string) $row['id'] : '';
             $theme_names[] = is_scalar($row['name']) ? (string) $row['name'] : '';
         }
@@ -181,10 +187,14 @@ SELECT
         if (! empty($theme_ids)) {
             $query = '
 DELETE
-  FROM ' . PREFIX_TABLE . 'themes
-  WHERE id IN (\'' . implode("','", $theme_ids) . '\')
+  FROM ' . Tables::themes() . '
+  WHERE id IN (:themeIds)
 ;';
-            $conn->executeStatement($query);
+            $conn->executeStatement($query, [
+                'themeIds' => $theme_ids,
+            ], [
+                'themeIds' => ArrayParameterType::STRING,
+            ]);
 
             \Piwigo\Core\PageState::current()->addInfo(Lang::t('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:')
                                 . '<p><i>' . implode(', ', $theme_names) . '</i></p>');
@@ -194,10 +204,12 @@ DELETE
             $default_user_id = is_numeric(\Piwigo\Config\Config::defaultUserId()) ? (int) \Piwigo\Config\Config::defaultUserId() : 0;
             $query = '
 SELECT theme
-  FROM ' . PREFIX_TABLE . 'user_infos
-  WHERE user_id = ' . $default_user_id . '
+  FROM ' . Tables::userInfos() . '
+  WHERE user_id = :userId
 ;';
-            $default_theme = $conn->fetchOne($query);
+            $default_theme = $conn->fetchOne($query, [
+                'userId' => $default_user_id,
+            ]);
             $default_theme = is_scalar($default_theme) ? (string) $default_theme : '';
 
             // if the default theme has just been deactivated, let's set another core theme as default
@@ -206,10 +218,12 @@ SELECT theme
                 $query = '
 SELECT
     COUNT(*)
-  FROM ' . PREFIX_TABLE . 'themes
-  WHERE id = \'' . AppInfo::DEFAULT_TEMPLATE . '\'
+  FROM ' . Tables::themes() . '
+  WHERE id = :themeId
 ;';
-                $counter = $conn->fetchOne($query);
+                $counter = $conn->fetchOne($query, [
+                    'themeId' => AppInfo::DEFAULT_TEMPLATE,
+                ]);
                 if (! is_int($counter) || $counter < 1) {
                     // we need to activate theme first
                     $urlService = new UrlService(new HtmlService());
@@ -225,11 +239,14 @@ SELECT
 
                 // then associate it to default user
                 $query = '
-UPDATE ' . PREFIX_TABLE . 'user_infos
-  SET theme = \'' . AppInfo::DEFAULT_TEMPLATE . '\'
-  WHERE user_id = ' . $default_user_id . '
+UPDATE ' . Tables::userInfos() . '
+  SET theme = :theme
+  WHERE user_id = :userId
 ;';
-                $conn->executeStatement($query);
+                $conn->executeStatement($query, [
+                    'theme' => AppInfo::DEFAULT_TEMPLATE,
+                    'userId' => $default_user_id,
+                ]);
             }
         }
     }

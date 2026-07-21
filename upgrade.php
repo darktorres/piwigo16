@@ -14,10 +14,16 @@ declare(strict_types=1);
 // Piwigo\Admin\Install\UpgradeRunner + UpgradeService; this file keeps
 // only what MUST run at real top-level scope (config/database.inc.php
 // includes write bare globals) or is forbidden inside src/Piwigo by Arch
-// rule SEC-60 (every define() -- PREFIX_TABLE/UPGRADES_PATH/CURRENT_DATE/
-// PHPWG_IN_UPGRADE/PWG_CHARSET are all read at include time by the FROZEN
-// install/upgrade_X.Y.Z.php + install/db/*.php scripts this page runs).
+// rule SEC-60. Legacy Coupling Retirement gap-closure (install/upgrade-flow
+// constants round): PREFIX_TABLE/CURRENT_DATE/PHPWG_IN_UPGRADE are gone --
+// UpgradeRunner/UpgradeService/AbstractRangeVersionUpgrade are real,
+// already-DI-shaped classes that read Config::/Tables::/UpgradeRunDate::
+// directly now instead of a global those classes' own methods used to
+// read. Only PWG_CHARSET stays: Patch65/85/90 (pre-2.0 database charset
+// migration) still consult it via UpgradeCharset:: on pre-2.0 databases
+// where this shell hasn't defined it yet.
 
+use Piwigo\Admin\Install\UpgradeRunDate;
 use Piwigo\Admin\Install\UpgradeRunner;
 use Piwigo\Admin\Install\UpgradeService;
 use Piwigo\Bootstrap\InstallBootstrap;
@@ -107,7 +113,6 @@ Config::override('db_prefix', $prefixeTable);
 // seeding above, not before -- see InstallBootstrap::activateConfigService()'s
 // own docblock.
 InstallBootstrap::activateConfigService();
-define('PREFIX_TABLE', $prefixeTable);
 // P23 sub-batch 8g-6: replaces the former define('UPGRADES_PATH', ...) as
 // the "this request is the upgrade flow" marker Lang::loadLanguage() reads
 // (skip DB default-language lookups against a mid-migration database).
@@ -153,9 +158,9 @@ $conn = UpgradeService::upgradeDbConnect();
 $row = $conn->fetchNumeric('SELECT NOW();');
 assert($row !== false);
 [$dbnow] = $row;
-// Read at include time by the frozen install/upgrade_X.Y.Z.php scripts --
-// must stay a real global constant (SEC-60 keeps the define() here).
-define('CURRENT_DATE', $dbnow);
+// Every VersionUpgrade ledger row inserted during this run shares this
+// exact moment (see UpgradeRunDate's own docblock).
+UpgradeRunDate::set(is_scalar($dbnow) ? (string) $dbnow : '');
 
 // +-----------------------------------------------------------------------+
 // |             template init / remote-site refusal / release             |
@@ -165,30 +170,26 @@ define('CURRENT_DATE', $dbnow);
 $current_release = $runner->prepare($conn);
 
 // Check access rights (webmaster session, or POSTed admin/webmaster
-// credentials -- the auth gate, ported verbatim). The define() itself must
-// live here: SEC-60 forbids define() in src/Piwigo, and the frozen
-// install/upgrade_X.Y.Z.php scripts die('Hacking attempt!') unless
-// PHPWG_IN_UPGRADE is a real defined constant when they are included.
-if (UpgradeService::checkUpgradeAccessRights($conn, $current_release)) {
-    define('PHPWG_IN_UPGRADE', true);
-}
+// credentials -- the auth gate, ported verbatim).
+$isAuthorized = UpgradeService::checkUpgradeAccessRights($conn, $current_release);
 
 // +-----------------------------------------------------------------------+
 // |                            upgrade launch                             |
 // +-----------------------------------------------------------------------+
 
 if ((isset($_POST['submit']) or isset($_GET['now']))
-  and UpgradeService::checkUpgrade()) {
+  and $isAuthorized) {
     $runner->performUpgrade($conn);
 } else {
     // Deliberately only defined on this branch, exactly like the former
-    // top-level code: during an actual upgrade launch the frozen
-    // install/db/65-database.php reads defined('PWG_CHARSET') to decide
-    // whether its one-shot charset migration still has to run.
+    // top-level code: during an actual upgrade launch, Patch65 (the
+    // pre-2.0 charset migration) reads defined('PWG_CHARSET') via
+    // UpgradeCharset:: to decide whether its one-shot charset migration
+    // still has to run.
     if (! defined('PWG_CHARSET')) {
         define('PWG_CHARSET', 'utf-8');
     }
-    $runner->renderIntro();
+    $runner->renderIntro($isAuthorized);
 }
 
 $runner->finish();

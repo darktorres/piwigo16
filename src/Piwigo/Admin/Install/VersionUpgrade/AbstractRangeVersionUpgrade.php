@@ -13,6 +13,7 @@ namespace Piwigo\Admin\Install\VersionUpgrade;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Install\DbPatch\DbPatchRegistry;
+use Piwigo\Admin\Install\UpgradeRunDate;
 use Piwigo\Admin\Install\UpgradeService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\BatchWriter;
@@ -31,8 +32,11 @@ use Piwigo\Db\Tables;
  * the ledger descriptions read PHPWG_VERSION and the inserts used
  * UPGRADE_TABLE -- constants nothing has defined for phases (documented
  * in the 8f-6 review) -- now AppInfo::VERSION and Tables::upgrade().
- * CURRENT_DATE is still read as a constant: the upgrade.php entry shell
- * define()s it on this path (SEC-60 keeps the define out of src/).
+ * Legacy Coupling Retirement gap-closure (install/upgrade-flow constants
+ * round): the applied-date used to be read as a `CURRENT_DATE` global
+ * (define()'d by upgrade.php); now `UpgradeRunDate::get()`, and both
+ * ledger INSERTs below are bound-parameterized instead of raw
+ * string-interpolated.
  */
 abstract class AbstractRangeVersionUpgrade implements VersionUpgradeInterface
 {
@@ -70,7 +74,7 @@ SELECT id
                 $inserts,
                 [
                     'id' => $upgrade_id,
-                    'applied' => CURRENT_DATE,
+                    'applied' => UpgradeRunDate::get(),
                     'description' => '[migration from ' . $this->versionFrom() . ' to ' . AppInfo::VERSION . '] not applied',
                 ]
             );
@@ -114,9 +118,12 @@ SELECT id
 INSERT INTO `' . Tables::upgrade() . '`
   (id, applied, description)
   VALUES
-  (\'' . $upgrade_id . '\', NOW(), \'[migration from ' . $this->versionFrom() . ' to ' . AppInfo::VERSION . '] ' . $patch->description() . '\')
+  (:id, NOW(), :description)
 ;';
-            $conn->executeStatement($query);
+            $conn->executeStatement($query, [
+                'id' => $upgrade_id,
+                'description' => '[migration from ' . $this->versionFrom() . ' to ' . AppInfo::VERSION . '] ' . $patch->description(),
+            ]);
         }
 
         echo '</pre>';

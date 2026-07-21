@@ -13,10 +13,11 @@ declare(strict_types=1);
 // established shape). The former top-level upgrade loop lives in
 // Piwigo\Admin\Install\UpgradeFeedRunner; this file keeps only what MUST
 // run at real top-level scope (config/database.inc.php includes write bare
-// globals) or is forbidden inside src/Piwigo by Arch rule SEC-60 (every
-// define() -- PREFIX_TABLE/UPGRADES_PATH and the former
-// prepare_conf_upgrade() block are read at include time by the FROZEN
-// install/db/*.php scripts this page runs).
+// globals) or is forbidden inside src/Piwigo by Arch rule SEC-60. Legacy
+// Coupling Retirement gap-closure (install/upgrade-flow constants round):
+// PREFIX_TABLE is gone -- UpgradeFeedRunner is real, already-DI-shaped
+// class that reads Tables::upgrade() directly now instead of a global its
+// own ledger SQL used to read.
 
 // check php version
 if (version_compare(PHP_VERSION, '8.5.0', '<')) {
@@ -102,10 +103,7 @@ if (! (bool) $conf['check_upgrade_feed']) {
     die('upgrade feed is not active');
 }
 
-// P23 sub-batch 8g-6: the frozen install/db scripts (and their
-// prepare_conf_upgrade() codemod-artifact constant block, whose names were
-// the literal strings 'Tables::categories()' -- a documented pre-existing
-// breakage) are gone; the DbPatch classes read Piwigo\Db\Tables::*(),
+// P23 sub-batch 8g-6: the DbPatch classes read Piwigo\Db\Tables::*(),
 // which resolves its prefix from Config::dbPrefix(). InstallBootstrap::boot()
 // above only seeds SCHEMA defaults + env overrides, so seed the real prefix
 // directly here too (same as upgrade.php does), or every Tables::*() call
@@ -117,8 +115,6 @@ if (! (bool) $conf['check_upgrade_feed']) {
 // own docblock.
 \Piwigo\Bootstrap\InstallBootstrap::activateConfigService();
 
-// Read by UpgradeFeedRunner's ledger SQL (SEC-60 keeps the define() here).
-define('PREFIX_TABLE', $prefixeTable);
 // P23 sub-batch 8g-6: replaces the former define('UPGRADES_PATH', ...) as
 // the "this request is the upgrade flow" marker Lang::loadLanguage() reads.
 \Piwigo\Core\UpgradeFlow::mark();

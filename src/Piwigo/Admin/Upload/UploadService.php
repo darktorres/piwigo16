@@ -206,8 +206,18 @@ final class UploadService
      * 3) register in database
      *
      * @param int[]|null $categories
+     * @param PwgServer|null $service Legacy Coupling Retirement Phase 8,
+     *   8m: was a `global $service;` read guarded by `defined('IN_WS')`.
+     *   Cannot be a required parameter -- the one non-WS real caller,
+     *   Job\Handler\BatchUploadHandler::__invoke(BatchUploadJob $job), is a
+     *   genuine queued-job handler with no PwgServer in scope at all
+     *   (IN_WS is never defined there either, matching the pre-existing
+     *   behavior). PwgImages.php's 5 real WS callers (addFile()/add()/
+     *   addSimple()/upload()/uploadAsync(), each already carrying its own
+     *   PwgServer $service param) pass it through; BatchUploadHandler
+     *   passes nothing.
      */
-    public function addUploadedFile(string $source_filepath, UrlServiceInterface $urlService, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null): int|string
+    public function addUploadedFile(string $source_filepath, UrlServiceInterface $urlService, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null, ?PwgServer $service = null): int|string
     {
         $logger = \Piwigo\Core\CurrentLogger::get();
         $conn = DbConnection::build();
@@ -338,9 +348,7 @@ SELECT
                 if (in_array($finfo_type, ['image/svg', 'image/svg+xml'], true) and $original_extension !== 'svg') {
                     unlink($source_filepath);
                     $error_msg = 'File extension "' . $original_extension . '" for file "' . $original_filename . '" does not match file MIME type "' . $finfo_type . '"';
-                    if (defined('IN_WS')) {
-                        /** @var PwgServer $service */
-                        global $service;
+                    if (defined('IN_WS') && $service !== null) {
                         $service->sendResponse(new PwgError(415, $error_msg));
                         exit;
                     }

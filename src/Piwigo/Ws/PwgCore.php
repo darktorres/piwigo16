@@ -124,7 +124,7 @@ final class PwgCore
         \Piwigo\Config\Config::override('derivative_url_style', 2); // script
 
         $qlimit = min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
-        $where_clauses = WsHelper::stdImageSqlFilter($params, '');
+        $where_clauses = WsHelper::stdImageSqlFilter($params, $service, '');
         $where_clauses[] = 'id<start_id';
 
         if (! empty($params['ids'])) {

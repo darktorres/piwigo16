@@ -22,15 +22,18 @@ use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
  * registrations and PwgServer construction ran at most once per request no
  * matter how many call sites reached the file (WsController on every WS
  * request; UserBootstrap's api_key-failure and pwg.images.uploadAsync
- * branches earlier in the same request). The shared instance is also
- * published to $GLOBALS['service'], preserving the original top-level
- * `$service = new PwgServer();` global-scope contract that
- * WsHelper::stdImageSqlFilter()/UploadService's `global $service` error
- * paths (and UserBootstrap's own `global $service`) still read. Note this
- * closes a latent scope bug of the include_once era: when UserBootstrap's
- * uploadAsync branch had already included the seam, WsController's later
- * method-scoped include_once was a no-op that left its *local* $service
- * unset — every caller now receives the same instance from init() instead.
+ * branches earlier in the same request). Note this closes a latent scope
+ * bug of the include_once era: when UserBootstrap's uploadAsync branch
+ * had already included the seam, WsController's later method-scoped
+ * include_once was a no-op that left its *local* $service unset — every
+ * caller now receives the same instance from init()'s return value
+ * instead. Legacy Coupling Retirement Phase 8, 8m: the original top-level
+ * `$service = new PwgServer();` global-scope contract this used to also
+ * preserve via a `$GLOBALS['service'] = $service;` publish is gone --
+ * WsHelper::stdImageSqlFilter()/UploadService::addUploadedFile() now take
+ * PwgServer as a real parameter instead of reading the global, and
+ * WsController/UserBootstrap were already reading init()'s return value
+ * directly, never the global.
  */
 final class WsInitializer
 {
@@ -108,7 +111,6 @@ final class WsInitializer
             ->setMakeFullUrl();
 
         self::$server = $service;
-        $GLOBALS['service'] = $service;
 
         return $service;
     }

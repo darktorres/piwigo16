@@ -142,12 +142,10 @@ final class UserBootstrap
             if ((bool) $auth_header) {
                 $authenticate = $authService->authKeyLogin($auth_header, true);
                 if (! $authenticate) {
-                    // WsInitializer::init() already publishes the shared
-                    // PwgServer to $GLOBALS['service'] itself as its own side
-                    // effect (preserving the deleted include/ws_init.inc.php
-                    // top-level global-scope contract) -- this assignment is
-                    // a plain local read of its return value, not a second
-                    // publication, so it doesn't need `global $service;`.
+                    // A plain local read of WsInitializer::init()'s return
+                    // value -- never needed `global $service;` (see that
+                    // class's own docblock for the now-removed
+                    // $GLOBALS['service'] publish this predates).
                     $service = \Piwigo\Ws\WsInitializer::init();
                     $service->sendResponse(new PwgError(401, 'Invalid api_key'));
                     exit;

@@ -744,7 +744,7 @@ SELECT DISTINCT id
     public static function search(array $params, PwgServer $service): array
     {
         $images = [];
-        $where_clauses = WsHelper::stdImageSqlFilter($params, 'i.');
+        $where_clauses = WsHelper::stdImageSqlFilter($params, $service, 'i.');
         $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
 
         $super_order_by = false;
@@ -1413,7 +1413,8 @@ SELECT
                 null,
                 null,
                 $params['image_id'],
-                $image['md5sum'] // we force the md5sum to remain the same
+                $image['md5sum'], // we force the md5sum to remain the same
+                $service
             );
 
         return null;
@@ -1507,7 +1508,8 @@ SELECT COUNT(*)
                 null, // categories
                 $params['level'],
                 $params['image_id'] > 0 ? $params['image_id'] : null,
-                $params['original_sum']
+                $params['original_sum'],
+                $service
             );
 
         $info_columns = [
@@ -1646,7 +1648,9 @@ SELECT COUNT(*)
                 is_string($uploaded_name) ? $uploaded_name : null,
                 $params['category'],
                 8,
-                $params['image_id'] > 0 ? $params['image_id'] : null
+                $params['image_id'] > 0 ? $params['image_id'] : null,
+                null,
+                $service
             );
 
         $info_columns = [
@@ -1889,7 +1893,9 @@ SELECT
                     $name, // function add_uploaded_file will secure before insert
                     $params['category'],
                     $params['level'],
-                    $id_image
+                    $id_image,
+                    null,
+                    $service
                 );
 
             $query = '
@@ -2142,7 +2148,8 @@ SELECT COUNT(*)
                 $params['category'],
                 $params['level'],
                 $params['image_id'],
-                $params['original_sum']
+                $params['original_sum'],
+                $service
             );
 
         $logger->debug(__FUNCTION__ . ' image_id after add_uploaded_file = ' . $image_id);

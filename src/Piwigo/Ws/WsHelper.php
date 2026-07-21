@@ -58,12 +58,10 @@ final class WsHelper
      * @param array{f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} $params
      * @return list{0: non-falsy-string, 1?: non-falsy-string, 2?: non-falsy-string, 3?: non-falsy-string, 4?: non-falsy-string, 5?: non-falsy-string, 6?: non-falsy-string, 7?: non-falsy-string, 8?: non-falsy-string, 9?: non-falsy-string, 10?: non-falsy-string}|array{}
      */
-    public static function stdImageSqlFilter(array $params, string $tbl_name = ''): array
+    public static function stdImageSqlFilter(array $params, PwgServer $service, string $tbl_name = ''): array
     {
         foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {
             if (isset($params[$datefield]) and ! DateHelper::isValidMysqlDatetime($params[$datefield])) {
-                /** @var PwgServer $service */
-                global $service;
                 $service->sendResponse(new PwgError(WsError::INVALID_PARAM, 'Invalid ' . $datefield));
                 exit;
             }

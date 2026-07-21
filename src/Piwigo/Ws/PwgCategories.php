@@ -139,7 +139,7 @@ SELECT
 
         // -------------------------------------------------------- get the images
         if (! empty($cats)) {
-            $where_clauses = WsHelper::stdImageSqlFilter($params, 'i.');
+            $where_clauses = WsHelper::stdImageSqlFilter($params, $service, 'i.');
             $where_clauses[] = 'category_id IN (' . implode(',', array_keys($cats)) . ')';
             $where_clauses[] = self::permissionService($conn)->getSqlConditionFandF([
                 'visible_images' => 'i.id',

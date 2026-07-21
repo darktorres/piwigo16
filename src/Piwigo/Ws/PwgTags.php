@@ -152,7 +152,7 @@ final class PwgTags
         unset($tags);
         $tag_ids = array_keys($tags_by_id);
 
-        $where_clauses = WsHelper::stdImageSqlFilter($params);
+        $where_clauses = WsHelper::stdImageSqlFilter($params, $service);
         $where_clauses = ! empty($where_clauses) ? implode(' AND ', $where_clauses) : '';
 
         $order_by = WsHelper::stdImageSqlOrder($params, 'i.');

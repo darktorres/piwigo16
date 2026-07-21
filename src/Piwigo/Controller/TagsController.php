@@ -100,7 +100,8 @@ final class TagsController implements ControllerInterface
                 if (! is_string($tag_name)) {
                     $tag_name = is_string($tag['name_raw'] ?? null) ? $tag['name_raw'] : '';
                 }
-                $tag_letter = mb_strtoupper(mb_substr(\Piwigo\Core\StringHelper::pwgTransliterate($tag_name), 0, 1, PWG_CHARSET), PWG_CHARSET);
+                $pwgCharset = \Piwigo\Core\CharsetHelper::getPwgCharset();
+                $tag_letter = mb_strtoupper(mb_substr(\Piwigo\Core\StringHelper::pwgTransliterate($tag_name), 0, 1, $pwgCharset), $pwgCharset);
 
                 if ($current_tag_idx === 0) {
                     $current_letter = $tag_letter;

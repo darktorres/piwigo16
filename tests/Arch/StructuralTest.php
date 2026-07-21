@@ -688,7 +688,12 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // ... there is no real PSR-7 Response to construct"). Same
         // mechanism reached from Bootstrap/UserBootstrap.php's api_key
         // gate and Admin/Upload/UploadService.php's IN_WS branch.
-        'Ws/PwgImages.php' => 5,
+        // Ws/PwgImages.php's own former 5 raw die('{"jsonrpc"...}') upload-
+        // error sites (Legacy Coupling Retirement gap-closure, Workstream
+        // C2) are gone -- retargeted onto `return new PwgError(...)`, the
+        // same real error-response mechanism this file already uses
+        // everywhere else, so upload errors now honor the request's real
+        // format=/protocol instead of hardcoding raw JSON regardless.
         'Ws/PwgServer.php' => 1,
         'Ws/WsHelper.php' => 1,
         'Controller/WsController.php' => 1,

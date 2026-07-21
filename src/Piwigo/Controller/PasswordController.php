@@ -381,11 +381,6 @@ final class PasswordController implements ControllerInterface
      */
     private function processPasswordRequest(): bool
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $user;
-
         $conn = DbConnection::build();
 
         $state = $_SESSION['reset_password_code'] ?? null;
@@ -436,18 +431,16 @@ final class PasswordController implements ControllerInterface
                 unset($_SESSION['reset_password_code']);
                 // lockout account for 1hour
                 if ($has_valid_user_id) {
-                    $save_user = $user;
                     $saveCurrentUser = \Piwigo\Users\CurrentUser::get();
-                    $user = self::userService($conn)->buildUser((int) $user_id_raw, false);
+                    $target_user_data = self::userService($conn)->buildUser((int) $user_id_raw, false);
                     // PreferencesService writes onto CurrentUser::get()->id
                     // (Legacy Coupling Retirement Track A batch A3), so the
-                    // temporary identity switch above must be mirrored here
-                    // too, or the preference would land on the ORIGINAL
-                    // requester instead of the locked-out target user.
-                    \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
+                    // identity must switch here too, or the preference
+                    // would land on the ORIGINAL requester instead of the
+                    // locked-out target user.
+                    \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($target_user_data));
                     new \Piwigo\Users\PreferencesService(new UserRepository($conn))
                         ->updateParam('reset_password_forbidden_until', time() + 60 * 60);
-                    $user = $save_user;
                     \Piwigo\Users\CurrentUser::set($saveCurrentUser);
 
                     self::activityService($conn)->record('user', (int) $user_id_raw, 'reset_password_failure_too_many');
@@ -472,13 +465,12 @@ final class PasswordController implements ControllerInterface
         }
         $user_id = (int) $user_id_raw;
 
-        $save_user = $user;
         $saveCurrentUser = \Piwigo\Users\CurrentUser::get();
-        $user = self::userService($conn)->buildUser($user_id, false);
+        $target_user_data = self::userService($conn)->buildUser($user_id, false);
         // Same CurrentUser identity-switch requirement as the lockout branch
         // above -- PreferencesService::deleteParam() writes onto
         // CurrentUser::get()->id.
-        \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
+        \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($target_user_data));
         new \Piwigo\Users\PreferencesService(new UserRepository($conn))
             ->deleteParam('reset_password_forbidden_until');
 
@@ -492,7 +484,6 @@ final class PasswordController implements ControllerInterface
         $status = $targetUser->status->value;
         $has_no_email = $targetUser->email === '';
         $this->username = $targetUser->username;
-        $user = $save_user;
         \Piwigo\Users\CurrentUser::set($saveCurrentUser);
 
         // fallback check: don't send mail when user is guest, generic or

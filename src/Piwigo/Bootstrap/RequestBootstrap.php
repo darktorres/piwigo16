@@ -112,6 +112,14 @@ final class RequestBootstrap
     {
         Kernel::boot($paths);
 
+        // Legacy Coupling Retirement Phase 8, 8h: the true start of each
+        // request -- resets ActivityService::record()'s "was a real user
+        // resolved this request" flag before anything else can mark it
+        // (UserBootstrap::initialize()). Monotonic within a request, so it
+        // needs a real reset here rather than relying on
+        // CurrentUser::reset() (arch-test-restricted to tests/).
+        \Piwigo\Users\CurrentUser::resetRealUserResolvedFlag();
+
         /**
          * @var float
          */

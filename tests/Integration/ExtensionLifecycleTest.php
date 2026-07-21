@@ -95,6 +95,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\Tables;
     use Piwigo\Html\HtmlService;
     use Piwigo\Url\UrlService;
+    use Piwigo\Users\CurrentUser;
+    use Piwigo\Users\User;
 
     /**
      * Adversarial coverage for ExtensionLifecycle's real state-machine
@@ -145,7 +147,8 @@ namespace Piwigo\Tests\Integration {
             // production value so the real filesystem check runs against
             // the real themes/ dir.
             Config::override('themes_dir', PHPWG_ROOT_PATH . 'themes');
-            $GLOBALS['user'] = ['id' => 1];
+            CurrentUser::set(User::fromUserArray(['id' => 1]));
+            CurrentUser::markRealUserResolved();
             unset($_REQUEST['method'], $_REQUEST['action']);
             $_SERVER['SCRIPT_NAME'] = '/admin.php';
         }

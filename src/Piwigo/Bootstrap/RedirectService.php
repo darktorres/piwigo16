@@ -73,17 +73,18 @@ final class RedirectService implements RedirectServiceInterface
     #[\Override]
     public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0): never
     {
-        global $user;
-
         // $template/lang_info are genuinely not always set here: this method
         // can be called very early (e.g. a fatal before common.inc.php finishes
         // bootstrapping), which is exactly what this check detects. Lang::
         // isLangInfoInitialized() (Legacy Coupling Retirement Track A
         // gap-fill batch G5) preserves the former raw global's isset()
-        // semantics for $user/lang_info; CurrentTemplate::isInitialized()
-        // does the same for $template (Phase 2 global-residual sweep --
-        // do not simplify the null-coalesce below, it's what makes the
-        // real early-crash fallback path reachable).
+        // semantics for lang_info; CurrentTemplate::isInitialized() does
+        // the same for $template (Phase 2 global-residual sweep -- do not
+        // simplify the null-coalesce below, it's what makes the real
+        // early-crash fallback path reachable). $user below is a plain
+        // local -- written once, immediately consumed by the adjacent
+        // CurrentUser::set(), never read again (Legacy Coupling Retirement
+        // Phase 8, 8h).
         $template = CurrentTemplate::isInitialized() ? CurrentTemplate::get() : null;
 
         if (! Lang::isLangInfoInitialized() || ! isset($template)) {

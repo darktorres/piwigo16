@@ -15,6 +15,8 @@ use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\User;
 
 final class ActivityServiceTest extends IntegrationTestCase
 {
@@ -41,7 +43,8 @@ final class ActivityServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         Config::override('php_extension_in_urls', false);
-        $GLOBALS['user'] = ['id' => 1];
+        CurrentUser::set(User::fromUserArray(['id' => 1]));
+        CurrentUser::markRealUserResolved();
         unset($_REQUEST['method'], $_REQUEST['action'], $_GET['page'], $_POST['destination_tag'], $_SESSION['connected_with']);
         $_SERVER['SCRIPT_NAME'] = '/some/script.php';
 
@@ -212,7 +215,9 @@ final class ActivityServiceTest extends IntegrationTestCase
 
     public function test_record_uses_the_object_id_as_performed_by_on_logout(): void
     {
-        $GLOBALS['user'] = ['id' => 999999]; // should be ignored for logout
+        // should be ignored for logout
+        CurrentUser::set(User::fromUserArray(['id' => 999999]));
+        CurrentUser::markRealUserResolved();
 
         $this->service->record('test-logout', 1, 'logout');
 
@@ -228,7 +233,8 @@ final class ActivityServiceTest extends IntegrationTestCase
 
     public function test_record_uses_the_current_user_as_performed_by_otherwise(): void
     {
-        $GLOBALS['user'] = ['id' => 3];
+        CurrentUser::set(User::fromUserArray(['id' => 3]));
+        CurrentUser::markRealUserResolved();
 
         $this->service->record('test-performer', 999, 'add');
 
@@ -251,8 +257,12 @@ final class ActivityServiceTest extends IntegrationTestCase
         // comment) threw a real ForeignKeyConstraintViolationException on
         // every such write, since 0 is never a valid user id
         // (AUTO_INCREMENT starts at 1) -- this test would have failed with
-        // that exception before the fix.
-        unset($GLOBALS['user']);
+        // that exception before the fix. CurrentUser::isInitialized() is
+        // always true by this point (setUp() already called
+        // CurrentUser::set()) -- resetRealUserResolvedFlag() is what
+        // simulates "no real user resolved this request" now (Legacy
+        // Coupling Retirement Phase 8, 8h).
+        CurrentUser::resetRealUserResolvedFlag();
 
         $this->service->record('test-no-user', 1, 'add');
 

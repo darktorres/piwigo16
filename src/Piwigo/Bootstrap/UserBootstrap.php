@@ -212,6 +212,12 @@ final class UserBootstrap
         // test -- the Integration/Unit harnesses independently seed
         // CurrentUser in their own setUp(), masking the gap).
         \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
+        // Legacy Coupling Retirement Phase 8, 8h: this is the only real
+        // per-request user resolver, so this is where ActivityService::
+        // record()'s "was a real user ever resolved this request" flag
+        // gets marked -- see CurrentUser::wasRealUserResolved()'s own
+        // docblock for why isInitialized() can't substitute.
+        \Piwigo\Users\CurrentUser::markRealUserResolved();
 
         if (\Piwigo\Config\Config::browserLanguage() and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric()) and (bool) ($language = $userService->getBrowserLanguage())) {
             $user['language'] = $language;

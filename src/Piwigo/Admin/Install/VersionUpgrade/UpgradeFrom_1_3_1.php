@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Install\DbPatch\DatabaseConfigChanges;
 use Piwigo\Category\CategoryRepository;
@@ -298,12 +299,6 @@ CREATE TABLE phpwebgallery_user_forbidden (
 ) ENGINE=MyISAM
 ;",
 
-            "
-UPDATE phpwebgallery_users
-  SET language = 'en_UK.iso-8859-1'
-    , template = 'default'
-;",
-
             '
 DELETE FROM phpwebgallery_user_access
 ;',
@@ -318,6 +313,15 @@ DELETE FROM phpwebgallery_group_access
             $query = str_replace('phpwebgallery_', Config::dbPrefix(), $query);
             $conn->executeStatement($query);
         }
+
+        $conn->executeStatement('
+UPDATE ' . Tables::users() . '
+  SET language = :language
+    , template = :template
+;', [
+            'language' => 'en_UK.iso-8859-1',
+            'template' => 'default',
+        ]);
 
         //
         // check indexes
@@ -545,21 +549,27 @@ SELECT DISTINCT(storage_category_id) AS unique_storage_category_id
         foreach ($cat_ids as $cat_id) {
             $query = '
 UPDATE ' . Tables::images() . '
-  SET path = CONCAT(\'' . $fulldirs[$cat_id] . '\',\'/\',file)
-  WHERE storage_category_id = ' . $cat_id . '
+  SET path = CONCAT(:fulldir, :sep, file)
+  WHERE storage_category_id = :catId
 ;';
-            $conn->executeStatement($query);
+            $conn->executeStatement($query, [
+                'fulldir' => $fulldirs[$cat_id],
+                'sep' => '/',
+                'catId' => $cat_id,
+            ]);
         }
 
         // all sub-categories of private categories become private
         $query = '
 SELECT id
   FROM ' . Tables::categories() . '
-  WHERE status = \'private\'
+  WHERE status = :status
 ;';
         $private_cat_ids = array_map(
             static fn (mixed $v): int|string => is_int($v) || is_string($v) ? $v : '',
-            $conn->fetchFirstColumn($query)
+            $conn->fetchFirstColumn($query, [
+                'status' => 'private',
+            ])
         );
 
         if (count($private_cat_ids) > 0) {
@@ -567,10 +577,15 @@ SELECT id
 
             $query = '
 UPDATE ' . Tables::categories() . '
-  SET status = \'private\'
-  WHERE id IN (' . implode(',', $privates) . ')
+  SET status = :status
+  WHERE id IN (:privates)
 ;';
-            $conn->executeStatement($query);
+            $conn->executeStatement($query, [
+                'status' => 'private',
+                'privates' => $privates,
+            ], [
+                'privates' => ArrayParameterType::INTEGER,
+            ]);
         }
 
         // load the config file

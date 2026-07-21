@@ -37,7 +37,9 @@ final class Patch124 implements DbPatchInterface
         //
         // Clean useless configuration settings
         //
-        $conn->executeStatement('DELETE FROM ' . Tables::config() . ' WHERE param like \'upload_form_%\';');
+        $conn->executeStatement('DELETE FROM ' . Tables::config() . ' WHERE param like :pattern;', [
+            'pattern' => 'upload_form_%',
+        ]);
 
         //
         // Remove useless columns

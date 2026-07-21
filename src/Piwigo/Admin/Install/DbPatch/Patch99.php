@@ -34,9 +34,11 @@ final class Patch99 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        $query = 'DELETE FROM ' . Tables::config() . ' WHERE param = \'comments_update_validation\';';
+        $query = 'DELETE FROM ' . Tables::config() . ' WHERE param = :param;';
 
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'param' => 'comments_update_validation',
+        ]);
 
         echo "\n"
         . $this->description()

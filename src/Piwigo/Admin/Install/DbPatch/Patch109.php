@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
@@ -43,11 +44,21 @@ final class Patch109 implements DbPatchInterface
         }
         $conn->executeStatement($q);
 
-        $q = 'UPDATE ' . Tables::categories() . " SET image_order=REPLACE(image_order, 'average_rate', 'rating_score')";
-        $conn->executeStatement($q);
+        $q = 'UPDATE ' . Tables::categories() . ' SET image_order = REPLACE(image_order, :search, :replace)';
+        $conn->executeStatement($q, [
+            'search' => 'average_rate',
+            'replace' => 'rating_score',
+        ]);
 
-        $q = 'UPDATE ' . Tables::config() . " SET value=REPLACE(value, 'average_rate', 'rating_score')
-WHERE param IN ('picture_informations', 'order_by', 'order_by_inside_category')";
-        $conn->executeStatement($q);
+        $q = 'UPDATE ' . Tables::config() . '
+SET value = REPLACE(value, :search, :replace)
+WHERE param IN (:params)';
+        $conn->executeStatement($q, [
+            'search' => 'average_rate',
+            'replace' => 'rating_score',
+            'params' => ['picture_informations', 'order_by', 'order_by_inside_category'],
+        ], [
+            'params' => ArrayParameterType::STRING,
+        ]);
     }
 }

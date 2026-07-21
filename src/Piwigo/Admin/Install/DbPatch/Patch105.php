@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -34,11 +35,12 @@ final class Patch105 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        $query = '
-INSERT INTO ' . Tables::config() . ' (param,value,comment)
-  VALUES (\'picture_menu\',\'false\', \'' . $this->description() . '\')
-;';
-        $conn->executeStatement($query);
+        $batchWriter = new BatchWriter($conn);
+        $batchWriter->singleInsert(Tables::config(), [
+            'param' => 'picture_menu',
+            'value' => 'false',
+            'comment' => $this->description(),
+        ]);
 
         echo "\n"
         . $this->description()

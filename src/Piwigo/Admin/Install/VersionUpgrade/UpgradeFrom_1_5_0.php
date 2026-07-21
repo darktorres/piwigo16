@@ -46,7 +46,7 @@ final class UpgradeFrom_1_5_0 implements VersionUpgradeInterface
         $guest_id = is_scalar($localConf['guest_id'] ?? null) ? (string) $localConf['guest_id'] : (string) Config::guestId();
         $webmaster_id = is_scalar($localConf['webmaster_id'] ?? null) ? (string) $localConf['webmaster_id'] : (string) Config::webmasterId();
 
-        $queries = [
+        $ddlQueries = [
             '
 CREATE TABLE ' . Config::dbPrefix() . 'search (
   id int UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -128,37 +128,12 @@ ALTER TABLE ' . Config::dbPrefix() . "user_infos
      status enum('webmaster','admin','normal','generic','guest')
      NOT NULL default 'guest'
 ;",
-            '
-UPDATE ' . Config::dbPrefix() . "user_infos
-  SET status = 'normal'
-  WHERE status = 'guest'
-;",
-            '
-UPDATE ' . Config::dbPrefix() . "user_infos
-  SET status = 'guest'
-  WHERE user_id = " . $guest_id . '
-;',
-            '
-UPDATE ' . Config::dbPrefix() . "user_infos
-  SET status = 'webmaster'
-  WHERE user_id = " . $webmaster_id . '
-;',
 
             '
 ALTER TABLE ' . Config::dbPrefix() . "user_infos
    CHANGE COLUMN template template varchar(255) NOT NULL default 'yoga/clear'
 ;",
 
-            '
-UPDATE ' . Config::dbPrefix() . "user_infos
-  SET template = 'yoga/dark'
-  WHERE template = 'yoga-dark'
-;",
-            '
-UPDATE ' . Config::dbPrefix() . "user_infos
-  SET template = 'yoga/clear'
-  WHERE template != 'yoga/dark'
-;",
             '
 ALTER TABLE ' . Config::dbPrefix() . "user_infos
   ADD COLUMN adviser enum('true','false') NOT NULL default 'false'
@@ -171,17 +146,61 @@ ALTER TABLE ' . Config::dbPrefix() . "user_infos
 ALTER TABLE ' . Config::dbPrefix() . 'categories
   CHANGE COLUMN rank rank SMALLINT(5) UNSIGNED DEFAULT NULL
 ;',
-            // configuration table
-            '
-UPDATE ' . Config::dbPrefix() . "config
-  SET value = 'yoga/clear'
-  WHERE param = 'default_template'
-;",
         ];
 
-        foreach ($queries as $query) {
+        foreach ($ddlQueries as $query) {
             $conn->executeStatement($query);
         }
+
+        $conn->executeStatement('
+UPDATE ' . Config::dbPrefix() . 'user_infos
+  SET status = :status
+  WHERE status = :oldStatus
+;', [
+            'status' => 'normal',
+            'oldStatus' => 'guest',
+        ]);
+        $conn->executeStatement('
+UPDATE ' . Config::dbPrefix() . 'user_infos
+  SET status = :status
+  WHERE user_id = :userId
+;', [
+            'status' => 'guest',
+            'userId' => $guest_id,
+        ]);
+        $conn->executeStatement('
+UPDATE ' . Config::dbPrefix() . 'user_infos
+  SET status = :status
+  WHERE user_id = :userId
+;', [
+            'status' => 'webmaster',
+            'userId' => $webmaster_id,
+        ]);
+        $conn->executeStatement('
+UPDATE ' . Config::dbPrefix() . 'user_infos
+  SET template = :template
+  WHERE template = :oldTemplate
+;', [
+            'template' => 'yoga/dark',
+            'oldTemplate' => 'yoga-dark',
+        ]);
+        $conn->executeStatement('
+UPDATE ' . Config::dbPrefix() . 'user_infos
+  SET template = :template
+  WHERE template != :excludedTemplate
+;', [
+            'template' => 'yoga/clear',
+            'excludedTemplate' => 'yoga/dark',
+        ]);
+        // configuration table
+        $conn->executeStatement('
+UPDATE ' . Config::dbPrefix() . 'config
+  SET value = :value
+  WHERE param = :param
+;', [
+            'value' => 'yoga/clear',
+            'param' => 'default_template',
+        ]);
 
         //
         // Move rate, rate_anonymous and gallery_url from config file to database
@@ -223,15 +242,23 @@ UPDATE ' . Config::dbPrefix() . "config
             unset($params[$param_name]);
         }
 
-        // Perform the insert query
+        // Perform the insert query -- bound directly (not via
+        // BatchWriter::singleInsert()) because gallery_url's own accessor
+        // (Config::galleryUrl()) treats a stored NULL and a stored '' as
+        // genuinely different ("no override" vs "override to empty"), so
+        // singleInsert()'s empty-string-to-NULL coercion isn't safe here.
         foreach ($params as $param_key => $param_values) {
             $query = '
 INSERT INTO ' . Config::dbPrefix() . 'config
-  (param,value,comment)
+  (param, value, comment)
   VALUES
- (' . "'{$param_key}','{$param_values[0]}','{$param_values[1]}')
-;";
-            $conn->executeStatement($query);
+ (:param, :value, :comment)
+;';
+            $conn->executeStatement($query, [
+                'param' => $param_key,
+                'value' => $param_values[0],
+                'comment' => $param_values[1],
+            ]);
         }
 
         $query = '
@@ -244,67 +271,79 @@ ALTER TABLE ' . Config::dbPrefix() . 'config MODIFY COLUMN `value` TEXT;';
         $query = '
 SELECT value
   FROM ' . Config::dbPrefix() . 'config
-  WHERE param=\'gallery_title\'
+  WHERE param = :param
 ;';
         $t = array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            array_column($conn->fetchAllAssociative($query), 'value')
+            array_column($conn->fetchAllAssociative($query, [
+                'param' => 'gallery_title',
+            ]), 'value')
         )[0] ?? '';
 
         $query = '
 SELECT value
   FROM ' . Config::dbPrefix() . 'config
-  WHERE param=\'gallery_description\'
+  WHERE param = :param
 ;';
         $d = array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            array_column($conn->fetchAllAssociative($query), 'value')
+            array_column($conn->fetchAllAssociative($query, [
+                'param' => 'gallery_description',
+            ]), 'value')
         )[0] ?? '';
 
+        // No addslashes() here (unlike the original raw-SQL version) --
+        // that call was doing SQL-string-literal-escaping duty for the
+        // interpolated query text below; a bound parameter handles
+        // escaping itself, so keeping addslashes() too would double-
+        // escape the stored value.
         $page_banner = '<h1>' . $t . '</h1><p>' . $d . '</p>';
-        $page_banner = addslashes($page_banner);
         $query = '
 INSERT INTO ' . Config::dbPrefix() . 'config
-  (param,value,comment)
+  (param, value, comment)
   VALUES
-  (
-    \'page_banner\',
-    \'' . $page_banner . '\',
-    \'html displayed on the top each page of your gallery\'
-  )
+  (:param, :value, :comment)
 ;';
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'param' => 'page_banner',
+            'value' => $page_banner,
+            'comment' => 'html displayed on the top each page of your gallery',
+        ]);
 
         $query = '
 DELETE FROM ' . Config::dbPrefix() . 'config
-  WHERE param=\'gallery_description\'
+  WHERE param = :param
 ;';
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'param' => 'gallery_description',
+        ]);
 
         //
         // configuration for notification by mail
         //
-        $query = '
-INSERT INTO ' . Tables::config() . "
-  (param,value,comment)
-  VALUES
-  (
-    'nbm_send_mail_as',
-    '',
-    'Send mail as param value for notification by mail'
-  ),
-  (
-    'nbm_send_detailed_content',
-    'true',
-    'Send detailed content for notification by mail'
-  ),
-  (
-    'nbm_complementary_mail_content',
-    '',
-    'Complementary mail content for notification by mail'
-  )
-;";
-        $conn->executeStatement($query);
+        // nbm_send_mail_as/nbm_complementary_mail_content's '' values are
+        // safe under BatchWriter's empty-string-to-NULL coercion here --
+        // both are read back via Config::getString(key, '') (see
+        // Config.php), which falls back to the same '' default whether
+        // the stored value is NULL or ''.
+        $nbmBatchWriter = new BatchWriter($conn);
+        $nbmBatchWriter->massInsert(Tables::config(), ['param', 'value', 'comment'], [
+            [
+                'param' => 'nbm_send_mail_as',
+                'value' => '',
+                'comment' => 'Send mail as param value for notification by mail',
+            ],
+            [
+                'param' => 'nbm_send_detailed_content',
+                'value' => 'true',
+                'comment' => 'Send detailed content for notification by mail',
+            ],
+            [
+                'param' => 'nbm_complementary_mail_content',
+                'value' => '',
+                'comment' => 'Complementary mail content for notification by mail',
+            ],
+        ]);
 
         // depending on the way the 1.5.0 was installed (from scratch or by upgrade)
         // the database structure has small differences that should be corrected.

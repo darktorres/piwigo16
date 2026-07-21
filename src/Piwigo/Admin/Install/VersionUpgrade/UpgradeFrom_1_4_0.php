@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Db\BatchWriter;
@@ -42,32 +43,38 @@ final class UpgradeFrom_1_4_0 implements VersionUpgradeInterface
         $query = '
 SELECT value
   FROM ' . Tables::config() . '
-  WHERE param = \'prefix_thumbnail\'
+  WHERE param = :param
 ;';
-        $prefix_thumbnail_row = $conn->fetchNumeric($query);
+        $prefix_thumbnail_row = $conn->fetchNumeric($query, [
+            'param' => 'prefix_thumbnail',
+        ]);
         $prefix_thumbnail = $prefix_thumbnail_row !== false && is_scalar($prefix_thumbnail_row[0]) ? (string) $prefix_thumbnail_row[0] : '';
 
         // delete obsolete configuration
         $query = '
 DELETE
   FROM ' . Tables::config() . '
-  WHERE param IN (
-   \'prefix_thumbnail\',
-   \'mail_webmaster\',
-   \'upload_maxfilesize\',
-   \'upload_maxwidth\',
-   \'upload_maxheight\',
-   \'upload_maxwidth_thumbnail\',
-   \'upload_maxheight_thumbnail\',
-   \'mail_notification\',
-   \'use_iptc\',
-   \'use_exif\',
-   \'show_iptc\',
-   \'show_exif\',
-   \'authorize_remembering\'
-   )
+  WHERE param IN (:params)
 ;';
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'params' => [
+                'prefix_thumbnail',
+                'mail_webmaster',
+                'upload_maxfilesize',
+                'upload_maxwidth',
+                'upload_maxheight',
+                'upload_maxwidth_thumbnail',
+                'upload_maxheight_thumbnail',
+                'mail_notification',
+                'use_iptc',
+                'use_exif',
+                'show_iptc',
+                'show_exif',
+                'authorize_remembering',
+            ],
+        ], [
+            'params' => ArrayParameterType::STRING,
+        ]);
 
         $queries = [
 
@@ -222,60 +229,57 @@ SELECT *
                 $datas
             );
 
-        $queries = [
+        $conn->executeStatement('
+UPDATE ' . Tables::userInfos() . '
+  SET template = :template
+;', [
+            'template' => 'yoga',
+        ]);
 
-            '
-UPDATE ' . Tables::userInfos() . "
-  SET template = 'yoga'
-;",
+        $conn->executeStatement('
+UPDATE ' . Tables::userInfos() . '
+  SET language = :language
+  WHERE language NOT IN (:keptLanguages)
+;', [
+            'language' => 'en_UK.iso-8859-1',
+            'keptLanguages' => ['en_UK.iso-8859-1', 'fr_FR.iso-8859-1'],
+        ], [
+            'keptLanguages' => ArrayParameterType::STRING,
+        ]);
 
-            '
-UPDATE ' . Tables::userInfos() . "
-  SET language = 'en_UK.iso-8859-1'
-  WHERE language NOT IN ('en_UK.iso-8859-1', 'fr_FR.iso-8859-1')
-;",
+        $conn->executeStatement('
+UPDATE ' . Tables::config() . '
+  SET value = :value
+  WHERE param = :param
+    AND value NOT IN (:keptLanguages)
+;', [
+            'value' => 'en_UK.iso-8859-1',
+            'param' => 'default_language',
+            'keptLanguages' => ['en_UK.iso-8859-1', 'fr_FR.iso-8859-1'],
+        ], [
+            'keptLanguages' => ArrayParameterType::STRING,
+        ]);
 
-            '
-UPDATE ' . Tables::config() . "
-  SET value = 'en_UK.iso-8859-1'
-  WHERE param = 'default_language'
-    AND value NOT IN ('en_UK.iso-8859-1', 'fr_FR.iso-8859-1')
-;",
+        $conn->executeStatement('
+UPDATE ' . Tables::config() . '
+  SET value = :value
+  WHERE param = :param
+;', [
+            'value' => 'yoga',
+            'param' => 'default_template',
+        ]);
 
-            '
-UPDATE ' . Tables::config() . "
-  SET value = 'yoga'
-  WHERE param = 'default_template'
-;",
-
-            '
-INSERT INTO ' . Tables::config() . "
-  (param,value,comment)
-  VALUES
-  (
-    'gallery_title',
-    'Piwigo demonstration site',
-    'Title at top of each page and for RSS feed'
-  )
-;",
-
-            '
-INSERT INTO ' . Tables::config() . "
-  (param,value,comment)
-  VALUES
-  (
-    'gallery_description',
-    'My photos web site',
-    'Short description displayed with gallery title'
-  )
-;",
-
-        ];
-
-        foreach ($queries as $query) {
-            $query = str_replace('piwigo_', Config::dbPrefix(), $query);
-            $conn->executeStatement($query);
-        }
+        $batchWriter = new BatchWriter($conn);
+        $batchWriter->singleInsert(Tables::config(), [
+            'param' => 'gallery_title',
+            'value' => 'Piwigo demonstration site',
+            'comment' => 'Title at top of each page and for RSS feed',
+        ]);
+        $batchWriter->singleInsert(Tables::config(), [
+            'param' => 'gallery_description',
+            'value' => 'My photos web site',
+            'comment' => 'Short description displayed with gallery title',
+        ]);
 
         if ($prefix_thumbnail !== 'TN-') {
             \Piwigo\Core\PageState::current()->addInfo(

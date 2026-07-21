@@ -21,6 +21,15 @@ use Piwigo\Db\Tables;
  * Config::orderByInsideCategory() don't see a site's
  * local/config/config.inc.php override on this path (same reasoning as
  * ConfigurationSubController::orderByIsLocal()).
+ *
+ * Deliberately NOT using BatchWriter::singleInsert() here (unlike most
+ * sibling patches): its empty-string-to-NULL coercion isn't confirmed
+ * safe for this specific pair -- $orderBy/$orderByInsideCategory can be
+ * genuinely `''` (no site override configured), and this legacy DB row's
+ * exact relationship to the modern array-shaped Config::orderBy()/
+ * Config::orderByInsideCategory() wasn't traced far enough to rule out
+ * a NULL-vs-'' distinction mattering. Bound directly instead, preserving
+ * the original raw SQL's literal empty-string behavior exactly.
  */
 final class Patch106 implements DbPatchInterface
 {
@@ -44,16 +53,24 @@ final class Patch106 implements DbPatchInterface
         $orderByInsideCategory = is_scalar($localConf['order_by_inside_category'] ?? null) ? $localConf['order_by_inside_category'] : '';
 
         $query = '
-INSERT INTO ' . Tables::config() . '(param,value,comment)
-  VALUES (\'order_by\', \'' . $orderBy . '\', \'default photos order\')
+INSERT INTO ' . Tables::config() . '(param, value, comment)
+  VALUES (:param, :value, :comment)
 ;';
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'param' => 'order_by',
+            'value' => $orderBy,
+            'comment' => 'default photos order',
+        ]);
 
         $query = '
-INSERT INTO ' . Tables::config() . '(param,value,comment)
-  VALUES (\'order_by_inside_category\', \'' . $orderByInsideCategory . '\', \'default photos order inside category\')
+INSERT INTO ' . Tables::config() . '(param, value, comment)
+  VALUES (:param, :value, :comment)
 ;';
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'param' => 'order_by_inside_category',
+            'value' => $orderByInsideCategory,
+            'comment' => 'default photos order inside category',
+        ]);
 
         echo "\n"
         . $this->description()

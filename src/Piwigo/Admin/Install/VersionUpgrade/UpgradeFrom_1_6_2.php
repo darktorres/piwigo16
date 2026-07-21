@@ -11,7 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 
@@ -191,93 +193,85 @@ CREATE TABLE `' . \Piwigo\Config\Config::dbPrefix() . "user_cache_categories` (
         ) ENGINE=MyISAM COMMENT='Access for Web Services'
         ;",*/
 
-            '
-INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
-  (param,value,comment)
-  VALUES
-  ('show_nb_hits', 'false', 'Show hits count under thumbnails')
-;",
-
-            '
-INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
-  (param,value,comment)
-  VALUES
-  ('history_admin','false','keep a history of administrator visits on your website')
-;",
-
-            '
-INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
-  (param,value,comment)
-  VALUES
-  ('history_guest','true','keep a history of guest visits on your website')
-;",
-
-            '
-INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
-  (param,value,comment)
-  VALUES
-  ('allow_user_registration','true','allow visitors to register?')
-;",
-
-            '
-INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
-  (param,value,comment)
-  VALUES
-  ('secret_key', MD5(RAND()), 'a secret key specific to the gallery for internal use')
-;",
-
-            '
-INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
-  (param,value,comment)
-  VALUES
-  ('nbm_send_html_mail','true','Send mail on HTML format for notification by mail')
-;",
-
-            '
-INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
-  (param,value,comment)
-  VALUES
-  ('nbm_send_recent_post_dates','true','Send recent post by dates for notification by mail')
-;",
-
-            '
-INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
-  (param,value,comment)
-  VALUES
-  ('email_admin_on_new_user','false','Send an email to theadministrators when a user registers')
-;",
-
-            '
-INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
-  (param,value,comment)
-  VALUES
-  ('email_admin_on_comment','false','Send an email to the administrators when a valid comment is entered')
-;",
-
-            '
-INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
-  (param,value,comment)
-  VALUES
-  ('email_admin_on_comment_validation','false','Send an email to the administrators when a comment requires validation')
-;",
-
-            '
-INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . "config
-  (param,value,comment)
-  VALUES
-  ('email_admin_on_picture_uploaded','false','Send an email to the administrators when a picture is uploaded')
-;",
-
-            '
-UPDATE ' . \Piwigo\Config\Config::dbPrefix() . "user_cache
-  SET need_update = 'true'
-;",
-
         ];
 
         foreach ($queries as $query) {
             $conn->executeStatement($query);
         }
+
+        $batchWriter = new BatchWriter($conn);
+        $batchWriter->massInsert(Tables::config(), ['param', 'value', 'comment'], [
+            [
+                'param' => 'show_nb_hits',
+                'value' => 'false',
+                'comment' => 'Show hits count under thumbnails',
+            ],
+            [
+                'param' => 'history_admin',
+                'value' => 'false',
+                'comment' => 'keep a history of administrator visits on your website',
+            ],
+            [
+                'param' => 'history_guest',
+                'value' => 'true',
+                'comment' => 'keep a history of guest visits on your website',
+            ],
+            [
+                'param' => 'allow_user_registration',
+                'value' => 'true',
+                'comment' => 'allow visitors to register?',
+            ],
+            [
+                'param' => 'nbm_send_html_mail',
+                'value' => 'true',
+                'comment' => 'Send mail on HTML format for notification by mail',
+            ],
+            [
+                'param' => 'nbm_send_recent_post_dates',
+                'value' => 'true',
+                'comment' => 'Send recent post by dates for notification by mail',
+            ],
+            [
+                'param' => 'email_admin_on_new_user',
+                'value' => 'false',
+                'comment' => 'Send an email to theadministrators when a user registers',
+            ],
+            [
+                'param' => 'email_admin_on_comment',
+                'value' => 'false',
+                'comment' => 'Send an email to the administrators when a valid comment is entered',
+            ],
+            [
+                'param' => 'email_admin_on_comment_validation',
+                'value' => 'false',
+                'comment' => 'Send an email to the administrators when a comment requires validation',
+            ],
+            [
+                'param' => 'email_admin_on_picture_uploaded',
+                'value' => 'false',
+                'comment' => 'Send an email to the administrators when a picture is uploaded',
+            ],
+        ]);
+
+        // secret_key's value is generated server-side by MySQL itself
+        // (MD5(RAND())) -- not a PHP value, so it can't be a bound
+        // parameter; :param/:comment are still bound normally.
+        $conn->executeStatement('
+INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . 'config
+  (param, value, comment)
+  VALUES
+  (:param, MD5(RAND()), :comment)
+;', [
+            'param' => 'secret_key',
+            'comment' => 'a secret key specific to the gallery for internal use',
+        ]);
+
+        $conn->executeStatement('
+UPDATE ' . \Piwigo\Config\Config::dbPrefix() . 'user_cache
+  SET need_update = :needUpdate
+;', [
+            'needUpdate' => 'true',
+        ]);
 
         $replacements = [
             ['&#039;', '\''],
@@ -287,64 +281,78 @@ UPDATE ' . \Piwigo\Config\Config::dbPrefix() . "user_cache
             ['&amp;',  '&'], // <- this must be the last one
         ];
 
+        // No addslashes() here (unlike the original raw-SQL version) --
+        // those calls were doing SQL-string-literal-escaping duty for the
+        // interpolated query text; bound parameters handle escaping
+        // themselves, so keeping addslashes() too would double-escape
+        // the search/replace strings (a real bug for the &#039;/&quot;
+        // entries, whose replacement values contain a literal quote).
         foreach ($replacements as $replacement) {
             $query = '
 UPDATE ' . \Piwigo\Config\Config::dbPrefix() . 'comments
-  SET content = REPLACE(content, "' .
-              addslashes($replacement[0]) .
-              '", "' .
-              addslashes($replacement[1]) .
-              '")
+  SET content = REPLACE(content, :search, :replace)
 ;';
-            $conn->executeStatement($query);
+            $conn->executeStatement($query, [
+                'search' => $replacement[0],
+                'replace' => $replacement[1],
+            ]);
         }
 
         \Piwigo\Config\CurrentConfigService::get()->loadConfFromDb();
         $dbconf = \Piwigo\Config\Config::all();
 
         $query = '
-UPDATE ' . Tables::userInfos() . "
+UPDATE ' . Tables::userInfos() . '
 SET
-  template = '" . $dbconf['default_template'] . "',
-  nb_image_line = " . $dbconf['nb_image_line'] . ',
-  nb_line_page = ' . $dbconf['nb_line_page'] . ",
-  language = '" . $dbconf['default_language'] . "',
-  maxwidth = " .
-          (empty($dbconf['default_maxwidth']) ? 'NULL' : $dbconf['default_maxwidth']) .
-          ',
-  maxheight = ' .
-          (empty($dbconf['default_maxheight']) ? 'NULL' : $dbconf['default_maxheight']) .
-          ',
-  recent_period = ' . $dbconf['recent_period'] . ",
-  expand = '" . SqlDialect::booleanToString($dbconf['auto_expand']) . "',
-  show_nb_comments = '" . SqlDialect::booleanToString($dbconf['show_nb_comments']) . "',
-  show_nb_hits = '" . SqlDialect::booleanToString($dbconf['show_nb_hits']) . "',
-  enabled_high = '" . SqlDialect::booleanToString(
-              ($dbconf['newuser_default_enabled_high'] ?? true)
-          ) .
-          "'
+  template = :template,
+  nb_image_line = :nbImageLine,
+  nb_line_page = :nbLinePage,
+  language = :language,
+  maxwidth = :maxwidth,
+  maxheight = :maxheight,
+  recent_period = :recentPeriod,
+  expand = :expand,
+  show_nb_comments = :showNbComments,
+  show_nb_hits = :showNbHits,
+  enabled_high = :enabledHigh
 WHERE
-  user_id = " . $dbconf['default_user_id'] . ';';
-        $conn->executeStatement($query);
+  user_id = :userId';
+        $conn->executeStatement($query, [
+            'template' => $dbconf['default_template'],
+            'nbImageLine' => $dbconf['nb_image_line'],
+            'nbLinePage' => $dbconf['nb_line_page'],
+            'language' => $dbconf['default_language'],
+            'maxwidth' => empty($dbconf['default_maxwidth']) ? null : $dbconf['default_maxwidth'],
+            'maxheight' => empty($dbconf['default_maxheight']) ? null : $dbconf['default_maxheight'],
+            'recentPeriod' => $dbconf['recent_period'],
+            'expand' => SqlDialect::booleanToString($dbconf['auto_expand']),
+            'showNbComments' => SqlDialect::booleanToString($dbconf['show_nb_comments']),
+            'showNbHits' => SqlDialect::booleanToString($dbconf['show_nb_hits']),
+            'enabledHigh' => SqlDialect::booleanToString($dbconf['newuser_default_enabled_high'] ?? true),
+            'userId' => $dbconf['default_user_id'],
+        ]);
 
         $query = '
-DELETE FROM ' . Tables::config() . "
+DELETE FROM ' . Tables::config() . '
 WHERE
-  param IN
-(
-  'default_template',
-  'nb_image_line',
-  'nb_line_page',
-  'default_language',
-  'default_maxwidth',
-  'default_maxheight',
-  'recent_period',
-  'auto_expand',
-  'show_nb_comments',
-  'show_nb_hits'
-)
-;";
-        $conn->executeStatement($query);
+  param IN (:params)
+;';
+        $conn->executeStatement($query, [
+            'params' => [
+                'default_template',
+                'nb_image_line',
+                'nb_line_page',
+                'default_language',
+                'default_maxwidth',
+                'default_maxheight',
+                'recent_period',
+                'auto_expand',
+                'show_nb_comments',
+                'show_nb_hits',
+            ],
+        ], [
+            'params' => ArrayParameterType::STRING,
+        ]);
 
         // now we upgrade from 1.7.0
         new UpgradeFrom_1_7_0()

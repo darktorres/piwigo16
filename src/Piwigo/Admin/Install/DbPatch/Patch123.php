@@ -206,7 +206,9 @@ final class Patch123 implements DbPatchInterface
 
         ImageStdParams::set_and_save($types);
 
-        $conn->executeStatement('DELETE FROM ' . Tables::config() . ' WHERE param = \'disabled_derivatives\'');
+        $conn->executeStatement('DELETE FROM ' . Tables::config() . ' WHERE param = :param', [
+            'param' => 'disabled_derivatives',
+        ]);
         new DerivativeCacheService()
             ->clearDerivativeCache();
 

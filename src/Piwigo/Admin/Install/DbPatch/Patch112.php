@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
@@ -36,9 +37,13 @@ final class Patch112 implements DbPatchInterface
     {
         // Add column
         $query = 'DELETE FROM ' . Tables::config() . '
-  WHERE param IN (\'local_data_dir_checked\', \'combined_dir_checked\') ';
+  WHERE param IN (:params) ';
 
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'params' => ['local_data_dir_checked', 'combined_dir_checked'],
+        ], [
+            'params' => ArrayParameterType::STRING,
+        ]);
 
         $dir = PHPWG_ROOT_PATH . 'local/combined/';
         if (is_dir($dir)) {

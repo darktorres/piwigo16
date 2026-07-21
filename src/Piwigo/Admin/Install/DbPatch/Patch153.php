@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -40,12 +41,12 @@ final class Patch153 implements DbPatchInterface
     {
         $value = $this->valueDisplayFromto();
 
-        $query = '
-INSERT INTO ' . Tables::config() . ' (param,value,comment)
-  VALUES (\'display_fromto\',\'' . $value . '\', \'' . $this->description() . '\')
-;';
-
-        $conn->executeStatement($query);
+        $batchWriter = new BatchWriter($conn);
+        $batchWriter->singleInsert(Tables::config(), [
+            'param' => 'display_fromto',
+            'value' => $value,
+            'comment' => $this->description(),
+        ]);
 
         echo "\n"
         . $this->description()

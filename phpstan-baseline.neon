@@ -759,7 +759,7 @@ parameters:
 		-
 			rawMessage: Foreach overwrites $query with its value variable.
 			identifier: foreach.valueOverwrite
-			count: 2
+			count: 1
 			path: src/Piwigo/Admin/Install/VersionUpgrade/UpgradeFrom_1_4_0.php
 
 		-
@@ -791,18 +791,6 @@ parameters:
 			identifier: foreach.valueOverwrite
 			count: 1
 			path: src/Piwigo/Admin/Install/VersionUpgrade/UpgradeFrom_1_5_0.php
-
-		-
-			rawMessage: 'Part $param_values[0] (mixed) of encapsed string cannot be cast to string.'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: src/Piwigo/Admin/Install/VersionUpgrade/UpgradeFrom_1_5_0.php
-
-		-
-			rawMessage: Binary operation "." between non-falsy-string and mixed results in an error.
-			identifier: binaryOp.invalid
-			count: 12
-			path: src/Piwigo/Admin/Install/VersionUpgrade/UpgradeFrom_1_6_2.php
 
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'

@@ -106,7 +106,7 @@ test('addEventHandler refuses to register the exact same string callable twice a
 
 test('addEventHandler refuses a re-evaluated first-class-callable bound to the same object+method', function (): void {
     // $obj->method(...) creates a NEW Closure instance on every evaluation,
-    // but real callers (e.g. Admin\Integrity\c13y_internal.php) rely on
+    // but real callers (e.g. Admin\Integrity\C13yInternal.php) rely on
     // addEventHandler() recognizing it as the same registration.
     $obj = new class {
         public function handle(mixed $data): mixed

@@ -121,7 +121,7 @@ final class EventDispatcher
      * on every evaluation, so registering/removing the same bound method
      * across separate calls (the real add_event_handler()/
      * remove_event_handler() usage pattern, see
-     * src/Piwigo/Admin/Integrity/c13y_internal.php) needs the loose,
+     * src/Piwigo/Admin/Integrity/C13yInternal.php) needs the loose,
      * same-binding comparison `==` gives, not `===` identity.
      *
      * @param array<int, mixed>|object|string $a

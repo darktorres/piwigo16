@@ -28,9 +28,20 @@ use Piwigo\Session\SessionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
-class c13y_internal
+class C13yInternal
 {
-    public function __construct()
+    /**
+     * Legacy Coupling Retirement Phase 8, 8k: registration used to be a
+     * constructor side effect -- every `new C13yInternal()` silently
+     * registered 3 more closures on the shared EventDispatcher singleton,
+     * with no way to construct the class (e.g. to call
+     * c13y_correction_user() directly) without that side effect firing.
+     * Split into an explicit method so registration only happens where a
+     * caller actually asks for it -- the one real caller
+     * (Controller\Admin\IntroSubController) calls this right after
+     * construction, same as it always did, just visibly.
+     */
+    public function registerHandlers(): void
     {
         \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('list_check_integrity', $this->c13y_version(...));
         \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('list_check_integrity', $this->c13y_exif(...));
@@ -52,7 +63,7 @@ class c13y_internal
     /**
      * Check version
      *
-     * @param check_integrity $c13y
+     * @param CheckIntegrity $c13y
      */
     public function c13y_version($c13y): void
     {
@@ -88,7 +99,7 @@ class c13y_internal
     /**
      * Check exif
      *
-     * @param check_integrity $c13y
+     * @param CheckIntegrity $c13y
      */
     public function c13y_exif($c13y): void
     {
@@ -109,7 +120,7 @@ class c13y_internal
     /**
      * Check user
      *
-     * @param check_integrity $c13y
+     * @param CheckIntegrity $c13y
      */
     public function c13y_user($c13y): void
     {

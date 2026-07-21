@@ -235,7 +235,7 @@ final class Config
             'default' => null,
             'method' => 'c13yIgnore',
             'custom' => true,
-            'description' => 'Serialized {version, list} of integrity-check anomalies the admin has acknowledged/ignored (Admin/Integrity check_integrity.php).',
+            'description' => 'Serialized {version, list} of integrity-check anomalies the admin has acknowledged/ignored (Admin/Integrity CheckIntegrity.php).',
         ],
         'cache.backend' => [
             'type' => 'string',

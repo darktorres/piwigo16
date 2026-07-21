@@ -7,7 +7,7 @@ namespace Piwigo\Admin\Maintenance;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Admin\Integrity\check_integrity;
+use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Auth\CookieService;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
@@ -205,7 +205,7 @@ final class MaintenanceActionDispatcher
 
             case 'c13y':
 
-                $c13y = new check_integrity();
+                $c13y = new CheckIntegrity();
                 $c13y->maintenance();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Reinitialize check integrity'), Lang::t('action successfully performed.')));
                 break;

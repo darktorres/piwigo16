@@ -12,7 +12,7 @@ use Piwigo\Db\Tables;
  * Ported from admin/include/functions.php's fs_quick_check()/
  * images_integrity() (P23 batch 8d). Narrow "check X, fix Y" utilities,
  * distinct from the much larger, general anomaly framework in
- * Piwigo\Admin\Integrity\check_integrity (add_anomaly()/display()/
+ * Piwigo\Admin\Integrity\CheckIntegrity (add_anomaly()/display()/
  * maintenance()) -- not the same concern, deliberately not merged in and
  * deliberately named more specifically to avoid confusion with it.
  */

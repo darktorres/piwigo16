@@ -64,7 +64,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * defaultPictureContent(...)) instead of the string-name form -- confirmed
  * add_event_handler() accepts `array<int, mixed>|object|string` (a Closure
  * is an object), same conversion precedent as
- * Piwigo\Admin\Integrity\c13y_internal.php's own handler registrations.
+ * Piwigo\Admin\Integrity\C13yInternal.php's own handler registrations.
  *
  * The "actions" switch (favorite/caddie/rate/comment moderation, all
  * ending in redirect()) is the last place any exit()-capable call happens

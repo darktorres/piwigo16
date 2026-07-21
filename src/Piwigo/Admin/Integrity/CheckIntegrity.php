@@ -17,7 +17,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Lang\Translator;
 
-class check_integrity
+class CheckIntegrity
 {
     /**
      * @var array<int, mixed>

@@ -8,8 +8,8 @@ use DateInterval;
 use DateTime;
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Admin\InstallationStats;
-use Piwigo\Admin\Integrity\c13y_internal;
-use Piwigo\Admin\Integrity\check_integrity;
+use Piwigo\Admin\Integrity\C13yInternal;
+use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Core\Env;
@@ -605,9 +605,10 @@ SELECT
         $template->assign_var_from_handle('ADMIN_CONTENT', 'intro');
 
         // Check integrity
-        $c13y = new check_integrity();
+        $c13y = new CheckIntegrity();
         // add internal checks
-        new c13y_internal();
+        new C13yInternal()
+            ->registerHandlers();
         // check and display
         $c13y->check();
         $c13y->display();

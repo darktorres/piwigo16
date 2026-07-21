@@ -65,7 +65,7 @@ final class UserListPageRenderer
 
         $my_base_url = $urlService->getRootUrl() . 'admin.php?page=';
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('users');
         $tabsheet->select('user_list');
         $tabsheet->assign();

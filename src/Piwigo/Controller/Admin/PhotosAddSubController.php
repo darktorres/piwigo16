@@ -7,7 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\PhotosAddApplicationsPageRenderer;
 use Piwigo\Admin\PhotosAddDirectPageRenderer;
 use Piwigo\Admin\PhotosAddFtpPageRenderer;
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -67,7 +67,7 @@ final class PhotosAddSubController implements AdminSubControllerInterface
             $tab = 'direct';
         }
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('photos_add');
         $tabsheet->select($tab);
         $tabsheet->assign();

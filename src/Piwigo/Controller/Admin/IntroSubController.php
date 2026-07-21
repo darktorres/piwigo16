@@ -11,7 +11,7 @@ use Piwigo\Admin\InstallationStats;
 use Piwigo\Admin\Integrity\c13y_internal;
 use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
@@ -91,7 +91,7 @@ final class IntroSubController implements AdminSubControllerInterface
             exit();
         }
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('admin_home');
         $tabsheet->select('');
         $tabsheet->assign();

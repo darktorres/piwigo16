@@ -118,7 +118,7 @@ final class CatOptionsPageRenderer
             ]
         );
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('cat_options');
         $tabsheet->select($section);
         $tabsheet->assign();

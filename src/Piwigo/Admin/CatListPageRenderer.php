@@ -102,7 +102,7 @@ final class CatListPageRenderer
 
         $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=';
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('albums');
         $tabsheet->select('list');
         $tabsheet->assign();

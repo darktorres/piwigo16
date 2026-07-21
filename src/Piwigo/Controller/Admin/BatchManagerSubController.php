@@ -8,7 +8,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\BatchManagerGlobalPageRenderer;
 use Piwigo\Admin\BatchManagerUnitPageRenderer;
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -169,7 +169,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             $tab = 'global';
         }
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('batch_manager');
         $tabsheet->select($tab);
         $tabsheet->assign();

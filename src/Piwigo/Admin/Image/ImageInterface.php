@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
-interface imageInterface
+interface ImageInterface
 {
     public function get_width(): int|float;
 
@@ -29,7 +29,7 @@ interface imageInterface
 
     public function sharpen(int|float $amount): bool;
 
-    public function compose(pwg_image $overlay, int|float $x, int|float $y, int|float $opacity): bool;
+    public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool;
 
     public function write(string $destination_filepath): bool;
 }

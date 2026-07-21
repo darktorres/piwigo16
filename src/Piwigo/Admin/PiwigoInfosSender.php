@@ -7,7 +7,7 @@ namespace Piwigo\Admin;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ArrayHelper;
@@ -45,7 +45,7 @@ use Piwigo\Users\UserService;
  * instance. See TelemetrySenderInterface's own docblock.
  *
  * get_graphics_library()/get_pwg_general_statitics()/get_installation_date()
- * were migrated onto pwg_image::get_graphics_library()/
+ * were migrated onto PwgImage::get_graphics_library()/
  * InstallationStats::getGeneralStatistics()/getInstallationDate(), and
  * fetchRemote() onto Piwigo\Http\HttpClientService::fetch(), in the
  * following file-3 sub-batches (System info, Network/HTTP).
@@ -137,7 +137,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
                     ->version(),
                 'php_datetime' => date('Y-m-d H:i:s'),
                 'db_datetime' => $dbCurrentDate,
-                'graphics_library' => pwg_image::get_graphics_library(),
+                'graphics_library' => PwgImage::get_graphics_library(),
             ],
             'general_stats' => InstallationStats::getGeneralStatistics(),
         ];

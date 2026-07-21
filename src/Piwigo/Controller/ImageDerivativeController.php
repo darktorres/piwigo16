@@ -6,7 +6,7 @@ namespace Piwigo\Controller;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
-use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\Env;
@@ -47,9 +47,9 @@ use Piwigo\Url\UrlService;
  * else in this codebase.
  *
  * Note on plugin events: the old i.php carried a local no-op
- * trigger_notify() stub so that pwg_image's constructor (which fires
+ * trigger_notify() stub so that PwgImage's constructor (which fires
  * 'load_image_library') would not explode on this path. Since P23 batch 7
- * the real dispatch is always available (pwg_image now calls
+ * the real dispatch is always available (PwgImage now calls
  * Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify() directly, a
  * plain autoloaded class, not a composer autoload.files free function --
  * the stub had in fact become a fatal "cannot redeclare" collision), and
@@ -59,11 +59,11 @@ use Piwigo\Url\UrlService;
  * registering any, which is the fast-bootstrap design itself.
  *
  * No globals left: $conf, $logger and $prefixeTable used to be (Legacy
- * Coupling Retirement Track A gap-fill batches G2/G5) -- pwg_image and
+ * Coupling Retirement Track A gap-fill batches G2/G5) -- PwgImage and
  * ImageStdParams read Piwigo\Config\Config:: accessors instead of a raw
  * $conf; this controller's own Logger instance is published via
  * Piwigo\Core\CurrentLogger::set() right after construction, the same
- * static accessor image_ext_imagick.php and every other shared consumer
+ * static accessor ImageExtImagick.php and every other shared consumer
  * read from now; and every real $prefixeTable read here was already the
  * same value as Piwigo\Config\Config::dbPrefix() (both trace back to the
  * same PIWIGO_DB_PREFIX env var / 'piwigo_' default) -- now moot anyway,
@@ -260,9 +260,9 @@ final class ImageDerivativeController
                     // orientation / non-JPEG source" -- get_rotation_code_
                     // from_angle()'s own docblock confirms that means the
                     // same thing as an explicit 0 (no rotation).
-                    $this->rotationAngle = pwg_image::get_rotation_angle($this->srcPath) ?? 0;
+                    $this->rotationAngle = PwgImage::get_rotation_angle($this->srcPath) ?? 0;
 
-                    $imageRepo->updateRotation($image_id, pwg_image::get_rotation_code_from_angle($this->rotationAngle));
+                    $imageRepo->updateRotation($image_id, PwgImage::get_rotation_code_from_angle($this->rotationAngle));
                 } else {
                     // get_rotation_angle_from_code() accepts int|string; the
                     // `rotation` column is a native DBAL int once retargeted
@@ -273,7 +273,7 @@ final class ImageDerivativeController
                     if (! is_numeric($rotation)) {
                         $this->ierror('Invalid rotation value in database', 500);
                     }
-                    $this->rotationAngle = pwg_image::get_rotation_angle_from_code((int) $rotation);
+                    $this->rotationAngle = PwgImage::get_rotation_angle_from_code((int) $rotation);
                 }
             } catch (\Exception $e) {
                 $logger->error($e->getMessage(), 'i.php');
@@ -333,7 +333,7 @@ final class ImageDerivativeController
         ignore_user_abort(true);
         @set_time_limit(0);
 
-        $image = new pwg_image($this->srcPath);
+        $image = new PwgImage($this->srcPath);
         $timing['load'] = $this->timeStep($step);
 
         $changes = 0;
@@ -373,7 +373,7 @@ final class ImageDerivativeController
 
         if ($params->will_watermark($d_size)) {
             $wm = ImageStdParams::get_watermark();
-            $wm_image = new pwg_image(PHPWG_ROOT_PATH . $wm->file);
+            $wm_image = new PwgImage(PHPWG_ROOT_PATH . $wm->file);
             $wm_size = [(int) $wm_image->get_width(), (int) $wm_image->get_height()];
             if ($d_size[0] < $wm_size[0] or $d_size[1] < $wm_size[1]) {
                 $wm_scaling_params = SizingParams::classic($d_size[0], $d_size[1]);

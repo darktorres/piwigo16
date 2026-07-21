@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Admin\Image\pwg_image;
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Config\ConfigService;
 use Piwigo\Controller\ProfileFormHandler;
@@ -481,7 +481,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $template->set_filename('config', 'configuration_' . $page_section . '.tpl');
 
         // TabSheet
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('configuration');
         $tabsheet->select($page_section);
         $tabsheet->assign();
@@ -646,7 +646,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 // we only load the derivatives if it was not already loaded: it occurs
                 // when submitting the form and an error remains
                 if (! self::$sizesLoadedInTpl) {
-                    $is_gd = (pwg_image::get_library() == 'gd') ? true : false;
+                    $is_gd = (PwgImage::get_library() == 'gd') ? true : false;
                     $template->assign('is_gd', $is_gd);
                     $template->assign(
                         'sizes',

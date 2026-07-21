@@ -11,7 +11,7 @@ use Piwigo\Core\UrlServiceInterface;
  * Ported from admin/include/add_core_tabs.inc.php (P23 batch 8b-6). Its
  * one function is reached exclusively via the `tabsheet_before_select`
  * event -- confirmed via a direct grep, zero direct callers anywhere --
- * fired synchronously inside every `tabsheet::select()` call. Registered
+ * fired synchronously inside every `Tabsheet::select()` call. Registered
  * once per admin request from admin.php, before AdminDispatcher::dispatch()
  * runs, same bootstrap-time-registration shape as P23 batch 7's
  * `Piwigo\Admin\PluginLoader`.
@@ -31,7 +31,7 @@ use Piwigo\Core\UrlServiceInterface;
  * `admin/include/`, outside any dead-code check, until this fold). The
  * first block (setting `$sheets['user_list']`/`$sheets['user_activity']`)
  * is the one actually consumed by `UserListPageRenderer`/
- * `UserActivityPageRenderer`'s own `tabsheet::set_id('users')` calls.
+ * `UserActivityPageRenderer`'s own `Tabsheet::set_id('users')` calls.
  */
 final class CoreTabs
 {

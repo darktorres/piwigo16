@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
@@ -82,7 +82,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
 
         $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=';
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('site_update');
         // Matches CoreTabs::addCoreTabs()'s own 'site_maager' key -- see
         // this class's own docblock.

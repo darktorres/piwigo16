@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\ThemesInstalledPageRenderer;
 use Piwigo\Admin\ThemesNewPageRenderer;
 use Piwigo\Admin\ThemesStandardPagesPageRenderer;
@@ -26,7 +26,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * `Piwigo\Admin\CoreTabs::addCoreTabs()`'s own `case 'themes':` branch
  * (formerly `admin/include/add_core_tabs.inc.php`'s `add_core_tabs()`,
  * folded in P23 batch 8b-6), read via `global $my_base_url;` when
- * `tabsheet::select()` fires its `tabsheet_before_select` event a few
+ * `Tabsheet::select()` fires its `tabsheet_before_select` event a few
  * lines below -- dropping it silently degraded every tab href (missing
  * the `admin.php?page=themes` prefix entirely). Restored here.
  *
@@ -63,7 +63,7 @@ final class ThemesSubController implements AdminSubControllerInterface
 
         // Consumed by CoreTabs::addCoreTabs()'s own 'themes' case via
         // `global $my_base_url;`, triggered synchronously inside
-        // tabsheet::select() below -- must be set before that call, not
+        // Tabsheet::select() below -- must be set before that call, not
         // dead code (see this class's own docblock).
         global $my_base_url;
         $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=themes';
@@ -81,7 +81,7 @@ final class ThemesSubController implements AdminSubControllerInterface
             $tab = 'installed';
         }
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('themes');
         $tabsheet->select($tab);
         $tabsheet->assign();

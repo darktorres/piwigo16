@@ -178,109 +178,109 @@ parameters:
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 3
-			path: src/Piwigo/Admin/Image/image_ext_imagick.php
+			path: src/Piwigo/Admin/Image/ImageExtImagick.php
 
 		-
 			rawMessage: 'Loose comparison via "==" between float|int<min, -1>|int<1, max> and int is not allowed.'
 			identifier: equal.notAllowed
 			count: 2
-			path: src/Piwigo/Admin/Image/image_ext_imagick.php
+			path: src/Piwigo/Admin/Image/ImageExtImagick.php
 
 		-
 			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
 			identifier: equal.notAllowed
 			count: 1
-			path: src/Piwigo/Admin/Image/image_ext_imagick.php
+			path: src/Piwigo/Admin/Image/ImageExtImagick.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 4
-			path: src/Piwigo/Admin/Image/image_ext_imagick.php
+			path: src/Piwigo/Admin/Image/ImageExtImagick.php
 
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 1
-			path: src/Piwigo/Admin/Image/image_gd.php
+			path: src/Piwigo/Admin/Image/ImageGd.php
 
 		-
 			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
 			identifier: equal.notAllowed
 			count: 4
-			path: src/Piwigo/Admin/Image/image_gd.php
+			path: src/Piwigo/Admin/Image/ImageGd.php
 
 		-
 			rawMessage: 'Loose comparison via "==" between int<-1, 1> and int is not allowed.'
 			identifier: equal.notAllowed
 			count: 2
-			path: src/Piwigo/Admin/Image/image_imagick.php
+			path: src/Piwigo/Admin/Image/ImageImagick.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
-			path: src/Piwigo/Admin/Image/image_imagick.php
+			path: src/Piwigo/Admin/Image/ImageImagick.php
 
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 5
-			path: src/Piwigo/Admin/Image/pwg_image.php
+			path: src/Piwigo/Admin/Image/PwgImage.php
 
 		-
 			rawMessage: 'Call to function is_array() with list<string> will always evaluate to true.'
 			identifier: function.alreadyNarrowedType
 			count: 1
-			path: src/Piwigo/Admin/Image/pwg_image.php
+			path: src/Piwigo/Admin/Image/PwgImage.php
 
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 2
-			path: src/Piwigo/Admin/Image/pwg_image.php
+			path: src/Piwigo/Admin/Image/PwgImage.php
 
 		-
 			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
 			identifier: notEqual.notAllowed
 			count: 1
-			path: src/Piwigo/Admin/Image/pwg_image.php
+			path: src/Piwigo/Admin/Image/PwgImage.php
 
 		-
 			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
 			identifier: notEqual.notAllowed
 			count: 3
-			path: src/Piwigo/Admin/Image/pwg_image.php
+			path: src/Piwigo/Admin/Image/PwgImage.php
 
 		-
 			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
 			identifier: notEqual.notAllowed
 			count: 2
-			path: src/Piwigo/Admin/Image/pwg_image.php
+			path: src/Piwigo/Admin/Image/PwgImage.php
 
 		-
 			rawMessage: 'Loose comparison via "==" between float|int and float|int is not allowed.'
 			identifier: equal.notAllowed
 			count: 2
-			path: src/Piwigo/Admin/Image/pwg_image.php
+			path: src/Piwigo/Admin/Image/PwgImage.php
 
 		-
 			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
 			identifier: equal.notAllowed
 			count: 1
-			path: src/Piwigo/Admin/Image/pwg_image.php
+			path: src/Piwigo/Admin/Image/PwgImage.php
 
 		-
 			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
 			identifier: equal.notAllowed
 			count: 3
-			path: src/Piwigo/Admin/Image/pwg_image.php
+			path: src/Piwigo/Admin/Image/PwgImage.php
 
 		-
-			rawMessage: Variable method call on Piwigo\Admin\Image\imageInterface.
+			rawMessage: Variable method call on Piwigo\Admin\Image\ImageInterface.
 			identifier: method.dynamicName
 			count: 1
-			path: src/Piwigo/Admin/Image/pwg_image.php
+			path: src/Piwigo/Admin/Image/PwgImage.php
 
 		-
 			rawMessage: 'Constant Piwigo\Admin\Install\DbPatch\DbPatchRegistry::PATCHES (array<string, class-string<Piwigo\Admin\Install\DbPatch\DbPatchInterface>>) does not accept value array<int, string>.'
@@ -1009,7 +1009,7 @@ parameters:
 			path: src/Piwigo/Admin/Integrity/check_integrity.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/Integrity/check_integrity.php
@@ -1261,6 +1261,24 @@ parameters:
 			path: src/Piwigo/Admin/StatsPageRenderer.php
 
 		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: src/Piwigo/Admin/Tabsheet.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Admin/Tabsheet.php
+
+		-
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 3
+			path: src/Piwigo/Admin/Tabsheet.php
+
+		-
 			rawMessage: 'Method Piwigo\Admin\ThemeMaintain::activate() should return mixed but return statement is missing.'
 			identifier: return.missing
 			count: 1
@@ -1363,7 +1381,7 @@ parameters:
 			path: src/Piwigo/Admin/languages.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/languages.php
@@ -1435,7 +1453,7 @@ parameters:
 			path: src/Piwigo/Admin/plugins.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 4
 			path: src/Piwigo/Admin/plugins.php
@@ -1445,24 +1463,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: src/Piwigo/Admin/plugins.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 1
-			path: src/Piwigo/Admin/tabsheet.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: src/Piwigo/Admin/tabsheet.php
-
-		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 3
-			path: src/Piwigo/Admin/tabsheet.php
 
 		-
 			rawMessage: 'Call to function is_numeric() with int will always evaluate to true.'
@@ -1513,7 +1513,7 @@ parameters:
 			path: src/Piwigo/Admin/themes.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/themes.php
@@ -1585,7 +1585,7 @@ parameters:
 			path: src/Piwigo/Admin/updates.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 7
 			path: src/Piwigo/Admin/updates.php
@@ -1873,7 +1873,7 @@ parameters:
 			path: src/Piwigo/Calendar/CalendarBase.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 6
 			path: src/Piwigo/Calendar/CalendarBase.php
@@ -2851,7 +2851,7 @@ parameters:
 			path: src/Piwigo/Image/DerivativeImage.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Image/DerivativeImage.php
@@ -2875,7 +2875,7 @@ parameters:
 			path: src/Piwigo/Image/DerivativeParams.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 4
 			path: src/Piwigo/Image/DerivativeParams.php
@@ -2899,7 +2899,7 @@ parameters:
 			path: src/Piwigo/Image/ImageRect.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 4
 			path: src/Piwigo/Image/ImageRect.php
@@ -2941,7 +2941,7 @@ parameters:
 			path: src/Piwigo/Image/ImageStdParams.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 6
 			path: src/Piwigo/Image/ImageStdParams.php
@@ -3001,13 +3001,13 @@ parameters:
 			path: src/Piwigo/Image/SrcImage.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Image/SrcImage.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 7
 			path: src/Piwigo/Image/WatermarkParams.php
@@ -3211,7 +3211,7 @@ parameters:
 			path: src/Piwigo/Menu/BlockManager.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Menu/BlockManager.php
@@ -3229,7 +3229,7 @@ parameters:
 			path: src/Piwigo/Menu/DisplayBlock.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 6
 			path: src/Piwigo/Menu/DisplayBlock.php
@@ -3391,7 +3391,7 @@ parameters:
 			path: src/Piwigo/Search/QDateRangeScope.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Search/QExpression.php
@@ -3421,7 +3421,7 @@ parameters:
 			path: src/Piwigo/Search/QMultiToken.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Search/QMultiToken.php
@@ -3445,7 +3445,7 @@ parameters:
 			path: src/Piwigo/Search/QSearchScope.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Search/QSingleToken.php
@@ -3571,7 +3571,7 @@ parameters:
 			path: src/Piwigo/Template/Combinable.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Template/Combinable.php
@@ -3613,7 +3613,7 @@ parameters:
 			path: src/Piwigo/Template/PwgTemplateAdapter.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Template/Script.php
@@ -3655,7 +3655,7 @@ parameters:
 			path: src/Piwigo/Template/ScriptLoader.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Template/ScriptLoader.php
@@ -3745,7 +3745,7 @@ parameters:
 			path: src/Piwigo/Template/Template.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 9
 			path: src/Piwigo/Template/Template.php
@@ -3955,7 +3955,7 @@ parameters:
 			path: src/Piwigo/Ws/Protocol/PwgXmlWriter.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 5
 			path: src/Piwigo/Ws/Protocol/PwgXmlWriter.php
@@ -4357,7 +4357,7 @@ parameters:
 			path: src/Piwigo/Ws/PwgImages.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Ws/PwgNamedArray.php
@@ -4375,7 +4375,7 @@ parameters:
 			path: src/Piwigo/Ws/PwgNamedStruct.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Ws/PwgNamedStruct.php
@@ -4435,7 +4435,7 @@ parameters:
 			path: src/Piwigo/Ws/PwgServer.php
 
 		-
-			rawMessage: 'Out of 504 possible property types, only 409 - 81.1 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 505 possible property types, only 410 - 81.1 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Ws/PwgServer.php
@@ -4593,7 +4593,7 @@ parameters:
 		-
 			rawMessage: Casting to string something that's already string.
 			identifier: cast.useless
-			count: 3
+			count: 2
 			path: tests/Arch/StructuralTest.php
 
 		-

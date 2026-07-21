@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\ConfigService;
@@ -278,7 +278,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
         if (\Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Webmaster)) {
             // TabSheet
-            $tabsheet = new tabsheet();
+            $tabsheet = new Tabsheet();
             $tabsheet->set_id('nbm');
             $tabsheet->select($page_mode);
             $tabsheet->assign();

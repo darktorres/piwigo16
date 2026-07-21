@@ -11,12 +11,28 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
-class image_imagick implements imageInterface
+class ImageImagick implements ImageInterface
 {
     /**
      * @var \Imagick
      */
     public $image;
+
+    /**
+     * compose()'s own "already dimmed this overlay once" memoization flag
+     * (Legacy Coupling Retirement Phase 8, 8f) -- a former `global
+     * $dirty_trick_xrepeat;`. Instance-scoped, not static: each
+     * ImageImagick instance wraps exactly one source image for its own
+     * lifetime (see the constructor), and compose() reads/writes this flag
+     * on the OVERLAY's own instance (`$overlay_backend`, not `$this`) --
+     * the thing being memoized is "has this specific overlay's alpha
+     * channel already been dimmed," which must survive across multiple
+     * compose() calls onto different destination images (x-repeat/
+     * y-repeat watermark tiling reuses the same overlay object) but must
+     * never leak onto an unrelated overlay, the way a shared global or a
+     * static property would.
+     */
+    private bool $dirtyTrickXrepeatApplied = false;
 
     public function __construct(
         string $source_filepath
@@ -46,7 +62,7 @@ class image_imagick implements imageInterface
     #[\Override]
     public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
     {
-        // Imagick::cropImage() requires int arguments — see image_gd's
+        // Imagick::cropImage() requires int arguments — see ImageGd's
         // crop() for why real callers pass floats here.
         return $this->image->cropImage((int) $width, (int) $height, (int) $x, (int) $y);
     }
@@ -75,7 +91,7 @@ class image_imagick implements imageInterface
         // cheap scaleImage() box-filter halving first, then the accurate
         // but expensive Lanczos resizeImage() below on the now-much-smaller
         // image, is faster than running Lanczos over the full original
-        // resolution directly. image_gd's resize() has no equivalent step
+        // resolution directly. ImageGd's resize() has no equivalent step
         // -- GD's imagecopyresampled() doesn't need it.
         if ($this->get_width() % 2 == 0
             && $this->get_height() % 2 == 0
@@ -84,28 +100,28 @@ class image_imagick implements imageInterface
         }
 
         // Imagick::resizeImage() requires int columns/rows — see
-        // image_gd's crop() for why real callers pass floats here.
+        // ImageGd's crop() for why real callers pass floats here.
         return $this->image->resizeImage((int) $width, (int) $height, \Imagick::FILTER_LANCZOS, 0.9);
     }
 
     #[\Override]
     public function sharpen(int|float $amount): bool
     {
-        $m = pwg_image::get_sharpen_matrix($amount);
+        $m = PwgImage::get_sharpen_matrix($amount);
         return $this->image->convolveImage($m);
     }
 
     #[\Override]
-    public function compose(pwg_image $overlay, int|float $x, int|float $y, int|float $opacity): bool
+    public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
     {
         // compose() reaches into the overlay's own backend object to get
         // its raw Imagick instance — only valid when both images use the
         // same backend (always true in practice: i.php constructs both
-        // via `new pwg_image(...)`, which resolves the backend from the
+        // via `new PwgImage(...)`, which resolves the backend from the
         // single \Piwigo\Config\Config::graphicsLibrary() setting).
         $overlay_backend = $overlay->image;
         if (! $overlay_backend instanceof self) {
-            throw new \LogicException('pwg_image::compose(): overlay must use the same image backend');
+            throw new \LogicException('PwgImage::compose(): overlay must use the same image backend');
         }
         $ioverlay = $overlay_backend->image;
         /*if ($ioverlay->getImageAlphaChannel() !== Imagick::ALPHACHANNEL_OPAQUE)
@@ -114,13 +130,12 @@ class image_imagick implements imageInterface
           $ioverlay->setImageAlphaChannel(Imagick::ALPHACHANNEL_OPAQUE);
         }*/
 
-        global $dirty_trick_xrepeat;
-        if (! isset($dirty_trick_xrepeat) && $opacity < 100) {// NOTE: Using setImageOpacity will destroy current alpha channels!
+        if (! $overlay_backend->dirtyTrickXrepeatApplied && $opacity < 100) {// NOTE: Using setImageOpacity will destroy current alpha channels!
             $ioverlay->evaluateImage(\Imagick::EVALUATE_MULTIPLY, $opacity / 100, \Imagick::CHANNEL_ALPHA);
-            $dirty_trick_xrepeat = true;
+            $overlay_backend->dirtyTrickXrepeatApplied = true;
         }
 
-        // Imagick::compositeImage() requires int x/y — see image_gd's
+        // Imagick::compositeImage() requires int x/y — see ImageGd's
         // crop() for why real callers pass floats here.
         return $this->image->compositeImage($ioverlay, \Imagick::COMPOSITE_DISSOLVE, (int) $x, (int) $y);
     }

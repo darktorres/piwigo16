@@ -7,7 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\PictureCoiPageRenderer;
 use Piwigo\Admin\PictureFormatsPageRenderer;
 use Piwigo\Admin\PictureModifyPageRenderer;
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -81,7 +81,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         $tab_param = $_GET['tab'] ?? null;
         $tab = is_string($tab_param) && in_array($tab_param, self::KNOWN_TABS, true) ? $tab_param : 'properties';
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('photo');
         $tabsheet->select($tab);
         $tabsheet->assign();

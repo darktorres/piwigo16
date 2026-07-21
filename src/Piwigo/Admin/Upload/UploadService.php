@@ -6,7 +6,7 @@ namespace Piwigo\Admin\Upload;
 
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Config\Config;
 use Piwigo\Core\Env;
@@ -52,12 +52,12 @@ use Piwigo\Ws\PwgServer;
  *
  * [SEC-16] all 8 real exec() calls (PDF/HEIC/TIFF/video/PSD/EPS
  * representative generation) built their command string via unescaped
- * `'"' . $path . '"'` concatenation -- P19 only fixed pwg_image.php's and
- * image_ext_imagick.php's 4 call sites (the doc's own SEC-16 text already
+ * `'"' . $path . '"'` concatenation -- P19 only fixed PwgImage.php's and
+ * ImageExtImagick.php's 4 call sites (the doc's own SEC-16 text already
  * scoped "UploadService (10 calls)" separately, i.e. this file was always
  * the remaining half). Every exec() call now uses escapeshellarg(), same
- * `escapeshellarg($ext_imagick_dir) . pwg_image::get_ext_imagick_command()`
- * dir-prefix pattern P19 established in pwg_image.php/image_ext_imagick.php.
+ * `escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command()`
+ * dir-prefix pattern P19 established in PwgImage.php/ImageExtImagick.php.
  *
  * The 6 upload_file_* representative-generation handlers are `public
  * static` (not instance methods, unlike the rest of this class) because
@@ -413,7 +413,7 @@ SELECT
 
         $logger->info(__METHOD__ . ' : force cache generation, representative_ext = ' . ($representative_ext ?? ''));
 
-        if (pwg_image::get_library() !== 'gd') {
+        if (PwgImage::get_library() !== 'gd') {
             if (\Piwigo\Config\Config::originalResize()) {
                 $original_resize_maxwidth = \Piwigo\Config\Config::originalResizeMaxwidth();
 
@@ -422,7 +422,7 @@ SELECT
                 $need_resize = $this->needResize($file_path, $original_resize_maxwidth, $original_resize_maxheight);
 
                 if ($need_resize) {
-                    $img = new pwg_image($file_path);
+                    $img = new PwgImage($file_path);
 
                     $original_resize_quality = \Piwigo\Config\Config::originalResizeQuality();
 
@@ -442,8 +442,8 @@ SELECT
 
         // we need to save the rotation angle in the database to compute
         // width/height of "multisizes"
-        $rotation_angle = pwg_image::get_rotation_angle($file_path);
-        $rotation = pwg_image::get_rotation_code_from_angle($rotation_angle);
+        $rotation_angle = PwgImage::get_rotation_angle($file_path);
+        $rotation = PwgImage::get_rotation_code_from_angle($rotation_angle);
 
         $file_infos = $this->pwgImageInfos($file_path);
 
@@ -774,7 +774,7 @@ SELECT
             return $representative_ext;
         }
 
-        if (pwg_image::get_library() !== 'ext_imagick') {
+        if (PwgImage::get_library() !== 'ext_imagick') {
             return $representative_ext;
         }
 
@@ -797,10 +797,10 @@ SELECT
 
         $ext_imagick_dir = \Piwigo\Config\Config::extImagickDir();
         // [SEC-16] escapeshellarg() on the dir prefix and both real paths
-        // below -- same pattern P19 established in pwg_image.php/
-        // image_ext_imagick.php; the original never escaped an embedded
+        // below -- same pattern P19 established in PwgImage.php/
+        // ImageExtImagick.php; the original never escaped an embedded
         // '"' or shell metacharacter in either path.
-        $exec = escapeshellarg($ext_imagick_dir) . pwg_image::get_ext_imagick_command();
+        $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
         $exec .= ' ' . escapeshellarg((string) realpath($file_path) . '[0]');
         if ($ext === 'jpg') {
             $exec .= ' -quality ' . $jpg_quality;
@@ -827,7 +827,7 @@ SELECT
             return $representative_ext;
         }
 
-        if (pwg_image::get_library() !== 'ext_imagick') {
+        if (PwgImage::get_library() !== 'ext_imagick') {
             return $representative_ext;
         }
 
@@ -845,7 +845,7 @@ SELECT
 
         $ext_imagick_dir = \Piwigo\Config\Config::extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
-        $exec = escapeshellarg($ext_imagick_dir) . pwg_image::get_ext_imagick_command();
+        $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
         $exec .= ' -sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace sRGB -auto-orient +repage -resize "' . $w . 'x' . $h . '>"';
         $exec .= ' ' . escapeshellarg($representative_file_path);
@@ -873,7 +873,7 @@ SELECT
             return $representative_ext;
         }
 
-        if (pwg_image::get_library() !== 'ext_imagick') {
+        if (PwgImage::get_library() !== 'ext_imagick') {
             return $representative_ext;
         }
 
@@ -893,7 +893,7 @@ SELECT
 
         $ext_imagick_dir = \Piwigo\Config\Config::extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
-        $exec = escapeshellarg($ext_imagick_dir) . pwg_image::get_ext_imagick_command();
+        $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
 
         if ($representative_ext === 'jpg') {
@@ -1011,7 +1011,7 @@ SELECT
             return $representative_ext;
         }
 
-        if (pwg_image::get_library() !== 'ext_imagick') {
+        if (PwgImage::get_library() !== 'ext_imagick') {
             return $representative_ext;
         }
 
@@ -1030,7 +1030,7 @@ SELECT
 
         $ext_imagick_dir = \Piwigo\Config\Config::extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
-        $exec = escapeshellarg($ext_imagick_dir) . pwg_image::get_ext_imagick_command();
+        $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
 
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
 
@@ -1070,7 +1070,7 @@ SELECT
             return $representative_ext;
         }
 
-        if (pwg_image::get_library() !== 'ext_imagick') {
+        if (PwgImage::get_library() !== 'ext_imagick') {
             return $representative_ext;
         }
 
@@ -1089,7 +1089,7 @@ SELECT
 
         $ext_imagick_dir = \Piwigo\Config\Config::extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
-        $exec = escapeshellarg($ext_imagick_dir) . pwg_image::get_ext_imagick_command();
+        $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
         $exec .= ' -density 300';
         $exec .= ' -resize 2048x2048';
@@ -1164,7 +1164,7 @@ SELECT
         // pixels plus a 90/270 EXIF rotation flag needs width/height
         // swapped before comparing against the max thresholds, or the
         // check (and the resize it gates) runs against the wrong axis.
-        $rotation_angle = pwg_image::get_rotation_angle($image_filepath);
+        $rotation_angle = PwgImage::get_rotation_angle($image_filepath);
         if (in_array($rotation_angle, [90, 270], true)) {
             [$width, $height] = [$height, $width];
         }

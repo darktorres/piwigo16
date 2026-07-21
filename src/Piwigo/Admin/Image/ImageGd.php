@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
-class image_gd implements imageInterface
+class ImageGd implements ImageInterface
 {
     public \GdImage $image;
 
@@ -139,12 +139,12 @@ class image_gd implements imageInterface
     #[\Override]
     public function sharpen(int|float $amount): bool
     {
-        $m = pwg_image::get_sharpen_matrix($amount);
+        $m = PwgImage::get_sharpen_matrix($amount);
         return imageconvolution($this->image, $m, 1, 0);
     }
 
     #[\Override]
-    public function compose(pwg_image $overlay, int|float $x, int|float $y, int|float $opacity): bool
+    public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
     {
         // see crop()'s comment: GD's native imagecopy()/imagecopymerge()
         // require int arguments — real callers pass floats here too (i.php's
@@ -154,11 +154,11 @@ class image_gd implements imageInterface
         $x = (int) $x;
         $y = (int) $y;
 
-        // See image_imagick::compose()'s comment: only valid when both
+        // See ImageImagick::compose()'s comment: only valid when both
         // images use the same backend, always true in practice.
         $overlay_backend = $overlay->image;
         if (! $overlay_backend instanceof self) {
-            throw new \LogicException('pwg_image::compose(): overlay must use the same image backend');
+            throw new \LogicException('PwgImage::compose(): overlay must use the same image backend');
         }
         $ioverlay = $overlay_backend->image;
         /* A replacement for php's imagecopymerge() function that supports the alpha channel

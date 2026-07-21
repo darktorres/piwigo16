@@ -93,7 +93,7 @@ SELECT
 
         $my_base_url = $urlService->getRootUrl() . 'admin.php?page=';
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('albums');
         $tabsheet->select('list');
         $tabsheet->assign();

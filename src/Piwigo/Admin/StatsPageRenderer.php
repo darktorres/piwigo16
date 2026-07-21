@@ -52,7 +52,7 @@ final class StatsPageRenderer
 
         $template->set_filename('stats', 'stats.tpl');
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('history');
         $tabsheet->select($pageSlug);
         $tabsheet->assign();

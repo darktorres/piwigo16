@@ -6,7 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\LanguagesInstalledPageRenderer;
 use Piwigo\Admin\LanguagesNewPageRenderer;
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
@@ -25,7 +25,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * `Piwigo\Admin\CoreTabs::addCoreTabs()`'s own `case 'languages':` branch
  * (formerly `admin/include/add_core_tabs.inc.php`'s `add_core_tabs()`,
  * folded in P23 batch 8b-6), read via `global $my_base_url;` when
- * `tabsheet::select()` fires its `tabsheet_before_select` event a few
+ * `Tabsheet::select()` fires its `tabsheet_before_select` event a few
  * lines below -- dropping it silently degraded every tab href (missing
  * the `admin.php?page=languages` prefix entirely). Restored here.
  *
@@ -59,7 +59,7 @@ final class LanguagesSubController implements AdminSubControllerInterface
 
         // Consumed by CoreTabs::addCoreTabs()'s own 'languages' case via
         // `global $my_base_url;`, triggered synchronously inside
-        // tabsheet::select() below -- must be set before that call, not
+        // Tabsheet::select() below -- must be set before that call, not
         // dead code (see this class's own docblock).
         global $my_base_url;
         $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=languages';
@@ -77,7 +77,7 @@ final class LanguagesSubController implements AdminSubControllerInterface
             $tab = 'installed';
         }
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('languages');
         $tabsheet->select($tab);
         $tabsheet->assign();

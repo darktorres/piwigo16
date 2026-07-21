@@ -6,7 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\PluginsInstalledPageRenderer;
 use Piwigo\Admin\PluginsNewPageRenderer;
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
@@ -26,7 +26,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * `Piwigo\Admin\CoreTabs::addCoreTabs()`'s own `case 'plugins':` branch
  * (formerly `admin/include/add_core_tabs.inc.php`'s `add_core_tabs()`,
  * folded in P23 batch 8b-6), read via `global $my_base_url;` when
- * `tabsheet::select()` fires its `tabsheet_before_select` event a few
+ * `Tabsheet::select()` fires its `tabsheet_before_select` event a few
  * lines below -- dropping it silently degraded every tab href (missing
  * the `admin.php?page=plugins` prefix entirely). Restored here.
  *
@@ -60,7 +60,7 @@ final class PluginsSubController implements AdminSubControllerInterface
 
         // Consumed by CoreTabs::addCoreTabs()'s own 'plugins' case via
         // `global $my_base_url;`, triggered synchronously inside
-        // tabsheet::select() below -- must be set before that call, not
+        // Tabsheet::select() below -- must be set before that call, not
         // dead code (see this class's own docblock).
         global $my_base_url;
         $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=plugins';
@@ -78,7 +78,7 @@ final class PluginsSubController implements AdminSubControllerInterface
             $tab = 'installed';
         }
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('plugins');
         $tabsheet->select($tab);
         $tabsheet->assign();

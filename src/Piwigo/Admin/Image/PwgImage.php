@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Image;
 
 /**
- * Unknown methods are forwarded to $this->image (an imageInterface
+ * Unknown methods are forwarded to $this->image (an ImageInterface
  * implementor) via __call(). These @method tags mirror that interface.
  *
  * @method int|float get_width()
@@ -23,18 +23,18 @@ namespace Piwigo\Admin\Image;
  * @method bool rotate(int|float $rotation)
  * @method bool resize(int|float $width, int|float $height)
  * @method bool sharpen(int|float $amount)
- * @method bool compose(pwg_image $overlay, int|float $x, int|float $y, int|float $opacity)
+ * @method bool compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity)
  * @method bool write(string $destination_filepath)
  */
-class pwg_image
+class PwgImage
 {
     /**
-     * @var imageInterface|null null until either a 'load_image_library'
+     * @var ImageInterface|null null until either a 'load_image_library'
      *   event listener sets it (see the trigger_notify() call in
      *   __construct()) or __construct() itself instantiates the chosen
      *   library class
      */
-    public ?imageInterface $image = null;
+    public ?ImageInterface $image = null;
 
     /**
      * @var string|false false is only ever transient: get_library() can
@@ -69,10 +69,10 @@ class pwg_image
         }
 
         $this->image = match ($this->library) {
-            'ext_imagick' => new image_ext_imagick($this->source_filepath),
-            'imagick' => new image_imagick($this->source_filepath),
-            'gd' => new image_gd($this->source_filepath),
-            default => throw new \Exception("pwg_image: unknown image library '{$this->library}'"),
+            'ext_imagick' => new ImageExtImagick($this->source_filepath),
+            'imagick' => new ImageImagick($this->source_filepath),
+            'gd' => new ImageGd($this->source_filepath),
+            default => throw new \Exception("PwgImage: unknown image library '{$this->library}'"),
         };
     }
 
@@ -87,15 +87,15 @@ class pwg_image
     }
 
     /**
-     * Narrows $image from imageInterface|null to imageInterface. By the
+     * Narrows $image from ImageInterface|null to ImageInterface. By the
      * time any method other than __construct() runs, $image is always
      * set — either by a 'load_image_library' listener or by
      * __construct() itself (which die()s if no library is available).
      */
-    private function getImage(): imageInterface
+    private function getImage(): ImageInterface
     {
-        if (! $this->image instanceof imageInterface) {
-            throw new \LogicException('pwg_image: no image library instantiated');
+        if (! $this->image instanceof ImageInterface) {
+            throw new \LogicException('PwgImage: no image library instantiated');
         }
         return $this->image;
     }
@@ -536,8 +536,8 @@ class pwg_image
     {
         $image = $this->getImage();
         if (method_exists($image, 'destroy')) {
-            // $image's static type is imageInterface, which doesn't declare
-            // destroy() (only image_gd implements it; a plugin-provided
+            // $image's static type is ImageInterface, which doesn't declare
+            // destroy() (only ImageGd implements it; a plugin-provided
             // backend loaded via the 'load_image_library' event may also
             // implement it, per __construct()'s comment) — method_exists()
             // proves the call is safe but its return stays mixed to PHPStan.

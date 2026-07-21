@@ -25,7 +25,7 @@ final class HelpPageRenderer
             $selected = $_GET['section'];
         }
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('help');
         $tabsheet->select($selected);
         $tabsheet->assign();

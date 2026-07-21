@@ -75,7 +75,7 @@ final class HistoryPageRenderer
 
         $template->set_filename('history', 'history.tpl');
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('history');
         $tabsheet->select($pageSlug);
         $tabsheet->assign();

@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
-class image_ext_imagick implements imageInterface
+class ImageExtImagick implements ImageInterface
 {
     public string $imagickdir = '';
 
@@ -47,7 +47,7 @@ class image_ext_imagick implements imageInterface
         }
 
         if (strtolower(\Piwigo\Core\StringHelper::getExtension($this->source_filepath)) == 'webp') {
-            $webp_info = pwg_image::webp_info($this->source_filepath);
+            $webp_info = PwgImage::webp_info($this->source_filepath);
 
             if ($webp_info['has-animation']) {
                 $this->is_animated_webp = true;
@@ -58,7 +58,7 @@ class image_ext_imagick implements imageInterface
                 // getimagesize here.
                 $size = getimagesize($this->source_filepath);
                 if ($size === false) {
-                    throw new \Exception("image_ext_imagick(): getimagesize({$this->source_filepath}): Failed");
+                    throw new \Exception("ImageExtImagick(): getimagesize({$this->source_filepath}): Failed");
                 }
                 [$this->width, $this->height] = $size;
                 return;
@@ -161,7 +161,7 @@ class image_ext_imagick implements imageInterface
     #[\Override]
     public function sharpen(int|float $amount): bool
     {
-        $m = pwg_image::get_sharpen_matrix($amount);
+        $m = PwgImage::get_sharpen_matrix($amount);
 
         $param = 'convolve "' . count($m) . ':';
         foreach ($m as $line) {
@@ -174,13 +174,13 @@ class image_ext_imagick implements imageInterface
     }
 
     #[\Override]
-    public function compose(pwg_image $overlay, int|float $x, int|float $y, int|float $opacity): bool
+    public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
     {
-        // See image_imagick::compose()'s comment: only valid when both
+        // See ImageImagick::compose()'s comment: only valid when both
         // images use the same backend, always true in practice.
         $overlay_backend = $overlay->image;
         if (! $overlay_backend instanceof self) {
-            throw new \LogicException('pwg_image::compose(): overlay must use the same image backend');
+            throw new \LogicException('PwgImage::compose(): overlay must use the same image backend');
         }
         $overlay_realpath = realpath($overlay_backend->source_filepath);
         if ($overlay_realpath === false) {
@@ -211,13 +211,13 @@ class image_ext_imagick implements imageInterface
         // to detect IM version and when we know which version supports this
         // option
         //
-        if (version_compare(pwg_image::$ext_imagick_version, '6.6') > 0) {
+        if (version_compare(PwgImage::$ext_imagick_version, '6.6') > 0) {
             $this->add_command('sampling-factor', '4:2:2');
         }
 
         // [SEC-16] escapeshellarg() on the dir prefix and both real paths
         // below -- see the constructor's own note above.
-        $exec = escapeshellarg($this->imagickdir) . pwg_image::get_ext_imagick_command();
+        $exec = escapeshellarg($this->imagickdir) . PwgImage::get_ext_imagick_command();
         $exec .= ' ' . escapeshellarg((string) realpath($this->source_filepath));
 
         // If the image is animated webp add a filter to avoid breaking the animation

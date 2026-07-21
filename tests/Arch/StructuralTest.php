@@ -716,14 +716,14 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         'Controller/ImageDerivativeController.php' => 6,
 
         // Image-library internals (Admin/Image/*.php): low-level decode/
-        // library-availability guards inside image_gd/image_ext_imagick/
-        // pwg_image, reached from both Ws/PwgImages.php (needs a JSON
+        // library-availability guards inside ImageGd/ImageExtImagick/
+        // PwgImage, reached from both Ws/PwgImages.php (needs a JSON
         // error response, already covered above) and Job/BatchUploadJob.php
         // (a background job with no HTTP response to build) -- a hard
         // die() is correct in both real callers.
-        'Admin/Image/image_gd.php' => 2,
-        'Admin/Image/image_ext_imagick.php' => 1,
-        'Admin/Image/pwg_image.php' => 2,
+        'Admin/Image/ImageGd.php' => 2,
+        'Admin/Image/ImageExtImagick.php' => 1,
+        'Admin/Image/PwgImage.php' => 2,
         'Admin/Upload/UploadService.php' => 10,
 
         // Frozen historical VersionUpgrade class (Phase 1j's own scope

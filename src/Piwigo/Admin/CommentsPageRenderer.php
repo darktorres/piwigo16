@@ -34,7 +34,7 @@ final class CommentsPageRenderer
             ]
         );
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('comments');
         $tabsheet->select('');
         $tabsheet->assign();

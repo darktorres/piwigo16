@@ -31,7 +31,7 @@ final class RatingPageRenderer
         new \Piwigo\Validation\InputValidator()
             ->validate('display', $_GET, false, ValidationPattern::ID);
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('rating');
         $tabsheet->select('rating');
         $tabsheet->assign();

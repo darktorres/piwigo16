@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Imagick;
-use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
@@ -145,12 +145,12 @@ final class MaintenanceActionsPageRenderer
         );
 
         // graphics library
-        switch (pwg_image::get_library()) {
+        switch (PwgImage::get_library()) {
             case 'ext_imagick':
                 $library = 'External ImageMagick';
                 $ext_imagick_dir = \Piwigo\Config\Config::extImagickDir();
                 $returnarray = [];
-                exec($ext_imagick_dir . pwg_image::get_ext_imagick_command() . ' -version', $returnarray);
+                exec($ext_imagick_dir . PwgImage::get_ext_imagick_command() . ' -version', $returnarray);
                 $returnarray_line0 = $returnarray[0] ?? '';
                 if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray_line0, $match)) {
                     $library .= ' ' . $match[1];

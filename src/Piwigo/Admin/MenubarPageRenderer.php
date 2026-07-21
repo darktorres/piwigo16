@@ -35,7 +35,7 @@ final class MenubarPageRenderer
             \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('menus');
         $tabsheet->select('');
         $tabsheet->assign();

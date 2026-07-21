@@ -26,7 +26,7 @@ final class GroupListPageRenderer
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('groups');
         $tabsheet->select('group_list');
         $tabsheet->assign();

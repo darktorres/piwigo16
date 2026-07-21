@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
@@ -126,7 +126,7 @@ final class MaintenanceEnvPageRenderer
         );
 
         // graphics library
-        $graphics_library = pwg_image::get_graphics_library_label();
+        $graphics_library = PwgImage::get_graphics_library_label();
         if ($graphics_library !== '') {
             $template->assign('GRAPHICS_LIBRARY', $graphics_library);
         }

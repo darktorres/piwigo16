@@ -7,7 +7,7 @@ namespace Piwigo\Admin;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
@@ -271,7 +271,7 @@ SELECT *
         );
 
         // what is the maximum number of pixels permitted by the memory_limit?
-        if (pwg_image::get_library() === 'gd') {
+        if (PwgImage::get_library() === 'gd') {
             $fudge_factor = 1.7;
             $memory_limit = $uploadService->getIniSize('memory_limit');
             // memory_limit is a core php.ini directive, always present

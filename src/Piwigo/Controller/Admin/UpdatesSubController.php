@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Admin\UpdatesPwgPageRenderer;
 use Piwigo\Config\ConfigService;
@@ -27,7 +27,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * sub-batch's own shell-fold docblock claiming the same-shaped local var
  * was (confirmed via grep within each file's own scope, which is true --
  * but incomplete). It's a real, load-bearing global consumed indirectly:
- * `tabsheet::select()` fires a `tabsheet_before_select` event
+ * `Tabsheet::select()` fires a `tabsheet_before_select` event
  * (`Piwigo\Admin\CoreTabs::addCoreTabs()`, formerly `admin/include/
  * add_core_tabs.inc.php`'s `add_core_tabs()`, folded in P23 batch 8b-6),
  * whose own
@@ -73,7 +73,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
 
         // Consumed by CoreTabs::addCoreTabs()'s own 'updates' case via
         // `global $my_base_url;`, triggered synchronously inside
-        // tabsheet::select() below -- must be set before that call, not
+        // Tabsheet::select() below -- must be set before that call, not
         // dead code (see this class's own docblock).
         global $my_base_url;
         $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=updates';
@@ -86,7 +86,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
             $tab = 'pwg';
         }
 
-        $tabsheet = new tabsheet();
+        $tabsheet = new Tabsheet();
         $tabsheet->set_id('updates');
         $tabsheet->select($tab);
         $tabsheet->assign();

@@ -7,8 +7,8 @@ namespace Piwigo\Admin\Extensions;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Admin\DummyPlugin_maintain;
-use Piwigo\Admin\DummyTheme_maintain;
+use Piwigo\Admin\DummyPluginMaintain;
+use Piwigo\Admin\DummyThemeMaintain;
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Admin\ThemeMaintain;
 use Piwigo\Config\Config;
@@ -520,7 +520,7 @@ final readonly class ExtensionLifecycle
             }
         }
 
-        return new DummyPlugin_maintain($pluginId);
+        return new DummyPluginMaintain($pluginId);
     }
 
     private function buildThemeMaintain(string $themeId): ThemeMaintain
@@ -540,7 +540,7 @@ final readonly class ExtensionLifecycle
             }
         }
 
-        return new DummyTheme_maintain($themeId);
+        return new DummyThemeMaintain($themeId);
     }
 
     private function stringOrDefault(mixed $value, string $default): string

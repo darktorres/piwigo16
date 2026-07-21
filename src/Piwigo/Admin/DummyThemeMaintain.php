@@ -14,7 +14,7 @@ namespace Piwigo\Admin;
 /**
  * used when a theme uses the old procedural declaration of maintenance methods
  */
-class DummyTheme_maintain extends ThemeMaintain
+class DummyThemeMaintain extends ThemeMaintain
 {
     // Each is_callable() here checks for a bare function dynamically defined
     // by a theme's own maintain.inc.php (include_once'd in

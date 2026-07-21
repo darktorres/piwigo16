@@ -15,6 +15,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DeviceHelper;
 use Piwigo\Core\Lang;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeParams;
@@ -1370,9 +1371,6 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      */
     public function load_themeconf($dir)
     {
-        /** @var array<string, array<string, mixed>> $themeconfs */
-        global $themeconfs;
-
         $real_dir = realpath($dir);
         if ($real_dir === false) {
             // Theme directory doesn't actually exist on disk -- don't cache
@@ -1382,7 +1380,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             return [];
         }
         $dir = $real_dir;
-        if (! isset($themeconfs[$dir])) {
+        $cache_key = 'themeconf:' . $dir;
+        if (! ProcessCache::has($cache_key)) {
             $themeconf = [];
             // themeconf.inc.php may set this to push extra template
             // variables, instead of reaching for $this/$template directly
@@ -1393,9 +1392,13 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             include $dir . '/themeconf.inc.php';
             $this->assign($theme_template_vars);
             // Put themeconf in cache
-            $themeconfs[$dir] = $themeconf;
+            ProcessCache::set($cache_key, $themeconf);
         }
-        return $themeconfs[$dir];
+
+        /** @var array<string, mixed> $cached */
+        $cached = ProcessCache::get($cache_key);
+
+        return $cached;
     }
 
     /**

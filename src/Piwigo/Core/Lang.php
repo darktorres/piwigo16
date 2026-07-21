@@ -352,9 +352,15 @@ final class Lang
             // Core language files were converted to .po in P16 -- $f is a
             // .lang.php-style path (the '.php' suffix appended above), which no
             // longer exists on disk for the ~322 converted core files (only
-            // their .po sibling does now). Plugins/themes without a .po file
-            // yet still ship the plain .lang.php this existence check originally
-            // relied on exclusively.
+            // their .po sibling does now). The file_exists($f) branch below
+            // is kept for a different reason since Legacy Coupling
+            // Retirement Phase 8, 8l dropped .lang.php loading support
+            // entirely (see the docblock a few lines below this loop): it
+            // doubles as the generic existence check $options['return']
+            // mode needs for arbitrary non-.lang.php filenames (e.g.
+            // description.txt) -- a raw .lang.php match with no .po
+            // sibling now dead-ends into load()'s own `return false;`
+            // instead of being read.
             $po_sibling = preg_replace('/\.lang\.php$/', '.po', $f);
 
             if (file_exists($f) || ($po_sibling !== null && $po_sibling !== $f && file_exists($po_sibling))) {
@@ -374,97 +380,60 @@ final class Lang
             return $content;
         }
 
-        // $source_file is a .lang.php path here (see the '.php' suffix
-        // appended above); its sibling .po -- core content only, P16
-        // converted all 322 real ones -- takes priority. Plugins/
-        // themes without a .po file yet keep working via the PHP-
-        // array include path below (Translator::translate()'s own
-        // $GLOBALS['lang'] fallback is what makes that safe to mix
-        // with PO-loaded core strings).
+        // $source_file is a .lang.php-style path here (see the '.php'
+        // suffix appended above); only its .po sibling is ever actually
+        // read now -- Legacy Coupling Retirement Phase 8, 8l dropped the
+        // raw .lang.php PHP-array @include fallback that used to follow
+        // (zero .lang.php files are bundled in-tree; sibling-repo plugin/
+        // theme usage doesn't count as a reason to keep it, see this
+        // class's own docblock). The existence-check loop above still
+        // accepts a raw, non-.po path as "found" -- that's not dead .lang.php
+        // support, it's the generic file-exists check $options['return']
+        // mode relies on for arbitrary filenames like description.txt.
         $po_file = preg_replace('/\.lang\.php$/', '.po', $source_file);
 
-        global $lang;
-        if (! isset($lang) || ! is_array($lang)) {
-            $lang = [];
+        if ($po_file === null || ! is_readable($po_file)) {
+            return false;
         }
-        // A real local copy, not self::$langInfo read directly -- the
-        // @include below (legacy .lang.php files) sets a bare $lang_info at
-        // this method's own scope, and get_defined_vars() needs a real local
-        // variable already in scope to capture that write back out.
+
         $lang_info = self::$langInfo;
 
-        if ($po_file !== null && is_readable($po_file)) {
-            $translations = Translator::get()->load($selected_language, $po_file);
-            $load_lang_info = $translations instanceof \Gettext\Translations ? self::poHeadersToLangInfo($translations->getHeaders()) : [];
+        $translations = Translator::get()->load($selected_language, $po_file);
+        $load_lang_info = $translations instanceof \Gettext\Translations ? self::poHeadersToLangInfo($translations->getHeaders()) : [];
 
-            if (isset($options['force_fallback']) && is_string($options['force_fallback'])
-              && $options['force_fallback'] !== $selected_language) {
-                $fallback_po = $dirname . $options['force_fallback'] . '/' . basename($po_file);
-                if (is_readable($fallback_po)) {
-                    Translator::get()->load($options['force_fallback'], $fallback_po);
-                }
-            }
-
-            $parent_language = is_string($load_lang_info['parent'] ?? null) && $load_lang_info['parent'] !== ''
-                ? $load_lang_info['parent']
-                : (is_string($lang_info['parent'] ?? null) ? $lang_info['parent'] : null);
-
-            if (! empty($parent_language) && $parent_language !== $selected_language) {
-                $parent_po = $dirname . $parent_language . '/' . basename($po_file);
-                if (is_readable($parent_po)) {
-                    // Load the parent, then re-load the child (already
-                    // loaded above) -- Translator::load()'s merge
-                    // (gettext/translator's addTranslations() ->
-                    // array_replace_recursive(), and mirrorToGlobal()'s
-                    // own $GLOBALS['lang'] writes) both give precedence
-                    // to whichever load() call happens last. Loading
-                    // only the parent here would let it silently
-                    // override the child's own strings for any key both
-                    // define; re-loading the child restores the correct
-                    // "child overrides parent, parent fills the gaps"
-                    // precedence (e.g. en_US inherits piwigo_day_N from
-                    // its en_UK parent, but keeps its own overrides).
-                    Translator::get()->load($parent_language, $parent_po);
-                    Translator::get()->load($selected_language, $po_file);
-                }
-            }
-
-            $lang_info = array_merge($lang_info, $load_lang_info);
-            self::setLangInfo($lang_info);
-            return true;
-        }
-
-        // load forced fallback
         if (isset($options['force_fallback']) && is_string($options['force_fallback'])
-          && $options['force_fallback'] != $selected_language) {
-            @include str_replace($selected_language, $options['force_fallback'], $source_file);
+          && $options['force_fallback'] !== $selected_language) {
+            $fallback_po = $dirname . $options['force_fallback'] . '/' . basename($po_file);
+            if (is_readable($fallback_po)) {
+                Translator::get()->load($options['force_fallback'], $fallback_po);
+            }
         }
 
-        // load language content
-        @include $source_file;
-        // get_defined_vars() (rather than reading $lang/$lang_info
-        // directly) keeps their real, include-dependent type visible to
-        // static analysis instead of appearing to always be undefined.
-        $included_vars = get_defined_vars();
-        $load_lang = $included_vars['lang'] ?? null;
-        $load_lang_info = $included_vars['lang_info'] ?? null;
+        $parent_language = is_string($load_lang_info['parent'] ?? null) && $load_lang_info['parent'] !== ''
+            ? $load_lang_info['parent']
+            : (is_string($lang_info['parent'] ?? null) ? $lang_info['parent'] : null);
 
-        // load parent language content directly in global
-        if (is_array($load_lang_info) && ! empty($load_lang_info['parent']) && is_string($load_lang_info['parent'])) {
-            $parent_language = $load_lang_info['parent'];
-        } elseif (! empty($lang_info['parent']) && is_string($lang_info['parent'])) {
-            $parent_language = $lang_info['parent'];
-        } else {
-            $parent_language = null;
+        if (! empty($parent_language) && $parent_language !== $selected_language) {
+            $parent_po = $dirname . $parent_language . '/' . basename($po_file);
+            if (is_readable($parent_po)) {
+                // Load the parent, then re-load the child (already
+                // loaded above) -- Translator::load()'s merge
+                // (gettext/translator's addTranslations() ->
+                // array_replace_recursive(), and mirrorToGlobal()'s
+                // own $GLOBALS['lang'] writes) both give precedence
+                // to whichever load() call happens last. Loading
+                // only the parent here would let it silently
+                // override the child's own strings for any key both
+                // define; re-loading the child restores the correct
+                // "child overrides parent, parent fills the gaps"
+                // precedence (e.g. en_US inherits piwigo_day_N from
+                // its en_UK parent, but keeps its own overrides).
+                Translator::get()->load($parent_language, $parent_po);
+                Translator::get()->load($selected_language, $po_file);
+            }
         }
 
-        if (! empty($parent_language) && $parent_language != $selected_language) {
-            @include str_replace($selected_language, $parent_language, $source_file);
-        }
-
-        // merge contents
-        $lang = array_merge($lang, (array) $load_lang);
-        $lang_info = array_merge($lang_info, self::withStringKeysOnly((array) $load_lang_info));
+        $lang_info = array_merge($lang_info, $load_lang_info);
         self::setLangInfo($lang_info);
         return true;
     }
@@ -624,30 +593,6 @@ final class Lang
         $info['zero_plural'] = $headers->get('X-Piwigo-Zero-Plural') === 'true';
 
         return $info;
-    }
-
-    /**
-     * A .lang.php file included by load() sets $lang_info at this class's own
-     * method scope (see load()'s own docblock on the @include below) -- its
-     * keys are always string in practice (language_name/country/direction/
-     * code/parent/zero_plural/jquery_code/plupload_code, per
-     * poHeadersToLangInfo()'s own key list), but get_defined_vars() can't
-     * statically prove that, so this narrows for real instead of widening
-     * langInfo()'s declared array<string, mixed> shape to satisfy PHPStan.
-     *
-     * @param array<mixed, mixed> $value
-     * @return array<string, mixed>
-     */
-    private static function withStringKeysOnly(array $value): array
-    {
-        $result = [];
-        foreach ($value as $k => $v) {
-            if (is_string($k)) {
-                $result[$k] = $v;
-            }
-        }
-
-        return $result;
     }
 
     /**

@@ -26,7 +26,7 @@ class ThemeMaintain
     /**
      * @param string $theme_version
      * @param array<int, string> $errors - used to return error messages
-     * @return mixed - matches DummyTheme_maintain::activate()'s committed
+     * @return mixed - matches DummyThemeMaintain::activate()'s committed
      *   native `mixed` return; kept docblock-only here (not native) for the
      *   same third-party-subclass contravariance reason as PluginMaintain
      *   above.

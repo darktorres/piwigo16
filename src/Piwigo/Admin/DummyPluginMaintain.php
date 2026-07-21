@@ -14,7 +14,7 @@ namespace Piwigo\Admin;
 /**
  * used when a plugin uses the old procedural declaration of maintenance methods
  */
-class DummyPlugin_maintain extends PluginMaintain
+class DummyPluginMaintain extends PluginMaintain
 {
     // Each is_callable() here checks for a bare function dynamically defined
     // by a plugin's own maintain.inc.php (include_once'd in

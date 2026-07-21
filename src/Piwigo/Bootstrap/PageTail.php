@@ -40,6 +40,33 @@ final class PageTail
 {
     public static function render(): void
     {
+        self::checkForUpdates();
+
+        // P23 batch 8f-4: PageTailRenderer (L3) receives the telemetry
+        // sender through Piwigo\Core\TelemetrySenderInterface -- this class
+        // (L4) is the one place the concrete L4 implementation gets
+        // constructed. Legacy Coupling Retirement Phase 4c: UrlServiceInterface
+        // is wired the same way, see PageTailRenderer's own docblock.
+        new PageTailRenderer(new PiwigoInfosSender(), new UrlService(new HtmlService()))
+            ->render(\Piwigo\Core\PageState::current()->requestStart);
+    }
+
+    /**
+     * Legacy Coupling Retirement Workstream D: the non-echoing sibling of
+     * render() -- same update-check orchestration, but returns the fully
+     * rendered page instead of sending it to the browser. For controllers
+     * returning a real PSR-7 Response instead of echoing directly.
+     */
+    public static function renderToString(): string
+    {
+        self::checkForUpdates();
+
+        return new PageTailRenderer(new PiwigoInfosSender(), new UrlService(new HtmlService()))
+            ->renderToString(\Piwigo\Core\PageState::current()->requestStart);
+    }
+
+    private static function checkForUpdates(): void
+    {
         // ----------------------------------------------- update notification
         $update_notify_check_period = \Piwigo\Config\Config::updateNotifyCheckPeriod();
         if (is_int($update_notify_check_period) && $update_notify_check_period > 0) {
@@ -66,13 +93,5 @@ final class PageTail
                 }
             }
         }
-
-        // P23 batch 8f-4: PageTailRenderer (L3) receives the telemetry
-        // sender through Piwigo\Core\TelemetrySenderInterface -- this class
-        // (L4) is the one place the concrete L4 implementation gets
-        // constructed. Legacy Coupling Retirement Phase 4c: UrlServiceInterface
-        // is wired the same way, see PageTailRenderer's own docblock.
-        new PageTailRenderer(new PiwigoInfosSender(), new UrlService(new HtmlService()))
-            ->render(\Piwigo\Core\PageState::current()->requestStart);
     }
 }

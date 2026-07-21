@@ -649,6 +649,18 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
      */
     public function flush(): void
     {
+        echo $this->finalizeOutput();
+    }
+
+    /**
+     * Same substitutions flush() sends to the browser (combined scripts,
+     * combined CSS, injected `<head>` elements/style), but returned
+     * instead of echoed -- the non-echoing sibling `fetchOutput()` uses,
+     * and what flush() itself now delegates to (behavior-identical: every
+     * existing flush()/p() caller is unaffected).
+     */
+    private function finalizeOutput(): string
+    {
         if (! $this->scriptLoader->did_head()) {
             $pos = strpos($this->output, self::COMBINED_SCRIPTS_TAG);
             if ($pos !== false) {
@@ -701,8 +713,23 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
             $this->html_style = '';
         }
 
-        echo $this->output;
+        $output = $this->output;
         $this->output = '';
+
+        return $output;
+    }
+
+    /**
+     * The non-echoing sibling of flush()/p() -- same combined-script/CSS/
+     * head-element substitutions, returned as a string instead of sent to
+     * the browser. For callers that need the fully rendered page as a
+     * value (Legacy Coupling Retirement Workstream D: controllers
+     * returning a real PSR-7 Response instead of echoing directly) rather
+     * than as a side effect.
+     */
+    public function fetchOutput(): string
+    {
+        return $this->finalizeOutput();
     }
 
     /**

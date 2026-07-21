@@ -47,6 +47,28 @@ final readonly class PageTailRenderer
 
     public function render(float $startTime): void
     {
+        $this->prepareTail($startTime);
+        \Piwigo\Template\CurrentTemplate::get()
+            ->p();
+    }
+
+    /**
+     * Legacy Coupling Retirement Workstream D: the non-echoing sibling of
+     * render() -- same orchestration, but returns the fully rendered page
+     * (everything accumulated in $template->output so far, header/content/
+     * tail together, see Template::fetchOutput()'s own docblock) instead
+     * of sending it to the browser. For controllers returning a real
+     * PSR-7 Response instead of echoing directly.
+     */
+    public function renderToString(float $startTime): string
+    {
+        $this->prepareTail($startTime);
+        return \Piwigo\Template\CurrentTemplate::get()
+            ->fetchOutput();
+    }
+
+    private function prepareTail(float $startTime): void
+    {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $template->set_filenames([
@@ -123,7 +145,6 @@ final readonly class PageTailRenderer
         // Generate the page
         //
         $template->parse('tail');
-        $template->p();
     }
 
     /**

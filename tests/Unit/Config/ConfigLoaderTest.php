@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\MissingRequiredConfigException;
+use Piwigo\Core\Paths;
 
 // putenv($var)-to-unset must save+restore the original value, never just
 // clear it -- see memory feedback_putenv_unset_must_restore.md. PIWIGO_DB_*
@@ -109,4 +110,115 @@ test('validateRequired passes when every required key is set', function (): void
 
     ConfigLoader::validateRequired(); // should not throw
     expect(true)->toBeTrue();
+});
+
+// Legacy Coupling Retirement gap-closure: applyLocalFileOverrides() bridges
+// a site's own local/config/config.inc.php into Config:: -- previously
+// included into a bare $conf array (common.inc.php) that nothing in the
+// Config::-based request path ever read.
+
+function config_loader_test_rrmdir(string $dir): void
+{
+    if (! is_dir($dir)) {
+        return;
+    }
+    $entries = scandir($dir);
+    foreach ($entries !== false ? $entries : [] as $entry) {
+        if ($entry === '.' || $entry === '..') {
+            continue;
+        }
+        $path = $dir . '/' . $entry;
+        is_dir($path) ? config_loader_test_rrmdir($path) : unlink($path);
+    }
+    rmdir($dir);
+}
+
+test('applyLocalFileOverrides syncs a key the site file sets into Config::', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-config-loader-test-' . bin2hex(random_bytes(4));
+    mkdir($root . '/local/config', 0o777, true);
+    file_put_contents(
+        $root . '/local/config/config.inc.php',
+        "<?php\n\$conf['order_by_custom'] = 'ORDER BY test_column ASC';\n"
+    );
+
+    ConfigLoader::applyLocalFileOverrides(Paths::fromRoot($root));
+
+    expect(Config::all()['order_by_custom'])->toBe('ORDER BY test_column ASC');
+
+    config_loader_test_rrmdir($root);
+});
+
+test('applyLocalFileOverrides leaves a non-overridden key at its normal default', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-config-loader-test-' . bin2hex(random_bytes(4));
+    mkdir($root . '/local/config', 0o777, true);
+    file_put_contents(
+        $root . '/local/config/config.inc.php',
+        "<?php\n\$conf['order_by_custom'] = 'ORDER BY test_column ASC';\n"
+    );
+
+    ConfigLoader::applyDefaults();
+    ConfigLoader::applyLocalFileOverrides(Paths::fromRoot($root));
+
+    expect(Config::galleryTitle())->toBe('Piwigo');
+
+    config_loader_test_rrmdir($root);
+});
+
+test('applyLocalFileOverrides silently drops a key not in Config::SCHEMA', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-config-loader-test-' . bin2hex(random_bytes(4));
+    mkdir($root . '/local/config', 0o777, true);
+    file_put_contents(
+        $root . '/local/config/config.inc.php',
+        "<?php\n\$conf['some_totally_unknown_legacy_key'] = 'should not appear';\n"
+    );
+
+    ConfigLoader::applyLocalFileOverrides(Paths::fromRoot($root));
+
+    // Non-literal key argument on purpose -- Config::has() with a literal
+    // unknown key trips the ConfigKeyExistsRule PHPStan safety net (by
+    // design, it can't tell "deliberate test of unknown-key handling" from
+    // a real typo); its own documented escape hatch is a dynamic key.
+    $unknownKey = 'some_totally_unknown_legacy_key';
+    expect(Config::has($unknownKey))->toBeFalse();
+
+    config_loader_test_rrmdir($root);
+});
+
+test('applyLocalFileOverrides also reads the local_dir_site dir-site file when set', function (): void {
+    defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'test-dir-site/');
+
+    $root = sys_get_temp_dir() . '/piwigo-config-loader-test-' . bin2hex(random_bytes(4));
+    mkdir($root . '/local/config', 0o777, true);
+    file_put_contents(
+        $root . '/local/config/config.inc.php',
+        "<?php\n\$conf['local_dir_site'] = true;\n"
+    );
+    mkdir($root . '/' . PWG_LOCAL_DIR . 'config', 0o777, true);
+    file_put_contents(
+        $root . '/' . PWG_LOCAL_DIR . 'config/config.inc.php',
+        "<?php\n\$conf['gallery_title'] = 'Dir-Site Gallery';\n"
+    );
+
+    ConfigLoader::applyLocalFileOverrides(Paths::fromRoot($root));
+
+    expect(Config::all()['gallery_title'])->toBe('Dir-Site Gallery');
+
+    config_loader_test_rrmdir($root);
+});
+
+test('applyLocalFileOverrides is idempotent', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-config-loader-test-' . bin2hex(random_bytes(4));
+    mkdir($root . '/local/config', 0o777, true);
+    file_put_contents(
+        $root . '/local/config/config.inc.php',
+        "<?php\n\$conf['order_by_custom'] = 'ORDER BY test_column ASC';\n"
+    );
+
+    ConfigLoader::applyLocalFileOverrides(Paths::fromRoot($root));
+    $first = Config::all();
+    ConfigLoader::applyLocalFileOverrides(Paths::fromRoot($root));
+
+    expect(Config::all())->toBe($first);
+
+    config_loader_test_rrmdir($root);
 });

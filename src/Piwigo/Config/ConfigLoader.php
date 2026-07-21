@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
+use Piwigo\Core\Paths;
+
 /**
  * Boot-time orchestration for Config: seeds Config::$data with SCHEMA
  * defaults + env overrides.
@@ -55,8 +57,9 @@ final class ConfigLoader
      * (ConfigService::loadConfFromDb(), called separately once
      * Kernel::boot() makes the container available) so DB/env values win
      * over compile-time defaults -- CommonBootstrap::run()'s real
-     * sequence is applyDefaults() -> applyEnvOverrides() -> Kernel::boot()
-     * -> ConfigService::loadConfFromDb(), DB-merge genuinely last and
+     * sequence is applyDefaults() -> applyEnvOverrides() ->
+     * applyLocalFileOverrides() -> Kernel::boot() ->
+     * ConfigService::loadConfFromDb(), DB-merge genuinely last and
      * highest-priority.
      */
     public static function applyDefaults(): void
@@ -92,6 +95,34 @@ final class ConfigLoader
             $value = getenv($envKey);
             if ($value !== false && $value !== '') {
                 Config::override($confKey, $value);
+            }
+        }
+    }
+
+    /**
+     * Syncs a site's own `local/config/config.inc.php` (+ conditionally
+     * the `local_dir_site` dir file) overrides into Config::$data.
+     *
+     * Historically this never happened: `include/common.inc.php` builds a
+     * bare `$conf` array from these same files, but nothing in the
+     * `Config::`-based request path ever read it -- a site owner's file
+     * customizations (anything not in the `config` DB table, e.g.
+     * `order_by_custom`, `data_location`, `guest_id`) were silently
+     * ignored on every real request. This is the fix: real values, not
+     * just DB-persisted or SCHEMA-default ones.
+     *
+     * Only keys present in Config::SCHEMA are applied -- an old or
+     * removed legacy key in a site's file is silently ignored rather than
+     * polluting Config::$data with an unknown key. See
+     * {@see LocalConfigOverrides::read()} for why this reads the site's
+     * file(s) in isolation rather than reusing
+     * {@see \Piwigo\Admin\Install\DbPatch\LegacyFileConf::read()}'s shape.
+     */
+    public static function applyLocalFileOverrides(Paths $paths): void
+    {
+        foreach (LocalConfigOverrides::read($paths) as $key => $value) {
+            if (array_key_exists($key, Config::SCHEMA)) {
+                Config::override($key, $value);
             }
         }
     }

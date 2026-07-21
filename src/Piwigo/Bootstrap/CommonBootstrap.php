@@ -81,6 +81,14 @@ use Piwigo\Users\CurrentUser;
  * directly (calling this method with no RequestBootstrap::connect() run
  * first) and for CLI-adjacent callers that reach this method without ever
  * having gone through the legacy $GLOBALS bootstrap.
+ *
+ * Legacy Coupling Retirement gap-closure: ConfigLoader::applyLocalFileOverrides()
+ * added right after applyEnvOverrides(), before Kernel::boot() -- a site's
+ * own local/config/config.inc.php had been included into a bare $conf
+ * array by common.inc.php this whole time, but nothing ever synced it
+ * into Config::$data, so every real request silently ignored any
+ * non-DB-persisted site customization. See ConfigLoader::
+ * applyLocalFileOverrides()'s own docblock.
  */
 final class CommonBootstrap
 {
@@ -91,6 +99,7 @@ final class CommonBootstrap
         ServerTiming::start('boot');
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
+        ConfigLoader::applyLocalFileOverrides($paths);
         Kernel::boot($paths);
         if (CurrentConfigService::isSet()) {
             $configService = CurrentConfigService::get();

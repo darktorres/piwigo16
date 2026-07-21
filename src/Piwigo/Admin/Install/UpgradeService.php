@@ -13,11 +13,19 @@ namespace Piwigo\Admin\Install;
 
 use Doctrine\DBAL\Connection;
 use Exception;
-use Piwigo\Admin\themes;
+use Piwigo\Admin\Extensions\ExtensionLifecycle;
+use Piwigo\Admin\Extensions\ExtensionRepository;
+use Piwigo\Admin\Extensions\ExtensionScanner;
+use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
+use Piwigo\Url\UrlService;
 
 /**
  * Database-upgrade machinery, ported verbatim from the former
@@ -204,8 +212,15 @@ SELECT
                 $counter = $conn->fetchOne($query);
                 if (! is_int($counter) || $counter < 1) {
                     // we need to activate theme first
-                    $themes = new themes();
-                    $themes->perform_action('activate', AppInfo::DEFAULT_TEMPLATE);
+                    $urlService = new UrlService(new HtmlService());
+                    $fsEntry = new ExtensionScanner()
+                        ->scan(ExtensionType::Theme, $urlService)[AppInfo::DEFAULT_TEMPLATE] ?? null;
+                    new ExtensionLifecycle(
+                        new ExtensionRepository(DbConnection::build()),
+                        new PemCatalog(new ZipExtractor()),
+                        $urlService,
+                        CurrentConfigService::get(),
+                    )->performAction(ExtensionType::Theme, 'activate', AppInfo::DEFAULT_TEMPLATE, $fsEntry);
                 }
 
                 // then associate it to default user

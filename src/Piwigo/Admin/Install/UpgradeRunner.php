@@ -12,11 +12,14 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Admin\languages;
-use Piwigo\Admin\updates;
+use Piwigo\Admin\Extensions\CoreUpdateService;
+use Piwigo\Admin\Extensions\ExtensionScanner;
+use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
@@ -81,9 +84,9 @@ final class UpgradeRunner
         // so CurrentUser is never guest-initialized either -- same latent
         // crash as InstallWizard::boot()'s own attachGlobals() call (see its
         // docblock): UpgradeService::deactivateNonStandardThemes() can
-        // reach `new themes()`'s missing-screenshot fallback, which reads
-        // CurrentUser. Idempotent, so calling it this early (before the DB
-        // connection) is safe.
+        // reach ExtensionScanner::scan()'s missing-screenshot fallback,
+        // which reads CurrentUser. Idempotent, so calling it this early
+        // (before the DB connection) is safe.
         \Piwigo\Users\CurrentUser::attachGlobals();
 
         // Same no-boot gap, CurrentLogger this time -- same construction
@@ -100,11 +103,12 @@ final class UpgradeRunner
             'archiveDays' => \Piwigo\Config\Config::logArchiveDays(),
         ]));
 
-        $languages = new languages('utf-8');
+        $fs_languages = new ExtensionScanner()
+            ->scan(ExtensionType::Language, new UrlService(new HtmlService()), 'utf-8');
         if (isset($_GET['language'])) {
             $language = is_string($_GET['language']) ? strip_tags($_GET['language']) : '';
 
-            if (! in_array($language, array_keys($languages->fs_languages))) {
+            if (! in_array($language, array_keys($fs_languages))) {
                 $language = AppInfo::DEFAULT_LANGUAGE;
             }
         } else {
@@ -112,7 +116,7 @@ final class UpgradeRunner
             // Try to get browser language
             $http_accept_language = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null;
             $http_accept_language = is_string($http_accept_language) ? $http_accept_language : '';
-            foreach ($languages->fs_languages as $language_code => $fs_language) {
+            foreach ($fs_languages as $language_code => $fs_language) {
                 if (substr($language_code, 0, 2) == substr($http_accept_language, 0, 2)) {
                     $language = $language_code;
                     break;
@@ -184,7 +188,8 @@ final class UpgradeRunner
         if ($has_remote_site) {
             \Piwigo\Core\PageState::current()->errors = [];
             $step = 3;
-            updates::upgrade_to('2.3.4', $step, new RedirectService(), new UrlService(new HtmlService()), false);
+            new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService()), CurrentConfigService::get())
+                ->upgradeTo('2.3.4', $step, false);
 
             $upgrade_errors = \Piwigo\Core\PageState::current()->errors;
             if (! empty($upgrade_errors)) {
@@ -441,10 +446,11 @@ REPLACE INTO ' . Tables::plugins() . '
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $languages = new languages();
+        $fs_languages = new ExtensionScanner()
+            ->scan(ExtensionType::Language, new UrlService(new HtmlService()));
 
         $languages_options = [];
-        foreach ($languages->fs_languages as $language_code => $fs_language) {
+        foreach ($fs_languages as $language_code => $fs_language) {
             if ($this->language == $language_code) {
                 $template->assign('language_selection', $language_code);
             }

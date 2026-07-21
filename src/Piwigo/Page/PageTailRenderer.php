@@ -12,7 +12,8 @@ use Piwigo\Core\UrlServiceInterface;
  * Renders the page footer into $template.
  *
  * The original page_tail.php's "check for Piwigo updates" block
- * (constructing Piwigo\Admin\updates) is deliberately NOT ported here --
+ * (constructing Piwigo\Admin\Extensions\CoreUpdateService) is deliberately
+ * NOT ported here --
  * L3Presentation may not depend on L4Integration (Admin), confirmed via a
  * real deptrac violation when tried. It lives in
  * Piwigo\Bootstrap\PageTail::render() (L4, the orchestrator that replaced

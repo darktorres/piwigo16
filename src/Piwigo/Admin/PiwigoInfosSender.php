@@ -7,6 +7,9 @@ namespace Piwigo\Admin;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\Extensions\ExtensionRepository;
+use Piwigo\Admin\Extensions\ExtensionScanner;
+use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
@@ -22,15 +25,16 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Mail\MailService;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
  * Ported from include/functions.inc.php's send_piwigo_infos()/
  * send_piwigo_infos_retry_later() (P23 batch 8d). Lives under Admin\, not
- * a domain namespace, because it constructs `plugins`/`themes` (this same
- * namespace) to cross-reference installed extensions against the PEM
- * directory -- putting this in a domain namespace (L2bExtendedDomain,
+ * a domain namespace, because it constructs `Admin\Extensions\*` (this same
+ * namespace's sibling) to cross-reference installed extensions against the
+ * PEM directory -- putting this in a domain namespace (L2bExtendedDomain,
  * e.g. Piwigo\Telemetry, home of the unrelated greenfield
  * TelemetryService) would make an L2b class depend on L4Integration, the
  * wrong direction. Same "administrative machinery invoked from
@@ -262,10 +266,14 @@ SELECT
             }
         }
 
-        $plugins = new plugins();
+        $urlService = new UrlService(new HtmlService());
+        $fsPlugins = new ExtensionScanner()
+            ->scan(ExtensionType::Plugin, $urlService);
+        $dbPluginsById = new ExtensionRepository($conn)
+            ->findAll(ExtensionType::Plugin);
         $piwigoInfos['general_stats']['nb_private_plugins'] = 0;
         $piwigoInfos['plugins'] = [];
-        foreach ($plugins->db_plugins_by_id as $plugin) {
+        foreach ($dbPluginsById as $plugin) {
             if ($plugin['state'] == 'active') {
                 // piwigo_plugins.id/version are `varchar(...) NOT NULL` in the
                 // schema — a genuine row here always carries strings.
@@ -275,8 +283,8 @@ SELECT
                 assert(is_string($pluginVersion));
 
                 $eid = null;
-                if (isset($plugins->fs_plugins[$pluginId])) {
-                    $uri = $plugins->fs_plugins[$pluginId]['uri'] ?? null;
+                if (isset($fsPlugins[$pluginId])) {
+                    $uri = $fsPlugins[$pluginId]['uri'] ?? null;
                     if (is_string($uri) and (bool) preg_match('/eid=(\d+)/', $uri, $matches)) {
                         if (isset($pemExtensions[$matches[1]])) {
                             $eid = $matches[1];
@@ -310,7 +318,10 @@ SELECT
 
         $piwigoInfos['general_stats']['nb_plugins'] = $piwigoInfos['general_stats']['nb_private_plugins'] + count($piwigoInfos['plugins']);
 
-        $themes = new themes();
+        $fsThemes = new ExtensionScanner()
+            ->scan(ExtensionType::Theme, $urlService);
+        $dbThemesById = new ExtensionRepository($conn)
+            ->findAll(ExtensionType::Theme);
         $piwigoInfos['general_stats']['nb_private_themes'] = 0;
         $piwigoInfos['themes'] = [];
         $privateThemes = [];
@@ -318,7 +329,7 @@ SELECT
         // install/piwigo_structure-mysql.sql and the test fixture) — unlike
         // plugins, a theme is only in this table while active, so every row
         // here is implicitly active.
-        foreach ($themes->db_themes_by_id as $theme) {
+        foreach ($dbThemesById as $theme) {
             // piwigo_themes.id/version are `varchar(...) NOT NULL` in the
             // schema — a genuine row here always carries strings.
             $themeId = $theme['id'];
@@ -327,8 +338,8 @@ SELECT
             assert(is_string($themeVersion));
 
             $eid = null;
-            if (isset($themes->fs_themes[$themeId])) {
-                $uri = $themes->fs_themes[$themeId]['uri'] ?? null;
+            if (isset($fsThemes[$themeId])) {
+                $uri = $fsThemes[$themeId]['uri'] ?? null;
                 if (is_string($uri) and (bool) preg_match('/eid=(\d+)/', $uri, $matches)) {
                     if (isset($pemExtensions[$matches[1]])) {
                         $eid = $matches[1];

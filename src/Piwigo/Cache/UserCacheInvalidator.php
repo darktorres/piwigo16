@@ -18,7 +18,7 @@ use Piwigo\Db\DbConnection;
  * Legacy Coupling Retirement Phase 8, 8d: invalidate()'s confDeleteParam()
  * call goes through CurrentConfigService::get() (Tier 2) -- reachable both
  * directly (Admin\Install\UpgradeRunner.php) and transitively (via
- * Admin\updates::upgrade_to()), both covered by
+ * Admin\Extensions\CoreUpdateService::upgradeTo()), both covered by
  * InstallBootstrap::activateConfigService() on the install/upgrade path.
  */
 final class UserCacheInvalidator

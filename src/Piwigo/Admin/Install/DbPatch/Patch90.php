@@ -12,8 +12,16 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Admin\languages;
+use Piwigo\Admin\Extensions\ExtensionLifecycle;
+use Piwigo\Admin\Extensions\ExtensionRepository;
+use Piwigo\Admin\Extensions\ExtensionScanner;
+use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
+use Piwigo\Url\UrlService;
 
 /**
  * Former install/db/90-database.php (P23 sub-batch 8g-1). The bare
@@ -54,10 +62,18 @@ CREATE TABLE ' . Tables::languages() . " (
 
         // Fill table
 
-        $languages = new languages(UpgradeCharset::pwgCharset());
+        $urlService = new UrlService(new HtmlService());
+        $lifecycle = new ExtensionLifecycle(
+            new ExtensionRepository($conn),
+            new PemCatalog(new ZipExtractor()),
+            $urlService,
+            CurrentConfigService::get(),
+        );
+        $fs_languages = new ExtensionScanner()
+            ->scan(ExtensionType::Language, $urlService, UpgradeCharset::pwgCharset());
 
-        foreach ($languages->fs_languages as $language_code => $fs_language) {
-            $languages->perform_action('activate', $language_code);
+        foreach ($fs_languages as $language_code => $fs_language) {
+            $lifecycle->performAction(ExtensionType::Language, 'activate', $language_code, $fs_language);
         }
 
         echo "\n"

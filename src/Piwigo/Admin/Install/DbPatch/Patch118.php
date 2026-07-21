@@ -12,7 +12,15 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Admin\themes;
+use Piwigo\Admin\Extensions\ExtensionLifecycle;
+use Piwigo\Admin\Extensions\ExtensionRepository;
+use Piwigo\Admin\Extensions\ExtensionScanner;
+use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Config\CurrentConfigService;
+use Piwigo\Html\HtmlService;
+use Piwigo\Url\UrlService;
 
 /**
  * Former install/db/118-database.php (P23 sub-batch 8g-2).
@@ -34,8 +42,15 @@ final class Patch118 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        $themes = new themes();
-        $themes->perform_action('activate', 'smartpocket');
+        $urlService = new UrlService(new HtmlService());
+        $fsEntry = new ExtensionScanner()
+            ->scan(ExtensionType::Theme, $urlService)['smartpocket'] ?? null;
+        new ExtensionLifecycle(
+            new ExtensionRepository($conn),
+            new PemCatalog(new ZipExtractor()),
+            $urlService,
+            CurrentConfigService::get(),
+        )->performAction(ExtensionType::Theme, 'activate', 'smartpocket', $fsEntry);
 
         echo "\n"
         . $this->description()

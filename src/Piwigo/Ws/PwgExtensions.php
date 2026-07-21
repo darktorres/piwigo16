@@ -14,12 +14,17 @@ namespace Piwigo\Ws;
 use LogicException;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Admin\languages;
-use Piwigo\Admin\plugins;
-use Piwigo\Admin\themes;
-use Piwigo\Admin\updates;
+use Piwigo\Admin\Extensions\CoreUpdateService;
+use Piwigo\Admin\Extensions\ExtensionLifecycle;
+use Piwigo\Admin\Extensions\ExtensionRepository;
+use Piwigo\Admin\Extensions\ExtensionScanner;
+use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
+use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RedirectService;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
@@ -48,13 +53,16 @@ final class PwgExtensions
      */
     public static function pluginsGetList(array $params, PwgServer &$service): array
     {
-        $plugins = new plugins();
-        $plugins->sort_fs_plugins('name');
+        $urlService = new UrlService(new HtmlService());
+        $fs_plugins = new ExtensionScanner()
+            ->scan(ExtensionType::Plugin, $urlService);
+        uasort($fs_plugins, new HtmlService()->nameCompare(...));
+        $db_plugins_by_id = new ExtensionRepository(DbConnection::build())->findAll(ExtensionType::Plugin);
         $plugin_list = [];
 
-        foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
-            if (isset($plugins->db_plugins_by_id[$plugin_id])) {
-                $state = $plugins->db_plugins_by_id[$plugin_id]['state'];
+        foreach ($fs_plugins as $plugin_id => $fs_plugin) {
+            if (isset($db_plugins_by_id[$plugin_id])) {
+                $state = $db_plugins_by_id[$plugin_id]['state'];
             } else {
                 $state = 'uninstalled';
             }
@@ -105,8 +113,16 @@ final class PwgExtensions
         // grep). Dropping it also avoids a real SEC-60 (no define() under
         // src/Piwigo/) arch-test violation.
 
-        $plugins = new plugins();
-        $errors = $plugins->perform_action($params['action'], $params['plugin']);
+        $urlService = new UrlService(new HtmlService());
+        $lifecycle = new ExtensionLifecycle(
+            new ExtensionRepository(DbConnection::build()),
+            new PemCatalog(new ZipExtractor()),
+            $urlService,
+            CurrentConfigService::get(),
+        );
+        $fsEntry = new ExtensionScanner()
+            ->scan(ExtensionType::Plugin, $urlService)[$params['plugin']] ?? null;
+        $errors = $lifecycle->performAction(ExtensionType::Plugin, $params['action'], $params['plugin'], $fsEntry);
 
         if (! empty($errors)) {
             return new PwgError(500, implode(', ', array_filter($errors, is_string(...))));
@@ -143,8 +159,16 @@ final class PwgExtensions
         // original define('IN_ADMIN', true) here is equally a no-op for
         // this request.
 
-        $themes = new themes();
-        $errors = $themes->perform_action($params['action'], $params['theme']);
+        $urlService = new UrlService(new HtmlService());
+        $lifecycle = new ExtensionLifecycle(
+            new ExtensionRepository(DbConnection::build()),
+            new PemCatalog(new ZipExtractor()),
+            $urlService,
+            CurrentConfigService::get(),
+        );
+        $fsEntry = new ExtensionScanner()
+            ->scan(ExtensionType::Theme, $urlService)[$params['theme']] ?? null;
+        $errors = $lifecycle->performAction(ExtensionType::Theme, $params['action'], $params['theme'], $fsEntry);
 
         if (! empty($errors)) {
             return new PwgError(500, implode(', ', $errors));
@@ -185,25 +209,32 @@ final class PwgExtensions
             return new PwgError(403, 'invalid extension type');
         }
 
-        $type = $params['type'];
         $extension_id = $params['id'];
         $revision = $params['revision'];
 
-        $extension = match ($type) {
-            'plugins' => new plugins(),
-            'themes' => new themes(),
+        $type = match ($params['type']) {
+            'plugins' => ExtensionType::Plugin,
+            'themes' => ExtensionType::Theme,
             // 'languages' is the only value that can still reach here: $type
             // is already restricted to plugins/themes/languages by the
             // in_array() guard above.
-            default => new languages(),
+            default => ExtensionType::Language,
         };
 
-        if ($extension instanceof plugins) {
+        $urlService = new UrlService(new HtmlService());
+        $scanner = new ExtensionScanner();
+        $repo = new ExtensionRepository(DbConnection::build());
+        $pemCatalog = new PemCatalog(new ZipExtractor());
+        $lifecycle = new ExtensionLifecycle($repo, $pemCatalog, $urlService, CurrentConfigService::get());
+
+        if ($type === ExtensionType::Plugin) {
+            $dbPluginsById = $repo->findAll(ExtensionType::Plugin);
             if (
-                isset($extension->db_plugins_by_id[$extension_id])
-                and $extension->db_plugins_by_id[$extension_id]['state'] == 'active'
+                isset($dbPluginsById[$extension_id])
+                and $dbPluginsById[$extension_id]['state'] == 'active'
             ) {
-                $extension->perform_action('deactivate', $extension_id);
+                $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService)[$extension_id] ?? null;
+                $lifecycle->performAction(ExtensionType::Plugin, 'deactivate', $extension_id, $fsEntry);
 
                 new RedirectService()
                     ->redirect(
@@ -219,38 +250,46 @@ final class PwgExtensions
                     );
             }
 
-            [$upgrade_status] = $extension->perform_action('update', $extension_id, [
+            $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService)[$extension_id] ?? null;
+            [$upgrade_status] = $lifecycle->performAction(ExtensionType::Plugin, 'update', $extension_id, $fsEntry, [
                 'revision' => $revision,
             ]);
-            $extension_name = $extension->fs_plugins[$extension_id]['name'];
+            $extension_name = $scanner->scan(ExtensionType::Plugin, $urlService)[$extension_id]['name'] ?? $extension_id;
 
             if (isset($params['reactivate'])) {
-                $extension->perform_action('activate', $extension_id);
+                $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService)[$extension_id] ?? null;
+                $lifecycle->performAction(ExtensionType::Plugin, 'activate', $extension_id, $fsEntry);
             }
-        } elseif ($extension instanceof themes) {
-            $upgrade_status = $extension->extract_theme_files('upgrade', $revision, $extension_id);
-            $extension_name = $extension->fs_themes[$extension_id]['name'];
+        } elseif ($type === ExtensionType::Theme) {
+            $fsThemesBefore = $scanner->scan(ExtensionType::Theme, $urlService);
+            $extension_name = $fsThemesBefore[$extension_id]['name'] ?? $extension_id;
+
+            $extraction = $pemCatalog->extractArchive(ExtensionType::Theme, 'upgrade', $revision, $extension_id);
+            $upgrade_status = $extraction['status'];
 
             $activity_details = [
                 'theme_id' => $extension_id,
-                'from_version' => $extension->fs_themes[$extension_id]['version'],
+                'from_version' => $fsThemesBefore[$extension_id]['version'] ?? null,
             ];
 
             if ($upgrade_status == 'ok') {
-                $extension->get_fs_themes(); // refresh list
-                $activity_details['to_version'] = $extension->fs_themes[$extension_id]['version'];
+                $fsThemesAfter = $scanner->scan(ExtensionType::Theme, $urlService); // refresh list
+                $activity_details['to_version'] = $fsThemesAfter[$extension_id]['version'] ?? null;
             } else {
                 $activity_details['result'] = 'error';
             }
 
             new ActivityService(new ActivityRepository(DbConnection::build()))->record('system', ActivitySystem::Theme, 'update', $activity_details);
-        } elseif ($extension instanceof languages) {
-            $upgrade_status = $extension->extract_language_files('upgrade', $revision, $extension_id);
-            $extension_name = $extension->fs_languages[$extension_id]['name'];
+        } elseif ($type === ExtensionType::Language) {
+            $extraction = $pemCatalog->extractArchive(ExtensionType::Language, 'upgrade', $revision, $extension_id);
+            $upgrade_status = $extraction['status'];
+            $extension_name = $scanner->scan(ExtensionType::Language, $urlService)[$extension_id]['name'] ?? $extension_id;
         } else {
-            // Unreachable: $type is $params['type'], already restricted to
-            // plugins/themes/languages by the in_array() guard above.
-            throw new LogicException('Invalid extension type: ' . $type);
+            // Unreachable: $type is derived from $params['type'], already
+            // restricted to plugins/themes/languages by the in_array()
+            // guard above, and the 3 branches above exhaust every
+            // ExtensionType case.
+            throw new LogicException('Invalid extension type');
         }
 
         $template = \Piwigo\Template\CurrentTemplate::get();
@@ -342,19 +381,21 @@ final class PwgExtensions
      */
     public static function checkUpdates(array $params, PwgServer &$service): array
     {
-        $update = new updates(new RedirectService(), new UrlService(new HtmlService()));
+        $urlService = new UrlService(new HtmlService());
+        $coreUpdateService = new CoreUpdateService(new ZipExtractor(), new RedirectService(), $urlService, CurrentConfigService::get());
+        $updateChecker = new ExtensionUpdateChecker(new ExtensionScanner(), new PemCatalog(new ZipExtractor()), $urlService, CurrentConfigService::get());
         $result = [];
 
         if (! isset($_SESSION['need_update' . AppInfo::VERSION])) {
-            updates::check_piwigo_upgrade();
+            $coreUpdateService->checkPiwigoUpgrade();
         }
 
         $result['piwigo_need_update'] = $_SESSION['need_update' . AppInfo::VERSION];
 
         if (! isset($_SESSION['extensions_need_update'])) {
-            $update->check_extensions();
+            $updateChecker->checkExtensions();
         } else {
-            $update->check_updated_extensions();
+            $updateChecker->checkUpdatedExtensions();
         }
 
         if (! is_array($_SESSION['extensions_need_update'])) {

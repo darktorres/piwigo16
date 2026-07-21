@@ -15,7 +15,12 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\AdminUiHelper;
-use Piwigo\Admin\languages;
+use Piwigo\Admin\Extensions\ExtensionLifecycle;
+use Piwigo\Admin\Extensions\ExtensionRepository;
+use Piwigo\Admin\Extensions\ExtensionScanner;
+use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
@@ -94,7 +99,10 @@ final class InstallWizard
      */
     private array $errors = [];
 
-    private languages $languages;
+    /**
+     * @var array<string, array<string, mixed>>
+     */
+    private array $fsLanguages;
 
     /**
      * Built by analyzeForm() -> InstallService::installDbConnect(); non-null once hasErrors() is false.
@@ -189,8 +197,8 @@ final class InstallWizard
         // which doesn't touch CurrentUser), so CurrentUser is never guest-
         // initialized either. Found live (real
         // fixture-regen run, not assumed): InstallService::
-        // activateCoreThemes() -> new themes() -> get_fs_themes()'s
-        // missing-screenshot fallback -> PreferencesService::getParam() ->
+        // activateCoreThemes() -> ExtensionScanner::scan()'s missing-
+        // screenshot fallback -> PreferencesService::getParam() ->
         // CurrentUser::get() -> uncaught "CurrentUser not initialised".
         // attachGlobals() is exactly the safe guest default this no-boot
         // path needs (idempotent; a later real CurrentUser::set() in
@@ -237,12 +245,13 @@ final class InstallWizard
                 ->fatalError('Piwigo is already installed');
         }
 
-        $this->languages = new languages('utf-8');
+        $this->fsLanguages = new ExtensionScanner()
+            ->scan(ExtensionType::Language, new UrlService(new HtmlService()), 'utf-8');
 
         if (isset($_GET['language']) && is_string($_GET['language'])) {
             $language = strip_tags($_GET['language']);
 
-            if (! in_array($language, array_keys($this->languages->fs_languages))) {
+            if (! in_array($language, array_keys($this->fsLanguages))) {
                 $language = AppInfo::DEFAULT_LANGUAGE;
             }
         } else {
@@ -250,7 +259,7 @@ final class InstallWizard
             // Try to get browser language
             $accept_language = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null;
             $accept_language = is_string($accept_language) ? $accept_language : '';
-            foreach ($this->languages->fs_languages as $language_code => $fs_language) {
+            foreach ($this->fsLanguages as $language_code => $fs_language) {
                 if (substr($language_code, 0, 2) == substr($accept_language, 0, 2)) {
                     $language = $language_code;
                     break;
@@ -499,7 +508,13 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
         );
 
         // fill languages table, only activate the current language
-        $this->languages->perform_action('activate', $this->language);
+        $urlService = new UrlService(new HtmlService());
+        new ExtensionLifecycle(
+            new ExtensionRepository(DbConnection::build()),
+            new PemCatalog(new ZipExtractor()),
+            $urlService,
+            $configService,
+        )->performAction(ExtensionType::Language, 'activate', $this->language, $this->fsLanguages[$this->language] ?? null);
 
         // fill Config::$data from the freshly-seeded config table
         $configService->loadConfFromDb();
@@ -584,7 +599,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
         $template = $this->template;
 
         $languages_options = [];
-        foreach ($this->languages->fs_languages as $language_code => $fs_language) {
+        foreach ($this->fsLanguages as $language_code => $fs_language) {
             if ($this->language == $language_code) {
                 $template->assign('language_selection', $language_code);
             }

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use Piwigo\Admin\Extensions\CoreUpdateService;
+use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Admin\PiwigoInfosSender;
-use Piwigo\Admin\updates;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Html\HtmlService;
 use Piwigo\Page\PageTailRenderer;
@@ -17,8 +19,8 @@ use Piwigo\Url\UrlService;
  * notification block, then the PageTailRenderer render itself.
  *
  * Lives in Bootstrap (L4) for the same reason the deleted seam existed at
- * all: the update check constructs Piwigo\Admin\updates and the renderer
- * needs the concrete Piwigo\Admin\PiwigoInfosSender behind its
+ * all: the update check constructs Piwigo\Admin\Extensions\CoreUpdateService
+ * and the renderer needs the concrete Piwigo\Admin\PiwigoInfosSender behind its
  * Piwigo\Core\TelemetrySenderInterface constructor param — both
  * L4Integration, which PageTailRenderer (L3Presentation) may not reach
  * (confirmed via a real deptrac violation when tried; see
@@ -57,8 +59,8 @@ final class PageTail
             if ($check_for_updates) {
                 $exec_id = UniqueExecLock::begins('check_for_updates');
                 if ($exec_id !== false) {
-                    $updates = new updates(new RedirectService(), new UrlService(new HtmlService()));
-                    $updates->notify_piwigo_new_versions();
+                    new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService()), CurrentConfigService::get())
+                        ->notifyPiwigoNewVersions();
 
                     UniqueExecLock::ends('check_for_updates');
                 }

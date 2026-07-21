@@ -29,12 +29,11 @@ use Piwigo\Template\Template;
  * file's own (redundant) check_status() call is dropped here, same
  * precedent as MaintenanceSubController's own shell fold.
  *
- * Migrated off the legacy Piwigo\Admin\themes god-class: this was the only
- * remaining caller of `new themes(); $themes->get_fs_themes();` in this
- * cluster (confirmed via grep) -- ExtensionScanner::scan(ExtensionType::Theme)
- * already returns the same 'name'/'use_standard_pages' fields this file
- * needs. The themes class itself stays (real callers remain outside this
- * batch: admin/include/functions_install.inc.php, functions_upgrade.php).
+ * Migrated off the legacy Piwigo\Admin\themes god-class onto
+ * ExtensionScanner::scan(ExtensionType::Theme), which returns the same
+ * 'name'/'use_standard_pages' fields this file needs. The themes god-class
+ * itself was fully retired in Legacy Coupling Retirement Phase 8, 8j, once
+ * every other real caller had migrated onto Admin\Extensions\* too.
  *
  * Legacy Coupling Retirement Phase 5: the 4 writes below now go through
  * the DI/Doctrine-backed Piwigo\Config\ConfigService instead of the

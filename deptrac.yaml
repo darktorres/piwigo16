@@ -132,8 +132,9 @@ deptrac:
     # L4Integration (Admin) never actually comes into play here.
     # EventDispatcher moved to L1Infrastructure in Phase 3 of
     # docs/plan/legacy-coupling-retirement.md (Track B) -- see its own
-    # comment there; PluginRepository stays here since its only 2 real
-    # callers (Admin\PluginLoader, Admin\plugins.php) are both
+    # comment there; PluginRepository stays here since its only real
+    # caller (Admin\PluginLoader; the legacy Admin\plugins.php god-class
+    # was retired in Legacy Coupling Retirement Phase 8, 8j) is
     # L4Integration, already legally above L2b.
     - name: L2bExtendedDomain
       collectors:

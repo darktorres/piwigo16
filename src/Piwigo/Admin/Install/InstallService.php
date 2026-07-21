@@ -13,10 +13,17 @@ namespace Piwigo\Admin\Install;
 
 use Doctrine\DBAL\Connection;
 use Exception;
-use Piwigo\Admin\plugins;
-use Piwigo\Admin\themes;
+use Piwigo\Admin\Extensions\ExtensionLifecycle;
+use Piwigo\Admin\Extensions\ExtensionRepository;
+use Piwigo\Admin\Extensions\ExtensionScanner;
+use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
+use Piwigo\Html\HtmlService;
+use Piwigo\Url\UrlService;
 use RuntimeException;
 
 /**
@@ -76,10 +83,18 @@ final class InstallService
      */
     public static function activateCoreThemes(): void
     {
-        $themes = new themes();
-        foreach ($themes->fs_themes as $theme_id => $fs_theme) {
+        $urlService = new UrlService(new HtmlService());
+        $lifecycle = new ExtensionLifecycle(
+            new ExtensionRepository(DbConnection::build()),
+            new PemCatalog(new ZipExtractor()),
+            $urlService,
+            CurrentConfigService::get(),
+        );
+        $fs_themes = new ExtensionScanner()
+            ->scan(ExtensionType::Theme, $urlService);
+        foreach ($fs_themes as $theme_id => $fs_theme) {
             if (in_array($theme_id, ['modus'])) {
-                $themes->perform_action('activate', $theme_id);
+                $lifecycle->performAction(ExtensionType::Theme, 'activate', $theme_id, $fs_theme);
             }
         }
     }
@@ -89,11 +104,19 @@ final class InstallService
      */
     public static function activateCorePlugins(): void
     {
-        $plugins = new plugins();
+        $urlService = new UrlService(new HtmlService());
+        $lifecycle = new ExtensionLifecycle(
+            new ExtensionRepository(DbConnection::build()),
+            new PemCatalog(new ZipExtractor()),
+            $urlService,
+            CurrentConfigService::get(),
+        );
+        $fs_plugins = new ExtensionScanner()
+            ->scan(ExtensionType::Plugin, $urlService);
 
-        foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
+        foreach ($fs_plugins as $plugin_id => $fs_plugin) {
             if (in_array($plugin_id, [])) {
-                $plugins->perform_action('activate', $plugin_id);
+                $lifecycle->performAction(ExtensionType::Plugin, 'activate', $plugin_id, $fs_plugin);
             }
         }
     }

@@ -356,10 +356,11 @@ test('CurrentConfigService::reset() is only called from tests/', function (): vo
 // NOT added here despite the plan doc's "already true today" claim for it
 // too -- that claim was verified WRONG: PHPWG_ROOT_PATH is read directly
 // in ~50 real (non-comment) call sites across 12 src/Piwigo/ files
-// (Admin/updates.php, Admin/plugins.php, Admin/languages.php,
-// Admin/themes.php, Image/SrcImage.php, Image/DerivativeImage.php,
-// Template/Template.php, Template/FileCombiner.php, Cache/
-// PersistentFileCache.php), all pre-existing (P6-era), not introduced by
+// (Image/SrcImage.php, Image/DerivativeImage.php, Template/Template.php,
+// Template/FileCombiner.php, Cache/PersistentFileCache.php among them --
+// the legacy Admin/{updates,plugins,languages,themes}.php god-classes
+// named here originally were fully retired in Legacy Coupling Retirement
+// Phase 8, 8j), all pre-existing (P6-era), not introduced by
 // P16. This is exactly the "885-usage bulk Paths migration across
 // include//admin/" work already scoped to P17-23 by this phase's own
 // plan -- adding an enforcement test for a claim that isn't true yet would

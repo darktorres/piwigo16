@@ -23,6 +23,13 @@ if (version_compare(PHP_VERSION, '8.5.0', '<')) {
     die('Piwigo requires PHP 8.5 or above.');
 }
 
+// Legacy Coupling Retirement Phase 8, 8b: Paths::fromIndex() below is a
+// Piwigo\ class, so the autoloader must be required explicitly first now
+// (requiring twice is safe, PHP's own realpath-keyed include cache
+// no-ops the second require via include/env.inc.php below).
+require __DIR__ . '/vendor/autoload.php';
+
+$paths = \Piwigo\Core\Paths::fromIndex(__FILE__);
 define('PHPWG_ROOT_PATH', './');
 
 // Autoload boundary (see include/env.inc.php: it only requires
@@ -32,6 +39,13 @@ define('PHPWG_ROOT_PATH', './');
 // upgrade_feed.php requests that nothing smoke-tested; every entry shell
 // now requires the autoloader first, matching admin.php/install.php.
 include PHPWG_ROOT_PATH . 'include/env.inc.php';
+
+// Legacy Coupling Retirement Phase 8, 8b (the "boot-first" fix, extended
+// from 8a's HTTP-request-path version to install/upgrade): must run
+// before the database.inc.php-sourced db_* overrides below, so real,
+// site-specific credentials always win over a coincidental PIWIGO_DB_*
+// env var.
+\Piwigo\Bootstrap\InstallBootstrap::boot($paths);
 
 // Bootstrap globals, set by include/config_default.inc.php and database.inc.php.
 /**
@@ -45,6 +59,24 @@ include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
 include PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.inc.php';
+
+// Legacy Coupling Retirement Phase 8, 8b -- real, already-diagnosed bug
+// fix, identical to upgrade.php's own: database.inc.php (just included)
+// sets $conf['db_host']/['db_user']/['db_password']/['db_base'] into the
+// legacy $conf array, but nothing previously bridged them into Config::'s
+// static state. DbPatchRegistry::make(...)->apply() below eventually
+// reaches DbConnection::build() (via UpgradeFeedRunner::run()'s own $conn),
+// which reads Config::dbHost()/dbUser()/dbPassword()/dbBase() exclusively
+// -- so every real invocation of this script silently attempted to
+// connect as an empty-string user with an empty-string password against
+// an empty-string database at 'localhost', regardless of the site's real
+// configuration, which fails for any real MySQL install.
+foreach (['db_host', 'db_user', 'db_password', 'db_base'] as $dbConfKey) {
+    $dbConfValue = $conf[$dbConfKey] ?? null;
+    if (is_string($dbConfValue)) {
+        \Piwigo\Config\Config::override($dbConfKey, $dbConfValue);
+    }
+}
 
 // $conf['dblayer'] is set by config_default.inc.php/database.inc.php as a
 // string, but the generic array<string, mixed> type of $conf erases that
@@ -78,10 +110,11 @@ if (! (bool) $conf['check_upgrade_feed']) {
 // prepare_conf_upgrade() codemod-artifact constant block, whose names were
 // the literal strings 'Tables::categories()' -- a documented pre-existing
 // breakage) are gone; the DbPatch classes read Piwigo\Db\Tables::*(),
-// which resolves its prefix from Config::dbPrefix(). This script never
-// goes through Kernel::boot()/ConfigLoader, so seed the prefix directly
-// (same as upgrade.php does), or every Tables::*() call would silently
-// fall back to the 'piwigo_' schema default.
+// which resolves its prefix from Config::dbPrefix(). InstallBootstrap::boot()
+// above only seeds SCHEMA defaults + env overrides, so seed the real prefix
+// directly here too (same as upgrade.php does), or every Tables::*() call
+// would fall back to whatever InstallBootstrap::boot() left in place
+// instead of the real prefix.
 \Piwigo\Config\Config::override('db_prefix', $prefixeTable);
 
 // Read by UpgradeFeedRunner's ledger SQL (SEC-60 keeps the define() here).

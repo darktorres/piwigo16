@@ -48,10 +48,13 @@ use Piwigo\Url\UrlService;
  * needs to declare those two itself (Legacy Coupling Retirement Track A
  * gap-fill batch G3).
  *
- * Legacy Coupling Retirement Phase 5: this same "never goes through
- * Kernel::boot()" fact (see this class's own comment near its real
- * pre-container call site) is why every ConfigDb:: call here (Tier 3)
- * stays on ConfigDb rather than ConfigService.
+ * Legacy Coupling Retirement Phase 8, 8b: upgrade.php now calls
+ * InstallBootstrap::boot($paths) early (before this class is even
+ * constructed), so the DI container is available by the time this class's
+ * methods run. Every ConfigDb:: call here (Tier 3) still stays on
+ * ConfigDb rather than ConfigService for now, though -- 8b only boots the
+ * container, it doesn't yet retarget these calls (Legacy Coupling
+ * Retirement Phase 8, 8d).
  */
 final class UpgradeRunner
 {
@@ -73,10 +76,10 @@ final class UpgradeRunner
      */
     public function loadLanguage(): void
     {
-        // This request never goes through Kernel::boot()/
-        // CommonBootstrap::run(), so CurrentUser is never guest-
-        // initialized either -- same latent crash as
-        // InstallWizard::boot()'s own attachGlobals() call (see its
+        // This request goes through InstallBootstrap::boot() (Legacy
+        // Coupling Retirement Phase 8, 8b) but never CommonBootstrap::run(),
+        // so CurrentUser is never guest-initialized either -- same latent
+        // crash as InstallWizard::boot()'s own attachGlobals() call (see its
         // docblock): UpgradeService::deactivateNonStandardThemes() can
         // reach `new themes()`'s missing-screenshot fallback, which reads
         // CurrentUser. Idempotent, so calling it this early (before the DB

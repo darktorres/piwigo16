@@ -883,18 +883,20 @@ test('src/Piwigo/ does not repeat the same multi-dependency service construction
     // Phase 4a fixed several real instances this way, e.g.
     // `Ws\PwgCategories::categoryService()`/`Ws\PwgImages::searchService()`
     // calling `self::permissionService()` instead of repeating its chain).
-    $allowlist = [
-        // Pre-installation, no DI container exists yet (matches the
-        // Env/FilesystemHelper/MysqliDb precedent documented on this
-        // class's own docblock). Legacy Coupling Retirement Phase 8, 8b
-        // gives InstallWizard a real container-resolved UserService via
-        // Bootstrap/InstallBootstrap -- this entry is expected to drop
-        // then, same as Bootstrap/RedirectService.php|UserService already
-        // did in 8a (self::userService() resolves via Kernel::container()
-        // now that RequestBootstrap::configure() boots the Kernel as its
-        // own first statement, no more manual chain to repeat).
-        'Admin/Install/InstallWizard.php|UserService',
-    ];
+    // Zero-tolerance -- both real prior entries are fixed (Legacy Coupling
+    // Retirement Phase 8): Bootstrap/RedirectService.php|UserService in 8a
+    // (container-resolved, safe once RequestBootstrap::configure() boots
+    // the Kernel as its own first statement); Admin/Install/InstallWizard.php|UserService
+    // in 8b, via a plain private $this->userService(?Connection $conn = null)
+    // DRY-extraction helper instead -- not container-routed, since
+    // PHP-DI's request-shared instance would unsafely cache a Connection
+    // built from stale Config::dbHost() etc. if resolved before
+    // InstallWizard::boot()'s own Config::override('db_host', ...) calls
+    // (from the submitted install form) have run. Matches
+    // RequestBootstrap::activityService()'s own established
+    // "private helper takes the already-available Connection as a
+    // parameter" precedent.
+    $allowlist = [];
 
     $prefixLength = strlen($repoRoot . '/src/Piwigo/');
     $actual = array_map(

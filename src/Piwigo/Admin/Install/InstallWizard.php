@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Admin\languages;
 use Piwigo\Auth\CookieService;
@@ -22,13 +24,17 @@ use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Db\BatchWriter;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Mail\MailService;
 use Piwigo\Session\PwgSession;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 /**
  * install.php's orchestration, ported verbatim from that script's former
@@ -44,10 +50,12 @@ use Piwigo\Url\UrlService;
  * `global $user`; $template because updates/mail-era template helpers
  * historically resolve the shared instance through the global).
  *
- * Legacy Coupling Retirement Phase 5: this same "never goes through
- * Kernel::boot()/ConfigLoader" fact (see this class's own comments near
- * its real call sites) is why every ConfigDb:: call here (Tier 3) stays
- * on ConfigDb rather than ConfigService.
+ * Legacy Coupling Retirement Phase 8, 8b: install.php now calls
+ * InstallBootstrap::boot($paths) before this wizard is even constructed,
+ * so the DI container is available throughout. Every ConfigDb:: call here
+ * (Tier 3) still stays on ConfigDb rather than ConfigService for now,
+ * though -- 8b only boots the container, it doesn't yet retarget these
+ * calls (Legacy Coupling Retirement Phase 8, 8d).
  */
 final class InstallWizard
 {
@@ -148,11 +156,12 @@ final class InstallWizard
         $this->dbname = (! empty($_POST['dbname']) && is_string($_POST['dbname'])) ? $_POST['dbname'] : '';
 
         // Same reasoning as the db_prefix seeding in the install.php entry
-        // shell: this request never goes through Kernel::boot()/ConfigLoader,
-        // so any code reached later in this same request that resolves a DB
-        // connection via Piwigo\Db\DbConnection::build() (which reads
-        // Config::dbHost()/dbUser()/dbPassword()/dbName()) would otherwise
-        // silently see SCHEMA defaults instead of the real submitted
+        // shell: InstallBootstrap::boot() (Legacy Coupling Retirement Phase
+        // 8, 8b) only seeds SCHEMA defaults + env overrides before this
+        // point, so any code reached later in this same request that
+        // resolves a DB connection via Piwigo\Db\DbConnection::build()
+        // (which reads Config::dbHost()/dbUser()/dbPassword()/dbName())
+        // would otherwise silently see those instead of the real submitted
         // credentials. Found live: get_default_user_value() -> UserService ->
         // UserRepository -> DbConnection::build(), reached from
         // InstallService::activateCoreThemes() during step-2 theme
@@ -164,8 +173,9 @@ final class InstallWizard
         Config::override('db_base', $this->dbname);
 
         // Same reasoning again, different dependency: this request never
-        // goes through Kernel::boot()/CommonBootstrap::run(), so
-        // CurrentUser is never guest-initialized either. Found live (real
+        // goes through CommonBootstrap::run() (only InstallBootstrap::boot(),
+        // which doesn't touch CurrentUser), so CurrentUser is never guest-
+        // initialized either. Found live (real
         // fixture-regen run, not assumed): InstallService::
         // activateCoreThemes() -> new themes() -> get_fs_themes()'s
         // missing-screenshot fallback -> PreferencesService::getParam() ->
@@ -263,6 +273,28 @@ final class InstallWizard
     }
 
     /**
+     * DRY-extracted (Legacy Coupling Retirement Phase 8, 8b) -- was 3
+     * identical `new UserService(new UserRepository($c), new
+     * GroupRepository($c), new MailService(), new ActivityService(new
+     * ActivityRepository($c)), new HtmlService(), $c)` chains inline
+     * below, matching the same "private helper takes the already-available
+     * Connection as a parameter" shape as
+     * Bootstrap\RequestBootstrap::activityService(). $conn defaults to a
+     * fresh DbConnection::build() rather than reusing $this->conn: unlike
+     * the two performInstall() call sites below (which always have a real
+     * connection by the time they run), analyzeForm()'s own call site can
+     * legitimately run after installDbConnect() returned null (a failed
+     * connection attempt) -- the original code always attempted its own
+     * independent connection there regardless, a behavior this preserves
+     * exactly.
+     */
+    private function userService(?Connection $conn = null): UserService
+    {
+        $conn ??= DbConnection::build();
+        return new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), new HtmlService(), $conn);
+    }
+
+    /**
      * Former install.php "form analyze" validation block (DB connection
      * attempt + prefix/webmaster/password/mail checks). Only called when
      * $_POST['install'] is set.
@@ -295,7 +327,8 @@ final class InstallWizard
         if (empty($this->adminMail)) {
             $this->errors[] = Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         } else {
-            $error_mail_address = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), \Piwigo\Db\DbConnection::build())->validateMailAddress(null, $this->adminMail);
+            $error_mail_address = $this->userService()
+                ->validateMailAddress(null, $this->adminMail);
             if (! empty($error_mail_address)) {
                 $this->errors[] = $error_mail_address;
             }
@@ -495,7 +528,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
         new BatchWriter($conn)
             ->massInsert(Tables::users(), array_keys($inserts[0]), $inserts);
 
-        new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), $conn)
+        $this->userService($conn)
             ->createUserInfos([1, 2], [
                 'language' => $this->language,
             ]);
@@ -623,7 +656,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
 
             // we don't load user cache because since Piwigo 15.4.0 the calculation of user
             // cache requires $logger which is not instanciated
-            $user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), $conn)
+            $user = $this->userService($conn)
                 ->buildUser(1, false);
             // build_user() returns array<string, mixed>; the 'id' key we just set
             // to the literal user id 1 doesn't retain that literal type through

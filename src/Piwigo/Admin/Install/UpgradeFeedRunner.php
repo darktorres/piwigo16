@@ -33,10 +33,10 @@ final class UpgradeFeedRunner
 {
     public function run(): void
     {
-        // This request never goes through Kernel::boot()/
-        // CommonBootstrap::run(), so CurrentUser is never guest-
-        // initialized either -- same latent crash as
-        // InstallWizard::boot()'s own attachGlobals() call (see its
+        // This request goes through InstallBootstrap::boot() (Legacy
+        // Coupling Retirement Phase 8, 8b) but never CommonBootstrap::run(),
+        // so CurrentUser is never guest-initialized either -- same latent
+        // crash as InstallWizard::boot()'s own attachGlobals() call (see its
         // docblock). DbPatchRegistry::make(...)->apply() below dispatches
         // into frozen patch classes (Phase 1j) whose reach isn't fully
         // audited here; attachGlobals() is cheap, safe, and idempotent, so

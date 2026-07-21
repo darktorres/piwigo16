@@ -22,14 +22,34 @@ declare(strict_types=1);
 // removal of common.inc.php's twin sanitize_mysql_kv().
 
 use Piwigo\Admin\Install\InstallWizard;
+use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Config\Config;
 use Piwigo\Core\Env;
+use Piwigo\Core\Paths;
+
+// Unlike this file's own former "never requires vendor/autoload.php,
+// relies entirely on include/env.inc.php" shape (Legacy Coupling
+// Retirement Phase 8, 8b): Paths::fromIndex() below is a Piwigo\ class,
+// so the autoloader must be required explicitly first, matching every
+// other real entry point. Requiring it twice is safe (PHP's own
+// realpath-keyed include cache no-ops the second require via
+// include/env.inc.php below), same precedent index.php's own docblock
+// documents.
+require __DIR__ . '/vendor/autoload.php';
 
 // ----------------------------------------------------------- include
+$paths = Paths::fromIndex(__FILE__);
 define('PHPWG_ROOT_PATH', './');
 
 include PHPWG_ROOT_PATH . 'include/env.inc.php';
 Env::loadEnvFile(PHPWG_ROOT_PATH);
+
+// Legacy Coupling Retirement Phase 8, 8b (the "boot-first" fix, extended
+// from 8a's HTTP-request-path version to install/upgrade): must run
+// before the $_POST-submitted db_prefix override below, so a coincidental
+// PIWIGO_DB_PREFIX env var can never clobber the value the install form
+// actually submitted.
+InstallBootstrap::boot($paths);
 
 // ----------------------------------------------------- variable initialization
 
@@ -44,12 +64,13 @@ if (isset($_POST['install'])) {
 }
 
 // Piwigo\Db\Tables::*() (used throughout the wizard) reads
-// Config::dbPrefix() -- this script never goes through
-// Kernel::boot()/ConfigLoader (there's no database.inc.php to read from
-// until this wizard writes one), so the user-chosen $prefixeTable must be
-// seeded into Config's static state directly, or every Tables::*() call
-// downstream silently falls back to the 'piwigo_' SCHEMA default instead
-// of the real chosen prefix.
+// Config::dbPrefix() -- InstallBootstrap::boot() above only seeds
+// SCHEMA defaults + env overrides, there's no database.inc.php to read a
+// real db_prefix from until this wizard writes one, so the user-chosen
+// $prefixeTable must be seeded into Config's static state directly here,
+// or every Tables::*() call downstream would fall back to whatever
+// InstallBootstrap::boot() left in place instead of the real chosen
+// prefix.
 Config::override('db_prefix', $prefixeTable);
 
 include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
@@ -68,6 +89,14 @@ global $conf;
 // non-common.inc.php entry path.
 \Piwigo\Bootstrap\SessionBootstrap::register();
 \Piwigo\Config\ConfigDb::setHtmlRenderer(new \Piwigo\Html\HtmlService());
+// Pre-existing gap, found live while verifying Legacy Coupling Retirement
+// Phase 8, 8b (this file's own render() call always reaches install.tpl's
+// unconditional {get_combined_scripts load='footer'} -- unrelated to 8a/8b
+// themselves, just never caught because tests/Browser/RegenerateFixtureTest.php
+// is excluded from routine CI runs, per its own docblock): every other
+// entry path wires this via RequestBootstrap::configure(), which
+// install.php never runs.
+\Piwigo\Template\ScriptLoader::setUrlService(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService()));
 
 // See include/common.inc.php for why this fork never points PHPWG_DOMAIN at
 // the real piwigo.org.

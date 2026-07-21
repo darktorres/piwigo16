@@ -20,7 +20,9 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Install\UpgradeRunner;
 use Piwigo\Admin\Install\UpgradeService;
+use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Config\Config;
+use Piwigo\Core\Paths;
 
 // right after the overwrite of previous version files by the unzip in the administration,
 // PHP engine might still have old files in cache. We do not want to use the cache and
@@ -29,6 +31,15 @@ if (function_exists('ini_set')) {
     @ini_set('opcache.enable', 0);
 }
 
+// Legacy Coupling Retirement Phase 8, 8b: Paths::fromIndex() below is a
+// Piwigo\ class, so the autoloader must be required explicitly first now
+// (this file's former "resolve Piwigo\ classes with zero autoloader
+// hookup" bug, fixed in 8f-6 by the include/env.inc.php include below,
+// still needs that include to run too -- requiring twice is safe, PHP's
+// own realpath-keyed include cache no-ops the second require).
+require __DIR__ . '/vendor/autoload.php';
+
+$paths = Paths::fromIndex(__FILE__);
 define('PHPWG_ROOT_PATH', './');
 
 // Autoload boundary (see include/env.inc.php: it only requires
@@ -38,6 +49,13 @@ define('PHPWG_ROOT_PATH', './');
 // upgrade.php requests that nothing smoke-tested; every entry shell now
 // requires the autoloader first, matching admin.php/install.php.
 include PHPWG_ROOT_PATH . 'include/env.inc.php';
+
+// Legacy Coupling Retirement Phase 8, 8b (the "boot-first" fix, extended
+// from 8a's HTTP-request-path version to install/upgrade): must run
+// before the database.inc.php-sourced db_* overrides below, so real,
+// site-specific credentials always win over a coincidental PIWIGO_DB_*
+// env var.
+InstallBootstrap::boot($paths);
 
 // Bootstrap globals, set by include/config_default.inc.php and $config_file.
 /**
@@ -63,12 +81,29 @@ if ($php_end_tag === false) {
 
 include $config_file;
 
-// Piwigo\Db\Tables::*() reads Config::dbPrefix() -- this script never goes
-// through Kernel::boot()/ConfigLoader (the DB isn't necessarily configured
-// yet), so $prefixeTable (resolved above from database.inc.php, independent
-// of $conf) must be seeded into Config's static state directly, or every
-// Tables::*() call downstream silently falls back to the 'piwigo_' SCHEMA
-// default instead of the real prefix.
+// Legacy Coupling Retirement Phase 8, 8b -- real, already-diagnosed bug
+// fix: database.inc.php (just included) sets $conf['db_host']/['db_user']/
+// ['db_password']/['db_base'] into the legacy $conf array, but nothing
+// previously bridged them into Config::'s static state.
+// UpgradeService::upgradeDbConnect() below calls DbConnection::build(),
+// which reads Config::dbHost()/dbUser()/dbPassword()/dbBase() exclusively
+// -- so every real invocation of this script silently attempted to
+// connect as an empty-string user with an empty-string password against
+// an empty-string database at 'localhost', regardless of the site's real
+// configuration, which fails for any real MySQL install.
+foreach (['db_host', 'db_user', 'db_password', 'db_base'] as $dbConfKey) {
+    $dbConfValue = $conf[$dbConfKey] ?? null;
+    if (is_string($dbConfValue)) {
+        Config::override($dbConfKey, $dbConfValue);
+    }
+}
+
+// Piwigo\Db\Tables::*() reads Config::dbPrefix() -- InstallBootstrap::boot()
+// above only seeds SCHEMA defaults + env overrides, so $prefixeTable
+// (resolved above from database.inc.php, independent of $conf) must be
+// seeded into Config's static state directly here too, or every
+// Tables::*() call downstream would fall back to whatever
+// InstallBootstrap::boot() left in place instead of the real prefix.
 Config::override('db_prefix', $prefixeTable);
 define('PREFIX_TABLE', $prefixeTable);
 // P23 sub-batch 8g-6: replaces the former define('UPGRADES_PATH', ...) as
@@ -82,6 +117,14 @@ define('PREFIX_TABLE', $prefixeTable);
 // its fatal-error renderer wired for this non-common.inc.php entry path.
 \Piwigo\Bootstrap\SessionBootstrap::register();
 \Piwigo\Config\ConfigDb::setHtmlRenderer(new \Piwigo\Html\HtmlService());
+// Pre-existing gap, found live while verifying Legacy Coupling Retirement
+// Phase 8, 8b (renderIntro() below reaches upgrade.tpl's unconditional
+// {get_combined_scripts load='footer'} -- unrelated to 8a/8b themselves,
+// just never caught because tests/Browser/RegenerateFixtureTest.php is
+// excluded from routine CI runs, per its own docblock): every other entry
+// path wires this via RequestBootstrap::configure(), which upgrade.php
+// never runs.
+\Piwigo\Template\ScriptLoader::setUrlService(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService()));
 
 // See include/common.inc.php for why this fork never points PHPWG_DOMAIN at
 // the real piwigo.org.

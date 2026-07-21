@@ -1843,7 +1843,7 @@ carry), deptrac 0 violations, Unit/Arch 602, Contract 93, Integration
 632, Browser 66+1 skipped (including `UpgradePathTest`'s real
 `upgrade.php`/`upgrade_feed.php` connection smoke test).
 
-## Gap-closure: repo-wide legacy sweep round 2 — Workstreams 0/A/C1-C2/D (partial). Workstreams B and C3 NOT started.
+## Gap-closure: repo-wide legacy sweep round 2 — Workstreams 0/A/C1-C2/D (partial)/B all DONE. Workstream C3 NOT started.
 
 Following the DbPatch/VersionUpgrade gap-closure above, asked for a
 complete list of remaining legacy files/code again; direct
@@ -1960,13 +1960,46 @@ workstreams:
   everything accumulated so far until C3 turns those `die()` calls into
   a real return/exception path. `LegacyRenderCapture` itself stays until
   all 13 convert.
-- **Workstream B — 145-file DbPatch/VersionUpgrade raw-SQL-to-DBAL
-  bound-parameter refactor. NOT STARTED.** Design already complete (bound
-  parameters via `Connection::executeStatement($sql, $params)` for DML;
-  raw SQL text stays for DDL — Doctrine's Schema API was checked and
-  rejected, per `Version20260711150857.php`'s own documented
-  `mediumint`/`smallint`/`tinyint`-collapse bug against these files'
-  legacy FK-width-matched columns).
+- **Workstream B — DbPatch/VersionUpgrade raw-SQL-to-DBAL bound-parameter
+  refactor. DONE**, commits `94bd2b07d` (batch 1, 16 files), `6981fccfa`
+  (batch 2, 11 DbPatch + all 4 remaining VersionUpgrade DML files),
+  `6d143e90e` (batch 3, 14 files a broader keyword sweep caught that the
+  first-pass grep missed), `e0518189b` (interface docblock updates).
+  Bound parameters via `Connection::executeStatement($sql, $params)`/
+  `fetch*($sql, $params)` for hand-written DML, or
+  `Piwigo\Db\BatchWriter::singleInsert()`/`massInsert()` for plain
+  config-table inserts (matching the ~20 other call sites already using
+  that class); raw SQL text stays for DDL and identifier concatenation
+  (table/column names, which SQL can't parameterize) — Doctrine's Schema
+  API was checked and rejected for DDL, per `Version20260711150857.php`'s
+  own documented `mediumint`/`smallint`/`tinyint`-collapse bug against
+  these files' legacy FK-width-matched columns. Of 121 DbPatch + 23
+  VersionUpgrade files, 44 had genuine DML values needing binding (28 in
+  the first grep pass, 16 more found across 3 progressively broader
+  keyword sweeps afterward — confirms the plan's own caution that a
+  single grep pass undercounts); the rest were confirmed DDL-only,
+  SQL-free, or already using `BatchWriter`. Two real double-escaping bugs
+  surfaced and fixed: `UpgradeFrom_1_5_0`'s page_banner insert and
+  `UpgradeFrom_1_6_2`'s HTML-entity-replacement loop both called
+  `addslashes()` to SQL-escape values for the old interpolated query
+  text — a bound parameter would have double-escaped the stored value
+  (the `&#039;`-to-`'` replacement would have stored a literal
+  backslash-quote instead of a quote) had `addslashes()` been kept
+  alongside binding. `Patch63`'s `user_cache.need_update` (an
+  `ENUM('true','false')` column, not a real boolean) got the string
+  `'true'` bound directly instead of relying on the original's
+  bareword-`TRUE`-happens-to-equal-enum-index-1 coincidence. Several
+  spots deliberately did NOT get `BatchWriter`'s coercion because a
+  stored `NULL` and `''` read back differently through a live `Config::`
+  accessor (`UpgradeFrom_1_5_0`'s `gallery_url` via `Config::galleryUrl()`,
+  `Patch106`'s `order_by`/`order_by_inside_category`) — checked per-key
+  against the actual accessor before choosing, not assumed safe. No
+  bespoke Arch/Unit test added, per the plan's own original reasoning
+  (DDL-vs-DML classification needs real SQL-grammar awareness a token
+  scanner can't provide) — verification was the full standard gate
+  (ECS/PHPStan/deptrac/Unit+Arch/Contract/Integration) per batch, plus
+  careful before/after semantic review per file since these migration
+  classes have no execution-path test coverage of their own.
 - **Workstream C3 — the `header()`+`echo`+`exit()`/`: never`-return
   request-lifecycle architecture (`RedirectServiceInterface`,
   `RequestBootstrap::finalize()`'s 503 page, `UserBootstrap::initialize()`'s

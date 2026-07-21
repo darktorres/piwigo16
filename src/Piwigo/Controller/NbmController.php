@@ -28,9 +28,12 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Replaces nbm.php -- the public "notification by mail" subscribe/
  * unsubscribe confirmation link target (distinct from admin/
- * notification_by_mail.php, P21's admin sender page). check_status() stays
- * outside the captured closure, same exit()-based-termination limitation
- * as every other controller this phase.
+ * notification_by_mail.php, P21's admin sender page).
+ *
+ * Legacy Coupling Retirement Workstream D: converted off
+ * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
+ * pattern as AboutController -- see that class's own docblock for the
+ * accumulator mechanics this relies on.
  */
 final class NbmController implements ControllerInterface
 {
@@ -81,42 +84,40 @@ final class NbmController implements ControllerInterface
         $unsubscribe = $queryParams['unsubscribe'] ?? null;
         $urlService = $this->urlService;
 
-        $body = LegacyRenderCapture::capture(static function () use ($subscribe, $unsubscribe, $nbmSender, $urlService): void {
-            // $title is set and read entirely within this closure (passed
-            // straight into PageHeaderRenderer::render() below) -- no
-            // other file reads $GLOBALS['title']. Plain local, not global.
-            $template = \Piwigo\Template\CurrentTemplate::get();
+        // $title is set and read entirely within this method (passed
+        // straight into PageHeaderRenderer::render() below) -- no other
+        // file reads $GLOBALS['title']. Plain local, not global.
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
-            if (is_string($subscribe) && (bool) preg_match('/^[A-Za-z0-9]{16}$/', $subscribe)) {
-                $nbmSender->subscribeNotificationByMail(false, [$subscribe]);
-            } elseif (is_string($unsubscribe) && (bool) preg_match('/^[A-Za-z0-9]{16}$/', $unsubscribe)) {
-                $nbmSender->unsubscribeNotificationByMail(false, [$unsubscribe]);
-            } else {
-                \Piwigo\Core\PageState::current()->addError(Lang::t('Unknown identifier'));
-            }
+        if (is_string($subscribe) && (bool) preg_match('/^[A-Za-z0-9]{16}$/', $subscribe)) {
+            $nbmSender->subscribeNotificationByMail(false, [$subscribe]);
+        } elseif (is_string($unsubscribe) && (bool) preg_match('/^[A-Za-z0-9]{16}$/', $unsubscribe)) {
+            $nbmSender->unsubscribeNotificationByMail(false, [$unsubscribe]);
+        } else {
+            \Piwigo\Core\PageState::current()->addError(Lang::t('Unknown identifier'));
+        }
 
-            $title = Lang::t('Notification');
-            \Piwigo\Core\PageState::current()->setBodyId('theNBMPage');
+        $title = Lang::t('Notification');
+        \Piwigo\Core\PageState::current()->setBodyId('theNBMPage');
 
-            $template->set_filenames([
-                'nbm' => 'nbm.tpl',
-            ]);
+        $template->set_filenames([
+            'nbm' => 'nbm.tpl',
+        ]);
 
-            $themeconf = $template->get_template_vars('themeconf');
-            $themeconf = is_array($themeconf) ? $themeconf : [];
-            $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
-            if (! is_array($hide_menu_on) or ! in_array('theNBMPage', $hide_menu_on, true)) {
-                new MenubarRenderer()
-                    ->render($urlService);
-            }
+        $themeconf = $template->get_template_vars('themeconf');
+        $themeconf = is_array($themeconf) ? $themeconf : [];
+        $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
+        if (! is_array($hide_menu_on) or ! in_array('theNBMPage', $hide_menu_on, true)) {
+            new MenubarRenderer()
+                ->render($urlService);
+        }
 
-            new \Piwigo\Page\PageHeaderRenderer()
-                ->render($title);
-            new HtmlService()
-                ->flushPageMessages();
-            $template->parse('nbm');
-            \Piwigo\Bootstrap\PageTail::render();
-        });
+        new \Piwigo\Page\PageHeaderRenderer()
+            ->render($title);
+        new HtmlService()
+            ->flushPageMessages();
+        $template->parse('nbm');
+        $body = \Piwigo\Bootstrap\PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

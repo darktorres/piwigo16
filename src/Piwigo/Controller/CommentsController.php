@@ -35,12 +35,13 @@ use Psr\Http\Message\ServerRequestInterface;
  * Replaces comments.php -- the front-end "all comments" listing + per-
  * comment moderation actions (delete/validate/edit). The "comments
  * management" block (delete/validate/edit, including its own
- * check_pwg_token()/redirect() calls) stays outside the captured closure,
- * same exit()-based-termination limitation as every other controller this
- * phase; everything from "page header and options" onward has no further
- * early-exit path, so it's bundled into one closure matching
- * TagsController's own precedent for this page shape (browse/listing page,
- * no complex form-with-redirect flow).
+ * check_pwg_token()/redirect() calls) all happens before any rendering
+ * starts.
+ *
+ * Legacy Coupling Retirement Workstream D: converted off
+ * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
+ * pattern as AboutController -- see that class's own docblock for the
+ * accumulator mechanics this relies on.
  */
 final class CommentsController implements ControllerInterface
 {
@@ -378,338 +379,319 @@ final class CommentsController implements ControllerInterface
 
         $urlService = $this->urlService;
 
-        $body = LegacyRenderCapture::capture(static function () use (
-            $conn,
-            $url_self,
-            $since,
-            $since_options,
-            $sort_by,
-            $sort_order,
-            $items_number,
-            $email_field,
-            $id_field,
-            $sort_by_value,
-            $sort_order_value,
-            $selected_items_number,
-            $whereClauses,
-            $edit_comment,
-            $urlService
-        ): void {
-            // $title is set and read entirely within this closure (passed
-            // straight into PageHeaderRenderer::render() below) -- no
-            // other file reads $GLOBALS['title']. Plain local, not global.
-            $template = \Piwigo\Template\CurrentTemplate::get();
+        // $title is set and read entirely within this method (passed
+        // straight into PageHeaderRenderer::render() below) -- no other
+        // file reads $GLOBALS['title']. Plain local, not global.
 
-            // +---------------------------------------------------------------+
-            // |                    page header and options                    |
-            // +---------------------------------------------------------------+
+        // +---------------------------------------------------------------+
+        // |                    page header and options                    |
+        // +---------------------------------------------------------------+
 
-            $title = Lang::t('User comments');
-            \Piwigo\Core\PageState::current()->setBodyId('theCommentsPage');
+        $title = Lang::t('User comments');
+        \Piwigo\Core\PageState::current()->setBodyId('theCommentsPage');
 
-            $template->set_filenames([
-                'comments' => 'comments.tpl',
-                'comment_list' => 'comment_list.tpl',
-            ]);
-            $keyword_param = (isset($_GET['keyword']) && is_scalar($_GET['keyword'])) ? (string) $_GET['keyword'] : null;
-            $author_param = (isset($_GET['author']) && is_scalar($_GET['author'])) ? (string) $_GET['author'] : null;
+        $template->set_filenames([
+            'comments' => 'comments.tpl',
+            'comment_list' => 'comment_list.tpl',
+        ]);
+        $keyword_param = (isset($_GET['keyword']) && is_scalar($_GET['keyword'])) ? (string) $_GET['keyword'] : null;
+        $author_param = (isset($_GET['author']) && is_scalar($_GET['author'])) ? (string) $_GET['author'] : null;
 
-            $template->assign(
-                [
-                    'F_ACTION' => PHPWG_ROOT_PATH . 'comments.php',
-                    'F_KEYWORD' => $keyword_param !== null ? htmlspecialchars(stripslashes($keyword_param)) : '',
-                    'F_AUTHOR' => $author_param !== null ? htmlspecialchars(stripslashes($author_param)) : '',
-                ]
-            );
+        $template->assign(
+            [
+                'F_ACTION' => PHPWG_ROOT_PATH . 'comments.php',
+                'F_KEYWORD' => $keyword_param !== null ? htmlspecialchars(stripslashes($keyword_param)) : '',
+                'F_AUTHOR' => $author_param !== null ? htmlspecialchars(stripslashes($author_param)) : '',
+            ]
+        );
 
-            // +---------------------------------------------------------------+
-            // |                      form construction                        |
-            // +---------------------------------------------------------------+
+        // +---------------------------------------------------------------+
+        // |                      form construction                        |
+        // +---------------------------------------------------------------+
 
-            // Search in a particular category
-            $blockname = 'categories';
+        // Search in a particular category
+        $blockname = 'categories';
 
-            $query = '
+        $query = '
 SELECT id, name, uppercats, global_rank
   FROM ' . Tables::categories() . '
 ' . self::permissionService($conn)->getSqlConditionFandF([
-                'forbidden_categories' => 'id',
-                'visible_categories' => 'id',
-            ], 'WHERE') . '
+            'forbidden_categories' => 'id',
+            'visible_categories' => 'id',
+        ], 'WHERE') . '
 ;';
-            self::categoryService($conn)
-                ->displaySelectCatWrapper($query, [@$_GET['cat']], $blockname, new HtmlService(), $template, true);
+        self::categoryService($conn)
+            ->displaySelectCatWrapper($query, [@$_GET['cat']], $blockname, new HtmlService(), $template, true);
 
-            // Filter on recent comments...
-            $tpl_var = [];
-            foreach ($since_options as $id => $option) {
-                $tpl_var[$id] = $option['label'];
-            }
-            $template->assign('since_options', $tpl_var);
-            $template->assign('since_options_selected', $since);
+        // Filter on recent comments...
+        $tpl_var = [];
+        foreach ($since_options as $id => $option) {
+            $tpl_var[$id] = $option['label'];
+        }
+        $template->assign('since_options', $tpl_var);
+        $template->assign('since_options_selected', $since);
 
-            // Sort by
-            $template->assign('sort_by_options', $sort_by);
-            $template->assign('sort_by_options_selected', $sort_by_value);
+        // Sort by
+        $template->assign('sort_by_options', $sort_by);
+        $template->assign('sort_by_options_selected', $sort_by_value);
 
-            // Sorting order
-            $template->assign('sort_order_options', $sort_order);
-            $template->assign('sort_order_options_selected', $sort_order_value);
+        // Sorting order
+        $template->assign('sort_order_options', $sort_order);
+        $template->assign('sort_order_options_selected', $sort_order_value);
 
-            // Number of items
-            $blockname = 'items_number_option';
-            $tpl_var = [];
-            foreach ($items_number as $option) {
-                $tpl_var[$option] = is_numeric($option) ? $option : Lang::t($option);
-            }
-            $template->assign('item_number_options', $tpl_var);
-            $template->assign('item_number_options_selected', $selected_items_number);
+        // Number of items
+        $blockname = 'items_number_option';
+        $tpl_var = [];
+        foreach ($items_number as $option) {
+            $tpl_var[$option] = is_numeric($option) ? $option : Lang::t($option);
+        }
+        $template->assign('item_number_options', $tpl_var);
+        $template->assign('item_number_options_selected', $selected_items_number);
 
-            // +---------------------------------------------------------------+
-            // |                        navigation bar                         |
-            // +---------------------------------------------------------------+
+        // +---------------------------------------------------------------+
+        // |                        navigation bar                         |
+        // +---------------------------------------------------------------+
 
-            if (isset($_GET['start']) and is_scalar($_GET['start'])) {
-                $start = intval($_GET['start']);
-            } else {
-                $start = 0;
-            }
+        if (isset($_GET['start']) and is_scalar($_GET['start'])) {
+            $start = intval($_GET['start']);
+        } else {
+            $start = 0;
+        }
 
-            // +---------------------------------------------------------------+
-            // |                     last comments display                     |
-            // +---------------------------------------------------------------+
+        // +---------------------------------------------------------------+
+        // |                     last comments display                     |
+        // +---------------------------------------------------------------+
 
-            $comments = [];
-            $element_ids = [];
-            $category_ids = [];
+        $comments = [];
+        $element_ids = [];
+        $category_ids = [];
 
-            $where_clauses = $whereClauses;
+        $where_clauses = $whereClauses;
 
-            // ANY_VALUE(ic.category_id): category_id comes from the JOINed
-            // image_category table, not functionally dependent on the
-            // GROUP BY column (comment_id) -- Piwigo\Db\DbConnection
-            // doesn't strip ONLY_FULL_GROUP_BY the way the legacy mysqli
-            // connection did (same class of issue as
-            // Ws\PwgComments::getCommentsDateRange()'s own ANY_VALUE(author)
-            // fix), so this query (already GROUP BY comment_id, unchanged
-            // from the original) needs an explicit "any value is fine, same
-            // as the old driver's own permissive default" opt-out to keep
-            // selecting exactly one arbitrary category per comment, matching
-            // the original grouping/row-count exactly rather than splitting
-            // groups by adding category_id to GROUP BY.
-            $query = '
+        // ANY_VALUE(ic.category_id): category_id comes from the JOINed
+        // image_category table, not functionally dependent on the
+        // GROUP BY column (comment_id) -- Piwigo\Db\DbConnection
+        // doesn't strip ONLY_FULL_GROUP_BY the way the legacy mysqli
+        // connection did (same class of issue as
+        // Ws\PwgComments::getCommentsDateRange()'s own ANY_VALUE(author)
+        // fix), so this query (already GROUP BY comment_id, unchanged
+        // from the original) needs an explicit "any value is fine, same
+        // as the old driver's own permissive default" opt-out to keep
+        // selecting exactly one arbitrary category per comment, matching
+        // the original grouping/row-count exactly rather than splitting
+        // groups by adding category_id to GROUP BY.
+        $query = '
 SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
-       com.image_id,
-       ANY_VALUE(ic.category_id) AS category_id,
-       com.author,
-       com.author_id,
-       u.' . $email_field . ' AS user_email,
-       com.email,
-       com.date,
-       com.website_url,
-       com.content,
-       com.validated
+   com.image_id,
+   ANY_VALUE(ic.category_id) AS category_id,
+   com.author,
+   com.author_id,
+   u.' . $email_field . ' AS user_email,
+   com.email,
+   com.date,
+   com.website_url,
+   com.content,
+   com.validated
   FROM ' . Tables::imageCategory() . ' AS ic
-    INNER JOIN ' . Tables::comments() . ' AS com
-    ON ic.image_id = com.image_id
-    LEFT JOIN ' . Tables::users() . ' As u
-    ON u.' . $id_field . ' = com.author_id
+INNER JOIN ' . Tables::comments() . ' AS com
+ON ic.image_id = com.image_id
+LEFT JOIN ' . Tables::users() . ' As u
+ON u.' . $id_field . ' = com.author_id
   WHERE ' . implode('
-    AND ', $where_clauses) . '
+AND ', $where_clauses) . '
   GROUP BY comment_id
   ORDER BY ' . $sort_by_value . ' ' . $sort_order_value . ', comment_id ' . $sort_order_value;
-            if ($selected_items_number !== 'all') {
-                $query .= '
-  LIMIT ' . $selected_items_number . ' OFFSET ' . $start;
-            }
+        if ($selected_items_number !== 'all') {
             $query .= '
+  LIMIT ' . $selected_items_number . ' OFFSET ' . $start;
+        }
+        $query .= '
 ;';
-            foreach ($conn->fetchAllAssociative($query) as $row) {
-                $comments[] = $row;
-                $row_image_id = $row['image_id'];
-                $row_category_id = $row['category_id'];
-                // image_category.image_id / .category_id are both NOT NULL
-                // columns.
-                assert(is_scalar($row_image_id) && is_scalar($row_category_id));
-                $element_ids[] = (string) $row_image_id;
-                $category_ids[] = (string) $row_category_id;
-            }
-            // FOUND_ROWS() reflects the immediately-preceding query on the
-            // SAME connection/session -- both share $conn, no intervening
-            // query in between.
-            $counter_raw = $conn->fetchOne('SELECT FOUND_ROWS()');
-            $counter = is_numeric($counter_raw) ? (int) $counter_raw : 0;
+        foreach ($conn->fetchAllAssociative($query) as $row) {
+            $comments[] = $row;
+            $row_image_id = $row['image_id'];
+            $row_category_id = $row['category_id'];
+            // image_category.image_id / .category_id are both NOT NULL
+            // columns.
+            assert(is_scalar($row_image_id) && is_scalar($row_category_id));
+            $element_ids[] = (string) $row_image_id;
+            $category_ids[] = (string) $row_category_id;
+        }
+        // FOUND_ROWS() reflects the immediately-preceding query on the
+        // SAME connection/session -- both share $conn, no intervening
+        // query in between.
+        $counter_raw = $conn->fetchOne('SELECT FOUND_ROWS()');
+        $counter = is_numeric($counter_raw) ? (int) $counter_raw : 0;
 
-            $url = PHPWG_ROOT_PATH . 'comments.php'
-              . $urlService->getQueryStringDiff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
+        $url = PHPWG_ROOT_PATH . 'comments.php'
+          . $urlService->getQueryStringDiff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
 
-            // when 'all' items are shown there is no real page size;
-            // PHP_INT_MAX makes create_navigation_bar's own "more than one
-            // page" check always false, so no pagination controls are
-            // rendered (matching the 'all' UX intent).
-            $items_number_for_navbar = is_numeric($selected_items_number) ? (int) $selected_items_number : PHP_INT_MAX;
+        // when 'all' items are shown there is no real page size;
+        // PHP_INT_MAX makes create_navigation_bar's own "more than one
+        // page" check always false, so no pagination controls are
+        // rendered (matching the 'all' UX intent).
+        $items_number_for_navbar = is_numeric($selected_items_number) ? (int) $selected_items_number : PHP_INT_MAX;
 
-            $navbar = new \Piwigo\Core\PaginationService()
-                ->createNavigationBar($url, $counter, $start, $items_number_for_navbar);
+        $navbar = new \Piwigo\Core\PaginationService()
+            ->createNavigationBar($url, $counter, $start, $items_number_for_navbar);
 
-            $template->assign('navbar', $navbar);
+        $template->assign('navbar', $navbar);
 
-            if (count($comments) > 0) {
-                // retrieving element informations
-                $query = '
+        if (count($comments) > 0) {
+            // retrieving element informations
+            $query = '
 SELECT *
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $element_ids) . ')
 ;';
-                $elements = array_column($conn->fetchAllAssociative($query), null, 'id');
+            $elements = array_column($conn->fetchAllAssociative($query), null, 'id');
 
-                // retrieving category informations
-                $query = 'SELECT id, name, permalink, uppercats
+            // retrieving category informations
+            $query = 'SELECT id, name, permalink, uppercats
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $category_ids) . ')';
-                $categories = array_column($conn->fetchAllAssociative($query), null, 'id');
+            $categories = array_column($conn->fetchAllAssociative($query), null, 'id');
 
-                foreach ($comments as $comment) {
-                    $image_id_raw = $comment['image_id'];
-                    // comments.image_id / image_category.image_id are both
-                    // NOT NULL columns.
-                    assert(is_scalar($image_id_raw));
-                    $image_id = (string) $image_id_raw;
+            foreach ($comments as $comment) {
+                $image_id_raw = $comment['image_id'];
+                // comments.image_id / image_category.image_id are both
+                // NOT NULL columns.
+                assert(is_scalar($image_id_raw));
+                $image_id = (string) $image_id_raw;
 
-                    $category_id_raw = $comment['category_id'];
-                    // image_category.category_id is a NOT NULL column
-                    assert(is_scalar($category_id_raw));
-                    $category_id = (string) $category_id_raw;
+                $category_id_raw = $comment['category_id'];
+                // image_category.category_id is a NOT NULL column
+                assert(is_scalar($category_id_raw));
+                $category_id = (string) $category_id_raw;
 
-                    $element_name = $elements[$image_id]['name'] ?? null;
-                    if (is_string($element_name) && $element_name !== '' && $element_name !== '0') {
-                        $name = $element_name;
-                    } else {
-                        $file = $elements[$image_id]['file'];
-                        // images.file is a NOT NULL column
-                        assert(is_string($file));
-                        $name = \Piwigo\Core\StringHelper::getNameFromFile($file);
-                    }
+                $element_name = $elements[$image_id]['name'] ?? null;
+                if (is_string($element_name) && $element_name !== '' && $element_name !== '0') {
+                    $name = $element_name;
+                } else {
+                    $file = $elements[$image_id]['file'];
+                    // images.file is a NOT NULL column
+                    assert(is_string($file));
+                    $name = \Piwigo\Core\StringHelper::getNameFromFile($file);
+                }
 
-                    // source of the thumbnail picture
-                    $src_image = new SrcImage($elements[$image_id]);
+                // source of the thumbnail picture
+                $src_image = new SrcImage($elements[$image_id]);
 
-                    // link to the full size picture
-                    $url = $urlService->makePictureUrl(
+                // link to the full size picture
+                $url = $urlService->makePictureUrl(
+                    [
+                        'category' => $categories[$category_id],
+                        'image_id' => $image_id,
+                        'image_file' => $elements[$image_id]['file'],
+                    ]
+                );
+
+                $email = null;
+                $user_email = $comment['user_email'] ?? null;
+                $comment_email = $comment['email'] ?? null;
+                if (is_string($user_email) && $user_email !== '' && $user_email !== '0') {
+                    $email = $user_email;
+                } elseif (is_string($comment_email) && $comment_email !== '' && $comment_email !== '0') {
+                    $email = $comment_email;
+                }
+
+                $date = $comment['date'];
+                // comments.date is a NOT NULL column
+                assert(is_string($date));
+
+                $author_id = $comment['author_id'];
+                // comments.author_id is nullable in schema; a NULL
+                // author can never match a real user id, so treat it as
+                // unowned rather than casting blindly.
+                $author_id = is_numeric($author_id) ? (int) $author_id : -1;
+
+                $tpl_comment = [
+                    'ID' => $comment['comment_id'],
+                    'U_PICTURE' => $url,
+                    'src_image' => $src_image,
+                    'ALT' => $name,
+                    'AUTHOR' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_author', $comment['author']),
+                    'WEBSITE_URL' => $comment['website_url'],
+                    'DATE' => \Piwigo\Core\DateHelper::formatDate($date, ['day_name', 'day', 'month', 'year', 'time']),
+                    'CONTENT' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_content', $comment['content']),
+                ];
+
+                if (\Piwigo\Auth\AccessControl::isAdmin()) {
+                    $tpl_comment['EMAIL'] = $email;
+                }
+
+                if (\Piwigo\Auth\AccessControl::canManageComment('delete', $author_id)) {
+                    $tpl_comment['U_DELETE'] = $urlService->addUrlParams(
+                        $url_self,
                         [
-                            'category' => $categories[$category_id],
-                            'image_id' => $image_id,
-                            'image_file' => $elements[$image_id]['file'],
+                            'delete' => $comment['comment_id'],
+                            'pwg_token' => new \Piwigo\Csrf\CsrfService()
+                                ->getToken(),
+                        ]
+                    );
+                }
+
+                if (\Piwigo\Auth\AccessControl::canManageComment('edit', $author_id)) {
+                    $tpl_comment['U_EDIT'] = $urlService->addUrlParams(
+                        $url_self,
+                        [
+                            'edit' => $comment['comment_id'],
                         ]
                     );
 
-                    $email = null;
-                    $user_email = $comment['user_email'] ?? null;
-                    $comment_email = $comment['email'] ?? null;
-                    if (is_string($user_email) && $user_email !== '' && $user_email !== '0') {
-                        $email = $user_email;
-                    } elseif (is_string($comment_email) && $comment_email !== '' && $comment_email !== '0') {
-                        $email = $comment_email;
+                    $comment_id_str = is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '';
+                    if ($edit_comment !== null and is_numeric($edit_comment) and $comment_id_str === (string) $edit_comment) {
+                        $tpl_comment['IN_EDIT'] = true;
+                        $key = new \Piwigo\Auth\EphemeralKeyService()
+                            ->generate(2, $image_id);
+                        $tpl_comment['KEY'] = $key;
+                        $tpl_comment['IMAGE_ID'] = $image_id;
+                        $tpl_comment['CONTENT'] = $comment['content'];
+                        $tpl_comment['PWG_TOKEN'] = new \Piwigo\Csrf\CsrfService()->getToken();
+                        $tpl_comment['U_CANCEL'] = $url_self;
                     }
+                }
 
-                    $date = $comment['date'];
-                    // comments.date is a NOT NULL column
-                    assert(is_string($date));
-
-                    $author_id = $comment['author_id'];
-                    // comments.author_id is nullable in schema; a NULL
-                    // author can never match a real user id, so treat it as
-                    // unowned rather than casting blindly.
-                    $author_id = is_numeric($author_id) ? (int) $author_id : -1;
-
-                    $tpl_comment = [
-                        'ID' => $comment['comment_id'],
-                        'U_PICTURE' => $url,
-                        'src_image' => $src_image,
-                        'ALT' => $name,
-                        'AUTHOR' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_author', $comment['author']),
-                        'WEBSITE_URL' => $comment['website_url'],
-                        'DATE' => \Piwigo\Core\DateHelper::formatDate($date, ['day_name', 'day', 'month', 'year', 'time']),
-                        'CONTENT' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_content', $comment['content']),
-                    ];
-
-                    if (\Piwigo\Auth\AccessControl::isAdmin()) {
-                        $tpl_comment['EMAIL'] = $email;
-                    }
-
-                    if (\Piwigo\Auth\AccessControl::canManageComment('delete', $author_id)) {
-                        $tpl_comment['U_DELETE'] = $urlService->addUrlParams(
+                if (\Piwigo\Auth\AccessControl::canManageComment('validate', $author_id)) {
+                    if ($comment['validated'] !== 'true') {
+                        $tpl_comment['U_VALIDATE'] = $urlService->addUrlParams(
                             $url_self,
                             [
-                                'delete' => $comment['comment_id'],
+                                'validate' => $comment['comment_id'],
                                 'pwg_token' => new \Piwigo\Csrf\CsrfService()
                                     ->getToken(),
                             ]
                         );
                     }
-
-                    if (\Piwigo\Auth\AccessControl::canManageComment('edit', $author_id)) {
-                        $tpl_comment['U_EDIT'] = $urlService->addUrlParams(
-                            $url_self,
-                            [
-                                'edit' => $comment['comment_id'],
-                            ]
-                        );
-
-                        $comment_id_str = is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '';
-                        if ($edit_comment !== null and is_numeric($edit_comment) and $comment_id_str === (string) $edit_comment) {
-                            $tpl_comment['IN_EDIT'] = true;
-                            $key = new \Piwigo\Auth\EphemeralKeyService()
-                                ->generate(2, $image_id);
-                            $tpl_comment['KEY'] = $key;
-                            $tpl_comment['IMAGE_ID'] = $image_id;
-                            $tpl_comment['CONTENT'] = $comment['content'];
-                            $tpl_comment['PWG_TOKEN'] = new \Piwigo\Csrf\CsrfService()->getToken();
-                            $tpl_comment['U_CANCEL'] = $url_self;
-                        }
-                    }
-
-                    if (\Piwigo\Auth\AccessControl::canManageComment('validate', $author_id)) {
-                        if ($comment['validated'] !== 'true') {
-                            $tpl_comment['U_VALIDATE'] = $urlService->addUrlParams(
-                                $url_self,
-                                [
-                                    'validate' => $comment['comment_id'],
-                                    'pwg_token' => new \Piwigo\Csrf\CsrfService()
-                                        ->getToken(),
-                                ]
-                            );
-                        }
-                    }
-                    $template->append('comments', $tpl_comment);
                 }
+                $template->append('comments', $tpl_comment);
             }
+        }
 
-            $derivative_params = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_comments_derivative_params', ImageStdParams::get_by_type(ImageStdParams::THUMB));
-            $template->assign('comment_derivative_params', $derivative_params);
+        $derivative_params = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_comments_derivative_params', ImageStdParams::get_by_type(ImageStdParams::THUMB));
+        $template->assign('comment_derivative_params', $derivative_params);
 
-            // include menubar
-            $themeconf = $template->get_template_vars('themeconf');
-            $themeconf = is_array($themeconf) ? $themeconf : [];
-            if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theCommentsPage', $themeconf['hide_menu_on'], true)) {
-                new MenubarRenderer()
-                    ->render($urlService);
-            }
+        // include menubar
+        $themeconf = $template->get_template_vars('themeconf');
+        $themeconf = is_array($themeconf) ? $themeconf : [];
+        if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theCommentsPage', $themeconf['hide_menu_on'], true)) {
+            new MenubarRenderer()
+                ->render($urlService);
+        }
 
-            // +---------------------------------------------------------------+
-            // |                      html code display                        |
-            // +---------------------------------------------------------------+
-            new \Piwigo\Page\PageHeaderRenderer()
-                ->render($title);
-            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_comments');
-            new HtmlService()
-                ->flushPageMessages();
-            if (count($comments) > 0) {
-                $template->assign_var_from_handle('COMMENT_LIST', 'comment_list');
-            }
-            $template->pparse('comments');
-            \Piwigo\Bootstrap\PageTail::render();
-        });
+        // +---------------------------------------------------------------+
+        // |                      html code display                        |
+        // +---------------------------------------------------------------+
+        new \Piwigo\Page\PageHeaderRenderer()
+            ->render($title);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_comments');
+        new HtmlService()
+            ->flushPageMessages();
+        if (count($comments) > 0) {
+            $template->assign_var_from_handle('COMMENT_LIST', 'comment_list');
+        }
+        $template->parse('comments', false);
+        $body = \Piwigo\Bootstrap\PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

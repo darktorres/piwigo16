@@ -24,10 +24,12 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Replaces register.php -- the user self-registration form + POST handler.
- * page_forbidden()/redirect() both happen before any rendering starts, so
- * the whole "process form" business logic stays outside the captured
- * closure -- same exit()-based-termination limitation as every other
- * controller this phase.
+ * page_forbidden()/redirect() both happen before any rendering starts.
+ *
+ * Legacy Coupling Retirement Workstream D: converted off
+ * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
+ * pattern as AboutController -- see that class's own docblock for the
+ * accumulator mechanics this relies on.
  */
 final class RegisterController implements ControllerInterface
 {
@@ -167,81 +169,80 @@ final class RegisterController implements ControllerInterface
         $email = is_string($mail_raw) && $mail_raw !== '' && $mail_raw !== '0' ? htmlspecialchars(stripslashes($mail_raw)) : '';
 
         $urlService = $this->urlService;
-        $body = LegacyRenderCapture::capture(static function () use ($registration_post_key, $login, $email, $errors, $urlService): void {
-            // $title is set and read entirely within this closure (passed
-            // straight into PageHeaderRenderer::render() below) -- no
-            // other file reads $GLOBALS['title']. Plain local, not global.
-            $template = \Piwigo\Template\CurrentTemplate::get();
 
-            $title = Lang::t('Registration');
-            \Piwigo\Core\PageState::current()->setBodyId('theRegisterPage');
+        // $title is set and read entirely within this method (passed
+        // straight into PageHeaderRenderer::render() below) -- no other
+        // file reads $GLOBALS['title']. Plain local, not global.
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
-            $template->set_filenames([
-                'register' => 'register.tpl',
+        $title = Lang::t('Registration');
+        \Piwigo\Core\PageState::current()->setBodyId('theRegisterPage');
+
+        $template->set_filenames([
+            'register' => 'register.tpl',
+        ]);
+        $template->assign([
+            'U_HOME' => $urlService->makeIndexUrl(),
+            'F_KEY' => $registration_post_key,
+            'F_ACTION' => 'register.php',
+            'F_LOGIN' => $login,
+            'F_EMAIL' => $email,
+            'obligatory_user_mail_address' => \Piwigo\Config\Config::obligatoryUserMailAddress(),
+        ]);
+
+        $themeconf = $template->get_template_vars('themeconf');
+        $hide_menu_on = is_array($themeconf) ? ($themeconf['hide_menu_on'] ?? null) : null;
+        if (! is_array($hide_menu_on) or ! in_array('theRegisterPage', $hide_menu_on, true)) {
+            new MenubarRenderer()
+                ->render($urlService);
+        }
+
+        // Load language if cookie is set from login/register/password
+        // pages
+        $lang_cookie = $_COOKIE['lang'] ?? null;
+        if ($lang_cookie !== null and (! is_string($lang_cookie) or \Piwigo\Users\CurrentUser::get()->language !== $lang_cookie)) {
+            if (! is_string($lang_cookie)) {
+                new HtmlService()
+                    ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
+            }
+            if (! array_key_exists($lang_cookie, \Piwigo\Lang\LangService::getLanguages())) {
+                new HtmlService()
+                    ->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
+            }
+
+            \Piwigo\Users\CurrentUser::updateLanguage($lang_cookie);
+            Lang::load('common.lang', '', [
+                'language' => $lang_cookie,
             ]);
-            $template->assign([
-                'U_HOME' => $urlService->makeIndexUrl(),
-                'F_KEY' => $registration_post_key,
-                'F_ACTION' => 'register.php',
-                'F_LOGIN' => $login,
-                'F_EMAIL' => $email,
-                'obligatory_user_mail_address' => \Piwigo\Config\Config::obligatoryUserMailAddress(),
-            ]);
+        }
 
-            $themeconf = $template->get_template_vars('themeconf');
-            $hide_menu_on = is_array($themeconf) ? ($themeconf['hide_menu_on'] ?? null) : null;
-            if (! is_array($hide_menu_on) or ! in_array('theRegisterPage', $hide_menu_on, true)) {
-                new MenubarRenderer()
-                    ->render($urlService);
-            }
+        $language_options = [];
+        foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
+            $language_options[$language_code] = $language_name;
+        }
 
-            // Load language if cookie is set from login/register/password
-            // pages
-            $lang_cookie = $_COOKIE['lang'] ?? null;
-            if ($lang_cookie !== null and (! is_string($lang_cookie) or \Piwigo\Users\CurrentUser::get()->language !== $lang_cookie)) {
-                if (! is_string($lang_cookie)) {
-                    new HtmlService()
-                        ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
-                }
-                if (! array_key_exists($lang_cookie, \Piwigo\Lang\LangService::getLanguages())) {
-                    new HtmlService()
-                        ->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
-                }
+        $template->assign([
+            'language_options' => $language_options,
+            'current_language' => \Piwigo\Users\CurrentUser::get()->language,
+        ]);
 
-                \Piwigo\Users\CurrentUser::updateLanguage($lang_cookie);
-                Lang::load('common.lang', '', [
-                    'language' => $lang_cookie,
-                ]);
-            }
+        if (str_starts_with(\Piwigo\Users\CurrentUser::get()->language, 'fr')) {
+            $help_link = 'https://upstream.example.invalid/help/fr/';
+        } else {
+            $help_link = 'https://upstream.example.invalid/help/';
+        }
 
-            $language_options = [];
-            foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
-                $language_options[$language_code] = $language_name;
-            }
+        $template->assign('HELP_LINK', $help_link);
 
-            $template->assign([
-                'language_options' => $language_options,
-                'current_language' => \Piwigo\Users\CurrentUser::get()->language,
-            ]);
-
-            if (str_starts_with(\Piwigo\Users\CurrentUser::get()->language, 'fr')) {
-                $help_link = 'https://upstream.example.invalid/help/fr/';
-            } else {
-                $help_link = 'https://upstream.example.invalid/help/';
-            }
-
-            $template->assign('HELP_LINK', $help_link);
-
-            new \Piwigo\Page\PageHeaderRenderer()
-                ->render($title);
-            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_register');
-            new HtmlService()
-                ->flushPageMessages();
-            new HtmlService()
-                ->flushKeyedErrors($errors);
-            $template->parse('register');
-            \Piwigo\Bootstrap\PageTail::render();
-        });
+        new \Piwigo\Page\PageHeaderRenderer()
+            ->render($title);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_register');
+        new HtmlService()
+            ->flushPageMessages();
+        new HtmlService()
+            ->flushKeyedErrors($errors);
+        $template->parse('register');
+        $body = \Piwigo\Bootstrap\PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

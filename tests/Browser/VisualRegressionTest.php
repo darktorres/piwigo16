@@ -150,6 +150,13 @@ $routes = [
     // page before Legacy Coupling Retirement Workstream D's
     // NotificationController conversion; added as part of that batch.
     'notification'       => ['/notification.php', false],
+    // nbm.php with no subscribe/unsubscribe query param is a deterministic
+    // "Unknown identifier" error page (NbmController's else branch) -- no
+    // per-request randomness like notification.php's feed ID, so a plain
+    // baseline needs no special normalization. No prior VR coverage
+    // existed before Legacy Coupling Retirement Workstream D's
+    // NbmController conversion; added as part of that batch.
+    'nbm'                => ['/nbm.php', false],
     'search'             => ['/search.php', false],
     'comments'           => ['/comments.php', false],
     'category-1'         => ['/index.php?/category/1', false],

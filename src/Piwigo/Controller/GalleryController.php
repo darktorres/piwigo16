@@ -63,15 +63,16 @@ use Psr\Http\Message\ServerRequestInterface;
  * below (batch A5.2i retargeted its last 2 keys, body_id/cat_slideshow_url,
  * onto PageState/an explicit return value respectively).
  *
- * check_status()/check_restrictions()/page_not_found() all stay outside the
- * captured closure. Everything else -- including the interleaved
- * image_order/caddie/slideshow redirect() calls -- is bundled into one
- * closure matching TagsController's precedent for this page shape: none of
- * those redirects happen after any real echo (page_header.php isn't
- * included until the very end), so PHP's documented output-buffer-auto-
- * flush-on-exit() behavior makes wrapping them safe, and it avoids having
- * to thread several dozen interdependent local variables across a manual
- * split point.
+ * check_status()/check_restrictions()/page_not_found() all happen before
+ * any rendering starts.
+ *
+ * Legacy Coupling Retirement Workstream D: converted off
+ * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
+ * pattern as AboutController -- see that class's own docblock for the
+ * accumulator mechanics this relies on. $categoryCountCategories is the
+ * one real caller of MenubarRenderer::render()'s `mixed` return value
+ * among all the converted controllers -- preserved as a plain local
+ * variable, no different from before.
  */
 final class GalleryController implements ControllerInterface
 {
@@ -158,503 +159,501 @@ final class GalleryController implements ControllerInterface
         $redirectService = $this->redirectService;
         $urlService = $this->urlService;
         $configService = $this->configService;
-        $body = LegacyRenderCapture::capture(static function () use ($conn, $page_items, $page_start, $page_nb_image_page, $section_context, $redirectService, $urlService, $configService): void {
-            // $title is set and read entirely within this closure (passed
-            // straight into PageHeaderRenderer::render() below) -- no
-            // other file reads $GLOBALS['title']. Plain local, not global.
-            $template = \Piwigo\Template\CurrentTemplate::get();
 
-            $tagService = self::tagService($conn);
-            $categoryService = self::categoryService($conn);
+        // $title is set and read entirely within this method (passed
+        // straight into PageHeaderRenderer::render() below) -- no other
+        // file reads $GLOBALS['title']. Plain local, not global.
 
-            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_index');
+        $tagService = self::tagService($conn);
+        $categoryService = self::categoryService($conn);
 
-            // ---------------------------------------- change of image display order
-            if (isset($_GET['image_order'])) {
-                if (is_numeric($_GET['image_order']) && (int) $_GET['image_order'] > 0) {
-                    SessionService::get()->setSessionVar('image_order', (int) $_GET['image_order']);
-                } else {
-                    SessionService::get()->unsetSessionVar('image_order');
-                }
-                $redirectService->redirect(
-                    $urlService->duplicateIndexUrl(
-                        [],        // nothing to redefine
-                        ['start']  // changing display order goes back to section first page
-                    )
-                );
-            }
-            if (isset($_GET['display'])) {
-                \Piwigo\Core\PageState::current()->setMetaRobotsFlag('noindex');
-                if (is_string($_GET['display']) && array_key_exists($_GET['display'], ImageStdParams::get_defined_type_map())) {
-                    SessionService::get()->setSessionVar('index_deriv', $_GET['display']);
-                }
-            }
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_index');
 
-            // -------------------------------------------------- initialization
-            // navigation bar
-            $navigationBar = [];
-            if (count($page_items) > $page_nb_image_page) {
-                $navigationBar = new \Piwigo\Core\PaginationService()
-                    ->createNavigationBar($urlService->duplicateIndexUrl([], ['start']), count($page_items), $page_start, $page_nb_image_page, true, 'start');
-            }
-
-            $template->assign('thumb_navbar', $navigationBar);
-
-            // caddie filling :-)
-            if (isset($_GET['caddie'])) {
-                \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($page_items);
-                $redirectService->redirect($urlService->duplicateIndexUrl());
-            }
-
-            if ($section_context->isHomepage) {
-                $canonical_url = $urlService->getGalleryHomeUrl();
+        // ---------------------------------------- change of image display order
+        if (isset($_GET['image_order'])) {
+            if (is_numeric($_GET['image_order']) && (int) $_GET['image_order'] > 0) {
+                SessionService::get()->setSessionVar('image_order', (int) $_GET['image_order']);
             } else {
-                $start = $page_nb_image_page * round($page_start / $page_nb_image_page);
-                if ($start > 0 && $start >= count($page_items)) {
-                    $start -= $page_nb_image_page;
-                }
-                $canonical_url = $urlService->duplicateIndexUrl([
-                    'start' => $start,
-                ]);
+                SessionService::get()->unsetSessionVar('image_order');
             }
-            $template->assign('U_CANONICAL', $canonical_url);
+            $redirectService->redirect(
+                $urlService->duplicateIndexUrl(
+                    [],        // nothing to redefine
+                    ['start']  // changing display order goes back to section first page
+                )
+            );
+        }
+        if (isset($_GET['display'])) {
+            \Piwigo\Core\PageState::current()->setMetaRobotsFlag('noindex');
+            if (is_string($_GET['display']) && array_key_exists($_GET['display'], ImageStdParams::get_defined_type_map())) {
+                SessionService::get()->setSessionVar('index_deriv', $_GET['display']);
+            }
+        }
 
-            // Standard Pages
-            // Some themes will want to use standard pages so this will let
-            // them know
-            $template->assign('use_standard_pages', \Piwigo\Config\Config::all()['use_standard_pages'] ?? false);
+        // -------------------------------------------------- initialization
+        // navigation bar
+        $navigationBar = [];
+        if (count($page_items) > $page_nb_image_page) {
+            $navigationBar = new \Piwigo\Core\PaginationService()
+                ->createNavigationBar($urlService->duplicateIndexUrl([], ['start']), count($page_items), $page_start, $page_nb_image_page, true, 'start');
+        }
 
-            // -------------------------------------------------- page title
-            $title = $section_context->title;
-            $template_title = $section_context->sectionTitle;
-            $nb_items = count($page_items);
-            $template->assign('TITLE', $template_title);
-            $template->assign('NB_ITEMS', $nb_items);
+        $template->assign('thumb_navbar', $navigationBar);
 
-            // -------------------------------------------------- menubar
-            $categoryCountCategories = new MenubarRenderer()
-                ->render($urlService);
+        // caddie filling :-)
+        if (isset($_GET['caddie'])) {
+            \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($page_items);
+            $redirectService->redirect($urlService->duplicateIndexUrl());
+        }
 
-            $template->set_filename('index', 'index.tpl');
+        if ($section_context->isHomepage) {
+            $canonical_url = $urlService->getGalleryHomeUrl();
+        } else {
+            $start = $page_nb_image_page * round($page_start / $page_nb_image_page);
+            if ($start > 0 && $start >= count($page_items)) {
+                $start -= $page_nb_image_page;
+            }
+            $canonical_url = $urlService->duplicateIndexUrl([
+                'start' => $start,
+            ]);
+        }
+        $template->assign('U_CANONICAL', $canonical_url);
 
-            // +-----------------------------------------------------------------+
-            // |  index page (categories, thumbnails, search, calendar, etc.)    |
-            // +-----------------------------------------------------------------+
-            // This whole section used to be guarded by an "is_external"
-            // check (isset($page['is_external'])) that is confirmed dead in
-            // the 16.x-rewrite reference too (SectionContext::$isExternal
-            // defaults false and nothing ever passes true) -- not a 17.x
-            // porting gap, so the guard is dropped rather than ported.
-            // ------------------------------------------------- template init
-            \Piwigo\Core\PageState::current()->setBodyId('theCategoryPage');
+        // Standard Pages
+        // Some themes will want to use standard pages so this will let
+        // them know
+        $template->assign('use_standard_pages', \Piwigo\Config\Config::all()['use_standard_pages'] ?? false);
 
-            if ($section_context->flat or $section_context->chronologyField !== null) {
+        // -------------------------------------------------- page title
+        $title = $section_context->title;
+        $template_title = $section_context->sectionTitle;
+        $nb_items = count($page_items);
+        $template->assign('TITLE', $template_title);
+        $template->assign('NB_ITEMS', $nb_items);
+
+        // -------------------------------------------------- menubar
+        $categoryCountCategories = new MenubarRenderer()
+            ->render($urlService);
+
+        $template->set_filename('index', 'index.tpl');
+
+        // +-----------------------------------------------------------------+
+        // |  index page (categories, thumbnails, search, calendar, etc.)    |
+        // +-----------------------------------------------------------------+
+        // This whole section used to be guarded by an "is_external"
+        // check (isset($page['is_external'])) that is confirmed dead in
+        // the 16.x-rewrite reference too (SectionContext::$isExternal
+        // defaults false and nothing ever passes true) -- not a 17.x
+        // porting gap, so the guard is dropped rather than ported.
+        // ------------------------------------------------- template init
+        \Piwigo\Core\PageState::current()->setBodyId('theCategoryPage');
+
+        if ($section_context->flat or $section_context->chronologyField !== null) {
+            $template->assign(
+                'U_MODE_NORMAL',
+                $urlService->duplicateIndexUrl([], ['chronology_field', 'start', 'flat'])
+            );
+        }
+
+        if (\Piwigo\Config\Config::indexFlatIcon() and ! $section_context->flat and $section_context->section === 'categories') {
+            $template->assign(
+                'U_MODE_FLAT',
+                $urlService->duplicateIndexUrl([
+                    'flat' => '',
+                ], ['start', 'chronology_field'])
+            );
+        }
+
+        if ($section_context->chronologyField === null) {
+            $chronology_params = [
+                'chronology_field' => 'created',
+                'chronology_style' => 'monthly',
+                'chronology_view' => 'list',
+            ];
+            if (\Piwigo\Config\Config::indexCreatedDateIcon()) {
                 $template->assign(
-                    'U_MODE_NORMAL',
-                    $urlService->duplicateIndexUrl([], ['chronology_field', 'start', 'flat'])
+                    'U_MODE_CREATED',
+                    $urlService->duplicateIndexUrl($chronology_params, ['start', 'flat'])
                 );
             }
-
-            if (\Piwigo\Config\Config::indexFlatIcon() and ! $section_context->flat and $section_context->section === 'categories') {
+            if (\Piwigo\Config\Config::indexPostedDateIcon()) {
+                $chronology_params['chronology_field'] = 'posted';
                 $template->assign(
-                    'U_MODE_FLAT',
-                    $urlService->duplicateIndexUrl([
-                        'flat' => '',
-                    ], ['start', 'chronology_field'])
+                    'U_MODE_POSTED',
+                    $urlService->duplicateIndexUrl($chronology_params, ['start', 'flat'])
                 );
             }
-
-            if ($section_context->chronologyField === null) {
-                $chronology_params = [
-                    'chronology_field' => 'created',
-                    'chronology_style' => 'monthly',
-                    'chronology_view' => 'list',
-                ];
-                if (\Piwigo\Config\Config::indexCreatedDateIcon()) {
-                    $template->assign(
-                        'U_MODE_CREATED',
-                        $urlService->duplicateIndexUrl($chronology_params, ['start', 'flat'])
-                    );
-                }
-                if (\Piwigo\Config\Config::indexPostedDateIcon()) {
-                    $chronology_params['chronology_field'] = 'posted';
-                    $template->assign(
-                        'U_MODE_POSTED',
-                        $urlService->duplicateIndexUrl($chronology_params, ['start', 'flat'])
-                    );
-                }
+        } else {
+            if ($section_context->chronologyField === 'created') {
+                $chronology_field = 'posted';
             } else {
-                if ($section_context->chronologyField === 'created') {
-                    $chronology_field = 'posted';
-                } else {
-                    $chronology_field = 'created';
-                }
-                if ((bool) (\Piwigo\Config\Config::all()['index_' . $chronology_field . '_date_icon'] ?? null)) {
-                    $url = $urlService->duplicateIndexUrl(
-                        [
-                            'chronology_field' => $chronology_field,
-                        ],
-                        ['chronology_date', 'start', 'flat']
-                    );
-                    $template->assign(
-                        'U_MODE_' . strtoupper($chronology_field),
-                        $url
-                    );
-                }
+                $chronology_field = 'created';
             }
-
-            $resolved_search_id = new SearchFilterRenderer(
-                new HtmlService(),
-                $template,
-                new SearchRepository($conn),
-                new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new PersistentFileCache(), new MailService(), new HtmlService(), $redirectService, $tagService),
-                $tagService,
-                new CategoryRepository($conn),
-                self::permissionService($conn),
-                $urlService,
-            )->render($section_context);
-
-            if ($section_context->section === 'categories' and $section_context->category !== null and $section_context->combinedCategories === null) {
-                $template->assign(
+            if ((bool) (\Piwigo\Config\Config::all()['index_' . $chronology_field . '_date_icon'] ?? null)) {
+                $url = $urlService->duplicateIndexUrl(
                     [
-                        'SEARCH_IN_SET_BUTTON' => \Piwigo\Config\Config::indexSearchInSetButton(),
-                        'SEARCH_IN_SET_ACTION' => \Piwigo\Config\Config::indexSearchInSetAction(),
-                        'SEARCH_IN_SET_URL' => $urlService->getRootUrl() . 'search.php?cat_id=' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0),
+                        'chronology_field' => $chronology_field,
+                    ],
+                    ['chronology_date', 'start', 'flat']
+                );
+                $template->assign(
+                    'U_MODE_' . strtoupper($chronology_field),
+                    $url
+                );
+            }
+        }
+
+        $resolved_search_id = new SearchFilterRenderer(
+            new HtmlService(),
+            $template,
+            new SearchRepository($conn),
+            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new PersistentFileCache(), new MailService(), new HtmlService(), $redirectService, $tagService),
+            $tagService,
+            new CategoryRepository($conn),
+            self::permissionService($conn),
+            $urlService,
+        )->render($section_context);
+
+        if ($section_context->section === 'categories' and $section_context->category !== null and $section_context->combinedCategories === null) {
+            $template->assign(
+                [
+                    'SEARCH_IN_SET_BUTTON' => \Piwigo\Config\Config::indexSearchInSetButton(),
+                    'SEARCH_IN_SET_ACTION' => \Piwigo\Config\Config::indexSearchInSetAction(),
+                    'SEARCH_IN_SET_URL' => $urlService->getRootUrl() . 'search.php?cat_id=' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0),
+                ]
+            );
+        }
+
+        $bodyData = \Piwigo\Core\PageState::current()->bodyData;
+        if (isset($bodyData['tag_ids']) and is_array($bodyData['tag_ids'])) {
+            // get tags for related tags "button", with the
+            // possibility to combine them
+            //
+            // NB: the excluded tag ids intentionally come from
+            // $section_context->tagIds (the tags currently being
+            // viewed, only set on the "tags" section), not from
+            // PageState::bodyData['tag_ids'] (a broader,
+            // always-present mirror of the same data used for
+            // JS/body attributes).
+            $excluded_tag_ids = $section_context->tagIds;
+
+            $tags = $tagService->getCommonTags(
+                $page_items,
+                is_numeric(\Piwigo\Config\Config::menubarTagCloudItemsNumber()) ? (int) \Piwigo\Config\Config::menubarTagCloudItemsNumber() : 0,
+                new HtmlService(),
+                $excluded_tag_ids
+            );
+
+            $tags = $tagService->addLevelToTags($tags);
+
+            $page_tags = $section_context->tags;
+
+            $related_tags = [];
+
+            foreach ($tags as $tag) {
+                $related_tags[] = array_merge(
+                    $tag,
+                    [
+                        'U_ADD' => $urlService->makeIndexUrl(
+                            [
+                                'tags' => array_merge(
+                                    $page_tags,
+                                    [$tag]
+                                ),
+                            ]
+                        ),
+                        'URL' => $urlService->makeIndexUrl(
+                            [
+                                'tags' => [$tag],
+                            ]
+                        ),
                     ]
                 );
             }
 
-            $bodyData = \Piwigo\Core\PageState::current()->bodyData;
-            if (isset($bodyData['tag_ids']) and is_array($bodyData['tag_ids'])) {
-                // get tags for related tags "button", with the
-                // possibility to combine them
-                //
-                // NB: the excluded tag ids intentionally come from
-                // $section_context->tagIds (the tags currently being
-                // viewed, only set on the "tags" section), not from
-                // PageState::bodyData['tag_ids'] (a broader,
-                // always-present mirror of the same data used for
-                // JS/body attributes).
-                $excluded_tag_ids = $section_context->tagIds;
+            // We sort the array here because we want them sorted by
+            // counter and not alphabetically like before.
+            usort(
+                $related_tags,
+                fn (array $a, array $b): int => (is_numeric($b['counter'] ?? null) ? (int) $b['counter'] : 0)
+                    <=> (is_numeric($a['counter'] ?? null) ? (int) $a['counter'] : 0)
+            );
 
-                $tags = $tagService->getCommonTags(
-                    $page_items,
-                    is_numeric(\Piwigo\Config\Config::menubarTagCloudItemsNumber()) ? (int) \Piwigo\Config\Config::menubarTagCloudItemsNumber() : 0,
-                    new HtmlService(),
-                    $excluded_tag_ids
-                );
+            $selected_related_tags_info = [];
 
-                $tags = $tagService->addLevelToTags($tags);
+            $selectedTags = $section_context->tags;
 
-                $page_tags = $section_context->tags;
+            foreach ($selectedTags as $selectedTagKey => $selectedTag) {
+                $otherSelectedTags = $selectedTags;
+                unset($otherSelectedTags[$selectedTagKey]);
 
-                $related_tags = [];
-
-                foreach ($tags as $tag) {
-                    $related_tags[] = array_merge(
-                        $tag,
+                $selected_related_tags_info[$selectedTagKey] =
+                [
+                    'tag_name' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $selectedTag['name'], $selectedTag),
+                    'item_count' => '',
+                    'index_url' => $urlService->makeIndexUrl(
                         [
-                            'U_ADD' => $urlService->makeIndexUrl(
-                                [
-                                    'tags' => array_merge(
-                                        $page_tags,
-                                        [$tag]
-                                    ),
-                                ]
-                            ),
-                            'URL' => $urlService->makeIndexUrl(
-                                [
-                                    'tags' => [$tag],
-                                ]
-                            ),
+                            'tags' => [$selectedTag],
                         ]
-                    );
+                    ),
+                    'remove_url' => $urlService->makeIndexUrl(
+                        [
+                            'tags' => $otherSelectedTags,
+                        ]
+                    ),
+                ];
+            }
+
+            $template->assign(
+                [
+                    'SELECT_RELATED_TAGS' => $selected_related_tags_info,
+                ]
+            );
+
+            $template->set_filename('selected_tags', 'include/selected_tags.inc.tpl');
+            $template->assign_var_from_handle('SELECTED_TAGS_TEMPLATE', 'selected_tags');
+
+            $body_data_tag_ids = array_values(array_filter($bodyData['tag_ids'], is_scalar(...)));
+
+            $template->assign(
+                [
+                    'SEARCH_IN_SET_BUTTON' => \Piwigo\Config\Config::indexSearchInSetButton(),
+                    'SEARCH_IN_SET_ACTION' => \Piwigo\Config\Config::indexSearchInSetAction(),
+                    'SEARCH_IN_SET_URL' => $urlService->getRootUrl() . 'search.php?tag_id=' . implode(',', $body_data_tag_ids),
+                    'COMBINABLE_TAGS' => $related_tags,
+                ]
+            );
+        }
+
+        if ($section_context->category !== null and \Piwigo\Auth\AccessControl::isAdmin() and \Piwigo\Config\Config::indexEditIcon()) {
+            $template->assign(
+                'U_EDIT',
+                $urlService->getRootUrl() . 'admin.php?page=album-' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0)
+            );
+        }
+
+        if (\Piwigo\Auth\AccessControl::isAdmin() and $page_items !== [] and \Piwigo\Config\Config::indexCaddieIcon()) {
+            $template->assign(
+                'U_CADDIE',
+                $urlService->addUrlParams($urlService->duplicateIndexUrl(), [
+                    'caddie' => 1,
+                ])
+            );
+        }
+
+        if ($section_context->section === 'search' and $page_start === 0 and
+            $section_context->chronologyField === null and $section_context->qsearchDetails !== []) {
+            $qsearchDetails = $section_context->qsearchDetails;
+
+            $matching_cats_no_images = is_array($qsearchDetails['matching_cats_no_images'] ?? null) ? array_values(array_filter($qsearchDetails['matching_cats_no_images'], is_array(...))) : [];
+            $matching_cats = is_array($qsearchDetails['matching_cats'] ?? null) ? array_values(array_filter($qsearchDetails['matching_cats'], is_array(...))) : [];
+            /**
+             * @var array<int, array<string, mixed>> $matching_cats_no_images
+             * @var array<int, array<string, mixed>> $matching_cats
+             */
+            $cats = array_merge($matching_cats_no_images, $matching_cats);
+            if ($cats !== []) {
+                usort($cats, new HtmlService()->nameCompare(...));
+                $hints = [];
+                foreach ($cats as $cat) {
+                    $hints[] = new HtmlService()->getCatDisplayName([$cat], '');
                 }
+                $template->assign('category_search_results', $hints);
+            }
 
-                // We sort the array here because we want them sorted by
-                // counter and not alphabetically like before.
-                usort(
-                    $related_tags,
-                    fn (array $a, array $b): int => (is_numeric($b['counter'] ?? null) ? (int) $b['counter'] : 0)
-                        <=> (is_numeric($a['counter'] ?? null) ? (int) $a['counter'] : 0)
-                );
+            $matching_tags = is_array($qsearchDetails['matching_tags'] ?? null) ? array_values(array_filter($qsearchDetails['matching_tags'], is_array(...))) : [];
+            /** @var array<int, array<string, mixed>> $matching_tags */
+            foreach ($matching_tags as $tag) {
+                $tag['URL'] = $urlService->makeIndexUrl([
+                    'tags' => [$tag],
+                ]);
+                $template->append('tag_search_results', $tag);
+            }
 
-                $selected_related_tags_info = [];
+            if ($page_items === []) {
+                $search_query = $qsearchDetails['q'] ?? null;
+                $template->append('no_search_results', htmlspecialchars(is_string($search_query) ? $search_query : ''));
+            } else {
+                $unmatched_terms = $qsearchDetails['unmatched_terms'] ?? null;
+                if (is_array($unmatched_terms) && $unmatched_terms !== []) {
+                    /** @var list<string> $unmatched_terms */
+                    $unmatched_terms = array_values(array_filter($unmatched_terms, is_string(...)));
+                    $template->assign('no_search_results', array_map(htmlspecialchars(...), $unmatched_terms));
+                }
+            }
+        }
 
-                $selectedTags = $section_context->tags;
+        // image order
+        if (\Piwigo\Config\Config::indexSortOrderInput()
+            and count($page_items) > 0
+            and $section_context->section !== 'most_visited'
+            and $section_context->section !== 'best_rated') {
+            $preferred_image_orders = $categoryService->getPreferredImageOrders();
+            $order_idx = SessionService::get()->getSessionVar('image_order', 0);
 
-                foreach ($selectedTags as $selectedTagKey => $selectedTag) {
-                    $otherSelectedTags = $selectedTags;
-                    unset($otherSelectedTags[$selectedTagKey]);
+            // get first order field and direction
+            $order_by = is_string((\Piwigo\Config\Config::all()['order_by'] ?? null)) ? (\Piwigo\Config\Config::all()['order_by'] ?? null) : '';
+            $first_order = substr($order_by, 9);
+            if (($pos = strpos($first_order, ',')) !== false) {
+                $first_order = substr($first_order, 0, $pos);
+            }
+            $first_order = trim($first_order);
 
-                    $selected_related_tags_info[$selectedTagKey] =
-                    [
-                        'tag_name' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $selectedTag['name'], $selectedTag),
-                        'item_count' => '',
-                        'index_url' => $urlService->makeIndexUrl(
-                            [
-                                'tags' => [$selectedTag],
-                            ]
-                        ),
-                        'remove_url' => $urlService->makeIndexUrl(
-                            [
-                                'tags' => $otherSelectedTags,
-                            ]
-                        ),
+            $url = $urlService->addUrlParams(
+                $urlService->duplicateIndexUrl(),
+                [
+                    'image_order' => '',
+                ]
+            );
+            $tpl_orders = [];
+            $order_selected = false;
+
+            foreach ($preferred_image_orders as $order_id => $order) {
+                if ($order[2]) {
+                    // force select if the field is the first field
+                    // of order_by
+                    if (! $order_selected && $order[1] === $first_order) {
+                        $order_idx = $order_id;
+                        $order_selected = true;
+                    }
+
+                    $tpl_orders[$order_id] = [
+                        'DISPLAY' => $order[0],
+                        'URL' => $url . $order_id,
+                        'SELECTED' => (is_scalar($order_idx) ? (string) $order_idx : '') === (string) $order_id,
                     ];
                 }
-
-                $template->assign(
-                    [
-                        'SELECT_RELATED_TAGS' => $selected_related_tags_info,
-                    ]
-                );
-
-                $template->set_filename('selected_tags', 'include/selected_tags.inc.tpl');
-                $template->assign_var_from_handle('SELECTED_TAGS_TEMPLATE', 'selected_tags');
-
-                $body_data_tag_ids = array_values(array_filter($bodyData['tag_ids'], is_scalar(...)));
-
-                $template->assign(
-                    [
-                        'SEARCH_IN_SET_BUTTON' => \Piwigo\Config\Config::indexSearchInSetButton(),
-                        'SEARCH_IN_SET_ACTION' => \Piwigo\Config\Config::indexSearchInSetAction(),
-                        'SEARCH_IN_SET_URL' => $urlService->getRootUrl() . 'search.php?tag_id=' . implode(',', $body_data_tag_ids),
-                        'COMBINABLE_TAGS' => $related_tags,
-                    ]
-                );
             }
 
-            if ($section_context->category !== null and \Piwigo\Auth\AccessControl::isAdmin() and \Piwigo\Config\Config::indexEditIcon()) {
-                $template->assign(
-                    'U_EDIT',
-                    $urlService->getRootUrl() . 'admin.php?page=album-' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0)
-                );
-            }
+            $tpl_orders[0]['SELECTED'] = ! $order_selected; // unselect "Default" if another one is selected
+            $template->assign('image_orders', $tpl_orders);
+        }
 
-            if (\Piwigo\Auth\AccessControl::isAdmin() and $page_items !== [] and \Piwigo\Config\Config::indexCaddieIcon()) {
-                $template->assign(
-                    'U_CADDIE',
-                    $urlService->addUrlParams($urlService->duplicateIndexUrl(), [
-                        'caddie' => 1,
-                    ])
-                );
-            }
+        // category comment
+        $page_comment = $section_context->comment;
+        $page_comment_present = $page_comment !== '' && $page_comment !== '0';
+        if (($page_start === 0 or \Piwigo\Config\Config::albumDescriptionOnAllPages()) and $section_context->chronologyField === null and $page_comment_present) {
+            $template->assign('CONTENT_DESCRIPTION', $section_context->comment);
+        }
 
-            if ($section_context->section === 'search' and $page_start === 0 and
-                $section_context->chronologyField === null and $section_context->qsearchDetails !== []) {
-                $qsearchDetails = $section_context->qsearchDetails;
+        if ($section_context->category !== null and $categoryCountCategories === 0) {// count_categories might be computed by menubar - if the case unassign flat link if no sub albums
+            $template->clear_assign('U_MODE_FLAT');
+        }
 
-                $matching_cats_no_images = is_array($qsearchDetails['matching_cats_no_images'] ?? null) ? array_values(array_filter($qsearchDetails['matching_cats_no_images'], is_array(...))) : [];
-                $matching_cats = is_array($qsearchDetails['matching_cats'] ?? null) ? array_values(array_filter($qsearchDetails['matching_cats'], is_array(...))) : [];
-                /**
-                 * @var array<int, array<string, mixed>> $matching_cats_no_images
-                 * @var array<int, array<string, mixed>> $matching_cats
-                 */
-                $cats = array_merge($matching_cats_no_images, $matching_cats);
-                if ($cats !== []) {
-                    usort($cats, new HtmlService()->nameCompare(...));
-                    $hints = [];
-                    foreach ($cats as $cat) {
-                        $hints[] = new HtmlService()->getCatDisplayName([$cat], '');
-                    }
-                    $template->assign('category_search_results', $hints);
-                }
+        // -------------------------------------------- main part : thumbnails
+        if ($page_start === 0
+          and ! $section_context->flat
+          and $section_context->chronologyField === null
+          and ($section_context->section === 'recent_cats' or $section_context->section === 'categories')
+          and ($section_context->category === null or $categoryCountCategories === null or $categoryCountCategories > 0)
+        ) {
+            new CategoryCatsRenderer(
+                new FilterService(),
+                new HtmlService(),
+                $template,
+                new CategoryRepository($conn),
+                $categoryService,
+                self::permissionService($conn),
+                new ImageRepository($conn),
+                $urlService
+            )->render($section_context->section, $section_context->category, $section_context->startcat);
+        }
 
-                $matching_tags = is_array($qsearchDetails['matching_tags'] ?? null) ? array_values(array_filter($qsearchDetails['matching_tags'], is_array(...))) : [];
-                /** @var array<int, array<string, mixed>> $matching_tags */
-                foreach ($matching_tags as $tag) {
-                    $tag['URL'] = $urlService->makeIndexUrl([
-                        'tags' => [$tag],
-                    ]);
-                    $template->append('tag_search_results', $tag);
-                }
+        $slideshow_url = null;
+        if ($page_items !== []) {
+            $slideshow_url = new CategoryDefaultRenderer(
+                new HtmlService(),
+                $template,
+                new ImageRepository($conn),
+                new CommentRepository($conn),
+                $urlService
+            )->render($page_items, $page_start, $page_nb_image_page, $section_context->section);
 
-                if ($page_items === []) {
-                    $search_query = $qsearchDetails['q'] ?? null;
-                    $template->append('no_search_results', htmlspecialchars(is_string($search_query) ? $search_query : ''));
-                } else {
-                    $unmatched_terms = $qsearchDetails['unmatched_terms'] ?? null;
-                    if (is_array($unmatched_terms) && $unmatched_terms !== []) {
-                        /** @var list<string> $unmatched_terms */
-                        $unmatched_terms = array_values(array_filter($unmatched_terms, is_string(...)));
-                        $template->assign('no_search_results', array_map(htmlspecialchars(...), $unmatched_terms));
-                    }
-                }
-            }
-
-            // image order
-            if (\Piwigo\Config\Config::indexSortOrderInput()
-                and count($page_items) > 0
-                and $section_context->section !== 'most_visited'
-                and $section_context->section !== 'best_rated') {
-                $preferred_image_orders = $categoryService->getPreferredImageOrders();
-                $order_idx = SessionService::get()->getSessionVar('image_order', 0);
-
-                // get first order field and direction
-                $order_by = is_string((\Piwigo\Config\Config::all()['order_by'] ?? null)) ? (\Piwigo\Config\Config::all()['order_by'] ?? null) : '';
-                $first_order = substr($order_by, 9);
-                if (($pos = strpos($first_order, ',')) !== false) {
-                    $first_order = substr($first_order, 0, $pos);
-                }
-                $first_order = trim($first_order);
-
+            if (\Piwigo\Config\Config::indexSizesIcon()) {
                 $url = $urlService->addUrlParams(
                     $urlService->duplicateIndexUrl(),
                     [
-                        'image_order' => '',
+                        'display' => '',
                     ]
                 );
-                $tpl_orders = [];
-                $order_selected = false;
 
-                foreach ($preferred_image_orders as $order_id => $order) {
-                    if ($order[2]) {
-                        // force select if the field is the first field
-                        // of order_by
-                        if (! $order_selected && $order[1] === $first_order) {
-                            $order_idx = $order_id;
-                            $order_selected = true;
-                        }
+                $derivative_params_var = $template->get_template_vars('derivative_params');
+                $selected_type = ($derivative_params_var instanceof DerivativeParams) ? $derivative_params_var->type : null;
+                $template->clear_assign('derivative_params');
+                $type_map = ImageStdParams::get_defined_type_map();
+                unset($type_map[ImageStdParams::XXLARGE], $type_map[ImageStdParams::XLARGE]);
 
-                        $tpl_orders[$order_id] = [
-                            'DISPLAY' => $order[0],
-                            'URL' => $url . $order_id,
-                            'SELECTED' => (is_scalar($order_idx) ? (string) $order_idx : '') === (string) $order_id,
-                        ];
-                    }
-                }
-
-                $tpl_orders[0]['SELECTED'] = ! $order_selected; // unselect "Default" if another one is selected
-                $template->assign('image_orders', $tpl_orders);
-            }
-
-            // category comment
-            $page_comment = $section_context->comment;
-            $page_comment_present = $page_comment !== '' && $page_comment !== '0';
-            if (($page_start === 0 or \Piwigo\Config\Config::albumDescriptionOnAllPages()) and $section_context->chronologyField === null and $page_comment_present) {
-                $template->assign('CONTENT_DESCRIPTION', $section_context->comment);
-            }
-
-            if ($section_context->category !== null and $categoryCountCategories === 0) {// count_categories might be computed by menubar - if the case unassign flat link if no sub albums
-                $template->clear_assign('U_MODE_FLAT');
-            }
-
-            // -------------------------------------------- main part : thumbnails
-            if ($page_start === 0
-              and ! $section_context->flat
-              and $section_context->chronologyField === null
-              and ($section_context->section === 'recent_cats' or $section_context->section === 'categories')
-              and ($section_context->category === null or $categoryCountCategories === null or $categoryCountCategories > 0)
-            ) {
-                new CategoryCatsRenderer(
-                    new FilterService(),
-                    new HtmlService(),
-                    $template,
-                    new CategoryRepository($conn),
-                    $categoryService,
-                    self::permissionService($conn),
-                    new ImageRepository($conn),
-                    $urlService
-                )->render($section_context->section, $section_context->category, $section_context->startcat);
-            }
-
-            $slideshow_url = null;
-            if ($page_items !== []) {
-                $slideshow_url = new CategoryDefaultRenderer(
-                    new HtmlService(),
-                    $template,
-                    new ImageRepository($conn),
-                    new CommentRepository($conn),
-                    $urlService
-                )->render($page_items, $page_start, $page_nb_image_page, $section_context->section);
-
-                if (\Piwigo\Config\Config::indexSizesIcon()) {
-                    $url = $urlService->addUrlParams(
-                        $urlService->duplicateIndexUrl(),
+                foreach ($type_map as $params) {
+                    $template->append(
+                        'image_derivatives',
                         [
-                            'display' => '',
-                        ]
-                    );
-
-                    $derivative_params_var = $template->get_template_vars('derivative_params');
-                    $selected_type = ($derivative_params_var instanceof DerivativeParams) ? $derivative_params_var->type : null;
-                    $template->clear_assign('derivative_params');
-                    $type_map = ImageStdParams::get_defined_type_map();
-                    unset($type_map[ImageStdParams::XXLARGE], $type_map[ImageStdParams::XLARGE]);
-
-                    foreach ($type_map as $params) {
-                        $template->append(
-                            'image_derivatives',
-                            [
-                                'DISPLAY' => Lang::t($params->type),
-                                'URL' => $url . $params->type,
-                                'SELECTED' => $params->type === $selected_type,
-                            ]
-                        );
-                    }
-                }
-            }
-
-            // slideshow
-            // execute after init thumbs in order to have all picture
-            // informations
-            $slideshow_url_present = is_string($slideshow_url) && $slideshow_url !== '' && $slideshow_url !== '0';
-            if ($slideshow_url_present) {
-                if (isset($_GET['slideshow'])) {
-                    $redirectService->redirect($slideshow_url);
-                } elseif (\Piwigo\Config\Config::indexSlideShowIcon()) {
-                    $template->assign('U_SLIDESHOW', $slideshow_url);
-                }
-            }
-
-            // We want all pages that display thumbnails, except on the
-            // tags page
-            // Fill related tags action
-            $body_data_section = \Piwigo\Core\PageState::current()->bodyData['section'] ?? null;
-            if ($page_items !== [] and $body_data_section !== 'tags') {
-                $selection = array_slice($page_items, $page_start, $page_nb_image_page);
-                $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, is_numeric(\Piwigo\Config\Config::contentTagCloudItemsNumber()) ? (int) \Piwigo\Config\Config::contentTagCloudItemsNumber() : 0, new HtmlService()));
-                $related_tags = [];
-                foreach ($tags as $tag) {
-                    $related_tags[] =
-                    array_merge(
-                        $tag,
-                        [
-                            'URL' => $urlService->makeIndexUrl([
-                                'tags' => [$tag],
-                            ]),
+                            'DISPLAY' => Lang::t($params->type),
+                            'URL' => $url . $params->type,
+                            'SELECTED' => $params->type === $selected_type,
                         ]
                     );
                 }
+            }
+        }
 
-                $template->assign(
+        // slideshow
+        // execute after init thumbs in order to have all picture
+        // informations
+        $slideshow_url_present = is_string($slideshow_url) && $slideshow_url !== '' && $slideshow_url !== '0';
+        if ($slideshow_url_present) {
+            if (isset($_GET['slideshow'])) {
+                $redirectService->redirect($slideshow_url);
+            } elseif (\Piwigo\Config\Config::indexSlideShowIcon()) {
+                $template->assign('U_SLIDESHOW', $slideshow_url);
+            }
+        }
+
+        // We want all pages that display thumbnails, except on the
+        // tags page
+        // Fill related tags action
+        $body_data_section = \Piwigo\Core\PageState::current()->bodyData['section'] ?? null;
+        if ($page_items !== [] and $body_data_section !== 'tags') {
+            $selection = array_slice($page_items, $page_start, $page_nb_image_page);
+            $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, is_numeric(\Piwigo\Config\Config::contentTagCloudItemsNumber()) ? (int) \Piwigo\Config\Config::contentTagCloudItemsNumber() : 0, new HtmlService()));
+            $related_tags = [];
+            foreach ($tags as $tag) {
+                $related_tags[] =
+                array_merge(
+                    $tag,
                     [
-                        'RELATED_TAGS_ACTION' => $related_tags !== [],
-                        'RELATED_TAGS' => $related_tags,
+                        'URL' => $urlService->makeIndexUrl([
+                            'tags' => [$tag],
+                        ]),
                     ]
                 );
             }
 
-            // ---------------------------------------------------------- end
-            new \Piwigo\Page\PageHeaderRenderer()
-                ->render($title);
-            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_index');
-            new HtmlService()
-                ->flushPageMessages();
-            $template->parse_index_buttons();
-            $template->pparse('index');
+            $template->assign(
+                [
+                    'RELATED_TAGS_ACTION' => $related_tags !== [],
+                    'RELATED_TAGS' => $related_tags,
+                ]
+            );
+        }
 
-            // ------------------------------------------------ log informations
-            new HistoryService(new HistoryRepository($conn), $configService)
-                ->logVisit(
-                    section: $section_context->section,
-                    category: $section_context->category,
-                    tagIds: $section_context->tagIds,
-                    searchId: $resolved_search_id,
-                );
-            \Piwigo\Bootstrap\PageTail::render();
-        });
+        // ---------------------------------------------------------- end
+        new \Piwigo\Page\PageHeaderRenderer()
+            ->render($title);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_index');
+        new HtmlService()
+            ->flushPageMessages();
+        $template->parse_index_buttons();
+        $template->parse('index', false);
+
+        // ------------------------------------------------ log informations
+        new HistoryService(new HistoryRepository($conn), $configService)
+            ->logVisit(
+                section: $section_context->section,
+                category: $section_context->category,
+                tagIds: $section_context->tagIds,
+                searchId: $resolved_search_id,
+            );
+        $body = \Piwigo\Bootstrap\PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

@@ -3,13 +3,14 @@
 declare(strict_types=1);
 
 // Readiness: can we reach the configured DB. Extend once P11 adds Redis to
-// the dependency graph. Deliberately doesn't go through \Piwigo\Db\MysqliDb::connect()
-// — that wrapper assumes the full request bootstrap
-// ($page['count_queries'], $conf['show_queries'],
-// \Piwigo\Db\MysqliDb::myError() output), which doesn't belong in a probe response. Reuses only
-// the same config-resolution path common.inc.php uses, so this reflects
-// whatever DB the real app would connect to (local/config/config.inc.php
-// for classic installs, PIWIGO_DB_* env vars for container/CI runs).
+// the dependency graph. Deliberately doesn't go through
+// \Piwigo\Db\DbConnection::build() — that helper assumes the full request
+// bootstrap (Config::, the DI container, PageState's query-count/
+// show_queries logging), which doesn't belong in a probe response. Reuses
+// only the same config-resolution path common.inc.php uses, so this
+// reflects whatever DB the real app would connect to
+// (local/config/config.inc.php for classic installs, PIWIGO_DB_* env
+// vars for container/CI runs).
 
 define('PHPWG_ROOT_PATH', './');
 

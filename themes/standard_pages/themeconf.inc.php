@@ -2,10 +2,6 @@
 
 declare(strict_types=1);
 
-// Bootstrap global, set by include/common.inc.php.
-/** @var array<string, mixed> $page */
-global $page;
-
 $themeconf = [
     'name' => 'standard_pages',
     'parent' => 'default',
@@ -19,7 +15,10 @@ $themeconf = [
 $theme_template_vars = [
     'STD_PGS_SELECTED_SKIN' => \Piwigo\Config\Config::all()['standard_pages_selected_skin'] ?? 'default',
     'STD_PGS_SELECTED_LOGO' => \Piwigo\Config\Config::all()['standard_pages_selected_logo'] ?? 'piwigo_logo',
-    'GALLERY_TITLE' => $page['gallery_title'] ?? \Piwigo\Config\Config::galleryTitle(),
+    // Former `$page['gallery_title'] ?? Config::galleryTitle()` -- nothing
+    // writes $page['gallery_title'] anywhere anymore (confirmed via a
+    // repo-wide grep), so the fallback always won in practice already.
+    'GALLERY_TITLE' => \Piwigo\Config\Config::galleryTitle(),
 ];
 
 // Send custom logo path if custom_logo is the selected option

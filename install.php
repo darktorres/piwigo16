@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 // P23 sub-batch 8f-6: thin bootstrap shell (matching admin.php's
 // established shape). All former top-level orchestration lives in
-// Piwigo\Admin\Install\InstallWizard; this file keeps only what MUST run
-// at real top-level scope (the config includes write bare globals) or is
-// forbidden inside src/Piwigo by Arch rule SEC-60 (every define()).
+// Piwigo\Admin\Install\InstallWizard; this file keeps only what's
+// forbidden inside src/Piwigo by Arch rule SEC-60 (every define()) or
+// must run before InstallWizard is constructed (the db_prefix override).
 //
 // The former magic-quotes block (a conditional install_sanitize_mysql_kv()
 // free function) was deleted outright: get_magic_quotes_gpc() was removed
@@ -73,13 +73,14 @@ if (isset($_POST['install'])) {
 // prefix.
 Config::override('db_prefix', $prefixeTable);
 
-include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
-@include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
+// PWG_LOCAL_DIR is a real dependency of code reached later (InstallWizard
+// -> LegacyFileConf::read()'s local_dir_site check, DbPatch/VersionUpgrade
+// classes during a real upgrade-from-install flow) -- unlike the former
+// config_default.inc.php/local/config/config.inc.php includes that used to
+// sit here, which built a bare $conf array nothing in this file (or
+// InstallWizard, which reads its own local/config/config.inc.php
+// independently) ever read.
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
-
-// Bootstrap global, set by include/config_default.inc.php.
-/** @var array<string, mixed> $conf */
-global $conf;
 
 // P23 sub-batch 8f-5: the former include/functions_session.inc.php include
 // became Piwigo\Bootstrap\SessionBootstrap::register() (same internal

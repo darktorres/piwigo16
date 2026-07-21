@@ -47,12 +47,10 @@ include PHPWG_ROOT_PATH . 'include/env.inc.php';
 // env var.
 \Piwigo\Bootstrap\InstallBootstrap::boot($paths);
 
-// Bootstrap globals, set by include/config_default.inc.php and database.inc.php.
 /**
  * @var array<string, mixed> $conf
  * @var string $prefixeTable
  */
-global $conf, $prefixeTable;
 
 include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
 @include PHPWG_ROOT_PATH . 'local/config/config.inc.php';

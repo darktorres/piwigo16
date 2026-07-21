@@ -53,12 +53,12 @@ $mysqli = new mysqli('localhost', $option['db_user'], $option['db_password']);
 // Check if database name is set otherwise we use a random name.
 // Then we create the database.
 
-$option['db_name'] = create_database($option);
+$option['db_name'] = create_database($option, $mysqli);
 
 install_piwigo($option);
 $pwg_token = test_log_user($option, $cookies);
 create_album($option, $cookies);
-add_picture($option, $cookies, $pwg_token);
+add_picture($option, $cookies, $pwg_token, $mysqli);
 
 // +-----------------------+
 // | Create a new database |
@@ -67,11 +67,8 @@ add_picture($option, $cookies, $pwg_token);
 /**
  * @param array<string, mixed> $option
  */
-function create_database(array $option): string
+function create_database(array $option, \mysqli $mysqli): string
 {
-    /** @var mysqli $mysqli */
-    global $mysqli;
-
     $db_name = $option['db_name'] ?? null;
     if (! is_string($db_name) || $db_name === '') {
         $db_name = uniqid();
@@ -293,11 +290,8 @@ function create_album(array $option, string $cookies): void
 /**
  * @param array<string, mixed> $option
  */
-function add_picture(array $option, string $cookies, mixed $pwg_token): void
+function add_picture(array $option, string $cookies, mixed $pwg_token, \mysqli $mysqli): void
 {
-    /** @var mysqli $mysqli */
-    global $mysqli;
-
     $url = $option['url'];
     if (! is_string($url)) {
         throw new Exception('add_picture(): option url must be a string');

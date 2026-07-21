@@ -17,6 +17,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
+use Piwigo\Users\CurrentUser;
 
 // Unlike this file's own former "never requires vendor/autoload.php,
 // relies entirely on common.inc.php's own include/env.inc.php" shape:
@@ -34,12 +35,6 @@ $paths = Paths::fromIndex(__FILE__);
 define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
-// Bootstrap global, set by include/common.inc.php.
-/**
- * @var array<string, mixed>
- */
-global $user;
-
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
@@ -51,8 +46,12 @@ global $user;
 
 // top_number/nb_image_page are DB-backed smallint columns (default 15);
 // see include/config_default.inc.php and install/piwigo_structure-mysql.sql.
+// nb_image_page has exactly this one reader repo-wide, under User's own
+// documented promotion bar for a named property -- read via
+// rawAttributes, same as every other low-frequency legacy $user key.
 $top_number = Config::topNumber();
-$nb_image_page = is_numeric($user['nb_image_page'] ?? null) ? (int) $user['nb_image_page'] : 15;
+$rawNbImagePage = CurrentUser::get()->rawAttributes['nb_image_page'] ?? null;
+$nb_image_page = is_numeric($rawNbImagePage) ? (int) $rawNbImagePage : 15;
 
 $conn = \Piwigo\Db\DbConnection::build();
 

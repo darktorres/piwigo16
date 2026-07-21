@@ -57,12 +57,10 @@ include PHPWG_ROOT_PATH . 'include/env.inc.php';
 // env var.
 InstallBootstrap::boot($paths);
 
-// Bootstrap globals, set by include/config_default.inc.php and $config_file.
 /**
  * @var array<string, mixed> $conf
  * @var string $prefixeTable
  */
-global $conf, $prefixeTable;
 
 // load config file
 include PHPWG_ROOT_PATH . 'include/config_default.inc.php';

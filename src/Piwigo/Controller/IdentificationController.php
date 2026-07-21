@@ -28,9 +28,12 @@ use Psr\Http\Message\ServerRequestInterface;
  * functioning as before" scoping this whole phase uses elsewhere.
  *
  * Every redirect() in this file (both the "already logged in" and the
- * "successful login" paths) happens *before* any rendering starts, so both
- * stay outside the captured closure, same exit()-based-termination
- * limitation as every other controller this phase.
+ * "successful login" paths) happens *before* any rendering starts.
+ *
+ * Legacy Coupling Retirement Workstream D: converted off
+ * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
+ * pattern as AboutController -- see that class's own docblock for the
+ * accumulator mechanics this relies on.
  */
 final class IdentificationController implements ControllerInterface
 {
@@ -132,91 +135,90 @@ final class IdentificationController implements ControllerInterface
         }
 
         $urlService = $this->urlService;
-        $body = LegacyRenderCapture::capture(static function () use ($redirect_to, $errors, $urlService): void {
-            // $title is set and read entirely within this closure (passed
-            // straight into PageHeaderRenderer::render() below) -- no
-            // other file reads $GLOBALS['title']. Plain local, not global.
-            $template = \Piwigo\Template\CurrentTemplate::get();
 
-            $title = Lang::t('Identification');
-            \Piwigo\Core\PageState::current()->setBodyId('theIdentificationPage');
+        // $title is set and read entirely within this method (passed
+        // straight into PageHeaderRenderer::render() below) -- no other
+        // file reads $GLOBALS['title']. Plain local, not global.
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
-            $template->set_filenames([
-                'identification' => 'identification.tpl',
+        $title = Lang::t('Identification');
+        \Piwigo\Core\PageState::current()->setBodyId('theIdentificationPage');
+
+        $template->set_filenames([
+            'identification' => 'identification.tpl',
+        ]);
+
+        $template->assign(
+            [
+                'U_REDIRECT' => $redirect_to,
+
+                'F_LOGIN_ACTION' => $urlService->getRootUrl() . 'identification.php',
+                'authorize_remembering' => \Piwigo\Config\Config::authorizeRemembering(),
+            ]
+        );
+
+        if (! \Piwigo\Config\Config::galleryLocked() && \Piwigo\Config\Config::allowUserRegistration()) {
+            $template->assign('U_REGISTER', $urlService->getRootUrl() . 'register.php');
+        }
+
+        if (! \Piwigo\Config\Config::galleryLocked()) {
+            $template->assign('U_LOST_PASSWORD', $urlService->getRootUrl() . 'password.php');
+        }
+
+        $themeconf = $template->get_template_vars('themeconf');
+        $themeconf = is_array($themeconf) ? $themeconf : [];
+        $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
+        if (! \Piwigo\Config\Config::galleryLocked() && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on, true))) {
+            new MenubarRenderer()
+                ->render($urlService);
+        }
+
+        // Load language if cookie is set from login/register/password
+        // pages
+        $lang_cookie = $_COOKIE['lang'] ?? null;
+        if ($lang_cookie !== null and (! is_string($lang_cookie) or \Piwigo\Users\CurrentUser::get()->language !== $lang_cookie)) {
+            if (! is_string($lang_cookie)) {
+                new HtmlService()
+                    ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
+            }
+            if (! array_key_exists($lang_cookie, \Piwigo\Lang\LangService::getLanguages())) {
+                new HtmlService()
+                    ->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
+            }
+
+            \Piwigo\Users\CurrentUser::updateLanguage($lang_cookie);
+            Lang::load('common.lang', '', [
+                'language' => $lang_cookie,
             ]);
+        }
 
-            $template->assign(
-                [
-                    'U_REDIRECT' => $redirect_to,
+        $language_options = [];
+        foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
+            $language_options[$language_code] = $language_name;
+        }
 
-                    'F_LOGIN_ACTION' => $urlService->getRootUrl() . 'identification.php',
-                    'authorize_remembering' => \Piwigo\Config\Config::authorizeRemembering(),
-                ]
-            );
+        $template->assign([
+            'language_options' => $language_options,
+            'current_language' => \Piwigo\Users\CurrentUser::get()->language,
+        ]);
 
-            if (! \Piwigo\Config\Config::galleryLocked() && \Piwigo\Config\Config::allowUserRegistration()) {
-                $template->assign('U_REGISTER', $urlService->getRootUrl() . 'register.php');
-            }
+        if (str_starts_with(\Piwigo\Users\CurrentUser::get()->language, 'fr')) {
+            $help_link = 'https://upstream.example.invalid/help/fr/';
+        } else {
+            $help_link = 'https://upstream.example.invalid/help/';
+        }
 
-            if (! \Piwigo\Config\Config::galleryLocked()) {
-                $template->assign('U_LOST_PASSWORD', $urlService->getRootUrl() . 'password.php');
-            }
+        $template->assign('HELP_LINK', $help_link);
 
-            $themeconf = $template->get_template_vars('themeconf');
-            $themeconf = is_array($themeconf) ? $themeconf : [];
-            $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
-            if (! \Piwigo\Config\Config::galleryLocked() && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on, true))) {
-                new MenubarRenderer()
-                    ->render($urlService);
-            }
-
-            // Load language if cookie is set from login/register/password
-            // pages
-            $lang_cookie = $_COOKIE['lang'] ?? null;
-            if ($lang_cookie !== null and (! is_string($lang_cookie) or \Piwigo\Users\CurrentUser::get()->language !== $lang_cookie)) {
-                if (! is_string($lang_cookie)) {
-                    new HtmlService()
-                        ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
-                }
-                if (! array_key_exists($lang_cookie, \Piwigo\Lang\LangService::getLanguages())) {
-                    new HtmlService()
-                        ->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
-                }
-
-                \Piwigo\Users\CurrentUser::updateLanguage($lang_cookie);
-                Lang::load('common.lang', '', [
-                    'language' => $lang_cookie,
-                ]);
-            }
-
-            $language_options = [];
-            foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
-                $language_options[$language_code] = $language_name;
-            }
-
-            $template->assign([
-                'language_options' => $language_options,
-                'current_language' => \Piwigo\Users\CurrentUser::get()->language,
-            ]);
-
-            if (str_starts_with(\Piwigo\Users\CurrentUser::get()->language, 'fr')) {
-                $help_link = 'https://upstream.example.invalid/help/fr/';
-            } else {
-                $help_link = 'https://upstream.example.invalid/help/';
-            }
-
-            $template->assign('HELP_LINK', $help_link);
-
-            new \Piwigo\Page\PageHeaderRenderer()
-                ->render($title);
-            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_identification');
-            new HtmlService()
-                ->flushPageMessages();
-            new HtmlService()
-                ->flushKeyedErrors($errors);
-            $template->pparse('identification');
-            \Piwigo\Bootstrap\PageTail::render();
-        });
+        new \Piwigo\Page\PageHeaderRenderer()
+            ->render($title);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_identification');
+        new HtmlService()
+            ->flushPageMessages();
+        new HtmlService()
+            ->flushKeyedErrors($errors);
+        $template->parse('identification', false);
+        $body = \Piwigo\Bootstrap\PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

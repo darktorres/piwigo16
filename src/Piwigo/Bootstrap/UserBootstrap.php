@@ -50,11 +50,6 @@ final class UserBootstrap
 
     public function initialize(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $user;
-
         $conn = DbConnection::build();
         $authService = new AuthService(
             new AuthRepository($conn),
@@ -75,6 +70,7 @@ final class UserBootstrap
         $guest_id_int = \Piwigo\Config\Config::guestId();
 
         // by default we start with guest
+        $user = [];
         $user['id'] = \Piwigo\Config\Config::guestId();
 
         $session_cookie_name = session_name();

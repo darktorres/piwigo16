@@ -1507,12 +1507,6 @@ parameters:
 			path: src/Piwigo/Bootstrap/RequestBootstrap.php
 
 		-
-			rawMessage: 'Parameter #2 $theme of class Piwigo\Template\Template constructor expects string, mixed given.'
-			identifier: argument.type
-			count: 1
-			path: src/Piwigo/Bootstrap/RequestBootstrap.php
-
-		-
 			rawMessage: Result of || is always false.
 			identifier: booleanOr.alwaysFalse
 			count: 1

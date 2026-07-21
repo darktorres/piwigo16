@@ -49,11 +49,15 @@ use Piwigo\Users\UserService;
  * shell define()s PHPWG_INSTALLED/PWG_CHARSET/DB_CHARSET/DB_COLLATE ->
  * performInstall()] -> render().
  *
- * The methods declare the globals the former top-level scope shared with
- * the code they call ($conf everywhere; $user in render() --
- * AuthService::logUser() and PreferencesService's methods all read/write
- * `global $user`; $template because updates/mail-era template helpers
- * historically resolve the shared instance through the global).
+ * The constructor declares `global $conf;`, the one global the former
+ * top-level scope still genuinely shares with this class (see its own
+ * docblock -- a site owner's `local/config/config.inc.php` override is
+ * only visible through the raw array, not through `Config::`'s
+ * accessors). render()'s own former `global $user;` was fully retired
+ * (Legacy Coupling Retirement Phase 8 gap-closure) once every consumer,
+ * including `AuthService::logUser()`/`PreferencesService`'s own methods,
+ * had already moved onto `CurrentUser` in earlier phases -- $user is now
+ * a plain local variable there.
  *
  * Legacy Coupling Retirement Phase 8, 8b: install.php now calls
  * InstallBootstrap::boot($paths) before this wizard is even constructed,
@@ -591,11 +595,6 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
      */
     public function render(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $user;
-
         $template = $this->template;
 
         $languages_options = [];
@@ -700,12 +699,13 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
                 $user['preferences'] = $preferences;
             }
 
-            // Legacy Coupling Retirement Track A batch A3: sync CurrentUser
-            // (dual-write alongside the still-live global $user, matching
-            // RequestBootstrap's own sync points) before PreferencesService::
-            // save() reads it -- this install-time $user is a fresh
-            // buildUser(1, false) result, never routed through
-            // RequestBootstrap/UserBootstrap's own sync calls.
+            // Legacy Coupling Retirement Phase 8 gap-closure: sync CurrentUser
+            // before PreferencesService::save() reads it -- this install-time
+            // $user is a fresh buildUser(1, false) result, never routed
+            // through RequestBootstrap/UserBootstrap's own sync calls. (The
+            // raw global $user bridge this comment used to reference was
+            // fully retired once every consumer -- including this one --
+            // moved onto CurrentUser.)
             \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
 
             new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository($conn))

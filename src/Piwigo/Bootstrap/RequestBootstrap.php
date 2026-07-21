@@ -41,7 +41,6 @@ use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
@@ -205,11 +204,6 @@ final class RequestBootstrap
      */
     public static function connect(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $user;
-
         // P23 sub-batch 8g-6: the dynamic include of include/dblayer/
         // functions_<dblayer>.inc.php is gone -- the file's 45 facades died
         // with the frozen install/db scripts and its top-level define()s
@@ -347,39 +341,16 @@ final class RequestBootstrap
                 ->emptyLounge();
         }
 
-        // Piwigo\Bootstrap\UserBootstrap::initialize() sets these by calling
-        // build_user()/AuthService::autoLogin()/auth_key_login(), the latter
-        // mutating the $user global via its own `global` declaration and
-        // PageState::current()'s authKeyInvalid/notifyApiKeyExpiration
-        // (Legacy Coupling Retirement Track A batch A5.2i) -- $user's keys
-        // are always overwritten before use in every real path; PageState's
-        // own typed defaults (false/null) already cover the "no auth key
-        // presented" case, so no explicit reset is needed here.
-        $user['id'] = \Piwigo\Config\Config::guestId();
-        $user['email'] = null;
-        $user['theme'] = '';
-
+        // Piwigo\Bootstrap\UserBootstrap::initialize() resolves the real
+        // per-request user (build_user()/AuthService::autoLogin()/
+        // auth_key_login()) and calls CurrentUser::set() itself -- Legacy
+        // Coupling Retirement Phase 8 gap-closure retired the former
+        // `global $user` dual-write bridge this method used to pre-seed
+        // and re-sync around this call (Track A batch A3 kept it live
+        // "until every consumer is retargeted off the raw global";
+        // Bucket C's own consumer-side work, 8h/8i, was the last one).
         new UserBootstrap(new RedirectService(), new UrlService(new HtmlService()))
             ->initialize();
-
-        // The original file followed this call with a get_defined_vars()
-        // based re-read of $user/$page -- pure PHPStan narrowing
-        // scaffolding (a self-assignment at runtime), dropped in this port:
-        // inside a method the `global` declaration above already carries
-        // array<string, mixed>, which is all the old dance re-established.
-        // ($page itself is gone from this method as of batch A5.2i --
-        // auth_key_invalid/notify_api_key_expiration moved to PageState.)
-
-        // Legacy Coupling Retirement Track A batch A3: CurrentUser is the
-        // real target every retargeted consumer reads from now; `global
-        // $user` stays live alongside it (dual-write) until every consumer
-        // is retargeted off the raw global, matching CurrentTemplate's own
-        // migration shape (Track A batch A1). Synced here (real
-        // id/status/etc. from UserBootstrap::initialize()'s build_user()
-        // call, just above) AND again in finalize() below, since the
-        // guest's localized username is only known once the language is
-        // loaded -- not a redundant call, a second real mutation point.
-        CurrentUser::set(User::fromUserArray($user));
     }
 
     /**
@@ -406,11 +377,6 @@ final class RequestBootstrap
      */
     public static function finalize(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $user;
-
         // Shared for every repository/service constructed for the rest of
         // this method -- same "one Connection per method, not per
         // repository" reasoning as connect() above.
@@ -440,13 +406,13 @@ final class RequestBootstrap
         // only now we can set the localized username of the guest user (and not in
         // UserBootstrap::initialize())
         if (\Piwigo\Auth\AccessControl::isAGuest()) {
-            $user['username'] = Lang::t('guest');
-            // Second CurrentUser sync point -- see connect()'s own comment.
-            // isAGuest() itself already reads CurrentUser (synced there with
-            // the pre-localization username), so only the localized-username
-            // case needs a second sync; the non-guest path never mutates
-            // $user again after connect()'s sync.
-            CurrentUser::set(User::fromUserArray($user));
+            // Second CurrentUser sync point (the first is inside
+            // UserBootstrap::initialize()) -- isAGuest() itself already
+            // reads CurrentUser (synced there with the pre-localization
+            // username), so only the localized-username case needs a
+            // second sync; the non-guest path never mutates CurrentUser
+            // again after initialize()'s own sync.
+            CurrentUser::set(CurrentUser::get()->withUsername(Lang::t('guest')));
         }
 
         $pageState = \Piwigo\Core\PageState::current();
@@ -463,14 +429,8 @@ final class RequestBootstrap
         // check if we need to notified user about api_key expiration
         $notify_api_key_expiration = $pageState->notifyApiKeyExpiration;
         if ($notify_api_key_expiration !== null) {
-            // build_user() always populates 'username'/'email' from the database (see
-            // getuserdata()), so these are real strings on every path that reaches
-            // here (an auth key was just validated); the is_string() checks are a
-            // defensive narrowing, not expected to ever fall back.
-            $notify_username = $user['username'];
-            $notify_username = is_string($notify_username) ? $notify_username : '';
-            $notify_email = $user['email'];
-            $notify_email = is_string($notify_email) ? $notify_email : '';
+            $notify_username = CurrentUser::get()->username;
+            $notify_email = CurrentUser::get()->email;
             $apiKeyRepo = new \Piwigo\Auth\ApiKeyRepository($conn);
             $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new UrlService(new HtmlService()))
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
@@ -478,10 +438,9 @@ final class RequestBootstrap
             if ($is_mail_send) {
                 $notify_dbnow = $notify_api_key_expiration['dbnow'];
                 $notify_auth_key = $notify_api_key_expiration['auth_key'];
-                $notify_user_id = $user['id'];
                 $apiKeyRepo->updateLastNotifiedOn(
                     is_string($notify_auth_key) ? $notify_auth_key : '',
-                    is_numeric($notify_user_id) ? (int) $notify_user_id : 0,
+                    CurrentUser::get()->id,
                     is_string($notify_dbnow) ? $notify_dbnow : '',
                 );
             }
@@ -492,15 +451,16 @@ final class RequestBootstrap
         // template instance
         if (defined('IN_ADMIN') and IN_ADMIN) {// Admin template
             // getParam() has no return type declaration (its own value
-            // comes from the equally-untyped global $user['preferences'][$param]),
-            // so its return is inferred as mixed; narrow to the same 'clear'
-            // fallback already passed as the default value.
+            // comes from CurrentUser::get()->preferences[$param], an
+            // untyped array<string, mixed>), so its return is inferred as
+            // mixed; narrow to the same 'clear' fallback already passed as
+            // the default value.
             $admin_theme = new \Piwigo\Users\PreferencesService(new UserRepository($conn))
                 ->getParam('admin_theme', 'clear');
             $admin_theme = is_string($admin_theme) ? $admin_theme : 'clear';
             $template = new Template(PHPWG_ROOT_PATH . 'admin/themes', $admin_theme);
         } else { // Classic template
-            $theme = $user['theme'];
+            $theme = CurrentUser::get()->theme;
             if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'ws' and \Piwigo\Core\DeviceHelper::mobileTheme()) {
                 $theme = \Piwigo\Config\Config::mobilTheme();
             }
@@ -533,8 +493,8 @@ final class RequestBootstrap
                 ->render();
         }
 
-        $user_internal_status = $user['internal_status'] ?? null;
-        if (is_array($user_internal_status) && ($user_internal_status['guest_must_be_guest'] ?? false) === true) {
+        $user_internal_status = CurrentUser::get()->internalStatus;
+        if (($user_internal_status['guest_must_be_guest'] ?? false) === true) {
             $pageState->addHeaderMessage(Lang::t('Bad status for user "guest", using default status. Please notify the webmaster.'));
         }
 

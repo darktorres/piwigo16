@@ -19,13 +19,16 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Replaces notification.php -- mints a new per-user feed subscription and
- * shows its URL. check_status() stays outside the captured closure, same
- * exit()-based-termination limitation as every other controller this
- * phase. The legacy file's own top-level find_available_feed_id() becomes
- * a private method here instead of a free function -- only this
+ * shows its URL. The legacy file's own top-level find_available_feed_id()
+ * becomes a private method here instead of a free function -- only this
  * controller ever called it, and a bare global function risks the same
  * name-collision class of bug P21's Extensions batch found (two admin
  * pages both declaring `function cmp()`).
+ *
+ * Legacy Coupling Retirement Workstream D: converted off
+ * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
+ * pattern as AboutController -- see that class's own docblock for the
+ * accumulator mechanics this relies on.
  */
 final class NotificationController implements ControllerInterface
 {
@@ -44,58 +47,56 @@ final class NotificationController implements ControllerInterface
         $feedId = $this->findAvailableFeedId($feedRepo);
         $urlService = $this->urlService;
 
-        $body = LegacyRenderCapture::capture(static function () use ($feedRepo, $feedId, $urlService): void {
-            // $title is set and read entirely within this closure (passed
-            // straight into PageHeaderRenderer::render() below) -- no
-            // other file reads $GLOBALS['title']. Plain local, not global.
-            $template = \Piwigo\Template\CurrentTemplate::get();
+        // $title is set and read entirely within this method (passed
+        // straight into PageHeaderRenderer::render() below) -- no other
+        // file reads $GLOBALS['title']. Plain local, not global.
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
-            $user_id = \Piwigo\Users\CurrentUser::get()->id;
+        $user_id = \Piwigo\Users\CurrentUser::get()->id;
 
-            $feedRepo->insert($feedId, $user_id);
+        $feedRepo->insert($feedId, $user_id);
 
-            $feed_url = PHPWG_ROOT_PATH . 'feed.php';
-            if (\Piwigo\Auth\AccessControl::isAGuest()) {
-                $feed_image_only_url = $feed_url;
-                $feed_url .= '?feed=' . $feedId;
-            } else {
-                $feed_url .= '?feed=' . $feedId;
-                $feed_image_only_url = $feed_url . '&amp;image_only';
-            }
+        $feed_url = PHPWG_ROOT_PATH . 'feed.php';
+        if (\Piwigo\Auth\AccessControl::isAGuest()) {
+            $feed_image_only_url = $feed_url;
+            $feed_url .= '?feed=' . $feedId;
+        } else {
+            $feed_url .= '?feed=' . $feedId;
+            $feed_image_only_url = $feed_url . '&amp;image_only';
+        }
 
-            $title = Lang::t('Notification');
-            \Piwigo\Core\PageState::current()->setBodyId('theNotificationPage');
-            \Piwigo\Core\PageState::current()->setMetaRobots([
-                'noindex' => 1,
-                'nofollow' => 1,
-            ]);
+        $title = Lang::t('Notification');
+        \Piwigo\Core\PageState::current()->setBodyId('theNotificationPage');
+        \Piwigo\Core\PageState::current()->setMetaRobots([
+            'noindex' => 1,
+            'nofollow' => 1,
+        ]);
 
-            $template->set_filenames([
-                'notification' => 'notification.tpl',
-            ]);
+        $template->set_filenames([
+            'notification' => 'notification.tpl',
+        ]);
 
-            $template->assign(
-                [
-                    'U_FEED' => $feed_url,
-                    'U_FEED_IMAGE_ONLY' => $feed_image_only_url,
-                ]
-            );
+        $template->assign(
+            [
+                'U_FEED' => $feed_url,
+                'U_FEED_IMAGE_ONLY' => $feed_image_only_url,
+            ]
+        );
 
-            $themeconf = $template->get_template_vars('themeconf');
-            $themeconf = is_array($themeconf) ? $themeconf : [];
-            if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theNotificationPage', $themeconf['hide_menu_on'], true)) {
-                new MenubarRenderer()
-                    ->render($urlService);
-            }
+        $themeconf = $template->get_template_vars('themeconf');
+        $themeconf = is_array($themeconf) ? $themeconf : [];
+        if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theNotificationPage', $themeconf['hide_menu_on'], true)) {
+            new MenubarRenderer()
+                ->render($urlService);
+        }
 
-            new \Piwigo\Page\PageHeaderRenderer()
-                ->render($title);
-            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_notification');
-            new HtmlService()
-                ->flushPageMessages();
-            $template->pparse('notification');
-            \Piwigo\Bootstrap\PageTail::render();
-        });
+        new \Piwigo\Page\PageHeaderRenderer()
+            ->render($title);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_notification');
+        new HtmlService()
+            ->flushPageMessages();
+        $template->parse('notification', false);
+        $body = \Piwigo\Bootstrap\PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

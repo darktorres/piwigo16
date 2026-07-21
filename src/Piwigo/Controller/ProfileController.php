@@ -32,10 +32,12 @@ use Psr\Http\Message\ServerRequestInterface;
  * `Piwigo\Profile` namespace.
  *
  * check_pwg_token() and ProfileFormHandler::saveFromPost()'s own
- * redirect() both happen before any rendering starts, so all of the
- * "process form" business logic stays outside the captured closure --
- * same exit()-based-termination limitation as every other controller
- * this phase.
+ * redirect() both happen before any rendering starts.
+ *
+ * Legacy Coupling Retirement Workstream D: converted off
+ * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
+ * pattern as AboutController -- see that class's own docblock for the
+ * accumulator mechanics this relies on.
  */
 final class ProfileController implements ControllerInterface
 {
@@ -107,82 +109,79 @@ SELECT ' . implode(',', $fields) . '
         $template->assign_var_from_handle('PROFILE_CONTENT', 'profile_content');
 
         $urlService = $this->urlService;
-        $body = LegacyRenderCapture::capture(static function () use ($urlService): void {
-            // $title is set and read entirely within this closure (passed
-            // straight into PageHeaderRenderer::render() below) -- no
-            // other file reads $GLOBALS['title']. Plain local, not global.
-            $template = \Piwigo\Template\CurrentTemplate::get();
 
-            $title = Lang::t('Your Gallery Customization');
+        // $title is set and read entirely within this method (passed
+        // straight into PageHeaderRenderer::render() below) -- no other
+        // file reads $GLOBALS['title']. Plain local, not global.
+        $title = Lang::t('Your Gallery Customization');
 
-            // include menubar
-            $themeconf = $template->get_template_vars('themeconf');
-            $themeconf = is_array($themeconf) ? $themeconf : [];
-            $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
-            if (! is_array($hide_menu_on) or ! in_array('theProfilePage', $hide_menu_on, true)) {
-                if (($themeconf['id'] ?? null) !== 'standard_pages') {
-                    new MenubarRenderer()
-                        ->render($urlService);
-                }
+        // include menubar
+        $themeconf = $template->get_template_vars('themeconf');
+        $themeconf = is_array($themeconf) ? $themeconf : [];
+        $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
+        if (! is_array($hide_menu_on) or ! in_array('theProfilePage', $hide_menu_on, true)) {
+            if (($themeconf['id'] ?? null) !== 'standard_pages') {
+                new MenubarRenderer()
+                    ->render($urlService);
+            }
+        }
+
+        new \Piwigo\Page\PageHeaderRenderer()
+            ->render($title);
+
+        // Load language if cookie is set from login/register/password pages
+        $cookie_lang = $_COOKIE['lang'] ?? null;
+        if ($cookie_lang !== null and (! is_string($cookie_lang) or \Piwigo\Users\CurrentUser::get()->language !== $cookie_lang)) {
+            if (! is_string($cookie_lang)) {
+                new HtmlService()
+                    ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
+            }
+            if (! array_key_exists($cookie_lang, \Piwigo\Lang\LangService::getLanguages())) {
+                new HtmlService()
+                    ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
 
-            new \Piwigo\Page\PageHeaderRenderer()
-                ->render($title);
-
-            // Load language if cookie is set from login/register/password pages
-            $cookie_lang = $_COOKIE['lang'] ?? null;
-            if ($cookie_lang !== null and (! is_string($cookie_lang) or \Piwigo\Users\CurrentUser::get()->language !== $cookie_lang)) {
-                if (! is_string($cookie_lang)) {
-                    new HtmlService()
-                        ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
-                }
-                if (! array_key_exists($cookie_lang, \Piwigo\Lang\LangService::getLanguages())) {
-                    new HtmlService()
-                        ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
-                }
-
-                \Piwigo\Users\CurrentUser::updateLanguage($cookie_lang);
-                new BatchWriter(DbConnection::build())->singleUpdate(
-                    Tables::userInfos(),
-                    [
-                        'language' => $cookie_lang,
-                    ],
-                    [
-                        'user_id' => \Piwigo\Users\CurrentUser::get()->id,
-                    ]
-                );
-
-                Lang::load('common.lang', '', [
+            \Piwigo\Users\CurrentUser::updateLanguage($cookie_lang);
+            new BatchWriter(DbConnection::build())->singleUpdate(
+                Tables::userInfos(),
+                [
                     'language' => $cookie_lang,
-                ]);
-            }
+                ],
+                [
+                    'user_id' => \Piwigo\Users\CurrentUser::get()->id,
+                ]
+            );
 
-            // Get list of languages
-            $language_options = [];
-            foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
-                $language_options[$language_code] = $language_name;
-            }
-
-            $template->assign([
-                'language_options' => $language_options,
-                'language_selection' => \Piwigo\Users\CurrentUser::get()->language,
+            Lang::load('common.lang', '', [
+                'language' => $cookie_lang,
             ]);
+        }
 
-            // Get link to doc
-            if (str_starts_with(\Piwigo\Users\CurrentUser::get()->language, 'fr')) {
-                $help_link = 'https://upstream.example.invalid/help/fr/';
-            } else {
-                $help_link = 'https://upstream.example.invalid/help/';
-            }
+        // Get list of languages
+        $language_options = [];
+        foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
+            $language_options[$language_code] = $language_name;
+        }
 
-            $template->assign('HELP_LINK', $help_link);
+        $template->assign([
+            'language_options' => $language_options,
+            'language_selection' => \Piwigo\Users\CurrentUser::get()->language,
+        ]);
 
-            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_profile');
-            new HtmlService()
-                ->flushPageMessages();
-            $template->pparse('profile');
-            \Piwigo\Bootstrap\PageTail::render();
-        });
+        // Get link to doc
+        if (str_starts_with(\Piwigo\Users\CurrentUser::get()->language, 'fr')) {
+            $help_link = 'https://upstream.example.invalid/help/fr/';
+        } else {
+            $help_link = 'https://upstream.example.invalid/help/';
+        }
+
+        $template->assign('HELP_LINK', $help_link);
+
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_profile');
+        new HtmlService()
+            ->flushPageMessages();
+        $template->parse('profile', false);
+        $body = \Piwigo\Bootstrap\PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

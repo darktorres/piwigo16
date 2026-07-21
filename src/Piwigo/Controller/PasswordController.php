@@ -38,10 +38,12 @@ use Psr\Http\Message\ServerRequestInterface;
  * one file calls any of them (tools/triggers_list.php's own reference is
  * static trigger-name metadata, not a real call site).
  *
- * Every redirect() in this file happens before any rendering starts, so
- * all of the "process form"/"key and action" business logic stays outside
- * the captured closure -- same exit()-based-termination limitation as
- * every other controller this phase.
+ * Every redirect() in this file happens before any rendering starts.
+ *
+ * Legacy Coupling Retirement Workstream D: converted off
+ * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
+ * pattern as AboutController -- see that class's own docblock for the
+ * accumulator mechanics this relies on.
  */
 final class PasswordController implements ControllerInterface
 {
@@ -189,91 +191,88 @@ final class PasswordController implements ControllerInterface
         $action = $this->action;
         $username = $this->username;
         $urlService = $this->urlService;
-        $body = LegacyRenderCapture::capture(static function () use ($first_login, $formErrors, $action, $username, $urlService): void {
-            // $title is set and read entirely within this closure (passed
-            // straight into PageHeaderRenderer::render() below) -- no
-            // other file reads $GLOBALS['title']. Plain local, not global.
-            $template = \Piwigo\Template\CurrentTemplate::get();
 
-            $title = Lang::t('Password Reset');
-            if ($action === 'lost') {
-                $title = Lang::t('Forgot your password?');
+        // $title is set and read entirely within this method (passed
+        // straight into PageHeaderRenderer::render() below) -- no other
+        // file reads $GLOBALS['title']. Plain local, not global.
+        $title = Lang::t('Password Reset');
+        if ($action === 'lost') {
+            $title = Lang::t('Forgot your password?');
 
-                if (isset($_POST['username_or_email']) and is_string($_POST['username_or_email'])) {
-                    $template->assign('username_or_email', htmlspecialchars(stripslashes($_POST['username_or_email'])));
-                }
-            } elseif ($action === 'reset' and $first_login) {
-                $title = Lang::t('Welcome');
-                $template->assign('is_first_login', true);
+            if (isset($_POST['username_or_email']) and is_string($_POST['username_or_email'])) {
+                $template->assign('username_or_email', htmlspecialchars(stripslashes($_POST['username_or_email'])));
+            }
+        } elseif ($action === 'reset' and $first_login) {
+            $title = Lang::t('Welcome');
+            $template->assign('is_first_login', true);
+        }
+
+        \Piwigo\Core\PageState::current()->setBodyId('thePasswordPage');
+
+        $template->set_filenames([
+            'password' => 'password.tpl',
+        ]);
+        $template->assign(
+            [
+                'title' => $title,
+                'form_action' => $urlService->getRootUrl() . 'password.php',
+                'action' => $action,
+                'username' => $username ?? \Piwigo\Users\CurrentUser::get()->username,
+                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                    ->getToken(),
+            ]
+        );
+
+        $themeconf = $template->get_template_vars('themeconf');
+        $themeconf = is_array($themeconf) ? $themeconf : [];
+        $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
+        if (! is_array($hide_menu_on) or ! in_array('thePasswordPage', $hide_menu_on, true)) {
+            new MenubarRenderer()
+                ->render($urlService);
+        }
+
+        // Load language if cookie is set from login/register/password
+        // pages
+        $cookie_lang = $_COOKIE['lang'] ?? null;
+        if (is_string($cookie_lang) and \Piwigo\Users\CurrentUser::get()->language !== $cookie_lang) {
+            if (! array_key_exists($cookie_lang, \Piwigo\Lang\LangService::getLanguages())) {
+                new HtmlService()
+                    ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
 
-            \Piwigo\Core\PageState::current()->setBodyId('thePasswordPage');
-
-            $template->set_filenames([
-                'password' => 'password.tpl',
+            \Piwigo\Users\CurrentUser::updateLanguage($cookie_lang);
+            Lang::load('common.lang', '', [
+                'language' => $cookie_lang,
             ]);
-            $template->assign(
-                [
-                    'title' => $title,
-                    'form_action' => $urlService->getRootUrl() . 'password.php',
-                    'action' => $action,
-                    'username' => $username ?? \Piwigo\Users\CurrentUser::get()->username,
-                    'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
-                        ->getToken(),
-                ]
-            );
+        }
 
-            $themeconf = $template->get_template_vars('themeconf');
-            $themeconf = is_array($themeconf) ? $themeconf : [];
-            $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
-            if (! is_array($hide_menu_on) or ! in_array('thePasswordPage', $hide_menu_on, true)) {
-                new MenubarRenderer()
-                    ->render($urlService);
-            }
+        $language_options = [];
+        foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
+            $language_options[$language_code] = $language_name;
+        }
 
-            // Load language if cookie is set from login/register/password
-            // pages
-            $cookie_lang = $_COOKIE['lang'] ?? null;
-            if (is_string($cookie_lang) and \Piwigo\Users\CurrentUser::get()->language !== $cookie_lang) {
-                if (! array_key_exists($cookie_lang, \Piwigo\Lang\LangService::getLanguages())) {
-                    new HtmlService()
-                        ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
-                }
+        $template->assign([
+            'language_options' => $language_options,
+            'current_language' => \Piwigo\Users\CurrentUser::get()->language,
+        ]);
 
-                \Piwigo\Users\CurrentUser::updateLanguage($cookie_lang);
-                Lang::load('common.lang', '', [
-                    'language' => $cookie_lang,
-                ]);
-            }
+        if (str_starts_with(\Piwigo\Users\CurrentUser::get()->language, 'fr')) {
+            $help_link = 'https://upstream.example.invalid/help/fr/';
+        } else {
+            $help_link = 'https://upstream.example.invalid/help/';
+        }
 
-            $language_options = [];
-            foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
-                $language_options[$language_code] = $language_name;
-            }
+        $template->assign('HELP_LINK', $help_link);
 
-            $template->assign([
-                'language_options' => $language_options,
-                'current_language' => \Piwigo\Users\CurrentUser::get()->language,
-            ]);
-
-            if (str_starts_with(\Piwigo\Users\CurrentUser::get()->language, 'fr')) {
-                $help_link = 'https://upstream.example.invalid/help/fr/';
-            } else {
-                $help_link = 'https://upstream.example.invalid/help/';
-            }
-
-            $template->assign('HELP_LINK', $help_link);
-
-            new \Piwigo\Page\PageHeaderRenderer()
-                ->render($title);
-            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_password');
-            new HtmlService()
-                ->flushPageMessages();
-            new HtmlService()
-                ->flushKeyedErrors($formErrors);
-            $template->pparse('password');
-            \Piwigo\Bootstrap\PageTail::render();
-        });
+        new \Piwigo\Page\PageHeaderRenderer()
+            ->render($title);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_password');
+        new HtmlService()
+            ->flushPageMessages();
+        new HtmlService()
+            ->flushKeyedErrors($formErrors);
+        $template->parse('password', false);
+        $body = \Piwigo\Bootstrap\PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

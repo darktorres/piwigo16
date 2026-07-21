@@ -141,6 +141,15 @@ $routes = [
     'password'           => ['/password.php', false],
     'about'              => ['/about.php', false],
     'tags'               => ['/tags.php', false],
+    // notification.php mints a new per-request feed subscription ID (see
+    // NotificationController::findAvailableFeedId()) -- but the rendered
+    // .tpl (notification.tpl) only ever puts that ID inside <a href>/
+    // <link href> attribute values, never in visible text, so the
+    // rendered pixels are stable across requests despite the underlying
+    // data changing every time. No prior VR coverage existed for this
+    // page before Legacy Coupling Retirement Workstream D's
+    // NotificationController conversion; added as part of that batch.
+    'notification'       => ['/notification.php', false],
     'search'             => ['/search.php', false],
     'comments'           => ['/comments.php', false],
     'category-1'         => ['/index.php?/category/1', false],

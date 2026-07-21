@@ -55,14 +55,23 @@ ALTER TABLE ' . Tables::userCache() . ' ADD COLUMN image_access_list TEXT DEFAUL
         $conn->executeStatement($query);
 
         $query = '
-UPDATE ' . Tables::userInfos() . ' SET level=8 WHERE status="webmaster"
+UPDATE ' . Tables::userInfos() . ' SET level = :level WHERE status = :status
 ';
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'level' => 8,
+            'status' => 'webmaster',
+        ]);
 
+        // user_cache.need_update is an ENUM('true','false') column (see
+        // UserCacheRepository::markNeedUpdate()'s own real fix for the
+        // same column) -- bind the actual string, not the bareword
+        // numeric-coercion trick the original raw SQL relied on.
         $query = '
-UPDATE ' . Tables::userCache() . ' SET need_update=true
+UPDATE ' . Tables::userCache() . ' SET need_update = :needUpdate
 ';
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'needUpdate' => 'true',
+        ]);
 
         echo "\n"
         . '"' . $this->description() . '" ended'

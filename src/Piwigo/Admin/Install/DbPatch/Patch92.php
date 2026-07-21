@@ -63,8 +63,10 @@ final class Patch92 implements DbPatchInterface
         $webmasterId = $localConf['webmaster_id'] ?? 1;
 
         // set the existing photos with the webmaster_id as added_by
-        $query = 'UPDATE ' . Tables::images() . ' SET added_by = ' . (is_scalar($webmasterId) ? $webmasterId : 1) . ';';
-        $conn->executeStatement($query);
+        $query = 'UPDATE ' . Tables::images() . ' SET added_by = :addedBy;';
+        $conn->executeStatement($query, [
+            'addedBy' => is_scalar($webmasterId) ? $webmasterId : 1,
+        ]);
 
         echo "\n"
         . $this->description()

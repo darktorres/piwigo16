@@ -91,14 +91,19 @@ SELECT language, COUNT(user_id) AS count FROM ' . Tables::userInfos() . '
         $webmaster_id = is_scalar($localConf['webmaster_id'] ?? null) ? (string) $localConf['webmaster_id'] : '2';
         $query = '
 SELECT language FROM ' . Tables::userInfos() . '
-  WHERE user_id=' . $webmaster_id;
-        $rows = $conn->fetchAllAssociative($query);
+  WHERE user_id = :userId';
+        $rows = $conn->fetchAllAssociative($query, [
+            'userId' => $webmaster_id,
+        ]);
         if (count($rows) === 0) {
             $query = '
 SELECT language FROM ' . Tables::userInfos() . '
-  WHERE status="webmaster" and adviser="false"
+  WHERE status = :status and adviser = :adviser
   LIMIT 1';
-            $rows = $conn->fetchAllAssociative($query);
+            $rows = $conn->fetchAllAssociative($query, [
+                'status' => 'webmaster',
+                'adviser' => 'false',
+            ]);
         }
 
         if (isset($rows[0])) {
@@ -115,10 +120,12 @@ SELECT language FROM ' . Tables::userInfos() . '
             ->version();
         $upgrade_log .= ">>mysql_ver\t" . $mysql_version . "\n";
 
-        $query = 'SHOW TABLES LIKE "' . Config::dbPrefix() . '%"';
+        $query = 'SHOW TABLES LIKE :pattern';
         $all_tables = array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            $conn->fetchFirstColumn($query)
+            $conn->fetchFirstColumn($query, [
+                'pattern' => Config::dbPrefix() . '%',
+            ])
         );
 
         $all_tables_definition = [];
@@ -201,9 +208,12 @@ define(\'DB_COLLATE\',  \'\');'
 
         foreach ($all_langs as $old_lang => $lang_data) {
             $query = '
-  UPDATE ' . Tables::userInfos() . ' SET language="' . $lang_data['new_lang'] . '"
-    WHERE language="' . $old_lang . '"';
-            $conn->executeStatement($query);
+  UPDATE ' . Tables::userInfos() . ' SET language = :newLang
+    WHERE language = :oldLang';
+            $conn->executeStatement($query, [
+                'newLang' => $lang_data['new_lang'],
+                'oldLang' => $old_lang,
+            ]);
         }
 
         UpgradeCharset::set($pwg_charset, $db_charset);

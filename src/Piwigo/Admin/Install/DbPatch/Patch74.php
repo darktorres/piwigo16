@@ -12,10 +12,15 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
- * Former install/db/74-database.php (P23 sub-batch 8g-1).
+ * Former install/db/74-database.php (P23 sub-batch 8g-1). `blk_menubar`
+ * itself is confirmed unread anywhere in `src/Piwigo/`/`themes/` today,
+ * so `BatchWriter::singleInsert()`'s null-coercion of an empty-string
+ * value (see its own docblock) is harmless here -- nothing consumes the
+ * distinction between `''` and `NULL` for this specific dead key.
  */
 final class Patch74 implements DbPatchInterface
 {
@@ -34,10 +39,12 @@ final class Patch74 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        $query = '
-INSERT INTO ' . Tables::config() . " (param,value,comment) VALUES ('blk_menubar','','Menubar options');
-";
-        $conn->executeStatement($query);
+        $batchWriter = new BatchWriter($conn);
+        $batchWriter->singleInsert(Tables::config(), [
+            'param' => 'blk_menubar',
+            'value' => '',
+            'comment' => 'Menubar options',
+        ]);
 
         echo "\n"
         . '"' . $this->description() . '" ended'

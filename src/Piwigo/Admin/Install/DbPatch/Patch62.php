@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -34,10 +35,12 @@ final class Patch62 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        $query = '
-INSERT INTO ' . Tables::config() . " (param,value,comment) VALUES ('obligatory_user_mail_address','false','Mail address is obligatory for users');
-";
-        $conn->executeStatement($query);
+        $batchWriter = new BatchWriter($conn);
+        $batchWriter->singleInsert(Tables::config(), [
+            'param' => 'obligatory_user_mail_address',
+            'value' => 'false',
+            'comment' => 'Mail address is obligatory for users',
+        ]);
 
         echo "\n"
         . '"' . $this->description() . '" ended'

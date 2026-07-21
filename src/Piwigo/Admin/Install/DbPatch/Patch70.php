@@ -38,13 +38,20 @@ final class Patch70 implements DbPatchInterface
     public function apply(Connection $conn): void
     {
         $query = '
-replace into ' . Tables::config() . "
+replace into ' . Tables::config() . '
   (param, value, comment)
 values
-('upload_link_everytime','false','Show Upload link every time'),
-('upload_user_access'," . AccessLevel::Classic . ",'Minimal user status allowed to upload pictures')
-;";
-        $conn->executeStatement($query);
+(:param1, :value1, :comment1),
+(:param2, :value2, :comment2)
+;';
+        $conn->executeStatement($query, [
+            'param1' => 'upload_link_everytime',
+            'value1' => 'false',
+            'comment1' => 'Show Upload link every time',
+            'param2' => 'upload_user_access',
+            'value2' => AccessLevel::Classic,
+            'comment2' => 'Minimal user status allowed to upload pictures',
+        ]);
 
         echo "\n"
         . '"' . $this->description() . '" ended'

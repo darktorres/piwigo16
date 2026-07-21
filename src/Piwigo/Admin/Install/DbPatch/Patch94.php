@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\FilesystemHelper;
@@ -62,9 +63,11 @@ SELECT *
         $query = '
 SELECT id
   FROM ' . Tables::categories() . '
-  WHERE uploadable = \'true\'
+  WHERE uploadable = :uploadable
 ;';
-        $user_upload_conf['uploadable_categories'] = $conn->fetchFirstColumn($query);
+        $user_upload_conf['uploadable_categories'] = $conn->fetchFirstColumn($query, [
+            'uploadable' => 'true',
+        ]);
 
         // save configuration for a future use by the Community plugin
         $localConf = LegacyFileConf::read();
@@ -101,9 +104,13 @@ SELECT id
         // config parameter settings : upload_user_access, upload_link_everytime
         $query = '
 DELETE FROM ' . Tables::config() . '
-  WHERE param IN (\'upload_user_access\', \'upload_link_everytime\', \'email_admin_on_picture_uploaded\')
+  WHERE param IN (:params)
 ;';
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'params' => ['upload_user_access', 'upload_link_everytime', 'email_admin_on_picture_uploaded'],
+        ], [
+            'params' => ArrayParameterType::STRING,
+        ]);
 
         echo "\n"
         . $this->description()

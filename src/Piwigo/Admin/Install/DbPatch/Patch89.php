@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -34,13 +35,12 @@ final class Patch89 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        $query = '
-INSERT INTO ' . Tables::config() . ' (param,value,comment)
-  VALUES
-    ("allow_user_customization","true","allow users to customize their gallery?")
-;';
-
-        $conn->executeStatement($query);
+        $batchWriter = new BatchWriter($conn);
+        $batchWriter->singleInsert(Tables::config(), [
+            'param' => 'allow_user_customization',
+            'value' => 'true',
+            'comment' => 'allow users to customize their gallery?',
+        ]);
 
         echo "\n"
         . $this->description()

@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -34,18 +35,20 @@ final class Patch88 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        $query = '
-INSERT INTO ' . Tables::config() . ' (param,value,comment)
-  VALUES
-    ("picture_download_icon","true","Display download icon on picture page"),
-    (
-      "picture_informations",
-      "a:11:{s:6:\"author\";b:1;s:10:\"created_on\";b:1;s:9:\"posted_on\";b:1;s:10:\"dimensions\";b:1;s:4:\"file\";b:1;s:8:\"filesize\";b:1;s:4:\"tags\";b:1;s:10:\"categories\";b:1;s:6:\"visits\";b:1;s:12:\"average_rate\";b:1;s:13:\"privacy_level\";b:1;}",
-      "Information displayed on picture page"
-    )
-;';
-
-        $conn->executeStatement($query);
+        $rows = [
+            [
+                'param' => 'picture_download_icon',
+                'value' => 'true',
+                'comment' => 'Display download icon on picture page',
+            ],
+            [
+                'param' => 'picture_informations',
+                'value' => 'a:11:{s:6:"author";b:1;s:10:"created_on";b:1;s:9:"posted_on";b:1;s:10:"dimensions";b:1;s:4:"file";b:1;s:8:"filesize";b:1;s:4:"tags";b:1;s:10:"categories";b:1;s:6:"visits";b:1;s:12:"average_rate";b:1;s:13:"privacy_level";b:1;}',
+                'comment' => 'Information displayed on picture page',
+            ],
+        ];
+        $batchWriter = new BatchWriter($conn);
+        $batchWriter->massInsert(Tables::config(), ['param', 'value', 'comment'], $rows);
 
         echo "\n"
         . $this->description()

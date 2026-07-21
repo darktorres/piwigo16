@@ -35,9 +35,11 @@ final class Patch67 implements DbPatchInterface
     public function apply(Connection $conn): void
     {
         $query = '
-delete from ' . Tables::plugins() . " where id ='dew';
-";
-        $conn->executeStatement($query);
+delete from ' . Tables::plugins() . ' where id = :id;
+';
+        $conn->executeStatement($query, [
+            'id' => 'dew',
+        ]);
 
         echo "\n"
         . '"' . $this->description() . '" ended'

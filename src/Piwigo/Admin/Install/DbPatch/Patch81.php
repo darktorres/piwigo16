@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -37,18 +38,30 @@ users can modify/delete their owns comments';
     #[\Override]
     public function apply(Connection $conn): void
     {
-        $query = '
-INSERT INTO ' . Tables::config() . ' (param,value,comment)
-  VALUES (\'user_can_delete_comment\',\'false\',
-    \'administrators can allow user delete their own comments\'),
-  (\'user_can_edit_comment\',\'false\',
-    \'administrators can allow user edit their own comments\'),
-  (\'email_admin_on_comment_edition\',\'false\',
-    \'Send an email to the administrators when a comment is modified\'),
-  (\'email_admin_on_comment_deletion\',\'false\',
-    \'Send an email to the administrators when a comment is deleted\')
-;';
-        $conn->executeStatement($query);
+        $rows = [
+            [
+                'param' => 'user_can_delete_comment',
+                'value' => 'false',
+                'comment' => 'administrators can allow user delete their own comments',
+            ],
+            [
+                'param' => 'user_can_edit_comment',
+                'value' => 'false',
+                'comment' => 'administrators can allow user edit their own comments',
+            ],
+            [
+                'param' => 'email_admin_on_comment_edition',
+                'value' => 'false',
+                'comment' => 'Send an email to the administrators when a comment is modified',
+            ],
+            [
+                'param' => 'email_admin_on_comment_deletion',
+                'value' => 'false',
+                'comment' => 'Send an email to the administrators when a comment is deleted',
+            ],
+        ];
+        $batchWriter = new BatchWriter($conn);
+        $batchWriter->massInsert(Tables::config(), ['param', 'value', 'comment'], $rows);
 
         echo "\n"
         . $this->description()

@@ -37,9 +37,12 @@ final class Patch64 implements DbPatchInterface
         $query = '
 REPLACE INTO ' . Tables::plugins() . '
   (id, state)
-  VALUES (\'c13y_upgrade\', \'active\')
+  VALUES (:id, :state)
 ;';
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'id' => 'c13y_upgrade',
+            'state' => 'active',
+        ]);
 
         echo "\n"
         . '"' . $this->description() . '" ended'

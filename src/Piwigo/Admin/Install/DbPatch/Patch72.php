@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -34,10 +35,12 @@ final class Patch72 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        $query = '
-INSERT INTO ' . Tables::config() . " (param,value,comment) VALUES ('extents_for_templates','a:0:{}','Actived template-extension(s)');
-";
-        $conn->executeStatement($query);
+        $batchWriter = new BatchWriter($conn);
+        $batchWriter->singleInsert(Tables::config(), [
+            'param' => 'extents_for_templates',
+            'value' => 'a:0:{}',
+            'comment' => 'Actived template-extension(s)',
+        ]);
 
         echo "\n"
         . '"' . $this->description() . '" ended'

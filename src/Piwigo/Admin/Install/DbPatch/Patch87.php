@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
@@ -34,23 +35,65 @@ final class Patch87 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        $query = '
-INSERT INTO ' . Tables::config() . ' (param,value,comment)
-  VALUES
-    ("menubar_filter_icon","true","Display filter icon"),
-    ("index_sort_order_input","true","Display image order selection list"),
-    ("index_flat_icon","true","Display flat icon"),
-    ("index_posted_date_icon","true","Display calendar by posted date"),
-    ("index_created_date_icon","true","Display calendar by creation date icon"),
-    ("index_slideshow_icon","true","Display slideshow icon"),
-    ("picture_metadata_icon","true","Display metadata icon on picture page"),
-    ("picture_slideshow_icon","true","Display slideshow icon on picture page"),
-    ("picture_favorite_icon","true","Display favorite icon on picture page"),
-    ("picture_navigation_icons","true","Display navigation icons on picture page"),
-    ("picture_navigation_thumb","true","Display navigation thumbnails on picture page")
-;';
-
-        $conn->executeStatement($query);
+        $rows = [
+            [
+                'param' => 'menubar_filter_icon',
+                'value' => 'true',
+                'comment' => 'Display filter icon',
+            ],
+            [
+                'param' => 'index_sort_order_input',
+                'value' => 'true',
+                'comment' => 'Display image order selection list',
+            ],
+            [
+                'param' => 'index_flat_icon',
+                'value' => 'true',
+                'comment' => 'Display flat icon',
+            ],
+            [
+                'param' => 'index_posted_date_icon',
+                'value' => 'true',
+                'comment' => 'Display calendar by posted date',
+            ],
+            [
+                'param' => 'index_created_date_icon',
+                'value' => 'true',
+                'comment' => 'Display calendar by creation date icon',
+            ],
+            [
+                'param' => 'index_slideshow_icon',
+                'value' => 'true',
+                'comment' => 'Display slideshow icon',
+            ],
+            [
+                'param' => 'picture_metadata_icon',
+                'value' => 'true',
+                'comment' => 'Display metadata icon on picture page',
+            ],
+            [
+                'param' => 'picture_slideshow_icon',
+                'value' => 'true',
+                'comment' => 'Display slideshow icon on picture page',
+            ],
+            [
+                'param' => 'picture_favorite_icon',
+                'value' => 'true',
+                'comment' => 'Display favorite icon on picture page',
+            ],
+            [
+                'param' => 'picture_navigation_icons',
+                'value' => 'true',
+                'comment' => 'Display navigation icons on picture page',
+            ],
+            [
+                'param' => 'picture_navigation_thumb',
+                'value' => 'true',
+                'comment' => 'Display navigation thumbnails on picture page',
+            ],
+        ];
+        $batchWriter = new BatchWriter($conn);
+        $batchWriter->massInsert(Tables::config(), ['param', 'value', 'comment'], $rows);
 
         echo "\n"
         . $this->description()

@@ -46,9 +46,11 @@ SELECT
     theme,
     language
   FROM ' . Tables::userInfos() . '
-  WHERE user_id = ' . $defaultUserId . '
+  WHERE user_id = :userId
 ;';
-        $row = $conn->fetchNumeric($query);
+        $row = $conn->fetchNumeric($query, [
+            'userId' => $defaultUserId,
+        ]);
         $theme = $row !== false && is_scalar($row[0]) ? (string) $row[0] : '';
         $language = $row !== false && is_scalar($row[1]) ? (string) $row[1] : '';
 

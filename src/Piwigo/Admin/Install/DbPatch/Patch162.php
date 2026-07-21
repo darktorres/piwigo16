@@ -37,9 +37,11 @@ final class Patch162 implements DbPatchInterface
         $query = '
 UPDATE ' . Tables::activity() . '
   SET performed_by = object_id
-  WHERE action = \'logout\'
+  WHERE action = :action
 ;';
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'action' => 'logout',
+        ]);
 
         echo "\n" . $this->description() . "\n";
     }

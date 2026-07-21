@@ -36,17 +36,23 @@ final class Patch127 implements DbPatchInterface
     {
         $query = '
 UPDATE ' . Tables::userInfos() . '
-  SET language = \'nb_NO\'
-  WHERE language = \'no_NO\'
+  SET language = :newLang
+  WHERE language = :oldLang
 ;';
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'newLang' => 'nb_NO',
+            'oldLang' => 'no_NO',
+        ]);
 
         $query = '
 UPDATE ' . Tables::languages() . '
-  SET id = \'nb_NO\'
-  WHERE id = \'no_NO\'
+  SET id = :newId
+  WHERE id = :oldId
 ;';
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'newId' => 'nb_NO',
+            'oldId' => 'no_NO',
+        ]);
 
         echo "\n" . $this->description() . "\n";
     }

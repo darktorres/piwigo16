@@ -50,9 +50,11 @@ ALTER TABLE ' . Tables::images() . '
         $conn->executeStatement($query);
 
         // search for old "lat" field
-        $query = 'SHOW COLUMNS FROM ' . Tables::images() . ' LIKE "lat";';
+        $query = 'SHOW COLUMNS FROM ' . Tables::images() . ' LIKE :column;';
 
-        if ($conn->fetchAllAssociative($query) !== []) {
+        if ($conn->fetchAllAssociative($query, [
+            'column' => 'lat',
+        ]) !== []) {
             // duplicate non-null values
             $query = '
 UPDATE ' . Tables::images() . '

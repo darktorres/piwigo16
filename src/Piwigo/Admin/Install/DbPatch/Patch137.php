@@ -39,9 +39,11 @@ final class Patch137 implements DbPatchInterface
         $query = '
 SELECT id, image_order
   FROM ' . Tables::categories() . '
-  WHERE image_order != ""
+  WHERE image_order != :emptyImageOrder
 ;';
-        $cats = array_column($conn->fetchAllAssociative($query), null, 'id');
+        $cats = array_column($conn->fetchAllAssociative($query, [
+            'emptyImageOrder' => '',
+        ]), null, 'id');
 
         foreach ($cats as $id => &$data) {
             $image_order_raw = is_scalar($data['image_order']) ? (string) $data['image_order'] : '';

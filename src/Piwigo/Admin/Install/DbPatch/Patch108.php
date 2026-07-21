@@ -61,16 +61,22 @@ final class Patch108 implements DbPatchInterface
                 // update database
                 $query = '
     UPDATE ' . Tables::config() . '
-      SET value = \'' . preg_replace('# rank (ASC|DESC)(,?)#', '', $order_by) . '\'
-      WHERE param = \'order_by\'
+      SET value = :value
+      WHERE param = :param
     ;';
-                $conn->executeStatement($query);
+                $conn->executeStatement($query, [
+                    'value' => preg_replace('# rank (ASC|DESC)(,?)#', '', $order_by),
+                    'param' => 'order_by',
+                ]);
                 $query = '
     UPDATE ' . Tables::config() . '
-      SET value = \'' . $order_by . '\'
-      WHERE param = \'order_by_inside_category\'
+      SET value = :value
+      WHERE param = :param
     ';
-                $conn->executeStatement($query);
+                $conn->executeStatement($query, [
+                    'value' => $order_by,
+                    'param' => 'order_by_inside_category',
+                ]);
 
                 // update local file (delete lines)
                 $local_config = file($local_file);
@@ -91,16 +97,22 @@ final class Patch108 implements DbPatchInterface
                 // update database with default param
                 $query = '
     UPDATE ' . Tables::config() . '
-      SET value = \'ORDER BY date_available DESC, file ASC, id ASC\'
-      WHERE param = \'order_by\'
+      SET value = :value
+      WHERE param = :param
     ;';
-                $conn->executeStatement($query);
+                $conn->executeStatement($query, [
+                    'value' => 'ORDER BY date_available DESC, file ASC, id ASC',
+                    'param' => 'order_by',
+                ]);
                 $query = '
     UPDATE ' . Tables::config() . '
-      SET value = \'ORDER BY date_available DESC, file ASC, id ASC\'
-      WHERE param = \'order_by_inside_category\'
+      SET value = :value
+      WHERE param = :param
     ';
-                $conn->executeStatement($query);
+                $conn->executeStatement($query, [
+                    'value' => 'ORDER BY date_available DESC, file ASC, id ASC',
+                    'param' => 'order_by_inside_category',
+                ]);
 
                 // update local file (rename lines)
                 $local_config = file_get_contents($local_file);
@@ -117,16 +129,22 @@ final class Patch108 implements DbPatchInterface
             // update database with default param
             $query = '
   UPDATE ' . Tables::config() . '
-    SET value = \'ORDER BY date_available DESC, file ASC, id ASC\'
-    WHERE param = \'order_by\'
+    SET value = :value
+    WHERE param = :param
   ;';
-            $conn->executeStatement($query);
+            $conn->executeStatement($query, [
+                'value' => 'ORDER BY date_available DESC, file ASC, id ASC',
+                'param' => 'order_by',
+            ]);
             $query = '
   UPDATE ' . Tables::config() . '
-    SET value = \'ORDER BY date_available DESC, file ASC, id ASC\'
-    WHERE param = \'order_by_inside_category\'
+    SET value = :value
+    WHERE param = :param
   ';
-            $conn->executeStatement($query);
+            $conn->executeStatement($query, [
+                'value' => 'ORDER BY date_available DESC, file ASC, id ASC',
+                'param' => 'order_by_inside_category',
+            ]);
         }
 
         echo "\n"

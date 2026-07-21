@@ -62,10 +62,12 @@ AND i.registration_date <= c.date
 
         $query = '
 UPDATE ' . Tables::comments() . ' AS c
-SET c.author_id = ' . $guestId . '
+SET c.author_id = :guestId
 WHERE c.author_id is null
 ;';
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'guestId' => $guestId,
+        ]);
 
         echo "\n"
         . $this->description()

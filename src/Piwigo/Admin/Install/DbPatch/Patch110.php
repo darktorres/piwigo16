@@ -46,9 +46,11 @@ final class Patch110 implements DbPatchInterface
 SELECT
     value
   FROM ' . Tables::config() . '
-  WHERE param =\'gallery_url\'
+  WHERE param = :param
 ;';
-        $row = $conn->fetchNumeric($query);
+        $row = $conn->fetchNumeric($query, [
+            'param' => 'gallery_url',
+        ]);
         $gallery_url = $row !== false && is_scalar($row[0]) ? (string) $row[0] : '';
 
         if (! empty($gallery_url)) {
@@ -98,9 +100,11 @@ SELECT
         $query = '
 DELETE
   FROM ' . Tables::config() . '
-  WHERE param =\'gallery_url\'
+  WHERE param = :param
 ;';
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'param' => 'gallery_url',
+        ]);
 
         echo "\n"
         . $this->description()

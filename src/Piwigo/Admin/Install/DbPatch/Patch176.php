@@ -50,9 +50,12 @@ final class Patch176 implements DbPatchInterface
         // For rows that already exist in the table, we add a key_type
         $conn->executeStatement(
             'UPDATE `' . Tables::userAuthKeys() . '`
-  SET `key_type` = \'auth_key\'
+  SET `key_type` = :keyType
   WHERE `key_type` IS NULL
-;'
+;',
+            [
+                'keyType' => 'auth_key',
+            ]
         );
 
         echo "\n" . $this->description() . "\n";

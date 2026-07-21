@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
 
@@ -36,13 +37,19 @@ final class Patch91 implements DbPatchInterface
     {
         // Existing adviser become normal user
         $query = '
-UPDATE ' . Tables::userInfos() . "
-SET status = 'normal'
-WHERE status IN ('webmaster', 'admin')
-  AND adviser = 'true'
-;";
+UPDATE ' . Tables::userInfos() . '
+SET status = :status
+WHERE status IN (:oldStatuses)
+  AND adviser = :adviser
+;';
 
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'status' => 'normal',
+            'oldStatuses' => ['webmaster', 'admin'],
+            'adviser' => 'true',
+        ], [
+            'oldStatuses' => ArrayParameterType::STRING,
+        ]);
 
         // Remove adviser column
         $query = '

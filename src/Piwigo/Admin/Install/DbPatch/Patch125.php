@@ -69,9 +69,11 @@ final class Patch125 implements DbPatchInterface
         $is_plugin_installed = false;
         $plugin_table = Config::dbPrefix() . 'additionalpages';
 
-        $query = 'SHOW TABLES LIKE \'' . $plugin_table . '\';';
+        $query = 'SHOW TABLES LIKE :pattern;';
 
-        foreach ($conn->fetchFirstColumn($query) as $table_name) {
+        foreach ($conn->fetchFirstColumn($query, [
+            'pattern' => $plugin_table,
+        ]) as $table_name) {
             if ($plugin_table === $table_name) {
                 $is_plugin_installed = true;
             }
@@ -110,9 +112,11 @@ SELECT
         $is_plugin_installed = false;
         $plugin_table = Config::dbPrefix() . 'stuffs';
 
-        $query = 'SHOW TABLES LIKE \'' . $plugin_table . '\';';
+        $query = 'SHOW TABLES LIKE :pattern;';
 
-        foreach ($conn->fetchFirstColumn($query) as $table_name) {
+        foreach ($conn->fetchFirstColumn($query, [
+            'pattern' => $plugin_table,
+        ]) as $table_name) {
             if ($plugin_table === $table_name) {
                 $is_plugin_installed = true;
             }
@@ -124,9 +128,11 @@ SELECT
     id,
     datas
   FROM ' . $plugin_table . '
-  WHERE path LIKE \'%plugins/PWG_Stuffs/modules/Personal%\'
+  WHERE path LIKE :pathPattern
 ;';
-            foreach ($conn->fetchAllAssociative($query) as $row) {
+            foreach ($conn->fetchAllAssociative($query, [
+                'pathPattern' => '%plugins/PWG_Stuffs/modules/Personal%',
+            ]) as $row) {
                 $content_orig = is_scalar($row['datas']) ? (string) $row['datas'] : '';
                 $unserialized = unserialize($content_orig);
                 $content_new = serialize($this->replaceHotlinks(is_array($unserialized) || is_string($unserialized) ? $unserialized : '', $dirThumbnail, $prefixThumbnail));

@@ -46,12 +46,14 @@ ALTER TABLE `' . Tables::historySummary() . '`
 SELECT
     *
   FROM ' . Tables::history() . '
-  WHERE summarized = \'true\'
+  WHERE summarized = :summarized
   ORDER BY id DESC
   LIMIT 1
 ;';
         // note : much faster than searching MAX(ID), ie on my big sample 14 seconds Vs 2 seconds
-        $history_lines = $conn->fetchAllAssociative($query);
+        $history_lines = $conn->fetchAllAssociative($query, [
+            'summarized' => 'true',
+        ]);
         if (count($history_lines) > 0) {
             $last_summarized = $history_lines[0];
 

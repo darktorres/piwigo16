@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\CoreTabs;
+use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\MaintenanceActionsPageRenderer;
 use Piwigo\Admin\MaintenanceEnvPageRenderer;
 use Piwigo\Admin\MaintenanceSysPageRenderer;
@@ -66,19 +68,11 @@ final class MaintenanceSubController implements AdminSubControllerInterface
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        // Explicit `global` for $maint_actions (assigned as a bare
-        // `$maint_actions = [...]` below) so the 3 renderer classes' own
-        // `global $maint_actions;` reads see this array -- load-bearing now
-        // that the dynamic include is a real method call frame, not a
-        // top-level script include.
-        global $maint_actions;
-
-        // Consumed by CoreTabs::addCoreTabs()'s own 'maintenance' case via
-        // `global $my_base_url;`, triggered synchronously inside
-        // Tabsheet::select() below -- must be set before that call, not
-        // dead code (see this class's own docblock).
-        global $my_base_url;
-        $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=';
+        // Consumed by CoreTabs::addCoreTabs()'s own 'maintenance' case,
+        // triggered synchronously inside Tabsheet::select() below -- must
+        // be set before that call, not dead code (see this class's own
+        // docblock).
+        CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
 
         if (isset($_GET['action'])) {
             new \Piwigo\Csrf\CsrfService()
@@ -89,7 +83,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         // | Commons parameters                                                    |
         // +-------------------------------------------------------------------+
 
-        $maint_actions = [
+        $maintActions = [
             'derivatives' => [
                 'icon' => 'icon-trash-1',
                 'label' => Lang::t('Delete multiple size images'),
@@ -183,10 +177,10 @@ final class MaintenanceSubController implements AdminSubControllerInterface
                 ->render();
         } elseif ($tab === 'sys') {
             new MaintenanceSysPageRenderer()
-                ->render();
+                ->render($maintActions);
         } else {
             new MaintenanceActionsPageRenderer($this->redirectService, $this->urlService, $this->configService)
-                ->render();
+                ->render($maintActions);
         }
 
         $template->assign(

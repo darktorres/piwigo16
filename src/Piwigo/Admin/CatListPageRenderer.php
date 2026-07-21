@@ -49,7 +49,6 @@ final class CatListPageRenderer
     public function render(): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
-        global $my_base_url;
 
         $categoryConn = DbConnection::build();
         $categoryService = new CategoryService(
@@ -100,7 +99,7 @@ final class CatListPageRenderer
         // | tabs                                                              |
         // +-------------------------------------------------------------------+
 
-        $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=';
+        CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('albums');

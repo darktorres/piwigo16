@@ -26,12 +26,11 @@ use Piwigo\Template\Template;
  */
 final class MaintenanceSysPageRenderer
 {
-    public function render(): void
+    /**
+     * @param array<string, array{icon: string, label: string}> $maintActions
+     */
+    public function render(array $maintActions): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $maint_actions;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // +-------------------------------------------------------------------+
@@ -42,7 +41,6 @@ final class MaintenanceSysPageRenderer
             // Get system activities data
             if (isset($_GET['method']) && $_GET['method'] === 'pwg.activity_sys.getList') {
                 $data = [];
-                $maint_actions_arr = $maint_actions;
 
                 // \Piwigo\Config\Config::userFields() maps generic field names to actual DB column
                 // names (see include/config_default.inc.php); its values are
@@ -58,7 +56,7 @@ final class MaintenanceSysPageRenderer
 
                 // Format our data for frontend
                 foreach ($activity_log as $rows) {
-                    $data[] = $formatter->format($rows, $maint_actions_arr);
+                    $data[] = $formatter->format($rows, $maintActions);
                 }
 
                 // Now we good to send our response data

@@ -68,10 +68,16 @@ final class IntroSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        /**
-         * @var string
-         */
-        global $link_start;
+        // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
+        // bug found while retargeting this global -- nothing in this
+        // request ever wrote the true global $link_start (AdminShell's own
+        // same-named value, used for its menubar hrefs, is a genuinely
+        // local variable in a different call frame, never `global`- or
+        // $GLOBALS[]-declared), so the "pending comments" link below
+        // always rendered as a bare relative `href="comments"` instead of
+        // `admin.php?page=comments`. Computed locally instead, matching
+        // AdminShell's own exact value.
+        $link_start = PHPWG_ROOT_PATH . 'admin.php?page=';
         $logger = \Piwigo\Core\CurrentLogger::get();
         $template = \Piwigo\Template\CurrentTemplate::get();
 

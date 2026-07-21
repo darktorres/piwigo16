@@ -7,6 +7,8 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\AlbumNotificationPageRenderer;
 use Piwigo\Admin\CatModifyPageRenderer;
 use Piwigo\Admin\CatPermPageRenderer;
+use Piwigo\Admin\CoreTabs;
+use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\ElementSetRanksPageRenderer;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Core\Lang;
@@ -52,7 +54,8 @@ final class AlbumSubController implements AdminSubControllerInterface
         $cat_id_param = $query_params['cat_id'] ?? null;
         $cat_id = is_numeric($cat_id_param) ? (int) $cat_id_param : 0;
 
-        $GLOBALS['admin_album_base_url'] = $this->urlService->getRootUrl() . 'admin.php?page=album-' . $cat_id;
+        $adminAlbumBaseUrl = $this->urlService->getRootUrl() . 'admin.php?page=album-' . $cat_id;
+        CoreTabs::setContext(new CoreTabsContext(adminAlbumBaseUrl: $adminAlbumBaseUrl));
 
         $query = '
 SELECT *
@@ -64,7 +67,6 @@ SELECT *
             new HtmlService()
                 ->fatalError('unknown album');
         }
-        $GLOBALS['category'] = $category;
 
         $tab_param = $query_params['tab'] ?? null;
         $tab = is_string($tab_param) && in_array($tab_param, self::KNOWN_TABS, true) ? $tab_param : 'properties';
@@ -87,17 +89,17 @@ SELECT *
 
         if ($tab === 'properties') {
             new CatModifyPageRenderer()
-                ->render($this->urlService);
+                ->render($this->urlService, $category);
         } elseif ($tab === 'sort_order') {
             new ElementSetRanksPageRenderer($this->redirectService, $this->urlService)
                 ->render();
         } elseif ($tab === 'permissions') {
             $_GET['cat'] = $cat_id;
             new CatPermPageRenderer($this->redirectService, $this->urlService)
-                ->render();
+                ->render($adminAlbumBaseUrl, $category);
         } else {
             new AlbumNotificationPageRenderer($this->redirectService, $this->urlService)
-                ->render();
+                ->render($adminAlbumBaseUrl, $category);
         }
     }
 }

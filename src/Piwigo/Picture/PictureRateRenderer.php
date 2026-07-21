@@ -29,18 +29,12 @@ final class PictureRateRenderer
      * file name before this call), so this reads that directly instead
      * of a shared registry.
      */
-    public function render(int $imageId, UrlServiceInterface $urlService): void
+    /**
+     * @param array<string, array<string, mixed>> $picture
+     */
+    public function render(int $imageId, UrlServiceInterface $urlService, array $picture, string $url_self): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
-        // Set by picture.php/PictureController, right before this call.
-        /**
-         * @var array<string, array<string, mixed>>
-         */
-        global $picture;
-        /**
-         * @var string
-         */
-        global $url_self;
 
         if (! \Piwigo\Config\Config::rateEnabled()) {
             return;

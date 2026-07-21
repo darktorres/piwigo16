@@ -38,9 +38,9 @@ use Piwigo\Users\UserService;
 
 /**
  * Ported from admin/picture_modify.php (the "properties" tab of the "photo"
- * page slug, dispatched by PhotoSubController). $admin_photo_base_url is set
- * by PhotoSubController before calling render(); the rest come from
- * include/common.inc.php's normal bootstrap.
+ * page slug, dispatched by PhotoSubController). PhotoSubController threads
+ * $adminPhotoBaseUrl through render() directly (Legacy Coupling Retirement
+ * Phase 8, 8g -- formerly a `global $admin_photo_base_url;` read).
  *
  * P23 batch 6d fix: the sync_metadata action was reachable via a plain GET
  * with no check_pwg_token() (unlike the delete/submit actions in this same
@@ -85,12 +85,8 @@ final class PictureModifyPageRenderer
         return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
     }
 
-    public function render(): void
+    public function render(string $adminPhotoBaseUrl): void
     {
-        /**
-         * @var string
-         */
-        global $admin_photo_base_url;
         // Phase 2 global-residual sweep: $page is a local scratch array
         // for this method's own body only (no longer `global $page;`),
         // same shape as Section\SectionPopulator::populate()'s own
@@ -349,7 +345,7 @@ SELECT
             ]
         );
 
-        $admin_url_start = $admin_photo_base_url . '-properties';
+        $admin_url_start = $adminPhotoBaseUrl . '-properties';
 
         $src_image = new SrcImage($row);
 

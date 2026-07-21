@@ -46,12 +46,11 @@ final class MaintenanceActionsPageRenderer
         private readonly ConfigService $configService,
     ) {}
 
-    public function render(): void
+    /**
+     * @param array<string, array{icon: string, label: string}> $maintActions
+     */
+    public function render(array $maintActions): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $maint_actions;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         FilesystemIntegrityChecker::fsQuickCheck();
@@ -111,7 +110,7 @@ final class MaintenanceActionsPageRenderer
 
         $template->assign(
             [
-                'maint_actions' => $maint_actions,
+                'maint_actions' => $maintActions,
                 'U_MAINT_CATEGORIES' => sprintf($url_format, 'categories'),
                 'U_MAINT_IMAGES' => sprintf($url_format, 'images'),
                 'U_MAINT_ORPHAN_TAGS' => sprintf($url_format, 'delete_orphan_tags'),

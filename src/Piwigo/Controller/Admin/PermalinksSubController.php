@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\CoreTabs;
+use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -65,7 +67,6 @@ final class PermalinksSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
-        global $my_base_url;
 
         $htmlRenderer = new HtmlService();
         $conn = DbConnection::build();
@@ -104,7 +105,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         // | tabs                                                                  |
         // +-----------------------------------------------------------------------+
 
-        $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=';
+        CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('albums');

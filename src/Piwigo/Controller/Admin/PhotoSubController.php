@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\CoreTabs;
+use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\PictureCoiPageRenderer;
 use Piwigo\Admin\PictureFormatsPageRenderer;
 use Piwigo\Admin\PictureModifyPageRenderer;
@@ -71,7 +73,8 @@ final class PhotoSubController implements AdminSubControllerInterface
         // (or arrays, for foo[]=... params) so is_string() is the real narrowing.
         $get_image_id = is_string($_GET['image_id'] ?? null) ? $_GET['image_id'] : '';
 
-        $GLOBALS['admin_photo_base_url'] = $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $get_image_id;
+        $adminPhotoBaseUrl = $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $get_image_id;
+        CoreTabs::setContext(new CoreTabsContext(adminPhotoBaseUrl: $adminPhotoBaseUrl));
 
         // retrieving direct information about picture
         $imageConn = DbConnection::build();
@@ -94,7 +97,7 @@ final class PhotoSubController implements AdminSubControllerInterface
 
         if ($tab === 'properties') {
             new PictureModifyPageRenderer($this->redirectService, $this->urlService)
-                ->render();
+                ->render($adminPhotoBaseUrl);
         } elseif ($tab === 'coi') {
             new PictureCoiPageRenderer($this->redirectService)
                 ->render();

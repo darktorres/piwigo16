@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\CoreTabs;
+use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\LanguagesInstalledPageRenderer;
 use Piwigo\Admin\LanguagesNewPageRenderer;
 use Piwigo\Admin\Tabsheet;
@@ -57,12 +59,11 @@ final class LanguagesSubController implements AdminSubControllerInterface
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        // Consumed by CoreTabs::addCoreTabs()'s own 'languages' case via
-        // `global $my_base_url;`, triggered synchronously inside
-        // Tabsheet::select() below -- must be set before that call, not
-        // dead code (see this class's own docblock).
-        global $my_base_url;
-        $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=languages';
+        // Consumed by CoreTabs::addCoreTabs()'s own 'languages' case,
+        // triggered synchronously inside Tabsheet::select() below -- must
+        // be set before that call, not dead code (see this class's own
+        // docblock).
+        CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page=languages'));
 
         if (isset($_GET['tab'])) {
             new \Piwigo\Validation\InputValidator()

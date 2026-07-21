@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\CoreTabs;
+use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Upload\UploadService;
@@ -481,6 +483,19 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $template->set_filename('config', 'configuration_' . $page_section . '.tpl');
 
         // TabSheet
+        //
+        // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
+        // bug found via a live Browser-suite failure once CoreTabs::
+        // addCoreTabs()'s formerly-silent `global $conf_link;` null read
+        // became a real, throwing CoreTabsContext field access -- nothing
+        // had EVER called CoreTabs::setContext() with confLink for this
+        // page (AdminShell's own same-named $conf_link is a genuinely
+        // local variable in a different call frame, same class of bug as
+        // IntroSubController's own $link_start fix above). This page's
+        // own "General/Photo sizes/Watermark/Display/Comments/Search" tab
+        // strip hrefs have always rendered as bare relative paths instead
+        // of `admin.php?page=configuration&section=X`. Fixed here.
+        CoreTabs::setContext(new CoreTabsContext(confLink: $this->urlService->getRootUrl() . 'admin.php?page=configuration&amp;section='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('configuration');
         $tabsheet->select($page_section);

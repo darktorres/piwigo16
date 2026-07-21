@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\CoreTabs;
+use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -62,7 +64,6 @@ final class SiteManagerSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
-        global $my_base_url;
 
         if (! \Piwigo\Config\Config::enableSynchronization()) {
             new HtmlService()
@@ -80,7 +81,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             'site_manager' => 'site_manager.tpl',
         ]);
 
-        $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=';
+        CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('site_update');

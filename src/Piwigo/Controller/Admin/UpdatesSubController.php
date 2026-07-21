@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\CoreTabs;
+use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Admin\UpdatesPwgPageRenderer;
@@ -71,12 +73,11 @@ final class UpdatesSubController implements AdminSubControllerInterface
                 ->fatalError('update system is disabled');
         }
 
-        // Consumed by CoreTabs::addCoreTabs()'s own 'updates' case via
-        // `global $my_base_url;`, triggered synchronously inside
-        // Tabsheet::select() below -- must be set before that call, not
-        // dead code (see this class's own docblock).
-        global $my_base_url;
-        $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=updates';
+        // Consumed by CoreTabs::addCoreTabs()'s own 'updates' case,
+        // triggered synchronously inside Tabsheet::select() below -- must
+        // be set before that call, not dead code (see this class's own
+        // docblock).
+        CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page=updates'));
 
         new \Piwigo\Validation\InputValidator()
             ->validate('tab', $_GET, false, '/^(pwg|ext)$/');

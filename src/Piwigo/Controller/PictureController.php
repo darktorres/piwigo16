@@ -145,10 +145,6 @@ final class PictureController implements ControllerInterface
             $this->urlService,
         )->populate();
 
-        /**
-         * @var string
-         */
-        global $url_self;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // Legacy Coupling Retirement Track A batch A5.2e: populate() always
@@ -576,27 +572,18 @@ UPDATE ' . Tables::categories() . '
             $url_up,
             $edit_comment,
             $urlService,
-            $configService
+            $configService,
+            $url_self
         ): void {
-            /**
-             * @var string
-             */
-            global $url_self;
-            /**
-             * @var array<string, array<string, mixed>>
-             */
-            global $picture;
-            /**
-             * @var list<array<string, string|null>>
-             */
-            global $related_categories;
             // $title/$refresh/$url_link are set and read entirely within
             // this closure (passed straight into PageHeaderRenderer::
             // render() below) -- confirmed via grep that no other file
             // reads $GLOBALS['title']/['refresh']/['url_link'], unlike
-            // $url_self/$picture/$related_categories which are real
-            // bridges to PictureCommentRenderer/PictureRateRenderer/
-            // PictureMetadataRenderer. Plain locals, not globals.
+            // $url_self/$picture/$related_categories, real bridges to
+            // PictureCommentRenderer/PictureRateRenderer/
+            // PictureMetadataRenderer -- threaded into their own render()
+            // calls below as real parameters (Legacy Coupling Retirement
+            // Phase 8, 8g), formerly `global`.
             $refresh = null;
             $url_link = null;
             $template = \Piwigo\Template\CurrentTemplate::get();
@@ -1273,14 +1260,14 @@ SELECT id, name, permalink
             // +-------------------------------------------------------------+
 
             new PictureRateRenderer(new RateRepository($conn))
-                ->render($image_id, $urlService);
+                ->render($image_id, $urlService, $picture, $url_self);
             if (\Piwigo\Config\Config::activateComments()) {
                 new PictureCommentRenderer()
-                    ->render($edit_comment, $image_id, $section_context->start, $urlService);
+                    ->render($edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self);
             }
             if ((bool) $metadata_showable and SessionService::get()->getSessionVar('show_metadata') !== null) {
                 new PictureMetadataRenderer()
-                    ->render();
+                    ->render($picture);
             }
 
             // include menubar

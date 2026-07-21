@@ -35,16 +35,11 @@ final class CatPermPageRenderer
         private readonly UrlServiceInterface $urlService,
     ) {}
 
-    public function render(): void
+    /**
+     * @param array<string, mixed> $category
+     */
+    public function render(string $admin_album_base_url, array $category): void
     {
-        /**
-         * @var string
-         */
-        global $admin_album_base_url;
-        /**
-         * @var array<string, string|null>
-         */
-        global $category;
         // Phase 2 global-residual sweep: $page is a local scratch array
         // for this method's own body only (no longer `global $page;`),
         // same shape as Section\SectionPopulator::populate()'s own
@@ -58,7 +53,8 @@ final class CatPermPageRenderer
         // |                       variable initialization                     |
         // +-------------------------------------------------------------------+
 
-        $page['cat'] = (int) $category['id'];
+        // category id is the NOT NULL primary key, always numeric once fetched.
+        $page['cat'] = is_numeric($category['id']) ? (int) $category['id'] : 0;
 
         // +-------------------------------------------------------------------+
         // |                           form submission                         |

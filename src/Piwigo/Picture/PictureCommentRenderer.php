@@ -58,19 +58,12 @@ final class PictureCommentRenderer
      * nav-bar URL below stripping+reusing it), so both come from the
      * caller directly rather than a registry read.
      */
-    public function render(?int $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService): void
+    /**
+     * @param list<array<string, string|null>> $related_categories
+     */
+    public function render(?int $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
-        /**
-         * Set by PictureController, right before this call.
-         *
-         * @var list<array<string, string|null>>
-         */
-        global $related_categories;
-        /**
-         * @var string
-         */
-        global $url_self;
 
         $commentRepository = new CommentRepository(DbConnection::build());
         $commentService = new CommentService($commentRepository, new EphemeralKeyService(), new MailService(), new HtmlService(), $urlService);

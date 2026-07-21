@@ -36,13 +36,11 @@ use Piwigo\Template\Template;
  */
 final class CatModifyPageRenderer
 {
-    public function render(UrlServiceInterface $urlService): void
+    /**
+     * @param array<string, mixed> $category
+     */
+    public function render(UrlServiceInterface $urlService, array $category): void
     {
-        /**
-         * @var string
-         */
-        global $admin_album_base_url;
-        global $category;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();

@@ -43,16 +43,11 @@ final class AlbumNotificationPageRenderer
         private readonly UrlServiceInterface $urlService,
     ) {}
 
-    public function render(): void
+    /**
+     * @param array<string, mixed> $category
+     */
+    public function render(string $admin_album_base_url, array $category): void
     {
-        /**
-         * @var string
-         */
-        global $admin_album_base_url;
-        /**
-         * @var array<string, string|null>
-         */
-        global $category;
         // Phase 2 global-residual sweep: $page is a local scratch array
         // for this method's own body only (no longer `global $page;`),
         // same shape as Section\SectionPopulator::populate()'s own
@@ -66,7 +61,11 @@ final class AlbumNotificationPageRenderer
         // |                       variable initialization                     |
         // +-------------------------------------------------------------------+
 
-        $page['cat'] = (int) $category['id'];
+        // category id is the NOT NULL primary key, always numeric once
+        // fetched -- narrowed once here and reused by every raw-SQL splice
+        // below instead of re-guarding `$category['id']` at each site.
+        $category_id = is_numeric($category['id']) ? (int) $category['id'] : 0;
+        $page['cat'] = $category_id;
 
         // \Piwigo\Config\Config::userFields() maps generic field names to table-specific column
         // names (see include/config_default.inc.php); every value is a plain
@@ -93,11 +92,11 @@ final class AlbumNotificationPageRenderer
             // lookup ("use a child album's representative instead"), only
             // a direct-representative check. Not a defect, just a smaller
             // feature than a full recursive lookup would be.
-            if (! empty($category['representative_picture_id'])) {
+            if (! empty($category['representative_picture_id']) && is_scalar($category['representative_picture_id'])) {
                 $query = '
 SELECT id, file, path, representative_ext
   FROM ' . Tables::images() . '
-  WHERE id = ' . $category['representative_picture_id'] . '
+  WHERE id = ' . (string) $category['representative_picture_id'] . '
 ;';
 
                 $img_rows = $conn->fetchAllAssociative($query);
@@ -321,7 +320,7 @@ SELECT
 SELECT
     group_id
   FROM ' . Tables::groupAccess() . '
-  WHERE cat_id = ' . $category['id'] . '
+  WHERE cat_id = ' . $category_id . '
 ;';
                 $group_ids = array_column($conn->fetchAllAssociative($query), 'group_id');
             } else {
@@ -378,7 +377,7 @@ SELECT
 SELECT
     user_id
   FROM ' . Tables::userAccess() . '
-  WHERE cat_id = ' . $category['id'] . '
+  WHERE cat_id = ' . $category_id . '
 ;';
             $user_ids_access_direct = array_map(
                 static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\CoreTabs;
+use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\ThemesInstalledPageRenderer;
 use Piwigo\Admin\ThemesNewPageRenderer;
@@ -61,12 +63,11 @@ final class ThemesSubController implements AdminSubControllerInterface
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        // Consumed by CoreTabs::addCoreTabs()'s own 'themes' case via
-        // `global $my_base_url;`, triggered synchronously inside
-        // Tabsheet::select() below -- must be set before that call, not
-        // dead code (see this class's own docblock).
-        global $my_base_url;
-        $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=themes';
+        // Consumed by CoreTabs::addCoreTabs()'s own 'themes' case,
+        // triggered synchronously inside Tabsheet::select() below -- must
+        // be set before that call, not dead code (see this class's own
+        // docblock).
+        CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page=themes'));
 
         if (isset($_GET['tab'])) {
             new \Piwigo\Validation\InputValidator()

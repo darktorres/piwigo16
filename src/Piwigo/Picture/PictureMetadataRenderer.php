@@ -23,12 +23,11 @@ use Piwigo\Metadata\MetadataService;
  */
 final class PictureMetadataRenderer
 {
-    public function render(): void
+    /**
+     * @param array<string, array{src_image: SrcImage, ...}> $picture
+     */
+    public function render(array $picture): void
     {
-        /**
-         * @var array<string, array{src_image: SrcImage, ...}>
-         */
-        global $picture;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $metadataService = new MetadataService(new MetadataRepository(DbConnection::build()));

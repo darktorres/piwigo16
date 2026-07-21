@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\CoreTabs;
+use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -230,12 +232,11 @@ SELECT galleries_url
         // | tabs                                                                  |
         // +-----------------------------------------------------------------------+
 
-        // Consumed by CoreTabs::addCoreTabs()'s own 'site_update' case via
-        // `global $my_base_url;`, triggered synchronously inside
-        // Tabsheet::select() below -- must be set before that call, not
-        // dead code (see this class's own docblock).
-        global $my_base_url;
-        $my_base_url = $this->urlService->getRootUrl() . 'admin.php?page=';
+        // Consumed by CoreTabs::addCoreTabs()'s own 'site_update' case,
+        // triggered synchronously inside Tabsheet::select() below -- must
+        // be set before that call, not dead code (see this class's own
+        // docblock).
+        CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('site_update');

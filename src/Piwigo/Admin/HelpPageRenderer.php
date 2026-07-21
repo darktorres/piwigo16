@@ -6,13 +6,14 @@ namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\UrlServiceInterface;
 
 /**
  * Ported from admin/help.php (page slug "help").
  */
 final class HelpPageRenderer
 {
-    public function render(): void
+    public function render(UrlServiceInterface $urlService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -25,6 +26,12 @@ final class HelpPageRenderer
             $selected = $_GET['section'];
         }
 
+        // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
+        // bug -- nothing had ever called CoreTabs::setContext() with
+        // helpLink for this page (same class of gap as
+        // ConfigurationSubController's own $conf_link fix), so this page's
+        // own tab strip has always rendered broken relative hrefs.
+        CoreTabs::setContext(new CoreTabsContext(helpLink: $urlService->getRootUrl() . 'admin.php?page=help&amp;section='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('help');
         $tabsheet->select($selected);

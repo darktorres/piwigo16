@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\CoreTabs;
+use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryRepository;
@@ -134,14 +136,12 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         // | Initialization                                                        |
         // +-----------------------------------------------------------------------+
-        // insertNewDataUserMailNotification() below reads this back via
-        // `global $base_url;` -- this method is always invoked from inside
-        // an AdminSubControllerInterface::handle() call frame
-        // (Piwigo\Bootstrap\AdminDispatcher), so a bare assignment here
-        // would only be local to this call frame, invisible to that
-        // method's own `global` read.
-        global $base_url;
+        // Consumed by CoreTabs::addCoreTabs()'s own 'nbm' case (triggered
+        // synchronously inside Tabsheet::select() further down -- must be
+        // set before that call, not dead code) and by this method's own
+        // F_ACTION assignment below.
         $base_url = $this->urlService->getRootUrl() . 'admin.php';
+        CoreTabs::setContext(new CoreTabsContext(baseUrl: $base_url));
         $must_repost = false;
 
         // +-----------------------------------------------------------------------+
@@ -479,10 +479,11 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
      */
     private static function insertNewDataUserMailNotification(NotificationByMailSender $nbmSender, RedirectServiceInterface $redirectService, UrlServiceInterface $urlService): void
     {
-        /**
-         * @var string $base_url set at the top of handle()
-         */
-        global $base_url;
+        // Recomputed rather than threaded from handle()'s own CoreTabs
+        // value: this is the method's only real call site, and it already
+        // receives the same $urlService instance handle() derives its own
+        // base_url from.
+        $base_url = $urlService->getRootUrl() . 'admin.php';
 
         $conn = DbConnection::build();
 

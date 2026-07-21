@@ -30,45 +30,21 @@ use Piwigo\Template\Template;
  * file with zero external callers (confirmed via a direct grep) -- folded
  * into private (static) methods here, removing the "cannot redeclare
  * function on double-include" risk every prior sub-batch with this shape
- * has already converted away. assocToOrderedTree() stays recursive and
- * keeps reading $nb_photos_in/$nb_sub_photos/$is_forbidden via `global`
- * (which binds the true global scope regardless of nesting depth, so this
- * is a pure mechanical port, not a behavior change).
+ * has already converted away. assocToOrderedTree() stays recursive, now
+ * threading $nb_photos_in/$nb_sub_photos/$is_forbidden as real parameters
+ * through each recursive call instead of a `global` read (Legacy Coupling
+ * Retirement Phase 8, 8g).
  *
- * The same fix was missing for `$my_base_url` (set by the inline tabsheet
- * block below, formerly the admin/include/albums_tab.inc.php include,
- * folded in P23 batch 8b-5) until P23 batch 6j-1: without
- * `global $my_base_url;` here, that assignment stayed local to this call
- * frame, invisible to CoreTabs::addCoreTabs()'s own `global $my_base_url;` read
- * for the 'albums' tabsheet case -- verified live that this page's own
- * "List"/"Permalinks" tab hrefs were rendering as bare `href="albums"` /
- * `href="permalinks"` instead of `admin.php?page=albums` /
- * `admin.php?page=permalinks`. Fixed here.
+ * The tabsheet block below now calls CoreTabs::setContext() instead of a
+ * bare `$my_base_url = ...;` assignment -- see CoreTabsContext's own
+ * docblock for why CoreTabs::addCoreTabs() can't take this as a real
+ * parameter.
  */
 final class AlbumsPageRenderer
 {
     public function render(UrlServiceInterface $urlService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
-
-        // This method is always invoked from inside an
-        // AdminSubControllerInterface::handle() method
-        // (Piwigo\Bootstrap\AdminDispatcher), never from real top-level
-        // script scope -- a bare `$is_forbidden = ...` / `$nb_photos_in =
-        // ...` / `$nb_sub_photos = ...` below would only ever create a
-        // variable local to this method's call frame, invisible to
-        // assocToOrderedTree() below, which reads all three back via
-        // `global $nb_photos_in, $nb_sub_photos, $is_forbidden;`. The
-        // explicit `global` here is what actually makes those assignments
-        // reach the real global scope that method expects (same fix as
-        // admin/include/functions_notification_by_mail.inc.php's
-        // $env_nbm).
-        global $is_forbidden;
-        global $nb_photos_in;
-        global $nb_sub_photos;
-        // See this class's own docblock -- required before the inline
-        // tabsheet block below (P23 batch 6j-1 fix).
-        global $my_base_url;
 
         $conn = DbConnection::build();
         $categoryService = new CategoryService(
@@ -91,7 +67,7 @@ SELECT
         // | tabs                                                              |
         // +-------------------------------------------------------------------+
 
-        $my_base_url = $urlService->getRootUrl() . 'admin.php?page=';
+        CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('albums');
@@ -337,7 +313,7 @@ SELECT
 
         $template->assign(
             [
-                'album_data' => self::assocToOrderedTree($associatedTree),
+                'album_data' => self::assocToOrderedTree($associatedTree, $nb_photos_in, $nb_sub_photos, $is_forbidden),
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
                 'nb_albums' => count($allAlbum),
@@ -366,23 +342,13 @@ SELECT
      * Make an ordered tree.
      *
      * @param array<int|string, mixed> $assocT
+     * @param array<int|string, mixed> $nb_photos_in
+     * @param array<int|string, int> $nb_sub_photos
+     * @param array<int|string, int> $is_forbidden
      * @return array{rank: mixed, name: mixed, status: mixed, id: mixed, visible: mixed, uppercats: mixed, nb_images: mixed, last_updates: mixed, has_not_access: bool, nb_sub_photos: mixed}[]|array{rank: mixed, name: mixed, status: mixed, id: mixed, visible: mixed, uppercats: mixed, nb_images: mixed, last_updates: mixed, has_not_access: bool, nb_sub_photos: mixed, nb_subcats: int<0, max>, children: mixed}[]
      */
-    private static function assocToOrderedTree(array $assocT): array
+    private static function assocToOrderedTree(array $assocT, array $nb_photos_in, array $nb_sub_photos, array $is_forbidden): array
     {
-        /**
-         * @var array<int|string, string|null>
-         */
-        global $nb_photos_in;
-        /**
-         * @var array<int|string, int>
-         */
-        global $nb_sub_photos;
-        /**
-         * @var array<int|string, int>
-         */
-        global $is_forbidden;
-
         $orderedTree = [];
 
         foreach ($assocT as $cat) {
@@ -425,7 +391,7 @@ SELECT
             if (isset($cat['children']) && is_array($cat['children'])) {
                 // Does not update when moving a node
                 $orderedCat['nb_subcats'] = count($cat['children']);
-                $orderedCat['children'] = self::assocToOrderedTree($cat['children']);
+                $orderedCat['children'] = self::assocToOrderedTree($cat['children'], $nb_photos_in, $nb_sub_photos, $is_forbidden);
             }
             array_push($orderedTree, $orderedCat);
         }

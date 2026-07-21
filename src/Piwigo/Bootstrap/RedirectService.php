@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Bootstrap;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
-use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -27,9 +27,35 @@ use Piwigo\Users\UserService;
  * `Piwigo\Core\RedirectServiceInterface`'s own docblock. Needs zero
  * constructor args -- every dependency is constructed inline, exactly as
  * the free functions already did.
+ *
+ * Legacy Coupling Retirement Phase 8, 8a: userService() below resolves via
+ * Kernel::container() instead of manually repeating UserService's 6-arg
+ * construction chain 3 times in redirectHtml() -- safe because
+ * RequestBootstrap::configure() (Phase 8, 8a) now calls Kernel::boot() as
+ * its own first statement, ahead of connect()'s own real
+ * redirectHtml()-reaching call site (the "database needs upgrading"
+ * redirect), so the container is guaranteed available at every real call
+ * site of this class, including the early-crash fallback path below.
  */
 final class RedirectService implements RedirectServiceInterface
 {
+    /**
+     * DRY-extracted (Legacy Coupling Retirement Phase 8, 8a) -- was 3
+     * identical `new UserService(new UserRepository(DbConnection::build()),
+     * new GroupRepository(DbConnection::build()), new MailService(), new
+     * ActivityService(new ActivityRepository(DbConnection::build())), new
+     * HtmlService(), DbConnection::build())` chains inline in
+     * redirectHtml() below.
+     */
+    private static function userService(): UserService
+    {
+        $userService = Kernel::container()->get(UserService::class);
+        if (! $userService instanceof UserService) {
+            throw new \LogicException('Container returned an unexpected type for ' . UserService::class);
+        }
+        return $userService;
+    }
+
     #[\Override]
     public function redirectHttp(string $url): never
     {
@@ -62,7 +88,7 @@ final class RedirectService implements RedirectServiceInterface
 
         if (! Lang::isLangInfoInitialized() || ! isset($template)) {
             $guest_id = Config::guestId();
-            $user = new UserService(new \Piwigo\Users\UserRepository(DbConnection::build()), new \Piwigo\Group\GroupRepository(DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), new HtmlService(), DbConnection::build())->buildUser($guest_id, true);
+            $user = self::userService()->buildUser($guest_id, true);
             CurrentUser::set(User::fromUserArray($user));
             Lang::load('common.lang');
             EventDispatcher::get()->triggerNotify('loading_lang');
@@ -70,10 +96,10 @@ final class RedirectService implements RedirectServiceInterface
                 'no_fallback' => true,
                 'local' => true,
             ]);
-            $template = new Template(PHPWG_ROOT_PATH . 'themes', new UserService(new \Piwigo\Users\UserRepository(DbConnection::build()), new \Piwigo\Group\GroupRepository(DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), new HtmlService(), DbConnection::build())->getDefaultTheme());
+            $template = new Template(PHPWG_ROOT_PATH . 'themes', self::userService()->getDefaultTheme());
             CurrentTemplate::set($template);
         } elseif (defined('IN_ADMIN') and IN_ADMIN) {
-            $template = new Template(PHPWG_ROOT_PATH . 'themes', new UserService(new \Piwigo\Users\UserRepository(DbConnection::build()), new \Piwigo\Group\GroupRepository(DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), new HtmlService(), DbConnection::build())->getDefaultTheme());
+            $template = new Template(PHPWG_ROOT_PATH . 'themes', self::userService()->getDefaultTheme());
             CurrentTemplate::set($template);
         }
 

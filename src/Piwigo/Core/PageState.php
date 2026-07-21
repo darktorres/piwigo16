@@ -121,9 +121,10 @@ final class PageState
      * The instant (microtime(true)) this request began -- former
      * `global $t2`. Still captured at the seam's true top-level scope
      * (include/common.inc.php, before the autoload boundary, for maximum
-     * precision) and handed off here by
-     * RequestBootstrap::configure()'s first statement; every other
-     * consumer reads it from here.
+     * precision) and handed off here early in
+     * RequestBootstrap::configure()'s body (right after its own
+     * Kernel::boot() call, Legacy Coupling Retirement Phase 8 8a); every
+     * other consumer reads it from here.
      */
     public float $requestStart = 0.0;
 

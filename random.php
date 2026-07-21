@@ -15,8 +15,22 @@ declare(strict_types=1);
 
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
 
+// Unlike this file's own former "never requires vendor/autoload.php,
+// relies entirely on common.inc.php's own include/env.inc.php" shape:
+// common.inc.php's RequestBootstrap::configure($paths) call (P24 8a, the
+// boot-first fix) now needs a real Paths in scope before the include runs,
+// and Paths::fromIndex() itself is a Piwigo\ class -- so the autoloader
+// must be required explicitly first, matching every other real entry
+// point (index.php, admin.php, ...). Requiring it twice is safe (PHP's
+// own realpath-keyed include cache no-ops the second require via
+// common.inc.php's own env.inc.php include), same precedent index.php's
+// own docblock documents.
+require __DIR__ . '/vendor/autoload.php';
+
+$paths = Paths::fromIndex(__FILE__);
 define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 

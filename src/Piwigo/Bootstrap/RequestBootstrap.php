@@ -23,8 +23,10 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Db\DbConnection;
 use Piwigo\Filter\FilterService;
@@ -61,15 +63,25 @@ use Piwigo\Users\UserService;
  * language loading). Those define() calls stay in the seam file, slotted
  * between the phases, preserving the original statement order exactly.
  *
- * Runs before Kernel::boot(): CommonBootstrap::run() (index.php/admin.php
- * and the other P22 roots call it right after the common.inc.php include)
- * still owns the Kernel/DI-container side of the request; this class owns
- * the legacy $GLOBALS side, same division of labor as before this port.
+ * Legacy Coupling Retirement Phase 8, 8a (the "boot-first" fix):
+ * configure() now calls Kernel::boot($paths) as its own first statement --
+ * genuinely load-bearing, not just tidiness, since connect() below has a
+ * real production call site (the "database needs upgrading" redirect)
+ * that used to run before CommonBootstrap::run() (index.php/admin.php and
+ * the other P22 roots call it right after the common.inc.php include,
+ * previously the *only* Kernel::boot() call on this path) ever executed.
+ * CommonBootstrap::run()'s own Kernel::boot() call is now a harmless
+ * idempotent no-op on this path (Kernel::boot() itself guards on
+ * self::$booted) -- kept there for the standalone-callable contract
+ * tests/Unit/Bootstrap/CommonBootstrapTest.php exercises directly.
  *
- * Legacy Coupling Retirement Phase 5: this same "before Kernel::boot()"
- * fact is why every ConfigDb:: call in this file (Tier 3) stays on
- * ConfigDb rather than ConfigService -- no DI container exists yet at any
- * point in this class's own body.
+ * Every ConfigDb:: call in this file (Tier 3) still stays on ConfigDb
+ * rather than ConfigService for now -- 8a only boots the container, it
+ * doesn't yet retarget these calls (see Phase 8's 8c/8d: this file still
+ * reads a few `$conf[...]` keys ConfigDb::loadConfFromDb()'s dual-write
+ * populates, and ConfigService::loadConfFromDb() only ever writes
+ * Config::override(), never $conf -- swapping the call before those reads
+ * are retargeted would silently stop populating $conf from the DB).
  */
 final class RequestBootstrap
 {
@@ -88,9 +100,18 @@ final class RequestBootstrap
      * real input: the config includes never read $_GET/$_POST/$_COOKIE/
      * PATH_INFO, and Env's own header read ($_SERVER['HTTP_X_PIWIGO_ENV'])
      * was never touched by the sanitizer.
+     *
+     * Kernel::boot($paths) runs as the very first statement, ahead of
+     * everything else in this method -- see this class's own docblock for
+     * why. The container-building call it makes internally only registers
+     * lazy PHP-DI factory closures, confirmed zero eager side effects, so
+     * booting this early changes nothing observable until something
+     * actually resolves a service.
      */
-    public static function configure(): void
+    public static function configure(Paths $paths): void
     {
+        Kernel::boot($paths);
+
         /** @var array<string, mixed> $conf */
         global $conf;
         /**

@@ -884,16 +884,15 @@ test('src/Piwigo/ does not repeat the same multi-dependency service construction
     // `Ws\PwgCategories::categoryService()`/`Ws\PwgImages::searchService()`
     // calling `self::permissionService()` instead of repeating its chain).
     $allowlist = [
-        // Free functions: no enclosing instance, nothing to inject into.
-        // Legacy Coupling Retirement Phase 4b: redirect_html()'s early-crash
-        // fallback (2 UserService construction sites) moved verbatim from
-        // the deleted Http/functions.php into Bootstrap/RedirectService.php
-        // -- same structural exemption, new file.
-        'Bootstrap/RedirectService.php|UserService',
-
         // Pre-installation, no DI container exists yet (matches the
         // Env/FilesystemHelper/MysqliDb precedent documented on this
-        // class's own docblock).
+        // class's own docblock). Legacy Coupling Retirement Phase 8, 8b
+        // gives InstallWizard a real container-resolved UserService via
+        // Bootstrap/InstallBootstrap -- this entry is expected to drop
+        // then, same as Bootstrap/RedirectService.php|UserService already
+        // did in 8a (self::userService() resolves via Kernel::container()
+        // now that RequestBootstrap::configure() boots the Kernel as its
+        // own first statement, no more manual chain to repeat).
         'Admin/Install/InstallWizard.php|UserService',
     ];
 

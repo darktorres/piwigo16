@@ -45,7 +45,7 @@ final class BrowserTestHelpers
      * response body. Mirrors what 16.x-v2's strict-assertions.ts checked —
      * Notice/Deprecated/Stack trace/Throwable are as diagnostic as a fatal.
      *
-     * @return array<string, string>
+     * @return array<string, non-empty-string>
      */
     private static function serverErrorPatterns(): array
     {
@@ -685,7 +685,11 @@ final class BrowserTestHelpers
 
         imagestring($img, 5, 30, 70, $label, $fg);
 
-        $path = tempnam(sys_get_temp_dir(), 'pwg_browser_') . '.jpg';
+        $tmpPath = tempnam(sys_get_temp_dir(), 'pwg_browser_');
+        if ($tmpPath === false) {
+            throw new ExpectationFailedException('tempnam failed');
+        }
+        $path = $tmpPath . '.jpg';
         imagejpeg($img, $path, 80);
 
         return $path;
@@ -702,6 +706,9 @@ final class BrowserTestHelpers
     public static function uploadPhotoViaApi(string $imagePath, int $albumId, string $name): int
     {
         $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_browser_cookies_');
+        if ($cookieJar === false) {
+            throw new ExpectationFailedException('tempnam failed');
+        }
 
         self::curlWs($cookieJar, [
             'method'   => 'pwg.session.login',
@@ -752,6 +759,9 @@ final class BrowserTestHelpers
     public static function httpStatus(string $path): int
     {
         $ch = curl_init(self::baseUrl() . '/' . ltrim($path, '/'));
+        if ($ch === false) {
+            throw new ExpectationFailedException('curl_init failed');
+        }
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Piwigo-Env: test']);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
@@ -771,6 +781,9 @@ final class BrowserTestHelpers
     public static function httpBody(string $path): string
     {
         $ch = curl_init(self::baseUrl() . '/' . ltrim($path, '/'));
+        if ($ch === false) {
+            throw new ExpectationFailedException('curl_init failed');
+        }
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Piwigo-Env: test']);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
@@ -786,6 +799,9 @@ final class BrowserTestHelpers
         // the only caller passes tempnam()'s result, always a real path
         assert($cookieJar !== '');
         $ch = curl_init(self::baseUrl() . '/ws.php?format=json');
+        if ($ch === false) {
+            throw new ExpectationFailedException('curl_init failed');
+        }
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);

@@ -101,10 +101,10 @@ if (isset($_POST['install'])) {
         // PWG_CHARSET to build fs_themes) relies on them exactly like the
         // former top-level step-2 block that define()d them at this same
         // point of the flow.
-        define('PHPWG_INSTALLED', true);
-        define('PWG_CHARSET', 'utf-8');
-        define('DB_CHARSET', 'utf8');
-        define('DB_COLLATE', '');
+        defined('PHPWG_INSTALLED') or define('PHPWG_INSTALLED', true);
+        defined('PWG_CHARSET') or define('PWG_CHARSET', 'utf-8');
+        defined('DB_CHARSET') or define('DB_CHARSET', 'utf8');
+        defined('DB_COLLATE') or define('DB_COLLATE', '');
 
         $wizard->performInstall();
     }

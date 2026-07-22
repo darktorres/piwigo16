@@ -34,7 +34,7 @@ declare(strict_types=1);
 require __DIR__ . '/vendor/autoload.php';
 
 $paths = \Piwigo\Core\Paths::fromIndex(__FILE__);
-define('PHPWG_ROOT_PATH', './');
+defined('PHPWG_ROOT_PATH') or define('PHPWG_ROOT_PATH', './');
 
 // autoload boundary -- nothing above this line may reference a Piwigo\ class
 include $paths->root . 'include/env.inc.php';

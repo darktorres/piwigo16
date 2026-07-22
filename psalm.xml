@@ -496,6 +496,14 @@
                 <file name="src/Piwigo/Admin/Install/UpgradeService.php"/>
                 <file name="src/Piwigo/Controller/ImageDerivativeController.php"/>
                 <file name="src/Piwigo/Search/SearchService.php"/>
+                <!-- strtotime('+1 month') is a literal, always-valid
+                     relative-time string — PHPStan's own stub treats its
+                     return as certain int here and flags an explicit
+                     `=== false` guard as identical.alwaysFalse (provably
+                     dead code). Psalm's stub is more pessimistic
+                     (int|false). composer analyse:phpstan is clean here
+                     with zero changes. -->
+                <file name="src/Piwigo/Ws/PwgCore.php"/>
             </errorLevel>
         </PossiblyFalseArgument>
         <PossiblyNullArgument>
@@ -510,6 +518,18 @@
                      composer analyse:phpstan is clean here with zero
                      changes. -->
                 <file name="src/Piwigo/Image/DerivativeImage.php"/>
+                <!-- $format_ext is already proven a real, non-empty string
+                     by the `isset($params['format_of'])` guard earlier in
+                     this method (it returns a PwgError before this point
+                     unless $format_ext narrows to non-empty-string).
+                     PHPStan's flow analysis proves this correlation across
+                     the two separate isset($params['format_of']) branches
+                     and flags a re-derived guard here as
+                     function.alreadyNarrowedType (provably redundant).
+                     Psalm loses the narrowing across the intervening
+                     chunk-upload code. composer analyse:phpstan is clean
+                     here with zero changes. -->
+                <file name="src/Piwigo/Ws/PwgImages.php"/>
                 <!-- $mailAddress is already proven non-null here by
                      $isEmpty (see $isEmpty's own definition two lines above:
                      $isEmpty = $mailAddress === null || $mailAddress === '',
@@ -531,9 +551,16 @@
              typo, not a bug in our code (see the matching inline
              @phpstan-ignore comment at the same call site).
              composer analyse:phpstan is clean here with zero changes. -->
+        <!-- filter_var()'s FILTER_VALIDATE_INT/FLOAT options-array stub
+             requires its "numeric" pseudo-type on min_range but doesn't
+             accept Psalm's own literal int(0)/int(1) (or float(0)/float(1))
+             types as satisfying it — a Psalm stub limitation, not a real
+             type mismatch (0 and 1 are numeric). composer analyse:phpstan
+             is clean here with zero changes. -->
         <InvalidArgument>
             <errorLevel type="suppress">
                 <file name="src/Piwigo/Template/Template.php"/>
+                <file name="src/Piwigo/Ws/PwgServer.php"/>
             </errorLevel>
         </InvalidArgument>
     </issueHandlers>

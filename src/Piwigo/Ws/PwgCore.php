@@ -525,7 +525,8 @@ DELETE FROM ' . Tables::rate() . '
         $conn = DbConnection::build();
 
         foreach (['date_min', 'date_max'] as $datefield) {
-            if (! in_array($param[$datefield] ?? null, [null, ''], true) and ! \Piwigo\Core\DateHelper::isValidMysqlDatetime($param[$datefield] ?? null)) {
+            $datefield_value = $param[$datefield] ?? null;
+            if (! in_array($datefield_value, [null, ''], true) and ! \Piwigo\Core\DateHelper::isValidMysqlDatetime($datefield_value)) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid ' . $datefield);
             }
         }

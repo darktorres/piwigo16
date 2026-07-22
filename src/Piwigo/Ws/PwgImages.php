@@ -332,7 +332,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
                 $logger->debug('[merge_chunks] memory_get_usage on chunk ' . ++$i . ': ' . memory_get_usage(), 'WS');
             }
 
-            if (! (bool) file_put_contents($output_filepath, $string, FILE_APPEND)) {
+            if ($string === false || ! (bool) file_put_contents($output_filepath, $string, FILE_APPEND)) {
                 return new PwgError(500, '[merge_chunks] error while writting chunks for ' . $output_filepath);
             }
 
@@ -2583,8 +2583,9 @@ SELECT path
         }
 
         if (isset($compare_type)) {
-            $logger->debug(__FUNCTION__ . ', md5_file($path) = ' . md5_file($path), 'WS');
-            if (md5_file($path) !== $params[$compare_type . '_sum']) {
+            $path_md5sum = md5_file($path);
+            $logger->debug(__FUNCTION__ . ', md5_file($path) = ' . ($path_md5sum === false ? '' : $path_md5sum), 'WS');
+            if ($path_md5sum !== $params[$compare_type . '_sum']) {
                 $ret[$compare_type] = 'differs';
             } else {
                 $ret[$compare_type] = 'equals';

@@ -597,7 +597,7 @@ final readonly class MetadataService
 
         $separatorRegex = \Piwigo\Config\Config::metadataKeywordSeparatorRegex();
 
-        $keywordsString = preg_replace($separatorRegex, ',', $keywordsString);
+        $keywordsString = $separatorRegex === '' ? $keywordsString : preg_replace($separatorRegex, ',', $keywordsString);
         assert($keywordsString !== null);
         // new lines are always considered as keyword separators
         $keywordsString = str_replace(["\r\n", "\n", "\r"], ',', $keywordsString);

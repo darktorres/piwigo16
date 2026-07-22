@@ -19,12 +19,12 @@ class Inflector_fr implements InflectorInterface
     private array $exceptions;
 
     /**
-     * @var array<string, string>
+     * @var array<non-empty-string, string>
      */
     private readonly array $pluralizers;
 
     /**
-     * @var array<string, string>
+     * @var array<non-empty-string, string>
      */
     private readonly array $singularizers;
 

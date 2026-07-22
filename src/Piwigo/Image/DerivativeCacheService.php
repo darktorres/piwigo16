@@ -126,7 +126,7 @@ final class DerivativeCacheService
             if (is_dir($path . '/' . $node)) {
                 $subRmdir = $this->clearDerivativeCacheRecursive($path . '/' . $node, $pattern);
                 $rmdir = $rmdir && $subRmdir;
-            } elseif (preg_match($pattern, $node) === 1) {
+            } elseif ($pattern !== '' && preg_match($pattern, $node) === 1) {
                 unlink($path . '/' . $node);
             } elseif ($node === 'index.htm') {
                 $rmIndex = true;

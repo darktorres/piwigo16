@@ -71,7 +71,7 @@ final class InputValidator
                     self::fatalError('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"');
                 }
 
-                if (! (bool) preg_match(ValidationPattern::ID, (string) $key) || ! (bool) preg_match($pattern, (string) $itemToCheck)) {
+                if ($pattern === '' || ! (bool) preg_match(ValidationPattern::ID, (string) $key) || ! (bool) preg_match($pattern, (string) $itemToCheck)) {
                     self::fatalError('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"');
                 }
             }
@@ -80,7 +80,7 @@ final class InputValidator
                 self::fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
             }
 
-            if (! (bool) preg_match($pattern, (string) $paramValue)) {
+            if ($pattern === '' || ! (bool) preg_match($pattern, (string) $paramValue)) {
                 self::fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
             }
         }

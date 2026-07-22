@@ -27,7 +27,8 @@ final class VersionHelper
         $a = preg_replace_callback('#\b([a-z]{1})\b#i', $replace_chars, (string) $a);
         $b = preg_replace_callback('#\b([a-z]{1})\b#i', $replace_chars, (string) $b);
 
-        if ($op === null || $op === '') {
+        $known_operators = ['<', 'lt', '<=', 'le', '>', 'gt', '>=', 'ge', '==', '=', 'eq', '!=', '<>', 'ne'];
+        if ($op === null || $op === '' || ! in_array($op, $known_operators, true)) {
             return version_compare((string) $a, (string) $b);
         } else {
             return version_compare((string) $a, (string) $b, $op);

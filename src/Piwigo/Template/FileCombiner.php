@@ -242,9 +242,9 @@ final class FileCombiner
      */
     private static function process_css_rec(?string $css, string $dir, &$header, UrlServiceInterface $urlService, Paths $paths): ?string
     {
-        /** @var string */
+        /** @var non-empty-string */
         static $PATTERN_URL = "#url\(\s*['|\"]{0,1}(.*?)['|\"]{0,1}\s*\)#";
-        /** @var string */
+        /** @var non-empty-string */
         static $PATTERN_IMPORT = "#@import\s*['|\"]{0,1}(.*?)['|\"]{0,1};#";
 
         if ((bool) preg_match_all($PATTERN_URL, $css ?? '', $matches, PREG_SET_ORDER)) {

@@ -200,11 +200,14 @@ WHERE ';
                 ));
             }
 
+            $filter_visible_categories = $filter['visible_categories'] ?? null;
+            $filter_visible_images = $filter['visible_images'] ?? null;
+            $filter_categories = $filter['categories'] ?? null;
             \Piwigo\Core\FilterState::set(
                 true,
-                is_scalar($filter['visible_categories'] ?? null) ? (string) $filter['visible_categories'] : '',
-                is_scalar($filter['visible_images'] ?? null) ? (string) $filter['visible_images'] : '',
-                is_array($filter['categories'] ?? null) ? $filter['categories'] : []
+                is_scalar($filter_visible_categories) ? (string) $filter_visible_categories : '',
+                is_scalar($filter_visible_images) ? (string) $filter_visible_images : '',
+                is_array($filter_categories) ? $filter_categories : []
             );
         } else {
             if ((bool) SessionService::get()->getSessionVar('filter_enabled', false)) {

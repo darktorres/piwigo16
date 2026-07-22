@@ -30,7 +30,7 @@ final class FileCombiner
         private readonly Paths $paths,
         private $combinables = [],
     ) {
-        $this->is_css = $this->type == 'css';
+        $this->is_css = $this->type === 'css';
     }
 
     /**
@@ -44,7 +44,7 @@ final class FileCombiner
             return;
         }
         while ((bool) ($file = readdir($dir))) {
-            if (\Piwigo\Core\StringHelper::getExtension($file) == 'js' || \Piwigo\Core\StringHelper::getExtension($file) == 'css') {
+            if (\Piwigo\Core\StringHelper::getExtension($file) === 'js' || \Piwigo\Core\StringHelper::getExtension($file) === 'css') {
                 unlink($root . Config::combinedDir() . $file);
             }
         }
@@ -128,7 +128,7 @@ final class FileCombiner
                 @chmod($this->paths->root . $file, 0644);
             }
             $result[] = new Combinable('combi', $file, false);
-        } elseif (count($pending) == 1) {
+        } elseif (count($pending) === 1) {
             $header = '';
             $this->process_combinable($pending[0], false, $force, $header);
             $result[] = $pending[0];
@@ -250,7 +250,7 @@ final class FileCombiner
         if ((bool) preg_match_all($PATTERN_URL, $css ?? '', $matches, PREG_SET_ORDER)) {
             $search = $replace = [];
             foreach ($matches as $match) {
-                if (! $urlService->urlIsRemote($match[1]) && $match[1][0] != '/' && ! str_contains($match[1], 'data:image/')) {
+                if (! $urlService->urlIsRemote($match[1]) && $match[1][0] !== '/' && ! str_contains($match[1], 'data:image/')) {
                     $relative = $dir . "/{$match[1]}";
                     $search[] = $match[0];
                     $replace[] = 'url(' . $urlService->embellishUrl($urlService->getAbsoluteRootUrl(false) . $relative) . ')';

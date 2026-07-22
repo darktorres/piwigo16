@@ -121,7 +121,7 @@ class ScriptLoader
                         ->fatalError("inline script not found require {$id}");
                 }
                 $s = $this->registered_scripts[$id];
-                if ($s->load_mode == 2) {
+                if ($s->load_mode === 2) {
                     $s->load_mode = 1;
                 } // until now the implementation does not allow executing inline script depending on another async script
             }
@@ -140,7 +140,7 @@ class ScriptLoader
      */
     public function add($id, $load_mode, $require, $path, $version = '0', bool $is_template = false): void
     {
-        if ($this->did_head && $load_mode == 0) {
+        if ($this->did_head && $load_mode === 0) {
             trigger_error("Attempt to add script {$id} but the head has been written", E_USER_WARNING);
         } elseif ((bool) $this->did_footer) {
             trigger_error("Attempt to add script {$id} but the footer has been written", E_USER_WARNING);
@@ -152,7 +152,7 @@ class ScriptLoader
             $this->registered_scripts[$id] = $script;
 
             // Load or modify all UI core files
-            if ($id == 'jquery.ui' and $script->path == self::$known_paths['jquery.ui']) {
+            if ($id === 'jquery.ui' and $script->path === self::$known_paths['jquery.ui']) {
                 foreach (self::$ui_core_dependencies as $script_id => $required_ids) {
                     $this->add($script_id, $load_mode, $required_ids, null, $version);
                 }
@@ -272,7 +272,7 @@ class ScriptLoader
                         $scripts[$precedent]->load_mode = $load;
                         $changed = true;
                     }
-                    if ($load == 2 && $scripts[$precedent]->load_mode == 2 && ($scripts[$precedent]->is_remote(self::urlService()) or ! \Piwigo\Config\Config::templateCombineFiles())) {// we are async -> a predecessor cannot be async unlesss it can be merged; otherwise script execution order is not guaranteed
+                    if ($load === 2 && $scripts[$precedent]->load_mode === 2 && ($scripts[$precedent]->is_remote(self::urlService()) or ! \Piwigo\Config\Config::templateCombineFiles())) {// we are async -> a predecessor cannot be async unlesss it can be merged; otherwise script execution order is not guaranteed
                         $scripts[$precedent]->load_mode = 1;
                         $changed = true;
                     }
@@ -351,7 +351,7 @@ class ScriptLoader
         if (isset($script->extra['order'])) {
             return $script->extra['order'];
         }
-        if (count($script->precedents) == 0) {
+        if (count($script->precedents) === 0) {
             return $script->extra['order'] = 0;
         }
         $max = 0;
@@ -383,7 +383,7 @@ class ScriptLoader
             return $ret;
         }
 
-        if ($s1->extra['order'] == 0 and ($s1->is_remote(self::urlService()) xor $s2->is_remote(self::urlService()))) {
+        if ($s1->extra['order'] === 0 and ($s1->is_remote(self::urlService()) xor $s2->is_remote(self::urlService()))) {
             return $s1->is_remote(self::urlService()) ? -1 : 1;
         }
         return strcmp($s1->id, $s2->id);

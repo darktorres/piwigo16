@@ -291,7 +291,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         // We loop over the theme and the parent theme, so if we exclude default,
         // standard pages can't get the header to load the html header
         if (
-            $theme != 'default'
+            $theme !== 'default'
             and in_array(\Piwigo\Core\PageFilterHelper::scriptBasename(), ['identification', 'register', 'password', 'profile'])
             and ((bool) ($themeconf['use_standard_pages'] ?? false) or (bool) (\Piwigo\Config\Config::all()['use_standard_pages'] ?? false))
         ) {
@@ -301,7 +301,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
 
         $this->set_template_dir($root . '/' . $theme . '/' . $path);
 
-        if (isset($themeconf['parent']) and is_string($themeconf['parent']) and $themeconf['parent'] != $theme) {
+        if (isset($themeconf['parent']) and is_string($themeconf['parent']) and $themeconf['parent'] !== $theme) {
             $load_parent_css = $themeconf['load_parent_css'] ?? $load_css;
             $load_parent_local_head = $themeconf['load_parent_local_head'] ?? $load_local_head;
             $this->set_theme(
@@ -488,8 +488,8 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
                 return false;
             }
 
-            if ((stripos(implode('', array_keys($_GET)), '/' . $param) !== false or $param == 'N/A')
-              and ($thm == $theme or $thm == 'N/A')
+            if ((stripos(implode('', array_keys($_GET)), '/' . $param) !== false or (is_string($param) and $param === 'N/A'))
+              and ((is_string($thm) and $thm === $theme) or (is_string($thm) and $thm === 'N/A'))
               and (! isset($this->extents[$handle]) or $overwrite)
               and file_exists($dir . $filename)) {
                 $real_path = realpath($dir . $filename);
@@ -776,8 +776,8 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
     public static function get_php_str_val($str)
     {
         if (strlen($str) > 1) {
-            if (($str[0] == '\'' && $str[strlen($str) - 1] == '\'')
-              || ($str[0] == '"' && $str[strlen($str) - 1] == '"')) {
+            if (($str[0] === '\'' && $str[strlen($str) - 1] === '\'')
+              || ($str[0] === '"' && $str[strlen($str) - 1] === '"')) {
                 eval('$tmp=' . $str . ';');
                 // Same eval() blind spot as prefilter_white_space() below:
                 // PHPStan treats variables only ever assigned inside eval()
@@ -1072,10 +1072,10 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         if (! isset($params['load'])) {
             trigger_error("get_combined_scripts: missing 'load' parameter", E_USER_ERROR);
         }
-        $load = $params['load'] == 'header' ? 0 : 1;
+        $load = $params['load'] === 'header' ? 0 : 1;
         $content = [];
 
-        if ($load == 0) {
+        if ($load === 0) {
             return self::COMBINED_SCRIPTS_TAG;
         } else {
             $scripts = $this->scriptLoader->get_footer_scripts();

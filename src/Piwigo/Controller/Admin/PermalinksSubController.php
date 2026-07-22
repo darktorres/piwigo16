@@ -152,7 +152,7 @@ SELECT id, permalink, uppercats, global_rank
   FROM ' . Tables::categories() . '
   WHERE permalink IS NOT NULL
 ';
-        if ($sort_by[0] == 'id' or $sort_by[0] == 'permalink') {
+        if ($sort_by[0] === 'id' or $sort_by[0] === 'permalink') {
             $query .= ' ORDER BY ' . $sort_by[0];
         }
         $categories = [];
@@ -165,7 +165,7 @@ SELECT id, permalink, uppercats, global_rank
             $categories[] = $row;
         }
 
-        if ($sort_by[0] == 'name') {
+        if ($sort_by[0] === 'name') {
             usort($categories, CategoryService::compareByGlobalRank(...));
         }
         $template->assign('permalinks', $categories);
@@ -242,7 +242,7 @@ SELECT id, permalink, uppercats, global_rank
         parse_str($url_components['query'] ?? '', $vars);
         $is_first = true;
         foreach ($vars as $key => $value) {
-            if (! in_array($key, $get_rejects) and $key != $get_param) {
+            if (! in_array($key, $get_rejects) and $key !== $get_param) {
                 $base_url .= $is_first ? '?' : '&amp;';
                 $is_first = false;
 
@@ -261,7 +261,7 @@ SELECT id, permalink, uppercats, global_rank
             $disp = '↓';
 
             if ($field !== @$_GET[$get_param]) {
-                if ($default_field != $field) { // the first should be the default
+                if (($default_field ?? '') !== $field) { // the first should be the default
                     $url = $this->urlService->addUrlParams($url, [
                         $get_param => $field,
                     ]);

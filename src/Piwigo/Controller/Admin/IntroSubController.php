@@ -96,7 +96,7 @@ final class IntroSubController implements AdminSubControllerInterface
         // | tabs                                                                  |
         // +-----------------------------------------------------------------------+
 
-        if (isset($_GET['action']) and $_GET['action'] == 'hide_newsletter_subscription') {
+        if (isset($_GET['action']) and $_GET['action'] === 'hide_newsletter_subscription') {
             new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository($conn))
                 ->updateParam('show_newsletter_subscription', 'false');
             exit();
@@ -308,7 +308,7 @@ SELECT COUNT(*)
 
         // Get data from $nb_weeks last weeks
         while ($mondays < $nb_weeks) {
-            if ($date->format('D') == 'Mon') {
+            if ($date->format('D') === 'Mon') {
                 $week_number[] = $date->format('W');
                 ++$mondays;
             }
@@ -346,7 +346,7 @@ SELECT COUNT(*)
 
                 $week = 0;
                 for ($i = 0; $i < $nb_weeks; $i++) {
-                    if ($week_number[$i] == $day_date->format('W')) {
+                    if ($week_number[$i] === $day_date->format('W')) {
                         $week = $i;
                     }
                 }
@@ -463,7 +463,7 @@ SELECT COUNT(*)
 
         // Set sizes in chart data
         for ($i = 1; $i < count($temp_data); $i++) {
-            if ($diff_x[$i - 1] == -1) {
+            if ($diff_x[$i - 1] === -1) {
                 $size++;
             }
             $chart_w = $temp_data[$i]['w'];

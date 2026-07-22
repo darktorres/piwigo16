@@ -305,7 +305,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                                 }
 
                                 // must define a default order_by if user want to order by rank only
-                                if (count($order_by) == 0) {
+                                if (count($order_by) === 0) {
                                     $order_by = ['id ASC'];
                                 }
 
@@ -319,7 +319,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                     if (empty($_POST['email_admin_on_new_user'])) {
                         $_POST['email_admin_on_new_user'] = 'none';
-                    } elseif ($_POST['email_admin_on_new_user_filter'] == 'all') {
+                    } elseif ($_POST['email_admin_on_new_user_filter'] === 'all') {
                         $_POST['email_admin_on_new_user'] = 'all';
                     } else {
                         if (empty($_POST['email_admin_on_new_user_filter_group'])) {
@@ -432,7 +432,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         $post_value = $_POST[$row['param']];
                         $value = is_scalar($post_value) ? (string) $post_value : '';
 
-                        if ($row['param'] == 'gallery_title') {
+                        if ($row['param'] === 'gallery_title') {
                             if (! \Piwigo\Config\Config::allowHtmlDescriptions()) {
                                 $value = strip_tags($value);
                             }
@@ -457,7 +457,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         }
 
         // restore default derivatives settings
-        if ($page['section'] == 'sizes' and isset($_GET['action']) and $_GET['action'] == 'restore_settings' and \Piwigo\Auth\AccessControl::isWebmaster()) {
+        if ($page['section'] === 'sizes' and isset($_GET['action']) and $_GET['action'] === 'restore_settings' and \Piwigo\Auth\AccessControl::isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(new HtmlService(), $this->redirectService);
 
@@ -551,7 +551,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         'mail_theme_options' => $mail_themes,
                         'order_by' => $order_by,
                         'order_by_options' => $sort_fields,
-                        'email_admin_on_new_user' => $conf_email_admin_on_new_user != 'none',
+                        'email_admin_on_new_user' => $conf_email_admin_on_new_user !== 'none',
                         'email_admin_on_new_user_filter' => in_array($conf_email_admin_on_new_user, ['none', 'all']) ? 'all' : 'group',
                         'email_admin_on_new_user_filter_group' => ((bool) preg_match('/^group:(\d+)$/', $conf_email_admin_on_new_user, $matches)) ? $matches[1] : -1,
                     ]
@@ -662,7 +662,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 // we only load the derivatives if it was not already loaded: it occurs
                 // when submitting the form and an error remains
                 if (! self::$sizesLoadedInTpl) {
-                    $is_gd = (PwgImage::get_library() == 'gd') ? true : false;
+                    $is_gd = (PwgImage::get_library() === 'gd') ? true : false;
                     $template->assign('is_gd', $is_gd);
                     $template->assign(
                         'sizes',
@@ -692,8 +692,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     foreach (ImageStdParams::get_all_types() as $type) {
                         $tpl_var = [];
 
-                        $tpl_var['must_square'] = ($type == ImageStdParams::SQUARE ? true : false);
-                        $tpl_var['must_enable'] = ($type == ImageStdParams::SQUARE || $type == ImageStdParams::THUMB || $type === \Piwigo\Config\Config::derivativeDefaultSize()) ? true : false;
+                        $tpl_var['must_square'] = ($type === ImageStdParams::SQUARE ? true : false);
+                        $tpl_var['must_enable'] = ($type === ImageStdParams::SQUARE || $type === ImageStdParams::THUMB || $type === \Piwigo\Config\Config::derivativeDefaultSize()) ? true : false;
 
                         if ((bool) ($params = $enabled[$type] ?? null)) {
                             $tpl_var['enabled'] = true;
@@ -754,23 +754,23 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $wm = ImageStdParams::get_watermark();
 
                     $position = 'custom';
-                    if ($wm->xpos == 0 and $wm->ypos == 0) {
+                    if ($wm->xpos === 0 and $wm->ypos === 0) {
                         $position = 'topleft';
                     }
-                    if ($wm->xpos == 100 and $wm->ypos == 0) {
+                    if ($wm->xpos === 100 and $wm->ypos === 0) {
                         $position = 'topright';
                     }
-                    if ($wm->xpos == 50 and $wm->ypos == 50) {
+                    if ($wm->xpos === 50 and $wm->ypos === 50) {
                         $position = 'middle';
                     }
-                    if ($wm->xpos == 0 and $wm->ypos == 100) {
+                    if ($wm->xpos === 0 and $wm->ypos === 100) {
                         $position = 'bottomleft';
                     }
-                    if ($wm->xpos == 100 and $wm->ypos == 100) {
+                    if ($wm->xpos === 100 and $wm->ypos === 100) {
                         $position = 'bottomright';
                     }
 
-                    if ($wm->xrepeat != 0 || $wm->yrepeat != 0) {
+                    if ($wm->xrepeat !== 0 || $wm->yrepeat !== 0) {
                         $position = 'custom';
                     }
 
@@ -922,12 +922,12 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         // step 1 - sanitize HTML input
         foreach ($pderivatives as $type => &$pderivative) {
-            if ($pderivative['must_square'] = ($type == ImageStdParams::SQUARE ? true : false)) {
+            if ($pderivative['must_square'] = ($type === ImageStdParams::SQUARE ? true : false)) {
                 $pderivative['h'] = $pderivative['w'];
                 $pderivative['minh'] = $pderivative['minw'] = $pderivative['w'];
                 $pderivative['crop'] = 100;
             }
-            $pderivative['must_enable'] = ($type == ImageStdParams::SQUARE || $type == ImageStdParams::THUMB || $type === \Piwigo\Config\Config::derivativeDefaultSize()) ? true : false;
+            $pderivative['must_enable'] = ($type === ImageStdParams::SQUARE || $type === ImageStdParams::THUMB || $type === \Piwigo\Config\Config::derivativeDefaultSize()) ? true : false;
             $pderivative['enabled'] = isset($pderivative['enabled']) || $pderivative['must_enable'] ? true : false;
 
             if (isset($pderivative['crop'])) {
@@ -957,7 +957,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 continue;
             }
 
-            if ($type == ImageStdParams::THUMB) {
+            if ($type === ImageStdParams::THUMB) {
                 $w = intval($pderivative['w']);
                 if ($w <= 0) {
                     $derivative_errors[$type]['w'] = '>0';
@@ -983,7 +983,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 }
             }
 
-            if (count($errors) == 0 && count($derivative_errors) == 0) {
+            if (count($errors) === 0 && count($derivative_errors) === 0) {
                 $prev_w = intval($pderivative['w']);
                 $prev_h = intval($pderivative['h']);
             }
@@ -995,10 +995,10 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         }
 
         // step 3 - save data
-        if (count($errors) == 0 && count($derivative_errors) == 0) {
+        if (count($errors) === 0 && count($derivative_errors) === 0) {
             $resize_quality_post = $_POST['resize_quality'] ?? null;
             $resize_quality = is_numeric($resize_quality_post) ? intval($resize_quality_post) : 0;
-            $quality_changed = ImageStdParams::$quality != $resize_quality;
+            $quality_changed = ImageStdParams::$quality !== $resize_quality;
             ImageStdParams::$quality = $resize_quality;
 
             $enabled = ImageStdParams::get_defined_type_map();
@@ -1037,18 +1037,18 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         $old_params = $enabled[$type];
                         $same = true;
                         if (! DerivativeUrlCodec::sizeEquals($old_params->sizing->ideal_size, $new_params->sizing->ideal_size)
-                            or $old_params->sizing->max_crop != $new_params->sizing->max_crop) {
+                            or $old_params->sizing->max_crop !== $new_params->sizing->max_crop) {
                             $same = false;
                         }
 
                         if ($same
-                            and $new_params->sizing->max_crop != 0
+                            and $new_params->sizing->max_crop !== 0.0
                             and ! DerivativeUrlCodec::sizeEquals($old_params->sizing->min_size, $new_params->sizing->min_size)) {
                             $same = false;
                         }
 
                         if ($quality_changed
-                            || $new_params->sharpen != $old_params->sharpen) {
+                            || $new_params->sharpen !== $old_params->sharpen) {
                             $same = false;
                         }
 
@@ -1169,7 +1169,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         if (! empty($watermark_tmp_name)) {
             $image_size = getimagesize($watermark_tmp_name);
             $type = $image_size === false ? false : $image_size[2];
-            if ($type != IMAGETYPE_PNG) {
+            if ($type !== IMAGETYPE_PNG) {
                 $errors['watermarkImage'] = sprintf(
                     Lang::t('Allowed file types: %s.'),
                     'PNG'
@@ -1273,7 +1273,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         }
 
         // step 3 - save data
-        if (count($errors) == 0) {
+        if (count($errors) === 0) {
             $watermark = new WatermarkParams();
             $watermark->file = $pwatermark['file'];
             $watermark->xpos = intval($pwatermark['xpos']);
@@ -1285,12 +1285,12 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
             $old_watermark = ImageStdParams::get_watermark();
             $watermark_changed =
-              $watermark->file != $old_watermark->file
-              || $watermark->xpos != $old_watermark->xpos
-              || $watermark->ypos != $old_watermark->ypos
-              || $watermark->xrepeat != $old_watermark->xrepeat
-              || $watermark->yrepeat != $old_watermark->yrepeat
-              || $watermark->opacity != $old_watermark->opacity;
+              $watermark->file !== $old_watermark->file
+              || $watermark->xpos !== $old_watermark->xpos
+              || $watermark->ypos !== $old_watermark->ypos
+              || $watermark->xrepeat !== $old_watermark->xrepeat
+              || $watermark->yrepeat !== $old_watermark->yrepeat
+              || $watermark->opacity !== $old_watermark->opacity;
 
             // save the new watermark configuration
             ImageStdParams::set_watermark($watermark);
@@ -1302,14 +1302,14 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 $old_use_watermark = $params->use_watermark;
                 ImageStdParams::apply_global($params);
 
-                $changed = $params->use_watermark != $old_use_watermark;
+                $changed = $params->use_watermark !== $old_use_watermark;
                 if (! $changed and $params->use_watermark) {
                     $changed = $watermark_changed;
                 }
                 if (! $changed and $params->use_watermark) {
                     // if thresholds change and before/after the threshold is lower than the corresponding derivative side -> some derivatives might switch the watermark
-                    (bool) ($changed |= $watermark->min_size[0] != $old_watermark->min_size[0]) and ($watermark->min_size[0] < $params->max_width() or $old_watermark->min_size[0] < $params->max_width());
-                    (bool) ($changed |= $watermark->min_size[1] != $old_watermark->min_size[1]) and ($watermark->min_size[1] < $params->max_height() or $old_watermark->min_size[1] < $params->max_height());
+                    (bool) ($changed |= $watermark->min_size[0] !== $old_watermark->min_size[0]) and ($watermark->min_size[0] < $params->max_width() or $old_watermark->min_size[0] < $params->max_width());
+                    (bool) ($changed |= $watermark->min_size[1] !== $old_watermark->min_size[1]) and ($watermark->min_size[1] < $params->max_height() or $old_watermark->min_size[1] < $params->max_height());
                 }
 
                 if ((bool) $changed) {
@@ -1346,7 +1346,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
     private static function getWatermarkFilename(array $list, string $candidate, int $step = 0): string
     {
         $change_name = $candidate;
-        if ($step != 0) {
+        if ($step !== 0) {
             $change_name .= '-' . $step;
         }
         if (in_array($change_name, $list)) {

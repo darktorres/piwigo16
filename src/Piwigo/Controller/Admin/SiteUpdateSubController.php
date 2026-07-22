@@ -271,7 +271,7 @@ SELECT galleries_url
             }
 
             // shall we simulate only
-            if (isset($_POST['simulate']) and $_POST['simulate'] == 1) {
+            if (isset($_POST['simulate']) and $_POST['simulate'] === '1') {
                 $simulate = true;
             } else {
                 $simulate = false;
@@ -282,7 +282,7 @@ SELECT galleries_url
         // |                      directories / categories                         |
         // +-----------------------------------------------------------------------+
         if (isset($_POST['submit'])
-            and ($_POST['sync'] == 'dirs' or $_POST['sync'] == 'files')
+            and ($_POST['sync'] === 'dirs' or $_POST['sync'] === 'files')
             and ! $general_failure) {
             $start = \Piwigo\Core\TimingHelper::getMoment();
             // which categories to update ?
@@ -292,7 +292,7 @@ SELECT id, uppercats, global_rank, status, visible
   WHERE dir IS NOT NULL
     AND site_id = ' . $site_id;
             if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
-                if (isset($_POST['subcats-included']) and $_POST['subcats-included'] == 1) {
+                if (isset($_POST['subcats-included']) and $_POST['subcats-included'] === '1') {
                     $query .= '
     AND uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' \'(^|,)' . $_POST['cat'] . '(,|$)\'
 ';
@@ -356,7 +356,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
   GROUP BY id_uppercat';
             foreach ($conn->fetchAllAssociative($query) as $row) {
                 // for the id_uppercat NULL, we write 'NULL' and not the empty string
-                if (! isset($row['id_uppercat']) or $row['id_uppercat'] == '') {
+                if (! isset($row['id_uppercat']) or $row['id_uppercat'] === '') {
                     $row['id_uppercat'] = 'NULL';
                 }
                 // next_rank is a computed "MAX(`rank`)+1" aggregate, always a
@@ -389,7 +389,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             // $db_fulldirs doesn't include any subdirectories and $fs_fulldirs does
             // So $fs_fulldirs will be limited to the selected basedir
             // (if that one is in $fs_fulldirs)
-            if (! isset($_POST['subcats-included']) or $_POST['subcats-included'] != 1) {
+            if (! isset($_POST['subcats-included']) or $_POST['subcats-included'] !== '1') {
                 $fs_fulldirs = array_intersect($fs_fulldirs, array_keys($db_fulldirs));
             }
             $inserts = [];
@@ -431,10 +431,10 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         $insert['rank'] = $next_rank[$parent]++;
                         $insert['global_rank'] =
                           $parent_global_rank . '.' . $insert['rank'];
-                        if ($db_categories[$parent]['status'] == 'private') {
+                        if ($db_categories[$parent]['status'] === 'private') {
                             $insert['status'] = 'private';
                         }
-                        if ($db_categories[$parent]['visible'] == 'false') {
+                        if ($db_categories[$parent]['visible'] === 'false') {
                             $insert['visible'] = 'false';
                         }
                     } else {
@@ -578,7 +578,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                                 $parent_id = $db_categories[$parent_id]['parent'] ?? null;
                                 $parent_id = is_int($parent_id) ? $parent_id : null;
                             }
-                            if ($db_categories[$ids]['status'] == 'private' and $parent_id !== null) {
+                            if ($db_categories[$ids]['status'] === 'private' and $parent_id !== null) {
                                 if (isset($granted_grps[$parent_id])) {
                                     foreach ($granted_grps[$parent_id] as $granted_grp) {
                                         $insert_granted_grps[] = [
@@ -624,7 +624,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                     'info' => Lang::t('deleted'),
                 ];
 
-                if (substr_compare($fulldir, '../', 0, 3) == 0) {
+                if (substr_compare($fulldir, '../', 0, 3) === 0) {
                     $fulldir = substr($fulldir, 3);
                 }
                 $to_delete_derivative_dirs[] = \Piwigo\Core\CurrentPaths::get()->root . Config::derivativeDir() . $fulldir;
@@ -650,7 +650,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
         // +-----------------------------------------------------------------------+
         // |                           files / elements                            |
         // +-----------------------------------------------------------------------+
-        if (isset($_POST['submit']) and $_POST['sync'] == 'files'
+        if (isset($_POST['submit']) and $_POST['sync'] === 'files'
               and ! $general_failure) {
             $start_files = \Piwigo\Core\TimingHelper::getMoment();
             $start = $start_files;
@@ -722,7 +722,7 @@ SELECT id, path
                     'added_by' => \Piwigo\Users\CurrentUser::get()->id,
                 ];
 
-                if ($_POST['privacy_level'] != 0) {
+                if ($_POST['privacy_level'] !== '0') {
                     $insert['level'] = $_POST['privacy_level'];
                 }
 
@@ -870,7 +870,7 @@ SELECT *
                     ]);
 
                     // add new photos to caddie
-                    if (isset($_POST['add_to_caddie']) and $_POST['add_to_caddie'] == 1) {
+                    if (isset($_POST['add_to_caddie']) and $_POST['add_to_caddie'] === '1') {
                         \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($caddiables);
                     }
                 }
@@ -927,7 +927,7 @@ DELETE
         // |                          synchronize files                            |
         // +-----------------------------------------------------------------------+
         if (isset($_POST['submit'])
-            and ($_POST['sync'] == 'dirs' or $_POST['sync'] == 'files')
+            and ($_POST['sync'] === 'dirs' or $_POST['sync'] === 'files')
             and ! $general_failure) {
             if (! $simulate) {
                 $syncCategoryService = self::categoryService($conn);
@@ -944,7 +944,7 @@ DELETE
                   . ' -->');
             }
 
-            if ($_POST['sync'] == 'files') {
+            if ($_POST['sync'] === 'files') {
                 $start = \Piwigo\Core\TimingHelper::getMoment();
                 $opts = [
                     'category_id' => '',
@@ -953,7 +953,7 @@ DELETE
                 if (isset($_POST['cat'])) {
                     $cat = $_POST['cat'];
                     $opts['category_id'] = is_string($cat) || is_int($cat) ? $cat : '';
-                    if (! isset($_POST['subcats-included']) or $_POST['subcats-included'] != 1) {
+                    if (! isset($_POST['subcats-included']) or $_POST['subcats-included'] !== '1') {
                         $opts['recursive'] = false;
                     }
                 }
@@ -1005,7 +1005,7 @@ DELETE
         // |                          synchronize files                            |
         // +-----------------------------------------------------------------------+
         if (isset($_POST['submit'])
-            and ($_POST['sync'] == 'dirs' or $_POST['sync'] == 'files')) {
+            and ($_POST['sync'] === 'dirs' or $_POST['sync'] === 'files')) {
             $template->assign(
                 'update_result',
                 [
@@ -1035,7 +1035,7 @@ DELETE
                 $cat = $_POST['cat'];
                 $opts['category_id'] = is_string($cat) || is_int($cat) ? $cat : '';
                 // recursive ?
-                if (! isset($_POST['subcats-included']) or $_POST['subcats-included'] != 1) {
+                if (! isset($_POST['subcats-included']) or $_POST['subcats-included'] !== '1') {
                     $opts['recursive'] = false;
                 }
             }
@@ -1171,9 +1171,9 @@ DELETE
             $tpl_introduction = [
                 'sync' => $_POST['sync'],
                 'sync_meta' => isset($_POST['sync_meta']) ? true : false,
-                'display_info' => isset($_POST['display_info']) and $_POST['display_info'] == 1,
-                'add_to_caddie' => isset($_POST['add_to_caddie']) and $_POST['add_to_caddie'] == 1,
-                'subcats_included' => isset($_POST['subcats-included']) and $_POST['subcats-included'] == 1,
+                'display_info' => isset($_POST['display_info']) and $_POST['display_info'] === '1',
+                'add_to_caddie' => isset($_POST['add_to_caddie']) and $_POST['add_to_caddie'] === '1',
+                'subcats_included' => isset($_POST['subcats-included']) and $_POST['subcats-included'] === '1',
                 'privacy_level_selected' => $privacy_level_selected,
                 'meta_all' => isset($_POST['meta_all']) ? true : false,
                 'meta_empty_overrides' => isset($_POST['meta_empty_overrides']) ? true : false,
@@ -1248,7 +1248,7 @@ SELECT id,name,uppercats,global_rank
 
         if (count($infos) > 0
             and isset($_POST['display_info'])
-            and $_POST['display_info'] == 1) {
+            and $_POST['display_info'] === '1') {
             foreach ($infos as $info) {
                 $template->append(
                     'sync_infos',

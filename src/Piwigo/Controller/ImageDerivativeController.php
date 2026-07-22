@@ -366,7 +366,7 @@ final class ImageDerivativeController implements ControllerInterface
         if (! $need_generate) {
             $if_modified_since = $_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? null;
             if (is_string($if_modified_since)
-              and strtotime($if_modified_since) == $derivative_mtime) {// send the last mod time of the file back
+              and strtotime($if_modified_since) === $derivative_mtime) {// send the last mod time of the file back
                 $response = ResponseFactory::raw('', [
                     'Last-Modified' => gmdate('D, d M Y H:i:s', $derivative_mtime) . ' GMT',
                     'Expires' => gmdate('D, d M Y H:i:s', time() + 10 * 24 * 3600) . ' GMT',
@@ -379,7 +379,7 @@ final class ImageDerivativeController implements ControllerInterface
             return $noStoreCacheControl ? $response->withHeader('Cache-Control', 'no-store, max-age=100') : $response;
         }
 
-        if (! $this->trySwitchSource($params, $src_mtime) && $params->type == ImageStdParams::CUSTOM) {
+        if (! $this->trySwitchSource($params, $src_mtime) && $params->type === ImageStdParams::CUSTOM) {
             $sharpen = 0;
             foreach (ImageStdParams::get_defined_type_map() as $std_params) {
                 $sharpen += $std_params->sharpen;
@@ -662,9 +662,9 @@ final class ImageDerivativeController implements ControllerInterface
         $min_size = null;
 
         $token = array_shift($tokens);
-        if ($token[0] == 's') {
+        if ($token[0] === 's') {
             $size = DerivativeUrlCodec::urlToSize(substr($token, 1));
-        } elseif ($token[0] == 'e') {
+        } elseif ($token[0] === 'e') {
             $crop = 1;
             $size = $min_size = DerivativeUrlCodec::urlToSize(substr($token, 1));
         } else {
@@ -758,7 +758,7 @@ final class ImageDerivativeController implements ControllerInterface
 
         $deriv = explode('_', $deriv);
         foreach (ImageStdParams::get_defined_type_map() as $type => $params) {
-            if (DerivativeUrlCodec::derivativeToUrl($type) == $deriv[0]) {
+            if (DerivativeUrlCodec::derivativeToUrl($type) === $deriv[0]) {
                 $this->derivativeType = $type;
                 $this->derivativeParams = $params;
                 break;
@@ -766,7 +766,7 @@ final class ImageDerivativeController implements ControllerInterface
         }
 
         if ($this->derivativeType === null) {
-            if (DerivativeUrlCodec::derivativeToUrl(ImageStdParams::CUSTOM) == $deriv[0]) {
+            if (DerivativeUrlCodec::derivativeToUrl(ImageStdParams::CUSTOM) === $deriv[0]) {
                 $this->derivativeType = ImageStdParams::CUSTOM;
             } else {
                 $this->ierror('Unknown parsing type', 400);
@@ -847,29 +847,29 @@ final class ImageDerivativeController implements ControllerInterface
 
         $candidates = [];
         foreach (ImageStdParams::get_defined_type_map() as $candidate) {
-            if ($candidate->type == $params->type) {
+            if ($candidate->type === $params->type) {
                 continue;
             }
-            if ($candidate->use_watermark != $use_watermark) {
+            if ($candidate->use_watermark !== $use_watermark) {
                 continue;
             }
             if ($candidate->max_width() < $params->max_width() || $candidate->max_height() < $params->max_height()) {
                 continue;
             }
             $candidate_size = $candidate->compute_final_size($original_size);
-            if ($dsize != $params->compute_final_size($candidate_size)) {
+            if ($dsize !== $params->compute_final_size($candidate_size)) {
                 continue;
             }
 
-            if ($params->sizing->max_crop == 0) {
-                if ($candidate->sizing->max_crop != 0) {
+            if ($params->sizing->max_crop === 0.0) {
+                if ($candidate->sizing->max_crop !== 0.0) {
                     continue;
                 }
             } else {
                 if ($use_watermark && $candidate->use_watermark) {
                     continue;
                 } // a square that requires watermark should not be generated from a larger derivative with watermark, because if the watermark is not centered on the large image, it will be cropped.
-                if ($candidate->sizing->max_crop != 0) {
+                if ($candidate->sizing->max_crop !== 0.0) {
                     continue;
                 } // this could be optimized
                 if ($candidate_size[0] < $params->sizing->min_size[0] || $candidate_size[1] < $params->sizing->min_size[1]) {
@@ -955,7 +955,7 @@ final class ImageDerivativeController implements ControllerInterface
     {
         $derivative_path = $this->derivativePath;
 
-        if (isset($_GET['ajaxload']) and $_GET['ajaxload'] == 'true') {
+        if (isset($_GET['ajaxload']) and $_GET['ajaxload'] === 'true') {
             $urlService = new UrlService(new HtmlService());
 
             return ResponseFactory::json([

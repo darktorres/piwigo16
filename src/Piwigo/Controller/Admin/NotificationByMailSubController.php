@@ -166,7 +166,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         // | Insert new users with mails                                           |
         // +-----------------------------------------------------------------------+
-        if (count($_POST) == 0) {
+        if (count($_POST) === 0) {
             // No insert data in post mode
             self::insertNewDataUserMailNotification($nbmSender, $this->redirectService, $this->urlService);
         }
@@ -436,7 +436,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
             if (isset($_POST[$post_keyname]) and is_array($_POST[$post_keyname])) {
                 $post_count = count($_POST[$post_keyname]);
                 $treated_count = count($check_key_treated);
-                if ($treated_count != 0) {
+                if ($treated_count !== 0) {
                     $time_refresh = (int) ceil((\Piwigo\Core\TimingHelper::getMoment() - $nbmSender->startTime()) * $post_count / $treated_count);
                 } else {
                     $time_refresh = 0;
@@ -562,7 +562,7 @@ order by
                 // castable to string.
                 $check_key_treated_strings = array_filter($check_key_treated, is_string(...));
                 $quoted_check_key_list = NotificationByMailSender::quoteCheckKeyList(array_diff($check_key_list, $check_key_treated_strings));
-                if (count($quoted_check_key_list) != 0) {
+                if (count($quoted_check_key_list) !== 0) {
                     $query = 'delete from ' . Tables::userMailNotification() . ' where check_key in (' . implode(',', $quoted_check_key_list) . ');';
                     $conn->executeStatement($query);
 

@@ -216,7 +216,7 @@ SELECT *
                     }
                 }
                 foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
-                    $image[$k] = $row[$k];
+                    $image[$k] = $row[$k] ?? null;
                 }
 
                 $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_name', $image['name'], __FUNCTION__);
@@ -227,7 +227,8 @@ SELECT *
 
                 $image_tag_ids = ($params['tag_mode_and']) ? $tag_ids : $image_tag_map[$row_id];
                 $image_tags = [];
-                foreach ($image_tag_ids as $tag_id) {
+                foreach ($image_tag_ids as $tag_id_raw) {
+                    $tag_id = is_numeric($tag_id_raw) ? (int) $tag_id_raw : 0;
                     $url = $urlService->makeIndexUrl(
                         [
                             'section' => 'tags',
@@ -239,11 +240,11 @@ SELECT *
                             'section' => 'tags',
                             'tags' => [$tags_by_id[$tag_id]],
                             'image_id' => $row['id'],
-                            'image_file' => $row['file'],
+                            'image_file' => $row['file'] ?? null,
                         ]
                     );
                     $image_tags[] = [
-                        'id' => (int) $tag_id,
+                        'id' => $tag_id,
                         'url' => $url,
                         'page_url' => $page_url,
                     ];
@@ -292,20 +293,23 @@ SELECT *
             return new PwgError(WsError::INVALID_PARAM, $creation_output['error']);
         }
 
-        self::activityService($conn)->record('tag', $creation_output['id'], 'add');
+        $creation_id = $creation_output['id'];
+        $creation_info = $creation_output['info'];
+
+        self::activityService($conn)->record('tag', $creation_id, 'add');
 
         $query = '
 SELECT name, url_name
 FROM `' . Tables::tags() . '`
-WHERE id = ' . $creation_output['id'] . ';';
+WHERE id = ' . $creation_id . ';';
 
         $new_tag = $conn->fetchAssociative($query);
         $new_tag_name = $new_tag !== false ? ($new_tag['name'] ?? null) : null;
         $new_tag_url_name = $new_tag !== false ? ($new_tag['url_name'] ?? null) : null;
 
         return [
-            'info' => $creation_output['info'],
-            'id' => $creation_output['id'],
+            'info' => $creation_info,
+            'id' => $creation_id,
             'name' => is_string($new_tag_name) ? $new_tag_name : '',
             'url_name' => is_string($new_tag_url_name) ? $new_tag_url_name : '',
         ];

@@ -591,7 +591,7 @@ final class ImageDerivativeController implements ControllerInterface
             // default url is on html format
             $url = html_entity_decode($msg);
             $logger->debug($code . ' ' . $url, 'i.php', [
-                'url' => $_SERVER['REQUEST_URI'],
+                'url' => $_SERVER['REQUEST_URI'] ?? null,
             ]);
             // [SEC-35] Request-URI/Content-Location echoed the redirect target
             // back as response headers with no purpose beyond the real
@@ -605,7 +605,7 @@ final class ImageDerivativeController implements ControllerInterface
         }
 
         $logger->error($code . ' ' . $msg, 'i.php', [
-            'url' => $_SERVER['REQUEST_URI'],
+            'url' => $_SERVER['REQUEST_URI'] ?? null,
         ]);
         throw new ResponseReadyException(ResponseFactory::text($msg, $code));
     }
@@ -686,7 +686,7 @@ final class ImageDerivativeController implements ControllerInterface
             $req = is_string($req) ? $req : '';
             $req = str_replace('//', '/', $req);
         } else {
-            $req = $_SERVER['QUERY_STRING'];
+            $req = $_SERVER['QUERY_STRING'] ?? null;
             $req = is_string($req) ? $req : '';
             if ((bool) ($pos = strpos($req, '&'))) {
                 $req = substr($req, 0, $pos);

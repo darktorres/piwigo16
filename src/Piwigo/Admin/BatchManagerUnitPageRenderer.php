@@ -311,8 +311,9 @@ SELECT *
 
                 $order_by_inside_category_conf = \Piwigo\Config\Config::all()['order_by_inside_category'] ?? null;
                 $order_by = is_string($order_by_inside_category_conf) ? $order_by_inside_category_conf : '';
-                if (is_string($category_info['image_order'] ?? null) && $category_info['image_order'] !== '') {
-                    $order_by = ' ORDER BY ' . $category_info['image_order'];
+                $category_image_order = $category_info !== null ? ($category_info['image_order'] ?? null) : null;
+                if (is_string($category_image_order) && $category_image_order !== '') {
+                    $order_by = ' ORDER BY ' . $category_image_order;
                 }
 
                 $query .= '
@@ -546,7 +547,7 @@ SELECT
                             'U_EDIT' => $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $row_id_str,
                             'NAME' => htmlspecialchars($row_name),
                             'AUTHOR' => htmlspecialchars($row_author),
-                            'LEVEL' => ($row['level'] ?? '') !== '' && $row['level'] !== '0' ? $row['level'] : '0',
+                            'LEVEL' => ($row['level'] ?? '') !== '' && ($row['level'] ?? null) !== '0' ? ($row['level'] ?? '0') : '0',
                             'DESCRIPTION' => htmlspecialchars($row_comment),
                             'DATE_CREATION' => $row['date_creation'],
                             'TAGS' => $tag_selection,

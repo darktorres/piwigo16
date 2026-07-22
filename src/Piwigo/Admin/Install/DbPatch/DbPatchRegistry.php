@@ -175,12 +175,12 @@ final class DbPatchRegistry
 
     public static function has(string $id): bool
     {
-        return isset(self::PATCHES[$id]);
+        return isset(self::PATCHES[(int) $id]);
     }
 
     public static function make(string $id): DbPatchInterface
     {
-        $class = self::PATCHES[$id] ?? throw new \InvalidArgumentException('Unknown db patch id: ' . $id);
+        $class = self::PATCHES[(int) $id] ?? throw new \InvalidArgumentException('Unknown db patch id: ' . $id);
 
         return new $class();
     }

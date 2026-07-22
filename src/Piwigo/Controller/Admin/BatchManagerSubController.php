@@ -401,12 +401,14 @@ DELETE FROM ' . Tables::caddie() . '
             $url_filter = [];
 
             foreach ($_GET['filter'] as $filter) {
-                [$type, $value] = explode('-', is_scalar($filter) ? (string) $filter : '', 2);
+                $filter_parts = explode('-', is_scalar($filter) ? (string) $filter : '', 2);
+                $type = $filter_parts[0];
+                $value = $filter_parts[1] ?? '';
 
                 switch ($type) {
                     case 'prefilter':
                         if ((bool) preg_match('/^duplicates-?/', $value)) {
-                            [, $duplicate_field] = explode('-', $value, 2);
+                            $duplicate_field = explode('-', $value, 2)[1] ?? '';
                             $url_filter['prefilter'] = 'duplicates';
 
                             if (in_array($duplicate_field, ['filename', 'checksum', 'date', 'dimensions'], true)) {
@@ -782,11 +784,11 @@ SELECT
             }
         }
 
-        foreach (array_keys($ratio_categories) as $type) {
-            if (count($ratio_categories[$type]) > 0) {
+        foreach ($ratio_categories as $type => $category) {
+            if (count($category) > 0) {
                 $dimensions['ratio_' . $type] = [
-                    'min' => $ratio_categories[$type][0],
-                    'max' => end($ratio_categories[$type]),
+                    'min' => $category[0],
+                    'max' => end($category),
                 ];
             }
         }

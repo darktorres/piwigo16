@@ -19,12 +19,6 @@ parameters:
 			path: include/common.inc.php
 
 		-
-			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/config_default.inc.php
-
-		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 3
@@ -281,12 +275,6 @@ parameters:
 			identifier: nullCoalesce.offset
 			count: 1
 			path: src/Piwigo/Admin/Install/DbPatch/LegacyDbLayer.php
-
-		-
-			rawMessage: 'Offset ''local_dir_site'' on array{} in isset() does not exist.'
-			identifier: isset.offset
-			count: 1
-			path: src/Piwigo/Admin/Install/DbPatch/LegacyFileConf.php
 
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'

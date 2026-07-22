@@ -175,10 +175,10 @@ final class ThemesNewPageRenderer
             \Piwigo\Core\PageState::current()->addError(Lang::t('Can\'t connect to server.'));
         }
 
-        $admin_theme_pref = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('admin_theme', 'clear');
+        $admin_theme_pref = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('admin_theme', \Piwigo\Config\Config::adminTheme());
         $template->assign(
             'default_screenshot',
-            $this->urlService->getRootUrl() . 'admin/themes/' . (is_string($admin_theme_pref) ? $admin_theme_pref : 'clear') . '/images/missing_screenshot.png'
+            $this->urlService->getRootUrl() . 'admin/themes/' . (is_string($admin_theme_pref) ? $admin_theme_pref : \Piwigo\Config\Config::adminTheme()) . '/images/missing_screenshot.png'
         );
         $template->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
 

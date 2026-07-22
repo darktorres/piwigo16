@@ -43,12 +43,14 @@ final class Config
 
     /**
      * Source-of-truth registry of every Piwigo config key. Empirically
-     * derived from this repo's own include/config_default.inc.php (187
-     * keys) + install/config.sql (74 keys) diffed against the reference
-     * implementation's 277-entry SCHEMA — not the plan doc's stated
-     * 189/102/14 figures, which don't match either side when checked
-     * directly. See docs/plan/manifest.yaml's P13 commit message for the
-     * full methodology.
+     * derived from this repo's own former include/config_default.inc.php
+     * (187 keys, deleted 2026-07-22 -- see defaultsArray()'s own docblock;
+     * this class has been the real source of truth for every request since
+     * P13, that file was already redundant) + install/config.sql (74 keys)
+     * diffed against the reference implementation's 277-entry SCHEMA — not
+     * the plan doc's stated 189/102/14 figures, which don't match either
+     * side when checked directly. See docs/plan/manifest.yaml's P13 commit
+     * message for the full methodology.
      *
      * Schema entries:
      *   type        one of 'string'|'int'|'bool'|'float'|'array'
@@ -96,9 +98,20 @@ final class Config
         ],
         'admin_theme' => [
             'type' => 'string',
-            'default' => 'dark',
+            // "Nothing is frozen" gap-closure (2026-07-22): this entry was
+            // orphaned -- zero real callers anywhere, its 'dark'/'light'
+            // default and description described an admin theme system
+            // nothing implements. The real, live admin-theme mechanism is
+            // a PER-USER Piwigo\Users\PreferencesService('admin_theme', ...)
+            // preference (AdminShell.php/ThemesNewPageRenderer.php/
+            // ExtensionScanner.php/RequestBootstrap.php), checked against
+            // the real on-disk admin/themes/{clear,default,roma}
+            // directories -- 'clear' matches its own former hardcoded
+            // fallback default in all 4 of those call sites, now wired
+            // through here instead of repeated as a literal 4 times.
+            'default' => 'clear',
             'method' => 'adminTheme',
-            'description' => 'Active theme for the administration panel: dark or light.',
+            'description' => 'Site-wide fallback admin theme (clear, default, or roma) used when a user has no admin_theme preference of their own yet.',
         ],
         'album_description_on_all_pages' => [
             'type' => 'bool',
@@ -237,6 +250,24 @@ final class Config
             'custom' => true,
             'description' => 'Serialized {version, list} of integrity-check anomalies the admin has acknowledged/ignored (Admin/Integrity CheckIntegrity.php).',
         ],
+        // "Nothing is frozen" gap-closure (2026-07-22) triage of these 4
+        // cache.* entries: confirmed genuinely unwired (zero real callers,
+        // including dynamic-key access), but NOT dead/superseded the way
+        // update_notify_last_notification_at/_version or home_page turned
+        // out to be -- Piwigo\Cache\CacheFactory already has a real, working
+        // cache-backend-selection system, just via the PIWIGO_CACHE_ADAPTER
+        // env var (apcu/redis/filesystem) instead of Config::, and its own
+        // docblock already flags "Config::cacheAdapter() doesn't exist yet
+        // (P13)" as a known future step. These 4 entries are that future
+        // step's prepared-but-not-yet-connected SCHEMA half -- left in
+        // place on purpose, not removed, since a real caller (whoever wires
+        // CacheFactory onto Config:: instead of the env var) is a concrete,
+        // plausible next step, not speculative. Left unfixed: naming drift
+        // (cacheBackend() vs. CacheFactory's own cacheAdapter() framing) and
+        // cache.backend's 'file'/'redis' options not matching
+        // CacheFactory's real 3-way apcu/redis/filesystem choice --
+        // whoever does the real wiring should reconcile these against
+        // CacheFactory's actual contract, not this SCHEMA's guess at it.
         'cache.backend' => [
             'type' => 'string',
             'default' => 'file',
@@ -306,9 +337,10 @@ final class Config
         ],
         'chmod_value' => [
             'type' => 'int',
-            'default' => 509,
+            'default' => null,
             'method' => 'chmodValue',
-            'description' => 'Filesystem permission bits applied to newly created directories.',
+            'custom' => true,
+            'description' => 'Filesystem permission bits applied to newly created directories -- 0777 under Apache, 0755 otherwise, unless explicitly overridden.',
         ],
         'comment_spam_max_links' => [
             'type' => 'int',
@@ -495,15 +527,24 @@ final class Config
         'derivative_url_style' => [
             'type' => 'int',
             // Part II (web-root isolation): was 0 ('auto', prefers a direct
-            // static _data/i/... link once a derivative is cached) -- see
-            // config_default.inc.php's own comment on this same key for why
-            // that (and style 1, always-static) are no longer usable now
-            // that _data/i/ is deliberately unreachable (SEC-33/35/38/47).
+            // static _data/i/... link once a derivative is cached). Styles 0
+            // and 1 ('derivative', always a direct static link) are no
+            // longer usable -- _data/i/ is deliberately unreachable now
+            // (SEC-33/35/38/47: a direct static link to a cached derivative
+            // skips ImageDerivativeController's own permission check every
+            // time after the first request, the exact vulnerability this
+            // closes), so either style would generate a broken <img src>
+            // for every cached derivative. 2 ('script', always routes
+            // through i.php, which re-checks permission on every request
+            // including cache hits) is the only style that still works, and
+            // is now the default (inlined here 2026-07-22 from the former
+            // include/config_default.inc.php's own comment on this key,
+            // which carried this reasoning before that file was retired).
             'default' => 2,
             'method' => 'derivativeUrlStyle',
             // Stale description found while fixing the default above: only
-            // documented 2 of the 3 real values (0/1/2, see
-            // config_default.inc.php's own comment) and mislabeled style 1.
+            // documented 2 of the 3 real values (0/1/2) and mislabeled
+            // style 1.
             'description' => 'Derivative URL format: 0 = auto (static link if already cached, else routed through i.php), 1 = always a static link, 2 = always routed through i.php.',
         ],
         'derivatives' => [
@@ -765,12 +806,6 @@ final class Config
             'custom' => true,
             'description' => 'Cached list of the history.section enum column values, refreshed when a plugin adds a new section.',
         ],
-        'home_page' => [
-            'type' => 'string',
-            'default' => 'recent_pics',
-            'method' => 'homePage',
-            'description' => 'Section shown on the gallery home page: recent_pics, recent_cats, and others.',
-        ],
         'index_caddie_icon' => [
             'type' => 'bool',
             'default' => true,
@@ -965,6 +1000,23 @@ final class Config
             'method' => 'menubarFilterIcon',
             'description' => 'Show the filter icon in the sidebar menu.',
         ],
+        // "Nothing is frozen" gap-closure (2026-07-22) triage: confirmed
+        // genuinely unwired (zero callers, including dynamic access) and,
+        // unlike home_page/update_notify_last_notification_at/_version,
+        // NOT superseded by anything -- Menu\MenubarRenderer's real tag-
+        // cloud block (the 'mbTags' block) always calls TagService::
+        // getAvailableTags() with no argument (always "all tags", capped
+        // to menubar_tag_cloud_items_number), never branching on this
+        // key's 'always_all'/'current_only'/'all_or_current' modes. Its
+        // sibling TagService::getAvailableTags($tagIds) parameter looked
+        // like a promising existing hook at first glance but turned out to
+        // filter by specific TAG ids (a different feature), not by the
+        // current page's item/photo ids -- there is no existing "tags
+        // present on these specific photos" primitive to wire this to
+        // without building one, and the reference implementation
+        // (piwigo16-rewrite) has the identical gap, so there's no working
+        // version to port from either. Left unfixed on purpose rather than
+        // guessed at: real feature work, needs its own scoped pass.
         'menubar_tag_cloud_content' => [
             'type' => 'string',
             'default' => 'all_or_current',
@@ -1742,6 +1794,19 @@ final class Config
             'method' => 'topNumber',
             'description' => 'Number of items shown in top ranking lists (most visited, best rated, etc.).',
         ],
+        // "Nothing is frozen" gap-closure (2026-07-22) triage: confirmed
+        // genuinely unwired -- the real client-IP reads in this codebase
+        // (Auth/EphemeralKeyService.php, Activity/ActivityService.php) both
+        // read $_SERVER['REMOTE_ADDR'] directly, with no X-Forwarded-For/
+        // X-Forwarded-Proto trust-chain resolution against this (or any)
+        // trusted-proxy allowlist at all -- a real, unbuilt security
+        // feature (distinct from allowed_hosts/[SEC-29], which guards the
+        // Host header for URL generation, not client-IP resolution for
+        // logging/rate-limiting). Left in place as documented, tracked
+        // infrastructure rather than removed -- unlike home_page/
+        // update_notify_last_notification_at/_version, nothing else
+        // superseded this; it's a real gap worth keeping visible, not
+        // dead weight.
         'trusted_proxies' => [
             'type' => 'string',
             'default' => '',
@@ -1773,20 +1838,6 @@ final class Config
             'method' => 'updateNotifyLastNotification',
             'custom' => true,
             'description' => 'Serialized {version, notified_on} of the last update-availability notification shown to the admin. Genuine absence before the first check.',
-        ],
-        'update_notify_last_notification_at' => [
-            'type' => 'string',
-            'default' => null,
-            'method' => 'updateNotifyLastNotificationAt',
-            'nullable' => true,
-            'description' => 'Timestamp when the admin was last notified of an available update.',
-        ],
-        'update_notify_last_notification_version' => [
-            'type' => 'string',
-            'default' => null,
-            'method' => 'updateNotifyLastNotificationVersion',
-            'nullable' => true,
-            'description' => 'Version string of the update the admin was last notified about.',
         ],
         'update_notify_reminder_period' => [
             'type' => 'int',
@@ -1907,13 +1958,6 @@ final class Config
             'custom' => true,
             'description' => 'Database column mapping for user attributes (username, email, etc.).',
         ],
-        'users_table' => [
-            'type' => 'string',
-            'default' => null,
-            'method' => 'usersTable',
-            'nullable' => true,
-            'description' => 'Custom database table name for user accounts (null uses the Piwigo default).',
-        ],
         'webmaster_id' => [
             'type' => 'int',
             'default' => 1,
@@ -2021,7 +2065,7 @@ final class Config
 
     public static function adminTheme(): string
     {
-        return self::getString('admin_theme', 'dark');
+        return self::getString('admin_theme', 'clear');
     }
 
     public static function albumDescriptionOnAllPages(): bool
@@ -2157,11 +2201,6 @@ final class Config
     public static function checksumComputeBlocksize(): int
     {
         return self::getInt('checksum_compute_blocksize', 50);
-    }
-
-    public static function chmodValue(): int
-    {
-        return self::getInt('chmod_value', 509);
     }
 
     public static function commentSpamMaxLinks(): int
@@ -2302,9 +2341,6 @@ final class Config
 
     public static function derivativeUrlStyle(): int
     {
-        // Part II (web-root isolation): matches config_default.inc.php's own
-        // default -- see that file's comment for why 2 ('script') is the
-        // only style that still works now that _data/i/ is unreachable.
         return self::getInt('derivative_url_style', 2);
     }
 
@@ -2463,11 +2499,6 @@ final class Config
     public static function historyGuest(): bool
     {
         return self::getBool('history_guest', false);
-    }
-
-    public static function homePage(): string
-    {
-        return self::getString('home_page', 'recent_pics');
     }
 
     public static function indexCaddieIcon(): bool
@@ -3164,7 +3195,6 @@ final class Config
 
     public static function themesDir(): string
     {
-        // Root-relative -- see SCHEMA['themes_dir']'s own comment.
         return self::getString('themes_dir', 'themes/');
     }
 
@@ -3199,18 +3229,6 @@ final class Config
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
 
-    public static function updateNotifyLastNotificationAt(): ?string
-    {
-        $v = self::src()['update_notify_last_notification_at'] ?? null;
-        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
-    }
-
-    public static function updateNotifyLastNotificationVersion(): ?string
-    {
-        $v = self::src()['update_notify_last_notification_version'] ?? null;
-        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
-    }
-
     public static function updateNotifyReminderPeriod(): int
     {
         return self::getInt('update_notify_reminder_period', 604800);
@@ -3223,7 +3241,6 @@ final class Config
 
     public static function uploadDir(): string
     {
-        // Root-relative -- see SCHEMA['upload_dir']'s own comment.
         return self::getString('upload_dir', 'upload/');
     }
 
@@ -3277,12 +3294,6 @@ final class Config
         return self::getBool('user_can_edit_comment', false);
     }
 
-    public static function usersTable(): ?string
-    {
-        $v = self::src()['users_table'] ?? null;
-        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
-    }
-
     public static function webmasterId(): int
     {
         return self::getInt('webmaster_id', 1);
@@ -3326,6 +3337,29 @@ final class Config
         }
         $unserialized = \Piwigo\Core\ArrayHelper::safeUnserialize($v);
         return is_array($unserialized) ? $unserialized : null;
+    }
+
+    /**
+     * Filesystem permission bits for newly created directories --
+     * 0777 under Apache (the SAPI historically able to `chmod` its own
+     * created files freely), 0755 elsewhere. "Nothing is frozen"
+     * gap-closure (2026-07-22): the former config_default.inc.php computed
+     * this the same SAPI-conditional way; a static SCHEMA default (509,
+     * octal 0775 -- neither branch this logic would ever produce) had
+     * silently replaced it as an unintentional simplification during the
+     * original P13 SCHEMA authoring. Marked 'custom' => true to restore
+     * the real conditional, rather than leave a config key that looks
+     * like a plain configurable default but was actually always meant to
+     * be computed.
+     */
+    public static function chmodValue(): int
+    {
+        $override = self::src()['chmod_value'] ?? null;
+        if (is_int($override)) {
+            return $override;
+        }
+
+        return substr_compare(\PHP_SAPI, 'apa', 0, 3) === 0 ? 0777 : 0755;
     }
 
     /**
@@ -3986,6 +4020,47 @@ final class Config
     public static function all(): array
     {
         return self::src();
+    }
+
+    /**
+     * Every literal SCHEMA default, keyed by config key -- independent of
+     * self::$data (Config's own boot/override state), safe to call before
+     * Kernel::boot() or from any request phase without side effects.
+     * Replaces the former `include/config_default.inc.php` raw-file
+     * pattern (`$conf = []; include '.../config_default.inc.php';`) for
+     * the handful of call sites that build their own standalone $conf
+     * array before overlaying a site's local/config/config.inc.php --
+     * "nothing is frozen" gap-closure, 2026-07-22: that file was already
+     * fully redundant with SCHEMA for the real app boot path
+     * (ConfigLoader::applyDefaults() never read it), and had already
+     * silently drifted from SCHEMA in 3 real values before being deleted
+     * (see Config.php's own class docblock history note).
+     *
+     * `'custom' => true` entries (computed accessors, e.g. orderBy()) are
+     * deliberately excluded, not reflectively invoked -- confirmed via a
+     * real diff against the now-deleted config_default.inc.php that none
+     * of them ever had a literal file-level default either (their only
+     * real default came from their own accessor's fallback, e.g.
+     * orderBy() returning [] when self::$data has no 'order_by' key),
+     * so omitting them here matches that file's own historical behavior
+     * exactly, and keeps this method pure (no Config::$data coupling a
+     * caller mid-request could observe differently than intended).
+     *
+     * @return array<string, mixed>
+     */
+    public static function defaultsArray(): array
+    {
+        $result = [];
+        foreach (self::SCHEMA as $key => $entry) {
+            if (($entry['custom'] ?? false) === true) {
+                continue;
+            }
+            if (($entry['default'] ?? null) !== null) {
+                $result[$key] = $entry['default'];
+            }
+        }
+
+        return $result;
     }
 
     /**

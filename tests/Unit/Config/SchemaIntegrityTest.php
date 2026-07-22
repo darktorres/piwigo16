@@ -12,7 +12,7 @@ const SCHEMA_INTEGRITY_ALLOW_LIST = [
     // Preamble / framework
     'instance',
     // Bulk readers
-    'all', 'dumpForLog',
+    'all', 'dumpForLog', 'defaultsArray',
     // Test helper
     'reset',
     // P16: composed accessors replacing retired define() constants -- no

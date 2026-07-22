@@ -157,8 +157,8 @@ final class AdminShell
         if (isset($_GET['change_theme'])) {
             $admin_themes = ['roma', 'clear'];
             $admin_theme_param = new PreferencesService(new UserRepository($conn))
-                ->getParam('admin_theme', 'clear');
-            $admin_theme_array = [is_string($admin_theme_param) ? $admin_theme_param : 'clear'];
+                ->getParam('admin_theme', \Piwigo\Config\Config::adminTheme());
+            $admin_theme_array = [is_string($admin_theme_param) ? $admin_theme_param : \Piwigo\Config\Config::adminTheme()];
             $result = array_diff(
                 $admin_themes,
                 $admin_theme_array

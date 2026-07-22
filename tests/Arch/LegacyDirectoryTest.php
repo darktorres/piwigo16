@@ -97,13 +97,15 @@ test('include/ contains exactly the sanctioned bootstrap seam files', function (
     // include seam every entry point uses (top-level scope is
     // load-bearing for the bare-variable config includes, and SEC-60
     // keeps its define() calls out of src/), env.inc.php is the autoload
-    // boundary, config_default.inc.php is a plain data file by Piwigo's
-    // own documented user-override convention, and index.php is the
-    // standard anti-directory-listing stub. Anything else appearing here
-    // is legacy code coming back.
+    // boundary, and index.php is the standard anti-directory-listing
+    // stub. config_default.inc.php is gone -- "nothing is frozen"
+    // gap-closure (2026-07-22) retired it in favor of
+    // Piwigo\Config\Config::defaultsArray(), already the real source of
+    // truth for every request's actual defaults (see that method's own
+    // docblock). Anything appearing here beyond these 3 is legacy code
+    // coming back.
     expect(listDirectoryEntries(dirname(__DIR__, 2) . '/include'))->toBe([
         'common.inc.php',
-        'config_default.inc.php',
         'env.inc.php',
         'index.php',
     ]);
@@ -230,7 +232,6 @@ test('no include/require statement targets a legacy path outside the sanctioned 
 
     $sanctioned = [
         'include/common.inc.php',
-        'include/config_default.inc.php',
         'include/env.inc.php',
     ];
 

@@ -82,10 +82,9 @@ final class UpgradePathTest extends IntegrationTestCase
         $body = $this->get('upgrade_feed.php');
 
         self::assertStringNotContainsStringIgnoringCase('access denied', $body);
-        // check_upgrade_feed defaults to false (include/config_default.inc.php),
-        // so reaching this guard message -- rather than a raw connection
-        // exception -- is exactly what a successful connection looks like
-        // here.
+        // check_upgrade_feed defaults to false (Config::SCHEMA), so reaching
+        // this guard message -- rather than a raw connection exception -- is
+        // exactly what a successful connection looks like here.
         self::assertStringContainsString('upgrade feed is not active', $body);
     }
 

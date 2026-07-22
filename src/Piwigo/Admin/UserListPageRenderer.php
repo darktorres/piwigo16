@@ -327,16 +327,26 @@ SELECT id, name, is_default
 
     private static function webmasterIdIsLocal(): mixed
     {
-        // include/config_default.inc.php never sets local_dir_site/webmaster_id
-        // (confirmed: no such keys in that file at all) -- they only ever come
-        // from an optional, site-owner-authored local/config/config.inc.php
-        // loaded at runtime, whose content isn't knowable statically. Note the
-        // deliberate absence of `global $conf;` here -- this $conf is a fresh
-        // local shadow the two includes below populate from scratch, never the
-        // real DB-synced global.
+        // A presence check ("did the site owner override webmaster_id in
+        // their OWN local/config/config.inc.php"), not a value read --
+        // deliberately does NOT start from Config::defaultsArray() the way
+        // LegacyFileConf::read()'s value-reading callers do. webmaster_id
+        // has a real SCHEMA default (1) now; merging that in first would
+        // make isset($conf['webmaster_id']) true on every request even
+        // when the site file never touched it, permanently (and wrongly)
+        // showing the "please remove it" deprecation warning below. The
+        // former config_default.inc.php happened to never set
+        // local_dir_site/webmaster_id either, so this always was, and
+        // stays, a bare local-file-only read -- "nothing is frozen"
+        // gap-closure (2026-07-22) caught this as a real near-miss bug
+        // while retiring config_default.inc.php (a naive Config::
+        // defaultsArray()-first rewrite would have made this warning fire
+        // unconditionally, since webmaster_id does have a real SCHEMA
+        // default now). Note the deliberate absence of `global $conf;`
+        // here -- this $conf is a fresh local shadow the include below
+        // populates from scratch, never the real DB-synced global.
         $paths = CurrentPaths::get();
         $conf = [];
-        include $paths->root . 'include/config_default.inc.php';
         @include $paths->local . 'config/config.inc.php';
         // @phpstan-ignore isset.offset
         if (isset($conf['local_dir_site'])) {

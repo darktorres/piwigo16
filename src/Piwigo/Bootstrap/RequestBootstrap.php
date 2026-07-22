@@ -456,11 +456,11 @@ final class RequestBootstrap
             // getParam() has no return type declaration (its own value
             // comes from CurrentUser::get()->preferences[$param], an
             // untyped array<string, mixed>), so its return is inferred as
-            // mixed; narrow to the same 'clear' fallback already passed as
-            // the default value.
+            // mixed; narrow to the same Config::adminTheme() fallback
+            // already passed as the default value.
             $admin_theme = new \Piwigo\Users\PreferencesService(new UserRepository($conn))
-                ->getParam('admin_theme', 'clear');
-            $admin_theme = is_string($admin_theme) ? $admin_theme : 'clear';
+                ->getParam('admin_theme', \Piwigo\Config\Config::adminTheme());
+            $admin_theme = is_string($admin_theme) ? $admin_theme : \Piwigo\Config\Config::adminTheme();
             $template = new Template(CurrentPaths::get()->root . 'admin/themes', $admin_theme);
         } else { // Classic template
             $theme = CurrentUser::get()->theme;

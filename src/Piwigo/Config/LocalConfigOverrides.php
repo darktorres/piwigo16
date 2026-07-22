@@ -9,15 +9,21 @@ use Piwigo\Core\Paths;
 /**
  * Reads exactly the `$conf[...]` keys a site owner's own
  * `local/config/config.inc.php` (+ conditionally the `local_dir_site` dir
- * file) sets -- deliberately isolated from `config_default.inc.php`, unlike
- * {@see \Piwigo\Admin\Install\DbPatch\LegacyFileConf::read()}'s "give me an
- * effective value with a sensible fallback" shape. That distinction matters
- * here: this is the source for `ConfigLoader::applyLocalFileOverrides()`,
- * which syncs every key found straight into `Config::override()` -- if
- * `config_default.inc.php`'s own ~277 default-bearing keys were included
- * first, every one of them would look "overridden" and get blindly
- * resynced, risking silent drift wherever `config_default.inc.php`'s
- * literal value and `Config::SCHEMA`'s hardcoded default have diverged.
+ * file) sets -- deliberately isolated from `Config::defaultsArray()`,
+ * unlike {@see \Piwigo\Admin\Install\DbPatch\LegacyFileConf::read()}'s
+ * "give me an effective value with a sensible fallback" shape. That
+ * distinction matters here: this is the source for `ConfigLoader::
+ * applyLocalFileOverrides()`, which syncs every key found straight into
+ * `Config::override()` -- if `Config::defaultsArray()`'s own ~277
+ * default-bearing keys were merged in first, every one of them would look
+ * "overridden" and get blindly resynced, which is a no-op today (they're
+ * already `Config::SCHEMA`'s own defaults) but would silently mask a real
+ * bug the instant anyone touched a default value here vs. in code that
+ * reads a key's presence to mean "the site genuinely customized this"
+ * (confirmed live: `Admin\UserListPageRenderer::webmasterIdIsLocal()`,
+ * a presence check for exactly that reason, had to be fixed the same way
+ * during the "nothing is frozen" config_default.inc.php retirement,
+ * 2026-07-22 -- this class already got that design right from the start).
  * Reading only the site's own file(s) means exactly the keys a site
  * genuinely customized land in the returned array, by construction.
  */

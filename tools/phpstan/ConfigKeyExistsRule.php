@@ -48,8 +48,9 @@ final class ConfigKeyExistsRule implements Rule
      * be rare; prefer adding the key to SCHEMA if it's user-configurable.
      *
      * Seeded from P13's own origin-vs-SCHEMA diff (docs/plan/manifest.yaml's
-     * P13 commit message) -- the six origin conf keys that exist in
-     * include/config_default.inc.php / install/config.sql but were
+     * P13 commit message) -- the six origin conf keys that existed in the
+     * former include/config_default.inc.php (deleted 2026-07-22, see
+     * Config::defaultsArray()'s own docblock) / install/config.sql but were
      * deliberately left out of Config::SCHEMA because they're read
      * dynamically (ConfigService::confGetParam()) or legacy-only:
      * blk_menubar (menubar layout, admin-editable, no SCHEMA-shaped

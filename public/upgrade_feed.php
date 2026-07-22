@@ -51,8 +51,7 @@ include $paths->root . 'include/env.inc.php';
  * @var array<string, mixed> $conf
  * @var string $prefixeTable
  */
-
-include $paths->root . 'include/config_default.inc.php';
+$conf = \Piwigo\Config\Config::defaultsArray();
 @include $paths->local . 'config/config.inc.php';
 
 include $paths->siteLocal . 'config/database.inc.php';
@@ -75,9 +74,13 @@ foreach (['db_host', 'db_user', 'db_password', 'db_base'] as $dbConfKey) {
     }
 }
 
-// $conf['dblayer'] is set by config_default.inc.php/database.inc.php as a
-// string, but the generic array<string, mixed> type of $conf erases that
-// specific type; re-narrow at the point of use (same pattern as
+// $conf['dblayer'] is set by database.inc.php (just included) as a string
+// -- "nothing is frozen" gap-closure (2026-07-22) confirmed config_default.
+// inc.php never set it, contrary to what this comment used to claim, dblayer
+// has no Config::SCHEMA entry either (see LegacyDbLayer::value()'s own
+// docblock for why: a different value space than Config::dbDriver()) -- but
+// the generic array<string, mixed> type of $conf erases dblayer's specific
+// type regardless of source; re-narrow at the point of use (same pattern as
 // include/common.inc.php and upgrade.php).
 $dblayer = $conf['dblayer'];
 if (! is_string($dblayer)) {

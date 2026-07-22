@@ -68,7 +68,7 @@ InstallBootstrap::boot($paths);
  */
 
 // load config file
-include $paths->root . 'include/config_default.inc.php';
+$conf = Config::defaultsArray();
 @include $paths->local . 'config/config.inc.php';
 
 $config_file = $paths->siteLocal . 'config/database.inc.php';

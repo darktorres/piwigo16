@@ -16,8 +16,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $paths = \Piwigo\Core\Paths::fromRoot(dirname(__DIR__));
 
-$conf = [];
-require $paths->root . 'include/config_default.inc.php';
+$conf = \Piwigo\Config\Config::defaultsArray();
 @include $paths->local . 'config/config.inc.php';
 
 require $paths->root . 'include/env.inc.php';

@@ -817,31 +817,33 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      * by a site-owner-authored local config file (a deprecated pattern --
      * see the warning message this feeds).
      *
-     * Same external-file rationale as the isset.offset/logicalOr.alwaysFalse
-     * ignores inside this method's own body: PHPStan can't see
-     * local/config/config.inc.php's content, so it proves this method always
-     * returns false even though it can genuinely return true.
+     * PHPStan can't see local/config/config.inc.php's content, so it can't
+     * rule out either isset() genuinely being true -- no ignores needed
+     * here (unlike before "nothing is frozen" gap-closure, 2026-07-22,
+     * retired config_default.inc.php: PHPStan previously treated the whole
+     * $conf array as unverifiable mixed from the raw include, which
+     * produced different, now-stale error identifiers; Config::
+     * defaultsArray() gives $conf a real, checkable type instead).
      */
-    // @phpstan-ignore return.tooWideBool
     private static function orderByIsLocal(): bool
     {
-        // include/config_default.inc.php never sets local_dir_site/
-        // order_by/order_by_inside_category (confirmed: no such keys in
-        // that file at all) — they only ever come from an optional,
-        // site-owner-authored local/config/config.inc.php loaded at
-        // runtime, whose content isn't knowable statically. Whether
-        // $conf ends up with these keys genuinely depends on a file
-        // that may not exist and isn't part of this codebase.
+        // Config::defaultsArray() never sets local_dir_site/order_by/
+        // order_by_inside_category -- local_dir_site has no SCHEMA entry
+        // at all, and order_by/order_by_inside_category are both
+        // 'custom' => true (computed accessors, no plain literal default),
+        // deliberately excluded from defaultsArray() (see its own
+        // docblock). They only ever come from an optional, site-owner-
+        // authored local/config/config.inc.php loaded at runtime, whose
+        // content isn't knowable statically. Whether $conf ends up with
+        // these keys genuinely depends on a file that may not exist and
+        // isn't part of this codebase.
         $paths = CurrentPaths::get();
-        $conf = [];
-        include $paths->root . 'include/config_default.inc.php';
+        $conf = \Piwigo\Config\Config::defaultsArray();
         @include $paths->local . 'config/config.inc.php';
-        // @phpstan-ignore isset.offset
         if (isset($conf['local_dir_site'])) {
             @include $paths->siteLocal . 'config/config.inc.php';
         }
 
-        // @phpstan-ignore isset.offset, isset.offset, logicalOr.alwaysFalse
         return isset($conf['order_by']) or isset($conf['order_by_inside_category']);
     }
 

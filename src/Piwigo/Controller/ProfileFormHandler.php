@@ -131,12 +131,12 @@ final class ProfileFormHandler
                 $errors[] = Lang::t('Recent period must be a positive integer value');
             }
 
-            if (! in_array($_POST['language'], array_keys(\Piwigo\Lang\LangService::getLanguages()), true)) {
+            if (! in_array($_POST['language'] ?? null, array_keys(\Piwigo\Lang\LangService::getLanguages()), true)) {
                 new HtmlService()
                     ->fatalError('Hacking attempt, incorrect language value');
             }
 
-            if (! in_array($_POST['theme'], array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes()), true)) {
+            if (! in_array($_POST['theme'] ?? null, array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes()), true)) {
                 new HtmlService()
                     ->fatalError('Hacking attempt, incorrect theme value');
             }
@@ -157,7 +157,7 @@ final class ProfileFormHandler
             && $new_pwd_present_raw !== 0 && $new_pwd_present_raw !== false && $new_pwd_present_raw !== [];
         if ($new_pwd_present) {
             // password must be the same as its confirmation
-            $new_pwd_raw = $_POST['use_new_pwd'];
+            $new_pwd_raw = $_POST['use_new_pwd'] ?? null;
             $pwd_conf_raw = $_POST['passwordConf'] ?? null;
             if (
                 (is_string($new_pwd_raw) ? $new_pwd_raw : '')

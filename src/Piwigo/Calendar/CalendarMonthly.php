@@ -418,7 +418,7 @@ class CalendarMonthly extends CalendarBase
 
         if ($items !== []) {
             [$known_day] = array_keys($items);
-            $known_dow = $items[$known_day]['dow'];
+            $known_dow = $items[$known_day]['dow'] ?? 0;
             $first_day_dow = ($known_dow - ($known_day - 1)) % 7;
             if ($first_day_dow < 0) {
                 $first_day_dow += 7;
@@ -482,7 +482,7 @@ class CalendarMonthly extends CalendarBase
                           'NB_ELEMENTS' => $items[$day]['nb_images'],
                           'IMAGE' => $items[$day]['derivative']->get_url(),
                           'U_IMG_LINK' => $url,
-                          'IMAGE_ALT' => $items[$day]['file'],
+                          'IMAGE_ALT' => $items[$day]['file'] ?? null,
                       ];
                 }
             }

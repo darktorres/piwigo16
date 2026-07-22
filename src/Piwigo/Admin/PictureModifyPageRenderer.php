@@ -441,13 +441,13 @@ SELECT
             // actually protects the list-destructure below (not assert(), which is
             // a no-op under this app's zend.assertions=-1).
             if ($rate_row !== false) {
-                [$row['nb_rates']] = $rate_row;
+                $row['nb_rates'] = $rate_row[0] ?? null;
 
                 $intro_vars['stats'] .= ', ' . sprintf(Lang::t('Rated %d times, score : %.2f'), is_numeric($row['nb_rates']) ? (int) $row['nb_rates'] : 0, is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
             }
         }
 
-        $row_id_str = is_numeric($row['id']) ? (string) (int) $row['id'] : '0';
+        $row_id_str = is_numeric($row['id'] ?? null) ? (string) (int) $row['id'] : '0';
         $query = '
 SELECT *
   FROM ' . Tables::imageFormat() . '

@@ -964,6 +964,7 @@ SELECT
         // Get duration of video and determine time of poster
         // [SEC-16] escapeshellarg() on the video path -- the original
         // single-quoted it manually, which never escapes an embedded `'`.
+        $O = [];
         exec('ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' . escapeshellarg($file_path), $O, $S);
 
         if (isset($O[0]) && $O[0] !== '') {
@@ -984,6 +985,7 @@ SELECT
         $ffmpeg .= ' -frames:v 1';  // Extract one frame
         $ffmpeg .= ' ' . escapeshellarg($representative_file_path); // Output file
 
+        $FO = [];
         @exec($ffmpeg . ' 2>&1', $FO, $FS);
         if (isset($FO[0]) && $FO[0] !== '') {
             $logger->debug(__METHOD__ . ', Tried ' . $ffmpeg);
@@ -994,6 +996,7 @@ SELECT
         if (! file_exists($representative_file_path)) {
             // Let's try with avconv if ffmpeg unavailable
             $avconv = str_replace('ffmpeg', 'avconv', $ffmpeg);
+            $AO = [];
             @exec($avconv . ' 2>&1', $AO, $AS);
 
             if (isset($AO[0]) && $AO[0] !== '') {

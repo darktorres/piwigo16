@@ -214,6 +214,22 @@
                      `is_numeric($params['max_level'] ?? null)` guards the
                      bare `$params['max_level']` reads a few tokens later. -->
                 <file name="src/Piwigo/Ws/PwgUsers.php"/>
+                <!-- Same $_POST-shape-narrowing disagreement, this time on
+                     username/password/redirect (each guarded by its own
+                     `is_string($_POST['x'] ?? null)` a few tokens earlier). -->
+                <file name="src/Piwigo/Controller/IdentificationController.php"/>
+                <!-- $items[$day] entries are always built with the full
+                     derivative/file/dow literal shape (see the loop at
+                     ~line 410 above); PHPStan's own nullCoalesce.offset
+                     "always exists" complaint confirms it once a `?? 0`
+                     fallback is added, same array-shape-merging
+                     imprecision as the other suppressions here. -->
+                <file name="src/Piwigo/Calendar/CalendarMonthly.php"/>
+                <!-- Same disagreement on $_POST['date_creation'] (guarded a
+                     few lines above by `in_array($_POST['date_creation'] ??
+                     null, ...)`) and $row['id'] (guarded by
+                     `is_numeric($row['id'] ?? null)` immediately before). -->
+                <file name="src/Piwigo/Admin/PictureModifyPageRenderer.php"/>
             </errorLevel>
         </PossiblyUndefinedArrayOffset>
         <PossiblyNullArrayAccess>
@@ -238,6 +254,17 @@
                 <file name="src/Piwigo/Admin/PictureCoiPageRenderer.php"/>
             </errorLevel>
         </PossiblyInvalidArrayOffset>
+        <!-- `$last_rank = count($items) - 1` reads as possibly -1 to Psalm,
+             but $current_rank (= $rank_of[$image_id]) was already proven to
+             exist a few lines above (an isset($rank_of[$image_id]) guard
+             upstream falls through to page_not_found() otherwise), which
+             guarantees $items is non-empty. composer analyse:phpstan is
+             clean here with zero changes. -->
+        <InvalidArrayOffset>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Controller/PictureController.php"/>
+            </errorLevel>
+        </InvalidArrayOffset>
         <!-- $searchFields is `&$mySearch['fields']` — a by-ref alias. The
              project's known "by-ref loses narrowing" limitation (see
              QNumericRangeScope.php's own InvalidOperand suppression above)

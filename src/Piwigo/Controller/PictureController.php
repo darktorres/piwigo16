@@ -912,7 +912,7 @@ SELECT *
             foreach (['repeat', 'play'] as $p) {
                 $var_name =
                   'U_'
-                  . ((bool) $slideshow_params[$p] ? 'STOP_' : 'START_')
+                  . ((bool) ($slideshow_params[$p] ?? null) ? 'STOP_' : 'START_')
                   . strtoupper($p);
 
                 $tpl_slideshow[$var_name] =
@@ -924,7 +924,7 @@ SELECT *
                                       array_merge(
                                           $slideshow_params,
                                           [
-                                              $p => ! (bool) $slideshow_params[$p],
+                                              $p => ! (bool) ($slideshow_params[$p] ?? null),
                                           ]
                                       )
                                   ),
@@ -1165,7 +1165,7 @@ SELECT COUNT(*) AS nb_fav
 
         // related categories
         $related_cat0_id = $related_categories[0]['id'] ?? null;
-        $page_category_id_for_compare = is_scalar($page_category['id'] ?? null) ? (string) $page_category['id'] : null;
+        $page_category_id_for_compare = $page_category !== null && is_scalar($page_category['id'] ?? null) ? (string) $page_category['id'] : null;
         if (count($related_categories) === 1 and
             $page_category !== null and
             $related_cat0_id !== null and $related_cat0_id === $page_category_id_for_compare) { // no need to go to db, we have all the info

@@ -109,7 +109,7 @@ final class PluginLoader
         $i = -1;
 
         if ($fh !== false) {
-            while (($line = fgets($fh)) !== false && $fs_version == null && $i < 10) {
+            while (($line = fgets($fh)) !== false && $fs_version === null && $i < 10) {
                 $i++;
                 if ($i < 2) {
                     continue;
@@ -129,8 +129,8 @@ final class PluginLoader
         $plugin_version = is_string($plugin_version) ? $plugin_version : '0';
 
         // if version is auto (dev) or superior
-        if ($fs_version != null && (
-            $fs_version == 'auto' || $plugin_version == 'auto' ||
+        if ($fs_version !== null && (
+            $fs_version === 'auto' || $plugin_version === 'auto' ||
               (bool) \Piwigo\Core\VersionHelper::safeVersionCompare($plugin_version, $fs_version, '<')
         )
         ) {
@@ -172,7 +172,7 @@ final class PluginLoader
 
             // update database (only on production). We want to avoid registering an "auto" to "auto" update,
             // which happens for each "version=auto" plugin on each page load.
-            if ($new_version != $old_version) {
+            if ($new_version !== $old_version) {
                 $conn = DbConnection::build();
                 new PluginRepository($conn)
                     ->updateVersion($plugin_id, $fs_version);

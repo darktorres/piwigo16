@@ -125,7 +125,7 @@ final class UpgradeRunner
             $http_accept_language = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null;
             $http_accept_language = is_string($http_accept_language) ? $http_accept_language : '';
             foreach ($fs_languages as $language_code => $fs_language) {
-                if (substr($language_code, 0, 2) == substr($http_accept_language, 0, 2)) {
+                if (substr($language_code, 0, 2) === substr($http_accept_language, 0, 2)) {
                     $language = $language_code;
                     break;
                 }
@@ -474,7 +474,7 @@ REPLACE INTO ' . Tables::plugins() . '
 
         $languages_options = [];
         foreach ($fs_languages as $language_code => $fs_language) {
-            if ($this->language == $language_code) {
+            if ($this->language === $language_code) {
                 $template->assign('language_selection', $language_code);
             }
             $languages_options[$language_code] = $fs_language['name'];
@@ -500,12 +500,12 @@ REPLACE INTO ' . Tables::plugins() . '
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $page_errors = \Piwigo\Core\PageState::current()->errors;
-        if (count($page_errors) != 0) {
+        if (count($page_errors) !== 0) {
             $template->assign('errors', $page_errors);
         }
 
         $page_infos = \Piwigo\Core\PageState::current()->infos;
-        if (count($page_infos) != 0) {
+        if (count($page_infos) !== 0) {
             $template->assign('infos', $page_infos);
         }
 

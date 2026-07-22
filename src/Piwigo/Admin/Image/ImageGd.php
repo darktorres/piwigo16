@@ -25,9 +25,9 @@ class ImageGd implements ImageInterface
 
         if (in_array($extension, ['jpg', 'jpeg'])) {
             $image = imagecreatefromjpeg($source_filepath);
-        } elseif ($extension == 'png') {
+        } elseif ($extension === 'png') {
             $image = imagecreatefrompng($source_filepath);
-        } elseif ($extension == 'gif' and $gd_info['GIF Read Support'] and $gd_info['GIF Create Support']) {
+        } elseif ($extension === 'gif' and $gd_info['GIF Read Support'] and $gd_info['GIF Create Support']) {
             $image = imagecreatefromgif($source_filepath);
         } else {
             die('[Image GD] unsupported file extension');
@@ -185,10 +185,10 @@ class ImageGd implements ImageInterface
     {
         $extension = strtolower(\Piwigo\Core\StringHelper::getExtension($destination_filepath));
 
-        if ($extension == 'png') {
+        if ($extension === 'png') {
             return imagepng($this->image, $destination_filepath);
         }
-        if ($extension == 'gif') {
+        if ($extension === 'gif') {
             return imagegif($this->image, $destination_filepath);
         }
         return imagejpeg($this->image, $destination_filepath, $this->quality);

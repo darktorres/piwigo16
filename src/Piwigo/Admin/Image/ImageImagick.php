@@ -93,8 +93,8 @@ class ImageImagick implements ImageInterface
         // image, is faster than running Lanczos over the full original
         // resolution directly. ImageGd's resize() has no equivalent step
         // -- GD's imagecopyresampled() doesn't need it.
-        if ($this->get_width() % 2 == 0
-            && $this->get_height() % 2 == 0
+        if ($this->get_width() % 2 === 0
+            && $this->get_height() % 2 === 0
             && $this->get_width() > 3 * $width) {
             $this->image->scaleImage($this->get_width() / 2, $this->get_height() / 2);
         }

@@ -46,7 +46,7 @@ CREATE TABLE ' . Tables::themes() . " (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM";
 
-        if (UpgradeCharset::dbCharset() == 'utf8') {
+        if (UpgradeCharset::dbCharset() === 'utf8') {
             $query .= ' DEFAULT CHARACTER SET utf8';
         }
 

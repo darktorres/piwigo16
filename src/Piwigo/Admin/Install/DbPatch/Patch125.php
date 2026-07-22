@@ -58,8 +58,9 @@ final class Patch125 implements DbPatchInterface
         $configService->loadConfFromDb();
 
         $banner_orig = $configService->confGetParam('page_banner');
-        $banner_new = $this->replaceHotlinks(is_array($banner_orig) || is_string($banner_orig) ? $banner_orig : '', $dirThumbnail, $prefixThumbnail);
-        if ($banner_orig != $banner_new) {
+        $banner_orig_normalized = is_array($banner_orig) || is_string($banner_orig) ? $banner_orig : '';
+        $banner_new = $this->replaceHotlinks($banner_orig_normalized, $dirThumbnail, $prefixThumbnail);
+        if ($banner_orig_normalized !== $banner_new) {
             $configService->confUpdateParam('page_banner', $banner_new);
         }
 

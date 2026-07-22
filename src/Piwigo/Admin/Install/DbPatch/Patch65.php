@@ -70,7 +70,7 @@ SELECT language, COUNT(user_id) AS count FROM ' . Tables::userInfos() . '
             $language = is_scalar($row['language']) ? (string) $row['language'] : '';
             $count = is_scalar($row['count']) ? (string) $row['count'] : '';
             $lang_def = explode('.', $language);
-            if (count($lang_def) == 2) {
+            if (count($lang_def) === 2) {
                 $new_lang = $lang_def[0];
                 $charset = strtolower($lang_def[1]);
             } else {
@@ -135,7 +135,7 @@ SELECT language FROM ' . Tables::userInfos() . '
             $query = 'SHOW FULL COLUMNS FROM ' . $table;
             $field_definitions = [];
             foreach ($conn->fetchAllAssociative($query) as $row) {
-                if (! isset($row['Collation']) or $row['Collation'] == 'NULL') {
+                if (! isset($row['Collation']) or $row['Collation'] === 'NULL') {
                     continue;
                 }
                 array_push($field_definitions, $row);
@@ -155,7 +155,7 @@ SELECT language FROM ' . Tables::userInfos() . '
         $db_collate = '';
         if (version_compare($mysql_version, '4.1', '<')) { // below 4.1 no charset support
             $upgrade_log .= "< conversion\tnothing\n";
-        } elseif ($admin_charset == 'iso-8859-1') {
+        } elseif ($admin_charset === 'iso-8859-1') {
             $pwg_charset = 'utf-8';
             $db_charset = 'utf8';
             foreach ($all_tables as $table) {
@@ -170,7 +170,7 @@ SELECT language FROM ' . Tables::userInfos() . '
          * ALTER TABLE t1 CHANGE c1 c1 BLOB;
          * ALTER TABLE t1 CHANGE c1 c1 TEXT CHARACTER SET utf8;
          */
-        elseif ($admin_charset == 'utf-8') {
+        elseif ($admin_charset === 'utf-8') {
             $pwg_charset = 'utf-8';
             $db_charset = 'utf8';
             foreach ($all_tables as $table) {
@@ -183,7 +183,7 @@ SELECT language FROM ' . Tables::userInfos() . '
             }
             $upgrade_log .= "< conversion\tchange binary\n";
             $upgrade_log .= "< conversion\tchange utf8\n";
-        } elseif ($admin_charset == 'iso-8859-2'/* Central European */) {
+        } elseif ($admin_charset === 'iso-8859-2'/* Central European */) {
             $pwg_charset = 'utf-8';
             $db_charset = 'utf8';
             foreach ($all_tables as $table) {
@@ -220,7 +220,7 @@ define(\'DB_COLLATE\',  \'\');'
 
         UpgradeCharset::set($pwg_charset, $db_charset);
 
-        if (version_compare(new DbInfo($conn)->version(), '4.1.0', '>=') and $db_charset != '') {
+        if (version_compare(new DbInfo($conn)->version(), '4.1.0', '>=') and $db_charset !== '') {
             $conn->executeStatement('SET NAMES "' . $db_charset . '"');
         }
 

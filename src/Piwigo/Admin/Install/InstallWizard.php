@@ -271,7 +271,7 @@ final class InstallWizard
             $accept_language = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null;
             $accept_language = is_string($accept_language) ? $accept_language : '';
             foreach ($this->fsLanguages as $language_code => $fs_language) {
-                if (substr($language_code, 0, 2) == substr($accept_language, 0, 2)) {
+                if (substr($language_code, 0, 2) === substr($accept_language, 0, 2)) {
                     $language = $language_code;
                     break;
                 }
@@ -353,7 +353,7 @@ final class InstallWizard
         } elseif ((bool) preg_match('/[\'"]/', $webmaster)) {
             $this->errors[] = Lang::t('webmaster login can\'t contain characters \' or "');
         }
-        if ($this->adminPass1 != $this->adminPass2 || empty($this->adminPass1)) {
+        if ($this->adminPass1 !== $this->adminPass2 || empty($this->adminPass1)) {
             $this->errors[] = Lang::t('please enter your password again');
         }
         if (empty($this->adminMail)) {
@@ -438,7 +438,7 @@ final class InstallWizard
 
         // Also write legacy database.inc.php in prod mode so upgrade.php and other
         // not-yet-migrated scripts keep working (see docs/PLAN-REPLAY.md P13).
-        if (! Env::testModeIsActive() && count($this->errors) == 0) {
+        if (! Env::testModeIsActive() && count($this->errors) === 0) {
             $file_content = '<?php
 $conf[\'dblayer\'] = \'' . $this->dblayer . '\';
 $conf[\'db_base\'] = \'' . $this->dbname . '\';
@@ -482,7 +482,7 @@ define(\'DB_COLLATE\', \'\');
         }
 
         // Create install sentinel stamp file.
-        if (count($this->errors) == 0) {
+        if (count($this->errors) === 0) {
             touch($this->paths->siteLocal . Env::testModeInstalledStamp());
         }
 
@@ -606,7 +606,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
 
         $languages_options = [];
         foreach ($this->fsLanguages as $language_code => $fs_language) {
-            if ($this->language == $language_code) {
+            if ($this->language === $language_code) {
                 $template->assign('language_selection', $language_code);
             }
             $languages_options[$language_code] = $fs_language['name'];
@@ -631,7 +631,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
         );
 
         // -------------------------------------------- errors & infos display
-        if ($this->step == 1) {
+        if ($this->step === 1) {
             $template->assign('install', true);
         } else {
             // Only reached once performInstall() (step 2) already ran
@@ -745,11 +745,11 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
                     );
             }
         }
-        if (count($this->errors) != 0) {
+        if (count($this->errors) !== 0) {
             $template->assign('errors', $this->errors);
         }
 
-        if (count($this->infos) != 0) {
+        if (count($this->infos) !== 0) {
             $template->assign('infos', $this->infos);
         }
 

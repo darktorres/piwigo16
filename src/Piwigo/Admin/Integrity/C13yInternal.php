@@ -139,7 +139,7 @@ class C13yInternal
             'l10n_bad_status' => 'Main "guest" user status is incorrect',
         ];
 
-        if ($guest_id != $default_user_id) {
+        if ($guest_id !== $default_user_id) {
             $c13y_users[$default_user_id] = [
                 'password' => null,
                 'l10n_non_existent' => 'Default user does not exist',
@@ -227,11 +227,11 @@ class C13yInternal
                     $name = null;
                     $password = null;
 
-                    if ($id == $guest_id) {
+                    if ($id === $guest_id) {
                         $name = 'guest';
-                    } elseif ($id == $default_user_id) {
+                    } elseif ($id === $default_user_id) {
                         $name = 'guest';
-                    } elseif ($id == $webmaster_id) {
+                    } elseif ($id === $webmaster_id) {
                         $name = 'webmaster';
                         $password = SessionService::get()->generateKey(6);
                     }
@@ -263,11 +263,11 @@ class C13yInternal
                     }
                     break;
                 case 'status':
-                    if ($id == $guest_id) {
+                    if ($id === $guest_id) {
                         $status = 'guest';
-                    } elseif ($id == $default_user_id) {
+                    } elseif ($id === $default_user_id) {
                         $status = 'guest';
-                    } elseif ($id == $webmaster_id) {
+                    } elseif ($id === $webmaster_id) {
                         $status = 'webmaster';
                     }
 

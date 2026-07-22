@@ -46,7 +46,7 @@ class ImageExtImagick implements ImageInterface
             @putenv('MAGICK_THREAD_LIMIT=1');
         }
 
-        if (strtolower(\Piwigo\Core\StringHelper::getExtension($this->source_filepath)) == 'webp') {
+        if (strtolower(\Piwigo\Core\StringHelper::getExtension($this->source_filepath)) === 'webp') {
             $webp_info = PwgImage::webp_info($this->source_filepath);
 
             if ($webp_info['has-animation']) {
@@ -121,7 +121,7 @@ class ImageExtImagick implements ImageInterface
             return true;
         }
 
-        if ($rotation == 90 || $rotation == 270) {
+        if ((float) $rotation === 90.0 || (float) $rotation === 270.0) {
             $tmp = $this->width;
             $this->width = $this->height;
             $this->height = $tmp;

@@ -95,7 +95,9 @@ final class Patch123 implements DbPatchInterface
 
         $thumb_is_square = false;
         if ($dbconf['upload_form_thumb_crop']) {
-            if ($dbconf['upload_form_thumb_maxwidth'] == $dbconf['upload_form_thumb_maxheight']) {
+            $maxwidth = is_scalar($dbconf['upload_form_thumb_maxwidth']) ? (string) $dbconf['upload_form_thumb_maxwidth'] : '';
+            $maxheight = is_scalar($dbconf['upload_form_thumb_maxheight']) ? (string) $dbconf['upload_form_thumb_maxheight'] : '';
+            if ($maxwidth === $maxheight) {
                 $thumb_is_square = true;
             }
         }

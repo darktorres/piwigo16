@@ -122,7 +122,7 @@ class PwgImage
 
         // testing on height is useless in theory: if width is unchanged, there
         // should be no resize, because width/height ratio is not modified.
-        if ($resize_dimensions['width'] == $source_width and $resize_dimensions['height'] == $source_height) {
+        if ((float) $resize_dimensions['width'] === (float) $source_width and (float) $resize_dimensions['height'] === (float) $source_height) {
             // the image doesn't need any resize! We just copy it to the destination
             copy($this->source_filepath, $destination_filepath);
             return $this->get_resize_result($destination_filepath, $resize_dimensions['width'], $resize_dimensions['height'], $starttime);
@@ -249,10 +249,10 @@ class PwgImage
         switch (true) {
             case strlen($buf) < 25:
             case ! str_starts_with($buf, 'RIFF'):
-            case substr($buf, 8, 4) != 'WEBP':
-            case substr($buf, 12, 3) != 'VP8':
+            case substr($buf, 8, 4) !== 'WEBP':
+            case substr($buf, 12, 3) !== 'VP8':
                 throw new \Exception('webp_info(): not a valid webp image');
-            case $buf[15] == ' ':
+            case $buf[15] === ' ':
                 // Simple File Format (Lossy)
                 return [
                     'type' => 'VP8',
@@ -260,7 +260,7 @@ class PwgImage
                     'has-transparent' => false,
                 ];
 
-            case $buf[15] == 'L':
+            case $buf[15] === 'L':
                 // Simple File Format (Lossless)
                 return [
                     'type' => 'VP8L',
@@ -268,7 +268,7 @@ class PwgImage
                     'has-transparent' => (bool) (ord($buf[24]) & 0x00000010),
                 ];
 
-            case $buf[15] == 'X':
+            case $buf[15] === 'X':
                 // Extended File Format
                 return [
                     'type' => 'VP8X',
@@ -288,7 +288,7 @@ class PwgImage
             throw new \Exception("get_rotation_angle(): getimagesize({$source_filepath}): Failed");
         }
         [$width, $height, $type] = $size;
-        if ($type != IMAGETYPE_JPEG) {
+        if ($type !== IMAGETYPE_JPEG) {
             return null;
         }
 
@@ -416,7 +416,7 @@ class PwgImage
             // quoted+unquoted shell tokens still concatenate into one word
             // (e.g. '/usr/bin/'magick), so this stays functionally identical.
             exec('command -v ' . escapeshellarg($imagick_dir) . 'magick', $cmd_out, $retval);
-            $command = ($retval == 0) ? 'magick' : 'convert';
+            $command = ($retval === 0) ? 'magick' : 'convert';
         }
 
         return $command;
@@ -458,12 +458,12 @@ class PwgImage
         switch (strtolower($library)) {
             case 'auto':
             case 'ext_imagick':
-                if ($extension != 'gif' and self::is_ext_imagick()) {
+                if ($extension !== 'gif' and self::is_ext_imagick()) {
                     return 'ext_imagick';
                 }
                 // no break
             case 'imagick':
-                if ($extension != 'gif' and self::is_imagick()) {
+                if ($extension !== 'gif' and self::is_imagick()) {
                     return 'imagick';
                 }
                 // no break
@@ -473,7 +473,7 @@ class PwgImage
                 }
                 // no break
             default:
-                if ($library != 'auto') {
+                if ($library !== 'auto') {
                     // Requested library not available. Try another library
                     return self::get_library('auto', $extension);
                 }

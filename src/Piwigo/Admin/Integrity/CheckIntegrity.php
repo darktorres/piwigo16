@@ -52,7 +52,8 @@ class CheckIntegrity
         if (
             is_array($conf_c13y_ignore) and
             isset($conf_c13y_ignore['version']) and
-            ($conf_c13y_ignore['version'] == AppInfo::VERSION) and
+            is_string($conf_c13y_ignore['version']) and
+            ($conf_c13y_ignore['version'] === AppInfo::VERSION) and
             is_array($conf_c13y_ignore['list'])
         ) {
             $ignore_list_changed = false;

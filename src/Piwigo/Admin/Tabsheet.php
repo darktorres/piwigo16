@@ -74,7 +74,7 @@ class Tabsheet
         if (isset($this->sheets[$name])) {
             unset($this->sheets[$name]);
 
-            if ($this->selected == $name) {
+            if ($this->selected === $name) {
                 $this->selected = '';
             }
             return true;

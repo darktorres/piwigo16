@@ -24,6 +24,13 @@
             <directory name="language"/>
             <!-- Runtime-compiled Smarty templates + combined JS/CSS cache, not source. -->
             <directory name="_data"/>
+            <!-- Standalone CLI tool excluded from analysis for the same
+                 reason as phpstan.neon's own excludePaths entry: it curls a
+                 real running install and reads a database.inc.php the
+                 install just generated — a path that genuinely doesn't
+                 exist at analysis time. Not part of the analyzed
+                 application. -->
+            <file name="tools/test_piwigo.php"/>
         </ignoreFiles>
     </projectFiles>
     <stubs>
@@ -275,6 +282,37 @@
                      guarded by `in_array($_POST['image_order_choice'] ??
                      null, [...])` in the same condition. -->
                 <file name="src/Piwigo/Admin/ElementSetRanksPageRenderer.php"/>
+                <!-- $trigger['infos'] is already `@`-suppressed at the PHP
+                     level (documented optional key on this script's own
+                     $triggers table); adding a `?? null` instead surfaces a
+                     real PHPStan binaryOp.invalid on the resulting union
+                     type, so the existing `@` operator is left in place and
+                     Psalm's complaint is suppressed here instead. -->
+                <file name="tools/triggers_list.php"/>
+                <!-- Same disagreement on $_POST['prefix'], guarded by
+                     `is_string($_POST['prefix'] ?? null)` in the same
+                     expression. -->
+                <file name="public/install.php"/>
+                <!-- $remoteAddr is guarded by
+                     `is_string($_SERVER['REMOTE_ADDR'] ?? null)` in the
+                     same expression, same $_SERVER-guard pattern as
+                     CommentService.php above. -->
+                <file name="tests/Integration/CommentServiceTest.php"/>
+                <!-- $originalDbEnvVars[$var]/$originalEnvVars[$var]: written
+                     inside a Pest beforeEach() closure, read inside a
+                     separate afterEach() closure via a shared `&$var`
+                     use()-bound reference — the project's known "by-ref and
+                     closures lose narrowing" limitation (hit repeatedly
+                     across this codebase's own migration phases, per
+                     project memory) applies to Psalm's own array-shape
+                     tracking here too. composer analyse:phpstan is clean
+                     with zero changes. -->
+                <file name="tests/Unit/Config/ConfigLoaderTest.php"/>
+                <file name="tests/Unit/Db/DbCredentialsTest.php"/>
+                <!-- Same disagreement on $_SERVER['PATH_INFO'], guarded by
+                     `in_array($_SERVER['PATH_INFO'] ?? null, [...])` in the
+                     same condition. -->
+                <file name="src/Piwigo/Bootstrap/RequestBootstrap.php"/>
             </errorLevel>
         </PossiblyUndefinedArrayOffset>
         <PossiblyNullArrayAccess>
@@ -339,6 +377,31 @@
                      fallback. composer analyse:phpstan is clean here with
                      zero changes. -->
                 <file name="src/Piwigo/Controller/Admin/IntroSubController.php"/>
+                <!-- Same `for ($i = 0; $i < count($available_order_by);
+                     ...)` bound-not-tied-to-literal-array-size pattern as
+                     RatingUserPageRenderer.php above. -->
+                <file name="src/Piwigo/Admin/RatingPageRenderer.php"/>
+                <!-- $readable[$index]: a `while` loop increments $index,
+                     then clamps it back with `if ($index >
+                     count($readable) - 1) { $index -= 1; break; }` before any
+                     read — a loop invariant Psalm's index-range inference
+                     doesn't follow. composer analyse:phpstan is clean here
+                     with zero changes. -->
+                <file name="src/Piwigo/Admin/AdminUiHelper.php"/>
+                <!-- $trigger['vars'][$i]/[$i + 1]: a `for ($i = 0; $i <
+                     count($trigger['vars']); $i += 2)` loop over a
+                     genuinely variable-length data-driven array (this
+                     script's own $triggers table, not a fixed literal) —
+                     Psalm's index-range inference has nothing to bound
+                     against here. composer analyse:phpstan is clean with
+                     zero changes. -->
+                <file name="tools/triggers_list.php"/>
+                <!-- `assertCount(4, $rows)` proves $rows has exactly 4
+                     elements at the point `$rows[count($rows) - 1]` reads
+                     it, but Psalm doesn't tie PHPUnit's assertCount() to
+                     array-length narrowing. composer analyse:phpstan is
+                     clean here with zero changes. -->
+                <file name="tests/Integration/ActivityRepositoryTest.php"/>
             </errorLevel>
         </InvalidArrayOffset>
         <!-- $searchFields is `&$mySearch['fields']` — a by-ref alias. The

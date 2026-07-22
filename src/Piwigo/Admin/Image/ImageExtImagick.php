@@ -70,6 +70,7 @@ class ImageExtImagick implements ImageInterface
         // never escaped an embedded '"' or shell metacharacter in the path.
         $command = escapeshellarg($this->imagickdir) . 'identify -format "%wx%h" '
             . escapeshellarg((string) realpath($this->source_filepath));
+        $returnarray = [];
         @exec($command, $returnarray);
         if (! isset($returnarray[0]) || $returnarray[0] === '' || $returnarray[0] === '0' or ! (bool) preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
             die("[External ImageMagick] Corrupt image\n" . var_export($returnarray, true));

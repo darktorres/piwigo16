@@ -159,7 +159,7 @@ try {
 
     $row = $conn->fetchNumeric('SELECT NOW();');
     assert($row !== false);
-    [$dbnow] = $row;
+    $dbnow = $row[0] ?? null;
     // Every VersionUpgrade ledger row inserted during this run shares this
     // exact moment (see UpgradeRunDate's own docblock).
     UpgradeRunDate::set(is_scalar($dbnow) ? (string) $dbnow : '');

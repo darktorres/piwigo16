@@ -8,23 +8,32 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Http\ResponseReadyException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Replaces popuphelp.php (front-end help popup -- distinct from
  * admin/popuphelp.php, a standalone root-style entry point untouched
- * since P21). check_status() stays outside the captured closure, same
- * exit()-based-termination limitation as every other controller this
- * phase.
+ * since P21). check_status() stays outside the render logic on purpose:
+ * it can throw ResponseReadyException on failure directly, same as every
+ * other controller (Workstream C3).
  *
- * The `?page=` validation's die() deliberately stays *inside* the closure,
- * matching the legacy file's own real order (page_header.php echoes
- * *before* the validation runs) -- an invalid `?page=` value dies after
- * partial output today, not before it. PHP flushes any still-active output
- * buffer on exit()/die() by default, so wrapping this in ob_start() still
- * reproduces that exact partial-output behavior rather than silently
- * swallowing it.
+ * Workstream C3c: converted off LegacyRenderCapture's ob_start()/
+ * ob_get_contents() capture, same "nothing in this chain echoes -- Page
+ * HeaderRenderer only ever called assign()/parse($handle, false)
+ * internally, parse('popuphelp', false) accumulates into Template's own
+ * $output buffer, PageTail::renderToString() drains that whole buffer as
+ * one string" mechanism Controller\AboutController already established.
+ * The `?page=` validation now throws ResponseReadyException instead of
+ * die()ing mid-render -- this drops the former "preserve partial legacy
+ * HTML then die()" behavior LegacyRenderCapture's own docblock used to
+ * document as intentional, deliberately: nothing has actually been
+ * echoed to a real Response body by this point any more (Template's own
+ * accumulator buffer isn't drained until PageTail::renderToString() at
+ * the very end), so there's no partial HTML left to preserve -- a clean
+ * 400 reject is strictly more correct, matching how
+ * Controller\ActionController::doError() already works.
  */
 final class PopuphelpController implements ControllerInterface
 {
@@ -36,56 +45,54 @@ final class PopuphelpController implements ControllerInterface
         $queryParams = $request->getQueryParams();
         $rawPage = $queryParams['page'] ?? null;
 
-        $body = LegacyRenderCapture::capture(static function () use ($rawPage): void {
-            // Legacy popuphelp.php also did `define('PWG_HELP', true);`
-            // here -- confirmed via a project-wide grep that nothing reads
-            // that constant anywhere (not even admin/popuphelp.php, which
-            // defines the same constant for its own, unrelated reasons);
-            // dropped rather than ported, and src/Piwigo/ itself is
-            // arch-tested to contain zero define() calls at all
-            // (tests/Arch/StructuralTest.php).
+        // Legacy popuphelp.php also did `define('PWG_HELP', true);`
+        // here -- confirmed via a project-wide grep that nothing reads
+        // that constant anywhere (not even admin/popuphelp.php, which
+        // defines the same constant for its own, unrelated reasons);
+        // dropped rather than ported, and src/Piwigo/ itself is
+        // arch-tested to contain zero define() calls at all
+        // (tests/Arch/StructuralTest.php).
 
-            // $title is set and read entirely within this closure (passed
-            // straight into PageHeaderRenderer::render() below) -- no
-            // other file reads $GLOBALS['title']. Plain local, not global.
-            $template = \Piwigo\Template\CurrentTemplate::get();
+        // $title is set and read entirely within this method (passed
+        // straight into PageHeaderRenderer::render() below) -- no
+        // other file reads $GLOBALS['title']. Plain local, not global.
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
-            \Piwigo\Core\PageState::current()->setBodyId('thePopuphelpPage');
-            $title = Lang::t('Piwigo Help');
-            \Piwigo\Core\PageState::current()->setPageBanner('');
-            \Piwigo\Core\PageState::current()->setMetaRobots([
-                'noindex' => 1,
-                'nofollow' => 1,
-            ]);
-            new \Piwigo\Page\PageHeaderRenderer()
-                ->render($title);
+        \Piwigo\Core\PageState::current()->setBodyId('thePopuphelpPage');
+        $title = Lang::t('Piwigo Help');
+        \Piwigo\Core\PageState::current()->setPageBanner('');
+        \Piwigo\Core\PageState::current()->setMetaRobots([
+            'noindex' => 1,
+            'nofollow' => 1,
+        ]);
+        new \Piwigo\Page\PageHeaderRenderer()
+            ->render($title);
 
-            if (! is_string($rawPage) || ! (bool) preg_match('/^[a-z_]*$/', $rawPage)) {
-                die('Hacking attempt!');
-            }
+        if (! is_string($rawPage) || ! (bool) preg_match('/^[a-z_]*$/', $rawPage)) {
+            throw new ResponseReadyException(ResponseFactory::text('Hacking attempt!', 400));
+        }
 
-            $help_content = Lang::load('help/' . $rawPage . '.html', '', [
-                'return' => true,
-            ]);
-            if ($help_content === false) {
-                $help_content = '';
-            }
+        $help_content = Lang::load('help/' . $rawPage . '.html', '', [
+            'return' => true,
+        ]);
+        if ($help_content === false) {
+            $help_content = '';
+        }
 
-            $help_content = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                'get_popup_help_content',
-                $help_content,
-                $rawPage
-            );
+        $help_content = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
+            'get_popup_help_content',
+            $help_content,
+            $rawPage
+        );
 
-            $template->set_filename('popuphelp', 'popuphelp.tpl');
-            $template->assign([
-                'HELP_CONTENT' => $help_content,
-            ]);
+        $template->set_filename('popuphelp', 'popuphelp.tpl');
+        $template->assign([
+            'HELP_CONTENT' => $help_content,
+        ]);
 
-            $template->pparse('popuphelp');
+        $template->parse('popuphelp', false);
 
-            \Piwigo\Bootstrap\PageTail::render();
-        });
+        $body = \Piwigo\Bootstrap\PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

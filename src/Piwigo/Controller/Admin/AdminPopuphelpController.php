@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Piwigo\Controller\LegacyRenderCapture;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
-use Piwigo\Template\Template;
+use Piwigo\Http\ResponseReadyException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -29,13 +28,16 @@ use Psr\Http\Message\ServerRequestInterface;
  * elsewhere (Piwigo\Page\PageHeaderRenderer) so it stays, set by the new
  * bootstrap file the same way admin.php itself sets it.
  *
- * check_status() stays outside the captured closure, same exit()-based-
- * termination limitation as every other controller this phase. The
- * `?page=` validation's die() and the `output=content_only` branch's
- * echo+exit() both deliberately stay *inside* the closure, matching the
- * legacy file's own real order and PHP's documented output-buffer-flush-
- * on-exit() behavior -- same reasoning already established in
- * PopuphelpController's own docblock for its analogous die() case.
+ * Workstream C3c: converted off LegacyRenderCapture's ob_start()/
+ * ob_get_contents() capture -- same mechanism/reasoning as
+ * PopuphelpController's own docblock (parse($handle, false) accumulates
+ * into Template's own buffer instead of echoing, PageTail::
+ * renderToString() drains it as one string). The `?page=` validation
+ * throws ResponseReadyException instead of die()ing mid-render (same
+ * "no partial HTML left to preserve any more" reasoning as
+ * PopuphelpController); the `output=content_only` branch just returns
+ * $help_content directly -- by that point in the method it's already
+ * fully computed, nothing left to accumulate.
  */
 final class AdminPopuphelpController implements ControllerInterface
 {
@@ -48,73 +50,70 @@ final class AdminPopuphelpController implements ControllerInterface
         $rawPage = $queryParams['page'] ?? null;
         $output = $queryParams['output'] ?? null;
 
-        $body = LegacyRenderCapture::capture(static function () use ($rawPage, $output): void {
-            // $title is set and read entirely within this closure (passed
-            // straight into PageHeaderRenderer::render() below) -- no
-            // other file reads $GLOBALS['title']. Plain local, not global.
-            $template = \Piwigo\Template\CurrentTemplate::get();
+        // $title is set and read entirely within this method (passed
+        // straight into PageHeaderRenderer::render() below) -- no
+        // other file reads $GLOBALS['title']. Plain local, not global.
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
-            if ($output !== 'content_only') {
-                \Piwigo\Core\PageState::current()->setBodyId('thePopuphelpPage');
-                $title = Lang::t('Piwigo Help');
-                \Piwigo\Core\PageState::current()->setPageBanner('<h1>' . $title . '</h1>');
-                \Piwigo\Core\PageState::current()->setMetaRobots([
-                    'noindex' => 1,
-                    'nofollow' => 1,
-                ]);
+        if ($output !== 'content_only') {
+            \Piwigo\Core\PageState::current()->setBodyId('thePopuphelpPage');
+            $title = Lang::t('Piwigo Help');
+            \Piwigo\Core\PageState::current()->setPageBanner('<h1>' . $title . '</h1>');
+            \Piwigo\Core\PageState::current()->setMetaRobots([
+                'noindex' => 1,
+                'nofollow' => 1,
+            ]);
 
-                // set required template variables to avoid "Undefined array key" with PHP 8
-                $template->assign(
-                    [
-                        'U_RETURN' => '',
-                        'USERNAME' => '',
-                        'U_FAQ' => '',
-                        'U_CHANGE_THEME' => '',
-                        'U_LOGOUT' => '',
-                    ]
-                );
-
-                new \Piwigo\Page\PageHeaderRenderer()
-                    ->render($title);
-            }
-
-            if (! is_string($rawPage) || ! (bool) preg_match('/^[a-z_]*$/', $rawPage)) {
-                die('Hacking attempt!');
-            }
-
-            $help_content = Lang::load(
-                'help/' . $rawPage . '.html',
-                '',
-                [
-                    'force_fallback' => 'en_UK',
-                    'return' => true,
-                ]
-            );
-            if ($help_content === false) {
-                $help_content = '';
-            }
-
-            $help_content = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_popup_help_content', $help_content, $rawPage);
-            if (! is_string($help_content)) {
-                $help_content = '';
-            }
-
-            $template->set_filename('popuphelp', 'popuphelp.tpl');
+            // set required template variables to avoid "Undefined array key" with PHP 8
             $template->assign(
                 [
-                    'HELP_CONTENT' => $help_content,
+                    'U_RETURN' => '',
+                    'USERNAME' => '',
+                    'U_FAQ' => '',
+                    'U_CHANGE_THEME' => '',
+                    'U_LOGOUT' => '',
                 ]
             );
 
-            if ($output === 'content_only') {
-                echo $help_content;
-                exit();
-            }
+            new \Piwigo\Page\PageHeaderRenderer()
+                ->render($title);
+        }
 
-            $template->pparse('popuphelp');
+        if (! is_string($rawPage) || ! (bool) preg_match('/^[a-z_]*$/', $rawPage)) {
+            throw new ResponseReadyException(ResponseFactory::text('Hacking attempt!', 400));
+        }
 
-            \Piwigo\Bootstrap\PageTail::render();
-        });
+        $help_content = Lang::load(
+            'help/' . $rawPage . '.html',
+            '',
+            [
+                'force_fallback' => 'en_UK',
+                'return' => true,
+            ]
+        );
+        if ($help_content === false) {
+            $help_content = '';
+        }
+
+        $help_content = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_popup_help_content', $help_content, $rawPage);
+        if (! is_string($help_content)) {
+            $help_content = '';
+        }
+
+        $template->set_filename('popuphelp', 'popuphelp.tpl');
+        $template->assign(
+            [
+                'HELP_CONTENT' => $help_content,
+            ]
+        );
+
+        if ($output === 'content_only') {
+            return ResponseFactory::html($help_content);
+        }
+
+        $template->parse('popuphelp', false);
+
+        $body = \Piwigo\Bootstrap\PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

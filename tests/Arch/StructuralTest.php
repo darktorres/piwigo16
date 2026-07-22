@@ -818,14 +818,17 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         'Users/UserService.php' => 1,
 
         // Full legacy template render + exit(), matching the pre-rewrite
-        // include-then-die() page shape verbatim -- LegacyRenderCapture's
-        // own docblock covers why die()/exit() *inside* its captured
-        // closure is correct, not a bug (PHP flushes the still-open
-        // output buffer on exit() by default).
+        // include-then-die() page shape verbatim. Not part of Workstream
+        // C3c (which retired LegacyRenderCapture and its own 3 real
+        // callers, Picture/PictureCommentRenderer.php/Controller/Admin/
+        // AdminPopuphelpController.php/Controller/PopuphelpController.php
+        // -- all 3 now throw ResponseReadyException instead and are gone
+        // from this allowlist): this class never used LegacyRenderCapture
+        // at all (a raw $template->pparse()+exit() of its own, reached
+        // from Bootstrap\RequestBootstrap::finalize() -- catch point 1's
+        // own scope, so it's a real future C3 candidate, just not one the
+        // plan named).
         'Page/NoPhotoYetRenderer.php' => 1,
-        'Picture/PictureCommentRenderer.php' => 2,
-        'Controller/Admin/AdminPopuphelpController.php' => 2,
-        'Controller/PopuphelpController.php' => 1,
 
         // Controller/ImageDerivativeController.php (i.php): runs before
         // ConfigLoader::applyDefaults() even executes on some paths, so no

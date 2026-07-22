@@ -16,11 +16,14 @@ use Psr\Http\Message\ServerRequestInterface;
  * pipeline's terminal step, never itself passed a next handler to
  * delegate to. Same interim-contract precedent as P21's
  * AdminSubControllerInterface::handle(), but returning a real
- * ResponseInterface instead of mutating $template/$page -- P22 controllers
- * capture their legacy render body's output (still Smarty, still echoing)
- * via an output-buffer bridge (Piwigo\Controller\LegacyRenderCapture) and
- * wrap it in a Response, rather than leaving rendering as a side effect
- * for something else to emit.
+ * ResponseInterface instead of mutating $template/$page -- P22 controllers'
+ * legacy render body (still Smarty) calls Template::parse($handle, false)
+ * (accumulates into Template's own internal buffer instead of echoing) and
+ * drains it via Piwigo\Bootstrap\PageTail::renderToString() into a real
+ * Response body, rather than leaving rendering as a side effect for
+ * something else to emit. Workstream C3c retired the last controllers
+ * still bridging via an output-buffer capture (Piwigo\Controller\
+ * LegacyRenderCapture, deleted) onto this same mechanism.
  *
  * Lives in Piwigo\Http (L3Presentation), not Piwigo\Controller
  * (L4Integration) despite the name -- deptrac.yaml only allows

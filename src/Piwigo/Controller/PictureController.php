@@ -68,13 +68,24 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * The "actions" switch (favorite/caddie/rate/comment moderation, all
  * ending in redirect()) is the last place any exit()-capable call happens
- * in this file (confirmed via a full-file grep for redirect()/
+ * before the render body (confirmed via a full-file grep for redirect()/
  * redirect_http()/page_not_found()/access_denied()/die()/exit -- every hit
- * is above the "number of hits" section) -- everything from there stays
- * outside the captured closure, same discipline as CommentsController's
- * own "management block" split. Everything after is bundled into one
- * closure, matching TagsController/CommentsController/GalleryController's
- * own precedent for this page shape.
+ * above the "number of hits" section already throws ResponseReadyException
+ * via RedirectService, unrelated to Workstream C3c below).
+ *
+ * Workstream C3c: converted off LegacyRenderCapture's ob_start()/
+ * ob_get_contents() capture -- the render body that used to be a separate
+ * static closure (passed to LegacyRenderCapture::capture(), its own
+ * use()-list threading every needed variable in by value) is now flat code
+ * directly in this method, same "parse($handle, false) accumulates into
+ * Template's own buffer, PageTail::renderToString() drains it as one
+ * string" mechanism Controller\AboutController/PopuphelpController already
+ * use. $urlService/$configService keep their own local aliases (still
+ * referenced throughout the body) rather than being renamed to
+ * $this->urlService/$this->configService everywhere -- a smaller, safer
+ * diff for a ~750-line method. Picture\PictureCommentRenderer::render()'s
+ * own 2 die() calls (reached from within this body) now throw
+ * ResponseReadyException too -- see that class's own docblock.
  *
  * Like GalleryController, Piwigo\Section\SectionPopulator::populate() (P23
  * batch 4d) must run before check_status() -- check_restrictions() below
@@ -348,8 +359,7 @@ SELECT id
 
         // Set by the 'edit_comment' action case below (only when
         // can_manage_comment('edit', ...) passes), threaded explicitly into
-        // the LegacyRenderCapture closure's use() list further down and
-        // from there into PictureCommentRenderer::render() -- see that
+        // PictureCommentRenderer::render() further down -- see that
         // class's own docblock for the bare-scope bug this replaced.
         $edit_comment = null;
 
@@ -557,755 +567,737 @@ UPDATE ' . Tables::categories() . '
 
         $urlService = $this->urlService;
         $configService = $this->configService;
-        $body = LegacyRenderCapture::capture(static function () use (
-            $conn,
-            $section_context,
-            $page_category,
-            $items,
-            $image_id,
-            $user_id,
-            $current_rank,
-            $previous_item,
-            $first_item,
-            $next_item,
-            $last_item,
-            $url_up,
-            $edit_comment,
-            $urlService,
-            $configService,
-            $url_self
-        ): void {
-            // $title/$refresh/$url_link are set and read entirely within
-            // this closure (passed straight into PageHeaderRenderer::
-            // render() below) -- confirmed via grep that no other file
-            // reads $GLOBALS['title']/['refresh']/['url_link'], unlike
-            // $url_self/$picture/$related_categories, real bridges to
-            // PictureCommentRenderer/PictureRateRenderer/
-            // PictureMetadataRenderer -- threaded into their own render()
-            // calls below as real parameters (Legacy Coupling Retirement
-            // Phase 8, 8g), formerly `global`.
-            $refresh = null;
-            $url_link = null;
-            $template = \Piwigo\Template\CurrentTemplate::get();
+        // $title/$refresh/$url_link are set and read entirely within
+        // this method (passed straight into PageHeaderRenderer::
+        // render() below) -- confirmed via grep that no other file
+        // reads $GLOBALS['title']/['refresh']/['url_link'], unlike
+        // $url_self/$picture/$related_categories, real bridges to
+        // PictureCommentRenderer/PictureRateRenderer/
+        // PictureMetadataRenderer -- threaded into their own render()
+        // calls below as real parameters (Legacy Coupling Retirement
+        // Phase 8, 8g), formerly `global`.
+        $refresh = null;
+        $url_link = null;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
-            // ---------- incrementation of the number of hits
-            $inc_hit_count = ! isset($_POST['content']);
-            // don't increment counter if in the Mozilla Firefox prefetch
-            $http_x_moz = $_SERVER['HTTP_X_MOZ'] ?? null;
-            if (is_string($http_x_moz) and $http_x_moz === 'prefetch') {
+        // ---------- incrementation of the number of hits
+        $inc_hit_count = ! isset($_POST['content']);
+        // don't increment counter if in the Mozilla Firefox prefetch
+        $http_x_moz = $_SERVER['HTTP_X_MOZ'] ?? null;
+        if (is_string($http_x_moz) and $http_x_moz === 'prefetch') {
+            $inc_hit_count = false;
+        } else {
+            // don't increment counter if comming from the same picture
+            // (actions)
+            $referer_image_id = SessionService::get()->getSessionVar('referer_image_id', 0);
+            if (is_numeric($referer_image_id) and (int) $referer_image_id === $image_id) {
                 $inc_hit_count = false;
-            } else {
-                // don't increment counter if comming from the same picture
-                // (actions)
-                $referer_image_id = SessionService::get()->getSessionVar('referer_image_id', 0);
-                if (is_numeric($referer_image_id) and (int) $referer_image_id === $image_id) {
-                    $inc_hit_count = false;
-                }
-                SessionService::get()->setSessionVar('referer_image_id', $image_id);
             }
+            SessionService::get()->setSessionVar('referer_image_id', $image_id);
+        }
 
-            // don't increment if adding a comment
-            if ((bool) \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('allow_increment_element_hit_count', $inc_hit_count, $image_id)) {
-                new ImageRepository($conn)
-                    ->incrementVisitCounter($image_id);
-            }
+        // don't increment if adding a comment
+        if ((bool) \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('allow_increment_element_hit_count', $inc_hit_count, $image_id)) {
+            new ImageRepository($conn)
+                ->incrementVisitCounter($image_id);
+        }
 
-            // -------------------------------------------------- related categories
-            $query = '
+        // -------------------------------------------------- related categories
+        $query = '
 SELECT id,uppercats,commentable,visible,status,global_rank
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::categories() . ' ON category_id = id
   WHERE image_id = ' . $image_id . '
 ' . self::permissionService($conn)->getSqlConditionFandF([
-                'forbidden_categories' => 'id',
-                'visible_categories' => 'id',
-            ], 'AND') . '
+            'forbidden_categories' => 'id',
+            'visible_categories' => 'id',
+        ], 'AND') . '
 ;';
-            /** @var list<array<string, string|null>> $related_categories */
-            $related_categories = $conn->fetchAllAssociative($query);
-            usort($related_categories, CategoryService::compareByGlobalRank(...));
-            // ---------------------- first, prev, current, next & last picture management
-            $picture = [];
+        /** @var list<array<string, string|null>> $related_categories */
+        $related_categories = $conn->fetchAllAssociative($query);
+        usort($related_categories, CategoryService::compareByGlobalRank(...));
+        // ---------------------- first, prev, current, next & last picture management
+        $picture = [];
 
-            $ids = [(string) $image_id];
-            if ($previous_item !== null) {
-                $ids[] = (string) $previous_item;
-                $ids[] = (string) $first_item;
-            }
-            if ($next_item !== null) {
-                $ids[] = (string) $next_item;
-                $ids[] = (string) $last_item;
-            }
+        $ids = [(string) $image_id];
+        if ($previous_item !== null) {
+            $ids[] = (string) $previous_item;
+            $ids[] = (string) $first_item;
+        }
+        if ($next_item !== null) {
+            $ids[] = (string) $next_item;
+            $ids[] = (string) $last_item;
+        }
 
-            $query = '
+        $query = '
 SELECT *
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $ids) . ')
 ;';
 
-            foreach ($conn->fetchAllAssociative($query) as $row) {
-                $row_id_raw = $row['id'];
-                $row_id_str = is_scalar($row_id_raw) ? (string) $row_id_raw : '';
-                if ($previous_item !== null and $row_id_str === (string) $previous_item) {
-                    $i = 'previous';
-                } elseif ($next_item !== null and $row_id_str === (string) $next_item) {
-                    $i = 'next';
-                } elseif ($first_item !== null and $row_id_str === (string) $first_item) {
-                    $i = 'first';
-                } elseif ($last_item !== null and $row_id_str === (string) $last_item) {
-                    $i = 'last';
-                } else {
-                    $i = 'current';
-                }
+        foreach ($conn->fetchAllAssociative($query) as $row) {
+            $row_id_raw = $row['id'];
+            $row_id_str = is_scalar($row_id_raw) ? (string) $row_id_raw : '';
+            if ($previous_item !== null and $row_id_str === (string) $previous_item) {
+                $i = 'previous';
+            } elseif ($next_item !== null and $row_id_str === (string) $next_item) {
+                $i = 'next';
+            } elseif ($first_item !== null and $row_id_str === (string) $first_item) {
+                $i = 'first';
+            } elseif ($last_item !== null and $row_id_str === (string) $last_item) {
+                $i = 'last';
+            } else {
+                $i = 'current';
+            }
 
-                $row['src_image'] = new SrcImage($row);
-                $row['derivatives'] = DerivativeImage::get_all($row['src_image']);
+            $row['src_image'] = new SrcImage($row);
+            $row['derivatives'] = DerivativeImage::get_all($row['src_image']);
 
-                // Writing computed keys (src_image, derivatives, ...) back
-                // into $row widens PHPStan's inferred value type for every
-                // key in this array to a shared union across all of them --
-                // narrow explicitly at each still-scalar column read below
-                // instead of casting the widened union directly.
-                $row_path = $row['path'];
-                assert(is_string($row_path)); // images.path is NOT NULL
-                $row['path_ext'] = strtolower(\Piwigo\Core\StringHelper::getExtension($row_path));
+            // Writing computed keys (src_image, derivatives, ...) back
+            // into $row widens PHPStan's inferred value type for every
+            // key in this array to a shared union across all of them --
+            // narrow explicitly at each still-scalar column read below
+            // instead of casting the widened union directly.
+            $row_path = $row['path'];
+            assert(is_string($row_path)); // images.path is NOT NULL
+            $row['path_ext'] = strtolower(\Piwigo\Core\StringHelper::getExtension($row_path));
 
-                $row_file = $row['file'];
-                assert(is_string($row_file)); // images.file is NOT NULL
-                $row['file_ext'] = strtolower(\Piwigo\Core\StringHelper::getExtension($row_file));
+            $row_file = $row['file'];
+            assert(is_string($row_file)); // images.file is NOT NULL
+            $row['file_ext'] = strtolower(\Piwigo\Core\StringHelper::getExtension($row_file));
 
-                if ($i === 'current') {
-                    $row['element_path'] = \Piwigo\Image\ImagePathHelper::getElementPath($row, $urlService);
+            if ($i === 'current') {
+                $row['element_path'] = \Piwigo\Image\ImagePathHelper::getElementPath($row, $urlService);
 
-                    $row_id = $row['id'];
-                    assert(is_string($row_id)); // images.id is the NOT NULL primary key
+                $row_id = $row['id'];
+                assert(is_string($row_id)); // images.id is the NOT NULL primary key
 
-                    if ($row['src_image']->is_original()) {// we have a photo
-                        if (\Piwigo\Users\CurrentUser::get()->enabledHigh) {
-                            $row['element_url'] = $row['src_image']->get_url();
-                            $row['download_url'] = $urlService->getActionUrl($row_id, 'e', true);
-                        }
-                    } else { // not a pic - need download link
-                        $row['element_url'] = $urlService->getElementUrl($row);
+                if ($row['src_image']->is_original()) {// we have a photo
+                    if (\Piwigo\Users\CurrentUser::get()->enabledHigh) {
+                        $row['element_url'] = $row['src_image']->get_url();
                         $row['download_url'] = $urlService->getActionUrl($row_id, 'e', true);
                     }
-                }
-
-                $row['url'] = $urlService->duplicatePictureUrl(
-                    [
-                        'image_id' => $row['id'],
-                        'image_file' => $row['file'],
-                    ],
-                    [
-                        'start',
-                    ]
-                );
-
-                $picture[$i] = $row;
-                $picture[$i]['TITLE'] = new HtmlService()->renderElementName($row);
-                $picture[$i]['TITLE_ESC'] = str_replace('"', '&quot;', $picture[$i]['TITLE']);
-
-                if ($i === 'previous' and (string) $previous_item === (string) $first_item) {
-                    $picture['first'] = $picture[$i];
-                }
-                if ($i === 'next' and (string) $next_item === (string) $last_item) {
-                    // $picture[$i] (== $picture['next']) was set a few
-                    // lines above, this same iteration ($i doesn't change
-                    // within one iteration)
-                    assert(isset($picture[$i]));
-                    $picture['last'] = $picture[$i];
+                } else { // not a pic - need download link
+                    $row['element_url'] = $urlService->getElementUrl($row);
+                    $row['download_url'] = $urlService->getActionUrl($row_id, 'e', true);
                 }
             }
 
-            $slideshow_params = [];
-            $slideshow_url_params = [];
-
-            if (isset($_GET['slideshow'])) {
-                $slideshow = true;
-                \Piwigo\Core\PageState::current()->setMetaRobots([
-                    'noindex' => 1,
-                    'nofollow' => 1,
-                ]);
-
-                $get_slideshow = $_GET['slideshow'];
-                $slideshow_params = self::imageService($conn)
-                    ->decodeSlideshowParams(is_string($get_slideshow) ? $get_slideshow : null);
-                $slideshow_url_params['slideshow'] = self::imageService($conn)->encodeSlideshowParams($slideshow_params);
-
-                if ((bool) $slideshow_params['play']) {
-                    $id_pict_redirect = '';
-                    if ($next_item !== null) {
-                        $id_pict_redirect = 'next';
-                    } else {
-                        if ((bool) $slideshow_params['repeat'] and $first_item !== null) {
-                            $id_pict_redirect = 'first';
-                        }
-                    }
-
-                    if ($id_pict_redirect !== '' and isset($picture[$id_pict_redirect])) {
-                        // $refresh, $url_link and $title are required for
-                        // creating an automated refresh page in
-                        // header.tpl
-                        $refresh = $slideshow_params['period'];
-                        $url_link = $urlService->addUrlParams(
-                            $picture[$id_pict_redirect]['url'],
-                            $slideshow_url_params
-                        );
-                    }
-                }
-            } else {
-                $slideshow = false;
-            }
-            if ($slideshow and \Piwigo\Config\Config::lightSlideshow()) {
-                $template->set_filenames([
-                    'slideshow' => 'slideshow.tpl',
-                ]);
-            } else {
-                $template->set_filenames([
-                    'picture' => 'picture.tpl',
-                ]);
-            }
-
-            // $image_id is always in $ids (see the query above) and
-            // always hits the while loop's final `else { $i =
-            // 'current'; }` branch
-            assert(isset($picture['current']));
-            $title = $picture['current']['TITLE'];
-            $title_nb = ($current_rank + 1) . '/' . count($items);
-
-            // metadata
-            $url_metadata = $urlService->duplicatePictureUrl();
-            $url_metadata = $urlService->addUrlParams($url_metadata, [
-                'metadata' => null,
-            ]);
-
-            // do we have a plugin that can show metadata for something
-            // else than images?
-            $metadata_showable = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                'get_element_metadata_available',
-                (
-                    (\Piwigo\Config\Config::showExif() or \Piwigo\Config\Config::showIptc())
-                and ! $picture['current']['src_image']->is_mimetype()
-                ),
-                $picture['current']
+            $row['url'] = $urlService->duplicatePictureUrl(
+                [
+                    'image_id' => $row['id'],
+                    'image_file' => $row['file'],
+                ],
+                [
+                    'start',
+                ]
             );
 
-            if (isset($_GET['metadata'])) {
-                \Piwigo\Core\PageState::current()->setMetaRobots([
-                    'noindex' => 1,
-                    'nofollow' => 1,
-                ]);
+            $picture[$i] = $row;
+            $picture[$i]['TITLE'] = new HtmlService()->renderElementName($row);
+            $picture[$i]['TITLE_ESC'] = str_replace('"', '&quot;', $picture[$i]['TITLE']);
+
+            if ($i === 'previous' and (string) $previous_item === (string) $first_item) {
+                $picture['first'] = $picture[$i];
             }
+            if ($i === 'next' and (string) $next_item === (string) $last_item) {
+                // $picture[$i] (== $picture['next']) was set a few
+                // lines above, this same iteration ($i doesn't change
+                // within one iteration)
+                assert(isset($picture[$i]));
+                $picture['last'] = $picture[$i];
+            }
+        }
 
-            \Piwigo\Core\PageState::current()->setBodyId('thePicturePage');
+        $slideshow_params = [];
+        $slideshow_url_params = [];
 
-            // allow plugins to change what we computed before passing data
-            // to template
-            /**
-             * EventDispatcher::triggerChange() is only typed to return
-             * mixed -- restate the shape plugins are expected to
-             * preserve: one images-table row (string|null columns) per
-             * navigation slot, plus the computed fields set on $row
-             * above.
-             *
-             * @var array<string, array{
-             *     id: string,
-             *     file: string,
-             *     path: string,
-             *     comment: string|null,
-             *     author: string|null,
-             *     date_creation: string|null,
-             *     date_available: string,
-             *     width: string|null,
-             *     height: string|null,
-             *     hit: string,
-             *     filesize: string|null,
-             *     src_image: SrcImage,
-             *     derivatives: array<string, DerivativeImage>,
-             *     url: string,
-             *     download_url?: string,
-             *     TITLE: string,
-             *     TITLE_ESC: string,
-             *     ...
-             * }> $picture
-             */
-            $picture = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('picture_pictures_data', $picture);
+        if (isset($_GET['slideshow'])) {
+            $slideshow = true;
+            \Piwigo\Core\PageState::current()->setMetaRobots([
+                'noindex' => 1,
+                'nofollow' => 1,
+            ]);
 
-            // ---------------------------------------------------- navigation management
-            foreach (['first', 'previous', 'next', 'last', 'current'] as $which_image) {
-                if (isset($picture[$which_image])) {
-                    $template->assign(
-                        $which_image,
-                        array_merge(
-                            $picture[$which_image],
-                            [
-                                // Params slideshow was transmit to
-                                // navigation buttons
-                                'U_IMG' => $urlService->addUrlParams(
-                                    $picture[$which_image]['url'],
-                                    $slideshow_url_params
-                                ),
-                            ]
-                        )
+            $get_slideshow = $_GET['slideshow'];
+            $slideshow_params = self::imageService($conn)
+                ->decodeSlideshowParams(is_string($get_slideshow) ? $get_slideshow : null);
+            $slideshow_url_params['slideshow'] = self::imageService($conn)->encodeSlideshowParams($slideshow_params);
+
+            if ((bool) $slideshow_params['play']) {
+                $id_pict_redirect = '';
+                if ($next_item !== null) {
+                    $id_pict_redirect = 'next';
+                } else {
+                    if ((bool) $slideshow_params['repeat'] and $first_item !== null) {
+                        $id_pict_redirect = 'first';
+                    }
+                }
+
+                if ($id_pict_redirect !== '' and isset($picture[$id_pict_redirect])) {
+                    // $refresh, $url_link and $title are required for
+                    // creating an automated refresh page in
+                    // header.tpl
+                    $refresh = $slideshow_params['period'];
+                    $url_link = $urlService->addUrlParams(
+                        $picture[$id_pict_redirect]['url'],
+                        $slideshow_url_params
                     );
                 }
             }
-            $download_url = $picture['current']['download_url'] ?? null;
-            $download_url_present = is_string($download_url) && $download_url !== '' && $download_url !== '0';
-            if (\Piwigo\Config\Config::pictureDownloadIcon() and $download_url_present and \Piwigo\Users\CurrentUser::get()->enabledHigh) {
-                $template->append('current', [
-                    'U_DOWNLOAD' => $download_url,
-                ], true);
+        } else {
+            $slideshow = false;
+        }
+        if ($slideshow and \Piwigo\Config\Config::lightSlideshow()) {
+            $template->set_filenames([
+                'slideshow' => 'slideshow.tpl',
+            ]);
+        } else {
+            $template->set_filenames([
+                'picture' => 'picture.tpl',
+            ]);
+        }
 
-                if (\Piwigo\Config\Config::isFormatsEnabled()) {
-                    $query = '
+        // $image_id is always in $ids (see the query above) and
+        // always hits the while loop's final `else { $i =
+        // 'current'; }` branch
+        assert(isset($picture['current']));
+        $title = $picture['current']['TITLE'];
+        $title_nb = ($current_rank + 1) . '/' . count($items);
+
+        // metadata
+        $url_metadata = $urlService->duplicatePictureUrl();
+        $url_metadata = $urlService->addUrlParams($url_metadata, [
+            'metadata' => null,
+        ]);
+
+        // do we have a plugin that can show metadata for something
+        // else than images?
+        $metadata_showable = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
+            'get_element_metadata_available',
+            (
+                (\Piwigo\Config\Config::showExif() or \Piwigo\Config\Config::showIptc())
+                and ! $picture['current']['src_image']->is_mimetype()
+            ),
+            $picture['current']
+        );
+
+        if (isset($_GET['metadata'])) {
+            \Piwigo\Core\PageState::current()->setMetaRobots([
+                'noindex' => 1,
+                'nofollow' => 1,
+            ]);
+        }
+
+        \Piwigo\Core\PageState::current()->setBodyId('thePicturePage');
+
+        // allow plugins to change what we computed before passing data
+        // to template
+        /**
+         * EventDispatcher::triggerChange() is only typed to return
+         * mixed -- restate the shape plugins are expected to
+         * preserve: one images-table row (string|null columns) per
+         * navigation slot, plus the computed fields set on $row
+         * above.
+         *
+         * @var array<string, array{
+         *     id: string,
+         *     file: string,
+         *     path: string,
+         *     comment: string|null,
+         *     author: string|null,
+         *     date_creation: string|null,
+         *     date_available: string,
+         *     width: string|null,
+         *     height: string|null,
+         *     hit: string,
+         *     filesize: string|null,
+         *     src_image: SrcImage,
+         *     derivatives: array<string, DerivativeImage>,
+         *     url: string,
+         *     download_url?: string,
+         *     TITLE: string,
+         *     TITLE_ESC: string,
+         *     ...
+         * }> $picture
+         */
+        $picture = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('picture_pictures_data', $picture);
+
+        // ---------------------------------------------------- navigation management
+        foreach (['first', 'previous', 'next', 'last', 'current'] as $which_image) {
+            if (isset($picture[$which_image])) {
+                $template->assign(
+                    $which_image,
+                    array_merge(
+                        $picture[$which_image],
+                        [
+                            // Params slideshow was transmit to
+                            // navigation buttons
+                            'U_IMG' => $urlService->addUrlParams(
+                                $picture[$which_image]['url'],
+                                $slideshow_url_params
+                            ),
+                        ]
+                    )
+                );
+            }
+        }
+        $download_url = $picture['current']['download_url'] ?? null;
+        $download_url_present = is_string($download_url) && $download_url !== '' && $download_url !== '0';
+        if (\Piwigo\Config\Config::pictureDownloadIcon() and $download_url_present and \Piwigo\Users\CurrentUser::get()->enabledHigh) {
+            $template->append('current', [
+                'U_DOWNLOAD' => $download_url,
+            ], true);
+
+            if (\Piwigo\Config\Config::isFormatsEnabled()) {
+                $query = '
 SELECT *
   FROM ' . Tables::imageFormat() . '
   WHERE image_id = ' . $picture['current']['id'] . '
 ;';
-                    $formats = $conn->fetchAllAssociative($query);
+                $formats = $conn->fetchAllAssociative($query);
 
-                    // let's add the original as a format among others. It
-                    // will just have a specific download URL
-                    array_unshift(
-                        $formats,
-                        [
-                            'download_url' => $download_url,
-                            'ext' => \Piwigo\Core\StringHelper::getExtension($picture['current']['file']),
-                            'filesize' => $picture['current']['filesize'],
-                        ]
-                    );
-
-                    foreach ($formats as &$format) {
-                        // array_unshift() above prepends a differently-
-                        // shaped literal (only download_url/ext/filesize)
-                        // onto the fetchAllAssociative() rows (format_id/
-                        // image_id/ext/filesize), so PHPStan can no longer
-                        // track a precise per-key type for $format --
-                        // narrow explicitly.
-                        if (! isset($format['download_url'])) {
-                            $format_id = $format['format_id'];
-                            $format['download_url'] = 'action.php?format=' . (is_scalar($format_id) ? $format_id : '') . '&amp;download';
-                        }
-
-                        $format_ext = $format['ext'];
-                        $format_ext = is_string($format_ext) ? $format_ext : '';
-                        $format['label'] = strtoupper($format_ext);
-                        $lang_key = 'format ' . strtoupper($format_ext);
-                        if (\Piwigo\Core\Lang::has($lang_key)) {
-                            $format['label'] = \Piwigo\Core\Lang::t($lang_key);
-                        }
-
-                        $format_filesize = $format['filesize'];
-                        $format_filesize = is_numeric($format_filesize) ? (float) $format_filesize : 0.0;
-                        $format['filesize'] = sprintf('%.1fMB', $format_filesize / 1024);
-                    }
-                    unset($format);
-                    $template->append('current', [
-                        'formats' => $formats,
-                    ], true);
-                }
-            }
-
-            if ($slideshow) {
-                $tpl_slideshow = [];
-
-                // slideshow end
-                $template->assign(
+                // let's add the original as a format among others. It
+                // will just have a specific download URL
+                array_unshift(
+                    $formats,
                     [
-                        'U_SLIDESHOW_STOP' => $picture['current']['url'],
+                        'download_url' => $download_url,
+                        'ext' => \Piwigo\Core\StringHelper::getExtension($picture['current']['file']),
+                        'filesize' => $picture['current']['filesize'],
                     ]
                 );
 
-                foreach (['repeat', 'play'] as $p) {
-                    $var_name =
-                      'U_'
-                      . ((bool) $slideshow_params[$p] ? 'STOP_' : 'START_')
-                      . strtoupper($p);
+                foreach ($formats as &$format) {
+                    // array_unshift() above prepends a differently-
+                    // shaped literal (only download_url/ext/filesize)
+                    // onto the fetchAllAssociative() rows (format_id/
+                    // image_id/ext/filesize), so PHPStan can no longer
+                    // track a precise per-key type for $format --
+                    // narrow explicitly.
+                    if (! isset($format['download_url'])) {
+                        $format_id = $format['format_id'];
+                        $format['download_url'] = 'action.php?format=' . (is_scalar($format_id) ? $format_id : '') . '&amp;download';
+                    }
 
+                    $format_ext = $format['ext'];
+                    $format_ext = is_string($format_ext) ? $format_ext : '';
+                    $format['label'] = strtoupper($format_ext);
+                    $lang_key = 'format ' . strtoupper($format_ext);
+                    if (\Piwigo\Core\Lang::has($lang_key)) {
+                        $format['label'] = \Piwigo\Core\Lang::t($lang_key);
+                    }
+
+                    $format_filesize = $format['filesize'];
+                    $format_filesize = is_numeric($format_filesize) ? (float) $format_filesize : 0.0;
+                    $format['filesize'] = sprintf('%.1fMB', $format_filesize / 1024);
+                }
+                unset($format);
+                $template->append('current', [
+                    'formats' => $formats,
+                ], true);
+            }
+        }
+
+        if ($slideshow) {
+            $tpl_slideshow = [];
+
+            // slideshow end
+            $template->assign(
+                [
+                    'U_SLIDESHOW_STOP' => $picture['current']['url'],
+                ]
+            );
+
+            foreach (['repeat', 'play'] as $p) {
+                $var_name =
+                  'U_'
+                  . ((bool) $slideshow_params[$p] ? 'STOP_' : 'START_')
+                  . strtoupper($p);
+
+                $tpl_slideshow[$var_name] =
+                      $urlService->addUrlParams(
+                          $picture['current']['url'],
+                          [
+                              'slideshow' => self::imageService($conn)
+                                  ->encodeSlideshowParams(
+                                      array_merge(
+                                          $slideshow_params,
+                                          [
+                                              $p => ! (bool) $slideshow_params[$p],
+                                          ]
+                                      )
+                                  ),
+                          ]
+                      );
+            }
+
+            foreach (['dec', 'inc'] as $op) {
+                // decodeSlideshowParams()/correctSlideshowParams()
+                // only declare @return array<string, mixed>; 'period'
+                // is always numeric in practice (int default, or a
+                // preg-captured \d+ string).
+                $current_period = $slideshow_params['period'];
+                $current_period = is_numeric($current_period) ? (int) $current_period : 0;
+                $slideshow_period_step = \Piwigo\Config\Config::slideshowPeriodStep();
+                $new_period = $current_period + ((($op === 'dec') ? -1 : 1) * $slideshow_period_step);
+                $new_slideshow_params =
+                  self::imageService($conn)
+                      ->correctSlideshowParams(
+                          array_merge(
+                              $slideshow_params,
+                              [
+                                  'period' => $new_period,
+                              ]
+                          )
+                      );
+
+                if ($new_slideshow_params['period'] === $new_period) {
+                    $var_name = 'U_' . strtoupper($op) . '_PERIOD';
                     $tpl_slideshow[$var_name] =
                           $urlService->addUrlParams(
                               $picture['current']['url'],
                               [
                                   'slideshow' => self::imageService($conn)
-                                      ->encodeSlideshowParams(
-                                          array_merge(
-                                              $slideshow_params,
-                                              [
-                                                  $p => ! (bool) $slideshow_params[$p],
-                                              ]
-                                          )
-                                      ),
+                                      ->encodeSlideshowParams($new_slideshow_params),
                               ]
                           );
                 }
+            }
+            $template->assign('slideshow', $tpl_slideshow);
+        } elseif (\Piwigo\Config\Config::pictureSlideShowIcon()) {
+            $template->assign(
+                [
+                    'U_SLIDESHOW_START' => $urlService->addUrlParams(
+                        $picture['current']['url'],
+                        [
+                            'slideshow' => '',
+                        ]
+                    ),
+                ]
+            );
+        }
 
-                foreach (['dec', 'inc'] as $op) {
-                    // decodeSlideshowParams()/correctSlideshowParams()
-                    // only declare @return array<string, mixed>; 'period'
-                    // is always numeric in practice (int default, or a
-                    // preg-captured \d+ string).
-                    $current_period = $slideshow_params['period'];
-                    $current_period = is_numeric($current_period) ? (int) $current_period : 0;
-                    $slideshow_period_step = \Piwigo\Config\Config::slideshowPeriodStep();
-                    $new_period = $current_period + ((($op === 'dec') ? -1 : 1) * $slideshow_period_step);
-                    $new_slideshow_params =
-                      self::imageService($conn)
-                          ->correctSlideshowParams(
-                              array_merge(
-                                  $slideshow_params,
-                                  [
-                                      'period' => $new_period,
-                                  ]
-                              )
-                          );
+        $template->assign(
+            [
+                'SECTION_TITLE' => $section_context->sectionTitle,
+                'PHOTO' => $title_nb,
+                'IS_HOME' => ($section_context->section === 'categories' and $page_category === null),
 
-                    if ($new_slideshow_params['period'] === $new_period) {
-                        $var_name = 'U_' . strtoupper($op) . '_PERIOD';
-                        $tpl_slideshow[$var_name] =
-                              $urlService->addUrlParams(
-                                  $picture['current']['url'],
-                                  [
-                                      'slideshow' => self::imageService($conn)
-                                          ->encodeSlideshowParams($new_slideshow_params),
-                                  ]
-                              );
-                    }
-                }
-                $template->assign('slideshow', $tpl_slideshow);
-            } elseif (\Piwigo\Config\Config::pictureSlideShowIcon()) {
+                'LEVEL_SEPARATOR' => \Piwigo\Config\Config::levelSeparator(),
+
+                'U_UP' => $url_up,
+                'DISPLAY_NAV_BUTTONS' => \Piwigo\Config\Config::pictureNavigationIcons(),
+                'DISPLAY_NAV_THUMB' => \Piwigo\Config\Config::pictureNavigationThumb(),
+            ]
+        );
+
+        if (\Piwigo\Config\Config::pictureMetadataIcon()) {
+            $template->assign('U_METADATA', $url_metadata);
+        }
+
+        // -------------------------------------------------- upper menu management
+
+        // admin links
+        if (\Piwigo\Auth\AccessControl::isAdmin()) {
+            if ($page_category !== null and \Piwigo\Config\Config::pictureRepresentativeIcon()) {
                 $template->assign(
                     [
-                        'U_SLIDESHOW_START' => $urlService->addUrlParams(
-                            $picture['current']['url'],
+                        'U_SET_AS_REPRESENTATIVE' => $urlService->addUrlParams(
+                            $url_self,
                             [
-                                'slideshow' => '',
+                                'action' => 'set_as_representative',
                             ]
                         ),
                     ]
                 );
             }
 
-            $template->assign(
-                [
-                    'SECTION_TITLE' => $section_context->sectionTitle,
-                    'PHOTO' => $title_nb,
-                    'IS_HOME' => ($section_context->section === 'categories' and $page_category === null),
-
-                    'LEVEL_SEPARATOR' => \Piwigo\Config\Config::levelSeparator(),
-
-                    'U_UP' => $url_up,
-                    'DISPLAY_NAV_BUTTONS' => \Piwigo\Config\Config::pictureNavigationIcons(),
-                    'DISPLAY_NAV_THUMB' => \Piwigo\Config\Config::pictureNavigationThumb(),
-                ]
-            );
-
-            if (\Piwigo\Config\Config::pictureMetadataIcon()) {
-                $template->assign('U_METADATA', $url_metadata);
+            if (\Piwigo\Config\Config::pictureEditIcon()) {
+                $template->assign('U_PHOTO_ADMIN', $urlService->getRootUrl() . 'admin.php?page=photo-' . $image_id);
             }
 
-            // -------------------------------------------------- upper menu management
-
-            // admin links
-            if (\Piwigo\Auth\AccessControl::isAdmin()) {
-                if ($page_category !== null and \Piwigo\Config\Config::pictureRepresentativeIcon()) {
-                    $template->assign(
-                        [
-                            'U_SET_AS_REPRESENTATIVE' => $urlService->addUrlParams(
-                                $url_self,
-                                [
-                                    'action' => 'set_as_representative',
-                                ]
-                            ),
-                        ]
-                    );
-                }
-
-                if (\Piwigo\Config\Config::pictureEditIcon()) {
-                    $template->assign('U_PHOTO_ADMIN', $urlService->getRootUrl() . 'admin.php?page=photo-' . $image_id);
-                }
-
-                if (\Piwigo\Config\Config::pictureCaddieIcon()) {
-                    $template->assign(
-                        'U_CADDIE',
-                        $urlService->addUrlParams($url_self, [
-                            'action' => 'add_to_caddie',
-                        ])
-                    );
-                }
-
+            if (\Piwigo\Config\Config::pictureCaddieIcon()) {
+                $template->assign(
+                    'U_CADDIE',
+                    $urlService->addUrlParams($url_self, [
+                        'action' => 'add_to_caddie',
+                    ])
+                );
             }
 
-            // favorite manipulation
-            if (! \Piwigo\Auth\AccessControl::isAGuest() and \Piwigo\Config\Config::pictureFavoriteIcon()) {
-                // verify if the picture is already in the favorite of the
-                // user
-                $query = '
+        }
+
+        // favorite manipulation
+        if (! \Piwigo\Auth\AccessControl::isAGuest() and \Piwigo\Config\Config::pictureFavoriteIcon()) {
+            // verify if the picture is already in the favorite of the
+            // user
+            $query = '
 SELECT COUNT(*) AS nb_fav
   FROM ' . Tables::favorites() . '
   WHERE image_id = ' . $image_id . '
     AND user_id = ' . $user_id . '
 ;';
-                $row = $conn->fetchAssociative($query);
-                if ($row === false) {
-                    throw new \Exception('picture.php: favorite-count aggregate query returned no row');
-                }
-                $nb_fav = $row['nb_fav'];
-                $is_favorite = (is_numeric($nb_fav) ? (int) $nb_fav : 0) !== 0;
-
-                $template->assign(
-                    'favorite',
-                    [
-                        'IS_FAVORITE' => $is_favorite,
-                        'U_FAVORITE' => $urlService->addUrlParams(
-                            $url_self,
-                            [
-                                'action' => ! $is_favorite ? 'add_to_favorites' : 'remove_from_favorites',
-                            ]
-                        ),
-                    ]
-                );
+            $row = $conn->fetchAssociative($query);
+            if ($row === false) {
+                throw new \Exception('picture.php: favorite-count aggregate query returned no row');
             }
+            $nb_fav = $row['nb_fav'];
+            $is_favorite = (is_numeric($nb_fav) ? (int) $nb_fav : 0) !== 0;
 
-            // ------------------------------------------------------ picture information
-            // $infos was previously used without initialization (relying
-            // on PHP's implicit array creation on first offset write) --
-            // make it explicit.
-            $infos = [];
-
-            // legend
-            $current_comment = $picture['current']['comment'] ?? null;
-            if (is_string($current_comment) && $current_comment !== '' && $current_comment !== '0') {
-                $template->assign(
-                    'COMMENT_IMG',
-                    \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                        'render_element_description',
-                        $picture['current']['comment'],
-                        'picture_page_element_description'
-                    )
-                );
-            }
-
-            // author
-            $current_author = $picture['current']['author'] ?? null;
-            if (is_string($current_author) && $current_author !== '' && $current_author !== '0') {
-                $infos['INFO_AUTHOR'] = $picture['current']['author'];
-            }
-
-            // creation date
-            $date_creation = $picture['current']['date_creation'] ?? null;
-            if (is_string($date_creation) && $date_creation !== '' && $date_creation !== '0') {
-                $val = \Piwigo\Core\DateHelper::formatDate($date_creation);
-                $url = $urlService->makeIndexUrl(
-                    [
-                        'chronology_field' => 'created',
-                        'chronology_style' => 'monthly',
-                        'chronology_view' => 'list',
-                        'chronology_date' => explode('-', substr($date_creation, 0, 10)),
-                    ]
-                );
-                $infos['INFO_CREATION_DATE'] =
-                  '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
-            }
-
-            // date of availability
-            $val = \Piwigo\Core\DateHelper::formatDate($picture['current']['date_available']);
-            $url = $urlService->makeIndexUrl(
+            $template->assign(
+                'favorite',
                 [
-                    'chronology_field' => 'posted',
-                    'chronology_style' => 'monthly',
-                    'chronology_view' => 'list',
-                    'chronology_date' => explode(
-                        '-',
-                        substr($picture['current']['date_available'], 0, 10)
+                    'IS_FAVORITE' => $is_favorite,
+                    'U_FAVORITE' => $urlService->addUrlParams(
+                        $url_self,
+                        [
+                            'action' => ! $is_favorite ? 'add_to_favorites' : 'remove_from_favorites',
+                        ]
                     ),
                 ]
             );
-            $infos['INFO_POSTED_DATE'] = '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
+        }
 
-            // size in pixels
-            if ($picture['current']['src_image']->is_original() and isset($picture['current']['width'])) {
-                $infos['INFO_DIMENSIONS'] =
-                  $picture['current']['width'] . '*' . $picture['current']['height'];
-            }
+        // ------------------------------------------------------ picture information
+        // $infos was previously used without initialization (relying
+        // on PHP's implicit array creation on first offset write) --
+        // make it explicit.
+        $infos = [];
 
-            // filesize
-            $current_filesize = $picture['current']['filesize'] ?? null;
-            if (is_numeric($current_filesize) && (float) $current_filesize !== 0.0) {
-                $infos['INFO_FILESIZE'] = Lang::t('%d Kb', $picture['current']['filesize']);
-            }
+        // legend
+        $current_comment = $picture['current']['comment'] ?? null;
+        if (is_string($current_comment) && $current_comment !== '' && $current_comment !== '0') {
+            $template->assign(
+                'COMMENT_IMG',
+                \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
+                    'render_element_description',
+                    $picture['current']['comment'],
+                    'picture_page_element_description'
+                )
+            );
+        }
 
-            // number of visits
-            $infos['INFO_VISITS'] = $picture['current']['hit'];
+        // author
+        $current_author = $picture['current']['author'] ?? null;
+        if (is_string($current_author) && $current_author !== '' && $current_author !== '0') {
+            $infos['INFO_AUTHOR'] = $picture['current']['author'];
+        }
 
-            // file
-            $infos['INFO_FILE'] = $picture['current']['file'];
+        // creation date
+        $date_creation = $picture['current']['date_creation'] ?? null;
+        if (is_string($date_creation) && $date_creation !== '' && $date_creation !== '0') {
+            $val = \Piwigo\Core\DateHelper::formatDate($date_creation);
+            $url = $urlService->makeIndexUrl(
+                [
+                    'chronology_field' => 'created',
+                    'chronology_style' => 'monthly',
+                    'chronology_view' => 'list',
+                    'chronology_date' => explode('-', substr($date_creation, 0, 10)),
+                ]
+            );
+            $infos['INFO_CREATION_DATE'] =
+              '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
+        }
 
-            $template->assign($infos);
-            $template->assign('display_info', \Piwigo\Config\Config::pictureInformations());
+        // date of availability
+        $val = \Piwigo\Core\DateHelper::formatDate($picture['current']['date_available']);
+        $url = $urlService->makeIndexUrl(
+            [
+                'chronology_field' => 'posted',
+                'chronology_style' => 'monthly',
+                'chronology_view' => 'list',
+                'chronology_date' => explode(
+                    '-',
+                    substr($picture['current']['date_available'], 0, 10)
+                ),
+            ]
+        );
+        $infos['INFO_POSTED_DATE'] = '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
 
-            // related tags
-            $tags = self::tagService($conn)
-                ->getCommonTags([$image_id], -1, new HtmlService());
-            if ($tags !== []) {
-                foreach ($tags as $tag) {
-                    $template->append(
-                        'related_tags',
-                        array_merge(
-                            $tag,
-                            [
-                                'URL' => $urlService->makeIndexUrl(
-                                    [
-                                        'tags' => [$tag],
-                                    ]
-                                ),
-                                'U_TAG_IMAGE' => $urlService->duplicatePictureUrl(
-                                    [
-                                        'section' => 'tags',
-                                        'tags' => [$tag],
-                                    ]
-                                ),
-                            ]
-                        )
-                    );
-                }
-            }
+        // size in pixels
+        if ($picture['current']['src_image']->is_original() and isset($picture['current']['width'])) {
+            $infos['INFO_DIMENSIONS'] =
+              $picture['current']['width'] . '*' . $picture['current']['height'];
+        }
 
-            // related categories
-            $related_cat0_id = $related_categories[0]['id'] ?? null;
-            $page_category_id_for_compare = is_scalar($page_category['id'] ?? null) ? (string) $page_category['id'] : null;
-            if (count($related_categories) === 1 and
-                $page_category !== null and
-                $related_cat0_id !== null and $related_cat0_id === $page_category_id_for_compare) { // no need to go to db, we have all the info
-                // Mirrors the narrowing in include/functions_html.inc.php
-                // (get_cat_display_name_from_id()) for the same
-                // 'upper_names' shape.
-                $upper_names = $page_category['upper_names'] ?? [];
-                $upper_names = is_array($upper_names) ? $upper_names : [];
-                /** @var array<int, array<string, mixed>> $upper_names */
+        // filesize
+        $current_filesize = $picture['current']['filesize'] ?? null;
+        if (is_numeric($current_filesize) && (float) $current_filesize !== 0.0) {
+            $infos['INFO_FILESIZE'] = Lang::t('%d Kb', $picture['current']['filesize']);
+        }
+
+        // number of visits
+        $infos['INFO_VISITS'] = $picture['current']['hit'];
+
+        // file
+        $infos['INFO_FILE'] = $picture['current']['file'];
+
+        $template->assign($infos);
+        $template->assign('display_info', \Piwigo\Config\Config::pictureInformations());
+
+        // related tags
+        $tags = self::tagService($conn)
+            ->getCommonTags([$image_id], -1, new HtmlService());
+        if ($tags !== []) {
+            foreach ($tags as $tag) {
                 $template->append(
-                    'related_categories',
-                    new HtmlService()
-                        ->getCatDisplayName($upper_names)
+                    'related_tags',
+                    array_merge(
+                        $tag,
+                        [
+                            'URL' => $urlService->makeIndexUrl(
+                                [
+                                    'tags' => [$tag],
+                                ]
+                            ),
+                            'U_TAG_IMAGE' => $urlService->duplicatePictureUrl(
+                                [
+                                    'section' => 'tags',
+                                    'tags' => [$tag],
+                                ]
+                            ),
+                        ]
+                    )
                 );
-            } else { // use only 1 sql query to get names for all related categories
-                $ids = [];
-                foreach ($related_categories as $category) {// add all uppercats to $ids
-                    $ids = array_merge($ids, explode(',', (string) $category['uppercats']));
-                }
-                $ids = array_unique($ids);
-                $query = '
+            }
+        }
+
+        // related categories
+        $related_cat0_id = $related_categories[0]['id'] ?? null;
+        $page_category_id_for_compare = is_scalar($page_category['id'] ?? null) ? (string) $page_category['id'] : null;
+        if (count($related_categories) === 1 and
+            $page_category !== null and
+            $related_cat0_id !== null and $related_cat0_id === $page_category_id_for_compare) { // no need to go to db, we have all the info
+            // Mirrors the narrowing in include/functions_html.inc.php
+            // (get_cat_display_name_from_id()) for the same
+            // 'upper_names' shape.
+            $upper_names = $page_category['upper_names'] ?? [];
+            $upper_names = is_array($upper_names) ? $upper_names : [];
+            /** @var array<int, array<string, mixed>> $upper_names */
+            $template->append(
+                'related_categories',
+                new HtmlService()
+                    ->getCatDisplayName($upper_names)
+            );
+        } else { // use only 1 sql query to get names for all related categories
+            $ids = [];
+            foreach ($related_categories as $category) {// add all uppercats to $ids
+                $ids = array_merge($ids, explode(',', (string) $category['uppercats']));
+            }
+            $ids = array_unique($ids);
+            $query = '
 SELECT id, name, permalink
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $ids) . ')';
-                /** @var array<int|string, array<string, string|null>> $cat_map */
-                $cat_map = array_column($conn->fetchAllAssociative($query), null, 'id');
-                foreach ($related_categories as $category) {
-                    $cats = [];
-                    foreach (explode(',', (string) $category['uppercats']) as $id) {
-                        $cats[] = $cat_map[$id];
-                    }
-                    $template->append('related_categories', new HtmlService()->getCatDisplayName($cats));
+            /** @var array<int|string, array<string, string|null>> $cat_map */
+            $cat_map = array_column($conn->fetchAllAssociative($query), null, 'id');
+            foreach ($related_categories as $category) {
+                $cats = [];
+                foreach (explode(',', (string) $category['uppercats']) as $id) {
+                    $cats[] = $cat_map[$id];
                 }
+                $template->append('related_categories', new HtmlService()->getCatDisplayName($cats));
             }
+        }
 
-            if (in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($picture['current']['file'])), ['pdf'], true)) {
-                $pdf_viewer_filesize_threshold = \Piwigo\Config\Config::pdfViewerFilesizeThreshold();
-                $template->assign(
-                    [
-                        'PDF_VIEWER_FILESIZE_THRESHOLD' => $pdf_viewer_filesize_threshold * 1024,
-                        'PDF_NB_PAGES' => self::imageService($conn)
-                            ->countPdfPages($picture['current']['path']),
-                    ]
-                );
-            }
-
-            // maybe someone wants a special display (call it before
-            // page_header so that they can add stylesheets)
-            $element_content = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                'render_element_content',
-                '',
-                $picture['current']
-            );
-            $template->assign('ELEMENT_CONTENT', $element_content);
-
-            $http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-            $http_user_agent = is_string($http_user_agent) ? $http_user_agent : '';
-            if (isset($picture['next'])
-                and $picture['next']['src_image']->is_original()
-                and $template->get_template_vars('U_PREFETCH') === null
-                and ! str_contains($http_user_agent, 'Chrome/')) {
-                $prefetch_deriv_type = SessionService::get()->getSessionVar('picture_deriv', \Piwigo\Config\Config::derivativeDefaultSize());
-                if (! is_string($prefetch_deriv_type)) {
-                    $prefetch_deriv_type = ImageStdParams::MEDIUM;
-                }
-                $template->assign(
-                    'U_PREFETCH',
-                    $picture['next']['derivatives'][$prefetch_deriv_type]->get_url()
-                );
-            }
-
+        if (in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($picture['current']['file'])), ['pdf'], true)) {
+            $pdf_viewer_filesize_threshold = \Piwigo\Config\Config::pdfViewerFilesizeThreshold();
             $template->assign(
-                'U_CANONICAL',
-                $urlService->makePictureUrl(
-                    [
-                        'image_id' => $picture['current']['id'],
-                        'image_file' => $picture['current']['file'],
-                    ]
-                )
+                [
+                    'PDF_VIEWER_FILESIZE_THRESHOLD' => $pdf_viewer_filesize_threshold * 1024,
+                    'PDF_NB_PAGES' => self::imageService($conn)
+                        ->countPdfPages($picture['current']['path']),
+                ]
+            );
+        }
+
+        // maybe someone wants a special display (call it before
+        // page_header so that they can add stylesheets)
+        $element_content = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
+            'render_element_content',
+            '',
+            $picture['current']
+        );
+        $template->assign('ELEMENT_CONTENT', $element_content);
+
+        $http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $http_user_agent = is_string($http_user_agent) ? $http_user_agent : '';
+        if (isset($picture['next'])
+            and $picture['next']['src_image']->is_original()
+            and $template->get_template_vars('U_PREFETCH') === null
+            and ! str_contains($http_user_agent, 'Chrome/')) {
+            $prefetch_deriv_type = SessionService::get()->getSessionVar('picture_deriv', \Piwigo\Config\Config::derivativeDefaultSize());
+            if (! is_string($prefetch_deriv_type)) {
+                $prefetch_deriv_type = ImageStdParams::MEDIUM;
+            }
+            $template->assign(
+                'U_PREFETCH',
+                $picture['next']['derivatives'][$prefetch_deriv_type]->get_url()
+            );
+        }
+
+        $template->assign(
+            'U_CANONICAL',
+            $urlService->makePictureUrl(
+                [
+                    'image_id' => $picture['current']['id'],
+                    'image_file' => $picture['current']['file'],
+                ]
+            )
+        );
+
+        // +-------------------------------------------------------------+
+        // |                          sub pages                           |
+        // +-------------------------------------------------------------+
+
+        new PictureRateRenderer(new RateRepository($conn))
+            ->render($image_id, $urlService, $picture, $url_self);
+        if (\Piwigo\Config\Config::activateComments()) {
+            new PictureCommentRenderer()
+                ->render($edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self);
+        }
+        if ((bool) $metadata_showable and SessionService::get()->getSessionVar('show_metadata') !== null) {
+            new PictureMetadataRenderer()
+                ->render($picture);
+        }
+
+        // include menubar
+        $themeconf = $template->get_template_vars('themeconf');
+        $themeconf = is_array($themeconf) ? $themeconf : [];
+        if (\Piwigo\Config\Config::pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
+            new MenubarRenderer()
+                ->render($urlService);
+        }
+
+        // The slideshow branch above may have set $refresh/$url_link
+        // (auto-advance meta refresh); same null-unless-numeric narrowing
+        // the deleted include/page_header.php seam applied.
+        $refresh_str = isset($refresh) && is_numeric($refresh) ? (string) $refresh : null;
+        /** @var string|null $url_link */
+        new \Piwigo\Page\PageHeaderRenderer()
+            ->render($title, $refresh_str, $url_link ?? null);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_picture');
+        new HtmlService()
+            ->flushPageMessages();
+        if ($slideshow and \Piwigo\Config\Config::lightSlideshow()) {
+            $template->parse('slideshow', false);
+        } else {
+            $template->parse_picture_buttons();
+            $template->parse('picture', false);
+        }
+        // -------------------------------------------------- log informations
+        $current_image_id = $picture['current']['id'];
+        new HistoryService(new HistoryRepository($conn), $configService)
+            ->logVisit(
+                is_numeric($current_image_id) ? (int) $current_image_id : null,
+                'picture',
+                section: $section_context->section,
+                category: $section_context->category,
+                tagIds: $section_context->tagIds,
             );
 
-            // +-------------------------------------------------------------+
-            // |                          sub pages                           |
-            // +-------------------------------------------------------------+
-
-            new PictureRateRenderer(new RateRepository($conn))
-                ->render($image_id, $urlService, $picture, $url_self);
-            if (\Piwigo\Config\Config::activateComments()) {
-                new PictureCommentRenderer()
-                    ->render($edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self);
-            }
-            if ((bool) $metadata_showable and SessionService::get()->getSessionVar('show_metadata') !== null) {
-                new PictureMetadataRenderer()
-                    ->render($picture);
-            }
-
-            // include menubar
-            $themeconf = $template->get_template_vars('themeconf');
-            $themeconf = is_array($themeconf) ? $themeconf : [];
-            if (\Piwigo\Config\Config::pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
-                new MenubarRenderer()
-                    ->render($urlService);
-            }
-
-            // The slideshow branch above may have set $refresh/$url_link
-            // (auto-advance meta refresh); same null-unless-numeric narrowing
-            // the deleted include/page_header.php seam applied.
-            $refresh_str = isset($refresh) && is_numeric($refresh) ? (string) $refresh : null;
-            /** @var string|null $url_link */
-            new \Piwigo\Page\PageHeaderRenderer()
-                ->render($title, $refresh_str, $url_link ?? null);
-            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_picture');
-            new HtmlService()
-                ->flushPageMessages();
-            if ($slideshow and \Piwigo\Config\Config::lightSlideshow()) {
-                $template->pparse('slideshow');
-            } else {
-                $template->parse_picture_buttons();
-                $template->pparse('picture');
-            }
-            // -------------------------------------------------- log informations
-            $current_image_id = $picture['current']['id'];
-            new HistoryService(new HistoryRepository($conn), $configService)
-                ->logVisit(
-                    is_numeric($current_image_id) ? (int) $current_image_id : null,
-                    'picture',
-                    section: $section_context->section,
-                    category: $section_context->category,
-                    tagIds: $section_context->tagIds,
-                );
-            \Piwigo\Bootstrap\PageTail::render();
-        });
+        $body = \Piwigo\Bootstrap\PageTail::renderToString();
 
         return ResponseFactory::html($body);
     }

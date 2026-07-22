@@ -4335,18 +4335,6 @@ parameters:
 		-
 			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
 			identifier: method.internalClass
-			count: 4
-			path: tests/Unit/Controller/LegacyRenderCaptureTest.php
-
-		-
-			rawMessage: 'Call to method toThrow() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
-			identifier: method.internalClass
-			count: 1
-			path: tests/Unit/Controller/LegacyRenderCaptureTest.php
-
-		-
-			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
-			identifier: method.internalClass
 			count: 20
 			path: tests/Unit/Core/ConstantsTest.php
 

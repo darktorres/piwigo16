@@ -50,10 +50,11 @@ final class ResponseFactory
     }
 
     /**
-     * P22 frontend controllers' own shape: legacy Smarty rendering still
-     * echoes directly (Template::pparse(), page_header.php/page_tail.php),
-     * captured into a string via Piwigo\Controller\LegacyRenderCapture
-     * rather than retrofitting every P17-20 renderer to return one.
+     * P22 frontend controllers' own shape: legacy Smarty rendering
+     * accumulates into Template's own internal buffer (Template::
+     * parse($handle, false), not pparse()'s echo) instead of retrofitting
+     * every P17-20 renderer to return a string directly, drained via
+     * Piwigo\Bootstrap\PageTail::renderToString() into this Response body.
      */
     public static function html(string $body, int $status = 200): ResponseInterface
     {

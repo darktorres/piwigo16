@@ -37,8 +37,8 @@ use Piwigo\Users\UserService;
  *
  * Both real callers (GalleryController, PictureController) already
  * `include` this file at true top-level method scope, before either
- * controller's LegacyRenderCapture closure begins -- confirmed via a full
- * trace of every local variable this file uses: none are a bare read of a
+ * controller's own render body begins -- confirmed via a full trace of
+ * every local variable this file uses: none are a bare read of a
  * variable an outer scope was expected to set (unlike the $edit_comment bug
  * fixed in P23 batch 4a), so wrapping this body in a class method carries
  * no closure-capture risk.

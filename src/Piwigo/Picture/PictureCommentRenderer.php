@@ -11,6 +11,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\ResponseFactory;
+use Piwigo\Http\ResponseReadyException;
 use Piwigo\Mail\MailService;
 use Piwigo\Session\SessionService;
 
@@ -36,15 +38,19 @@ use Piwigo\Session\SessionService;
  * decides whether any given comment row honors it -- both already existed
  * and are unchanged.
  *
- * The two die() calls below (render()'s reject paths) were flagged in an
- * earlier phase as needing dedicated investigation into whether
- * LegacyRenderCapture's own try/finally would catch this cleanly -- it
- * doesn't (die()/exit() skip finally entirely), but that's fine: see
- * Controller\LegacyRenderCapture's own docblock for why the resulting
- * partial-output-then-die() behavior is the correct, already-precedented
- * one (matches PopuphelpController/AdminPopuphelpController's identical
- * pattern, and the original include/picture_comment.inc.php's own
- * behavior verbatim).
+ * Workstream C3c: render()'s 2 reject paths ("Session expired"/"ugly
+ * spammer") now throw Piwigo\Http\ResponseReadyException instead of
+ * die()ing -- caught by Http\Middleware\ControllerInvokerMiddleware, same
+ * as every other controller (Workstream C3a/C3c). "Session expired" keeps
+ * its original (no explicit setStatusHeader() call ever preceded it) 200
+ * status; "ugly spammer" keeps its explicit 403. Piwigo\Controller\
+ * PictureController, this class's one real caller, dropped its own
+ * LegacyRenderCapture wrapper in the same commit, so both die() sites
+ * used to skip that closure's try/finally (die()/exit() skip finally
+ * entirely) and rely on PHP's own default output-buffer-flush-on-exit()
+ * behavior to still send whatever partial HTML had accumulated --
+ * throwing instead means a clean reject response with no partial HTML,
+ * matching how Controller\ActionController::doError() already works.
  */
 final class PictureCommentRenderer
 {
@@ -82,7 +88,7 @@ final class PictureCommentRenderer
 
         if ($showComments and isset($_POST['content'])) {
             if (\Piwigo\Auth\AccessControl::isAGuest() and ! \Piwigo\Config\Config::commentsForall()) {
-                die('Session expired');
+                throw new ResponseReadyException(ResponseFactory::text('Session expired'));
             }
 
             $postAuthor = $_POST['author'] ?? null;
@@ -141,9 +147,7 @@ final class PictureCommentRenderer
                 ])
             );
         } elseif (isset($_POST['content'])) {
-            new HtmlService()
-                ->setStatusHeader(403);
-            die('ugly spammer');
+            throw new ResponseReadyException(ResponseFactory::text('ugly spammer', 403));
         }
 
         if (! $showComments) {

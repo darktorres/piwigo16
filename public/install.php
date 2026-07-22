@@ -29,16 +29,16 @@ use Piwigo\Core\Paths;
 
 // Unlike this file's own former "never requires vendor/autoload.php,
 // relies entirely on include/env.inc.php" shape (Legacy Coupling
-// Retirement Phase 8, 8b): Paths::fromIndex() below is a Piwigo\ class,
+// Retirement Phase 8, 8b): Paths::fromRoot() below is a Piwigo\ class,
 // so the autoloader must be required explicitly first, matching every
 // other real entry point. Requiring it twice is safe (PHP's own
 // realpath-keyed include cache no-ops the second require via
 // include/env.inc.php below), same precedent index.php's own docblock
 // documents.
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 // ----------------------------------------------------------- include
-$paths = Paths::fromIndex(__FILE__);
+$paths = Paths::fromRoot(dirname(__DIR__));
 
 include $paths->root . 'include/env.inc.php';
 Env::loadEnvFile($paths->root);
@@ -86,28 +86,41 @@ Config::override('db_prefix', $prefixeTable);
 
 // ---------------------------------------------------------------- orchestration
 $wizard = new InstallWizard($prefixeTable, $paths);
-// InstallWizard::boot() itself calls InstallBootstrap::activateConfigService()
-// partway through its own body (Legacy Coupling Retirement Phase 8, 8d) --
-// its own Template construction at the end needs it active before this
-// call returns, so it can't wait until here.
-$wizard->boot();
 
-if (isset($_POST['install'])) {
-    $wizard->analyzeForm();
+// Found live while verifying Part II's public/ relocation, unrelated to the
+// move itself: InstallWizard::boot()'s own "PHP extension mysqli is not
+// loaded"/"Piwigo is already installed" checks call HtmlService::
+// fatalError(), which (per Workstream C3) throws ResponseReadyException --
+// this file never had a catch point for it, same gap random.php had (a raw
+// top-level script, no RequestPipeline::handle() to catch it downstream).
+try {
+    // InstallWizard::boot() itself calls InstallBootstrap::
+    // activateConfigService() partway through its own body (Legacy
+    // Coupling Retirement Phase 8, 8d) -- its own Template construction at
+    // the end needs it active before this call returns, so it can't wait
+    // until here.
+    $wizard->boot();
 
-    if (! $wizard->hasErrors()) {
-        // SEC-60 keeps these define()s out of src/Piwigo: performInstall()
-        // (and everything it reaches, e.g. the themes class needing
-        // PWG_CHARSET to build fs_themes) relies on them exactly like the
-        // former top-level step-2 block that define()d them at this same
-        // point of the flow.
-        defined('PHPWG_INSTALLED') or define('PHPWG_INSTALLED', true);
-        defined('PWG_CHARSET') or define('PWG_CHARSET', 'utf-8');
-        defined('DB_CHARSET') or define('DB_CHARSET', 'utf8');
-        defined('DB_COLLATE') or define('DB_COLLATE', '');
+    if (isset($_POST['install'])) {
+        $wizard->analyzeForm();
 
-        $wizard->performInstall();
+        if (! $wizard->hasErrors()) {
+            // SEC-60 keeps these define()s out of src/Piwigo: performInstall()
+            // (and everything it reaches, e.g. the themes class needing
+            // PWG_CHARSET to build fs_themes) relies on them exactly like the
+            // former top-level step-2 block that define()d them at this same
+            // point of the flow.
+            defined('PHPWG_INSTALLED') or define('PHPWG_INSTALLED', true);
+            defined('PWG_CHARSET') or define('PWG_CHARSET', 'utf-8');
+            defined('DB_CHARSET') or define('DB_CHARSET', 'utf8');
+            defined('DB_COLLATE') or define('DB_COLLATE', '');
+
+            $wizard->performInstall();
+        }
     }
-}
 
-$wizard->render();
+    $wizard->render();
+} catch (\Piwigo\Http\ResponseReadyException $e) {
+    new \Piwigo\Http\ResponseEmitter()
+        ->emit($e->response());
+}

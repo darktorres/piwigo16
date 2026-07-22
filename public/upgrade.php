@@ -37,15 +37,15 @@ if (function_exists('ini_set')) {
     @ini_set('opcache.enable', 0);
 }
 
-// Legacy Coupling Retirement Phase 8, 8b: Paths::fromIndex() below is a
+// Legacy Coupling Retirement Phase 8, 8b: Paths::fromRoot() below is a
 // Piwigo\ class, so the autoloader must be required explicitly first now
 // (this file's former "resolve Piwigo\ classes with zero autoloader
 // hookup" bug, fixed in 8f-6 by the include/env.inc.php include below,
 // still needs that include to run too -- requiring twice is safe, PHP's
 // own realpath-keyed include cache no-ops the second require).
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
-$paths = Paths::fromIndex(__FILE__);
+$paths = Paths::fromRoot(dirname(__DIR__));
 
 // Autoload boundary (see include/env.inc.php: it only requires
 // vendor/autoload.php). Added in the 8f-6 port -- the former file resolved
@@ -146,43 +146,56 @@ $runner->loadLanguage();
 // ConfigDb:: directly, and the facade file's define()s became MysqliDb
 // class constants.
 
-$conn = UpgradeService::upgradeDbConnect();
+// Found live while verifying Part II's public/ relocation, unrelated to the
+// move itself: UpgradeService::upgradeDbConnect()'s own "MySQL version too
+// old" check calls HtmlService::fatalError(), which (per Workstream C3)
+// throws ResponseReadyException -- this file never had a catch point for
+// it, same gap random.php had (a raw top-level script, no
+// RequestPipeline::handle() to catch it downstream). UpgradeRunner::
+// prepare()'s own 2 exit() sites below are unrelated raw exit()s (verbatim
+// ported, never went through HtmlService/RedirectService), not affected.
+try {
+    $conn = UpgradeService::upgradeDbConnect();
 
-$row = $conn->fetchNumeric('SELECT NOW();');
-assert($row !== false);
-[$dbnow] = $row;
-// Every VersionUpgrade ledger row inserted during this run shares this
-// exact moment (see UpgradeRunDate's own docblock).
-UpgradeRunDate::set(is_scalar($dbnow) ? (string) $dbnow : '');
+    $row = $conn->fetchNumeric('SELECT NOW();');
+    assert($row !== false);
+    [$dbnow] = $row;
+    // Every VersionUpgrade ledger row inserted during this run shares this
+    // exact moment (see UpgradeRunDate's own docblock).
+    UpgradeRunDate::set(is_scalar($dbnow) ? (string) $dbnow : '');
 
-// +-----------------------------------------------------------------------+
-// |             template init / remote-site refusal / release             |
-// +-----------------------------------------------------------------------+
+    // +-------------------------------------------------------------------+
+    // |           template init / remote-site refusal / release           |
+    // +-------------------------------------------------------------------+
 
-// May exit(): remote sites are refused, an up-to-date DB short-circuits.
-$current_release = $runner->prepare($conn);
+    // May exit(): remote sites are refused, an up-to-date DB short-circuits.
+    $current_release = $runner->prepare($conn);
 
-// Check access rights (webmaster session, or POSTed admin/webmaster
-// credentials -- the auth gate, ported verbatim).
-$isAuthorized = UpgradeService::checkUpgradeAccessRights($conn, $current_release);
+    // Check access rights (webmaster session, or POSTed admin/webmaster
+    // credentials -- the auth gate, ported verbatim).
+    $isAuthorized = UpgradeService::checkUpgradeAccessRights($conn, $current_release);
 
-// +-----------------------------------------------------------------------+
-// |                            upgrade launch                             |
-// +-----------------------------------------------------------------------+
+    // +-------------------------------------------------------------------+
+    // |                          upgrade launch                           |
+    // +-------------------------------------------------------------------+
 
-if ((isset($_POST['submit']) or isset($_GET['now']))
-  and $isAuthorized) {
-    $runner->performUpgrade($conn);
-} else {
-    // Deliberately only defined on this branch, exactly like the former
-    // top-level code: during an actual upgrade launch, Patch65 (the
-    // pre-2.0 charset migration) reads defined('PWG_CHARSET') via
-    // UpgradeCharset:: to decide whether its one-shot charset migration
-    // still has to run.
-    if (! defined('PWG_CHARSET')) {
-        define('PWG_CHARSET', 'utf-8');
+    if ((isset($_POST['submit']) or isset($_GET['now']))
+      and $isAuthorized) {
+        $runner->performUpgrade($conn);
+    } else {
+        // Deliberately only defined on this branch, exactly like the former
+        // top-level code: during an actual upgrade launch, Patch65 (the
+        // pre-2.0 charset migration) reads defined('PWG_CHARSET') via
+        // UpgradeCharset:: to decide whether its one-shot charset migration
+        // still has to run.
+        if (! defined('PWG_CHARSET')) {
+            define('PWG_CHARSET', 'utf-8');
+        }
+        $runner->renderIntro($isAuthorized);
     }
-    $runner->renderIntro($isAuthorized);
-}
 
-$runner->finish();
+    $runner->finish();
+} catch (\Piwigo\Http\ResponseReadyException $e) {
+    new \Piwigo\Http\ResponseEmitter()
+        ->emit($e->response());
+}

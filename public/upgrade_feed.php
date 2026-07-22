@@ -24,13 +24,13 @@ if (version_compare(PHP_VERSION, '8.5.0', '<')) {
     die('Piwigo requires PHP 8.5 or above.');
 }
 
-// Legacy Coupling Retirement Phase 8, 8b: Paths::fromIndex() below is a
+// Legacy Coupling Retirement Phase 8, 8b: Paths::fromRoot() below is a
 // Piwigo\ class, so the autoloader must be required explicitly first now
 // (requiring twice is safe, PHP's own realpath-keyed include cache
 // no-ops the second require via include/env.inc.php below).
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
-$paths = \Piwigo\Core\Paths::fromIndex(__FILE__);
+$paths = \Piwigo\Core\Paths::fromRoot(dirname(__DIR__));
 
 // Autoload boundary (see include/env.inc.php: it only requires
 // vendor/autoload.php). Added in the 8f-6 port -- the former file resolved
@@ -121,5 +121,15 @@ if (! (bool) $conf['check_upgrade_feed']) {
 // |                              Upgrades                                 |
 // +-----------------------------------------------------------------------+
 
-new \Piwigo\Admin\Install\UpgradeFeedRunner()
-    ->run();
+// Found live while verifying Part II's public/ relocation, unrelated to the
+// move itself: UpgradeFeedRunner::run()'s own error path calls HtmlService::
+// fatalError(), which (per Workstream C3) throws ResponseReadyException --
+// this file never had a catch point for it, same gap random.php had (a raw
+// top-level script, no RequestPipeline::handle() to catch it downstream).
+try {
+    new \Piwigo\Admin\Install\UpgradeFeedRunner()
+        ->run();
+} catch (\Piwigo\Http\ResponseReadyException $e) {
+    new \Piwigo\Http\ResponseEmitter()
+        ->emit($e->response());
+}

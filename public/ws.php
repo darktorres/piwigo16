@@ -14,7 +14,7 @@ declare(strict_types=1);
 // bootstrap + dispatch, matching every other P22 controller's root file.
 // The ~100-method registration catalog is Piwigo\Ws\WsDefaultMethods
 // (P23 batch 8e-8).
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Bootstrap\RequestPipeline;
@@ -24,7 +24,7 @@ use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 
 // ----------------------------------------------------------- include
-$paths = Paths::fromIndex(__FILE__);
+$paths = Paths::fromRoot(dirname(__DIR__));
 WsContext::mark();
 include_once $paths->root . 'include/common.inc.php';
 

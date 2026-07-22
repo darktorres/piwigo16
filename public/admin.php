@@ -15,11 +15,11 @@ declare(strict_types=1);
 
 // vendor/autoload.php must be required directly here (not just reached
 // transitively via common.inc.php's own include/env.inc.php) -- Paths::
-// fromIndex() below needs the autoloader before common.inc.php has even
+// fromRoot() below needs the autoloader before common.inc.php has even
 // started running. Requiring it twice is safe (PHP's own realpath-keyed
 // include cache no-ops the second require). Mirrors index.php's own
 // ordering exactly.
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Admin\AdminShell;
 use Piwigo\Bootstrap\CommonBootstrap;
@@ -30,7 +30,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Html\HtmlService;
 use Piwigo\Url\UrlService;
 
-$paths = Paths::fromIndex(__FILE__);
+$paths = Paths::fromRoot(dirname(__DIR__));
 AdminContext::mark();
 
 include_once $paths->root . 'include/common.inc.php';

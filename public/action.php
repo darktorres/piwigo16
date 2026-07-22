@@ -16,7 +16,7 @@ declare(strict_types=1);
 // it must run before session_start(), which include/common.inc.php calls
 // directly below, well before CommonBootstrap::run()/RequestPipeline::
 // handle() dispatch to the controller.
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Bootstrap\RequestPipeline;
@@ -25,7 +25,7 @@ use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 
 // ----------------------------------------------------------- include
-$paths = Paths::fromIndex(__FILE__);
+$paths = Paths::fromRoot(dirname(__DIR__));
 session_cache_limiter('public');
 include_once $paths->root . 'include/common.inc.php';
 

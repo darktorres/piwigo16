@@ -31,9 +31,9 @@ declare(strict_types=1);
 // deliberately deferred to Workstream C3 Part III's own dedicated pass on
 // this controller. Every genuine filesystem-path read in that class
 // already reads $paths instead.
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
-$paths = \Piwigo\Core\Paths::fromIndex(__FILE__);
+$paths = \Piwigo\Core\Paths::fromRoot(dirname(__DIR__));
 defined('PHPWG_ROOT_PATH') or define('PHPWG_ROOT_PATH', './');
 
 // autoload boundary -- nothing above this line may reference a Piwigo\ class

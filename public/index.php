@@ -12,7 +12,7 @@ declare(strict_types=1);
 // P22: page logic moved to Piwigo\Controller\GalleryController
 // (config/routes.php's `/index.php` route); this file is now pure
 // bootstrap + dispatch, matching every other P22 controller's root file.
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Bootstrap\RequestPipeline;
@@ -29,7 +29,16 @@ use Piwigo\Http\ResponseEmitter;
 // URL generation goes through UrlService's own request-derived mount
 // prefix instead of ever reading a filesystem-path constant, so nothing
 // depends on a single string serving both purposes any more.
-$paths = Paths::fromIndex(__FILE__);
+// Part II (web-root isolation): this file (and every sibling P22
+// controller root file) now lives one directory below the true repo root
+// (public/), matching admin/popuphelp.php's own pre-existing depth --
+// Paths::fromRoot(dirname(__DIR__)) instead of the former
+// Paths::fromIndex(__FILE__), which would resolve to public/ itself. No
+// change to Router::MOUNT_DEPTH_ATTRIBUTE/RequestMountDepth: that fact is
+// about SCRIPT_NAME depth below DocumentRoot, unaffected since
+// DocumentRoot moves to public/ together with every entry file (see
+// Router's own docblock).
+$paths = Paths::fromRoot(dirname(__DIR__));
 include_once $paths->root . 'include/common.inc.php';
 
 CommonBootstrap::run($paths);

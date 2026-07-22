@@ -12,7 +12,7 @@ declare(strict_types=1);
 // P22: page logic moved to Piwigo\Controller\PictureController
 // (config/routes.php's `/picture.php` route); this file is now pure
 // bootstrap + dispatch, matching every other P22 controller's root file.
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Bootstrap\RequestPipeline;
@@ -21,7 +21,7 @@ use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 
 // ----------------------------------------------------------- include
-$paths = Paths::fromIndex(__FILE__);
+$paths = Paths::fromRoot(dirname(__DIR__));
 include_once $paths->root . 'include/common.inc.php';
 
 CommonBootstrap::run($paths);

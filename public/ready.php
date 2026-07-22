@@ -12,9 +12,9 @@ declare(strict_types=1);
 // (local/config/config.inc.php for classic installs, PIWIGO_DB_* env
 // vars for container/CI runs).
 
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
-$paths = \Piwigo\Core\Paths::fromIndex(__FILE__);
+$paths = \Piwigo\Core\Paths::fromRoot(dirname(__DIR__));
 
 $conf = [];
 require $paths->root . 'include/config_default.inc.php';

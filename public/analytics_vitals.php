@@ -16,7 +16,7 @@ declare(strict_types=1);
 // filename (Router::pathInfo() falls back to the raw REQUEST_URI once
 // SCRIPT_NAME stops being a prefix of it, same mechanism the bare "/" ->
 // index_directory_root route already relies on).
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Bootstrap\RequestPipeline;
@@ -25,7 +25,7 @@ use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 
 // ----------------------------------------------------------- include
-$paths = Paths::fromIndex(__FILE__);
+$paths = Paths::fromRoot(dirname(__DIR__));
 include_once $paths->root . 'include/common.inc.php';
 
 CommonBootstrap::run($paths);

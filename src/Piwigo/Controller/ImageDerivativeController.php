@@ -702,7 +702,7 @@ final class ImageDerivativeController implements ControllerInterface
         }
         $sync_chars_regex = \Piwigo\Config\Config::syncCharsRegex();
         foreach ($req_tokens as $token) {
-            (bool) preg_match($sync_chars_regex, $token) or $this->ierror('Invalid chars in request', 400);
+            ($sync_chars_regex !== '' && (bool) preg_match($sync_chars_regex, $token)) or $this->ierror('Invalid chars in request', 400);
         }
 
         $this->derivativePath = $this->paths->root . Config::derivativeDir() . $req;

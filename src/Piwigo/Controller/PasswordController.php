@@ -308,7 +308,7 @@ final class PasswordController implements ControllerInterface
         // this lets the function behave identically for unknown users,
         // preventing username/email enumeration through timing or responses.
         $is_user_found = is_numeric($user_id_raw);
-        if ($is_user_found) {
+        if (is_numeric($user_id_raw)) {
             $user_id = $user_id_raw;
         } else {
             $guest_id = \Piwigo\Config\Config::guestId();

@@ -419,33 +419,37 @@ GROUP BY period';
         $tpl_var = [];
 
         if ($current_rank > 0) { // has previous
-            $prev = $upper_items[$current_rank - 1];
-            $chronology_date = explode('-', $prev);
-            $tpl_var['previous'] =
-              [
-                  'LABEL' => $this->get_date_nice_name($prev),
-                  'URL' => $this->urlService->duplicateIndexUrl(
-                      [
-                          'chronology_date' => $chronology_date,
-                      ],
-                      ['start']
-                  ),
-              ];
+            $prev = $upper_items[$current_rank - 1] ?? null;
+            if ($prev !== null) {
+                $chronology_date = explode('-', $prev);
+                $tpl_var['previous'] =
+                  [
+                      'LABEL' => $this->get_date_nice_name($prev),
+                      'URL' => $this->urlService->duplicateIndexUrl(
+                          [
+                              'chronology_date' => $chronology_date,
+                          ],
+                          ['start']
+                      ),
+                  ];
+            }
         }
 
         if ($current_rank < count($upper_items) - 1) { // has next
-            $next = $upper_items[$current_rank + 1];
-            $chronology_date = explode('-', $next);
-            $tpl_var['next'] =
-              [
-                  'LABEL' => $this->get_date_nice_name($next),
-                  'URL' => $this->urlService->duplicateIndexUrl(
-                      [
-                          'chronology_date' => $chronology_date,
-                      ],
-                      ['start']
-                  ),
-              ];
+            $next = $upper_items[$current_rank + 1] ?? null;
+            if ($next !== null) {
+                $chronology_date = explode('-', $next);
+                $tpl_var['next'] =
+                  [
+                      'LABEL' => $this->get_date_nice_name($next),
+                      'URL' => $this->urlService->duplicateIndexUrl(
+                          [
+                              'chronology_date' => $chronology_date,
+                          ],
+                          ['start']
+                      ),
+                  ];
+            }
         }
 
         if ($tpl_var !== []) {

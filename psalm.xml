@@ -461,23 +461,38 @@
              `identical.alwaysFalse`, provably dead code). Psalm's stub is
              more pessimistic (string|false). composer analyse:phpstan is
              clean here with zero changes. -->
+        <!-- Each entry below is a genuine PHPStan-vs-Psalm disagreement,
+             verified per file: adding the real code guard makes PHPStan
+             flag it as identical.alwaysFalse/notIdentical.alwaysTrue
+             (provably dead code, its own flow analysis already proves the
+             value), while Psalm's stub/narrowing is more pessimistic or
+             doesn't carry a correlation between two separately-assigned
+             locals. composer analyse:phpstan is clean in every case below
+             with zero changes.
+             - UpgradeService.php: mb_convert_encoding(string, ...) always
+               returns a string given a string input (PHPStan's stub is
+               certain; Psalm's is string|false).
+             - CalendarWeekly.php: $cday_labels always resolves to a real
+               array here (see the method's own inline comment: $day_labels
+               comes from Lang::days(), which never returns null).
+             - ImageDerivativeController.php: $derivative_mtime is only read
+               (via gmdate()) inside the `! $need_generate` branch, where
+               $need_generate was already proven false by the same earlier
+               if-block that reads $derivative_mtime.
+             - PasswordController.php: $email is already proven non-null by
+               $skip_mail (see the method's own inline comment: $skip_mail
+               === false implies $email !== null/''). -->
         <PossiblyFalseArgument>
             <errorLevel type="suppress">
                 <file name="src/Piwigo/Admin/Install/UpgradeService.php"/>
+                <file name="src/Piwigo/Controller/ImageDerivativeController.php"/>
             </errorLevel>
         </PossiblyFalseArgument>
-        <!-- $secret_key is only read inside the `$valid_key === 'api_key'`
-             branch, where it was unconditionally set (from
-             explode(':', $authKey)[1]) by the same elseif that set
-             $valid_key to that value — PHPStan's flow analysis proves this
-             across the two variables and flags an explicit null guard here
-             as `identical.alwaysFalse` (provably dead code). Psalm doesn't
-             carry the correlation between the two separately-assigned
-             locals. composer analyse:phpstan is clean here with zero
-             changes. -->
         <PossiblyNullArgument>
             <errorLevel type="suppress">
                 <file name="src/Piwigo/Auth/AuthService.php"/>
+                <file name="src/Piwigo/Calendar/CalendarWeekly.php"/>
+                <file name="src/Piwigo/Controller/PasswordController.php"/>
             </errorLevel>
         </PossiblyNullArgument>
     </issueHandlers>

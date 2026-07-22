@@ -397,7 +397,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             foreach (array_diff($fs_fulldirs, array_keys($db_fulldirs)) as $fulldir) {
                 $dir = basename($fulldir);
                 $sync_chars_regex = \Piwigo\Config\Config::syncCharsRegex();
-                if ((bool) preg_match($sync_chars_regex, $dir)) {
+                if ($sync_chars_regex !== '' && (bool) preg_match($sync_chars_regex, $dir)) {
                     $insert = [
                         'id' => $next_id++,
                         'dir' => $dir,
@@ -698,7 +698,7 @@ SELECT id, path
                 }
                 $filename = basename($path);
                 $sync_chars_regex = \Piwigo\Config\Config::syncCharsRegex();
-                if (! (bool) preg_match($sync_chars_regex, $filename)) {
+                if ($sync_chars_regex === '' || ! (bool) preg_match($sync_chars_regex, $filename)) {
                     $errors[] = [
                         'path' => $path,
                         'type' => 'PWG-UPDATE-1',

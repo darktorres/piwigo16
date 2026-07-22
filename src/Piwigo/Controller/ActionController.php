@@ -14,7 +14,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
@@ -32,12 +31,15 @@ use Psr\Http\Message\ServerRequestInterface;
  * own derivative-serving surface is separately, and only partially,
  * closed -- see docs/plan/manifest.yaml's own SEC-33 note).
  *
- * do_error()/the 304 early-return both call exit() directly (never
- * return), same exit()-based-termination limitation as every other
- * controller this phase -- there's no Template/Smarty rendering at all in
- * this controller, so there's no LegacyRenderCapture closure either: the
- * whole method is flat, ending in a single ResponseFactory::raw() on the
- * real success path.
+ * Workstream C3b: doError()/the 304 early-return used to call exit()
+ * directly (never return) -- simpler than the ResponseReadyException
+ * mechanism the rest of C3 needed, since doError() is only ever called
+ * from __invoke() itself (never a shared class like RedirectService/
+ * HtmlService reached from many dispatch contexts): it just returns a
+ * real ResponseInterface, and every call site returns it in turn. There's
+ * no Template/Smarty rendering at all in this controller, so there's no
+ * LegacyRenderCapture closure either: the whole method is flat, always
+ * ending in a single ResponseFactory call on every path.
  *
  * The response body is read fully into a string via file_get_contents()
  * rather than streamed (legacy readfile()/ob_flush()/flush()) --
@@ -79,7 +81,7 @@ final class ActionController implements ControllerInterface
                 ->validate('format', $_GET, false, ValidationPattern::ID);
 
             if (! is_numeric($_GET['format'])) {
-                $this->doError(400, 'Invalid request - format');
+                return $this->doError(400, 'Invalid request - format');
             }
             $format_id = (int) $_GET['format'];
 
@@ -92,7 +94,7 @@ SELECT
             $formats = $conn->fetchAllAssociative($query);
 
             if (count($formats) === 0) {
-                $this->doError(400, 'Invalid request - format');
+                return $this->doError(400, 'Invalid request - format');
             }
 
             $format = $formats[0];
@@ -106,7 +108,7 @@ SELECT
             or ! is_numeric($_GET['id'])
             or ! is_string($get_part)
             or ! in_array($get_part, ['e', 'r', 'f'], true)) {
-            $this->doError(400, 'Invalid request - id/part');
+            return $this->doError(400, 'Invalid request - id/part');
         }
         $_GET['id'] = (int) $_GET['id'];
 
@@ -117,7 +119,7 @@ SELECT * FROM ' . Tables::images() . '
 
         $element_info = $conn->fetchAssociative($query);
         if ($element_info === false) {
-            $this->doError(404, 'Requested id not found');
+            return $this->doError(404, 'Requested id not found');
         }
 
         // special download action for admins
@@ -143,7 +145,7 @@ SELECT id
   LIMIT 1
 ;';
         if (! $is_admin_download and $conn->fetchOne($query) === false) {
-            $this->doError(401, 'Access denied');
+            return $this->doError(401, 'Access denied');
         }
 
         // $format is only set when the enable_formats block above ran;
@@ -157,7 +159,7 @@ SELECT id
                 if ($src_image->is_original() and ! \Piwigo\Users\CurrentUser::get()->enabledHigh) {// we have a photo and the user has no access to HD
                     $deriv = new DerivativeImage(ImageStdParams::XXLARGE, $src_image);
                     if (! $deriv->same_as_source()) {
-                        $this->doError(401, 'Access denied e');
+                        return $this->doError(401, 'Access denied e');
                     }
                 }
                 $file = \Piwigo\Image\ImagePathHelper::getElementPath($element_info, $this->urlService);
@@ -169,13 +171,13 @@ SELECT id
                 // a genuine missing value means there is no representative
                 // file to serve.
                 if (! is_string($representative_ext) || $representative_ext === '' || $representative_ext === '0') {
-                    $this->doError(404, 'Requested file not found');
+                    return $this->doError(404, 'Requested file not found');
                 }
                 $file = \Piwigo\Image\ImagePathHelper::originalToRepresentative(\Piwigo\Image\ImagePathHelper::getElementPath($element_info, $this->urlService), $representative_ext);
                 break;
             case 'f':
                 if ($format_row === null) {
-                    $this->doError(400, 'Invalid request - format');
+                    return $this->doError(400, 'Invalid request - format');
                 }
                 $format_ext = $format_row['ext'];
                 // image_format.ext is `varchar(255) NOT NULL` in the
@@ -193,7 +195,7 @@ SELECT id
         }
 
         if ($file === '') {
-            $this->doError(404, 'Requested file not found');
+            return $this->doError(404, 'Requested file not found');
         }
 
         $image_id_val = $_GET['id'];
@@ -205,7 +207,7 @@ SELECT id
                 ->logVisit($image_id_val, 'other');
         } elseif ($get_part === 'f') {
             if ($format_row === null) {
-                $this->doError(400, 'Invalid request - format');
+                return $this->doError(400, 'Invalid request - format');
             }
             $format_id_val = $format_row['format_id'] ?? null;
             $format_id_val = is_string($format_id_val) ? $format_id_val : null;
@@ -220,7 +222,7 @@ SELECT id
         $ctype = null;
         if (! $this->urlService->urlIsRemote($file)) {
             if (! @is_readable($file)) {
-                $this->doError(404, "Requested file not found - {$file}");
+                return $this->doError(404, "Requested file not found - {$file}");
             }
             $http_headers['Content-Length'] = (string) @filesize($file);
             if (function_exists('mime_content_type')) {
@@ -247,12 +249,7 @@ SELECT id
             $http_headers['Cache-Control'] = 'private, must-revalidate, max-age='.$max_age;*/
 
             if ($get_part !== 'f' and isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])) {
-                new HtmlService()
-                    ->setStatusHeader(304);
-                foreach ($http_headers as $name => $value) {
-                    header($name . ': ' . $value);
-                }
-                exit();
+                return ResponseFactory::raw('', $http_headers, 304);
             }
         }
 
@@ -300,11 +297,8 @@ SELECT id
         };
     }
 
-    private function doError(int $code, string $str): never
+    private function doError(int $code, string $str): ResponseInterface
     {
-        new HtmlService()
-            ->setStatusHeader($code);
-        echo $str;
-        exit();
+        return ResponseFactory::text($str, $code);
     }
 }

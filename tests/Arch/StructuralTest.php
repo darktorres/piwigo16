@@ -783,7 +783,15 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         'Admin/UserActivityPageRenderer.php' => 1,
         'Admin/Install/InstallWizard.php' => 1,
         'Controller/Admin/IntroSubController.php' => 1,
-        'Controller/ActionController.php' => 2,
+
+        // Workstream C3b: Controller/ActionController.php's doError()/304
+        // early-return no longer call exit() -- doError() now returns a
+        // real ResponseInterface (ResponseFactory::text($str, $code)),
+        // and the 304 branch returns ResponseFactory::raw() directly.
+        // Simpler than C3a's ResponseReadyException mechanism: doError()
+        // is only ever called from this controller's own __invoke(),
+        // never a shared class reached from multiple dispatch contexts,
+        // so every call site just needed `return $this->doError(...);`.
 
         // Workstream C3: Bootstrap/RequestBootstrap.php's own 2 raw sites
         // (the install-redirect in configure(), the gallery-locked 503 in

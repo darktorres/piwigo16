@@ -147,7 +147,7 @@ final class PwgImages
         $rank_on_category = [];
         $search_current_ranks = false;
 
-        if (empty($categories_string)) {
+        if ($categories_string === '') {
             if ($replace_mode) {
                 $query = '
 DELETE
@@ -549,7 +549,7 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
         }
         usort($related_categories, CategoryService::compareByGlobalRank(...));
 
-        if (empty($related_categories) and ! \Piwigo\Auth\AccessControl::isAdmin()) {
+        if ($related_categories === [] and ! \Piwigo\Auth\AccessControl::isAdmin()) {
             // photo might be in the lounge? or simply orphan. A standard user should not get
             // info. An admin should still be able to get info.
             return new PwgError(401, 'Access denied');
@@ -749,7 +749,7 @@ SELECT DISTINCT id
         $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
 
         $super_order_by = false;
-        if (! empty($order_by)) {
+        if ($order_by !== '') {
             // Communicates the effective order_by to SearchService::
             // getQuickSearchResults()/getRegularSearchResults() etc, which
             // read it back from Config:: for the rest of this request --
@@ -860,12 +860,12 @@ SELECT *
         // * check the search exists
         $search_info = null;
         if (isset($params['search_id'])) {
-            if (empty(SearchService::getSearchIdPattern($params['search_id']))) {
+            if (in_array(SearchService::getSearchIdPattern($params['search_id']), [null, ''], true)) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid search_id input parameter.');
             }
 
             $search_info = $searchService->getValidatedSearchInfo($params['search_id'], null);
-            if (empty($search_info)) {
+            if ($search_info === null || $search_info === []) {
                 return new PwgError(WsError::INVALID_PARAM, 'This search does not exist.');
             }
         }
@@ -981,7 +981,7 @@ SELECT *
 
             @$search['fields']['date_posted']['preset'] = $params['date_posted_preset'];
 
-            if ($search['fields']['date_posted']['preset'] === 'custom' and empty($params['date_posted_custom'])) {
+            if ($search['fields']['date_posted']['preset'] === 'custom' and (! isset($params['date_posted_custom']) or $params['date_posted_custom'] === [])) {
                 return new PwgError(WsError::INVALID_PARAM, 'date_posted_custom is missing');
             }
         }
@@ -1030,7 +1030,7 @@ SELECT *
 
             @$search['fields']['date_created']['preset'] = $params['date_created_preset'];
 
-            if ($search['fields']['date_created']['preset'] === 'custom' and empty($params['date_created_custom'])) {
+            if ($search['fields']['date_created']['preset'] === 'custom' and (! isset($params['date_created_custom']) or $params['date_created_custom'] === [])) {
                 return new PwgError(WsError::INVALID_PARAM, 'date_created_custom is missing');
             }
         }
@@ -1204,7 +1204,7 @@ SELECT
         // turns image_id into a simple int instead of array
         $params['image_id'] = array_shift($params['image_id']);
 
-        if (empty($params['rank'])) {
+        if ($params['rank'] === null || $params['rank'] === 0) {
             return new PwgError(WsError::MISSING_PARAM, 'rank is missing');
         }
 
@@ -1561,7 +1561,7 @@ SELECT id, name, permalink
         }
 
         // and now, let's create tag associations
-        if (isset($params['tag_ids']) and ! empty($params['tag_ids'])) {
+        if (isset($params['tag_ids']) and $params['tag_ids'] !== '') {
             self::tagService($conn)
                 ->setTags(
                     explode(',', $params['tag_ids']),
@@ -1677,7 +1677,7 @@ SELECT COUNT(*)
                 ]
             );
 
-        if (isset($params['tags']) and ! empty($params['tags'])) {
+        if (isset($params['tags']) and $params['tags'] !== '' and $params['tags'] !== []) {
             $tagService = self::tagService($conn);
 
             $tag_ids = [];
@@ -1704,7 +1704,7 @@ SELECT COUNT(*)
             'image_id' => $image_id,
         ];
 
-        if (! empty($params['category'])) {
+        if ($params['category'] !== []) {
             $query = '
 SELECT id, name, permalink
   FROM ' . Tables::categories() . '
@@ -1766,7 +1766,7 @@ SELECT id, name, permalink
                 $format_ext = $matches[1];
             }
 
-            if (empty($format_ext)) {
+            if (! is_string($format_ext) || $format_ext === '') {
                 return new PwgError(401, 'unexpected format extension of file "' . $params['name'] . '" (authorized extensions: ' . implode(', ', $format_ext_list) . ')');
             }
         }
@@ -1782,7 +1782,7 @@ SELECT id, name, permalink
         // Get a file name
         if (isset($_REQUEST['name'])) {
             $fileName = $_REQUEST['name'];
-        } elseif (! empty($_FILES) && isset($_FILES['file']) && is_array($_FILES['file'])) {
+        } elseif ($_FILES !== [] && isset($_FILES['file']) && is_array($_FILES['file'])) {
             $fileName = $_FILES['file']['name'];
         } else {
             $fileName = uniqid('file_');
@@ -1803,14 +1803,14 @@ SELECT id, name, permalink
             return new PwgError(102, 'Failed to open output stream.');
         }
 
-        if (! empty($_FILES)) {
+        if ($_FILES !== []) {
             if (! isset($_FILES['file']) || ! is_array($_FILES['file'])) {
                 return new PwgError(103, 'Failed to move uploaded file.');
             }
             $uploaded_file = $_FILES['file'];
             $uploaded_file_tmp_name = $uploaded_file['tmp_name'] ?? null;
 
-            if (! empty($uploaded_file['error']) || ! is_string($uploaded_file_tmp_name) || ! is_uploaded_file($uploaded_file_tmp_name)) {
+            if (! in_array($uploaded_file['error'] ?? null, [null, false, 0, '0', ''], true) || ! is_string($uploaded_file_tmp_name) || ! is_uploaded_file($uploaded_file_tmp_name)) {
                 return new PwgError(103, 'Failed to move uploaded file.');
             }
 
@@ -2157,7 +2157,7 @@ SELECT COUNT(*)
         $logger->debug(__FUNCTION__ . ' image_id after add_uploaded_file = ' . $image_id);
 
         // and now, let's create tag associations
-        if (isset($params['tag_ids']) and ! empty($params['tag_ids'])) {
+        if (isset($params['tag_ids']) and $params['tag_ids'] !== '') {
             self::tagService($conn)
                 ->setTags(
                     explode(',', $params['tag_ids']),
@@ -2195,7 +2195,7 @@ SELECT COUNT(*)
         UserCacheInvalidator::invalidate();
 
         // trick to bypass get_sql_condition_FandF
-        if (! empty($params['level']) and $params['level'] > \Piwigo\Users\CurrentUser::get()->level) {
+        if (! in_array($params['level'], [null, 0], true) and $params['level'] > \Piwigo\Users\CurrentUser::get()->level) {
             // this will not persist -- Legacy Coupling Retirement Phase 8,
             // 8i: CurrentUser is the only real reader now (the parallel
             // `global $user;` array was never read by anything else in
@@ -2389,7 +2389,7 @@ SELECT
                 $candidate_filename_wo_ext = $matches[1];
             }
 
-            if (empty($candidate_filename_wo_ext)) {
+            if (! is_string($candidate_filename_wo_ext) || $candidate_filename_wo_ext === '') {
                 $result[$format_external_id] = [
                     'status' => 'not found',
                 ];
@@ -2646,7 +2646,7 @@ SELECT *
                 }
 
                 if ($params['single_value_mode'] === 'fill_if_empty') {
-                    if (empty($image_row[$key])) {
+                    if (in_array($image_row[$key], [null, false, 0, 0.0, '0', '', []], true)) {
                         $update[$key] = $params[$key];
                     }
                 } elseif ($params['single_value_mode'] === 'replace') {
@@ -2663,7 +2663,7 @@ SELECT *
         }
 
         if (isset($params['file'])) {
-            if (! empty($image_row['storage_category_id'])) {
+            if (is_numeric($image_row['storage_category_id']) && (int) $image_row['storage_category_id'] !== 0) {
                 return new PwgError(
                     500,
                     '[ws_images_setInfo] updating "file" is forbidden on photos added by synchronization'
@@ -2672,7 +2672,7 @@ SELECT *
 
             // prevent XSS, remove HTML tags
             $update['file'] = strip_tags($params['file']);
-            if (empty($update['file'])) {
+            if ($update['file'] === '' || $update['file'] === '0') {
                 unset($update['file']);
             }
         }
@@ -2814,7 +2814,7 @@ SELECT *
         $ret = [];
         $ret['message'] = new UploadService()->readyForUploadMessage();
         $ret['ready_for_upload'] = true;
-        if (! empty($ret['message'])) {
+        if (! in_array($ret['message'], [null, ''], true)) {
             $ret['ready_for_upload'] = false;
         }
 
@@ -2989,7 +2989,7 @@ SELECT
             $image_ids[] = $image_id;
         }
 
-        if (empty($image_ids)) {
+        if ($image_ids === []) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid image_id (no value after filters)');
         }
 
@@ -3001,7 +3001,7 @@ SELECT id
         $conn = DbConnection::build();
         $image_ids = array_column($conn->fetchAllAssociative($query), 'id');
 
-        if (empty($image_ids)) {
+        if ($image_ids === []) {
             return new PwgError(403, 'No image found');
         }
 

@@ -161,7 +161,7 @@ final class NotificationByMailSender
             // \Piwigo\Config\Config::nbmSendMailAs() is admin-submitted free text (see
             // NotificationByMailSubController), always a string when set.
             $nbmSendMailAs = \Piwigo\Config\Config::nbmSendMailAs();
-            $sendAsName = (isset($nbmSendMailAs) and ! empty($nbmSendMailAs) and is_string($nbmSendMailAs))
+            $sendAsName = $nbmSendMailAs !== ''
                 ? $nbmSendMailAs
                 : new MailService()
                     ->getMailSenderName();
@@ -606,7 +606,7 @@ final class NotificationByMailSender
                                       $customizeMailContent,
                                       $nbmUser
                                   );
-                                if (! empty($nbmUserCustomizeMailContent)) {
+                                if (! in_array($nbmUserCustomizeMailContent, [null, false, 0, '0', '', []], true)) {
                                     $mailTemplate->assign(
                                         'custom_mail_content',
                                         $nbmUserCustomizeMailContent

@@ -188,7 +188,7 @@ class C13yInternal
                         'action' => 'creation',
                     ]
                 );
-            } elseif (! empty($data['status']) and (is_scalar($status[$id]) ? (string) $status[$id] : '') !== $data['status']) {
+            } elseif (! in_array($data['status'] ?? null, [null, false, 0, '0', '', []], true) and (is_scalar($status[$id]) ? (string) $status[$id] : '') !== $data['status']) {
                 $c13y->add_anomaly(
                     Lang::t($data['l10n_bad_status']),
                     'c13y_correction_user',
@@ -221,7 +221,7 @@ class C13yInternal
         $result = false;
         $conn = DbConnection::build();
 
-        if (! empty($id)) {
+        if ($id !== 0) {
             switch ($action) {
                 case 'creation':
                     $name = null;

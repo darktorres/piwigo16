@@ -92,7 +92,7 @@ final class AlbumNotificationPageRenderer
             // lookup ("use a child album's representative instead"), only
             // a direct-representative check. Not a defect, just a smaller
             // feature than a full recursive lookup would be.
-            if (! empty($category['representative_picture_id']) && is_scalar($category['representative_picture_id'])) {
+            if (is_numeric($category['representative_picture_id']) && (int) $category['representative_picture_id'] !== 0) {
                 $query = '
 SELECT id, file, path, representative_ext
   FROM ' . Tables::images() . '
@@ -137,7 +137,7 @@ SELECT id, file, path, representative_ext
                             ],
                         ]
                     ),
-                    'CPL_CONTENT' => empty($mail_content) ? '' : stripslashes($mail_content),
+                    'CPL_CONTENT' => $mail_content === '' ? '' : stripslashes($mail_content),
                 ],
             ];
 
@@ -224,7 +224,7 @@ SELECT
                         'save_success' => $message,
                     ]
                 );
-            } elseif ($_POST['who'] === 'group' and ! empty($_POST['group'])) {
+            } elseif ($_POST['who'] === 'group' and ! in_array($_POST['group'] ?? null, [null, false, 0, '0', '', []], true)) {
                 new \Piwigo\Validation\InputValidator()
                     ->validate('group', $_POST, false, ValidationPattern::ID);
 

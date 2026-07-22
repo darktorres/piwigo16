@@ -170,10 +170,10 @@ final class InstallWizard
         }
 
         // Obtain various vars
-        $this->dbhost = (! empty($_POST['dbhost']) && is_string($_POST['dbhost'])) ? $_POST['dbhost'] : 'localhost';
-        $this->dbuser = (! empty($_POST['dbuser']) && is_string($_POST['dbuser'])) ? $_POST['dbuser'] : '';
-        $this->dbpasswd = (! empty($_POST['dbpasswd']) && is_string($_POST['dbpasswd'])) ? $_POST['dbpasswd'] : '';
-        $this->dbname = (! empty($_POST['dbname']) && is_string($_POST['dbname'])) ? $_POST['dbname'] : '';
+        $this->dbhost = (is_string($_POST['dbhost'] ?? null) && $_POST['dbhost'] !== '') ? $_POST['dbhost'] : 'localhost';
+        $this->dbuser = (is_string($_POST['dbuser'] ?? null) && $_POST['dbuser'] !== '') ? $_POST['dbuser'] : '';
+        $this->dbpasswd = (is_string($_POST['dbpasswd'] ?? null) && $_POST['dbpasswd'] !== '') ? $_POST['dbpasswd'] : '';
+        $this->dbname = (is_string($_POST['dbname'] ?? null) && $_POST['dbname'] !== '') ? $_POST['dbname'] : '';
 
         // Same reasoning as the db_prefix seeding in the install.php entry
         // shell: InstallBootstrap::boot() (Legacy Coupling Retirement Phase
@@ -241,10 +241,10 @@ final class InstallWizard
         }
         $this->dblayer = 'mysqli';
 
-        $this->adminName = (! empty($_POST['admin_name']) && is_string($_POST['admin_name'])) ? $_POST['admin_name'] : '';
-        $this->adminPass1 = (! empty($_POST['admin_pass1']) && is_string($_POST['admin_pass1'])) ? $_POST['admin_pass1'] : '';
-        $this->adminPass2 = (! empty($_POST['admin_pass2']) && is_string($_POST['admin_pass2'])) ? $_POST['admin_pass2'] : '';
-        $this->adminMail = (! empty($_POST['admin_mail']) && is_string($_POST['admin_mail'])) ? $_POST['admin_mail'] : '';
+        $this->adminName = (is_string($_POST['admin_name'] ?? null) && $_POST['admin_name'] !== '') ? $_POST['admin_name'] : '';
+        $this->adminPass1 = (is_string($_POST['admin_pass1'] ?? null) && $_POST['admin_pass1'] !== '') ? $_POST['admin_pass1'] : '';
+        $this->adminPass2 = (is_string($_POST['admin_pass2'] ?? null) && $_POST['admin_pass2'] !== '') ? $_POST['admin_pass2'] : '';
+        $this->adminMail = (is_string($_POST['admin_mail'] ?? null) && $_POST['admin_mail'] !== '') ? $_POST['admin_mail'] : '';
 
         if (isset($_POST['install'])) {
             $this->isNewsletterSubscribe = isset($_POST['newsletter_subscribe']);
@@ -348,20 +348,20 @@ final class InstallWizard
         }
 
         $webmaster = trim((string) preg_replace('/\s{2,}/', ' ', $this->adminName));
-        if (empty($webmaster)) {
+        if ($webmaster === '') {
             $this->errors[] = Lang::t('enter a login for webmaster');
         } elseif ((bool) preg_match('/[\'"]/', $webmaster)) {
             $this->errors[] = Lang::t('webmaster login can\'t contain characters \' or "');
         }
-        if ($this->adminPass1 !== $this->adminPass2 || empty($this->adminPass1)) {
+        if ($this->adminPass1 !== $this->adminPass2 || $this->adminPass1 === '') {
             $this->errors[] = Lang::t('please enter your password again');
         }
-        if (empty($this->adminMail)) {
+        if ($this->adminMail === '') {
             $this->errors[] = Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         } else {
             $error_mail_address = $this->userService()
                 ->validateMailAddress(null, $this->adminMail);
-            if (! empty($error_mail_address)) {
+            if ($error_mail_address !== '') {
                 $this->errors[] = $error_mail_address;
             }
         }
@@ -404,7 +404,7 @@ final class InstallWizard
                   . 'PIWIGO_DB_PREFIX=' . $env_vals[4] . "\n";
         // In test mode, also record the base URL so e2e runners know where to connect.
         if (Env::testModeIsActive()) {
-            $scheme = (! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $scheme = (! in_array($_SERVER['HTTPS'] ?? null, [null, false, 0, '0', ''], true) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
             $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
             $host = is_string($host) ? $host : 'localhost';
             $script = $_SERVER['SCRIPT_NAME'] ?? '';

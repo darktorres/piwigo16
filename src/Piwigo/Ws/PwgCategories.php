@@ -116,7 +116,7 @@ SELECT id
                 $where_clauses[] = 'id=' . $cat_id;
             }
         }
-        if (! empty($where_clauses)) {
+        if ($where_clauses !== []) {
             $where_clauses = ['(' . implode("\n    OR ", $where_clauses) . ')'];
         }
         $where_clauses[] = self::permissionService($conn)->getSqlConditionFandF([
@@ -138,7 +138,7 @@ SELECT
         }
 
         // -------------------------------------------------------- get the images
-        if (! empty($cats)) {
+        if ($cats !== []) {
             $where_clauses = WsHelper::stdImageSqlFilter($params, $service, 'i.');
             $where_clauses[] = 'category_id IN (' . implode(',', array_keys($cats)) . ')';
             $where_clauses[] = self::permissionService($conn)->getSqlConditionFandF([
@@ -146,14 +146,14 @@ SELECT
             ], null, true);
 
             $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
-            if (empty($order_by)
+            if ($order_by === ''
                   and count($params['cat_id']) === 1
                   and isset($cats[$params['cat_id'][0]]['image_order'])
                   and is_string($cats[$params['cat_id'][0]]['image_order'])
             ) {
                 $order_by = $cats[$params['cat_id'][0]]['image_order'];
             }
-            $order_by = empty($order_by) ? (is_string((\Piwigo\Config\Config::all()['order_by'] ?? null)) ? (\Piwigo\Config\Config::all()['order_by'] ?? null) : '') : 'ORDER BY ' . $order_by;
+            $order_by = $order_by === '' ? (is_string((\Piwigo\Config\Config::all()['order_by'] ?? null)) ? (\Piwigo\Config\Config::all()['order_by'] ?? null) : '') : 'ORDER BY ' . $order_by;
             $favorite_ids = $urlService->getUserFavorites();
 
             $query = '
@@ -326,7 +326,7 @@ SELECT
             return new PwgError(WsError::INVALID_PARAM, 'Invalid thumbnail_size');
         }
 
-        if (! empty($params['limit']) and $params['recursive']) {
+        if (! in_array($params['limit'], [null, 0], true) and $params['recursive']) {
             return new PwgError(WsError::INVALID_PARAM, 'Cannot use both recursive and limit parameters at the same time');
         }
 
@@ -472,9 +472,9 @@ SELECT SQL_CALC_FOUND_ROWS
             // filtering method would be too complicated for now. We will simply
             // avoid to persist the user_representative_picture_id in the database
             // if $params['public']
-            if (! empty($row['user_representative_picture_id'])) {
+            if (is_numeric($row['user_representative_picture_id']) && (int) $row['user_representative_picture_id'] !== 0) {
                 $image_id = $row['user_representative_picture_id'];
-            } elseif (! empty($row['representative_picture_id'])) { // if a representative picture is set, it has priority
+            } elseif (is_numeric($row['representative_picture_id']) && (int) $row['representative_picture_id'] !== 0) { // if a representative picture is set, it has priority
                 $image_id = $row['representative_picture_id'];
             } elseif (\Piwigo\Config\Config::allowRandomRepresentative()) {
                 // searching a random representant among elements in sub-categories
@@ -520,7 +520,7 @@ SELECT representative_picture_id
             unset($image_id);
             // management of the album thumbnail -- stops here
 
-            if (empty($row['image_order'])) {
+            if (! is_string($row['image_order']) || $row['image_order'] === '') {
                 $row['image_order'] = str_replace('ORDER BY ', '', is_string((\Piwigo\Config\Config::all()['order_by'] ?? null)) ? (\Piwigo\Config\Config::all()['order_by'] ?? null) : '');
             }
 
@@ -739,7 +739,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
                 'ws_categories_getAdminList'
             );
 
-            if (empty($row['image_order'])) {
+            if (! is_string($row['image_order']) || $row['image_order'] === '') {
                 $row['image_order'] = str_replace('ORDER BY ', '', is_string((\Piwigo\Config\Config::all()['order_by'] ?? null)) ? (\Piwigo\Config\Config::all()['order_by'] ?? null) : '');
             }
 
@@ -753,7 +753,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
         if (! $params['recursive']) {
             $cats_ids = array_column($cats, 'id');
             $nb_subcats_of = [];
-            if (! empty($cats_ids)) {
+            if ($cats_ids !== []) {
                 $cats_ids = array_map(strval(...), array_filter($cats_ids, is_scalar(...)));
 
                 $query = '
@@ -808,7 +808,7 @@ SELECT
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (! empty($params['position']) and in_array($params['position'], ['first', 'last'])) {
+        if (! in_array($params['position'], [null, ''], true) and in_array($params['position'], ['first', 'last'])) {
             // In-memory override only (this request's own Config::$data),
             // not a real persisted preference -- known limitation, same as
             // AlbumsPageRenderer's own POS_PREF assignment.
@@ -816,11 +816,11 @@ SELECT
         }
 
         $options = [];
-        if (! empty($params['status']) and in_array($params['status'], ['private', 'public'])) {
+        if (! in_array($params['status'], [null, ''], true) and in_array($params['status'], ['private', 'public'])) {
             $options['status'] = $params['status'];
         }
 
-        if (! empty($params['comment'])) {
+        if (! in_array($params['comment'], [null, ''], true)) {
             $options['comment'] = (! \Piwigo\Config\Config::allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params['comment']) : $params['comment'];
         }
 
@@ -877,7 +877,7 @@ SELECT id, id_uppercat, `rank`
             $query = '
 SELECT id
   FROM ' . Tables::categories() . '
-  WHERE id_uppercat ' . (empty($category['id_uppercat']) ? 'IS NULL' : '= ' . (is_scalar($category['id_uppercat']) ? $category['id_uppercat'] : '')) . '
+  WHERE id_uppercat ' . ((is_numeric($category['id_uppercat']) && (int) $category['id_uppercat'] !== 0) ? '= ' . $category['id_uppercat'] : 'IS NULL') . '
   ORDER BY `id` ASC
 ;';
 
@@ -892,7 +892,7 @@ SELECT id
             $query = '
 SELECT id
   FROM ' . Tables::categories() . '
-  WHERE id_uppercat ' . (empty($category['id_uppercat']) ? 'IS NULL' : '= ' . (is_scalar($category['id_uppercat']) ? $category['id_uppercat'] : '')) . '
+  WHERE id_uppercat ' . ((is_numeric($category['id_uppercat']) && (int) $category['id_uppercat'] !== 0) ? '= ' . $category['id_uppercat'] : 'IS NULL') . '
     AND id != ' . $params['category_id'] . '
   ORDER BY `rank` ASC
 ;';
@@ -957,7 +957,7 @@ SELECT *
 
         $categoryService = self::categoryService($categoryConn);
 
-        if (! empty($params['status'])) {
+        if (! in_array($params['status'], [null, ''], true)) {
             if (! in_array($params['status'], ['private', 'public'])) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid status, only public/private');
             }
@@ -977,7 +977,7 @@ SELECT *
             }
         }
 
-        if (! empty($params['visible']) and ($params['visible'] !== $category['visible'])) {
+        if (! in_array($params['visible'], [null, ''], true) and ($params['visible'] !== $category['visible'])) {
             $categoryService->setCatVisible([$params['category_id']], $params['visible']);
         }
 
@@ -1334,7 +1334,7 @@ SELECT id, name, dir, uppercats
             $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', $row_uppercats), 0, -1));
 
             // we break on error at first physical category detected
-            if (! empty($row['dir'])) {
+            if (! in_array($row['dir'], [null, '', '0'], true)) {
                 $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
                     'render_category_name',
                     $row['name'],

@@ -256,7 +256,7 @@ abstract class CalendarBase
     ) {
         $nav_bar_datas = [];
 
-        if (\Piwigo\Config\Config::calendarShowEmpty() and $show_empty and ! empty($labels)) {
+        if (\Piwigo\Config\Config::calendarShowEmpty() and $show_empty and $labels !== null and $labels !== []) {
             foreach ($labels as $item => $label) {
                 if (! isset($items[$item])) {
                     $items[$item] = -1;
@@ -377,7 +377,7 @@ $this->get_date_where($level) . '
     protected function build_next_prev(\Piwigo\Core\TemplateInterface $template): void
     {
         $prev = $next = null;
-        if (empty($this->chronology_date)) {
+        if ($this->chronology_date === []) {
             return;
         }
 
@@ -448,13 +448,13 @@ GROUP BY period';
               ];
         }
 
-        if (! empty($tpl_var)) {
+        if ($tpl_var !== []) {
             // Template::get_template_vars() is declared to return mixed;
             // every write to 'chronology_navigation_bars' (build_nav_bar()
             // above, and the append() below) stores a list of arrays, so
             // narrow with is_array() rather than trusting the signature.
             $existing = $template->get_template_vars('chronology_navigation_bars');
-            if (is_array($existing) && ! empty($existing)) {
+            if (is_array($existing) && $existing !== []) {
                 $last_index = count($existing) - 1;
                 $last_item = $existing[$last_index] ?? null;
                 $last_item = is_array($last_item) ? $last_item : [];

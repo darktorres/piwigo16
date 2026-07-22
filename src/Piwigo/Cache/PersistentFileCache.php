@@ -87,7 +87,7 @@ class PersistentFileCache extends PersistentCache
     public function purge($all): void
     {
         $files = glob($this->dir . '*.cache');
-        if (empty($files)) {
+        if ($files === false || $files === []) {
             return;
         }
 

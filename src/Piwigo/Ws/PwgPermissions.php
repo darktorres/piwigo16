@@ -62,7 +62,7 @@ final class PwgPermissions
         $conn = DbConnection::build();
 
         $cat_filter = '';
-        if (! empty($params['cat_id'])) {
+        if (isset($params['cat_id']) && $params['cat_id'] !== []) {
             $cat_filter = 'WHERE cat_id IN(' . implode(',', $params['cat_id']) . ')';
         }
 
@@ -124,24 +124,24 @@ SELECT group_id, cat_id
         // filter by group and user
         foreach ($perms as $cat_id => &$cat) {
             if (isset($params['group_id'])) {
-                if (empty($cat['groups']) or count(array_intersect($cat['groups'], $params['group_id'])) === 0) {
+                if ((! isset($cat['groups']) || $cat['groups'] === []) or count(array_intersect($cat['groups'] ?? [], $params['group_id'])) === 0) {
                     unset($perms[$cat_id]);
                     continue;
                 }
             }
             if (isset($params['user_id'])) {
                 if (
-                    (empty($cat['users_indirect']) or count(array_intersect($cat['users_indirect'], $params['user_id'])) === 0)
-                    and (empty($cat['users']) or count(array_intersect($cat['users'], $params['user_id'])) === 0)
+                    ((! isset($cat['users_indirect']) || $cat['users_indirect'] === []) or count(array_intersect($cat['users_indirect'] ?? [], $params['user_id'])) === 0)
+                    and ((! isset($cat['users']) || $cat['users'] === []) or count(array_intersect($cat['users'] ?? [], $params['user_id'])) === 0)
                 ) {
                     unset($perms[$cat_id]);
                     continue;
                 }
             }
 
-            $cat['groups'] = ! empty($cat['groups']) ? array_values(array_unique($cat['groups'])) : [];
-            $cat['users'] = ! empty($cat['users']) ? array_values(array_unique($cat['users'])) : [];
-            $cat['users_indirect'] = ! empty($cat['users_indirect']) ? array_values(array_unique($cat['users_indirect'])) : [];
+            $cat['groups'] = isset($cat['groups']) && $cat['groups'] !== [] ? array_values(array_unique($cat['groups'])) : [];
+            $cat['users'] = isset($cat['users']) && $cat['users'] !== [] ? array_values(array_unique($cat['users'])) : [];
+            $cat['users_indirect'] = isset($cat['users_indirect']) && $cat['users_indirect'] !== [] ? array_values(array_unique($cat['users_indirect'])) : [];
         }
         unset($cat);
 
@@ -175,7 +175,7 @@ SELECT group_id, cat_id
 
         $conn = DbConnection::build();
 
-        if (! empty($params['group_id'])) {
+        if (isset($params['group_id']) && $params['group_id'] !== []) {
             $cat_ids = self::categoryService($conn)->getUppercatIds($params['cat_id']);
             if ($params['recursive']) {
                 $cat_ids = array_merge($cat_ids, self::categoryService($conn)->getSubcatIds($params['cat_id']));
@@ -210,7 +210,7 @@ SELECT id
                 );
         }
 
-        if (! empty($params['user_id'])) {
+        if (isset($params['user_id']) && $params['user_id'] !== []) {
             if ($params['recursive']) {
                 $_POST['apply_on_sub'] = true;
             }
@@ -243,7 +243,7 @@ SELECT id
         $conn = DbConnection::build();
         $cat_ids = self::categoryService($conn)->getSubcatIds($params['cat_id']);
 
-        if (! empty($params['group_id'])) {
+        if (isset($params['group_id']) && $params['group_id'] !== []) {
             $query = '
 DELETE
   FROM ' . Tables::groupAccess() . '
@@ -253,7 +253,7 @@ DELETE
             $conn->executeStatement($query);
         }
 
-        if (! empty($params['user_id'])) {
+        if (isset($params['user_id']) && $params['user_id'] !== []) {
             $query = '
 DELETE
   FROM ' . Tables::userAccess() . '

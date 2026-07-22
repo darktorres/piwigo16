@@ -70,7 +70,7 @@ final class ImageRect
         }
         $tlcrop = floor($pixels / 2);
 
-        if (! empty($coi)) {
+        if ($coi !== null && $coi !== '') {
             $coil = floor($this->r * DerivativeUrlCodec::charToFraction($coi[0]));
             $coir = ceil($this->r * DerivativeUrlCodec::charToFraction($coi[2]));
             $availableL = $coil > $this->l ? $coil - $this->l : 0;
@@ -100,7 +100,7 @@ final class ImageRect
         }
         $tlcrop = floor($pixels / 2);
 
-        if (! empty($coi)) {
+        if ($coi !== null && $coi !== '') {
             $coit = floor($this->b * DerivativeUrlCodec::charToFraction($coi[1]));
             $coib = ceil($this->b * DerivativeUrlCodec::charToFraction($coi[3]));
             $availableT = $coit > $this->t ? $coit - $this->t : 0;

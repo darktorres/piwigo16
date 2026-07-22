@@ -483,7 +483,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                     $category_up = [];
                     foreach ($inserts as $category) {
                         $category_ids[] = $category['id'];
-                        if (! empty($category['id_uppercat'])) {
+                        if (! in_array($category['id_uppercat'], [null, false, 0, '0', '', []], true)) {
                             $category_up[] = $category['id_uppercat'];
                         }
                     }
@@ -493,7 +493,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                     ]);
 
                     $category_up = implode(',', array_unique($category_up));
-                    if (\Piwigo\Config\Config::inheritanceByDefault() and ! empty($category_up)) {
+                    if (\Piwigo\Config\Config::inheritanceByDefault() and $category_up !== '') {
                         // predeclared so both stay real arrays below even if a
                         // query below ever returns an empty/falsy result set.
                         $granted_grps = [];

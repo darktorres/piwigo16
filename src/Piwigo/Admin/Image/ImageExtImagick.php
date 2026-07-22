@@ -71,7 +71,7 @@ class ImageExtImagick implements ImageInterface
         $command = escapeshellarg($this->imagickdir) . 'identify -format "%wx%h" '
             . escapeshellarg((string) realpath($this->source_filepath));
         @exec($command, $returnarray);
-        if (empty($returnarray[0]) or ! (bool) preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
+        if (! isset($returnarray[0]) || $returnarray[0] === '' || $returnarray[0] === '0' or ! (bool) preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
             die("[External ImageMagick] Corrupt image\n" . var_export($returnarray, true));
         }
 
@@ -117,7 +117,7 @@ class ImageExtImagick implements ImageInterface
     #[\Override]
     public function rotate(int|float $rotation): bool
     {
-        if (empty($rotation)) {
+        if ($rotation === 0 || $rotation === 0.0) {
             return true;
         }
 
@@ -227,7 +227,7 @@ class ImageExtImagick implements ImageInterface
 
         foreach ($this->commands as $command => $params) {
             $exec .= ' -' . $command;
-            if (! empty($params)) {
+            if (! in_array($params, [null, 0, 0.0, '0', ''], true)) {
                 $exec .= ' ' . $params;
             }
         }

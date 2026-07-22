@@ -114,7 +114,7 @@ class ScriptLoader
     public function add_inline($code, $require): void
     {
         ! (bool) $this->did_footer || trigger_error('Attempt to add inline script but the footer has been written', E_USER_WARNING);
-        if (! empty($require)) {
+        if ($require !== []) {
             foreach ($require as $id) {
                 if (! isset($this->registered_scripts[$id])) {
                     $this->load_known_required_script($id, 1) or new HtmlService()
@@ -197,7 +197,7 @@ class ScriptLoader
             if ($script->load_mode > 0) {
                 break;
             }
-            if (! empty($script->path)) {
+            if (! in_array($script->path, [null, ''], true)) {
                 $this->head_done_scripts[$id] = $script;
             } else {
                 trigger_error("Script {$id} has an undefined path", E_USER_WARNING);
@@ -288,7 +288,7 @@ class ScriptLoader
      */
     private static function fill_well_known($id, Script $script): void
     {
-        if (empty($script->path) && isset(self::$known_paths[$id])) {
+        if (in_array($script->path, [null, ''], true) && isset(self::$known_paths[$id])) {
             $script->path = self::$known_paths[$id];
         }
         if (str_starts_with($id, 'jquery.')) {
@@ -297,7 +297,7 @@ class ScriptLoader
             if (str_starts_with($id, 'jquery.ui.effect-')) {
                 $required_ids = ['jquery', 'jquery.ui.effect'];
 
-                if (empty($script->path)) {
+                if (in_array($script->path, [null, ''], true)) {
                     $script->path = dirname(self::$known_paths['jquery.ui.effect']) . "/{$id}.min.js";
                 }
             } elseif (str_starts_with($id, 'jquery.ui.')) {
@@ -305,7 +305,7 @@ class ScriptLoader
                     $required_ids = array_merge(['jquery', 'jquery.ui'], array_keys(self::$ui_core_dependencies));
                 }
 
-                if (empty($script->path)) {
+                if (in_array($script->path, [null, ''], true)) {
                     $script->path = dirname(self::$known_paths['jquery.ui']) . "/{$id}.min.js";
                 }
             }

@@ -709,7 +709,7 @@ final class ImageDerivativeController implements ControllerInterface
         // this codebase -- so building $this->srcUrl from it needs no
         // depth computation of any kind, in either URL style below.
         if (\Piwigo\Config\Config::questionMarkInUrls() === false and
-             isset($_SERVER['PATH_INFO']) and ! empty($_SERVER['PATH_INFO'])) {
+             isset($_SERVER['PATH_INFO']) and ! in_array($_SERVER['PATH_INFO'], [null, false, 0, '0', '', []], true)) {
             $req = $_SERVER['PATH_INFO'];
             // PHPStan types superglobal reads as mixed; PATH_INFO is only ever
             // populated by the web server as a string (verified via the isset()

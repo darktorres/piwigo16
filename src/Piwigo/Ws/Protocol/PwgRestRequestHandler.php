@@ -34,11 +34,11 @@ class PwgRestRequestHandler extends PwgRequestHandler
                 $params[(string) $name] = $value;
             }
         }
-        if (empty($method) && isset($_GET['method'])) {
+        if ((! isset($method) || (is_string($method) && ($method === '' || $method === '0'))) && isset($_GET['method'])) {
             $method = $_GET['method'];
         }
 
-        if (empty($method) || ! is_string($method)) {
+        if (! isset($method) || ! is_string($method) || $method === '' || $method === '0') {
             $service->sendResponse(
                 new PwgError(WsError::INVALID_METHOD, 'Missing "method" name')
             );

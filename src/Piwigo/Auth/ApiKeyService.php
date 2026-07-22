@@ -45,7 +45,7 @@ final readonly class ApiKeyService
         $now = Env::now();
 
         $expiration = null;
-        if (! empty($duration)) {
+        if ($duration !== null && $duration !== 0) {
             $expiration = (clone $now)->modify('+' . ($duration * 60 * 60 * 24) . ' seconds')->format('Y-m-d H:i:s');
         }
 
@@ -192,7 +192,7 @@ final readonly class ApiKeyService
 
         $available = [];
         foreach ($api_keys as $api_key) {
-            if (! (bool) $api_key['is_expired'] && empty($api_key['revoked_on'])) {
+            if (! (bool) $api_key['is_expired'] && in_array($api_key['revoked_on'], [null, false, 0, '0', '', []], true)) {
                 $available[] = $api_key;
             }
         }

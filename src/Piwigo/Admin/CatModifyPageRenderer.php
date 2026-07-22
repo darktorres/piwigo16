@@ -69,7 +69,7 @@ final class CatModifyPageRenderer
         }
 
         /** @var array<string, mixed> $category */
-        $category['is_virtual'] = empty($category['dir']) ? true : false;
+        $category['is_virtual'] = in_array($category['dir'], [null, false, 0, '0', '', []], true) ? true : false;
 
         $query = 'SELECT DISTINCT category_id
   FROM ' . Tables::imageCategory() . '
@@ -117,7 +117,7 @@ final class CatModifyPageRenderer
         $category_id_uppercat = is_string($category['id_uppercat']) ? $category['id_uppercat'] : '';
 
         $self_url = $cat_list_url;
-        if (! empty($category_id_uppercat)) {
+        if ($category_id_uppercat !== '') {
             $self_url .= '&amp;parent_id=' . $category_id_uppercat;
         }
 
@@ -128,7 +128,7 @@ final class CatModifyPageRenderer
             [
                 'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
                 'CATEGORIES_PARENT_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $parent_navigation)),
-                'PARENT_CAT_ID' => ! empty($category_id_uppercat) ? $category_id_uppercat : 0,
+                'PARENT_CAT_ID' => $category_id_uppercat !== '' ? $category_id_uppercat : 0,
                 'CAT_ID' => $category_id,
                 'CAT_NAME' => @htmlspecialchars(is_string($category['name']) ? $category['name'] : ''),
                 'CAT_COMMENT' => @htmlspecialchars(is_string($category['comment']) ? $category['comment'] : ''),
@@ -319,12 +319,12 @@ SELECT COUNT(*)
         // rather than assuming string|null.
         $category_representative_picture_id_raw = $category['representative_picture_id'];
         $category_representative_picture_id = (is_int($category_representative_picture_id_raw) || is_string($category_representative_picture_id_raw)) ? $category_representative_picture_id_raw : 0;
-        if ($category['has_images'] or ! empty($category_representative_picture_id)) {
+        if ($category['has_images'] or ! in_array($category_representative_picture_id, [0, '0', ''], true)) {
             $tpl_representant = [];
 
             // picture to display : the identified representant or the generic random
             // representant ?
-            if (! empty($category_representative_picture_id)) {
+            if (! in_array($category_representative_picture_id, [0, '0', ''], true)) {
                 $tpl_representant['picture'] = $categoryService->getCategoryRepresentantProperties($category_representative_picture_id, $urlService, ImageStdParams::MEDIUM);
             }
 
@@ -346,7 +346,7 @@ SELECT COUNT(*)
         }
 
         if ((bool) $category['is_virtual']) {
-            $template->assign('parent_category', empty($category_id_uppercat) ? [] : [$category_id_uppercat]);
+            $template->assign('parent_category', $category_id_uppercat === '' ? [] : [$category_id_uppercat]);
         }
 
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());

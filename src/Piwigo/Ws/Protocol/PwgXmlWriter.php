@@ -56,7 +56,7 @@ class PwgXmlWriter
     public function start_element(string $name): void
     {
         $this->_end_prev(false);
-        if (! empty($this->_elementStack)) {
+        if ($this->_elementStack !== []) {
             $this->_eol_indent();
         }
         $this->_indentLevel++;

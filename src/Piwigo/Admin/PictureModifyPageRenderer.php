@@ -196,7 +196,7 @@ SELECT id
                 $data[$field] = (\Piwigo\Config\Config::allowHtmlDescriptions()) ? $field_value : strip_tags($field_value);
             }
 
-            if (! empty($_POST['date_creation'])) {
+            if (! in_array($_POST['date_creation'] ?? null, [null, false, 0, '0', '', []], true)) {
                 $data['date_creation'] = $_POST['date_creation'];
             } else {
                 $data['date_creation'] = null;
@@ -228,7 +228,7 @@ SELECT id
 
             $tag_ids = [];
             $raw_tags_post = $_POST['tags'] ?? null;
-            if (! empty($raw_tags_post)) {
+            if (! in_array($raw_tags_post, [null, false, 0, '0', '', []], true)) {
                 if (is_array($raw_tags_post)) {
                     $tag_ids = $tagService->getTagIds(array_filter($raw_tags_post, is_string(...)));
                 } elseif (is_string($raw_tags_post)) {
@@ -328,7 +328,7 @@ SELECT
         }
 
         $storage_category_id = null;
-        if (! empty($row['storage_category_id'])) {
+        if (is_numeric($row['storage_category_id']) && (int) $row['storage_category_id'] !== 0) {
             $raw_storage_category_id = $row['storage_category_id'];
             $storage_category_id = (is_int($raw_storage_category_id) || is_string($raw_storage_category_id)) ? (string) $raw_storage_category_id : null;
         }
@@ -429,7 +429,7 @@ SELECT
             'is_svg' => (strtoupper(end($extTab)) === 'SVG'),
         ];
 
-        if (\Piwigo\Config\Config::rateEnabled() && ! empty($row['rating_score'])) {
+        if (\Piwigo\Config\Config::rateEnabled() && ! in_array($row['rating_score'], [null, false, 0, 0.0, '0', '', []], true)) {
             $query = '
 SELECT
     COUNT(*)
@@ -455,7 +455,7 @@ SELECT *
 ;';
         $formats = $conn->fetchAllAssociative($query);
 
-        if (! empty($formats)) {
+        if ($formats !== []) {
             $format_strings = [];
 
             foreach ($formats as $format) {

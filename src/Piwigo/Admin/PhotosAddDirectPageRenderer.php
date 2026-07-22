@@ -184,7 +184,7 @@ SELECT *
 ;';
                 $formats = $conn->fetchAllAssociative($query);
 
-                if (! empty($formats)) {
+                if ($formats !== []) {
                     $format_strings = [];
                     $formats_exts = [];
 
@@ -419,7 +419,7 @@ SELECT
         $setup_errors = [];
 
         $error_message = $uploadService->readyForUploadMessage();
-        if (! empty($error_message)) {
+        if (! in_array($error_message, [null, ''], true)) {
             $setup_errors[] = $error_message;
         }
 

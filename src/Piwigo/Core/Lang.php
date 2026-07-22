@@ -312,11 +312,11 @@ final class Lang
         // (array_unique()/implode() below need string-castable elements, not
         // just an array container).
         $languages = [];
-        if (! empty($options['language'])) { // explicit language
+        if (! in_array($options['language'] ?? null, [null, false, 0, '0', '', []], true)) { // explicit language
             $languages[] = $options['language'];
         }
         $current_user_language = self::$defaultLanguageProvider?->getCurrentLanguage();
-        if (! empty($current_user_language)) { // use language
+        if (! in_array($current_user_language, [null, ''], true)) { // use language
             $languages[] = $current_user_language;
         }
         if (($parent = self::getParentLanguage()) !== null) { // parent language
@@ -410,7 +410,7 @@ final class Lang
             ? $load_lang_info['parent']
             : (is_string($lang_info['parent'] ?? null) ? $lang_info['parent'] : null);
 
-        if (! empty($parent_language) && $parent_language !== $selected_language) {
+        if (! in_array($parent_language, [null, ''], true) && $parent_language !== $selected_language) {
             $parent_po = $dirname . $parent_language . '/' . basename($po_file);
             if (is_readable($parent_po)) {
                 // Load the parent, then re-load the child (already
@@ -529,7 +529,7 @@ final class Lang
 
     private static function getParentLanguage(?string $lang_id = null): ?string
     {
-        if (empty($lang_id)) {
+        if ($lang_id === null || $lang_id === '') {
             $parent = self::$langInfo['parent'] ?? null;
             return (is_string($parent) && $parent !== '') ? $parent : null;
         }

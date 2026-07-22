@@ -53,7 +53,7 @@ final class PwgGroups
         $groups = new GroupRepository(DbConnection::build())
             ->findWithMemberCounts(
                 $params['group_id'] ?? [],
-                ! empty($params['name']) ? $params['name'] : null,
+                isset($params['name']) && $params['name'] !== '' ? $params['name'] : null,
                 $params['order'],
                 $params['per_page'],
                 $params['page']

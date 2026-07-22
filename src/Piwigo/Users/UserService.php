@@ -674,7 +674,7 @@ SELECT
         // every other key's inferred type to mixed for the remainder of this
         // function. Merged back in just before the final return instead.
         $preferences_raw = $userdata['preferences'];
-        $preferences = ! empty($preferences_raw) && is_string($preferences_raw)
+        $preferences = ! self::emptyValue($preferences_raw) && is_string($preferences_raw)
             ? unserialize($preferences_raw)
             : [];
 
@@ -764,7 +764,7 @@ SELECT DISTINCT(id)
                     array_column($this->conn->fetchAllAssociative($query), 'id')
                 );
 
-                if (empty($forbidden_ids)) {
+                if ($forbidden_ids === []) {
                     $forbidden_ids[] = '0';
                 }
                 $image_access_type = 'NOT IN';
@@ -799,8 +799,8 @@ SELECT COUNT(DISTINCT(image_id)) as total
                             CategoryService::removeComputedCategory($user_cache_cats, $cat);
                         }
                     }
-                    if (! empty($forbidden_ids)) {
-                        if (empty($forbidden_categories)) {
+                    if ($forbidden_ids !== []) {
+                        if ($forbidden_categories === '') {
                             $forbidden_categories = implode(',', $forbidden_ids);
                         } else {
                             $forbidden_categories .= ',' . implode(',', $forbidden_ids);
@@ -863,7 +863,7 @@ INSERT IGNORE INTO ' . Tables::userCache() . '
   (' . $userId . ',\'' . $need_update_str . '\','
   . $cache_update_time . ',\''
   . $forbidden_categories . '\',' . $nb_total_images . ',' .
-  (empty($last_photo_date) ? 'NULL' : '\'' . $last_photo_date . '\'') .
+  (self::emptyValue($last_photo_date) ? 'NULL' : '\'' . $last_photo_date . '\'') .
   ',\'' . $image_access_type . '\',\'' . $image_access_list . '\')';
                 $this->conn->executeStatement($query);
 
@@ -1198,7 +1198,7 @@ DELETE FROM ' . Tables::favorites() . '
                 ];
             }
 
-            if (! empty($params['username'])) {
+            if (! self::emptyValue($params['username'] ?? null)) {
                 $username_param = $params['username'];
                 assert(is_string($username_param));
                 $user_id = $this->getUserId($username_param);
@@ -1221,7 +1221,7 @@ DELETE FROM ' . Tables::favorites() . '
                 $updates[$user_fields['username']] = $username_param;
             }
 
-            if (! empty($params['email'])) {
+            if (! self::emptyValue($params['email'] ?? null)) {
                 $email_param = $params['email'];
                 assert(is_string($email_param));
                 if (($error = $this->validateMailAddress($user_ids[0], $email_param)) !== '') {
@@ -1235,7 +1235,7 @@ DELETE FROM ' . Tables::favorites() . '
                 $updates[$user_fields['email']] = $email_param;
             }
 
-            if (! empty($params['password'])) {
+            if (! self::emptyValue($params['password'] ?? null)) {
                 if (! AccessControl::isWebmaster()) {
                     $password_protected_users = [\Piwigo\Config\Config::guestId()];
 
@@ -1272,7 +1272,7 @@ SELECT
             }
         }
 
-        if (! empty($params['status'])) {
+        if (! self::emptyValue($params['status'] ?? null)) {
             if (in_array($params['status'], ['webmaster', 'admin']) and ! AccessControl::isWebmaster()) {
                 return [
                     'error' => [
@@ -1322,7 +1322,7 @@ SELECT
             $update_status = $status_param;
         }
 
-        if (! empty($params['level']) or @$params['level'] === 0) {
+        if (! self::emptyValue($params['level'] ?? null) or @$params['level'] === 0) {
             // \Piwigo\Config\Config::availablePermissionLevels() defaults to [0, 1, 2, 4, 8]
             // (see include/config_default.inc.php), always an array
             $available_permission_levels = \Piwigo\Config\Config::availablePermissionLevels();
@@ -1337,7 +1337,7 @@ SELECT
             $updates_infos['level'] = $params['level'];
         }
 
-        if (! empty($params['language'])) {
+        if (! self::emptyValue($params['language'] ?? null)) {
             if (! in_array($params['language'], array_keys(\Piwigo\Lang\LangService::getLanguages()))) {
                 return [
                     'error' => [
@@ -1349,7 +1349,7 @@ SELECT
             $updates_infos['language'] = $params['language'];
         }
 
-        if (! empty($params['theme'])) {
+        if (! self::emptyValue($params['theme'] ?? null)) {
             if (! in_array($params['theme'], array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes()))) {
                 return [
                     'error' => [
@@ -1361,27 +1361,27 @@ SELECT
             $updates_infos['theme'] = $params['theme'];
         }
 
-        if (! empty($params['nb_image_page'])) {
+        if (! self::emptyValue($params['nb_image_page'] ?? null)) {
             $updates_infos['nb_image_page'] = $params['nb_image_page'];
         }
 
-        if (! empty($params['recent_period']) or @$params['recent_period'] === 0) {
+        if (! self::emptyValue($params['recent_period'] ?? null) or @$params['recent_period'] === 0) {
             $updates_infos['recent_period'] = $params['recent_period'];
         }
 
-        if (! empty($params['expand']) or @$params['expand'] === false) {
+        if (! self::emptyValue($params['expand'] ?? null) or @$params['expand'] === false) {
             $updates_infos['expand'] = SqlDialect::booleanToString($params['expand']);
         }
 
-        if (! empty($params['show_nb_comments']) or @$params['show_nb_comments'] === false) {
+        if (! self::emptyValue($params['show_nb_comments'] ?? null) or @$params['show_nb_comments'] === false) {
             $updates_infos['show_nb_comments'] = SqlDialect::booleanToString($params['show_nb_comments']);
         }
 
-        if (! empty($params['show_nb_hits']) or @$params['show_nb_hits'] === false) {
+        if (! self::emptyValue($params['show_nb_hits'] ?? null) or @$params['show_nb_hits'] === false) {
             $updates_infos['show_nb_hits'] = SqlDialect::booleanToString($params['show_nb_hits']);
         }
 
-        if (! empty($params['enabled_high']) or @$params['enabled_high'] === false) {
+        if (! self::emptyValue($params['enabled_high'] ?? null) or @$params['enabled_high'] === false) {
             $updates_infos['enabled_high'] = SqlDialect::booleanToString($params['enabled_high']);
         }
 
@@ -1450,7 +1450,7 @@ UPDATE ' . Tables::userInfos() . ' SET ';
         }
 
         // manage association to groups
-        if (! empty($params['group_id'])) {
+        if (! self::emptyValue($params['group_id'] ?? null)) {
             $group_id_param = $params['group_id'];
             assert(is_array($group_id_param));
             $group_ids_param = [];

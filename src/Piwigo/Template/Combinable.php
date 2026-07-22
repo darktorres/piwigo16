@@ -46,7 +46,7 @@ class Combinable
      */
     public function set_path($path): void
     {
-        if (! empty($path)) {
+        if (! in_array($path, [null, ''], true)) {
             $this->path = $path;
         }
     }

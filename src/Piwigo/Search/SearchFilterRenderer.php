@@ -1281,7 +1281,7 @@ SELECT
 
         $otherFilters = array_diff(array_keys($imageIdsForFilter), [$filterName]);
 
-        if (empty($otherFilters)) {
+        if ($otherFilters === []) {
             return false;
         }
 
@@ -1328,7 +1328,7 @@ SELECT
             $debugMsg .= ', time = ' . \Piwigo\Core\TimingHelper::getElapsedTime($functionStart, \Piwigo\Core\TimingHelper::getMoment());
             $logger->debug($debugMsg);
 
-            if (empty($otherFiltersItems)) {
+            if ($otherFiltersItems === []) {
                 $otherFiltersItems = [-1];
             }
 

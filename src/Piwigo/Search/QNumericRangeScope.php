@@ -108,13 +108,13 @@ class QNumericRangeScope extends QSearchScope
 
         $clauses = [];
         if ($range_0 !== '') {
-            $clauses[] = $field . ' >' . (empty($strict[0]) ? '=' : '') . (is_scalar($range_0) ? (string) $range_0 : '') . ' ';
+            $clauses[] = $field . ' >' . ($strict[0] === 0 ? '=' : '') . (is_scalar($range_0) ? (string) $range_0 : '') . ' ';
         }
         if ($range_1 !== '') {
-            $clauses[] = $field . ' <' . (empty($strict[1]) ? '=' : '') . (is_scalar($range_1) ? (string) $range_1 : '') . ' ';
+            $clauses[] = $field . ' <' . ($strict[1] === 0 ? '=' : '') . (is_scalar($range_1) ? (string) $range_1 : '') . ' ';
         }
 
-        if (empty($clauses)) {
+        if ($clauses === []) {
             if ((bool) ($token->modifier & QSingleToken::QST_WILDCARD)) {
                 return $field . ' IS NOT NULL';
             } else {

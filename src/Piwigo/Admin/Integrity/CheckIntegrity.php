@@ -85,7 +85,7 @@ class CheckIntegrity
             $not_corrected_count = 0;
 
             foreach ($this->retrieve_list as $i => $c13y) {
-                if (! empty($c13y['correction_fct']) and
+                if (! in_array($c13y['correction_fct'] ?? null, [null, false, 0, '0', '', []], true) and
                     (bool) $c13y['is_callable'] and
                     in_array($c13y['id'], $c13y_selection)) {
                     if (is_array($c13y['correction_fct_args'])) {
@@ -195,7 +195,7 @@ class CheckIntegrity
                         throw new \LogicException('$c13y[\'ignored\'] cannot be false');
                     }
                 } else {
-                    if (! empty($c13y['correction_fct'])) {
+                    if (! in_array($c13y['correction_fct'] ?? null, [null, false, 0, '0', '', []], true)) {
                         if (isset($c13y['corrected'])) {
                             if ((bool) $c13y['corrected']) {
                                 $c13y_display['show_correction_success_fct'] = true;
@@ -215,7 +215,7 @@ class CheckIntegrity
                         $can_select = true;
                     }
 
-                    if (! empty($c13y['correction_msg']) and ! isset($c13y['corrected'])) {
+                    if (! in_array($c13y['correction_msg'] ?? null, [null, false, 0, '0', '', []], true) and ! isset($c13y['corrected'])) {
                         $c13y_display['correction_msg'] = $c13y['correction_msg'];
                     }
                 }

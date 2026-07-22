@@ -146,7 +146,7 @@ final class RequestBootstrap
             array_walk_recursive($_POST, self::sanitizeMysqlKv(...));
             array_walk_recursive($_COOKIE, self::sanitizeMysqlKv(...));
         }
-        if (! empty($_SERVER['PATH_INFO']) && is_string($_SERVER['PATH_INFO'])) {
+        if (! in_array($_SERVER['PATH_INFO'] ?? null, [null, false, 0, '0', '', []], true) && is_string($_SERVER['PATH_INFO'])) {
             $_SERVER['PATH_INFO'] = addslashes($_SERVER['PATH_INFO']);
         }
 
@@ -535,7 +535,7 @@ final class RequestBootstrap
             $pageState->headerMessages = [];
         }
 
-        if (! empty(\Piwigo\Config\Config::filterPages()) and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
+        if (\Piwigo\Config\Config::filterPages() !== [] and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
             // Formerly a conditional `include PHPWG_ROOT_PATH .
             // 'include/filter.inc.php';` (deleted, P23 sub-batch 8f-5).
             new FilterService($conn)
@@ -608,7 +608,7 @@ final class RequestBootstrap
         \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFileVideo(...));
         \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFilePsd(...));
         \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFileEps(...));
-        if (! empty(\Piwigo\Config\Config::originalUrlProtection())) {
+        if (\Piwigo\Config\Config::originalUrlProtection() !== '') {
             \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('get_element_url', new HtmlService()->getElementUrlProtectionHandler(...));
             \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('get_src_image_url', new HtmlService()->getSrcImageUrlProtectionHandler(...));
         }

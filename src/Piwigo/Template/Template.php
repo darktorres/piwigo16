@@ -235,7 +235,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         }
 
         $this->smarty->setTemplateDir([]);
-        if (! empty($theme)) {
+        if ($theme !== '') {
             $this->set_theme($root, $theme, $path);
             if (! AdminContext::isActive()) {
                 $this->set_prefilter('header', self::prefilter_local_css(...));
@@ -317,7 +317,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
             'id' => $theme,
             'load_css' => $load_css,
         ];
-        if (! empty($themeconf['local_head']) and $load_local_head and is_string($themeconf['local_head'])) {
+        if (! in_array($themeconf['local_head'] ?? null, [null, false, 0, '0', '', []], true) and $load_local_head and is_string($themeconf['local_head'])) {
             $tpl_var['local_head'] = realpath($root . '/' . $theme . '/' . $themeconf['local_head']);
         }
         $themeconf['id'] = $theme;
@@ -899,7 +899,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         // Smarty calls block plugins twice: null $content on the opening
         // tag, real content on the closing tag ("second call" below).
         $content = trim((string) $content);
-        if (! empty($content)) { // second call
+        if ($content !== '') { // second call
             $this->html_head_elements[] = $content;
         }
     }
@@ -916,7 +916,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         // Smarty calls block plugins twice: null $content on the opening
         // tag, real content on the closing tag ("second call" below).
         $content = trim((string) $content);
-        if (! empty($content)) { // second call
+        if ($content !== '') { // second call
             $this->html_style .= "\n" . $content;
         }
     }
@@ -939,7 +939,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
     public function func_define_derivative(array $params, $smarty): void
     {
         $name = $params['name'] ?? null;
-        (! empty($name) && is_string($name)) or new HtmlService()
+        (! in_array($name, [null, false, 0, '0', '', []], true) && is_string($name)) or new HtmlService()
             ->fatalError('define_derivative missing name');
         if (isset($params['type'])) {
             $type = $params['type'];
@@ -949,8 +949,8 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
             $smarty->assign($name, $derivative);
             return;
         }
-        ! empty($params['width']) or new HtmlService()->fatalError('define_derivative missing width');
-        ! empty($params['height']) or new HtmlService()->fatalError('define_derivative missing height');
+        ! in_array($params['width'] ?? null, [null, false, 0, '0', '', []], true) or new HtmlService()->fatalError('define_derivative missing width');
+        ! in_array($params['height'] ?? null, [null, false, 0, '0', '', []], true) or new HtmlService()->fatalError('define_derivative missing height');
         $width = $params['width'];
         $height = $params['height'];
         is_scalar($width) or new HtmlService()
@@ -975,7 +975,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
             }
 
             if ((bool) $crop) {
-                if (empty($params['min_width'])) {
+                if (in_array($params['min_width'] ?? null, [null, false, 0, '0', '', []], true)) {
                     $minw = $w;
                 } else {
                     $min_width = $params['min_width'];
@@ -985,7 +985,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
                 }
                 $minw <= $w or new HtmlService()
                     ->fatalError('define_derivative invalid min_width');
-                if (empty($params['min_height'])) {
+                if (in_array($params['min_height'] ?? null, [null, false, 0, '0', '', []], true)) {
                     $minh = $h;
                 } else {
                     $min_height = $params['min_height'];
@@ -1041,7 +1041,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         }
 
         $require = $params['require'] ?? null;
-        $require_list = (! empty($require) && is_scalar($require)) ? explode(',', (string) $require) : [];
+        $require_list = (! in_array($require, [null, false, 0, '0', '', []], true) && is_scalar($require)) ? explode(',', (string) $require) : [];
 
         $path = $params['path'] ?? null;
         $path = is_string($path) ? $path : null;
@@ -1150,9 +1150,9 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         // Smarty calls block plugins twice: null $content on the opening
         // tag, real content on the closing tag ("second call" below).
         $content = trim((string) $content);
-        if (! empty($content)) { // second call
+        if ($content !== '') { // second call
             $require = $params['require'] ?? null;
-            $require_list = (! empty($require) && is_scalar($require)) ? explode(',', (string) $require) : [];
+            $require_list = (! in_array($require, [null, false, 0, '0', '', []], true) && is_scalar($require)) ? explode(',', (string) $require) : [];
 
             $this->scriptLoader->add_inline(
                 $content,
@@ -1175,7 +1175,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      */
     public function func_combine_css(array $params): void
     {
-        if (empty($params['path']) || ! is_string($params['path'])) {
+        if (in_array($params['path'] ?? null, [null, false, 0, '0', '', []], true) || ! is_string($params['path'])) {
             new HtmlService()
                 ->fatalError('combine_css missing path');
         }
@@ -1403,7 +1403,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             $css[] = "{combine_css path='{$f}' order=10}";
         }
 
-        if (! empty($css)) {
+        if ($css !== []) {
             $source = str_replace('{get_combined_css}', implode("\n", $css) . "\n{get_combined_css}", $source);
         }
 
@@ -1473,7 +1473,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      */
     public function parse_picture_buttons(): void
     {
-        if (! empty($this->picture_buttons)) {
+        if ($this->picture_buttons !== []) {
             ksort($this->picture_buttons);
             $buttons = [];
             foreach ($this->picture_buttons as $k => $row) {
@@ -1496,7 +1496,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      */
     public function parse_index_buttons(): void
     {
-        if (! empty($this->index_buttons)) {
+        if ($this->index_buttons !== []) {
             ksort($this->index_buttons);
             $buttons = [];
             foreach ($this->index_buttons as $k => $row) {

@@ -139,7 +139,7 @@ AND id NOT IN (:standardPlugins)
             ])
         );
 
-        if (! empty($plugins)) {
+        if ($plugins !== []) {
             $query = '
 UPDATE ' . Tables::plugins() . '
 SET state = :state
@@ -184,7 +184,7 @@ SELECT
             $theme_names[] = is_scalar($row['name']) ? (string) $row['name'] : '';
         }
 
-        if (! empty($theme_ids)) {
+        if ($theme_ids !== []) {
             $query = '
 DELETE
   FROM ' . Tables::themes() . '
@@ -278,7 +278,7 @@ UPDATE ' . Tables::userInfos() . '
             // Check if user is already connected as webmaster
             session_start();
             $pwg_uid = $_SESSION['pwg_uid'] ?? null;
-            if (! empty($pwg_uid) and (is_int($pwg_uid) or (is_string($pwg_uid) and is_numeric($pwg_uid)))) {
+            if (! in_array($pwg_uid, [null, false, 0, '0', '', []], true) and (is_int($pwg_uid) or (is_string($pwg_uid) and is_numeric($pwg_uid)))) {
                 $query = '
 SELECT status
   FROM ' . Tables::userInfos() . '

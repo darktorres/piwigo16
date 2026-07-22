@@ -1015,7 +1015,7 @@ $core = [
             if ($i > 0) {
                 echo ', ';
             }
-            echo $trigger['vars'][$i] . ' ' . (! empty($trigger['vars'][$i + 1]) ? '<i>$' . $trigger['vars'][$i + 1] . '</i>' : null);
+            echo $trigger['vars'][$i] . ' ' . (! in_array($trigger['vars'][$i + 1] ?? null, [null, false, 0, '0', '', []], true) ? '<i>$' . $trigger['vars'][$i + 1] . '</i>' : null);
         }
         echo '
       </td>

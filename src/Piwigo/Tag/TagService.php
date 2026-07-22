@@ -300,7 +300,7 @@ final readonly class TagService
             );
         }
 
-        $whereSql .= empty($extraImagesWhereSql) ? '' : " \nAND (" . $extraImagesWhereSql . ')';
+        $whereSql .= in_array($extraImagesWhereSql, [null, ''], true) ? '' : " \nAND (" . $extraImagesWhereSql . ')';
 
         $groupHavingSql = 'GROUP BY id';
         if ($mode === 'AND' && count($tagIds) > 1) {
@@ -309,7 +309,7 @@ final readonly class TagService
         }
 
         $confOrderBy = \Piwigo\Config\Config::all()['order_by'] ?? null;
-        $orderBySql = empty($orderBy) ? (is_string($confOrderBy) ? $confOrderBy : '') : $orderBy;
+        $orderBySql = in_array($orderBy, [null, ''], true) ? (is_string($confOrderBy) ? $confOrderBy : '') : $orderBy;
 
         return $this->repo->findImageIdsForTags($joinSql, $whereSql, $groupHavingSql, $orderBySql);
     }

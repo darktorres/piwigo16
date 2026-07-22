@@ -383,7 +383,7 @@ class Logger
      */
     private function formatMessage($level, $message, $cat, $context): string
     {
-        if (! empty($context)) {
+        if ($context !== []) {
             $message .= "\n" . $this->indent($this->contextToString($context));
         }
         $executionUuid = PageState::current()->executionUuid;

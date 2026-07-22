@@ -212,7 +212,7 @@ final class AdminShell
         unset($test_get['section']);
         unset($test_get['tag']);
         $query_string = $_SERVER['QUERY_STRING'] ?? null;
-        if (count($test_get) === 0 and is_string($query_string) and ! empty($query_string)) {
+        if (count($test_get) === 0 and is_string($query_string) and $query_string !== '') {
             $change_theme_url .= str_replace('&', '&amp;', $query_string) . '&amp;';
         }
         $change_theme_url .= 'change_theme=1';
@@ -422,7 +422,7 @@ SELECT COUNT(*)
                     'site_update',  // ?only POST
                 ]
             )
-            or (! empty($_POST) and in_array(
+            or ($_POST !== [] and in_array(
                 $page_slug,
                 [
                     'album',        // public/private; lock/unlock, permissions

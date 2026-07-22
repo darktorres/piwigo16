@@ -200,7 +200,7 @@ final class UpgradeRunner
                 ->upgradeTo('2.3.4', $step, false);
 
             $upgrade_errors = \Piwigo\Core\PageState::current()->errors;
-            if (! empty($upgrade_errors)) {
+            if ($upgrade_errors !== []) {
                 echo '<ul>';
                 foreach ($upgrade_errors as $error) {
                     echo '<li>' . $error . '</li>';
@@ -413,7 +413,7 @@ SELECT id
             );
 
             // if the webmaster has a session, let's give a link to discover new features
-            if (! empty($_SESSION['pwg_uid'])) {
+            if (! in_array($_SESSION['pwg_uid'] ?? null, [null, false, 0, '0', '', []], true)) {
                 $version_ = str_replace('.', '_', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.0');
 
                 if (file_exists(\Piwigo\Admin\PluginLoader::pluginsPath() . 'TakeATour/tours/' . $version_ . '/config.inc.php')) {

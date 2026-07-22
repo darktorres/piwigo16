@@ -94,6 +94,15 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class ConfigurationSubController implements AdminSubControllerInterface
 {
+    /**
+     * Matches empty()'s exact truthiness semantics -- required since
+     * empty() itself is disallowed by this project's strict PHPStan rules.
+     */
+    private static function emptyValue(mixed $value): bool
+    {
+        return $value === null || $value === '' || $value === 0 || $value === 0.0 || $value === '0' || $value === false || $value === [];
+    }
+
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -274,7 +283,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 case 'main':
 
                     if (! \Piwigo\Config\Config::has('order_by_custom') and ! \Piwigo\Config\Config::has('order_by_inside_category_custom')) {
-                        if (! empty($_POST['order_by'])) {
+                        if (! self::emptyValue($_POST['order_by'] ?? null)) {
                             new \Piwigo\Validation\InputValidator()
                                 ->validate('order_by', $_POST, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
 
@@ -287,7 +296,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                             $used = [];
                             foreach ($order_by_input as $i => $val) {
-                                if (empty($val) or isset($used[$val])) {
+                                if (self::emptyValue($val) or isset($used[$val])) {
                                     unset($order_by_input[$i]);
                                 } else {
                                     $used[$val] = true;
@@ -317,12 +326,12 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         }
                     }
 
-                    if (empty($_POST['email_admin_on_new_user'])) {
+                    if (self::emptyValue($_POST['email_admin_on_new_user'] ?? null)) {
                         $_POST['email_admin_on_new_user'] = 'none';
                     } elseif ($_POST['email_admin_on_new_user_filter'] === 'all') {
                         $_POST['email_admin_on_new_user'] = 'all';
                     } else {
-                        if (empty($_POST['email_admin_on_new_user_filter_group'])) {
+                        if (self::emptyValue($_POST['email_admin_on_new_user_filter_group'] ?? null)) {
                             $_POST['email_admin_on_new_user'] = 'all';
                         } else {
                             $filter_group = $_POST['email_admin_on_new_user_filter_group'];
@@ -331,7 +340,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     }
 
                     foreach ($main_checkboxes as $checkbox) {
-                        $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
+                        $_POST[$checkbox] = self::emptyValue($_POST[$checkbox] ?? null) ? 'false' : 'true';
                     }
                     break;
 
@@ -356,7 +365,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         \Piwigo\Core\PageState::current()->addError(Lang::t('The number of comments a page must be between 5 and 50 included.'));
                     }
                     foreach ($comments_checkboxes as $checkbox) {
-                        $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
+                        $_POST[$checkbox] = self::emptyValue($_POST[$checkbox] ?? null) ? 'false' : 'true';
                     }
                     break;
 
@@ -373,12 +382,12 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         \Piwigo\Core\PageState::current()->addError(Lang::t('The number of albums a page must be above 4.'));
                     }
                     foreach ($display_checkboxes as $checkbox) {
-                        $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
+                        $_POST[$checkbox] = self::emptyValue($_POST[$checkbox] ?? null) ? 'false' : 'true';
                     }
                     $picture_informations = is_array($_POST['picture_informations'] ?? null) ? $_POST['picture_informations'] : [];
                     foreach ($display_info_checkboxes as $checkbox) {
                         $picture_informations[$checkbox] =
-                          empty($picture_informations[$checkbox]) ? false : true;
+                          self::emptyValue($picture_informations[$checkbox] ?? null) ? false : true;
                     }
                     // Phase 5: no addslashes() -- that was only ever needed
                     // to survive the old raw-SQL write's quote-doubling
@@ -399,18 +408,18 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     foreach ($filters_names_checkboxes as $checkbox) {
                         $filter_conf = is_array($filters_views_post[$checkbox] ?? null) ? $filters_views_post[$checkbox] : [];
 
-                        if (empty($filters_views_box[$checkbox])) {
+                        if (self::emptyValue($filters_views_box[$checkbox] ?? null)) {
                             $filter_conf['access'] = 'nobody';
                             $filter_conf['default'] = false;
                         } else {
                             $filter_conf['default'] =
-                              empty($filter_conf['default']) ? false : true;
+                              self::emptyValue($filter_conf['default'] ?? null) ? false : true;
                         }
 
                         $filters_views_post[$checkbox] = $filter_conf;
                     }
                     $filters_views_post['last_filters_conf'] =
-                      empty($filters_views_post['last_filters_conf']) ? false : true;
+                      self::emptyValue($filters_views_post['last_filters_conf'] ?? null) ? false : true;
                     // Phase 5: no addslashes() -- same reasoning as
                     // picture_informations above.
                     $_POST['filters_views'] = serialize($filters_views_post);
@@ -876,7 +885,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $updates = [];
 
         foreach ($original_fields as $field) {
-            $value = ! empty($_POST[$field]) ? $_POST[$field] : null;
+            $value = ! self::emptyValue($_POST[$field] ?? null) ? $_POST[$field] : null;
             $updates[$field] = $value;
         }
 
@@ -1166,7 +1175,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             }
         }
 
-        if (! empty($watermark_tmp_name)) {
+        if (! in_array($watermark_tmp_name, [null, ''], true)) {
             $image_size = getimagesize($watermark_tmp_name);
             $type = $image_size === false ? false : $image_size[2];
             if ($type !== IMAGETYPE_PNG) {

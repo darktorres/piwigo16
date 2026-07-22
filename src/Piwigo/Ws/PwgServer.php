@@ -237,7 +237,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
     public static function isPost(): bool
     {
-        return ! empty($_POST);
+        return $_POST !== [];
     }
 
     public static function makeArrayParam(mixed &$param): void
@@ -438,7 +438,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
     {
         $methods = array_filter(
             $service->_methods,
-            fn (array $m): bool => empty($m['options']['hidden'])
+            fn (array $m): bool => in_array($m['options']['hidden'] ?? null, [null, false, 0, '0', '', []], true)
         );
         return [
             'methods' => new PwgNamedArray(array_keys($methods), 'method'),

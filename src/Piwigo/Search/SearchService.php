@@ -182,7 +182,7 @@ final readonly class SearchService
     public function getValidatedSearchArray(int|string $searchId, ?string $section, ?int &$resolvedSearchId = null): array|false
     {
         $search = $this->getValidatedSearchInfo($searchId, $section, $resolvedSearchId);
-        if (empty($search)) {
+        if ($search === null || $search === []) {
             $this->htmlRenderer->badRequest($this->redirectService, 'this search identifier does not exist');
         }
 

@@ -178,7 +178,7 @@ class BlockManager
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('blockmanager_apply', [$this]);
 
         foreach ($this->display_blocks as $id => $block) {
-            if (empty($block->raw_content) and empty($block->template)) {
+            if (in_array($block->raw_content, [null, ''], true) and in_array($block->template, [null, ''], true)) {
                 $this->hide_block($id);
             }
         }

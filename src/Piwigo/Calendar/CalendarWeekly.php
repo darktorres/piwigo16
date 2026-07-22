@@ -112,7 +112,7 @@ class CalendarWeekly extends CalendarBase
             $day = $date[self::CDAY];
             $res .= ' AND ' . $this->calendar_levels[self::CDAY]['sql'] . '=' . $day;
         }
-        if (empty($res)) {
+        if ($res === '') {
             $res = ' AND ' . $this->date_field . ' IS NOT NULL';
         }
         return $res;

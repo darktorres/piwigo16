@@ -451,7 +451,7 @@ SELECT id, keywords
             );
         }
 
-        if (! empty($datas)) {
+        if ($datas !== []) {
             new BatchWriter($conn)
                 ->massInsert(
                     Config::dbPrefix() . 'tags',
@@ -473,7 +473,7 @@ SELECT id, keywords
             }
         }
 
-        if (! empty($datas)) {
+        if ($datas !== []) {
             new BatchWriter($conn)
                 ->massInsert(
                     Config::dbPrefix() . 'image_tag',

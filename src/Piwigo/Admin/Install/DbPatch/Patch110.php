@@ -54,7 +54,7 @@ SELECT
         ]);
         $gallery_url = $row !== false && is_scalar($row[0]) ? (string) $row[0] : '';
 
-        if (! empty($gallery_url)) {
+        if ($gallery_url !== '') {
             $paths = CurrentPaths::get();
             // let's try to write it in the local configuration file
             $local_conf = $paths->local . 'config/config.inc.php';

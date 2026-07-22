@@ -260,7 +260,7 @@ final class ImageStdParams
             }
         }
         self::$disabled_type_map = $disabled_type_map;
-        if (empty(self::$disabled_type_map)) {
+        if (self::$disabled_type_map === []) {
             self::$disabled_type_map = self::get_disabled_default_sizes();
             self::save_disabled();
         }
@@ -396,7 +396,7 @@ final class ImageStdParams
      */
     public static function apply_global($params): void
     {
-        $params->use_watermark = ! empty(self::$watermark->file) &&
+        $params->use_watermark = self::$watermark->file !== '' &&
             (self::$watermark->min_size[0] <= $params->sizing->ideal_size[0]
             or self::$watermark->min_size[1] <= $params->sizing->ideal_size[1]);
     }

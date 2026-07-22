@@ -85,7 +85,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
             $permalink = $_POST['permalink'] ?? null;
             $permalink = is_string($permalink) ? $permalink : '';
             $permalink_service = new PermalinkService(new PermalinkRepository($conn));
-            if (empty($permalink)) {
+            if ($permalink === '') {
                 $permalink_service->deleteCatPermalink($post_cat_id, isset($_POST['save']));
             } else {
                 $permalink_service->setCatPermalink($post_cat_id, $permalink, isset($_POST['save']));

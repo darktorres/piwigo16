@@ -132,16 +132,16 @@ final class PwgUsers
 
         $where_clauses = ['1=1'];
 
-        if (! empty($params['user_id'])) {
+        if (isset($params['user_id']) && $params['user_id'] !== []) {
             $where_clauses[] = 'u.' . $user_field_id . ' IN(' . implode(',', $params['user_id']) . ')';
         }
 
-        if (! empty($params['username'])) {
+        if (isset($params['username']) && $params['username'] !== '') {
             $where_clauses[] = 'u.' . $user_field_username . ' LIKE ' . $conn->quote($params['username']);
         }
 
         $filtered_groups = [];
-        if (! empty($params['filter'])) {
+        if (isset($params['filter']) && $params['filter'] !== '') {
             $filter_like = $conn->quote('%' . $params['filter'] . '%');
             $filter_query = 'SELECT id FROM `' . Tables::groups() . '` WHERE name LIKE ' . $filter_like . ';';
             foreach ($conn->fetchAllAssociative($filter_query) as $row) {
@@ -152,13 +152,13 @@ final class PwgUsers
             $filter_where_clause = '(u.' . $user_field_username . ' LIKE ' . $filter_like . ' OR '
             . 'u.' . $user_field_email . ' LIKE ' . $filter_like;
 
-            if (! empty($filtered_groups)) {
+            if ($filtered_groups !== []) {
                 $filter_where_clause .= 'OR ug.group_id IN (' . implode(',', $filtered_groups) . ')';
             }
             $where_clauses[] = $filter_where_clause . ')';
         }
 
-        if (! empty($params['min_register'])) {
+        if (isset($params['min_register']) && $params['min_register'] !== '') {
             if (! (bool) preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $params['min_register'])) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter min_register');
             }
@@ -171,7 +171,7 @@ final class PwgUsers
             $where_clauses[] = 'ui.registration_date >= \'' . $min_date . ' 00:00:00\'';
         }
 
-        if (! empty($params['max_register'])) {
+        if (isset($params['max_register']) && $params['max_register'] !== '') {
             if (! (bool) preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $params['max_register'])) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter max_register');
             }
@@ -193,21 +193,21 @@ final class PwgUsers
             $where_clauses[] = 'ui.registration_date <= \'' . $max_date . ' 23:59:59\'';
         }
 
-        if (! empty($params['status'])) {
+        if (isset($params['status']) && $params['status'] !== []) {
             $params['status'] = array_intersect($params['status'], new DbInfo($conn)->getEnums(Tables::userInfos(), 'status'));
             if (count($params['status']) > 0) {
                 $where_clauses[] = 'ui.status IN("' . implode('","', $params['status']) . '")';
             }
         }
 
-        if (! empty($params['min_level'])) {
+        if ($params['min_level'] !== 0) {
             if (! in_array($params['min_level'], $available_permission_levels)) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
             }
             $where_clauses[] = 'ui.level >= ' . $params['min_level'];
         }
 
-        if (! empty($params['max_level'])) {
+        if (! in_array($params['max_level'] ?? null, [null, false, 0, '0', '', []], true)) {
             if (! in_array($params['max_level'], $available_permission_levels)) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
             }
@@ -218,11 +218,11 @@ final class PwgUsers
             $where_clauses[] = 'ui.level <= ' . $max_level;
         }
 
-        if (! empty($params['group_id'])) {
+        if (isset($params['group_id']) && $params['group_id'] !== []) {
             $where_clauses[] = 'ug.group_id IN(' . implode(',', $params['group_id']) . ')';
         }
 
-        if (! empty($params['exclude'])) {
+        if (isset($params['exclude']) && $params['exclude'] !== []) {
             $where_clauses[] = 'u.' . $user_field_id . ' NOT IN(' . implode(',', $params['exclude']) . ')';
         }
 
@@ -321,7 +321,7 @@ SELECT DISTINCT ';
   WHERE
     ' . implode(' AND ', $where_clauses) . '
   ORDER BY ' . $params['order'];
-        if ($params['per_page'] !== 0 || ! empty($display_flags)) {
+        if ($params['per_page'] !== 0 || $display_flags !== []) {
             $query .= '
     LIMIT ' . $params['per_page'] . '
     OFFSET ' . ($params['per_page'] * $params['page']) . ';
@@ -387,7 +387,7 @@ SELECT DISTINCT ';
                     $last_visit = is_string($cur_user['last_visit']) ? $cur_user['last_visit'] : null;
                     $users[$cur_user_id]['last_visit'] = $last_visit;
 
-                    if (! SqlDialect::getBoolean($cur_user['last_visit_from_history']) and empty($last_visit)) {
+                    if (! SqlDialect::getBoolean($cur_user['last_visit_from_history']) and in_array($last_visit, [null, ''], true)) {
                         $last_visit = self::authService($conn)->getUserLastVisitFromHistory($cur_user_id, true);
                         $users[$cur_user_id]['last_visit'] = $last_visit;
                     }
@@ -408,7 +408,7 @@ SELECT DISTINCT ';
         // in.
         $users_after_trigger = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('ws_users_getList', $users);
         $users = is_array($users_after_trigger) ? $users_after_trigger : $users;
-        if ($params['per_page'] === 0 && empty($display_flags)) {
+        if ($params['per_page'] === 0 && $display_flags === []) {
             $method_result = $users_id_arr;
         } else {
             $method_result = [
@@ -677,7 +677,7 @@ SELECT
             );
         }
 
-        if (! empty($params['password'])) {
+        if (isset($params['password']) && $params['password'] !== '') {
             if (($params['new_password'] ?? '') !== ($params['conf_new_password'] ?? '')) {
                 return new PwgError(403, Lang::t('The passwords do not match'));
             }
@@ -868,7 +868,7 @@ DELETE
         $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
         $conf_order_by_raw = \Piwigo\Config\Config::all()['order_by'] ?? null;
         $conf_order_by = is_string($conf_order_by_raw) ? $conf_order_by_raw : '';
-        $order_by = empty($order_by) ? $conf_order_by : 'ORDER BY ' . $order_by;
+        $order_by = $order_by === '' ? $conf_order_by : 'ORDER BY ' . $order_by;
         $current_user_id = (string) \Piwigo\Users\CurrentUser::get()->id;
 
         $query = '
@@ -973,7 +973,7 @@ SELECT
         // parameter.
         $gallery_title = \Piwigo\Config\Config::galleryTitle();
 
-        if ($params['send_by_mail'] and ! empty($user_lost_email)) {
+        if ($params['send_by_mail'] and ! in_array($user_lost_email, [null, ''], true)) {
             $user_lost_username = is_string($user_lost['username']) ? $user_lost['username'] : '';
             if ($first_login) {
                 $email_params = new MailService()

@@ -175,7 +175,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // | Treatment of tab post                                                 |
         // +-----------------------------------------------------------------------+
 
-        if (! empty($_POST)) {
+        if ($_POST !== []) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail($htmlRenderer, $this->redirectService);
         }

@@ -60,7 +60,7 @@ final class CatPermPageRenderer
         // |                           form submission                         |
         // +-------------------------------------------------------------------+
 
-        if (! empty($_POST)) {
+        if ($_POST !== []) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(new HtmlService(), $this->redirectService);
 

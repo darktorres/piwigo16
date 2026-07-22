@@ -70,7 +70,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
                 ->fatalError('synchronization is disabled');
         }
 
-        if (! empty($_POST) or isset($_GET['action'])) {
+        if ($_POST !== [] or isset($_GET['action'])) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(new HtmlService(), $this->redirectService);
         }
@@ -93,7 +93,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         // +-----------------------------------------------------------------------+
         // |                        new site creation form                         |
         // +-----------------------------------------------------------------------+
-        if (isset($_POST['submit']) and ! empty($_POST['galleries_url']) and is_string($_POST['galleries_url'])) {
+        if (isset($_POST['submit']) and ! in_array($_POST['galleries_url'], [null, false, 0, '0', '', []], true) and is_string($_POST['galleries_url'])) {
             $galleries_url_input = $_POST['galleries_url'];
             $is_remote = $this->urlService->urlIsRemote($galleries_url_input);
             if ($is_remote) {

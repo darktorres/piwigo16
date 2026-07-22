@@ -72,7 +72,7 @@ class Inflector_fr implements InflectorInterface
 
         $rc = $this->exceptions[$word] ?? null;
         if (isset($rc)) {
-            if (! empty($rc)) {
+            if (is_string($rc) && $rc !== '') {
                 $res[] = $rc;
             }
             return $res;

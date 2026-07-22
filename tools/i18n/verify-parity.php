@@ -33,10 +33,6 @@ function read_po_keys(string $poFile): array
         }
     }
 
-    // getOriginal(): string and getPlural(): ?string (Gettext\Translation) --
-    // every key assigned above is a real string, but PHPStan's accumulator
-    // inference across the loop widens $keys to array<true> anyway.
-    // @phpstan-ignore return.type
     return $keys;
 }
 

@@ -153,10 +153,10 @@ final class PwgTags
         $tag_ids = array_keys($tags_by_id);
 
         $where_clauses = WsHelper::stdImageSqlFilter($params, $service);
-        $where_clauses = ! empty($where_clauses) ? implode(' AND ', $where_clauses) : '';
+        $where_clauses = $where_clauses !== [] ? implode(' AND ', $where_clauses) : '';
 
         $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
-        if (! empty($order_by)) {
+        if ($order_by !== '') {
             $order_by = 'ORDER BY ' . $order_by;
         }
         $image_ids = $tagService->getImageIdsForTags(
@@ -177,7 +177,7 @@ final class PwgTags
 
         $image_tag_map = [];
         // build list of image ids with associated tags per image
-        if (! empty($image_ids) and ! $params['tag_mode_and']) {
+        if ($image_ids !== [] and ! $params['tag_mode_and']) {
             $query = '
 SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
   FROM ' . Tables::imageTag() . '
@@ -193,7 +193,7 @@ SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
 
         $images = [];
         $urlService = new UrlService(new HtmlService());
-        if (! empty($image_ids)) {
+        if ($image_ids !== []) {
             $rank_of = array_flip($image_ids);
             $favorite_ids = $urlService->getUserFavorites();
 
@@ -397,7 +397,7 @@ SELECT name
         if (in_array($tag_name, $existing_names)) {
             return new PwgError(WsError::INVALID_PARAM, 'This name is already token');
         }
-        if (! empty($tag_name)) {
+        if ($tag_name !== '') {
             // realEscapeString() dropped: BatchWriter::singleUpdate() below
             // parameterizes $update['name'] instead of interpolating it,
             // same "dead pre-escaping" rationale as

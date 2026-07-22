@@ -70,15 +70,15 @@ final class PwgComments
 
         $where_clauses = ['1=1'];
 
-        if (isset($params['author_id']) and ! empty($params['author_id'])) {
+        if (isset($params['author_id']) and $params['author_id'] !== 0) {
             $where_clauses['author_id'] = 'author_id = ' . $params['author_id'];
         }
 
-        if (isset($params['image_id']) and ! empty($params['image_id'])) {
+        if (isset($params['image_id']) and $params['image_id'] !== 0) {
             $where_clauses[] = 'image_id = ' . $params['image_id'];
         }
 
-        if (! empty($params['f_min_date'])) {
+        if (! in_array($params['f_min_date'], [null, ''], true)) {
             $min_date = date_create($params['f_min_date']);
             if ($min_date === false) {
                 return new PwgError(401, 'Invalid f_min_date');
@@ -87,7 +87,7 @@ final class PwgComments
             $where_clauses[] = 'date >= \'' . $min . '\'';
         }
 
-        if (! empty($params['f_max_date'])) {
+        if (! in_array($params['f_max_date'], [null, ''], true)) {
             $max_date = date_create($params['f_max_date']);
             if ($max_date === false) {
                 return new PwgError(401, 'Invalid f_max_date');
@@ -97,7 +97,7 @@ final class PwgComments
         }
 
         // reset all filters during search
-        if (! empty($params['search'])) {
+        if (! in_array($params['search'], [null, ''], true)) {
             $where_clauses = ['1=1'];
             // [SEC-18] real DBAL driver escaping via Connection::quote()
             // (includes its own surrounding quotes), replacing the
@@ -187,7 +187,7 @@ SELECT
             $medium = $medium_derivative->get_url();
 
             $row_author = is_string($row['author']) ? $row['author'] : null;
-            if (empty($row['author_id']) or (is_numeric($row['author_id']) and (int) $row['author_id'] === \Piwigo\Config\Config::guestId())) {
+            if (! is_numeric($row['author_id']) or (int) $row['author_id'] === 0 or (int) $row['author_id'] === \Piwigo\Config\Config::guestId()) {
                 $author_name = $row_author;
             } else {
                 $row_username = $row['username'] ?? null;

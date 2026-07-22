@@ -141,7 +141,7 @@ class PwgImage
 
         $image->resize($resize_dimensions['width'], $resize_dimensions['height']);
 
-        if (! empty($rotation)) {
+        if ($rotation !== null && $rotation !== 0) {
             $image->rotate($rotation);
         }
 
@@ -432,7 +432,7 @@ class PwgImage
         $imagick_dir = \Piwigo\Config\Config::extImagickDir();
         // [SEC-16] see the escapeshellarg() note above.
         @exec(escapeshellarg($imagick_dir) . self::get_ext_imagick_command() . ' -version', $returnarray);
-        if (! empty($returnarray[0]) and (bool) preg_match('/ImageMagick/i', $returnarray[0])) {
+        if (isset($returnarray[0]) && $returnarray[0] !== '' && $returnarray[0] !== '0' and (bool) preg_match('/ImageMagick/i', $returnarray[0])) {
             if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 self::$ext_imagick_version = $match[1];
             }

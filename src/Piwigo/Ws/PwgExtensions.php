@@ -124,7 +124,7 @@ final class PwgExtensions
             ->scan(ExtensionType::Plugin, $urlService)[$params['plugin']] ?? null;
         $errors = $lifecycle->performAction(ExtensionType::Plugin, $params['action'], $params['plugin'], $fsEntry);
 
-        if (! empty($errors)) {
+        if ($errors !== []) {
             return new PwgError(500, implode(', ', array_filter($errors, is_string(...))));
         } else {
             if (in_array($params['action'], ['activate', 'deactivate'])) {
@@ -170,7 +170,7 @@ final class PwgExtensions
             ->scan(ExtensionType::Theme, $urlService)[$params['theme']] ?? null;
         $errors = $lifecycle->performAction(ExtensionType::Theme, $params['action'], $params['theme'], $fsEntry);
 
-        if (! empty($errors)) {
+        if ($errors !== []) {
             return new PwgError(500, implode(', ', $errors));
         } else {
             if (in_array($params['action'], ['activate', 'deactivate'])) {
@@ -338,7 +338,7 @@ final class PwgExtensions
 
         // Reset ignored extension
         if ($params['reset']) {
-            if (! empty($params['type']) and isset($updates_ignored[$params['type']])) {
+            if (! in_array($params['type'], [null, ''], true) and isset($updates_ignored[$params['type']])) {
                 $updates_ignored[$params['type']] = [];
             } else {
                 $updates_ignored = [
@@ -354,7 +354,7 @@ final class PwgExtensions
             return true;
         }
 
-        if (empty($params['id']) or empty($params['type']) or ! in_array($params['type'], ['plugins', 'themes', 'languages'])) {
+        if (in_array($params['id'], [null, ''], true) or in_array($params['type'], [null, ''], true) or ! in_array($params['type'], ['plugins', 'themes', 'languages'])) {
             return new PwgError(403, 'Invalid parameters');
         }
 
@@ -400,7 +400,7 @@ final class PwgExtensions
         if (! is_array($_SESSION['extensions_need_update'])) {
             $result['ext_need_update'] = null;
         } else {
-            $result['ext_need_update'] = ! empty($_SESSION['extensions_need_update']);
+            $result['ext_need_update'] = $_SESSION['extensions_need_update'] !== [];
         }
 
         return $result;

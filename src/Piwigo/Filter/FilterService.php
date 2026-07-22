@@ -148,7 +148,7 @@ final class FilterService implements FilterUpdaterInterface
                 \Piwigo\Users\CurrentUser::set($currentUser->withRawAttribute('last_photo_date', $computedCategories['lastPhotoDate']));
 
                 $filter['visible_categories'] = implode(',', array_keys($filter['categories']));
-                if (empty($filter['visible_categories'])) {
+                if ($filter['visible_categories'] === '') {
                     // Must be not empty
                     $filter['visible_categories'] = -1;
                 }
@@ -173,7 +173,7 @@ WHERE ';
                 );
                 $filter['visible_images'] = implode(',', $visible_image_ids);
 
-                if (empty($filter['visible_images'])) {
+                if ($filter['visible_images'] === '') {
                     // Must be not empty
                     $filter['visible_images'] = -1;
                 }

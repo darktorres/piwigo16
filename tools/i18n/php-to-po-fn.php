@@ -34,7 +34,7 @@ function convert_lang_php_to_po(string $phpFile, string $locale, array $pairs): 
         include $phpFile;
     })();
 
-    if (empty($lang)) {
+    if ($lang === []) {
         return null;
     }
 

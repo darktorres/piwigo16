@@ -416,7 +416,7 @@ class CalendarMonthly extends CalendarBase
             $items[$day]['dow'] = is_numeric($row['dow']) ? (int) $row['dow'] : 0;
         }
 
-        if (! empty($items)) {
+        if ($items !== []) {
             [$known_day] = array_keys($items);
             $known_dow = $items[$known_day]['dow'];
             $first_day_dow = ($known_dow - ($known_day - 1)) % 7;

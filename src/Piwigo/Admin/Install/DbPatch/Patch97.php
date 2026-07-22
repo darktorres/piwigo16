@@ -56,8 +56,8 @@ SELECT
 
         $data = [
             'user_id' => $defaultUserId,
-            'theme' => empty($theme) ? 'Sylvia' : $theme,
-            'language' => empty($language) ? 'en_UK' : $language,
+            'theme' => $theme === '' ? 'Sylvia' : $theme,
+            'language' => $language === '' ? 'en_UK' : $language,
         ];
 
         new BatchWriter($conn)

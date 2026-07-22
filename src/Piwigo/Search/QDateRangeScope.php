@@ -92,7 +92,7 @@ class QDateRangeScope extends QSearchScope
             $clauses[] = $field . ' <= \'' . $date_range_1 . '\'';
         }
 
-        if (empty($clauses)) {
+        if ($clauses === []) {
             if ((bool) ($token->modifier & QSingleToken::QST_WILDCARD)) {
                 return $field . ' IS NOT NULL';
             } else {

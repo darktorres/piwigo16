@@ -313,8 +313,8 @@ final readonly class AuthService
         $password_verify = $this->passwordService->verify($password ?? '', $hash, $verify_user_id);
 
         // If the user was not found, is a guest, or the password is incorrect
-        if (empty($user_found) || $user_found['status'] === 'guest' || ! $password_verify) {
-            if (! empty($user_found) && ! $password_verify) {
+        if ($user_found === null || $user_found === [] || $user_found['status'] === 'guest' || ! $password_verify) {
+            if ($user_found !== null && $user_found !== [] && ! $password_verify) {
                 $found_user_id = $user_found['id'];
                 assert(is_string($found_user_id));
                 $this->activityLogger->record('user', $found_user_id, 'login_failure_wrong_password');
@@ -514,7 +514,7 @@ final readonly class AuthService
             $fortyEightHoursAgo = (clone $now)->modify('-48 hours');
             if (
                 $days_left <= 7 // the key expire in max 7 days
-                and ! empty($key['email']) // the user have an email
+                and ! in_array($key['email'], [null, false, 0, '0', '', []], true) // the user have an email
                 and (
                     $key['last_notified_on'] === null // we never send an email for this key
                     or strtotime($key['last_notified_on']) < $fortyEightHoursAgo->getTimestamp() // OR when the last email was sent more than 48 hours ago

@@ -58,7 +58,7 @@ final class CatListPageRenderer
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_cat_list');
 
-        if (! empty($_POST) or isset($_GET['delete'])) {
+        if ($_POST !== [] or isset($_GET['delete'])) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(new HtmlService(), $this->redirectService);
         }
@@ -322,11 +322,11 @@ SELECT
                   'U_ADD_PHOTOS_ALBUM' => $base_url . 'photos_add&amp;album=' . $cat_id,
                   'U_MOVE' => $base_url . 'albums#cat-' . $cat_id,
 
-                  'IS_VIRTUAL' => empty($category['dir']),
+                  'IS_VIRTUAL' => in_array($category['dir'], [null, '', '0'], true),
                   'CAT_ADMIN_ACCESS' => $categoryService->catAdminAccess($cat_id),
               ];
 
-            if (empty($category['dir'])) {
+            if (in_array($category['dir'], [null, '', '0'], true)) {
                 $tpl_cat['U_DELETE'] = $self_url . '&amp;delete=' . $cat_id;
                 $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken();
             } else {

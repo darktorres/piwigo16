@@ -80,7 +80,7 @@ SELECT id
             );
         }
 
-        if (! empty($inserts)) {
+        if ($inserts !== []) {
             new BatchWriter($conn)
                 ->massInsert(
                     '`' . Tables::upgrade() . '`',

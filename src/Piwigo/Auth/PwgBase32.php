@@ -70,7 +70,7 @@ class PwgBase32
      */
     public static function encode(string $input, bool $padding = true): string
     {
-        if (empty($input)) {
+        if ($input === '') {
             return '';
         }
         $input = str_split($input);
@@ -101,7 +101,7 @@ class PwgBase32
 
     public static function decode(string $input): string|false|null
     {
-        if (empty($input)) {
+        if ($input === '') {
             return null;
         }
         $paddingCharCount = substr_count($input, self::$map[32]);

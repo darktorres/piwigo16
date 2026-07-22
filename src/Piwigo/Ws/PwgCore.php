@@ -87,7 +87,7 @@ final class PwgCore
      */
     public static function getMissingDerivatives(array $params, PwgServer &$service): PwgError|array
     {
-        if (empty($params['types'])) {
+        if ($params['types'] === []) {
             $types = array_keys(ImageStdParams::get_defined_type_map());
         } else {
             $types = array_intersect(array_keys(ImageStdParams::get_defined_type_map()), $params['types']);
@@ -127,7 +127,7 @@ final class PwgCore
         $where_clauses = WsHelper::stdImageSqlFilter($params, $service, '');
         $where_clauses[] = 'id<start_id';
 
-        if (! empty($params['ids'])) {
+        if ($params['ids'] !== []) {
             $where_clauses[] = 'id IN (' . implode(',', $params['ids']) . ')';
         }
 
@@ -282,7 +282,7 @@ SELECT id, path, representative_ext, width, height, rotation
         if (function_exists('exec')) {
             @exec('du -sk ' . $path_cache, $return_array_cache);
             if (
-                ! empty($return_array_cache[0])
+                isset($return_array_cache[0]) && $return_array_cache[0] !== '' && $return_array_cache[0] !== '0'
                 and (bool) preg_match('/^(\d+)\s/', $return_array_cache[0], $matches_cache)
             ) {
                 $infos['cache_size'] = $matches_cache[1] * 1024;
@@ -324,7 +324,7 @@ SELECT id, path, representative_ext, width, height, rotation
         if (function_exists('exec')) {
             @exec('du -sk ' . $path_template_c, $return_array_template_c);
             if (
-                ! empty($return_array_template_c[0])
+                isset($return_array_template_c[0]) && $return_array_template_c[0] !== '' && $return_array_template_c[0] !== '0'
                 and (bool) preg_match('/^(\d+)\s/', $return_array_template_c[0], $matches_template_c)
             ) {
                 $infos['tsizes'] = $matches_template_c[1] * 1024;
@@ -378,10 +378,10 @@ SELECT id, path, representative_ext, width, height, rotation
 DELETE FROM ' . Tables::rate() . '
   WHERE user_id=' . $params['user_id'];
 
-        if (! empty($params['anonymous_id'])) {
+        if (! in_array($params['anonymous_id'], [null, ''], true)) {
             $query .= ' AND anonymous_id=\'' . $params['anonymous_id'] . '\'';
         }
-        if (! empty($params['image_id'])) {
+        if (isset($params['image_id']) and $params['image_id'] !== 0) {
             $query .= ' AND element_id=' . $params['image_id'];
         }
 
@@ -523,7 +523,7 @@ DELETE FROM ' . Tables::rate() . '
         $conn = DbConnection::build();
 
         foreach (['date_min', 'date_max'] as $datefield) {
-            if (! empty($param[$datefield]) and ! \Piwigo\Core\DateHelper::isValidMysqlDatetime($param[$datefield])) {
+            if (! in_array($param[$datefield], [null, ''], true) and ! \Piwigo\Core\DateHelper::isValidMysqlDatetime($param[$datefield])) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid ' . $datefield);
             }
         }
@@ -543,7 +543,7 @@ DELETE FROM ' . Tables::rate() . '
         // condition that sets them here is true again.
         $min = null;
         $max = null;
-        if (! empty($param['date_min'])) {
+        if (! in_array($param['date_min'], [null, ''], true)) {
             // is_valid_mysql_datetime() above already validated date_min; a
             // valid Y-m-d[ H:i:s] string always parses
             $min_date = date_create($param['date_min']);
@@ -558,7 +558,7 @@ DELETE FROM ' . Tables::rate() . '
             $max = date_format($max_date, 'Y-m-d 23:59:59');
         }
 
-        if (! empty($param['date_max'])) {
+        if (! in_array($param['date_max'], [null, ''], true)) {
             $max_date = date_create($param['date_max']);
             assert($max_date !== false);
             $max = date_format($max_date, 'Y-m-d 23:59:59');
@@ -581,17 +581,17 @@ DELETE FROM ' . Tables::rate() . '
     AND object = ' . $conn->quote($param['object']);
         }
 
-        if (! empty($param['date_min'])) {
+        if (! in_array($param['date_min'], [null, ''], true)) {
             $where .= '
     AND occured_on >= "' . $min . '"';
         }
 
-        if (! empty($param['date_max'])) {
+        if (! in_array($param['date_max'], [null, ''], true)) {
             $where .= '
     AND occured_on <= "' . $max . '"';
         }
 
-        if (! empty($param['id'])) {
+        if ($param['id'] !== null and $param['id'] !== 0) {
             $where .= '
     AND object_id = ' . $param['id'];
         }
@@ -798,25 +798,25 @@ SELECT
     public static function historyLog(array $params, PwgServer &$service): void
     {
         $section = null;
-        if (! empty($params['section']) and in_array($params['section'], new DbInfo(DbConnection::build())->getEnums(Tables::history(), 'section'))) {
+        if (! in_array($params['section'], [null, ''], true) and in_array($params['section'], new DbInfo(DbConnection::build())->getEnums(Tables::history(), 'section'))) {
             $section = $params['section'];
         }
 
         $category = null;
-        if (! empty($params['cat_id'])) {
+        if ($params['cat_id'] !== null and $params['cat_id'] !== 0) {
             $category = [
                 'id' => $params['cat_id'],
             ];
         }
 
         $tagIds = null;
-        if (! empty($params['tags_string']) and (bool) preg_match('/^\d+(,\d+)*$/', $params['tags_string'])) {
+        if (! in_array($params['tags_string'], [null, ''], true) and (bool) preg_match('/^\d+(,\d+)*$/', $params['tags_string'])) {
             $tagIds = array_map(intval(...), explode(',', $params['tags_string']));
         }
 
         // when visiting a photo (which is currently, in version 14, the only event registered
         // by pwg.history.log) we should also increment images.hit
-        if (! empty($params['image_id'])) {
+        if ($params['image_id'] !== 0) {
             new ImageRepository(DbConnection::build())->incrementVisitCounter($params['image_id']);
         }
 
@@ -826,7 +826,7 @@ SELECT
         }
 
         self::historyService()->logVisit(
-            is_numeric($params['image_id']) ? (int) $params['image_id'] : null,
+            $params['image_id'],
             $image_type,
             section: $section,
             category: $category,
@@ -897,21 +897,21 @@ SELECT
         $search['fields'] = [];
 
         // date start
-        if (! empty($param['start'])) {
+        if (! in_array($param['start'], [null, ''], true)) {
             new \Piwigo\Validation\InputValidator()
                 ->validate('start', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
             $search['fields']['date-after'] = $param['start'];
         }
 
         // date end
-        if (! empty($param['end'])) {
+        if (! in_array($param['end'], [null, ''], true)) {
             new \Piwigo\Validation\InputValidator()
                 ->validate('end', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
             $search['fields']['date-before'] = $param['end'];
         }
 
         // types
-        if (empty($param['types'])) {
+        if ($param['types'] === []) {
             $search['fields']['types'] = $types;
         } else {
             new \Piwigo\Validation\InputValidator()
@@ -923,7 +923,7 @@ SELECT
         $search['fields']['user'] = intval($param['user_id']);
 
         // image
-        if (! empty($param['image_id'])) {
+        if ($param['image_id'] !== null and $param['image_id'] !== 0) {
             $search['fields']['image_id'] = intval($param['image_id']);
         }
 
@@ -935,12 +935,12 @@ SELECT
         // rationale as this phase's other occurrences. The '*' -> '%'
         // wildcard conversion is unrelated to escaping and stays exactly
         // as-is.
-        if (! empty($param['filename'])) {
+        if (! in_array($param['filename'], [null, ''], true)) {
             $search['fields']['filename'] = str_replace('*', '%', $param['filename']);
         }
 
         // ip
-        if (! empty($param['ip'])) {
+        if (! in_array($param['ip'], [null, ''], true)) {
             $search['fields']['ip'] = str_replace('*', '%', $param['ip']);
         }
 
@@ -950,7 +950,7 @@ SELECT
 
         $search['fields']['display_thumbnail'] = $param['display_thumbnail'];
         // Display choise are also save to one cookie
-        if (! empty($param['display_thumbnail'])
+        if ($param['display_thumbnail'] !== ''
             and isset($display_thumbnails[$param['display_thumbnail']])) {
             $cookie_val = $param['display_thumbnail'];
         } else {
@@ -1090,12 +1090,12 @@ SELECT
                     : [];
 
                 $rules_tags = is_array($rules_search['tags'] ?? null) ? $rules_search['tags'] : [];
-                if (! empty($rules_tags['words'])) {
+                if (! in_array($rules_tags['words'] ?? null, [null, false, 0, '0', '', []], true)) {
                     $has_tags = true;
                 }
 
                 $rules_cat = is_array($rules_search['cat'] ?? null) ? $rules_search['cat'] : [];
-                if (! empty($rules_cat['words']) and is_array($rules_cat['words'])) {
+                if (! in_array($rules_cat['words'] ?? null, [null, false, 0, '0', '', []], true) and is_array($rules_cat['words'])) {
                     foreach ($rules_cat['words'] as $cat_id) {
                         if (is_string($cat_id) || is_int($cat_id)) {
                             $category_ids[] = (string) $cat_id;
@@ -1104,7 +1104,7 @@ SELECT
                 }
 
                 $rules_added_by = $rules_search['added_by'] ?? null;
-                if (! empty($rules_added_by) and is_array($rules_added_by)) {
+                if (! in_array($rules_added_by, [null, false, 0, '0', '', []], true) and is_array($rules_added_by)) {
                     foreach ($rules_added_by as $key) {
                         if (is_string($key) || is_int($key)) {
                             $user_ids[$key] = 1;
@@ -1382,14 +1382,15 @@ SELECT
 
                 $filetypes = $search_detail_fields['filetypes'] ?? null;
 
+                $is_falsy = static fn (mixed $v): bool => in_array($v, [null, false, 0, 0.0, '0', '', []], true);
                 $search_detail = [
-                    'allwords' => ! empty($allwords_words) ? $allwords_words : null,
-                    'tags' => ! empty($tags_words) ? array_intersect_key($name_of_tag, array_flip($tags_words)) : null,
-                    'date_posted' => ! empty($date_posted) ? $date_posted : null,
-                    'cat' => ! empty($cat_words) ? array_intersect_key($name_of_category, array_flip($cat_words)) : null,
-                    'author' => ! empty($author_words) ? $author_words : null,
-                    'added_by' => ! empty($added_by) ? array_intersect_key($username_of, array_flip($added_by)) : null,
-                    'filetypes' => ! empty($filetypes) ? $filetypes : null,
+                    'allwords' => ! $is_falsy($allwords_words) ? $allwords_words : null,
+                    'tags' => $tags_words !== null && $tags_words !== [] ? array_intersect_key($name_of_tag, array_flip($tags_words)) : null,
+                    'date_posted' => ! $is_falsy($date_posted) ? $date_posted : null,
+                    'cat' => $cat_words !== null && $cat_words !== [] ? array_intersect_key($name_of_category, array_flip($cat_words)) : null,
+                    'author' => ! $is_falsy($author_words) ? $author_words : null,
+                    'added_by' => $added_by !== null && $added_by !== [] ? array_intersect_key($username_of, array_flip($added_by)) : null,
+                    'filetypes' => ! $is_falsy($filetypes) ? $filetypes : null,
                 ];
             } else {
                 $search_detail = null;

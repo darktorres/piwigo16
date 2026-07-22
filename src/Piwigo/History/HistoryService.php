@@ -113,7 +113,7 @@ final readonly class HistoryService
         $sessionLength = \Piwigo\Config\Config::sessionLength();
 
         $updateLastVisit = false;
-        if (empty($lastVisit) or strtotime($lastVisitStr) < time() - $sessionLength) {
+        if (in_array($lastVisit, [null, false, 0, '0', '', []], true) or strtotime($lastVisitStr) < time() - $sessionLength) {
             $updateLastVisit = true;
         }
         $updateLastVisit = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('pwg_log_update_last_visit', $updateLastVisit);

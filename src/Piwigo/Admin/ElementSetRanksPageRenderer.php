@@ -109,7 +109,7 @@ final class ElementSetRanksPageRenderer
                     );
             }
 
-            if (! empty($_POST['image_order_choice'])
+            if (! in_array($_POST['image_order_choice'] ?? null, [null, false, 0, '0', '', []], true)
                 && in_array($_POST['image_order_choice'], $image_order_choices)) {
                 $image_order_choice = $_POST['image_order_choice'];
             }
@@ -122,7 +122,7 @@ final class ElementSetRanksPageRenderer
                 for ($i = 0; $i < 3; $i++) {
                     $order_value = $post_image_order[$i] ?? null;
                     if (is_string($order_value) && $order_value !== '' && in_array($order_value, array_keys($sort_fields), true)) {
-                        if (! empty($image_order)) {
+                        if (! in_array($image_order, [null, ''], true)) {
                             $image_order .= ',';
                         }
                         $image_order .= $order_value;
@@ -215,7 +215,7 @@ SELECT
             foreach ($thumbnail_rows as $row) {
                 $derivative = new DerivativeImage($derivativeParams, new SrcImage($row));
 
-                if (! empty($row['name'])) {
+                if (! in_array($row['name'], [null, false, 0, '0', '', []], true)) {
                     $thumbnail_name = $row['name'];
                 } else {
                     $file_wo_ext = is_string($row['file']) ? \Piwigo\Core\StringHelper::getFilenameWoExtension($row['file']) : '';

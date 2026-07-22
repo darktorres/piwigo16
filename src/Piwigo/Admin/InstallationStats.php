@@ -143,7 +143,7 @@ SELECT
             $candidate = $users[0]['registration_date'];
         }
 
-        if (empty($candidate) or ! is_string($candidate) or strtotime($candidate) < strtotime($piwigo_origins)) {
+        if (in_array($candidate, [null, false, 0, '0', '', []], true) or ! is_string($candidate) or strtotime($candidate) < strtotime($piwigo_origins)) {
             $query = '
 SELECT
     MIN(registration_date) AS min_registration_date
@@ -156,7 +156,7 @@ SELECT
             }
         }
 
-        if (empty($candidate) or ! is_string($candidate) or strtotime($candidate) < strtotime($piwigo_origins)) {
+        if (in_array($candidate, [null, false, 0, '0', '', []], true) or ! is_string($candidate) or strtotime($candidate) < strtotime($piwigo_origins)) {
             // let's find another candidate
             $query = '
 SELECT

@@ -239,7 +239,7 @@ final class NotificationByMailSender
         $this->sentMailCount++;
 
         $msgInfo = $this->msgInfo ?? 'Mail sent to %s [%s].';
-        \Piwigo\Core\PageState::current()->addInfo(sprintf($msgInfo, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
+        \Piwigo\Core\PageState::current()->addInfo(sprintf($msgInfo, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address'] ?? ''));
     }
 
     /**
@@ -250,7 +250,7 @@ final class NotificationByMailSender
         $this->errorOnMailCount++;
 
         $msgError = $this->msgError ?? 'Error when sending email to %s [%s].';
-        \Piwigo\Core\PageState::current()->addError(sprintf($msgError, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
+        \Piwigo\Core\PageState::current()->addError(sprintf($msgError, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address'] ?? ''));
     }
 
     public function displayCounterInfo(): void
@@ -421,10 +421,10 @@ final class NotificationByMailSender
                         'enabled' => $enabledValue,
                     ];
                     ++$updatedDataCount;
-                    \Piwigo\Core\PageState::current()->addInfo(sprintf($msgInfo, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
+                    \Piwigo\Core\PageState::current()->addInfo(sprintf($msgInfo, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address'] ?? ''));
                 } else {
                     ++$errorOnUpdatedDataCount;
-                    \Piwigo\Core\PageState::current()->addError(sprintf($msgError, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
+                    \Piwigo\Core\PageState::current()->addError(sprintf($msgError, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address'] ?? ''));
                 }
             }
 

@@ -153,15 +153,15 @@ class BlockManager
      */
     protected function sort_blocks(): void
     {
-        uasort($this->display_blocks, [self::class, 'cmp_by_position']);
+        uasort($this->display_blocks, self::cmp_by_position(...));
     }
 
     /**
      * Callback for blocks sorting.
      */
-    protected static function cmp_by_position(DisplayBlock $a, DisplayBlock $b): int|float
+    protected static function cmp_by_position(DisplayBlock $a, DisplayBlock $b): int
     {
-        return $a->get_position() - $b->get_position();
+        return $a->get_position() <=> $b->get_position();
     }
 
     /**

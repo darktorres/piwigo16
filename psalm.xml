@@ -493,6 +493,13 @@
                 <file name="src/Piwigo/Auth/AuthService.php"/>
                 <file name="src/Piwigo/Calendar/CalendarWeekly.php"/>
                 <file name="src/Piwigo/Controller/PasswordController.php"/>
+                <!-- $this->rel_path/$this->rel_url are untyped, uninitialized
+                     properties passed by-ref as build()'s own out-params
+                     (@var string documents the real contract) — the
+                     project's known "by-ref loses narrowing" limitation.
+                     composer analyse:phpstan is clean here with zero
+                     changes. -->
+                <file name="src/Piwigo/Image/DerivativeImage.php"/>
             </errorLevel>
         </PossiblyNullArgument>
     </issueHandlers>

@@ -221,7 +221,8 @@ final readonly class TagService
         // $persistent_cache->get()'s by-reference $value output param is
         // declared mixed (a cache hit could genuinely hold anything), so
         // narrow once here regardless of which branch above ran.
-        $tagCounters = is_array($tagCounters ?? null) ? $tagCounters : [];
+        $tagCountersRaw = $tagCounters ?? null;
+        $tagCounters = is_array($tagCountersRaw) ? $tagCountersRaw : [];
 
         if ($tagCounters === []) {
             return [];

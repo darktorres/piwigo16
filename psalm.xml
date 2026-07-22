@@ -482,10 +482,20 @@
              - PasswordController.php: $email is already proven non-null by
                $skip_mail (see the method's own inline comment: $skip_mail
                === false implies $email !== null/''). -->
+        <!-- $first = reset($imageIdsForFilter) inside the
+             `count($imageIdsForFilter) === 1` branch of an already-guarded
+             `$imageIdsForFilter !== []` block is always a real, non-empty
+             list<int> (every value stored into $imageIdsForFilter comes
+             from queryImageIdsFor(), which always returns list<int>).
+             PHPStan's flow analysis proves this and flags an explicit
+             is_array() re-check here as function.alreadyNarrowedType
+             (provably redundant). composer analyse:phpstan is clean here
+             with zero changes. -->
         <PossiblyFalseArgument>
             <errorLevel type="suppress">
                 <file name="src/Piwigo/Admin/Install/UpgradeService.php"/>
                 <file name="src/Piwigo/Controller/ImageDerivativeController.php"/>
+                <file name="src/Piwigo/Search/SearchService.php"/>
             </errorLevel>
         </PossiblyFalseArgument>
         <PossiblyNullArgument>
@@ -500,7 +510,31 @@
                      composer analyse:phpstan is clean here with zero
                      changes. -->
                 <file name="src/Piwigo/Image/DerivativeImage.php"/>
+                <!-- $mailAddress is already proven non-null here by
+                     $isEmpty (see $isEmpty's own definition two lines above:
+                     $isEmpty = $mailAddress === null || $mailAddress === '',
+                     and this call site is inside `! $isEmpty`). PHPStan's
+                     flow analysis proves it too, flagging an explicit
+                     `$mailAddress !== null` guard here as
+                     notIdentical.alwaysTrue (provably dead code). Psalm
+                     doesn't carry the correlation between the two
+                     separately-assigned locals. composer analyse:phpstan is
+                     clean here with zero changes. -->
+                <file name="src/Piwigo/Users/UserService.php"/>
             </errorLevel>
         </PossiblyNullArgument>
+        <!-- Smarty\Smarty::unregisterFilter()'s own docblock types its 2nd
+             param as `callback|string` — `callback` (no trailing e) isn't a
+             recognized pseudo-type, so it resolves to the unrelated class
+             Smarty\callback instead of PHP's native `callable`. The real
+             implementation accepts any callable; this is a vendor docblock
+             typo, not a bug in our code (see the matching inline
+             @phpstan-ignore comment at the same call site).
+             composer analyse:phpstan is clean here with zero changes. -->
+        <InvalidArgument>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Template/Template.php"/>
+            </errorLevel>
+        </InvalidArgument>
     </issueHandlers>
 </psalm>

@@ -111,14 +111,16 @@ class Logger
         $this->options['directory'] = rtrim(is_string($directory) ? $directory : '', '\\/') . DIRECTORY_SEPARATOR;
 
         $filename = $this->options['filename'];
-        if ($filename == null || ! is_string($filename)) {
+        if ($filename === null || ! is_string($filename) || $filename === '') {
             $filename = 'log_' . date('Y-m-d') . '.txt';
         }
         $this->options['filename'] = $filename;
 
         $this->options['filePath'] = $this->options['directory'] . $this->options['filename'];
 
-        if ($this->options['archiveDays'] != self::ARCHIVE_NO_PURGE && mt_rand() % 97 == 0) {
+        $archiveDaysOption = $this->options['archiveDays'];
+        $archiveDaysOption = is_numeric($archiveDaysOption) ? (int) $archiveDaysOption : self::ARCHIVE_NO_PURGE;
+        if ($archiveDaysOption !== self::ARCHIVE_NO_PURGE && mt_rand() % 97 === 0) {
             $this->purge();
         }
     }
@@ -128,7 +130,7 @@ class Logger
      */
     private function open(): void
     {
-        if ($this->status() == self::STATUS_LOG_CLOSED) {
+        if ($this->status() === self::STATUS_LOG_CLOSED) {
             $directory = $this->options['directory'];
             $directory = is_string($directory) ? $directory : '';
 
@@ -333,7 +335,7 @@ class Logger
     public function write($line): void
     {
         $this->open();
-        if ($this->status() == self::STATUS_LOG_OPEN) {
+        if ($this->status() === self::STATUS_LOG_OPEN) {
             // status() only reaches STATUS_LOG_OPEN in open()'s branch that
             // also assigns _fileHandle a real resource.
             assert($this->_fileHandle !== null);
@@ -387,7 +389,7 @@ class Logger
         $executionUuid = PageState::current()->executionUuid;
         $executionUuid = $executionUuid !== '' ? $executionUuid : 'unkonwn';
         $line = '[' . $this->getTimestamp() . '][exec=' . $executionUuid . "]\t[" . self::levelToCode($level) . "]\t";
-        if ($cat != null) {
+        if ($cat !== null) {
             $line .= '[' . $cat . "]\t";
         }
         return $line . $message . "\n";

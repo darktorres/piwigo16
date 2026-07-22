@@ -85,14 +85,14 @@ class PwgBase32
             $base32 .= self::$map[base_convert(str_pad($fiveBitBinaryArray[$i], 5, '0'), 2, 10)];
             $i++;
         }
-        if ($padding && ($x = strlen($binaryString) % 40) != 0) {
-            if ($x == 8) {
+        if ($padding && ($x = strlen($binaryString) % 40) !== 0) {
+            if ($x === 8) {
                 $base32 .= str_repeat(self::$map[32], 6);
-            } elseif ($x == 16) {
+            } elseif ($x === 16) {
                 $base32 .= str_repeat(self::$map[32], 4);
-            } elseif ($x == 24) {
+            } elseif ($x === 24) {
                 $base32 .= str_repeat(self::$map[32], 3);
-            } elseif ($x == 32) {
+            } elseif ($x === 32) {
                 $base32 .= self::$map[32];
             }
         }
@@ -111,8 +111,8 @@ class PwgBase32
         }
         for ($i = 0; $i < 4; $i++) {
             if (
-                $paddingCharCount == $allowedValues[$i] &&
-                substr($input, -($allowedValues[$i])) != str_repeat(self::$map[32], $allowedValues[$i])
+                $paddingCharCount === $allowedValues[$i] &&
+                substr($input, -($allowedValues[$i])) !== str_repeat(self::$map[32], $allowedValues[$i])
             ) {
                 return false;
             }
@@ -131,7 +131,7 @@ class PwgBase32
             $eightBits = str_split($x, 8);
             for ($z = 0; $z < count($eightBits); $z++) {
                 $codepoint = max(0, min(255, (int) base_convert($eightBits[$z], 2, 10)));
-                $binaryString .= ((bool) ($y = chr($codepoint)) || ord($y[0]) == 48) ? $y : '';
+                $binaryString .= ((bool) ($y = chr($codepoint)) || ord($y[0]) === 48) ? $y : '';
             }
         }
         return $binaryString;

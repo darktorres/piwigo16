@@ -261,14 +261,14 @@ final class NotificationByMailSender
 
     public function displayCounterInfo(): void
     {
-        if ($this->errorOnMailCount != 0) {
+        if ($this->errorOnMailCount !== 0) {
             \Piwigo\Core\PageState::current()->addError(Translator::get()->plural(
                 '%d mail was not sent.',
                 '%d mails were not sent.',
                 $this->errorOnMailCount
             ));
 
-            if ($this->sentMailCount != 0) {
+            if ($this->sentMailCount !== 0) {
                 \Piwigo\Core\PageState::current()->addInfo(Translator::get()->plural(
                     '%d mail was sent.',
                     '%d mails were sent.',
@@ -276,7 +276,7 @@ final class NotificationByMailSender
                 ));
             }
         } else {
-            if ($this->sentMailCount == 0) {
+            if ($this->sentMailCount === 0) {
                 \Piwigo\Core\PageState::current()->addInfo(Lang::t('No mail to send.'));
             } else {
                 \Piwigo\Core\PageState::current()->addInfo(Translator::get()->plural(
@@ -351,7 +351,7 @@ final class NotificationByMailSender
             $msgError = Lang::t('User %s [%s] was not removed from the subscription list.');
         }
 
-        if (count($checkKeyList) != 0) {
+        if (count($checkKeyList) !== 0) {
             $updates = [];
             $enabledValue = \Piwigo\Db\SqlDialect::booleanToString($isSubscribe);
             $dataUsers = $this->getUserNotifications('subscribe', $checkKeyList, ! $isSubscribe);
@@ -371,7 +371,7 @@ final class NotificationByMailSender
                 $checkKeyTreated[] = $nbmUser['check_key'];
 
                 $doUpdate = true;
-                if ($nbmUser['mail_address'] != '') {
+                if (($nbmUser['mail_address'] ?? '') !== '') {
                     $this->setUserOnEnv($nbmUser, true);
 
                     $subject = '[' . $galleryTitle . '] ' . ($isSubscribe ? Lang::t('Subscribe to notification by mail') : Lang::t('Unsubscribe from notification by mail'));
@@ -454,7 +454,7 @@ final class NotificationByMailSender
             $updatedDataCount
         ));
 
-        if ($errorOnUpdatedDataCount != 0) {
+        if ($errorOnUpdatedDataCount !== 0) {
             \Piwigo\Core\PageState::current()->addError(Translator::get()->plural(
                 '%d user was not updated.',
                 '%d users were not updated.',
@@ -487,7 +487,7 @@ final class NotificationByMailSender
             // clocks otherwise.
             $dbnow = \Piwigo\Core\Env::now()->format('Y-m-d H:i:s');
 
-            $isActionSend = ($action == 'send');
+            $isActionSend = ($action === 'send');
 
             // disabled and null mail_address are not selected in the list
             $dataUsers = $this->getUserNotifications('send', $checkKeyList);

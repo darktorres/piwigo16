@@ -568,7 +568,7 @@ final readonly class AuthService
         // table it comes back as a raw string (see load_conf_from_db())
         $auth_key_duration = \Piwigo\Config\Config::authKeyDuration();
 
-        if ($auth_key_duration == 0) {
+        if ($auth_key_duration === 0) {
             return false;
         }
 

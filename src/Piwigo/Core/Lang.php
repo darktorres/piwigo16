@@ -319,7 +319,7 @@ final class Lang
         if (! empty($current_user_language)) { // use language
             $languages[] = $current_user_language;
         }
-        if (($parent = self::getParentLanguage()) != null) { // parent language
+        if (($parent = self::getParentLanguage()) !== null) { // parent language
             // this is only for when the "child" language is missing
             $languages[] = $parent;
         }

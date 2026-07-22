@@ -11,7 +11,6 @@
     allowPhpStormGenerics="false"
     checkForThrowsDocblock="false"
     phpVersion="8.5"
-    errorBaseline="psalm-baseline.xml"
     allConstantsGlobal="true"
     allFunctionsGlobal="true"
 >

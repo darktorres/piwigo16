@@ -1552,8 +1552,6 @@ final readonly class CategoryService
     }
 
     /**
-     * Create a virtual category.
-     *
      * @param int|string|null $parentId ws_categories_add() passes null by
      *   default (WsParamType::INT param, unset by the caller), admin/cat_list.php
      *   passes a raw, unvalidated $_GET['parent_id'] string

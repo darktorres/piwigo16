@@ -619,8 +619,6 @@ final readonly class AuthService
     }
 
     /**
-     * Deactivates password reset key.
-     *
      * @since 11
      */
     public function deactivatePasswordResetKey(int $userId): void
@@ -719,8 +717,6 @@ final readonly class AuthService
     }
 
     /**
-     * Verify a user code.
-     *
      * @since 16
      */
     public static function verifyUserCode(string $secret, string $code): bool

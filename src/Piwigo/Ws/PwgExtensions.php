@@ -308,7 +308,6 @@ final class PwgExtensions
 
     /**
      * API method
-     * Ignore an update
      *
      * @param array{type: string|null, id: string|null, reset: bool, pwg_token: string, ...} $params
      *   type/id: null default, no 'type' flag -- always present, string|null.

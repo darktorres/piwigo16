@@ -1337,7 +1337,6 @@ UPDATE ' . Tables::imageCategory() . '
 
     /**
      * API method
-     * Adds a file
      * @param array{image_id: int, type: string, sum: string, ...} $params
      *    image_id: WsParamType::ID, mandatory. type: no WS_TYPE flag, defaults to
      *    'file'. sum: no WS_TYPE flag, mandatory -- both always plain strings

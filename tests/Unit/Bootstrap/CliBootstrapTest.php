@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Bootstrap\CliBootstrap;
 use Piwigo\Core\Kernel;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 
 beforeEach(function (): void {
@@ -17,14 +18,15 @@ afterEach(function (): void {
 test('config/commands.php entries resolve to registered command names', function (): void {
     $application = CliBootstrap::buildApplication();
 
+    /** @var list<class-string<Command>> $commandClasses */
     $commandClasses = require dirname(__DIR__, 3) . '/config/commands.php';
     expect($commandClasses)->toBeArray()->not->toBe([]);
 
     foreach ($commandClasses as $commandClass) {
         expect(is_subclass_of($commandClass, Command::class))->toBeTrue();
 
-        $name = new ReflectionClass($commandClass)->getAttributes()[0]->newInstance()->name;
-        expect($application->has($name))->toBeTrue();
+        $attribute = new ReflectionClass($commandClass)->getAttributes(AsCommand::class)[0]->newInstance();
+        expect($application->has($attribute->name))->toBeTrue();
     }
 });
 

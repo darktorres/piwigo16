@@ -66,9 +66,10 @@ final class ConfigServiceTest extends IntegrationTestCase
 
     public function test_loadConfFromDb_returns_quietly_when_param_not_found_and_dieIfNotFound_is_false(): void
     {
-        $this->service->loadConfFromDb('this_param_does_not_exist_anywhere', false);
+        $missingKey = 'this_param_does_not_exist_anywhere';
+        $this->service->loadConfFromDb($missingKey, false);
 
-        self::assertFalse(Config::has('this_param_does_not_exist_anywhere'));
+        self::assertFalse(Config::has($missingKey));
     }
 
     public function test_confUpdateParam_then_confDeleteParam_round_trips(): void

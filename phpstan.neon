@@ -1,5 +1,4 @@
 includes:
-    - phpstan-baseline.neon
     - vendor/phpstan/phpstan/conf/bleedingEdge.neon
 
 parameters:
@@ -44,6 +43,55 @@ parameters:
             # class-string<FixerInterface>. Tooling config, not application
             # code.
             - ecs.php
+
+    ignoreErrors:
+        # Pest's expect(...)->toBe()-style fluent assertion chain is
+        # intentionally public -- it's the framework's documented, primary
+        # way to write every test -- but Pest tags the underlying classes
+        # @internal upstream anyway. PHPStan's core "no calling @internal
+        # members from outside their root namespace" check has no way to
+        # know that; every hit is inside tests/, calling Pest's own API
+        # exactly the way Pest tells you to. Not fixable in application
+        # code since we don't control Pest's docblocks -- same class of
+        # tooling/visibility mismatch as the ecs.php exclusion above.
+        -
+            identifier: method.internalClass
+            path: tests/*
+        # Same root cause, one level removed: Pest binds test-local state
+        # (e.g. `$this->service = ...` inside beforeEach()) dynamically via
+        # closure binding, which PHPStan can't see through, surfacing as
+        # property/method access on Pest's internal call-forwarding
+        # classes. Scoped to the exact files confirmed to hit this -- not a
+        # blanket tests/* -- so it can't swallow unrelated real errors
+        # (e.g. tools/i18n/*.php's genuine method.nonObject hits on
+        # SplFileInfo iteration). Split one entry per identifier (rather
+        # than combining into a single identifiers+paths cross-product)
+        # because each identifier only actually occurs in a subset of these
+        # files -- a combined entry left reportUnmatchedIgnoredErrors
+        # permanently failing on the identifier/path pairs that never
+        # co-occur.
+        -
+            identifier: property.notFound
+            paths:
+                - tests/Unit/Admin/Maintenance/ServerInfoServiceTest.php
+                - tests/Unit/Bootstrap/CliBootstrapTest.php
+                - tests/Unit/Lang/LangServiceTest.php
+                - tests/Unit/Lang/TranslatorTest.php
+                - tests/Unit/Session/SessionServiceTest.php
+        -
+            identifier: method.nonObject
+            paths:
+                - tests/Arch/StructuralTest.php
+                - tests/Unit/Admin/Maintenance/ServerInfoServiceTest.php
+                - tests/Unit/Bootstrap/CliBootstrapTest.php
+                - tests/Unit/Lang/LangServiceTest.php
+                - tests/Unit/Session/SessionServiceTest.php
+        -
+            identifier: method.notFound
+            path: tests/Arch/StructuralTest.php
+        -
+            identifier: classConstant.internalClass
+            path: tests/Unit/SmokeTest.php
 
 rules:
     - Piwigo\Tools\PhpStan\ConfigKeyExistsRule

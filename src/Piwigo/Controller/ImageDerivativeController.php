@@ -237,6 +237,12 @@ final class ImageDerivativeController
         // derivative, once generated once, would be served to anyone who
         // knows/guesses the URL on every later request forever, without ever
         // touching the DB again.
+        // Part II (web-root isolation): populated only in the real-DB-image
+        // branch below, read later by the "redirect to source" fast path
+        // (~line 432) to build a permission-checked action.php?part=e
+        // redirect instead of a raw link into upload/ -- see that call
+        // site's own comment for the real bug this fixes.
+        $image_id = null;
         $this->coi = null;
         if (! str_contains($this->srcLocation, '/pwg_representative/')
             && ! str_contains($this->srcLocation, 'themes/')
@@ -432,6 +438,25 @@ final class ImageDerivativeController
         // no change required - redirect to source
         if (! (bool) $changes) {
             header('X-i: No change');
+            // Part II (web-root isolation): $this->srcUrl is a raw link
+            // into upload/ (via the still-PHPWG_ROOT_PATH-based
+            // $this->rootPath, deliberately deferred to Part III's own
+            // pass on this controller) -- upload/ is deliberately
+            // unreachable now (SEC-33/35/38/47), so that redirect target
+            // 404s. Found live (a real Visual Regression failure, decoded
+            // and diffed rather than dismissed): every derivative whose
+            // computed size is identity to the source hits this exact
+            // path, not a rare edge case. $image_id is only set for a real
+            // DB-backed image (not the theme/plugin/representative
+            // branches above, which keep the unchanged raw $this->srcUrl
+            // link -- themes/ is a real, safe, reachable symlink); when
+            // set, redirect through action.php?part=e instead, the same
+            // permission-checked path Controller\ActionController's own
+            // 'e' case already re-verifies (including the HD-access check
+            // that a raw upload/ link also silently bypassed).
+            if ($image_id !== null) {
+                $this->ierror(new UrlService(new HtmlService())->getActionUrl($image_id, 'e', false), 301);
+            }
             $this->ierror($this->srcUrl, 301);
         }
 

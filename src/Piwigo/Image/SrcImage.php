@@ -233,14 +233,36 @@ final class SrcImage
 
     public function get_url(): string
     {
-        $url = self::urlService()->getRootUrl() . $this->rel_path;
-        if (! (bool) ($this->flags & self::IS_MIMETYPE)) {
+        if ($this->is_mimetype()) {
+            // A static theme asset (e.g. themes/default/icon/mimetypes/
+            // pdf.png), not user content -- themes/ is a real, deliberately
+            // reachable symlink into public/ (Part II), so a direct static
+            // link is correct and safe here, unlike the two branches below.
+            $url = self::urlService()->getRootUrl() . $this->rel_path;
+        } else {
+            // Part II (web-root isolation): a direct static link into
+            // upload/ (the original) was SEC-33/35/38/47's own root cause
+            // for originals, not just derivatives -- upload/ is
+            // deliberately unreachable now, and a raw link here also
+            // bypassed ActionController's own HD-access check (part=e)
+            // entirely, a real, separate bug found live (a real picture
+            // page's <img> was broken -- decoded+diffed the Visual
+            // Regression failure rather than dismissing it as a flake).
+            // ActionController (routed action.php, config/routes.php)
+            // already re-checks both permission and HD-access on every
+            // request; UrlService::getActionUrl() is the same helper
+            // Admin\PictureModifyPageRenderer/BatchManagerUnitPageRenderer
+            // already use for their own action.php download links.
+            $part = $this->is_original() ? 'e' : 'r';
+            $url = self::urlService()->getActionUrl($this->id, $part, false);
+
             $filtered_url = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_src_image_url', $url, $this);
             // trigger_change() hands the value through arbitrary registered
             // event handlers (mixed return); fall back to the pre-filter
             // url if a misbehaving handler returns a non-string.
             $url = is_string($filtered_url) ? $filtered_url : $url;
         }
+
         return self::urlService()->embellishUrl($url);
     }
 

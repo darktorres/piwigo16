@@ -161,7 +161,13 @@ SELECT id, date_creation
                 $raw_tags_post = $_POST['tags-' . $row_id_str] ?? null;
                 if ($raw_tags_post !== null && $raw_tags_post !== '' && $raw_tags_post !== '0' && $raw_tags_post !== []) {
                     if (is_array($raw_tags_post)) {
-                        $tag_ids = $tagService->getTagIds(array_filter($raw_tags_post, is_string(...)));
+                        $raw_tags_post_strings = [];
+                        foreach ($raw_tags_post as $raw_tag) {
+                            if (is_string($raw_tag)) {
+                                $raw_tags_post_strings[] = $raw_tag;
+                            }
+                        }
+                        $tag_ids = $tagService->getTagIds($raw_tags_post_strings);
                     } elseif (is_string($raw_tags_post)) {
                         $tag_ids = $tagService->getTagIds($raw_tags_post);
                     }

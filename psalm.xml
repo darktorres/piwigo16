@@ -432,5 +432,16 @@
                 <file name="src/Piwigo/Core/FeatureFlag.php"/>
             </errorLevel>
         </EmptyArrayAccess>
+        <!-- Psalm's $_POST/$_GET superglobal stub infers any array-shaped
+             entry as always non-empty, but a real HTTP request can submit a
+             genuinely empty array field (e.g. add_tags[]/associate[] posted
+             with zero selections) — the count() === 0 guard here is real,
+             reachable behavior, not dead code. composer analyse:phpstan is
+             clean here with zero changes. -->
+        <TypeDoesNotContainType>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Admin/BatchManagerGlobalPageRenderer.php"/>
+            </errorLevel>
+        </TypeDoesNotContainType>
     </issueHandlers>
 </psalm>

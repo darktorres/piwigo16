@@ -141,7 +141,8 @@ SELECT id, file, path, representative_ext
                 ],
             ];
 
-            if ($_POST['who'] === 'users' and isset($_POST['users']) and is_array($_POST['users']) and count($_POST['users']) > 0) {
+            $post_users = $_POST['users'] ?? null;
+            if ($_POST['who'] === 'users' and is_array($post_users) and count($post_users) > 0) {
                 new \Piwigo\Validation\InputValidator()
                     ->validate('users', $_POST, true, ValidationPattern::ID);
 
@@ -150,9 +151,16 @@ SELECT id, file, path, representative_ext
                 // private content beyond a public category name/link.
 
                 // check_input_parameter() above already validated that every item
-                // matches ValidationPattern::ID (digits only), so this filter only exists to
-                // give implode() a provably string-castable array.
-                $post_user_ids = array_filter($_POST['users'], is_string(...));
+                // matches ValidationPattern::ID (digits only); this loop (rather than
+                // array_filter(..., is_string(...))) exists because Psalm doesn't narrow
+                // the callback's effect on $_POST's mixed nested-array union type, so a
+                // bare array_filter() result is still not provably string-only to implode().
+                $post_user_ids = [];
+                foreach ($post_users as $post_user_id) {
+                    if (is_string($post_user_id)) {
+                        $post_user_ids[] = $post_user_id;
+                    }
+                }
 
                 $query = '
 SELECT

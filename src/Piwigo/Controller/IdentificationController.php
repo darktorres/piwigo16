@@ -92,8 +92,10 @@ final class IdentificationController implements ControllerInterface
                 // $_POST['password'] is allowed to be null (both this and
                 // ws_session_login() are try_log_user()'s only real
                 // callers, and both can genuinely omit the field).
-                $username = is_string($_POST['username'] ?? null) ? $_POST['username'] : '';
-                $password = is_string($_POST['password'] ?? null) ? $_POST['password'] : null;
+                $username_raw = $_POST['username'] ?? null;
+                $username = is_string($username_raw) ? $username_raw : '';
+                $password_raw = $_POST['password'] ?? null;
+                $password = is_string($password_raw) ? $password_raw : null;
 
                 $conn = \Piwigo\Db\DbConnection::build();
                 if (\Piwigo\Config\Config::insensitiveCaseLogon()) {
@@ -101,7 +103,8 @@ final class IdentificationController implements ControllerInterface
                         ->searchCaseUsername($username);
                 }
 
-                $redirect_to = is_string($_POST['redirect'] ?? null) ? urldecode($_POST['redirect']) : '';
+                $redirect_raw = $_POST['redirect'] ?? null;
+                $redirect_to = is_string($redirect_raw) ? urldecode($redirect_raw) : '';
                 $remember_me_raw = $_POST['remember_me'] ?? null;
                 $remember_me = isset($_POST['remember_me']) && is_scalar($remember_me_raw) && (string) $remember_me_raw === '1';
 

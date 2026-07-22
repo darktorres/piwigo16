@@ -69,12 +69,24 @@ final class GroupPermPageRenderer
         // these are arrays of digit-only strings, but that guarantee isn't
         // visible to static analysis across the call; re-derive real array
         // types here.
-        $cat_true = isset($_POST['cat_true']) && is_array($_POST['cat_true'])
-            ? array_filter($_POST['cat_true'], is_string(...))
-            : [];
-        $cat_false = isset($_POST['cat_false']) && is_array($_POST['cat_false'])
-            ? array_map(intval(...), array_filter($_POST['cat_false'], is_numeric(...)))
-            : [];
+        $post_cat_true = $_POST['cat_true'] ?? null;
+        $cat_true = [];
+        if (is_array($post_cat_true)) {
+            foreach ($post_cat_true as $raw_cat_id) {
+                if (is_string($raw_cat_id)) {
+                    $cat_true[] = $raw_cat_id;
+                }
+            }
+        }
+        $post_cat_false = $_POST['cat_false'] ?? null;
+        $cat_false = [];
+        if (is_array($post_cat_false)) {
+            foreach ($post_cat_false as $raw_cat_id) {
+                if (is_numeric($raw_cat_id)) {
+                    $cat_false[] = (int) $raw_cat_id;
+                }
+            }
+        }
 
         if (! isset($_GET['group_id'])) {
             new HtmlService()

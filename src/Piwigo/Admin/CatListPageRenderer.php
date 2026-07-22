@@ -146,7 +146,8 @@ SELECT COUNT(*)
         }
         // request to add a virtual category
         elseif (isset($_POST['submitAdd'])) {
-            $virtual_name = is_string($_POST['virtual_name'] ?? null) ? $_POST['virtual_name'] : '';
+            $virtual_name_raw = $_POST['virtual_name'] ?? null;
+            $virtual_name = is_string($virtual_name_raw) ? $virtual_name_raw : '';
             $output_create = new CategoryAdminService($categoryService)
                 ->createVirtualCategory(
                     $virtual_name,

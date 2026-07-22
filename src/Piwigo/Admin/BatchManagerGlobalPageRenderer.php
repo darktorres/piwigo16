@@ -211,11 +211,12 @@ DELETE
                 // remove from caddie action available only in caddie so reload content
                 $redirect = true;
             } elseif ($action === 'add_tags') {
-                if (! is_array($_POST['add_tags'] ?? null) || count($_POST['add_tags']) === 0) {
+                $post_add_tags = $_POST['add_tags'] ?? null;
+                if (! is_array($post_add_tags) || count($post_add_tags) === 0) {
                     \Piwigo\Core\PageState::current()->addError(Lang::t('Select at least one tag'));
                 } else {
                     $add_tags = [];
-                    foreach ($_POST['add_tags'] as $raw_tag) {
+                    foreach ($post_add_tags as $raw_tag) {
                         if (is_string($raw_tag)) {
                             $add_tags[] = $raw_tag;
                         }
@@ -229,7 +230,15 @@ DELETE
                     }
                 }
             } elseif ($action === 'del_tags') {
-                $del_tags = isset($_POST['del_tags']) && is_array($_POST['del_tags']) ? array_filter($_POST['del_tags'], is_scalar(...)) : [];
+                $post_del_tags = $_POST['del_tags'] ?? null;
+                $del_tags = [];
+                if (is_array($post_del_tags)) {
+                    foreach ($post_del_tags as $raw_del_tag) {
+                        if (is_scalar($raw_del_tag)) {
+                            $del_tags[] = $raw_del_tag;
+                        }
+                    }
+                }
                 if (count($del_tags) > 0) {
                     $taglist_before = $tagService->getImageTagIds($collection);
 
@@ -255,11 +264,12 @@ DELETE
             }
 
             if ($action === 'associate') {
-                if (! is_array($_POST['associate'] ?? null) || count($_POST['associate']) === 0) {
+                $post_associate = $_POST['associate'] ?? null;
+                if (! is_array($post_associate) || count($post_associate) === 0) {
                     \Piwigo\Core\PageState::current()->addError(Lang::t('Select at least one album'));
                 } else {
                     $associate_categories = [];
-                    foreach ($_POST['associate'] as $raw_category_id) {
+                    foreach ($post_associate as $raw_category_id) {
                         if (is_numeric($raw_category_id)) {
                             $associate_categories[] = (int) $raw_category_id;
                         }

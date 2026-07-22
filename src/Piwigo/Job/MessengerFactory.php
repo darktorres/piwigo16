@@ -46,7 +46,7 @@ final class MessengerFactory
          *     handlers: array<class-string, \Closure(): callable>,
          * }
          */
-        return require PHPWG_ROOT_PATH . 'config/messenger.php';
+        return require \Piwigo\Core\CurrentPaths::get()->root . 'config/messenger.php';
     }
 
     /**

@@ -50,7 +50,7 @@ final class UpgradeFeedRunner
         // Config:: calls, so their declared `string` return types are
         // already certain, no is_string() re-guard needed.
         \Piwigo\Core\CurrentLogger::set(new Logger([
-            'directory' => PHPWG_ROOT_PATH . \Piwigo\Config\Config::dataLocation() . \Piwigo\Config\Config::logDir(),
+            'directory' => \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\Config::dataLocation() . \Piwigo\Config\Config::logDir(),
             'severity' => \Piwigo\Config\Config::logLevel(),
             'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Config\Config::dbPassword()) . '.txt',
             'globPattern' => 'log_*.txt',

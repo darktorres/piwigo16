@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
@@ -59,7 +60,7 @@ final class Patch153 implements DbPatchInterface
      */
     private function valueDisplayFromto(): string
     {
-        $file = PHPWG_ROOT_PATH . 'local/config/config.inc.php';
+        $file = CurrentPaths::get()->local . 'config/config.inc.php';
         if (file_exists($file)) {
             $conf = [];
             include $file;

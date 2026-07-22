@@ -58,7 +58,7 @@ final class ThemesNewPageRenderer
         // |                           setup check                                 |
         // +-----------------------------------------------------------------------+
 
-        $themes_dir = PHPWG_ROOT_PATH . 'themes';
+        $themes_dir = \Piwigo\Core\CurrentPaths::get()->themes;
         if (! is_writable($themes_dir)) {
             \Piwigo\Core\PageState::current()->addError(Lang::t('Add write access to the "%s" directory', 'themes'));
         }

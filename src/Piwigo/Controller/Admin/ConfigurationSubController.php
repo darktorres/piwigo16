@@ -13,6 +13,7 @@ use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Config\ConfigService;
 use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -728,15 +729,16 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
             case 'watermark':
 
+                $paths = CurrentPaths::get();
                 $watermark_files = [];
-                if (($glob = glob(PHPWG_ROOT_PATH . 'themes/default/watermarks/*.png')) !== false) {
+                if (($glob = glob($paths->root . 'themes/default/watermarks/*.png')) !== false) {
                     foreach ($glob as $file) {
-                        $watermark_files[] = substr($file, strlen(PHPWG_ROOT_PATH));
+                        $watermark_files[] = substr($file, strlen($paths->root));
                     }
                 }
-                if (($glob = glob(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/*.png')) !== false) {
+                if (($glob = glob($paths->siteLocal . 'watermarks/*.png')) !== false) {
                     foreach ($glob as $file) {
-                        $watermark_files[] = substr($file, strlen(PHPWG_ROOT_PATH));
+                        $watermark_files[] = substr($file, strlen($paths->root));
                     }
                 }
                 $watermark_filemap = [
@@ -830,12 +832,13 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // runtime, whose content isn't knowable statically. Whether
         // $conf ends up with these keys genuinely depends on a file
         // that may not exist and isn't part of this codebase.
+        $paths = CurrentPaths::get();
         $conf = [];
-        include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
-        @include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
+        include $paths->root . 'include/config_default.inc.php';
+        @include $paths->local . 'config/config.inc.php';
         // @phpstan-ignore isset.offset
         if (isset($conf['local_dir_site'])) {
-            @include PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.inc.php';
+            @include $paths->siteLocal . 'config/config.inc.php';
         }
 
         // @phpstan-ignore isset.offset, isset.offset, logicalOr.alwaysFalse
@@ -1170,16 +1173,17 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     'PNG'
                 );
             } else {
-                $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks';
+                $paths = CurrentPaths::get();
+                $upload_dir = $paths->siteLocal . 'watermarks';
                 if (\Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
                     // file name may include exotic chars like single quote, we need a safe name
                     $new_name = \Piwigo\Core\StringHelper::str2url(\Piwigo\Core\StringHelper::getFilenameWoExtension($watermark_upload_name ?? ''));
 
                     // we need existing watermarks to avoid overwritting one
                     $watermark_files = [];
-                    if (($glob = glob(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/*.png')) !== false) {
+                    if (($glob = glob($paths->siteLocal . 'watermarks/*.png')) !== false) {
                         foreach ($glob as $file) {
-                            $watermark_files[] = \Piwigo\Core\StringHelper::getFilenameWoExtension(substr($file, strlen(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/')));
+                            $watermark_files[] = \Piwigo\Core\StringHelper::getFilenameWoExtension(substr($file, strlen($paths->siteLocal . 'watermarks/')));
                         }
                     }
 
@@ -1191,7 +1195,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     if ($watermark_stream !== false) {
                         StorageRegistry::disk('watermarks')->writeStream(basename($file_path), $watermark_stream);
                         fclose($watermark_stream);
-                        $pwatermark['file'] = substr($file_path, strlen(PHPWG_ROOT_PATH));
+                        $pwatermark['file'] = substr($file_path, strlen($paths->root));
                     } else {
                         \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = "{$file_path} " . Lang::t('no write access'));
                     }

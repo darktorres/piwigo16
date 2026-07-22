@@ -30,10 +30,6 @@ declare(strict_types=1);
 // without a stub (same DBAL-backed path this test already exercises via
 // PermissionService::getSqlConditionFandF() elsewhere).
 namespace {
-    if (! defined('PHPWG_ROOT_PATH')) {
-        define('PHPWG_ROOT_PATH', './');
-    }
-
     // trigger_change()/trigger_notify() calls go directly through the real
     // Piwigo\PluginConfig\EventDispatcher::get() singleton now, pure
     // passthroughs with no handlers registered, so no local stubs are

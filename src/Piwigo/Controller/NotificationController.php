@@ -56,7 +56,7 @@ final class NotificationController implements ControllerInterface
 
         $feedRepo->insert($feedId, $user_id);
 
-        $feed_url = PHPWG_ROOT_PATH . 'feed.php';
+        $feed_url = $urlService->getRootUrl() . 'feed.php';
         if (\Piwigo\Auth\AccessControl::isAGuest()) {
             $feed_image_only_url = $feed_url;
             $feed_url .= '?feed=' . $feedId;

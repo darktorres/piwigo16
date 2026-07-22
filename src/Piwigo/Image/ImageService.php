@@ -8,6 +8,7 @@ use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -523,7 +524,7 @@ final readonly class ImageService
         $updates = [];
 
         foreach ($pathForId as $id => $path) {
-            $md5sum = md5_file(PHPWG_ROOT_PATH . $path);
+            $md5sum = md5_file(CurrentPaths::get()->root . $path);
             // md5_file() returns false when the file can't be read -- skip
             // rather than writing a bogus md5sum that would then read as
             // "already computed" on the next addMd5sum() pass.

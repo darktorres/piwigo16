@@ -11,6 +11,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -34,6 +35,7 @@ final class UserPermPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly UrlServiceInterface $urlService,
     ) {}
 
     public function render(): void
@@ -107,7 +109,7 @@ final class UserPermPageRenderer
                 'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),
                 'L_CAT_OPTIONS_FALSE' => Lang::t('Forbidden'),
 
-                'F_ACTION' => PHPWG_ROOT_PATH .
+                'F_ACTION' => $this->urlService->getRootUrl() .
                     'admin.php?page=user_perm' .
                     '&amp;user_id=' . $user_id,
             ]

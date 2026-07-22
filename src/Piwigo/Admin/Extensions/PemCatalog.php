@@ -414,7 +414,7 @@ final readonly class PemCatalog
      */
     public function getLocallyMergedExtensions(): array
     {
-        $file = PHPWG_ROOT_PATH . 'install/obsolete_extensions.list';
+        $file = \Piwigo\Core\CurrentPaths::get()->root . 'install/obsolete_extensions.list';
         $mergedExtensions = [];
 
         if (file_exists($file)) {

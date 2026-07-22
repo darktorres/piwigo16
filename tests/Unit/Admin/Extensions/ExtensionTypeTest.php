@@ -5,14 +5,18 @@ declare(strict_types=1);
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
 
 beforeEach(function (): void {
     Config::reset();
+    CurrentPaths::set(Paths::fromRoot('/tmp/piwigo-extension-type-test'));
 });
 
 afterEach(function (): void {
     Config::reset();
+    CurrentPaths::reset();
 });
 
 test('table returns each type\'s own table', function (): void {
@@ -32,7 +36,7 @@ test('scanDirectory returns each type\'s own filesystem root', function (): void
     // Piwigo\Admin\PluginLoader::pluginsPath() is the canonical value now.
     expect(ExtensionType::Plugin->scanDirectory())->toBe(\Piwigo\Admin\PluginLoader::pluginsPath())
         ->and(ExtensionType::Theme->scanDirectory())->toBe(Config::themesPath())
-        ->and(ExtensionType::Language->scanDirectory())->toBe(PHPWG_ROOT_PATH . 'language/');
+        ->and(ExtensionType::Language->scanDirectory())->toBe(CurrentPaths::get()->root . 'language/');
 });
 
 test('markerFilename returns each type\'s own extension marker file', function (): void {

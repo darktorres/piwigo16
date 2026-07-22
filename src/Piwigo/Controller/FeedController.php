@@ -239,7 +239,7 @@ final class FeedController implements ControllerInterface
             $htmlRenderer->fatalError("Invalid \\Piwigo\Config\Config::dataLocation() configuration: expected a string.");
         }
 
-        $fileName = PHPWG_ROOT_PATH . $data_location . 'tmp';
+        $fileName = \Piwigo\Core\CurrentPaths::get()->root . $data_location . 'tmp';
         \Piwigo\Core\FilesystemHelper::mkgetdir($fileName); // just in case
         $fileName .= '/feed.xml';
         file_put_contents($fileName, $feed_content);

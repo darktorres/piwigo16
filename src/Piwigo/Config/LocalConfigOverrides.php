@@ -35,8 +35,14 @@ final class LocalConfigOverrides
         }
 
         if (isset($conf['local_dir_site'])) {
-            $localDir = defined('PWG_LOCAL_DIR') && is_string(PWG_LOCAL_DIR) ? PWG_LOCAL_DIR : 'local/';
-            $dirSiteConfigFile = $paths->root . $localDir . 'config/config.inc.php';
+            // Legacy Coupling Retirement gap-closure (entry-shell
+            // define()/include round): used to read the raw PWG_LOCAL_DIR
+            // constant here -- Paths::$siteLocal (sourced from the
+            // PIWIGO_LOCAL_DIR env var, see Paths's own docblock) replaces
+            // it, genuinely a different directory than $paths->local above
+            // in the real multi-site-instance deployment shape this
+            // supports.
+            $dirSiteConfigFile = $paths->siteLocal . 'config/config.inc.php';
             if (is_file($dirSiteConfigFile)) {
                 include $dirSiteConfigFile;
             }

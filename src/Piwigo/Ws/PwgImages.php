@@ -26,6 +26,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
@@ -2016,12 +2017,13 @@ SELECT COUNT(*)
             return new PwgError(500, 'missing uploaded chunk file');
         }
         // $chunkfile_path is relative (built from \Piwigo\Config\Config::uploadDir() without a
-        // PHPWG_ROOT_PATH prefix) -- normalize to absolute before stripRoot()
+        // Paths::$root prefix) -- normalize to absolute before stripRoot()
         // can compute the 'uploads' disk-relative path; everything downstream
         // keeps using the original relative $chunkfile_path unchanged, since
         // the 'uploads' disk is rooted at the same real filesystem location.
-        $chunk_root = PHPWG_ROOT_PATH . Config::uploadDir();
-        $chunk_abs_path = PHPWG_ROOT_PATH . ltrim(str_replace(['\\', '/./'], ['/', '/'], $chunkfile_path), '/');
+        $paths = CurrentPaths::get();
+        $chunk_root = $paths->root . Config::uploadDir();
+        $chunk_abs_path = $paths->root . ltrim(str_replace(['\\', '/./'], ['/', '/'], $chunkfile_path), '/');
         $chunk_rel_path = StorageRegistry::stripRoot($chunk_root, $chunk_abs_path);
         $chunk_stream = fopen($uploaded_chunk_tmp_name, 'rb');
         if ($chunk_stream !== false) {

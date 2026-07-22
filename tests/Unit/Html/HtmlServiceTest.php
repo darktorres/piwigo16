@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Html\HtmlService;
 
-if (! defined('PHPWG_ROOT_PATH')) {
-    define('PHPWG_ROOT_PATH', './');
-}
-
 // trigger_notify() calls go directly through the real
 // Piwigo\PluginConfig\EventDispatcher::get() singleton now, a pure no-op
 // with no handlers registered, so no local stub is needed for it here --

@@ -7,6 +7,7 @@ namespace Piwigo\Page;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\Tables;
@@ -38,6 +39,7 @@ final readonly class NoPhotoYetRenderer
         private ConfigService $configService,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly Paths $paths,
     ) {}
 
     public function render(): void
@@ -60,7 +62,7 @@ final readonly class NoPhotoYetRenderer
                 // the "no photo yet" feature
                 $user_theme = \Piwigo\Users\CurrentUser::get()->theme;
                 $user_theme = $user_theme !== '' ? $user_theme : new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), \Piwigo\Db\DbConnection::build())->getDefaultTheme();
-                $template = new Template(PHPWG_ROOT_PATH . 'themes', $user_theme);
+                $template = new Template($this->paths->root . 'themes', $user_theme);
                 \Piwigo\Template\CurrentTemplate::set($template);
 
                 if (isset($_GET['no_photo_yet'])) {

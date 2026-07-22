@@ -31,7 +31,6 @@ if (version_compare(PHP_VERSION, '8.5.0', '<')) {
 require __DIR__ . '/vendor/autoload.php';
 
 $paths = \Piwigo\Core\Paths::fromIndex(__FILE__);
-define('PHPWG_ROOT_PATH', './');
 
 // Autoload boundary (see include/env.inc.php: it only requires
 // vendor/autoload.php). Added in the 8f-6 port -- the former file resolved
@@ -39,7 +38,7 @@ define('PHPWG_ROOT_PATH', './');
 // hookup on its include chain, a latent "Class not found" fatal on direct
 // upgrade_feed.php requests that nothing smoke-tested; every entry shell
 // now requires the autoloader first, matching admin.php/install.php.
-include PHPWG_ROOT_PATH . 'include/env.inc.php';
+include $paths->root . 'include/env.inc.php';
 
 // Legacy Coupling Retirement Phase 8, 8b (the "boot-first" fix, extended
 // from 8a's HTTP-request-path version to install/upgrade): must run
@@ -53,11 +52,10 @@ include PHPWG_ROOT_PATH . 'include/env.inc.php';
  * @var string $prefixeTable
  */
 
-include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
-@include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
-defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
+include $paths->root . 'include/config_default.inc.php';
+@include $paths->local . 'config/config.inc.php';
 
-include PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.inc.php';
+include $paths->siteLocal . 'config/database.inc.php';
 
 // Legacy Coupling Retirement Phase 8, 8b -- real, already-diagnosed bug
 // fix, identical to upgrade.php's own: database.inc.php (just included)

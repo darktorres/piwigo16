@@ -248,7 +248,7 @@ class ScriptLoader
      */
     private static function do_combine(array $scripts, int $load_mode): array
     {
-        $combiner = new FileCombiner('js', self::urlService(), $scripts);
+        $combiner = new FileCombiner('js', self::urlService(), \Piwigo\Core\CurrentPaths::get(), $scripts);
         return $combiner->combine();
     }
 

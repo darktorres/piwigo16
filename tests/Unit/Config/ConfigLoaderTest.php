@@ -185,7 +185,9 @@ test('applyLocalFileOverrides silently drops a key not in Config::SCHEMA', funct
 });
 
 test('applyLocalFileOverrides also reads the local_dir_site dir-site file when set', function (): void {
-    defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'test-dir-site/');
+    $originalLocalDir = getenv('PIWIGO_LOCAL_DIR');
+    $originalLocalDir = $originalLocalDir === false ? null : $originalLocalDir;
+    putenv('PIWIGO_LOCAL_DIR=test-dir-site');
 
     $root = sys_get_temp_dir() . '/piwigo-config-loader-test-' . bin2hex(random_bytes(4));
     mkdir($root . '/local/config', 0o777, true);
@@ -193,17 +195,20 @@ test('applyLocalFileOverrides also reads the local_dir_site dir-site file when s
         $root . '/local/config/config.inc.php',
         "<?php\n\$conf['local_dir_site'] = true;\n"
     );
-    mkdir($root . '/' . PWG_LOCAL_DIR . 'config', 0o777, true);
+    mkdir($root . '/test-dir-site/config', 0o777, true);
     file_put_contents(
-        $root . '/' . PWG_LOCAL_DIR . 'config/config.inc.php',
+        $root . '/test-dir-site/config/config.inc.php',
         "<?php\n\$conf['gallery_title'] = 'Dir-Site Gallery';\n"
     );
 
-    ConfigLoader::applyLocalFileOverrides(Paths::fromRoot($root));
+    try {
+        ConfigLoader::applyLocalFileOverrides(Paths::fromRoot($root));
 
-    expect(Config::all()['gallery_title'])->toBe('Dir-Site Gallery');
-
-    config_loader_test_rrmdir($root);
+        expect(Config::all()['gallery_title'])->toBe('Dir-Site Gallery');
+    } finally {
+        putenv($originalLocalDir === null ? 'PIWIGO_LOCAL_DIR' : 'PIWIGO_LOCAL_DIR=' . $originalLocalDir);
+        config_loader_test_rrmdir($root);
+    }
 });
 
 test('applyLocalFileOverrides is idempotent', function (): void {

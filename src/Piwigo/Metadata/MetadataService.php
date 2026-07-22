@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Metadata;
 
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
@@ -368,7 +369,7 @@ final readonly class MetadataService
 
         $path = $infos['path'] ?? null;
         $path = is_string($path) ? $path : '';
-        $file = PHPWG_ROOT_PATH . $path;
+        $file = CurrentPaths::get()->root . $path;
         if (! is_readable($file)) {
             return false;
         }
@@ -420,7 +421,7 @@ final readonly class MetadataService
 
         if ($isTiff) {
             // back to original file
-            $file = PHPWG_ROOT_PATH . $path;
+            $file = CurrentPaths::get()->root . $path;
         }
 
         if ((bool) (\Piwigo\Config\Config::useExif())) {

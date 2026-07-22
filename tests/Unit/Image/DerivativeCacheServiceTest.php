@@ -3,41 +3,19 @@
 declare(strict_types=1);
 
 use Piwigo\Config\Config;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Paths;
 use Piwigo\Image\DerivativeCacheService;
 
-// PHPWG_ROOT_PATH is a process-wide constant -- some OTHER test file
-// (e.g. StorageRegistryTest.php) may already have defined it to the REAL
-// project root before this file loads, since Pest/PHPUnit parses every
-// test file into the same PHP process even under --filter. A guarded
-// `if (! defined(...))` here is NOT enough on its own to guarantee a safe
-// value; never let it, alone, gate a recursive delete (that's exactly
-// what wiped the real project root out from under a live session once
-// already). Only ever destroy paths that also contain $marker below.
-if (! defined('PHPWG_ROOT_PATH')) {
-    define('PHPWG_ROOT_PATH', sys_get_temp_dir() . '/piwigo-derivative-cache-test-root/');
-}
-
-// Unique per-run marker: every path this suite creates or deletes must
-// contain it, and the recursive-delete helper refuses to run on any path
-// that doesn't -- regardless of what PHPWG_ROOT_PATH actually resolves to.
-function derivative_cache_test_marker(): string
-{
-    /** @var string|null $marker */
-    static $marker = null;
-
-    return $marker ??= 'phpwg-test-marker-' . bin2hex(random_bytes(8));
-}
-
+// Unique per-run root: clearDerivativeCache()/deleteElementDerivatives()
+// read CurrentPaths::get()->root . Config::derivativeDir() internally, not
+// an explicit test-supplied path -- pointing CurrentPaths at a fresh,
+// uniquely-named temp directory per test (rather than a shared constant)
+// means the recursive-delete helper below can never touch anything outside
+// this run's own sandbox, regardless of test ordering or other suites'
+// own CurrentPaths::set() calls.
 function derivative_cache_test_rrmdir(string $dir): void
 {
-    $marker = derivative_cache_test_marker();
-    if (! str_contains($dir, $marker)) {
-        throw new \RuntimeException(
-            "Refusing to recursively delete '{$dir}': it does not contain this test run's marker ('{$marker}'). ".
-            'PHPWG_ROOT_PATH is a shared process-wide constant that another test file may have '.
-            'pointed at a real, non-test directory.'
-        );
-    }
     if (! is_dir($dir)) {
         return;
     }
@@ -53,26 +31,22 @@ function derivative_cache_test_rrmdir(string $dir): void
 }
 
 beforeEach(function (): void {
-    $marker = derivative_cache_test_marker();
     Config::reset();
-    // Config::derivativeDir() = Config::dataLocation() . 'i/' -- point
-    // data_location at a uniquely-named subdirectory so
-    // clearDerivativeCache()/deleteElementDerivatives() (which read
-    // PHPWG_ROOT_PATH . Config::derivativeDir() internally, not an
-    // explicit test-supplied path) only ever touch a path carrying this
-    // run's marker, never PHPWG_ROOT_PATH itself.
-    Config::override('data_location', $marker . '/');
-    mkdir(PHPWG_ROOT_PATH . Config::derivativeDir(), 0o777, true);
+    $root = sys_get_temp_dir() . '/piwigo-derivative-cache-test-' . bin2hex(random_bytes(8));
+    mkdir($root, 0o777, true);
+    CurrentPaths::set(Paths::fromRoot($root));
+    Config::override('data_location', 'data/');
+    mkdir(CurrentPaths::get()->root . Config::derivativeDir(), 0o777, true);
 });
 
 afterEach(function (): void {
-    $marker = derivative_cache_test_marker();
-    derivative_cache_test_rrmdir(PHPWG_ROOT_PATH . $marker);
+    derivative_cache_test_rrmdir(CurrentPaths::get()->root);
     Config::reset();
+    CurrentPaths::reset();
 });
 
 test('clearDerivativeCacheRecursive deletes only files matching the pattern', function (): void {
-    $dir = PHPWG_ROOT_PATH . derivative_cache_test_marker() . '/derivatives';
+    $dir = CurrentPaths::get()->root . 'derivatives';
     mkdir($dir, 0o777, true);
     file_put_contents($dir . '/photo-th.jpg', 'x');
     file_put_contents($dir . '/photo-sq.jpg', 'x');
@@ -86,7 +60,7 @@ test('clearDerivativeCacheRecursive deletes only files matching the pattern', fu
 });
 
 test('clearDerivativeCacheRecursive removes an emptied subdirectory', function (): void {
-    $base = PHPWG_ROOT_PATH . derivative_cache_test_marker() . '/derivatives';
+    $base = CurrentPaths::get()->root . 'derivatives';
     $dir = $base . '/2026';
     mkdir($dir, 0o777, true);
     file_put_contents($dir . '/photo-th.jpg', 'x');
@@ -97,7 +71,7 @@ test('clearDerivativeCacheRecursive removes an emptied subdirectory', function (
 });
 
 test('clearDerivativeCacheRecursive recurses into nested directories', function (): void {
-    $base = PHPWG_ROOT_PATH . derivative_cache_test_marker() . '/derivatives';
+    $base = CurrentPaths::get()->root . 'derivatives';
     $nested = $base . '/a/b';
     mkdir($nested, 0o777, true);
     file_put_contents($nested . '/photo-th.jpg', 'x');
@@ -110,7 +84,7 @@ test('clearDerivativeCacheRecursive recurses into nested directories', function 
 });
 
 test('deleteElementDerivatives removes every derivative for the given element', function (): void {
-    $derivDir = PHPWG_ROOT_PATH . Config::derivativeDir() . '2026/07';
+    $derivDir = CurrentPaths::get()->root . Config::derivativeDir() . '2026/07';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
     file_put_contents($derivDir . '/photo-sq.jpg', 'x');
@@ -126,7 +100,7 @@ test('deleteElementDerivatives removes every derivative for the given element', 
 });
 
 test('deleteElementDerivatives filters by a specific derivative type', function (): void {
-    $derivDir = PHPWG_ROOT_PATH . Config::derivativeDir() . '2026/07';
+    $derivDir = CurrentPaths::get()->root . Config::derivativeDir() . '2026/07';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
     file_put_contents($derivDir . '/photo-sq.jpg', 'x');
@@ -144,7 +118,7 @@ test('deleteElementDerivatives throws for a path with no extension', function ()
 })->throws(Exception::class);
 
 test('clearDerivativeCache with an explicit type list only matches those types', function (): void {
-    $derivDir = PHPWG_ROOT_PATH . Config::derivativeDir() . '2026';
+    $derivDir = CurrentPaths::get()->root . Config::derivativeDir() . '2026';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
     file_put_contents($derivDir . '/photo-sq.jpg', 'x');

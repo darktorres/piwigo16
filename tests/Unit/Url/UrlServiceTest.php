@@ -3,12 +3,11 @@
 declare(strict_types=1);
 
 use Piwigo\Config\Config;
+use Piwigo\Core\RequestMountDepth;
 use Piwigo\Html\HtmlService;
+use Piwigo\Section\SectionContextRegistry;
+use Piwigo\Url\RootPathOverride;
 use Piwigo\Url\UrlService;
-
-if (! defined('PHPWG_ROOT_PATH')) {
-    define('PHPWG_ROOT_PATH', './');
-}
 
 beforeEach(function (): void {
     unset($_SERVER['HTTPS'], $_SERVER['HTTP_X_FORWARDED_PROTO'], $_SERVER['HTTP_X_FORWARDED_HOST'], $_SERVER['HTTP_HOST']);
@@ -21,10 +20,41 @@ beforeEach(function (): void {
     unset($_SERVER['REDIRECT_SCRIPT_NAME'], $_SERVER['REDIRECT_URL'], $_SERVER['PATH_INFO']);
     $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
     Config::override('url_port', 'none');
+    RootPathOverride::reset();
+    SectionContextRegistry::reset();
+    RequestMountDepth::reset();
 });
 
 afterEach(function (): void {
     Config::reset();
+    RootPathOverride::reset();
+    SectionContextRegistry::reset();
+    RequestMountDepth::reset();
+});
+
+test('getRootUrl returns an empty string at the app\'s real root (no mount depth, no override)', function (): void {
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getRootUrl())->toBe('');
+});
+
+test('getRootUrl returns a ../ prefix per RequestMountDepth level when no override is active', function (): void {
+    RequestMountDepth::set(1);
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getRootUrl())->toBe('../');
+});
+
+test('getRootUrl prefers RootPathOverride over RequestMountDepth', function (): void {
+    RequestMountDepth::set(1);
+    RootPathOverride::push('/gallery/');
+    $service = new UrlService(new HtmlService());
+
+    try {
+        expect($service->getRootUrl())->toBe('/gallery/');
+    } finally {
+        RootPathOverride::pop();
+    }
 });
 
 test('urlIsRemote is true for http and https URLs', function (): void {

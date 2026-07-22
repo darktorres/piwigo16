@@ -70,7 +70,7 @@ final class LanguagesNewPageRenderer
         // |                           setup check                                 |
         // +-----------------------------------------------------------------------+
 
-        $languages_dir = PHPWG_ROOT_PATH . 'language';
+        $languages_dir = \Piwigo\Core\CurrentPaths::get()->root . 'language';
         if (! is_writable($languages_dir)) {
             \Piwigo\Core\PageState::current()->addError(Lang::t('Add write access to the "%s" directory', 'language'));
         }

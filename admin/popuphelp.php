@@ -19,19 +19,25 @@ declare(strict_types=1);
 // for the real live bug this fixes and why it isn't derived from real
 // filesystem paths (this dev instance serves the app through a symlink,
 // so SCRIPT_FILENAME and PHP's own resolved paths are never comparable).
+// RequestMountDepth::set() below carries the same fact to
+// UrlService::getRootUrl() (outbound link generation) -- set as early as
+// possible, before include/common.inc.php runs, since URL generation can
+// be reached from deep inside that bootstrap chain, well before the
+// request object (and its own MOUNT_DEPTH_ATTRIBUTE) exists.
 require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Bootstrap\RequestPipeline;
 use Piwigo\Core\Paths;
+use Piwigo\Core\RequestMountDepth;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 use Piwigo\Routing\Router;
 
 $paths = Paths::fromRoot(dirname(__DIR__));
-define('PHPWG_ROOT_PATH', '../');
+RequestMountDepth::set(1);
 define('IN_ADMIN', true);
-include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
+include_once $paths->root . 'include/common.inc.php';
 
 CommonBootstrap::run($paths);
 

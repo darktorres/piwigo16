@@ -238,7 +238,7 @@ final class PwgExtensions
 
                 new RedirectService()
                     ->redirect(
-                        PHPWG_ROOT_PATH
+                        $urlService->getRootUrl()
                                 . 'ws.php'
                                 . '?method=pwg.extensions.update'
                                 . '&type=plugins'
@@ -382,7 +382,7 @@ final class PwgExtensions
     public static function checkUpdates(array $params, PwgServer &$service): array
     {
         $urlService = new UrlService(new HtmlService());
-        $coreUpdateService = new CoreUpdateService(new ZipExtractor(), new RedirectService(), $urlService, CurrentConfigService::get());
+        $coreUpdateService = new CoreUpdateService(new ZipExtractor(), new RedirectService(), $urlService, CurrentConfigService::get(), \Piwigo\Core\CurrentPaths::get());
         $updateChecker = new ExtensionUpdateChecker(new ExtensionScanner(), new PemCatalog(new ZipExtractor()), $urlService, CurrentConfigService::get());
         $result = [];
 

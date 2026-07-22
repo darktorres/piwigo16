@@ -13,6 +13,7 @@ namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
 
@@ -223,7 +224,7 @@ define(\'DB_COLLATE\',  \'\');'
         }
 
         echo $upgrade_log;
-        $fp = @fopen(PHPWG_ROOT_PATH . 'upgrade65.log', 'w');
+        $fp = @fopen(CurrentPaths::get()->root . 'upgrade65.log', 'w');
         if ($fp) {
             @fputs($fp, $upgrade_log, strlen($upgrade_log));
             @fclose($fp);

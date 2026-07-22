@@ -2,20 +2,14 @@
 
 declare(strict_types=1);
 
-// getSyncMetadata() reads PHPWG_ROOT_PATH directly (same convention as
-// every real bootstrap entry point) -- define it the same way
-// RateServiceTest.php/SearchServiceTest.php do for their own isolated
-// integration tests.
-namespace {
-    if (! defined('PHPWG_ROOT_PATH')) {
-        define('PHPWG_ROOT_PATH', './');
-    }
-
-    // trigger_change() calls go directly through the real
-    // Piwigo\PluginConfig\EventDispatcher::get() singleton now, a pure
-    // passthrough with no handlers registered, so no local stub is needed.
-}
-
+// getSyncMetadata() reads Piwigo\Core\CurrentPaths directly (same
+// convention as every real bootstrap entry point) -- IntegrationTestCase's
+// own setUp() already seeds it against this repo's real root, matching
+// this file's own '_data/...'-relative fixture paths below.
+//
+// trigger_change() calls go directly through the real
+// Piwigo\PluginConfig\EventDispatcher::get() singleton now, a pure
+// passthrough with no handlers registered, so no local stub is needed.
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;

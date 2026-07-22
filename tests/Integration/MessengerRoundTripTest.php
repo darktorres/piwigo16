@@ -48,11 +48,12 @@ final class MessengerRoundTripTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         // See tests/Unit/Image/DerivativeCacheServiceTest.php's own
-        // extensive comment on why PHPWG_ROOT_PATH can't be trusted alone:
-        // scope every filesystem side effect to a marker-suffixed
-        // subdirectory, verified before any destructive operation.
+        // extensive comment on why a real filesystem root alone isn't
+        // enough of a safeguard: scope every filesystem side effect to a
+        // marker-suffixed subdirectory, verified before any destructive
+        // operation.
         Config::override('data_location', $this->marker() . '/');
-        mkdir(PHPWG_ROOT_PATH . Config::derivativeDir(), 0o777, true);
+        mkdir(\Piwigo\Core\CurrentPaths::get()->root . Config::derivativeDir(), 0o777, true);
 
         $this->conn = DbConnection::build();
         $this->conn->executeStatement('DROP TABLE IF EXISTS messenger_messages');
@@ -61,7 +62,7 @@ final class MessengerRoundTripTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        $dir = PHPWG_ROOT_PATH . $this->marker();
+        $dir = \Piwigo\Core\CurrentPaths::get()->root . $this->marker();
         if (is_dir($dir)) {
             $this->rrmdir($dir);
         }
@@ -96,7 +97,7 @@ final class MessengerRoundTripTest extends IntegrationTestCase
 
     public function test_a_dispatched_job_is_persisted_received_and_handled_via_the_real_doctrine_transport(): void
     {
-        $derivDir = PHPWG_ROOT_PATH . Config::derivativeDir() . '2026/07';
+        $derivDir = \Piwigo\Core\CurrentPaths::get()->root . Config::derivativeDir() . '2026/07';
         mkdir($derivDir, 0o777, true);
         file_put_contents($derivDir . '/photo-th.jpg', 'x');
         file_put_contents($derivDir . '/photo-sq.jpg', 'x');

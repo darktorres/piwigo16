@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Storage;
 
 use League\Flysystem\FilesystemOperator;
+use Piwigo\Core\CurrentPaths;
 
 /**
  * Named-disk registry. Each entry is a lazy closure that creates the
@@ -56,7 +57,7 @@ final class StorageRegistry
      */
     public static function current(): self
     {
-        return self::$instance ??= self::fromConfig(PHPWG_ROOT_PATH . 'config/storage.php');
+        return self::$instance ??= self::fromConfig(CurrentPaths::get()->root . 'config/storage.php');
     }
 
     public static function set(self $registry): void
@@ -97,7 +98,7 @@ final class StorageRegistry
     /**
      * Strip $root from the beginning of $absolutePath to produce a relative
      * Flysystem path. Normalises backslashes and /./ segments so that paths
-     * built with PHPWG_ROOT_PATH . './upload' match correctly.
+     * built with Paths::$root . './upload' match correctly.
      */
     public static function stripRoot(string $root, string $absolutePath): string
     {

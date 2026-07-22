@@ -6,14 +6,10 @@ declare(strict_types=1);
 // directly (P23 batch 8d), which reads Piwigo\Users\CurrentUser (Legacy
 // Coupling Retirement Track A batch A3) -- tests below seed CurrentUser
 // instead.
-// CookieService::cookiePath() needs PHPWG_ROOT_PATH defined, same as
-// tests/Unit/Auth/CookieServiceTest.php.
-namespace {
-    if (! defined('PHPWG_ROOT_PATH')) {
-        define('PHPWG_ROOT_PATH', './');
-    }
-}
-
+// CookieService::cookiePath() no longer reads PHPWG_ROOT_PATH (Legacy
+// Coupling Retirement gap-closure, entry-shell define()/include round --
+// it reads Piwigo\Core\RequestMountDepth instead, which defaults to 0,
+// matching the old PHPWG_ROOT_PATH='.' default with no setup needed here).
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;

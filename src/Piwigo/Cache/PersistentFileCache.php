@@ -21,7 +21,7 @@ class PersistentFileCache extends PersistentCache
     public function __construct()
     {
         $data_location = \Piwigo\Config\Config::dataLocation();
-        $this->dir = PHPWG_ROOT_PATH . $data_location . 'cache/';
+        $this->dir = \Piwigo\Core\CurrentPaths::get()->root . $data_location . 'cache/';
     }
 
     #[\Override]

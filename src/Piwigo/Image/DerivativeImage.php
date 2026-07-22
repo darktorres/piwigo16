@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\UrlServiceInterface;
 
 /**
@@ -240,7 +241,7 @@ final class DerivativeImage
 
         $url_style = \Piwigo\Config\Config::derivativeUrlStyle();
         if (! (bool) $url_style) {
-            $mtime = @filemtime(PHPWG_ROOT_PATH . $rel_path);
+            $mtime = @filemtime(CurrentPaths::get()->root . $rel_path);
             if ($mtime === false or $mtime < $params->last_mod_time) {
                 $is_cached = false;
                 $url_style = 2;
@@ -265,7 +266,7 @@ final class DerivativeImage
 
     public function get_path(): string
     {
-        return PHPWG_ROOT_PATH . $this->rel_path;
+        return CurrentPaths::get()->root . $this->rel_path;
     }
 
     public function get_url(): string

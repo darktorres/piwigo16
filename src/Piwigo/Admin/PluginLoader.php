@@ -32,9 +32,9 @@ final class PluginLoader
      * PHPWG_ROOT_PATH . 'plugins/')`, file deleted; verified: no frozen
      * install/db or install/upgrade_*.php script reads that constant, so
      * no legacy-bootstrap define needs to survive). A static method rather
-     * than a class constant because PHPWG_ROOT_PATH is itself a runtime
-     * define whose availability at class-linking time can't be guaranteed
-     * on every path -- same reasoning as
+     * than a class constant because the underlying value (formerly
+     * PHPWG_ROOT_PATH, now Piwigo\Core\CurrentPaths) isn't guaranteed
+     * resolved at class-linking time -- same reasoning as
      * PhotosAddDirectPageRenderer::baseUrl() (P23 batch 8f-1). Lives here
      * (every real reader is L4Integration -- Admin/Admin\Extensions/
      * Controller -- or a root entry script) on the class that owns
@@ -42,7 +42,7 @@ final class PluginLoader
      */
     public static function pluginsPath(): string
     {
-        return PHPWG_ROOT_PATH . 'plugins/';
+        return \Piwigo\Core\CurrentPaths::get()->plugins;
     }
 
     /**

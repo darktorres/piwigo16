@@ -24,9 +24,8 @@ use Piwigo\Http\ResponseEmitter;
 
 // ----------------------------------------------------------- include
 $paths = Paths::fromIndex(__FILE__);
-define('PHPWG_ROOT_PATH', './');
 define('IN_WS', true);
-include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
+include_once $paths->root . 'include/common.inc.php';
 
 CommonBootstrap::run($paths);
 

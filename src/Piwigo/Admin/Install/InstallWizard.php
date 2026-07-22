@@ -29,6 +29,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
+use Piwigo\Core\Paths;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -132,6 +133,7 @@ final class InstallWizard
 
     public function __construct(
         private readonly string $prefixeTable,
+        private readonly Paths $paths,
     ) {
         $conf_data_location = LegacyFileConf::read()['data_location'] ?? null;
         if (! is_string($conf_data_location)) {
@@ -139,7 +141,7 @@ final class InstallWizard
         }
         $this->confDataLocation = $conf_data_location;
 
-        $this->configFile = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.inc.php';
+        $this->configFile = $this->paths->siteLocal . 'config/database.inc.php';
     }
 
     /**
@@ -155,8 +157,8 @@ final class InstallWizard
             ->validate('dl', $_GET, false, '/^[a-f0-9]{32}$/');
 
         $dl_param = $_GET['dl'] ?? null;
-        if (is_string($dl_param) && $dl_param !== '' && file_exists(PHPWG_ROOT_PATH . $this->confDataLocation . 'pwg_' . $dl_param)) {
-            $filename = PHPWG_ROOT_PATH . $this->confDataLocation . 'pwg_' . $dl_param;
+        if (is_string($dl_param) && $dl_param !== '' && file_exists($this->paths->root . $this->confDataLocation . 'pwg_' . $dl_param)) {
+            $filename = $this->paths->root . $this->confDataLocation . 'pwg_' . $dl_param;
             header('Cache-Control: no-cache, must-revalidate');
             header('Pragma: no-cache');
             header('Content-Disposition: attachment; filename="database.inc.php"');
@@ -225,7 +227,7 @@ final class InstallWizard
         // in between), so their declared `string` return types are already
         // certain -- no is_string() re-guard needed.
         \Piwigo\Core\CurrentLogger::set(new Logger([
-            'directory' => PHPWG_ROOT_PATH . Config::dataLocation() . Config::logDir(),
+            'directory' => $this->paths->root . Config::dataLocation() . Config::logDir(),
             'severity' => Config::logLevel(),
             'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . Config::dbPassword()) . '.txt',
             'globPattern' => 'log_*.txt',
@@ -249,7 +251,7 @@ final class InstallWizard
         }
 
         // Is Piwigo already installed ?
-        if (file_exists(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . Env::testModeInstalledStamp())) {
+        if (file_exists($this->paths->siteLocal . Env::testModeInstalledStamp())) {
             new HtmlService()
                 ->fatalError('Piwigo is already installed');
         }
@@ -294,7 +296,7 @@ final class InstallWizard
         }
 
         // --------------------------------------------- template initialization
-        $template = new Template(PHPWG_ROOT_PATH . 'admin/themes', 'clear');
+        $template = new Template($this->paths->root . 'admin/themes', 'clear');
         \Piwigo\Template\CurrentTemplate::set($template);
         $template->set_filenames([
             'install' => 'install.tpl',
@@ -391,7 +393,7 @@ final class InstallWizard
         $this->step = 2;
 
         // Write .env (or .env.test in test mode) with DB credentials — atomic rename.
-        $env_file = PHPWG_ROOT_PATH . Env::testModeEnvFile();
+        $env_file = $this->paths->root . Env::testModeEnvFile();
         // Strip line-breaks to prevent .env injection via crafted POST values.
         $env_vals = array_map(
             fn (string $v): string => str_replace(["\n", "\r", "\0"], '', $v),
@@ -457,10 +459,10 @@ define(\'DB_COLLATE\', \'\');
             // writing the configuration file
             if (! (bool) ($fp = @fopen($this->configFile, 'w'))) {
                 // make sure nobody can list files of _data directory
-                \Piwigo\Core\FilesystemHelper::secureDirectory(PHPWG_ROOT_PATH . $this->confDataLocation);
+                \Piwigo\Core\FilesystemHelper::secureDirectory($this->paths->root . $this->confDataLocation);
 
                 $tmp_filename = md5(uniqid((string) time()));
-                $fh = @fopen(PHPWG_ROOT_PATH . $this->confDataLocation . 'pwg_' . $tmp_filename, 'w');
+                $fh = @fopen($this->paths->root . $this->confDataLocation . 'pwg_' . $tmp_filename, 'w');
                 if ($fh !== false) {
                     @fputs($fh, $file_content, strlen($file_content));
                     @fclose($fh);
@@ -481,13 +483,13 @@ define(\'DB_COLLATE\', \'\');
 
         // Create install sentinel stamp file.
         if (count($this->errors) == 0) {
-            touch(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . Env::testModeInstalledStamp());
+            touch($this->paths->siteLocal . Env::testModeInstalledStamp());
         }
 
         // tables creation, based on piwigo_structure.sql
         InstallService::executeSqlfile(
             $conn,
-            PHPWG_ROOT_PATH . 'install/piwigo_structure-mysql.sql',
+            $this->paths->root . 'install/piwigo_structure-mysql.sql',
             self::DEFAULT_PREFIX_TABLE,
             $this->prefixeTable,
             'mysql'
@@ -495,7 +497,7 @@ define(\'DB_COLLATE\', \'\');
         // We fill the tables with basic informations
         InstallService::executeSqlfile(
             $conn,
-            PHPWG_ROOT_PATH . 'install/config.sql',
+            $this->paths->root . 'install/config.sql',
             self::DEFAULT_PREFIX_TABLE,
             $this->prefixeTable,
             'mysql'
@@ -539,7 +541,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
 
         $insert = [
             'id' => 1,
-            'galleries_url' => PHPWG_ROOT_PATH . 'galleries/',
+            'galleries_url' => $this->paths->root . 'galleries/',
         ];
         new BatchWriter($conn)
             ->massInsert(Tables::sites(), array_keys($insert), [$insert]);

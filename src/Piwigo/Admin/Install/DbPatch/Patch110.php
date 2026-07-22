@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Db\Tables;
 
 /**
@@ -54,10 +55,11 @@ SELECT
         $gallery_url = $row !== false && is_scalar($row[0]) ? (string) $row[0] : '';
 
         if (! empty($gallery_url)) {
+            $paths = CurrentPaths::get();
             // let's try to write it in the local configuration file
-            $local_conf = PHPWG_ROOT_PATH . 'local/config/config.inc.php';
+            $local_conf = $paths->local . 'config/config.inc.php';
             if (isset($localConf['local_dir_site'])) {
-                $local_conf = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.inc.php';
+                $local_conf = $paths->siteLocal . 'config/config.inc.php';
             }
 
             $conf_line = '$conf[\'gallery_url\'] = \'' . $gallery_url . '\';';

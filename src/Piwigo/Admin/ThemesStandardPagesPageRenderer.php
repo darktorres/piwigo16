@@ -135,7 +135,7 @@ final class ThemesStandardPagesPageRenderer
                     ]
                 );
             } else {
-                $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'logo';
+                $upload_dir = \Piwigo\Core\CurrentPaths::get()->siteLocal . 'logo';
                 if (\Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
                     $std_pgs_logo_name = isset($std_pgs_logo_upload['name']) && is_string($std_pgs_logo_upload['name'])
                         ? $std_pgs_logo_upload['name']

@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
+use Piwigo\Core\CurrentPaths;
+
 /**
  * Raw `dblayer` value read straight from the site's own
  * local/config/database.inc.php, the same way upgrade.php/upgrade_feed.php's
@@ -23,14 +25,22 @@ namespace Piwigo\Admin\Install\DbPatch;
  * function-scoped $conf captures the include's side effect in full
  * isolation, same pattern as the data_location/webmaster_id reads
  * elsewhere in this file family (Patch65/94/119/171).
+ *
+ * Legacy Coupling Retirement gap-closure (entry-shell define()/include
+ * round): reads Paths::$siteLocal via CurrentPaths::get() instead of the
+ * retired PHPWG_ROOT_PATH/PWG_LOCAL_DIR constants -- database.inc.php
+ * genuinely lives in the site-specific directory (not the fixed `local/`
+ * every install shares), same as upgrade.php's own database.inc.php read.
  */
 final class LegacyDbLayer
 {
     public static function value(): string
     {
-        $localConf = (static function (): array {
+        $paths = CurrentPaths::get();
+
+        $localConf = (static function () use ($paths): array {
             $conf = [];
-            include PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.inc.php';
+            include $paths->siteLocal . 'config/database.inc.php';
 
             return $conf;
         })();

@@ -6,6 +6,7 @@ namespace Piwigo\Section;
 
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\UrlServiceInterface;
 
 /**
@@ -44,7 +45,14 @@ final readonly class SectionInitializer
             $rewritten = is_string($rewritten) ? $rewritten : '';
             $rewritten = str_replace('//', '/', $rewritten);
             $path_count = count(explode('/', $rewritten));
-            $root_path = PHPWG_ROOT_PATH . str_repeat('../', $path_count - 1);
+            // Legacy Coupling Retirement gap-closure (entry-shell
+            // define()/include round): used to be PHPWG_ROOT_PATH .
+            // str_repeat(...), relying on PHPWG_ROOT_PATH's own './'
+            // prefix always being stripped by the (now-removed) check
+            // below in every real gallery-facing context. RequestMountDepth
+            // generalizes this correctly instead of hardcoding "this
+            // entry file is never nested" -- see that class's own docblock.
+            $root_path = str_repeat('../', RequestMountDepth::current() + $path_count - 1);
         } else {
             $rewritten = '';
             foreach (array_keys($_GET) as $key) {
@@ -60,11 +68,7 @@ final readonly class SectionInitializer
 
             // the $_GET keys are not protected in include/common.inc.php, only the values
             $rewritten = $this->repo->escapeToken($rewritten);
-            $root_path = PHPWG_ROOT_PATH;
-        }
-
-        if (str_starts_with($root_path, './')) {
-            $root_path = substr($root_path, 2);
+            $root_path = str_repeat('../', RequestMountDepth::current());
         }
 
         $section_url = $rewritten;

@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
@@ -333,12 +334,13 @@ SELECT id, name, is_default
         // deliberate absence of `global $conf;` here -- this $conf is a fresh
         // local shadow the two includes below populate from scratch, never the
         // real DB-synced global.
+        $paths = CurrentPaths::get();
         $conf = [];
-        include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
-        @include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
+        include $paths->root . 'include/config_default.inc.php';
+        @include $paths->local . 'config/config.inc.php';
         // @phpstan-ignore isset.offset
         if (isset($conf['local_dir_site'])) {
-            @include PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.inc.php';
+            @include $paths->siteLocal . 'config/config.inc.php';
         }
         // @phpstan-ignore nullCoalesce.offset
         return $conf['webmaster_id'] ?? false;

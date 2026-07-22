@@ -68,15 +68,16 @@ final class UrlService implements UrlServiceInterface
         // pages too, matching the original's own `?? null` fallback.
         $root_path = RootPathOverride::current() ?? SectionContextRegistry::current()?->rootPath;
         if ($root_path === null || $root_path === '') {
-            $root_url = PHPWG_ROOT_PATH;
-            if (str_starts_with($root_url, './')) {
-                return substr($root_url, 2);
-            }
-        } else {
-            $root_url = $root_path;
+            // Legacy Coupling Retirement gap-closure (entry-shell
+            // define()/include round): used to read the raw PHPWG_ROOT_PATH
+            // constant here -- see RequestMountDepth's own docblock for why
+            // that was fragile (coincidentally correct only for
+            // admin/popuphelp.php, not a guaranteed general mechanism) and
+            // why this real, request-scoped mount-depth value replaces it.
+            return str_repeat('../', \Piwigo\Core\RequestMountDepth::current());
         }
 
-        return $root_url;
+        return $root_path;
     }
 
     /**

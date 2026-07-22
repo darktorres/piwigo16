@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -181,13 +182,13 @@ final class SrcImage
             // location if a misbehaving handler returns a non-string.
             $this->rel_path = is_string($mimetype_location) ? $mimetype_location : $default_mimetype_location;
             $this->flags |= self::IS_MIMETYPE;
-            if (($size = @getimagesize(PHPWG_ROOT_PATH . $this->rel_path)) === false) {
+            if (($size = @getimagesize(CurrentPaths::get()->root . $this->rel_path)) === false) {
                 if ($ext == 'svg') {
                     $this->rel_path = $path;
                 } else {
                     $this->rel_path = 'themes/default/icon/mimetypes/unknown.png';
                 }
-                $size = getimagesize(PHPWG_ROOT_PATH . $this->rel_path);
+                $size = getimagesize(CurrentPaths::get()->root . $this->rel_path);
                 if ($size === false) {
                     throw new \Exception('SrcImage: unable to read size of fallback icon ' . $this->rel_path);
                 }
@@ -227,7 +228,7 @@ final class SrcImage
 
     public function get_path(): string
     {
-        return PHPWG_ROOT_PATH . $this->rel_path;
+        return CurrentPaths::get()->root . $this->rel_path;
     }
 
     public function get_url(): string

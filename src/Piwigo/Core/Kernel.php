@@ -31,6 +31,14 @@ use Psr\Container\ContainerInterface;
  * The `self::$booted` guard makes boot() idempotent — CommonBootstrap::run()
  * calling it more than once per request (e.g. from a nested include) must
  * not re-wire or corrupt state.
+ *
+ * Legacy Coupling Retirement gap-closure (entry-shell define()/include
+ * round): also publishes $paths to CurrentPaths::set() here -- the one
+ * point every real bootstrap path (HTTP, CLI, install/upgrade) already
+ * converges on a real Paths, for the handful of static-utility classes
+ * (DbPatch/VersionUpgrade migration classes, LegacyFileConf/LegacyDbLayer)
+ * that can't take constructor-injected Paths at all. See CurrentPaths's
+ * own docblock.
  */
 final class Kernel
 {
@@ -44,6 +52,10 @@ final class Kernel
             return;
         }
         self::$booted = true;
+
+        if ($paths instanceof Paths) {
+            CurrentPaths::set($paths);
+        }
 
         self::$container = Container::build(paths: $paths);
     }
@@ -73,5 +85,6 @@ final class Kernel
     {
         self::$booted = false;
         self::$container = null;
+        CurrentPaths::reset();
     }
 }

@@ -51,7 +51,7 @@ final class AdminDispatcher
     private static function map(): array
     {
         /** @var array<string, class-string<AdminSubControllerInterface>> $map */
-        $map = require PHPWG_ROOT_PATH . 'config/admin_pages.php';
+        $map = require \Piwigo\Core\CurrentPaths::get()->root . 'config/admin_pages.php';
         return $map;
     }
 }

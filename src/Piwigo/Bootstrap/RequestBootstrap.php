@@ -21,6 +21,7 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Env;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
@@ -144,7 +145,7 @@ final class RequestBootstrap
             $_SERVER['PATH_INFO'] = addslashes($_SERVER['PATH_INFO']);
         }
 
-        Env::loadEnvFile(PHPWG_ROOT_PATH);
+        Env::loadEnvFile($paths->root);
 
         // P23 batch 8f-3: wires the static-setter HtmlRenderingInterface
         // consumers (Piwigo\Core class-level fatal-error/access-denied paths
@@ -182,7 +183,7 @@ final class RequestBootstrap
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        if (! file_exists(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . Env::testModeInstalledStamp())) {
+        if (! file_exists($paths->siteLocal . Env::testModeInstalledStamp())) {
             header('Location: install.php');
             exit;
         }
@@ -278,7 +279,7 @@ final class RequestBootstrap
         }
 
         \Piwigo\Core\CurrentLogger::set(new Logger([
-            'directory' => PHPWG_ROOT_PATH . $log_data_location . $log_dir,
+            'directory' => CurrentPaths::get()->root . $log_data_location . $log_dir,
             'severity' => \Piwigo\Config\Config::logLevel(),
             // we use an hashed filename to prevent direct file access, and we salt with
             // the db_password instead of secret_key because the log must be usable in i.php
@@ -394,7 +395,7 @@ final class RequestBootstrap
             Lang::load('whats_new_' . \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
         }
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loading_lang');
-        Lang::load('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
+        Lang::load('lang', CurrentPaths::get()->siteLocal, [
             'no_fallback' => true,
             'local' => true,
         ]);
@@ -454,13 +455,13 @@ final class RequestBootstrap
             $admin_theme = new \Piwigo\Users\PreferencesService(new UserRepository($conn))
                 ->getParam('admin_theme', 'clear');
             $admin_theme = is_string($admin_theme) ? $admin_theme : 'clear';
-            $template = new Template(PHPWG_ROOT_PATH . 'admin/themes', $admin_theme);
+            $template = new Template(CurrentPaths::get()->root . 'admin/themes', $admin_theme);
         } else { // Classic template
             $theme = CurrentUser::get()->theme;
             if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'ws' and \Piwigo\Core\DeviceHelper::mobileTheme()) {
                 $theme = \Piwigo\Config\Config::mobilTheme();
             }
-            $template = new Template(PHPWG_ROOT_PATH . 'themes', $theme);
+            $template = new Template(CurrentPaths::get()->root . 'themes', $theme);
         }
 
         // Legacy Coupling Retirement Track A / Phase 2 global-residual
@@ -485,7 +486,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer($conn, \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()))
+            new NoPhotoYetRenderer($conn, \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get())
                 ->render();
         }
 

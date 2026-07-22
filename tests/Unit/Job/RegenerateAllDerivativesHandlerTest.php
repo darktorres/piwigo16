@@ -3,30 +3,17 @@
 declare(strict_types=1);
 
 use Piwigo\Config\Config;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Paths;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Job\Handler\RegenerateAllDerivativesHandler;
 use Piwigo\Job\RegenerateAllDerivativesJob;
 
-// See tests/Unit/Image/DerivativeCacheServiceTest.php's own extensive
-// comment on why PHPWG_ROOT_PATH can't be trusted alone.
-if (! defined('PHPWG_ROOT_PATH')) {
-    define('PHPWG_ROOT_PATH', sys_get_temp_dir() . '/piwigo-regen-handler-test-root/');
-}
-
-function regen_handler_test_marker(): string
-{
-    /** @var string|null $marker */
-    static $marker = null;
-
-    return $marker ??= 'phpwg-regen-handler-test-marker-' . bin2hex(random_bytes(8));
-}
-
+// See tests/Unit/Image/DerivativeCacheServiceTest.php's own comment on why
+// a fresh, uniquely-named temp root per test (via CurrentPaths::set()) is
+// used instead of a single shared constant.
 function regen_handler_test_rrmdir(string $dir): void
 {
-    $marker = regen_handler_test_marker();
-    if (! str_contains($dir, $marker)) {
-        throw new RuntimeException("Refusing to recursively delete '{$dir}': missing this test run's marker.");
-    }
     if (! is_dir($dir)) {
         return;
     }
@@ -43,17 +30,21 @@ function regen_handler_test_rrmdir(string $dir): void
 
 beforeEach(function (): void {
     Config::reset();
-    Config::override('data_location', regen_handler_test_marker() . '/');
-    mkdir(PHPWG_ROOT_PATH . Config::derivativeDir(), 0o777, true);
+    $root = sys_get_temp_dir() . '/piwigo-regen-handler-test-' . bin2hex(random_bytes(8));
+    mkdir($root, 0o777, true);
+    CurrentPaths::set(Paths::fromRoot($root));
+    Config::override('data_location', 'data/');
+    mkdir(CurrentPaths::get()->root . Config::derivativeDir(), 0o777, true);
 });
 
 afterEach(function (): void {
-    regen_handler_test_rrmdir(PHPWG_ROOT_PATH . regen_handler_test_marker());
+    regen_handler_test_rrmdir(CurrentPaths::get()->root);
     Config::reset();
+    CurrentPaths::reset();
 });
 
 test('__invoke delegates to DerivativeCacheService::clearDerivativeCache with the job types', function (): void {
-    $derivDir = PHPWG_ROOT_PATH . Config::derivativeDir() . '2026';
+    $derivDir = CurrentPaths::get()->root . Config::derivativeDir() . '2026';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
     file_put_contents($derivDir . '/photo-sq.jpg', 'x');

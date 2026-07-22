@@ -39,10 +39,9 @@ require __DIR__ . '/vendor/autoload.php';
 
 // ----------------------------------------------------------- include
 $paths = Paths::fromIndex(__FILE__);
-define('PHPWG_ROOT_PATH', './');
 
-include PHPWG_ROOT_PATH . 'include/env.inc.php';
-Env::loadEnvFile(PHPWG_ROOT_PATH);
+include $paths->root . 'include/env.inc.php';
+Env::loadEnvFile($paths->root);
 
 // Legacy Coupling Retirement Phase 8, 8b (the "boot-first" fix, extended
 // from 8a's HTTP-request-path version to install/upgrade): must run
@@ -71,15 +70,6 @@ if (isset($_POST['install'])) {
 // prefix.
 Config::override('db_prefix', $prefixeTable);
 
-// PWG_LOCAL_DIR is a real dependency of code reached later (InstallWizard
-// -> LegacyFileConf::read()'s local_dir_site check, DbPatch/VersionUpgrade
-// classes during a real upgrade-from-install flow) -- unlike the former
-// config_default.inc.php/local/config/config.inc.php includes that used to
-// sit here, which built a bare $conf array nothing in this file (or
-// InstallWizard, which reads its own local/config/config.inc.php
-// independently) ever read.
-defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
-
 // P23 sub-batch 8f-5: the former include/functions_session.inc.php include
 // became Piwigo\Bootstrap\SessionBootstrap::register() (same internal
 // PHPWG_INSTALLED guard, so it stays the no-op it always was at this point
@@ -100,7 +90,7 @@ define('PHPWG_DOMAIN', 'upstream.example.invalid');
 define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
 
 // ---------------------------------------------------------------- orchestration
-$wizard = new InstallWizard($prefixeTable);
+$wizard = new InstallWizard($prefixeTable, $paths);
 // InstallWizard::boot() itself calls InstallBootstrap::activateConfigService()
 // partway through its own body (Legacy Coupling Retirement Phase 8, 8d) --
 // its own Template construction at the end needs it active before this

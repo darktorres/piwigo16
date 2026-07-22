@@ -58,12 +58,16 @@ final class CookieService
             $scr .= '/';
         }
 
-        if (str_starts_with(PHPWG_ROOT_PATH, '../')) { // this is maybe a plugin inside pwg directory
+        $mountDepth = \Piwigo\Core\RequestMountDepth::current();
+        if ($mountDepth > 0) { // this is maybe a plugin inside pwg directory
             // Known, accepted scope boundary: this branch only normalizes
             // the already-narrow "plugin inside the Piwigo directory tree"
             // case above -- a genuinely external script (outside PWG
             // entirely) is a narrower, unsupported sub-case, not handled.
-            $scr .= PHPWG_ROOT_PATH;
+            // Legacy Coupling Retirement gap-closure (entry-shell
+            // define()/include round): used to read the raw PHPWG_ROOT_PATH
+            // constant here -- see RequestMountDepth's own docblock.
+            $scr .= str_repeat('../', $mountDepth);
             while (true) {
                 $new = preg_replace('#[^/]+/\.\.(/|$)#', '', $scr);
                 // fixed, valid pattern -- preg_replace() only returns null on a

@@ -14,21 +14,30 @@ declare(strict_types=1);
 // FAST-BOOTSTRAP entry shell -- it deliberately does NOT include
 // include/common.inc.php (no plugin loading, no user/session bootstrap,
 // minimal DB work), a hard performance requirement for serving derivative
-// images. Only what genuinely must live at real top-level global scope
-// stays here: the define()s (SEC-60 forbids define() in src/) and the
-// config includes (config_default.inc.php and the user's local config
-// write bare globals, which only exist as globals at top-level scope).
+// images.
+//
+// Legacy Coupling Retirement gap-closure (entry-shell define()/include
+// round): the former config_default.inc.php + local/config/config.inc.php
+// includes that used to sit here are gone -- they built a bare $conf array
+// ImageDerivativeController::serve() never read (it uses its own local
+// $conf_unused, see that method's own comment), the same dead-code shape
+// already found and removed from install.php in an earlier phase and from
+// include/common.inc.php in this same round.
+//
+// PHPWG_ROOT_PATH stays defined here (SEC-60 forbids define() in
+// src/Piwigo/, so it has to live in an entry shell if it lives anywhere) --
+// but only for ImageDerivativeController::parseRequest()'s own two
+// remaining reads, both real URL-generation concerns (a redirect target),
+// deliberately deferred to Workstream C3 Part III's own dedicated pass on
+// this controller. Every genuine filesystem-path read in that class
+// already reads $paths instead.
+require __DIR__ . '/vendor/autoload.php';
 
+$paths = \Piwigo\Core\Paths::fromIndex(__FILE__);
 define('PHPWG_ROOT_PATH', './');
 
-// fast bootstrap - no db connection
-include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
-@include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
-
-defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
-
 // autoload boundary -- nothing above this line may reference a Piwigo\ class
-include PHPWG_ROOT_PATH . 'include/env.inc.php';
+include $paths->root . 'include/env.inc.php';
 
-new \Piwigo\Controller\ImageDerivativeController()
+new \Piwigo\Controller\ImageDerivativeController($paths)
     ->serve();

@@ -185,7 +185,7 @@ SELECT COUNT(*)
         // +-------------------------------------------------------------------+
         $template->set_filename('categories', 'cat_list.tpl');
 
-        $form_action = PHPWG_ROOT_PATH . 'admin.php?page=cat_list';
+        $form_action = $this->urlService->getRootUrl() . 'admin.php?page=cat_list';
         if ($parent_id !== null) {
             $form_action .= '&amp;parent_id=' . $parent_id;
         }

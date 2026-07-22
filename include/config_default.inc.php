@@ -186,10 +186,10 @@ $conf['links'] = [];
 //  for each link is associated a php condition
 //  '' condition is equivalent to 'return true;'
 //  $conf['random_index_redirect'] = array(
-//    PHPWG_ROOT_PATH.'index.php?/best_rated' => 'return true;',
-//    PHPWG_ROOT_PATH.'index.php?/recent_pics' => 'return is_a_guest();',
-//    PHPWG_ROOT_PATH.'random.php' => '',
-//    PHPWG_ROOT_PATH.'index.php?/categories' => '',
+//    'index.php?/best_rated' => 'return true;',
+//    'index.php?/recent_pics' => 'return is_a_guest();',
+//    'random.php' => '',
+//    'index.php?/categories' => '',
 //    );
 $conf['random_index_redirect'] = [];
 
@@ -947,7 +947,7 @@ $conf['upload_dir'] = './upload';
 $conf['no_photo_yet_url'] = 'admin.php?page=photos_add';
 
 // directory with themes inside
-$conf['themes_dir'] = PHPWG_ROOT_PATH . 'themes';
+$conf['themes_dir'] = './themes';
 
 // enable the synchronization method for adding photos
 $conf['enable_synchronization'] = true;

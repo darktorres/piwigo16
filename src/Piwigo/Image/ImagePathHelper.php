@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\UrlServiceInterface;
 
 /**
@@ -62,7 +63,7 @@ final class ImagePathHelper
         assert(is_string($path));
 
         if (! $urlService->urlIsRemote($path)) {
-            $path = PHPWG_ROOT_PATH . $path;
+            $path = CurrentPaths::get()->root . $path;
         }
         return $path;
     }

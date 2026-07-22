@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Bootstrap;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -88,19 +89,20 @@ final class RedirectService implements RedirectServiceInterface
         $template = CurrentTemplate::isInitialized() ? CurrentTemplate::get() : null;
 
         if (! Lang::isLangInfoInitialized() || ! isset($template)) {
+            $paths = CurrentPaths::get();
             $guest_id = Config::guestId();
             $user = self::userService()->buildUser($guest_id, true);
             CurrentUser::set(User::fromUserArray($user));
             Lang::load('common.lang');
             EventDispatcher::get()->triggerNotify('loading_lang');
-            Lang::load('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
+            Lang::load('lang', $paths->siteLocal, [
                 'no_fallback' => true,
                 'local' => true,
             ]);
-            $template = new Template(PHPWG_ROOT_PATH . 'themes', self::userService()->getDefaultTheme());
+            $template = new Template($paths->root . 'themes', self::userService()->getDefaultTheme());
             CurrentTemplate::set($template);
         } elseif (defined('IN_ADMIN') and IN_ADMIN) {
-            $template = new Template(PHPWG_ROOT_PATH . 'themes', self::userService()->getDefaultTheme());
+            $template = new Template(CurrentPaths::get()->root . 'themes', self::userService()->getDefaultTheme());
             CurrentTemplate::set($template);
         }
 

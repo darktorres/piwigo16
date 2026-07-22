@@ -16,21 +16,15 @@ namespace {
     }
 
     // buildPluginMaintain() now reads Piwigo\Admin\PluginLoader::pluginsPath()
-    // (P23 batch 8f-4; the PHPWG_PLUGINS_PATH define is gone), which
-    // composes on PHPWG_ROOT_PATH at call time -- so only the root-path
-    // guard survives here. Every plugin id used in this suite is synthetic
-    // and never on disk, so it only needs to resolve to a real
+    // (P23 batch 8f-4; the PHPWG_PLUGINS_PATH define is gone), which reads
+    // Piwigo\Core\CurrentPaths (Legacy Coupling Retirement gap-closure,
+    // entry-shell define()/include round) -- IntegrationTestCase's own
+    // setUp() already seeds it against this repo's real root, no per-file
+    // guard needed any more. Every plugin id used in this suite is
+    // synthetic and never on disk, so it only needs to resolve to a real
     // (if empty-of-that-id) directory for file_exists() checks to return
-    // false safely. '.' (not an absolute path) matches PHPWG_ROOT_PATH's
-    // real value everywhere else in this codebase (see e.g.
-    // UrlServiceTest.php's identical guard) -- using an absolute path here
-    // corrupted PHPWG_ROOT_PATH project-wide for every other Integration
-    // test file loaded in the same Pest process (confirmed: it broke
-    // SectionInitializerTest's rootPath assertions, since define() guards
-    // mean whichever file's block runs first wins for the whole test run).
-    if (! defined('PHPWG_ROOT_PATH')) {
-        define('PHPWG_ROOT_PATH', './');
-    }
+    // false safely, which the real repo root satisfies the same way the
+    // old CWD-relative '.' guard did.
 
     // script_basename() stub removed -- ActivityService::record() (what
     // pwg_activity() delegates to) now calls Piwigo\Core\PageFilterHelper::
@@ -146,7 +140,7 @@ namespace Piwigo\Tests\Integration {
             // for real here) reads Config::themesDir() -- provide the
             // production value so the real filesystem check runs against
             // the real themes/ dir.
-            Config::override('themes_dir', PHPWG_ROOT_PATH . 'themes');
+            Config::override('themes_dir', \Piwigo\Core\CurrentPaths::get()->root . 'themes');
             CurrentUser::set(User::fromUserArray(['id' => 1]));
             CurrentUser::markRealUserResolved();
             unset($_REQUEST['method'], $_REQUEST['action']);

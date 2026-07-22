@@ -300,7 +300,7 @@ final class Lang
             $filename .= '.php';
         }
         if ($dirname === '') {
-            $dirname = PHPWG_ROOT_PATH;
+            $dirname = CurrentPaths::get()->root;
         }
         $dirname .= 'language/';
 
@@ -549,7 +549,7 @@ final class Lang
             return (is_string($parent) && $parent !== '') ? $parent : null;
         }
 
-        $f = PHPWG_ROOT_PATH . 'language/' . $lang_id . '/common.po';
+        $f = CurrentPaths::get()->root . 'language/' . $lang_id . '/common.po';
         if (is_readable($f)) {
             $parent = new PoLoader()
                 ->loadFile($f)

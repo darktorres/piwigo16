@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Db\Tables;
 
 /**
@@ -48,7 +49,7 @@ final class Patch108 implements DbPatchInterface
         $order_regex = '#^(( *)(id|file|name|date_available|date_creation|hit|average_rate|comment|author|filesize|width|height|high_filesize|high_width|high_height|rank) (ASC|DESC),{1}){1,}$#';
 
         // local file is writable
-        if (is_writable($local_file = PHPWG_ROOT_PATH . 'local/config/config.inc.php')) {
+        if (is_writable($local_file = CurrentPaths::get()->local . 'config/config.inc.php')) {
             $order_by = str_ireplace(
                 ['order by ', 'asc', 'desc'],
                 [null, 'ASC', 'DESC'],

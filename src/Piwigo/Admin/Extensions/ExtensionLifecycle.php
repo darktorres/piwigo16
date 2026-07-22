@@ -414,7 +414,8 @@ final readonly class ExtensionLifecycle
 
                 $this->repo->reassignUsersFromLanguage($id, self::userService($conn)->getDefaultLanguage());
 
-                FilesystemHelper::deltree(PHPWG_ROOT_PATH . 'language/' . $id, PHPWG_ROOT_PATH . 'language/trash');
+                $languagesDir = \Piwigo\Core\CurrentPaths::get()->root . 'language/';
+                FilesystemHelper::deltree($languagesDir . $id, $languagesDir . 'trash');
                 break;
 
             case 'set_default':

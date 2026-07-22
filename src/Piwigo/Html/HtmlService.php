@@ -123,7 +123,7 @@ final class HtmlService implements HtmlRenderingInterface
                 $output .= $cat['name'] . '</a>';
             } else {
                 $cat_id = is_scalar($cat['id']) ? (string) $cat['id'] : '';
-                $output .= '<a href="' . PHPWG_ROOT_PATH . $url . $cat_id . '">';
+                $output .= '<a href="' . $this->urlService()->getRootUrl() . $url . $cat_id . '">';
                 $output .= $cat['name'] . '</a>';
             }
         }
@@ -210,7 +210,7 @@ final class HtmlService implements HtmlRenderingInterface
                 . '">' . $cat['name'] . '</a>';
             } else {
                 $output .= '
-<a href="' . PHPWG_ROOT_PATH . $url . $category_id . '">' . $cat['name'] . '</a>';
+<a href="' . $this->urlService()->getRootUrl() . $url . $category_id . '">' . $cat['name'] . '</a>';
             }
         }
 

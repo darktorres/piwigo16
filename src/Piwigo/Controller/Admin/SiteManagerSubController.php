@@ -173,13 +173,13 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
             $id = is_scalar($row['id']) ? (string) $row['id'] : '';
             $galleries_url = is_string($row['galleries_url']) ? $row['galleries_url'] : '';
             $is_remote = $this->urlService->urlIsRemote($galleries_url);
-            $base_url = PHPWG_ROOT_PATH . 'admin.php';
+            $base_url = $this->urlService->getRootUrl() . 'admin.php';
             $base_url .= '?page=site_manager';
             $base_url .= '&amp;site=' . $id;
             $base_url .= '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken();
             $base_url .= '&amp;action=';
 
-            $update_url = PHPWG_ROOT_PATH . 'admin.php';
+            $update_url = $this->urlService->getRootUrl() . 'admin.php';
             $update_url .= '?page=site_update';
             $update_url .= '&amp;site=' . $id;
 

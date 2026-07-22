@@ -305,7 +305,7 @@ SELECT
             // upload directory hierarchy
             $conf_upload_dir = \Piwigo\Config\Config::uploadDir();
             $upload_dir = sprintf(
-                PHPWG_ROOT_PATH . $conf_upload_dir . '/%s/%s/%s',
+                \Piwigo\Core\CurrentPaths::get()->root . $conf_upload_dir . '/%s/%s/%s',
                 $year,
                 $month,
                 $day
@@ -392,7 +392,7 @@ SELECT
         // upload garbage-collection guarantee), matching what move_uploaded_file()
         // used to do immediately; the "already local" (rename()) branch still
         // needs an explicit unlink() since nothing else will remove that source.
-        $upload_root = rtrim(PHPWG_ROOT_PATH . Config::uploadDir(), '/');
+        $upload_root = rtrim(\Piwigo\Core\CurrentPaths::get()->root . Config::uploadDir(), '/');
         $upload_rel_path = StorageRegistry::stripRoot($upload_root, $file_path);
         $upload_stream = fopen($source_filepath, 'rb');
         if ($upload_stream !== false) {
@@ -493,7 +493,7 @@ SELECT
                 // exact same instant, matching what the DB default would
                 // have produced for a single INSERT.
                 'lastmodified' => $dbnow,
-                'path' => preg_replace('#^' . preg_quote(PHPWG_ROOT_PATH) . '#', '', $file_path),
+                'path' => preg_replace('#^' . preg_quote(\Piwigo\Core\CurrentPaths::get()->root) . '#', '', $file_path),
                 'filesize' => $file_infos['filesize'],
                 'width' => $file_infos['width'],
                 'height' => $file_infos['height'],
@@ -704,11 +704,12 @@ SELECT
 
         // Same StorageRegistry-routed migration as addUploadedFile()'s own
         // move_uploaded_file()/rename() pair above -- $format_path here (built
-        // from the DB-stored images.path column) is relative, not yet prefixed
-        // with PHPWG_ROOT_PATH, so it needs normalizing to an absolute path
-        // before stripRoot() can compute the disk-relative path.
-        $format_root = PHPWG_ROOT_PATH . Config::uploadDir();
-        $format_abs_path = PHPWG_ROOT_PATH . ltrim(str_replace(['\\', '/./'], ['/', '/'], $format_path), '/');
+        // from the DB-stored images.path column) is relative, not yet an
+        // absolute path, so it needs normalizing before stripRoot() can
+        // compute the disk-relative path.
+        $paths = \Piwigo\Core\CurrentPaths::get();
+        $format_root = $paths->root . Config::uploadDir();
+        $format_abs_path = $paths->root . ltrim(str_replace(['\\', '/./'], ['/', '/'], $format_path), '/');
         $format_rel_path = StorageRegistry::stripRoot($format_root, $format_abs_path);
         $format_stream = fopen($source_filepath, 'rb');
         if ($format_stream !== false) {
@@ -1313,7 +1314,12 @@ SELECT
 
         $upload_dir = \Piwigo\Config\Config::uploadDir();
 
-        $relative_dir = preg_replace('#^' . PHPWG_ROOT_PATH . '#', '', $upload_dir);
+        // Config::uploadDir()'s own default ('./upload') is CWD-relative, not
+        // Paths-based (same convention as Config::themesDir()) -- this only
+        // strips a leading './' for display, so the literal string replaces
+        // the former PHPWG_ROOT_PATH read (always './' in every real entry
+        // file) rather than Paths::$root, which is an absolute path.
+        $relative_dir = preg_replace('#^\./#', '', $upload_dir);
 
         if (! is_dir($upload_dir)) {
             if (! is_writable(dirname($upload_dir))) {

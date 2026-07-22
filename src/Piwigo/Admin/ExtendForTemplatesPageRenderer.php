@@ -124,7 +124,7 @@ SELECT permalink
             [
                 'N/A' => '----------',
             ],
-            FilesystemHelper::getDirs(PHPWG_ROOT_PATH . 'themes')
+            FilesystemHelper::getDirs(\Piwigo\Core\CurrentPaths::get()->themes)
         );
 
         if (isset($_POST['submit'])) {

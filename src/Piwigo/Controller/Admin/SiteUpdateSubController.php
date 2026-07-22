@@ -627,7 +627,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                 if (substr_compare($fulldir, '../', 0, 3) == 0) {
                     $fulldir = substr($fulldir, 3);
                 }
-                $to_delete_derivative_dirs[] = PHPWG_ROOT_PATH . Config::derivativeDir() . $fulldir;
+                $to_delete_derivative_dirs[] = \Piwigo\Core\CurrentPaths::get()->root . Config::derivativeDir() . $fulldir;
             }
 
             if (count($to_delete) > 0) {

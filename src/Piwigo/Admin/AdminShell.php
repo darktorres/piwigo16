@@ -59,6 +59,7 @@ final class AdminShell
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
+        private readonly \Piwigo\Core\Paths $paths,
     ) {}
 
     /**
@@ -184,7 +185,7 @@ final class AdminShell
         // | Variables init                                                    |
         // +-------------------------------------------------------------------+
 
-        $change_theme_url = PHPWG_ROOT_PATH . 'admin.php?';
+        $change_theme_url = $this->urlService->getRootUrl() . 'admin.php?';
         $test_get = $_GET;
         unset($test_get['page']);
         unset($test_get['section']);
@@ -237,7 +238,7 @@ final class AdminShell
         // anti-listing stub and popuphelp.php, neither a real admin page).
         // Anything else falls back to 'intro'.
         /** @var array<string, class-string<\Piwigo\Controller\Admin\AdminSubControllerInterface>> $admin_pages */
-        $admin_pages = require PHPWG_ROOT_PATH . 'config/admin_pages.php';
+        $admin_pages = require $this->paths->root . 'config/admin_pages.php';
 
         if (isset($_GET['page'])
             and is_string($_GET['page'])
@@ -248,7 +249,7 @@ final class AdminShell
             $page_slug = 'intro';
         }
 
-        $link_start = PHPWG_ROOT_PATH . 'admin.php?page=';
+        $link_start = $this->urlService->getRootUrl() . 'admin.php?page=';
         $conf_link = $link_start . 'configuration&amp;section=';
 
         // $_GET['tab'] is often used to perform and
@@ -295,8 +296,8 @@ final class AdminShell
                 'U_USERS' => $link_start . 'user_list',
                 'U_GROUPS' => $link_start . 'group_list',
                 'U_RETURN' => $this->urlService->getGalleryHomeUrl(),
-                'U_ADMIN' => PHPWG_ROOT_PATH . 'admin.php',
-                'U_LOGOUT' => PHPWG_ROOT_PATH . 'index.php?act=logout',
+                'U_ADMIN' => $this->urlService->getRootUrl() . 'admin.php',
+                'U_LOGOUT' => $this->urlService->getRootUrl() . 'index.php?act=logout',
                 'U_PLUGINS' => $link_start . 'plugins',
                 'U_ADD_PHOTOS' => $link_start . 'photos_add',
                 'U_CHANGE_THEME' => $change_theme_url,

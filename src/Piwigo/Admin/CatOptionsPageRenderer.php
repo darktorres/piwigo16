@@ -109,7 +109,7 @@ final class CatOptionsPageRenderer
         if (! is_string($section) or ! in_array($section, ['comments', 'visible', 'status', 'representative'], true)) {
             $section = 'status';
         }
-        $base_url = PHPWG_ROOT_PATH . 'admin.php?page=cat_options&amp;section=';
+        $base_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_options&amp;section=';
 
         $template->assign(
             [

@@ -78,7 +78,7 @@ final class CommentsController implements ControllerInterface
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        $url_self = PHPWG_ROOT_PATH . 'comments.php'
+        $url_self = $this->urlService->getRootUrl() . 'comments.php'
           . $this->urlService->getQueryStringDiff(['delete', 'edit', 'validate', 'pwg_token']);
 
         $sort_order = [
@@ -399,7 +399,7 @@ final class CommentsController implements ControllerInterface
 
         $template->assign(
             [
-                'F_ACTION' => PHPWG_ROOT_PATH . 'comments.php',
+                'F_ACTION' => $this->urlService->getRootUrl() . 'comments.php',
                 'F_KEYWORD' => $keyword_param !== null ? htmlspecialchars(stripslashes($keyword_param)) : '',
                 'F_AUTHOR' => $author_param !== null ? htmlspecialchars(stripslashes($author_param)) : '',
             ]
@@ -523,7 +523,7 @@ AND ', $where_clauses) . '
         $counter_raw = $conn->fetchOne('SELECT FOUND_ROWS()');
         $counter = is_numeric($counter_raw) ? (int) $counter_raw : 0;
 
-        $url = PHPWG_ROOT_PATH . 'comments.php'
+        $url = $urlService->getRootUrl() . 'comments.php'
           . $urlService->getQueryStringDiff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
 
         // when 'all' items are shown there is no real page size;

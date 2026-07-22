@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Mail;
 
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -392,7 +393,7 @@ final class MailService implements MailerInterface
      */
     public function getMailTemplate(string $emailFormat): Template
     {
-        return new Template(PHPWG_ROOT_PATH . 'themes', 'default', 'template/mail/' . $emailFormat);
+        return new Template(CurrentPaths::get()->root . 'themes', 'default', 'template/mail/' . $emailFormat);
     }
 
     public function getStrEmailFormat(bool $isHtml): string
@@ -445,7 +446,7 @@ final class MailService implements MailerInterface
             \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loading_lang');
             Lang::load(
                 'lang',
-                PHPWG_ROOT_PATH . PWG_LOCAL_DIR,
+                CurrentPaths::get()->siteLocal,
                 [
                     'language' => $language,
                     'no_fallback' => true,
@@ -1005,7 +1006,7 @@ final class MailService implements MailerInterface
     {
         $dataLocation = \Piwigo\Config\Config::dataLocation();
 
-        $dir = PHPWG_ROOT_PATH . $dataLocation . 'tmp';
+        $dir = CurrentPaths::get()->root . $dataLocation . 'tmp';
         if (\Piwigo\Core\FilesystemHelper::mkgetdir($dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
             $username = \Piwigo\Users\CurrentUser::get()->username;
             $langCode = Lang::langInfo()['code'] ?? null;

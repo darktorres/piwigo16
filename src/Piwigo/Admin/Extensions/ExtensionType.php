@@ -51,7 +51,7 @@ enum ExtensionType: string
         return match ($this) {
             self::Plugin => \Piwigo\Admin\PluginLoader::pluginsPath(),
             self::Theme => Config::themesPath(),
-            self::Language => PHPWG_ROOT_PATH . 'language/',
+            self::Language => \Piwigo\Core\CurrentPaths::get()->root . 'language/',
         };
     }
 

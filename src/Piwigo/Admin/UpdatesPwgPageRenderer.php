@@ -84,7 +84,7 @@ final class UpdatesPwgPageRenderer
             $upgrade_to = is_string($get_to) ? $get_to : '';
         }
 
-        $core_update_service = new CoreUpdateService(new ZipExtractor(), $this->redirectService, $this->urlService, $this->configService);
+        $core_update_service = new CoreUpdateService(new ZipExtractor(), $this->redirectService, $this->urlService, $this->configService, \Piwigo\Core\CurrentPaths::get());
         $new_versions = $core_update_service->getPiwigoNewVersions();
 
         // +-----------------------------------------------------------------------+

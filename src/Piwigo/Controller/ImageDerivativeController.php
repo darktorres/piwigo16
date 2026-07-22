@@ -12,6 +12,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Logger;
+use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -107,6 +108,10 @@ final class ImageDerivativeController
 
     private ?DerivativeParams $derivativeParams = null;
 
+    public function __construct(
+        private readonly Paths $paths,
+    ) {}
+
     public function serve(): void
     {
         // \Piwigo\Config\Config::dataLocation() needs narrowing here specifically (used
@@ -117,7 +122,7 @@ final class ImageDerivativeController
             die("Invalid \\Piwigo\Config\Config::dataLocation() configuration: expected a string.");
         }
 
-        Env::loadEnvFile(PHPWG_ROOT_PATH);
+        Env::loadEnvFile($this->paths->root);
         // Env::applyEnvToConf(array &$conf, string &$prefixeTable)'s two
         // by-ref params are both dead here now (Legacy Coupling Retirement
         // Track A gap-fill batch G2/G5: this controller's own $conf/
@@ -152,7 +157,7 @@ final class ImageDerivativeController
         }
 
         $logger = new Logger([
-            'directory' => PHPWG_ROOT_PATH . $log_data_location . $log_dir,
+            'directory' => $this->paths->root . $log_data_location . $log_dir,
             'severity' => \Piwigo\Config\Config::logLevel(),
             // we use an hashed filename to prevent direct file access, and we salt with
             // the db_password instead of secret_key because the log must be usable in i.php
@@ -373,7 +378,7 @@ final class ImageDerivativeController
 
         if ($params->will_watermark($d_size)) {
             $wm = ImageStdParams::get_watermark();
-            $wm_image = new PwgImage(PHPWG_ROOT_PATH . $wm->file);
+            $wm_image = new PwgImage($this->paths->root . $wm->file);
             $wm_size = [(int) $wm_image->get_width(), (int) $wm_image->get_height()];
             if ($d_size[0] < $wm_size[0] or $d_size[1] < $wm_size[1]) {
                 $wm_scaling_params = SizingParams::classic($d_size[0], $d_size[1]);
@@ -587,6 +592,21 @@ final class ImageDerivativeController
 
     private function parseRequest(): DerivativeParams
     {
+        // $this->rootPath deliberately keeps reading the raw PHPWG_ROOT_PATH
+        // constant (still defined by i.php, not eliminated there yet) rather
+        // than $this->paths->root: it's a *relative* URL prefix embedded in
+        // $this->srcUrl (a real 301 redirect target / generated URL, not a
+        // filesystem path) -- PHPWG_ROOT_PATH's relative './' shape is
+        // exactly what makes it valid there; $this->paths->root (absolute)
+        // would leak the server's real filesystem path into a client-facing
+        // URL. Legacy Coupling Retirement gap-closure (entry-shell
+        // define()/include round): every genuine filesystem-path read in
+        // this class already moved to $this->paths above -- this one
+        // URL-generation concern is deliberately left for Workstream C3
+        // Part III's own dedicated, careful pass (this class is already
+        // flagged there as needing isolated treatment: the highest-QPS
+        // endpoint in the app, and the one place a subtle mistake here would
+        // be a real security/correctness bug, not just style debt).
         if (\Piwigo\Config\Config::questionMarkInUrls() === false and
              isset($_SERVER['PATH_INFO']) and ! empty($_SERVER['PATH_INFO'])) {
             $req = $_SERVER['PATH_INFO'];
@@ -624,7 +644,7 @@ final class ImageDerivativeController
             (bool) preg_match($sync_chars_regex, $token) or $this->ierror('Invalid chars in request', 400);
         }
 
-        $this->derivativePath = PHPWG_ROOT_PATH . Config::derivativeDir() . $req;
+        $this->derivativePath = $this->paths->root . Config::derivativeDir() . $req;
 
         $pos = strrpos($req, '.');
         $pos !== false || $this->ierror('Missing .', 400);
@@ -674,14 +694,14 @@ final class ImageDerivativeController
             }
         }
 
-        if (is_file(PHPWG_ROOT_PATH . $req . $ext)) {
+        if (is_file($this->paths->root . $req . $ext)) {
             $req = './' . $req; // will be used to match #iamges.path
-        } elseif (is_file(PHPWG_ROOT_PATH . '../' . $req . $ext)) {
+        } elseif (is_file($this->paths->root . '../' . $req . $ext)) {
             $req = '../' . $req;
         }
 
         $this->srcLocation = $req . $ext;
-        $this->srcPath = PHPWG_ROOT_PATH . $this->srcLocation;
+        $this->srcPath = $this->paths->root . $this->srcLocation;
         $this->srcUrl = $this->rootPath . $this->srcLocation;
 
         // Every non-erroring path above sets $this->derivativeParams itself
@@ -771,7 +791,11 @@ final class ImageDerivativeController
             $params->use_watermark = false;
             $params->sharpen = min(1, $params->sharpen);
             $this->srcPath = $candidate_path;
-            $this->srcUrl = $this->rootPath . substr($candidate_path, strlen(PHPWG_ROOT_PATH));
+            // $this->rootPath is still a raw PHPWG_ROOT_PATH-relative prefix
+            // (see parseRequest()'s own comment) -- $candidate_path is now
+            // built from $this->paths->root (absolute), so the strip length
+            // must match that, not the old relative constant's length.
+            $this->srcUrl = $this->rootPath . substr($candidate_path, strlen($this->paths->root));
             $this->rotationAngle = 0;
             return true;
         }

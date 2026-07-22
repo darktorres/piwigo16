@@ -284,7 +284,7 @@ final class MaintenanceActionDispatcher
                     } elseif (version_compare($versions['current'], $versions['latest']) < 0) {
                         \Piwigo\Core\PageState::current()->addInfo(Lang::t('A new version of Piwigo is available.'));
 
-                        $update_url = PHPWG_ROOT_PATH . 'admin.php?page=updates';
+                        $update_url = $this->urlService->getRootUrl() . 'admin.php?page=updates';
                         \Piwigo\Core\PageState::current()->addInfo('<a href="' . $update_url . '">' . Lang::t('Update to Piwigo %s', $versions['latest']) . '</a>');
                     } else {
                         \Piwigo\Core\PageState::current()->addInfo(Lang::t('You are running the latest version of Piwigo.'));

@@ -13,6 +13,7 @@ namespace Piwigo\Template;
 
 use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\DeviceHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ProcessCache;
@@ -133,7 +134,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         }
 
         if (! \Piwigo\Config\Config::has('data_dir_checked')) {
-            $dir = PHPWG_ROOT_PATH . $conf_data_location;
+            $dir = CurrentPaths::get()->root . $conf_data_location;
             \Piwigo\Core\FilesystemHelper::mkgetdir($dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
             if (! is_writable($dir)) {
                 Lang::load('admin.lang');
@@ -178,7 +179,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
             }
         }
 
-        $compile_dir = PHPWG_ROOT_PATH . $conf_data_location . 'templates_c';
+        $compile_dir = CurrentPaths::get()->root . $conf_data_location . 'templates_c';
         \Piwigo\Core\FilesystemHelper::mkgetdir($compile_dir);
 
         $this->smarty->setCompileDir($compile_dir);
@@ -1365,6 +1366,14 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      */
     public static function prefilter_local_css($source, $smarty)
     {
+        $paths = CurrentPaths::get();
+        // The relative directory name (e.g. 'local/' or a PIWIGO_LOCAL_DIR
+        // override) -- combine_css's own path= attribute needs a
+        // root-relative string, same shape the retired PWG_LOCAL_DIR
+        // constant already was, so the absolute Paths::$siteLocal has its
+        // $paths->root prefix stripped back off here.
+        $siteLocalDir = substr($paths->siteLocal, strlen($paths->root));
+
         $css = [];
         $themes = $smarty->getTemplateVars('themes');
         if (is_array($themes)) {
@@ -1372,14 +1381,14 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
                 if (! is_array($theme) || ! isset($theme['id']) || ! is_string($theme['id'])) {
                     continue;
                 }
-                $f = PWG_LOCAL_DIR . 'css/' . $theme['id'] . '-rules.css';
-                if (file_exists(PHPWG_ROOT_PATH . $f)) {
+                $f = $siteLocalDir . 'css/' . $theme['id'] . '-rules.css';
+                if (file_exists($paths->root . $f)) {
                     $css[] = "{combine_css path='{$f}' order=10}";
                 }
             }
         }
-        $f = PWG_LOCAL_DIR . 'css/rules.css';
-        if (file_exists(PHPWG_ROOT_PATH . $f)) {
+        $f = $siteLocalDir . 'css/rules.css';
+        if (file_exists($paths->root . $f)) {
             $css[] = "{combine_css path='{$f}' order=10}";
         }
 

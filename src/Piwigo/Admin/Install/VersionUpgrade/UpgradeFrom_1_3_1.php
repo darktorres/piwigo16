@@ -589,7 +589,7 @@ UPDATE ' . Tables::categories() . '
         }
 
         // load the config file
-        $config_file = PHPWG_ROOT_PATH . 'local/config/database.inc.php';
+        $config_file = \Piwigo\Core\CurrentPaths::get()->siteLocal . 'config/database.inc.php';
         $config_file_contents = @file_get_contents($config_file);
         if ($config_file_contents === false) {
             die('CANNOT LOAD ' . $config_file);

@@ -1277,7 +1277,8 @@ SELECT
                 $user_string .= $user_id_key;
             }
             $user_string .= '&nbsp;<a href="';
-            $user_string .= PHPWG_ROOT_PATH . 'admin.php?page=history';
+            $user_string .= new UrlService(new HtmlService())
+                ->getRootUrl() . 'admin.php?page=history';
             $user_string .= '&amp;search_id=' . $search_id;
             $user_string .= '&amp;user_id=' . $user_id_key;
             $user_string .= '">+</a>';
@@ -1306,7 +1307,8 @@ SELECT
             $image_id = '';
             $cat_name = '';
             if ($line_image_id !== null) {
-                $image_edit_string = PHPWG_ROOT_PATH . 'admin.php?page=photo-' . $line_image_id;
+                $image_edit_string = new UrlService(new HtmlService())
+                    ->getRootUrl() . 'admin.php?page=photo-' . $line_image_id;
                 $picture_url = new UrlService(new HtmlService())
                     ->makePictureUrl(
                         [

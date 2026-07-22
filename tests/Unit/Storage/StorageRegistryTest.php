@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Paths;
 use Piwigo\Storage\StorageRegistry;
-
-if (! defined('PHPWG_ROOT_PATH')) {
-    define('PHPWG_ROOT_PATH', dirname(__DIR__, 3) . '/');
-}
 
 beforeEach(function (): void {
     StorageRegistry::reset();
+    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3)));
 });
 
 afterEach(function (): void {
     StorageRegistry::reset();
+    CurrentPaths::reset();
 });
 
 test('get round-trips a write and read on a real local disk', function (): void {
@@ -94,7 +94,7 @@ test('stripRoot normalizes backslashes', function (): void {
 });
 
 test('stripRoot collapses a single /./ redundancy from root+path concatenation', function (): void {
-    // The realistic case this exists for: PHPWG_ROOT_PATH ('./') concatenated
+    // The realistic case this exists for: Paths::$root concatenated
     // with a Config value that already starts with './' (e.g. Config::
     // uploadDir()'s './upload') produces exactly one '/./' redundancy in the
     // middle of the string -- normalize() does a single str_replace() pass,

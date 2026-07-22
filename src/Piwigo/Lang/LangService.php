@@ -57,9 +57,10 @@ final readonly class LangService
      * every language installed under the core language/ tree
      *
      * P23 batch 8d: relocated from include/functions.inc.php's
-     * get_languages(), unchanged logic -- static since it needs neither
-     * Paths nor any other instance state, matching InputValidator's own
-     * mixed static/instance precedent.
+     * get_languages(), unchanged logic -- static since it needs no other
+     * instance state, matching InputValidator's own mixed static/instance
+     * precedent; reads Paths via CurrentPaths::get() rather than $this->paths
+     * since a static method can't reach constructor-injected state.
      *
      * @return string[]
      */
@@ -67,7 +68,7 @@ final readonly class LangService
     {
         $languages = [];
         foreach (new LangRepository(DbConnection::build())->findAll() as $row) {
-            if (is_dir(PHPWG_ROOT_PATH . 'language/' . $row['id'])) {
+            if (is_dir(\Piwigo\Core\CurrentPaths::get()->root . 'language/' . $row['id'])) {
                 $languages[$row['id']] = $row['name'];
             }
         }

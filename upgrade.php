@@ -46,7 +46,6 @@ if (function_exists('ini_set')) {
 require __DIR__ . '/vendor/autoload.php';
 
 $paths = Paths::fromIndex(__FILE__);
-define('PHPWG_ROOT_PATH', './');
 
 // Autoload boundary (see include/env.inc.php: it only requires
 // vendor/autoload.php). Added in the 8f-6 port -- the former file resolved
@@ -54,7 +53,7 @@ define('PHPWG_ROOT_PATH', './');
 // its include chain, a latent "Class not found" fatal on direct
 // upgrade.php requests that nothing smoke-tested; every entry shell now
 // requires the autoloader first, matching admin.php/install.php.
-include PHPWG_ROOT_PATH . 'include/env.inc.php';
+include $paths->root . 'include/env.inc.php';
 
 // Legacy Coupling Retirement Phase 8, 8b (the "boot-first" fix, extended
 // from 8a's HTTP-request-path version to install/upgrade): must run
@@ -69,11 +68,10 @@ InstallBootstrap::boot($paths);
  */
 
 // load config file
-include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
-@include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
-defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
+include $paths->root . 'include/config_default.inc.php';
+@include $paths->local . 'config/config.inc.php';
 
-$config_file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.inc.php';
+$config_file = $paths->siteLocal . 'config/database.inc.php';
 $config_file_contents = @file_get_contents($config_file);
 if ($config_file_contents === false) {
     die('Cannot load ' . $config_file);
@@ -136,7 +134,7 @@ InstallBootstrap::activateConfigService();
 define('PHPWG_DOMAIN', 'upstream.example.invalid');
 define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
 
-$runner = new UpgradeRunner($config_file, $config_file_contents, $php_end_tag);
+$runner = new UpgradeRunner($config_file, $config_file_contents, $php_end_tag, $paths);
 
 // Language pick + Lang loads, before the DB connection on purpose: a
 // failed connection must die with an already localized message.

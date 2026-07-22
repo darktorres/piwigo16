@@ -30,10 +30,9 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Url\UrlService;
 
 $paths = Paths::fromIndex(__FILE__);
-define('PHPWG_ROOT_PATH', './');
 define('IN_ADMIN', true);
 
-include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
+include_once $paths->root . 'include/common.inc.php';
 
 // P21 boots the Kernel/DI container on the admin.php path too -- needed by
 // AdminDispatcher (inside AdminShell) to resolve AdminSubControllerInterface
@@ -44,5 +43,5 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 // their own docblocks), same ordering index.php already uses.
 CommonBootstrap::run($paths);
 
-new AdminShell(new RedirectService(), new UrlService(new HtmlService()), CurrentConfigService::get())
+new AdminShell(new RedirectService(), new UrlService(new HtmlService()), CurrentConfigService::get(), $paths)
     ->run();

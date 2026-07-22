@@ -20,11 +20,10 @@ use Piwigo\Admin\Upload\UploadService;
 // Marker-based filesystem safety: this suite writes real files to verify
 // [SEC-21]'s SVG sanitizer, so every path must be scoped to a unique
 // temp subdirectory it creates and tears down itself -- never touching
-// PHPWG_ROOT_PATH (see DerivativeCacheServiceTest's own docblock for the
+// the real app root (see DerivativeCacheServiceTest's own docblock for the
 // incident this pattern was built to prevent). sanitizeSvgIfNeeded()
-// itself never references PHPWG_ROOT_PATH -- it only touches the path
-// passed to it -- so this suite doesn't need to define/guard that
-// constant at all.
+// itself never reads Piwigo\Core\CurrentPaths -- it only touches the path
+// passed to it -- so this suite doesn't need to seed it at all.
 function upload_service_test_marker(): string
 {
     /** @var string|null $marker */

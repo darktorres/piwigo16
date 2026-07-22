@@ -42,7 +42,7 @@ class CssLoader
     public function get_css(UrlServiceInterface $urlService): array
     {
         uasort($this->registered_css, self::cmp_by_order(...));
-        $combiner = new FileCombiner('css', $urlService, $this->registered_css);
+        $combiner = new FileCombiner('css', $urlService, \Piwigo\Core\CurrentPaths::get(), $this->registered_css);
         return $combiner->combine();
     }
 

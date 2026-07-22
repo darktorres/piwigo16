@@ -11,6 +11,7 @@ use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
+use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\TablePrefixListener;
 use Piwigo\Html\HtmlService;
@@ -41,7 +42,7 @@ function core_update_service(): CoreUpdateService
         throw new \LogicException('Container returned an unexpected type for ' . ConfigRepository::class);
     }
 
-    return new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService()), new ConfigService($repo));
+    return new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService()), new ConfigService($repo), Paths::fromRoot(dirname(__DIR__, 4)));
 }
 
 test('containerVersionCompare orders by semantic version first', function (): void {

@@ -12,14 +12,16 @@ declare(strict_types=1);
 // (local/config/config.inc.php for classic installs, PIWIGO_DB_* env
 // vars for container/CI runs).
 
-define('PHPWG_ROOT_PATH', './');
+require __DIR__ . '/vendor/autoload.php';
+
+$paths = \Piwigo\Core\Paths::fromIndex(__FILE__);
 
 $conf = [];
-require PHPWG_ROOT_PATH . 'include/config_default.inc.php';
-@include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
+require $paths->root . 'include/config_default.inc.php';
+@include $paths->local . 'config/config.inc.php';
 
-require PHPWG_ROOT_PATH . 'include/env.inc.php';
-\Piwigo\Core\Env::loadEnvFile(PHPWG_ROOT_PATH);
+require $paths->root . 'include/env.inc.php';
+\Piwigo\Core\Env::loadEnvFile($paths->root);
 $prefixeTable = '';
 \Piwigo\Core\Env::applyEnvToConf($conf, $prefixeTable);
 

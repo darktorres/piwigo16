@@ -3,13 +3,15 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\CookieService;
-
-if (! defined('PHPWG_ROOT_PATH')) {
-    define('PHPWG_ROOT_PATH', './');
-}
+use Piwigo\Core\RequestMountDepth;
 
 beforeEach(function (): void {
     unset($_SERVER['REDIRECT_SCRIPT_NAME'], $_SERVER['REDIRECT_URL'], $_SERVER['PATH_INFO']);
+    RequestMountDepth::reset();
+});
+
+afterEach(function (): void {
+    RequestMountDepth::reset();
 });
 
 test('cookiePath falls back to SCRIPT_NAME when no rewrite headers are present', function (): void {
@@ -59,4 +61,16 @@ test('getCookieVar returns the default when unset', function (): void {
     unset($_COOKIE['pwg_missing']);
 
     expect(new CookieService()->getCookieVar('missing', 'fallback'))->toBe('fallback');
+});
+
+test('cookiePath normalizes back to the real app root when the entry file is one directory deeper', function (): void {
+    // admin/popuphelp.php's own shape: SCRIPT_NAME resolves the containing
+    // directory to '/piwigo/admin/', and RequestMountDepth (set by that
+    // entry file) says it's one level deeper than the app's real root --
+    // the '../' it appends must normalize back to '/piwigo/', not stay as
+    // '/piwigo/admin/../'.
+    $_SERVER['SCRIPT_NAME'] = '/piwigo/admin/popuphelp.php';
+    RequestMountDepth::set(1);
+
+    expect(new CookieService()->cookiePath())->toBe('/piwigo/');
 });

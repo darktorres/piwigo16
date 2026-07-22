@@ -10,6 +10,7 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
@@ -42,6 +43,7 @@ final readonly class CoreUpdateService
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
+        private readonly Paths $paths,
     ) {}
 
     public function checkPiwigoUpgrade(): void
@@ -269,14 +271,14 @@ final readonly class CoreUpdateService
             $code = $upgradeTo;
             $dlCode = $code;
             $removePath = version_compare($code, '2.0.8', '>=') ? 'piwigo' : 'piwigo-' . $code;
-            $obsoleteList = PHPWG_ROOT_PATH . 'install/obsolete.list';
+            $obsoleteList = $this->paths->root . 'install/obsolete.list';
         }
 
         if (\Piwigo\Core\PageState::current()->hasErrors()) {
             return;
         }
 
-        $path = PHPWG_ROOT_PATH . $dataLocation . 'update';
+        $path = $this->paths->root . $dataLocation . 'update';
         $filename = $path . '/' . $code . '.zip';
         @\Piwigo\Core\FilesystemHelper::mkgetdir($path);
 
@@ -316,9 +318,9 @@ final readonly class CoreUpdateService
             return;
         }
 
-        $result = $this->zipExtractor->extract($filename, PHPWG_ROOT_PATH, $removePath, 0755);
+        $result = $this->zipExtractor->extract($filename, $this->paths->root, $removePath, 0755);
         if ($result === null) {
-            FilesystemHelper::deltree(PHPWG_ROOT_PATH . $dataLocation . 'update');
+            FilesystemHelper::deltree($this->paths->root . $dataLocation . 'update');
             \Piwigo\Core\PageState::current()->addError(Lang::t('An error has occured during upgrade.'));
             return;
         }
@@ -326,10 +328,10 @@ final readonly class CoreUpdateService
         $error = '';
         foreach ($result as $extract) {
             if (! in_array($extract['status'], ['ok', 'filtered', 'already_a_directory'], true)) {
-                if (@chmod(PHPWG_ROOT_PATH . $extract['filename'], 0777)
+                if (@chmod($this->paths->root . $extract['filename'], 0777)
                   and ($res = $this->zipExtractor->extract(
                       $filename,
-                      PHPWG_ROOT_PATH,
+                      $this->paths->root,
                       $removePath,
                       0755,
                       $removePath . '/' . $extract['filename']
@@ -343,7 +345,7 @@ final readonly class CoreUpdateService
         }
 
         if ($error !== '') {
-            file_put_contents(PHPWG_ROOT_PATH . $dataLocation . 'update/log_error.txt', $error);
+            file_put_contents($this->paths->root . $dataLocation . 'update/log_error.txt', $error);
 
             \Piwigo\Core\PageState::current()->addError(Lang::t(
                 'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
@@ -356,7 +358,7 @@ final readonly class CoreUpdateService
             $this->processObsoleteList($obsoleteList);
         }
 
-        FilesystemHelper::deltree(PHPWG_ROOT_PATH . $dataLocation . 'update');
+        FilesystemHelper::deltree($this->paths->root . $dataLocation . 'update');
         UserCacheInvalidator::invalidate(true);
         $this->configService->confUpdateParam('piwigo_installed_version', $upgradeTo);
         new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Core, 'update', [
@@ -373,7 +375,7 @@ final readonly class CoreUpdateService
             \Piwigo\Core\PageState::current()->setUpdatedVersion($upgradeTo);
             $step = -1;
         } else {
-            $this->redirectService->redirect(PHPWG_ROOT_PATH . 'upgrade.php?now=');
+            $this->redirectService->redirect($this->urlService->getRootUrl() . 'upgrade.php?now=');
         }
     }
 
@@ -390,20 +392,20 @@ final readonly class CoreUpdateService
 
     private function processObsoleteList(string $file): void
     {
-        if (! file_exists(PHPWG_ROOT_PATH . $file)) {
+        if (! file_exists($this->paths->root . $file)) {
             return;
         }
-        $oldFiles = file(PHPWG_ROOT_PATH . $file, FILE_IGNORE_NEW_LINES);
+        $oldFiles = file($this->paths->root . $file, FILE_IGNORE_NEW_LINES);
         if ($oldFiles === false || $oldFiles === []) {
             return;
         }
         $oldFiles[] = $file;
         foreach ($oldFiles as $oldFile) {
-            $path = PHPWG_ROOT_PATH . $oldFile;
+            $path = $this->paths->root . $oldFile;
             if (is_file($path)) {
                 @unlink($path);
             } elseif (is_dir($path)) {
-                FilesystemHelper::deltree($path, PHPWG_ROOT_PATH . '_trash');
+                FilesystemHelper::deltree($path, $this->paths->root . '_trash');
             }
         }
     }

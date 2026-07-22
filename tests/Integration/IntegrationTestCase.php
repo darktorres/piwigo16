@@ -10,6 +10,8 @@ use Doctrine\ORM\ORMSetup;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\TablePrefixListener;
 
@@ -91,6 +93,16 @@ abstract class IntegrationTestCase extends TestCase
         // A subclass's own setUp() calling FilterState::set() with real
         // filter values right after parent::setUp() simply overwrites it.
         \Piwigo\Core\FilterState::set(false);
+        // Piwigo\Core\CurrentPaths (Legacy Coupling Retirement gap-closure,
+        // entry-shell define()/include round) is the same shape of
+        // per-request singleton -- tests that construct a domain service
+        // directly (not through a real HTTP request, so no root index.php
+        // ever calls Kernel::boot($paths)) need a real Paths available too,
+        // or the first CurrentPaths::get() call throws. dirname(__DIR__, 2)
+        // from tests/Integration/ is this project's own repo root, matching
+        // every fixture path (e.g. MetadataServiceTest's 'path' => '_data/...')
+        // already written relative to it.
+        CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 2)));
     }
 
     #[\Override]
@@ -107,6 +119,7 @@ abstract class IntegrationTestCase extends TestCase
         \Piwigo\Config\CurrentConfigService::reset();
         \Piwigo\Core\PageState::reset();
         \Piwigo\Core\FilterState::reset();
+        CurrentPaths::reset();
         parent::tearDown();
     }
 

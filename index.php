@@ -21,22 +21,16 @@ use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 
 // ----------------------------------------------------------- include
-// P16 mints a real Paths for src/Piwigo/ code (passed to CommonBootstrap::
-// run() below), but PHPWG_ROOT_PATH itself deliberately keeps its exact
-// legacy value ('./', CWD-relative) rather than switching to $paths->root
-// (absolute) -- found empirically that several legacy call sites
-// (get_root_url() in functions_url.inc.php, section_init.inc.php, i.php)
-// hard-assume PHPWG_ROOT_PATH's literal string shape to compute relative
-// URL prefixes for generated links (`str_starts_with($x, './')` etc.),
-// not just filesystem include paths. Switching to an absolute value broke
-// every generated href/src on the live site (confirmed via a real curl
-// request). Fixing those call sites is real legacy-logic surgery, not
-// bootstrap wiring -- out of scope here, matching this project's
-// established "typed source of truth for new code, legacy stays
-// unchanged until its own domain migrates" discipline (P17-23).
+// P16 mints a real Paths for src/Piwigo/ code, passed to CommonBootstrap::
+// run() below. Legacy Coupling Retirement gap-closure (entry-shell
+// define()/include round): PHPWG_ROOT_PATH (the former './', CWD-relative
+// legacy constant every raw include and several URL-generation call sites
+// used to read) is gone entirely -- filesystem paths go through $paths,
+// URL generation goes through UrlService's own request-derived mount
+// prefix instead of ever reading a filesystem-path constant, so nothing
+// depends on a single string serving both purposes any more.
 $paths = Paths::fromIndex(__FILE__);
-define('PHPWG_ROOT_PATH', './');
-include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
+include_once $paths->root . 'include/common.inc.php';
 
 CommonBootstrap::run($paths);
 

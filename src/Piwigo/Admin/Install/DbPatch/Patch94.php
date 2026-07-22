@@ -14,6 +14,7 @@ namespace Piwigo\Admin\Install\DbPatch;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Db\Tables;
 
@@ -72,13 +73,14 @@ SELECT id
         // save configuration for a future use by the Community plugin
         $localConf = LegacyFileConf::read();
         $data_location = is_string($localConf['data_location'] ?? null) ? $localConf['data_location'] : '_data/';
-        $backup_filepath = PHPWG_ROOT_PATH . $data_location . 'plugins/core_user_upload_to_community.php';
+        $paths = CurrentPaths::get();
+        $backup_filepath = $paths->root . $data_location . 'plugins/core_user_upload_to_community.php';
         $save_conf = true;
         if (is_dir(dirname($backup_filepath))) {
             if (! is_writable(dirname($backup_filepath))) {
                 $save_conf = false;
             }
-        } elseif (! is_writable(PHPWG_ROOT_PATH . $data_location)) {
+        } elseif (! is_writable($paths->root . $data_location)) {
             $save_conf = false;
         }
 

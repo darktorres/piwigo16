@@ -50,7 +50,7 @@ final class NbmController implements ControllerInterface
         Lang::load('admin.lang');
         // Need to update a second time.
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loading_lang');
-        Lang::load('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
+        Lang::load('lang', \Piwigo\Core\CurrentPaths::get()->siteLocal, [
             'no_fallback' => true,
             'local' => true,
         ]);

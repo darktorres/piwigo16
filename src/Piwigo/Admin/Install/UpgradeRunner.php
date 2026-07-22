@@ -23,6 +23,7 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
+use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
@@ -75,6 +76,7 @@ final class UpgradeRunner
         private readonly string $configFile,
         private readonly string $configFileContents,
         private readonly int $phpEndTag,
+        private readonly Paths $paths,
     ) {}
 
     /**
@@ -102,7 +104,7 @@ final class UpgradeRunner
         // direct calls, so their declared `string` return types are
         // already certain, no is_string() re-guard needed.
         \Piwigo\Core\CurrentLogger::set(new Logger([
-            'directory' => PHPWG_ROOT_PATH . \Piwigo\Config\Config::dataLocation() . \Piwigo\Config\Config::logDir(),
+            'directory' => $this->paths->root . \Piwigo\Config\Config::dataLocation() . \Piwigo\Config\Config::logDir(),
             'severity' => \Piwigo\Config\Config::logLevel(),
             'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Config\Config::dbPassword()) . '.txt',
             'globPattern' => 'log_*.txt',
@@ -165,7 +167,7 @@ final class UpgradeRunner
         // |                        template initialization                     |
         // +-------------------------------------------------------------------+
 
-        $template = new Template(PHPWG_ROOT_PATH . 'admin/themes', 'clear');
+        $template = new Template($this->paths->root . 'admin/themes', 'clear');
         \Piwigo\Template\CurrentTemplate::set($template);
         $template->set_filenames([
             'upgrade' => 'upgrade.tpl',
@@ -194,7 +196,7 @@ final class UpgradeRunner
         if ($has_remote_site) {
             \Piwigo\Core\PageState::current()->errors = [];
             $step = 3;
-            new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService()), CurrentConfigService::get())
+            new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService()), CurrentConfigService::get(), \Piwigo\Core\CurrentPaths::get())
                 ->upgradeTo('2.3.4', $step, false);
 
             $upgrade_errors = \Piwigo\Core\PageState::current()->errors;
@@ -362,9 +364,13 @@ SELECT id
                   . substr($this->configFileContents, $this->phpEndTag);
 
                 if (! (bool) @file_put_contents($this->configFile, $config_file_contents)) {
+                    // Relative directory name for display -- same
+                    // root-prefix-stripping shape as Template::
+                    // prefilter_local_css()'s own siteLocalDir computation.
+                    $siteLocalDir = substr($this->paths->siteLocal, strlen($this->paths->root));
                     \Piwigo\Core\PageState::current()->addInfo(Lang::t(
                         'In <i>%s</i>, before <b>?></b>, insert:',
-                        PWG_LOCAL_DIR . 'config/database.inc.php'
+                        $siteLocalDir . 'config/database.inc.php'
                     )
                     . '<p><textarea rows="4" cols="40">'
                     . implode("\r\n", $mysql_changes) . '</textarea></p>');

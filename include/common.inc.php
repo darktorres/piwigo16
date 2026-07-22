@@ -14,11 +14,21 @@ declare(strict_types=1);
 // per-request bootstrap orchestration lives on
 // Piwigo\Bootstrap\RequestBootstrap. What remains here, in original order:
 //
-// 1. plain-data global initialization + the config includes -- kept at
-//    true top-level scope on purpose: include/config_default.inc.php and
-//    a user's local/config/config.inc.php write bare variables that must
-//    land in $GLOBALS, which a method-scoped include would silently
-//    capture instead (the recurring AdminDispatcher bug class);
+// 1. plain-data global initialization -- kept at true top-level scope on
+//    purpose: a method-scoped assignment would silently land in the
+//    method's own scope instead of $GLOBALS (the recurring AdminDispatcher
+//    bug class). The former include/config_default.inc.php +
+//    local/config/config.inc.php includes that used to sit here are gone
+//    (Legacy Coupling Retirement gap-closure, entry-shell define()/include
+//    round): they built a bare $conf array nothing downstream of this file
+//    ever read (confirmed via a repo-wide grep) -- Config::SCHEMA already
+//    carries the real defaults (ConfigLoader::applyDefaults()), and
+//    Config\LocalConfigOverrides (via ConfigLoader::applyLocalFileOverrides(),
+//    called later from CommonBootstrap::run()) already re-reads a site's
+//    real local/config/config.inc.php properly, in its own scoped context
+//    -- this file's own copy was a redundant, unread second read. Same
+//    cleanup install.php's own history already applied to itself;
+//    i.php gets it too in the same round;
 // 2. the include/env.inc.php include -- the autoload boundary. NOTHING
 //    above it may reference a Piwigo\ class: thin entry points
 //    (random.php, ...) never require vendor/autoload.php themselves and
@@ -28,7 +38,19 @@ declare(strict_types=1);
 //    rule SEC-60), so the constants stay here, slotted between the
 //    RequestBootstrap phases exactly where the original statements sat.
 
-defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
+/**
+ * @var \Piwigo\Core\Paths $paths every real entry point mints this via
+ *      Paths::fromIndex(__FILE__)/fromRoot() before including this file,
+ *      and PHP `include` shares the including scope -- same mechanism
+ *      RequestBootstrap::configure($paths, $t2) below already relies on
+ *      explicitly. Guarded at runtime, not just documented: this file must
+ *      never run standalone (e.g. requested directly, or included out of
+ *      order), the same intent the former defined('PHPWG_ROOT_PATH')
+ *      guard had.
+ */
+if (! isset($paths) || ! $paths instanceof \Piwigo\Core\Paths) {
+    trigger_error('Hacking attempt!', E_USER_ERROR);
+}
 
 // determine the initial instant to indicate the generation time of this page
 $t2 = microtime(true);
@@ -37,7 +59,6 @@ $t2 = microtime(true);
 // Define some basic configuration arrays this also prevents malicious
 // rewriting of language and otherarray values via URI params
 //
-$conf = [];
 $page = [
     'infos' => [],
     'errors' => [],
@@ -50,22 +71,14 @@ $user = [];
 $lang = [];
 $filter = [];
 
-include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
-@include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
-
-defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
-
 // -------------------------------------------------- autoload boundary --
-include PHPWG_ROOT_PATH . 'include/env.inc.php';
+include $paths->root . 'include/env.inc.php';
 
 // superglobal sanitization, env-file loading, static-setter wiring,
 // Config seeding, install-sentinel check (redirects to install.php and
-// exits when Piwigo isn't installed yet). $paths is already in scope here
-// -- every real entry point mints it via Paths::fromIndex(__FILE__) before
-// including this file, and PHP `include` shares the including scope. $t2,
-// captured above at true top-level scope for maximum precision, is passed
-// straight through instead of relying on a `global $t2;` bridge.
-/** @var \Piwigo\Core\Paths $paths */
+// exits when Piwigo isn't installed yet). $t2, captured above at true
+// top-level scope for maximum precision, is passed straight through
+// instead of relying on a `global $t2;` bridge.
 \Piwigo\Bootstrap\RequestBootstrap::configure($paths, $t2);
 
 defined('PHPWG_INSTALLED') or define('PHPWG_INSTALLED', true);

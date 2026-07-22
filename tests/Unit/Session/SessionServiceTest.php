@@ -8,10 +8,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 
-if (! defined('PHPWG_ROOT_PATH')) {
-    define('PHPWG_ROOT_PATH', './');
-}
-
 // Doctrine DBAL connections are lazy -- they don't actually connect until
 // the first query runs. Every test below only exercises SessionService
 // methods that never touch the repository's DB-backed methods, so a real

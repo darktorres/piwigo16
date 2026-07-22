@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace Piwigo\Template;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 
 final class FileCombiner
@@ -25,6 +27,7 @@ final class FileCombiner
     public function __construct(
         private $type,
         private readonly UrlServiceInterface $urlService,
+        private readonly Paths $paths,
         private $combinables = [],
     ) {
         $this->is_css = $this->type == 'css';
@@ -35,13 +38,14 @@ final class FileCombiner
      */
     public static function clear_combined_files(): void
     {
-        $dir = opendir(PHPWG_ROOT_PATH . Config::combinedDir());
+        $root = CurrentPaths::get()->root;
+        $dir = opendir($root . Config::combinedDir());
         if ($dir === false) {
             return;
         }
         while ((bool) ($file = readdir($dir))) {
             if (\Piwigo\Core\StringHelper::getExtension($file) == 'js' || \Piwigo\Core\StringHelper::getExtension($file) == 'css') {
-                unlink(PHPWG_ROOT_PATH . Config::combinedDir() . $file);
+                unlink($root . Config::combinedDir() . $file);
             }
         }
         closedir($dir);
@@ -90,7 +94,7 @@ final class FileCombiner
             $key[] = $combinable->path;
             $key[] = (string) $combinable->version;
             if (\Piwigo\Config\Config::templateCompileCheck()) {
-                $key[] = (string) filemtime(PHPWG_ROOT_PATH . $combinable->path);
+                $key[] = (string) filemtime($this->paths->root . $combinable->path);
             }
             $pending[] = $combinable;
         }
@@ -110,7 +114,7 @@ final class FileCombiner
         if (count($pending) > 1) {
             $key = join('>', $key);
             $file = Config::combinedDir() . base_convert(hash('crc32b', $key), 16, 36) . '.' . $this->type;
-            if ($force || ! file_exists(PHPWG_ROOT_PATH . $file)) {
+            if ($force || ! file_exists($this->paths->root . $file)) {
                 $output = '';
                 $header = '';
                 foreach ($pending as $combinable) {
@@ -119,9 +123,9 @@ final class FileCombiner
                     $output .= "\n";
                 }
                 $output = "/*BEGIN header */\n" . $header . "\n" . $output;
-                \Piwigo\Core\FilesystemHelper::mkgetdir(dirname(PHPWG_ROOT_PATH . $file));
-                file_put_contents(PHPWG_ROOT_PATH . $file, $output);
-                @chmod(PHPWG_ROOT_PATH . $file, 0644);
+                \Piwigo\Core\FilesystemHelper::mkgetdir(dirname($this->paths->root . $file));
+                file_put_contents($this->paths->root . $file, $output);
+                @chmod($this->paths->root . $file, 0644);
             }
             $result[] = new Combinable('combi', $file, false);
         } elseif (count($pending) == 1) {
@@ -147,10 +151,10 @@ final class FileCombiner
             if (! $return_content) {
                 $key = [$combinable->path, $combinable->version];
                 if (\Piwigo\Config\Config::templateCompileCheck()) {
-                    $key[] = filemtime(PHPWG_ROOT_PATH . $combinable->path);
+                    $key[] = filemtime($this->paths->root . $combinable->path);
                 }
                 $file = Config::combinedDir() . 't' . base_convert(hash('crc32b', implode(',', $key)), 16, 36) . '.' . $this->type;
-                if (! $force && file_exists(PHPWG_ROOT_PATH . $file)) {
+                if (! $force && file_exists($this->paths->root . $file)) {
                     $combinable->path = $file;
                     $combinable->version = false;
 
@@ -160,7 +164,7 @@ final class FileCombiner
 
             $template = \Piwigo\Template\CurrentTemplate::get();
             $handle = $this->type . '.' . $combinable->id;
-            $real_path = realpath(PHPWG_ROOT_PATH . $combinable->path);
+            $real_path = realpath($this->paths->root . $combinable->path);
             if ($real_path === false) {
                 throw new \Exception("process_combinable(): file not found for {$combinable->path}");
             }
@@ -172,7 +176,7 @@ final class FileCombiner
             $content = $template->parse($handle, true);
 
             if ($this->is_css) {
-                $content = self::process_css($content, $combinable->path, $header, $this->urlService);
+                $content = self::process_css($content, $combinable->path, $header, $this->urlService, $this->paths);
             } else {
                 $content = self::process_js($content);
             }
@@ -180,18 +184,18 @@ final class FileCombiner
             if ($return_content) {
                 return $content;
             }
-            file_put_contents(PHPWG_ROOT_PATH . $file, $content);
+            file_put_contents($this->paths->root . $file, $content);
             $combinable->path = $file;
 
             return null;
         }
         if ($return_content) {
-            $content = file_get_contents(PHPWG_ROOT_PATH . $combinable->path);
+            $content = file_get_contents($this->paths->root . $combinable->path);
             if ($content === false) {
                 throw new \Exception('do_combine(): unable to read ' . $combinable->path);
             }
             if ($this->is_css) {
-                $content = self::process_css($content, $combinable->path, $header, $this->urlService);
+                $content = self::process_css($content, $combinable->path, $header, $this->urlService, $this->paths);
             } else {
                 $content = self::process_js($content);
             }
@@ -219,9 +223,9 @@ final class FileCombiner
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
      */
-    private static function process_css(?string $css, $file, string &$header, UrlServiceInterface $urlService): string
+    private static function process_css(?string $css, $file, string &$header, UrlServiceInterface $urlService, Paths $paths): string
     {
-        $css = self::process_css_rec($css, dirname($file), $header, $urlService);
+        $css = self::process_css_rec($css, dirname($file), $header, $urlService, $paths);
         $css = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('combined_css_postfilter', $css);
         if (! is_string($css)) {
             throw new \Exception("process_css(): a 'combined_css_postfilter' event listener returned a non-string value");
@@ -236,7 +240,7 @@ final class FileCombiner
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
      */
-    private static function process_css_rec(?string $css, string $dir, &$header, UrlServiceInterface $urlService): ?string
+    private static function process_css_rec(?string $css, string $dir, &$header, UrlServiceInterface $urlService, Paths $paths): ?string
     {
         /** @var string */
         static $PATTERN_URL = "#url\(\s*['|\"]{0,1}(.*?)['|\"]{0,1}\s*\)#";
@@ -264,7 +268,7 @@ final class FileCombiner
                 if (
                     str_contains($match[1], '..') // Possible attempt to get out of Piwigo's dir
                     or str_contains($match[1], '://') // Remote URL
-                    or ! is_readable(PHPWG_ROOT_PATH . $dir . '/' . $match[1])
+                    or ! is_readable($paths->root . $dir . '/' . $match[1])
                 ) {
                     // If anything is suspicious, don't try to process the
                     // @import. Since @import need to be first and we are
@@ -273,11 +277,11 @@ final class FileCombiner
                     $header .= $match[0];
                     $replace[] = '';
                 } else {
-                    $sub_css = file_get_contents(PHPWG_ROOT_PATH . $dir . "/{$match[1]}");
+                    $sub_css = file_get_contents($paths->root . $dir . "/{$match[1]}");
                     if ($sub_css === false) {
                         throw new \Exception('process_css_rec(): unable to read ' . $dir . "/{$match[1]}");
                     }
-                    $replace[] = self::process_css_rec($sub_css, dirname($dir . "/{$match[1]}"), $header, $urlService) ?? '';
+                    $replace[] = self::process_css_rec($sub_css, dirname($dir . "/{$match[1]}"), $header, $urlService, $paths) ?? '';
                 }
             }
             $css = str_replace($search, $replace, $css ?? '');

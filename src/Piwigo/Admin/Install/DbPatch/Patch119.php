@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Image\DerivativeCacheService;
 
 /**
@@ -46,7 +47,7 @@ final class Patch119 implements DbPatchInterface
         $localConf = LegacyFileConf::read();
         $data_location = is_string($localConf['data_location'] ?? null) ? $localConf['data_location'] : '_data/';
 
-        $derivative_conf_file = PHPWG_ROOT_PATH . $data_location . 'derivatives.dat';
+        $derivative_conf_file = CurrentPaths::get()->root . $data_location . 'derivatives.dat';
         if (is_file($derivative_conf_file)) {
             unlink($derivative_conf_file);
         }

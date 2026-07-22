@@ -63,7 +63,7 @@ final class TagsPageRenderer
 
         $template->assign(
             [
-                'F_ACTION' => PHPWG_ROOT_PATH . 'admin.php?page=tags',
+                'F_ACTION' => $this->urlService->getRootUrl() . 'admin.php?page=tags',
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
             ]

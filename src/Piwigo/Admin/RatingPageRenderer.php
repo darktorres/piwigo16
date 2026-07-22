@@ -98,8 +98,8 @@ final class RatingPageRenderer
         $template->assign(
             [
                 'navbar' => new \Piwigo\Core\PaginationService()
-                    ->createNavigationBar(PHPWG_ROOT_PATH . 'admin.php' . $urlService->getQueryStringDiff(['start', 'del']), $nb_images, $start, $elements_per_page),
-                'F_ACTION' => PHPWG_ROOT_PATH . 'admin.php',
+                    ->createNavigationBar($urlService->getRootUrl() . 'admin.php' . $urlService->getQueryStringDiff(['start', 'del']), $nb_images, $start, $elements_per_page),
+                'F_ACTION' => $urlService->getRootUrl() . 'admin.php',
                 'DISPLAY' => $elements_per_page,
                 'NB_ELEMENTS' => $nb_elements,
                 'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []),

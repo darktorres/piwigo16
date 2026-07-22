@@ -203,7 +203,7 @@ final class ExtensionScanner
             $theme['screenshot'] = $screenshotPath;
         } else {
             $adminTheme = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('admin_theme', 'clear');
-            $theme['screenshot'] = PHPWG_ROOT_PATH . 'admin/themes/'
+            $theme['screenshot'] = $urlService->getRootUrl() . 'admin/themes/'
                 . (is_string($adminTheme) ? $adminTheme : 'clear')
                 . '/images/missing_screenshot.png';
         }
@@ -242,7 +242,7 @@ final class ExtensionScanner
      */
     private function scanLanguage(string $languageId, ?string $targetCharset): ?array
     {
-        $path = PHPWG_ROOT_PATH . 'language/' . $languageId;
+        $path = \Piwigo\Core\CurrentPaths::get()->root . 'language/' . $languageId;
         if (! is_dir($path) || is_link($path) || ! file_exists($path . '/common.po')) {
             return null;
         }

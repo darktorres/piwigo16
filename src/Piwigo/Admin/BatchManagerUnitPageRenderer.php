@@ -43,12 +43,16 @@ use Piwigo\Template\Template;
  * mutation path (isset($_POST['submit'])) already has its own
  * check_pwg_token() call -- no CSRF gap here.
  *
- * Preserves 2 pre-existing quirks unchanged (a mechanical port doesn't fold
- * in unrelated fixes, same discipline as every prior sub-batch):
- *  - $base_url is built from PHPWG_ROOT_PATH (a filesystem path constant),
- *    not UrlServiceInterface::getRootUrl() like every sibling renderer --
- *    almost certainly a pre-existing bug (U_ELEMENTS_PAGE/F_ACTION would
- *    render a filesystem path, not a URL), but out of scope for this port.
+ * Preserves 1 pre-existing quirk unchanged (a mechanical port doesn't fold
+ * in unrelated fixes, same discipline as every prior sub-batch). $base_url
+ * used to be built from PHPWG_ROOT_PATH (a filesystem path constant), not
+ * UrlServiceInterface::getRootUrl() like every sibling renderer -- fixed
+ * as part of Legacy Coupling Retirement gap-closure (entry-shell
+ * define()/include round), since PHPWG_ROOT_PATH no longer exists at all;
+ * this specific site's own pre-existing bug (U_ELEMENTS_PAGE/F_ACTION
+ * rendering a filesystem path instead of a URL) is a real, if minor, side
+ * effect of that constant's removal being a strict improvement, not scope
+ * creep -- it had no other fix available once the constant was gone.
  *  - the "$storage_category_id" block below the images query reads
  *    whatever $row the earlier "unit mode form submission" while-loop left
  *    behind (or undefined, if that block didn't run) rather than the
@@ -218,7 +222,7 @@ SELECT id, date_creation
             ]
         );
 
-        $base_url = PHPWG_ROOT_PATH . 'admin.php';
+        $base_url = $this->urlService->getRootUrl() . 'admin.php';
 
         $template->assign(
             [

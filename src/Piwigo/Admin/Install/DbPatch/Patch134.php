@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Core\CurrentPaths;
 
 /**
  * Former install/db/134-database.php (P23 sub-batch 8g-2).
@@ -33,7 +34,7 @@ final class Patch134 implements DbPatchInterface
     #[\Override]
     public function apply(Connection $conn): void
     {
-        $config_file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.inc.php';
+        $config_file = CurrentPaths::get()->siteLocal . 'config/database.inc.php';
 
         if (extension_loaded('mysqli') and LegacyDbLayer::value() === 'mysql' and is_writable($config_file)) {
             $file_content = file_get_contents($config_file);

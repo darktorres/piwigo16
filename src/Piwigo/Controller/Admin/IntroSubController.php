@@ -65,6 +65,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class IntroSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly \Piwigo\Core\UrlServiceInterface $urlService,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
@@ -77,7 +81,7 @@ final class IntroSubController implements AdminSubControllerInterface
         // always rendered as a bare relative `href="comments"` instead of
         // `admin.php?page=comments`. Computed locally instead, matching
         // AdminShell's own exact value.
-        $link_start = PHPWG_ROOT_PATH . 'admin.php?page=';
+        $link_start = $this->urlService->getRootUrl() . 'admin.php?page=';
         $logger = \Piwigo\Core\CurrentLogger::get();
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -126,7 +130,7 @@ final class IntroSubController implements AdminSubControllerInterface
         }
 
         if ($nb_orphans > 0) {
-            $orphans_url = PHPWG_ROOT_PATH . 'admin.php?page=batch_manager&amp;filter=prefilter-no_album';
+            $orphans_url = $this->urlService->getRootUrl() . 'admin.php?page=batch_manager&amp;filter=prefilter-no_album';
 
             $message = '<a href="' . $orphans_url . '"><i class="icon-heart-broken"></i>';
             $message .= Lang::t('Orphans') . '</a>';
@@ -143,7 +147,7 @@ SELECT COUNT(*)
 ;';
         $locked_album = $conn->fetchOne($query);
         if (is_numeric($locked_album) && $locked_album > 0) {
-            $locked_album_url = PHPWG_ROOT_PATH . 'admin.php?page=cat_options&section=visible';
+            $locked_album_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_options&section=visible';
 
             $message = '<a href="' . $locked_album_url . '"><i class="icon-cone"></i>';
             $message .= Lang::t('Locked album') . '</a>';
@@ -234,7 +238,7 @@ SELECT COUNT(*)
                 'NB_VIEWS' => AdminUiHelper::numberFormatHumanReadable($nb_views),
                 'NB_PLUGINS' => count(\Piwigo\Admin\LoadedPlugins::get()),
                 'STORAGE_USED' => str_replace(' ', '&nbsp;', Lang::t('%sGB', number_format($du_gb, $du_decimals))),
-                'U_QUICK_SYNC' => PHPWG_ROOT_PATH . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
+                'U_QUICK_SYNC' => $this->urlService->getRootUrl() . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                 'CHECK_FOR_UPDATES' => \Piwigo\Config\Config::dashboardCheckForUpdates(),
             ]
         );
@@ -639,7 +643,7 @@ SELECT
         $data_location = \Piwigo\Config\Config::dataLocation();
         $lang_code = \Piwigo\Core\Lang::langInfo()['code'] ?? null;
         $lang_code = is_string($lang_code) ? $lang_code : '';
-        $cache_path = PHPWG_ROOT_PATH . $data_location . 'cache/piwigo_latest_news-' . $lang_code . '.cache.php';
+        $cache_path = \Piwigo\Core\CurrentPaths::get()->root . $data_location . 'cache/piwigo_latest_news-' . $lang_code . '.cache.php';
         if (! is_file($cache_path) or filemtime($cache_path) < strtotime('24 hours ago')) {
             $url = PHPWG_URL . '/ws.php?method=porg.news.getLatest&format=json';
 

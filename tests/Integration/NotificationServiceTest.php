@@ -6,12 +6,6 @@ declare(strict_types=1);
 // isAdmin() directly (P23 batch 8d), which reads Piwigo\Users\CurrentUser
 // (Legacy Coupling Retirement Track A batch A3) -- tests below seed
 // CurrentUser instead.
-namespace {
-    if (! defined('PHPWG_ROOT_PATH')) {
-        define('PHPWG_ROOT_PATH', './');
-    }
-}
-
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;

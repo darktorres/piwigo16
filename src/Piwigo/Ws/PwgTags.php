@@ -394,7 +394,7 @@ SELECT name
 
         $update = [];
 
-        if (in_array($tag_name, $existing_names)) {
+        if (in_array($tag_name, array_map(strval(...), array_filter($existing_names, is_scalar(...))), true)) {
             return new PwgError(WsError::INVALID_PARAM, 'This name is already token');
         }
         if ($tag_name !== '') {

@@ -322,7 +322,7 @@ SELECT
         $categoryConn = DbConnection::build();
         $categoryService = self::categoryService($categoryConn);
 
-        if (! in_array($params['thumbnail_size'], array_keys(ImageStdParams::get_defined_type_map()))) {
+        if (! in_array($params['thumbnail_size'], array_keys(ImageStdParams::get_defined_type_map()), true)) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid thumbnail_size');
         }
 
@@ -556,7 +556,7 @@ SELECT id, path, representative_ext, level
                             // searching a random representant among elements in sub-categories
                             $image_id = $categoryService->getRandomImageInCategory($category);
 
-                            if (isset($image_id) and ! in_array($image_id, $image_ids)) {
+                            if (isset($image_id) and ! in_array($image_id, $image_ids, true)) {
                                 $new_image_ids[] = $image_id;
                             }
                             if (\Piwigo\Config\Config::representativeCacheOnLevel()) {
@@ -743,7 +743,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
                 $row['image_order'] = str_replace('ORDER BY ', '', is_string((\Piwigo\Config\Config::all()['order_by'] ?? null)) ? (\Piwigo\Config\Config::all()['order_by'] ?? null) : '');
             }
 
-            if (in_array('full_name_with_admin_links', $params['additional_output'])) {
+            if (in_array('full_name_with_admin_links', $params['additional_output'], true)) {
                 $row['full_name_with_admin_links'] = $cat_display_name;
             }
 
@@ -808,7 +808,7 @@ SELECT
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (! in_array($params['position'], [null, ''], true) and in_array($params['position'], ['first', 'last'])) {
+        if (! in_array($params['position'], [null, ''], true) and in_array($params['position'], ['first', 'last'], true)) {
             // In-memory override only (this request's own Config::$data),
             // not a real persisted preference -- known limitation, same as
             // AlbumsPageRenderer's own POS_PREF assignment.
@@ -816,7 +816,7 @@ SELECT
         }
 
         $options = [];
-        if (! in_array($params['status'], [null, ''], true) and in_array($params['status'], ['private', 'public'])) {
+        if (! in_array($params['status'], [null, ''], true) and in_array($params['status'], ['private', 'public'], true)) {
             $options['status'] = $params['status'];
         }
 
@@ -958,7 +958,7 @@ SELECT *
         $categoryService = self::categoryService($categoryConn);
 
         if (! in_array($params['status'], [null, ''], true)) {
-            if (! in_array($params['status'], ['private', 'public'])) {
+            if (! in_array($params['status'], ['private', 'public'], true)) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid status, only public/private');
             }
 
@@ -1213,7 +1213,7 @@ SELECT *
         }
 
         $modes = ['no_delete', 'delete_orphans', 'force_delete'];
-        if (! in_array($params['photo_deletion_mode'], $modes)) {
+        if (! in_array($params['photo_deletion_mode'], $modes, true)) {
             return new PwgError(
                 500,
                 '[ws_categories_delete]'

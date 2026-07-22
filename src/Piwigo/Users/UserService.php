@@ -1255,7 +1255,7 @@ SELECT
                     // we add all admin+webmaster users BUT the user herself
                     $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$current_user_id_str]));
 
-                    if (in_array($user_ids[0], $password_protected_users)) {
+                    if (in_array((string) $user_ids[0], array_map(strval(...), $password_protected_users), true)) {
                         return [
                             'error' => [
                                 'code' => 403,
@@ -1273,7 +1273,7 @@ SELECT
         }
 
         if (! self::emptyValue($params['status'] ?? null)) {
-            if (in_array($params['status'], ['webmaster', 'admin']) and ! AccessControl::isWebmaster()) {
+            if (in_array($params['status'], ['webmaster', 'admin'], true) and ! AccessControl::isWebmaster()) {
                 return [
                     'error' => [
                         'code ' => 403,
@@ -1282,7 +1282,7 @@ SELECT
                 ];
             }
 
-            if (! in_array($params['status'], ['guest', 'generic', 'normal', 'admin', 'webmaster'])) {
+            if (! in_array($params['status'], ['guest', 'generic', 'normal', 'admin', 'webmaster'], true)) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1326,7 +1326,7 @@ SELECT
             // \Piwigo\Config\Config::availablePermissionLevels() defaults to [0, 1, 2, 4, 8]
             // (see include/config_default.inc.php), always an array
             $available_permission_levels = \Piwigo\Config\Config::availablePermissionLevels();
-            if (! in_array($params['level'], $available_permission_levels)) {
+            if (! in_array(is_numeric($params['level']) ? (int) $params['level'] : null, $available_permission_levels, true)) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1338,7 +1338,7 @@ SELECT
         }
 
         if (! self::emptyValue($params['language'] ?? null)) {
-            if (! in_array($params['language'], array_keys(\Piwigo\Lang\LangService::getLanguages()))) {
+            if (! in_array($params['language'], array_keys(\Piwigo\Lang\LangService::getLanguages()), true)) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1350,7 +1350,7 @@ SELECT
         }
 
         if (! self::emptyValue($params['theme'] ?? null)) {
-            if (! in_array($params['theme'], array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes()))) {
+            if (! in_array($params['theme'], array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes()), true)) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,

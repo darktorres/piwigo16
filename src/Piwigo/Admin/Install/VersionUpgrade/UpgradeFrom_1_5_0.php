@@ -362,7 +362,7 @@ DESC ' . Config::dbPrefix() . 'users
 
         foreach ($conn->fetchAllAssociative($query) as $row) {
             $field = is_scalar($row['Field']) ? (string) $row['Field'] : '';
-            if (! in_array($field, $to_keep)) {
+            if (! in_array($field, $to_keep, true)) {
                 $query = '
 ALTER TABLE ' . Config::dbPrefix() . 'users
   DROP COLUMN ' . $field . '

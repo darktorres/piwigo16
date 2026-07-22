@@ -355,7 +355,7 @@ SHOW INDEX
             foreach ($conn->fetchAllAssociative($query) as $row) {
                 $key_name = is_scalar($row['Key_name']) ? (string) $row['Key_name'] : '';
                 if ($key_name !== 'PRIMARY') {
-                    if (! in_array($key_name, array_keys($indexes_of[$table]))) {
+                    if (! in_array($key_name, array_keys($indexes_of[$table]), true)) {
                         $query = '
 ALTER TABLE ' . Config::dbPrefix() . $table . '
   DROP INDEX ' . $key_name . '
@@ -368,7 +368,7 @@ ALTER TABLE ' . Config::dbPrefix() . $table . '
             }
 
             foreach ($indexes_of[$table] as $index_name => $index) {
-                if (! in_array($index_name, $existing_indexes)) {
+                if (! in_array($index_name, $existing_indexes, true)) {
                     $query = '
 ALTER TABLE ' . Config::dbPrefix() . $table . '
   ADD ' . ($index['unique'] ? 'UNIQUE' : 'INDEX') . ' '

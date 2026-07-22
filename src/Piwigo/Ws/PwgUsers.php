@@ -201,14 +201,14 @@ final class PwgUsers
         }
 
         if ($params['min_level'] !== 0) {
-            if (! in_array($params['min_level'], $available_permission_levels)) {
+            if (! in_array($params['min_level'], $available_permission_levels, true)) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
             }
             $where_clauses[] = 'ui.level >= ' . $params['min_level'];
         }
 
         if (! in_array($params['max_level'] ?? null, [null, false, 0, '0', '', []], true)) {
-            if (! in_array($params['max_level'], $available_permission_levels)) {
+            if (! in_array(is_numeric($params['max_level']) ? (int) $params['max_level'] : null, $available_permission_levels, true)) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
             }
             // 'max_level' is not a registered ws.php param (see this function's
@@ -668,7 +668,7 @@ SELECT
         }
 
         // SPECIAL_USER
-        $special_user = in_array($currentUser->id, [\Piwigo\Config\Config::guestId(), \Piwigo\Config\Config::defaultUserId()]);
+        $special_user = in_array($currentUser->id, [\Piwigo\Config\Config::guestId(), \Piwigo\Config\Config::defaultUserId()], true);
         if ($special_user) {
             unset(
                 $params['password'],

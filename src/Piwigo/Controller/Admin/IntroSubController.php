@@ -438,7 +438,7 @@ SELECT COUNT(*)
         // Split (split represented by -1)
         if (count($diff_x) > 0) {
             while (max($diff_x) > 120) {
-                $diff_x[array_search(max($diff_x), $diff_x)] = -1;
+                $diff_x[array_search(max($diff_x), $diff_x, true)] = -1;
                 $split++;
             }
         }
@@ -512,9 +512,9 @@ SELECT
 
         foreach ($file_extensions as $ext => $ext_details) {
             $type = null;
-            if (in_array(strtolower((string) $ext), $picture_ext)) {
+            if (in_array(strtolower((string) $ext), $picture_ext, true)) {
                 $type = 'Photos';
-            } elseif (in_array(strtolower((string) $ext), $video_format)) {
+            } elseif (in_array(strtolower((string) $ext), $video_format, true)) {
                 $type = 'Videos';
             } else {
                 $type = 'Other';

@@ -116,7 +116,7 @@ final class UpgradeRunner
         if (isset($_GET['language'])) {
             $language = is_string($_GET['language']) ? strip_tags($_GET['language']) : '';
 
-            if (! in_array($language, array_keys($fs_languages))) {
+            if (! in_array($language, array_keys($fs_languages), true)) {
                 $language = AppInfo::DEFAULT_LANGUAGE;
             }
         } else {
@@ -226,44 +226,44 @@ final class UpgradeRunner
         $dbPrefix = \Piwigo\Config\Config::dbPrefix();
 
         // find the current release
-        if (! in_array('param', $columns_of[$dbPrefix . 'config'])) {
+        if (! in_array('param', $columns_of[$dbPrefix . 'config'], true)) {
             // we're in branch 1.3, important upgrade, isn't it?
-            if (in_array($dbPrefix . 'user_category', $tables)) {
+            if (in_array($dbPrefix . 'user_category', $tables, true)) {
                 $current_release = '1.3.1';
             } else {
                 $current_release = '1.3.0';
             }
-        } elseif (! in_array($dbPrefix . 'user_cache', $tables)) {
+        } elseif (! in_array($dbPrefix . 'user_cache', $tables, true)) {
             $current_release = '1.4.0';
-        } elseif (! in_array($dbPrefix . 'tags', $tables)) {
+        } elseif (! in_array($dbPrefix . 'tags', $tables, true)) {
             $current_release = '1.5.0';
-        } elseif (! in_array($dbPrefix . 'plugins', $tables)) {
-            if (! in_array('auto_login_key', $columns_of[$dbPrefix . 'user_infos'])) {
+        } elseif (! in_array($dbPrefix . 'plugins', $tables, true)) {
+            if (! in_array('auto_login_key', $columns_of[$dbPrefix . 'user_infos'], true)) {
                 $current_release = '1.6.0';
             } else {
                 $current_release = '1.6.2';
             }
-        } elseif (! in_array('md5sum', $columns_of[$dbPrefix . 'images'])) {
+        } elseif (! in_array('md5sum', $columns_of[$dbPrefix . 'images'], true)) {
             $current_release = '1.7.0';
-        } elseif (! in_array($dbPrefix . 'themes', $tables)) {
+        } elseif (! in_array($dbPrefix . 'themes', $tables, true)) {
             $current_release = '2.0.0';
-        } elseif (! in_array('added_by', $columns_of[$dbPrefix . 'images'])) {
+        } elseif (! in_array('added_by', $columns_of[$dbPrefix . 'images'], true)) {
             $current_release = '2.1.0';
-        } elseif (! in_array('rating_score', $columns_of[$dbPrefix . 'images'])) {
+        } elseif (! in_array('rating_score', $columns_of[$dbPrefix . 'images'], true)) {
             $current_release = '2.2.0';
-        } elseif (! in_array('rotation', $columns_of[$dbPrefix . 'images'])) {
+        } elseif (! in_array('rotation', $columns_of[$dbPrefix . 'images'], true)) {
             $current_release = '2.3.0';
-        } elseif (! in_array('website_url', $columns_of[$dbPrefix . 'comments'])) {
+        } elseif (! in_array('website_url', $columns_of[$dbPrefix . 'comments'], true)) {
             $current_release = '2.4.0';
-        } elseif (! in_array('nb_available_tags', $columns_of[$dbPrefix . 'user_cache'])) {
+        } elseif (! in_array('nb_available_tags', $columns_of[$dbPrefix . 'user_cache'], true)) {
             $current_release = '2.5.0';
-        } elseif (! in_array('activation_key_expire', $columns_of[$dbPrefix . 'user_infos'])) {
+        } elseif (! in_array('activation_key_expire', $columns_of[$dbPrefix . 'user_infos'], true)) {
             $current_release = '2.6.0';
-        } elseif (! in_array('auth_key_id', $columns_of[$dbPrefix . 'history'])) {
+        } elseif (! in_array('auth_key_id', $columns_of[$dbPrefix . 'history'], true)) {
             $current_release = '2.7.0';
-        } elseif (! in_array('history_id_to', $columns_of[$dbPrefix . 'history_summary'])) {
+        } elseif (! in_array('history_id_to', $columns_of[$dbPrefix . 'history_summary'], true)) {
             $current_release = '2.8.0';
-        } elseif (! in_array($dbPrefix . 'activity', $tables)) {
+        } elseif (! in_array($dbPrefix . 'activity', $tables, true)) {
             $current_release = '2.9.0';
         } else {
             // retrieve already applied upgrades
@@ -271,22 +271,23 @@ final class UpgradeRunner
 SELECT id
   FROM ' . Tables::upgrade() . '
 ;';
-            // Loose in_array() below tolerates either native int or string
-            // ids from the DBAL fetch, same as it always tolerated mysqli's
-            // all-string rows -- no explicit per-element cast needed.
-            $applied_upgrades = $conn->fetchFirstColumn($query);
+            // Normalized to a definite int list here, once, since the DBAL
+            // fetch can hand back either native int or numeric-string ids
+            // (same tolerance mysqli's all-string rows always needed) --
+            // strict-rules forbids the loose in_array() this used to be.
+            $applied_upgrades = array_map(intval(...), array_filter($conn->fetchFirstColumn($query), is_numeric(...)));
 
-            if (! in_array(159, $applied_upgrades)) {
+            if (! in_array(159, $applied_upgrades, true)) {
                 $current_release = '2.10.0';
-            } elseif (! in_array(162, $applied_upgrades)) {
+            } elseif (! in_array(162, $applied_upgrades, true)) {
                 $current_release = '11.0.0';
-            } elseif (! in_array(164, $applied_upgrades)) {
+            } elseif (! in_array(164, $applied_upgrades, true)) {
                 $current_release = '12.0.0';
-            } elseif (! in_array(170, $applied_upgrades)) {
+            } elseif (! in_array(170, $applied_upgrades, true)) {
                 $current_release = '13.0.0';
-            } elseif (! in_array(174, $applied_upgrades)) {
+            } elseif (! in_array(174, $applied_upgrades, true)) {
                 $current_release = '14.0.0';
-            } elseif (! in_array(181, $applied_upgrades)) {
+            } elseif (! in_array(181, $applied_upgrades, true)) {
                 $current_release = '15.0.0';
             } else {
                 // confirm that the database is in the same version as source code files

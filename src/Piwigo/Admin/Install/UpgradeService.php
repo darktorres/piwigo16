@@ -213,7 +213,7 @@ SELECT theme
             $default_theme = is_scalar($default_theme) ? (string) $default_theme : '';
 
             // if the default theme has just been deactivated, let's set another core theme as default
-            if (in_array($default_theme, $theme_ids)) {
+            if (in_array($default_theme, $theme_ids, true)) {
                 // make sure default Piwigo theme is active
                 $query = '
 SELECT

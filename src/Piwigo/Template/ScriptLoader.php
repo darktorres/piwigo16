@@ -311,7 +311,7 @@ class ScriptLoader
             }
 
             foreach ($required_ids as $required_id) {
-                if (! in_array($required_id, $script->precedents)) {
+                if (! in_array($required_id, $script->precedents, true)) {
                     $script->precedents[] = $required_id;
                 }
             }

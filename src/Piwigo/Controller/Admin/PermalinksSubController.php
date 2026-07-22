@@ -242,11 +242,11 @@ SELECT id, permalink, uppercats, global_rank
         parse_str($url_components['query'] ?? '', $vars);
         $is_first = true;
         foreach ($vars as $key => $value) {
-            if (! in_array($key, $get_rejects) and $key !== $get_param) {
+            if (! in_array((string) $key, $get_rejects, true) and $key !== $get_param) {
                 $base_url .= $is_first ? '?' : '&amp;';
                 $is_first = false;
 
-                if (! in_array($key, ['page', 'psf', 'dpsf', 'pwg_token'])) {
+                if (! in_array((string) $key, ['page', 'psf', 'dpsf', 'pwg_token'], true)) {
                     new HtmlService()
                         ->fatalError('unexpected URL get key');
                 }

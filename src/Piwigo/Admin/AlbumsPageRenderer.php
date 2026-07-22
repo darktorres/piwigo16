@@ -106,7 +106,7 @@ SELECT COUNT(*)
         if (isset($_POST['simpleAutoOrder']) || isset($_POST['recursiveAutoOrder'])) {
 
             $post_order = $_POST['order'] ?? null;
-            if (! is_string($post_order) || ! in_array($post_order, $sort_orders)) {
+            if (! is_string($post_order) || ! in_array($post_order, $sort_orders, true)) {
                 new HtmlService()
                     ->fatalError('Invalid sort order');
             }

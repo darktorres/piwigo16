@@ -532,7 +532,7 @@ final class ImageDerivativeController implements ControllerInterface
         $compression_quality = ImageStdParams::$quality;
 
         // for big sizing never go beyond 75 quality
-        if (in_array($this->derivativeType, [ImageStdParams::FOUR_XLARGE, ImageStdParams::THREE_XLARGE])) {
+        if (in_array($this->derivativeType, [ImageStdParams::FOUR_XLARGE, ImageStdParams::THREE_XLARGE], true)) {
             $compression_quality = min(ImageStdParams::$quality, 75);
         }
 

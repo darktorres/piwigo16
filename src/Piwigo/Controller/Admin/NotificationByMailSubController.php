@@ -335,12 +335,12 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                     }
                     if (SqlDialect::getBoolean($nbm_user['enabled'])) {
                         $opt_true[$nbm_user['check_key']] = stripslashes((string) $nbm_user['username']) . '[' . $nbm_user['mail_address'] . ']';
-                        if (isset($_POST['falsify']) and isset($_POST['cat_true']) and is_array($_POST['cat_true']) and in_array($nbm_user['check_key'], $_POST['cat_true'])) {
+                        if (isset($_POST['falsify']) and isset($_POST['cat_true']) and is_array($_POST['cat_true']) and in_array($nbm_user['check_key'], $_POST['cat_true'], true)) {
                             $opt_true_selected[] = $nbm_user['check_key'];
                         }
                     } else {
                         $opt_false[$nbm_user['check_key']] = stripslashes((string) $nbm_user['username']) . '[' . $nbm_user['mail_address'] . ']';
-                        if (isset($_POST['trueify']) and isset($_POST['cat_false']) and is_array($_POST['cat_false']) and in_array($nbm_user['check_key'], $_POST['cat_false'])) {
+                        if (isset($_POST['trueify']) and isset($_POST['cat_false']) and is_array($_POST['cat_false']) and in_array($nbm_user['check_key'], $_POST['cat_false'], true)) {
                             $opt_false_selected[] = $nbm_user['check_key'];
                         }
                     }
@@ -381,14 +381,14 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                         /** @var array<string, string|null> $nbm_user */
                         if (
                             (! $must_repost) or // Not timeout, normal treatment
-                            in_array($nbm_user['check_key'], $post_send_selection)  // Must be repost, show only user to send
+                            in_array($nbm_user['check_key'], $post_send_selection, true)  // Must be repost, show only user to send
                         ) {
                             $tpl_var['users'][] =
                               [
                                   'ID' => $nbm_user['check_key'],
                                   'CHECKED' => ( // not check if not selected,  on init select<all
                                       isset($_POST['send_selection']) and // not init
-                                      ! in_array($nbm_user['check_key'], $post_send_selection) // not selected
+                                      ! in_array($nbm_user['check_key'], $post_send_selection, true) // not selected
                                   ) ? '' : 'checked="checked"',
                                   'USERNAME' => stripslashes((string) $nbm_user['username']),
                                   'EMAIL' => $nbm_user['mail_address'],

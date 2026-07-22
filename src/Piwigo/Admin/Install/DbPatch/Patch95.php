@@ -45,7 +45,7 @@ final class Patch95 implements DbPatchInterface
             $query .= ' `user_representative_picture_id` mediumint(8) unsigned default NULL';
         }
 
-        if (in_array($dblayer, ['pgsql', 'sqlite', 'pdo-sqlite'])) {
+        if (in_array($dblayer, ['pgsql', 'sqlite', 'pdo-sqlite'], true)) {
             $query .= ' "user_representative_picture_id" INTEGER';
         }
 

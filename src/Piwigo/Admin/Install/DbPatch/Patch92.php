@@ -46,7 +46,7 @@ final class Patch92 implements DbPatchInterface
             $query .= ' added_by smallint(5)';
         }
 
-        if (in_array($dblayer, ['pgsql', 'sqlite', 'pdo-sqlite'])) {
+        if (in_array($dblayer, ['pgsql', 'sqlite', 'pdo-sqlite'], true)) {
             $query .= ' "added_by" INTEGER default 0';
         }
 

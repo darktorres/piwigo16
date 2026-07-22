@@ -237,7 +237,7 @@ SELECT user_id, group_id
                 foreach ($group_users as $user_id) {
                     // simple_hash_from_query()'s own return type is declared
                     // array<int|string, mixed>; narrow to the real username string
-                    if (in_array($user_id, $user_granted_indirect_ids) && isset($users[$user_id]) && is_string($users[$user_id])) {
+                    if (in_array($user_id, $user_granted_indirect_ids, true) && isset($users[$user_id]) && is_string($users[$user_id])) {
                         $group_usernames[] = $users[$user_id];
                     }
                 }

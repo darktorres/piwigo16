@@ -378,7 +378,7 @@ SELECT COUNT(*)
         }
 
         // any photos with no md5sum ?
-        if (in_array($page_slug, ['site_update', 'batch_manager'])) {
+        if (in_array($page_slug, ['site_update', 'batch_manager'], true)) {
             $imageService = self::imageService($conn);
 
             $nb_no_md5sum = count($imageService->getPhotosNoMd5sum());
@@ -420,7 +420,8 @@ SELECT COUNT(*)
                 [
                     'site_manager', // delete site
                     'site_update',  // ?only POST
-                ]
+                ],
+                true
             )
             or ($_POST !== [] and in_array(
                 $page_slug,
@@ -430,7 +431,8 @@ SELECT COUNT(*)
                     'cat_options',  // public/private; lock/unlock
                     'user_list',    // group assoc; user level
                     'user_perm',
-                ]
+                ],
+                true
             )
             )
         ) {

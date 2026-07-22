@@ -44,7 +44,7 @@ final class Patch100 implements DbPatchInterface
     ADD COLUMN `high_height` smallint(9) unsigned default NULL;';
         }
 
-        if (in_array($dblayer, ['pgsql', 'sqlite', 'pdo-sqlite'])) {
+        if (in_array($dblayer, ['pgsql', 'sqlite', 'pdo-sqlite'], true)) {
             $query = 'ALTER TABLE ' . Tables::images() . '
     ADD COLUMN "high_width" INTEGER,
     ADD COLUMN "high_height" INTEGER;';

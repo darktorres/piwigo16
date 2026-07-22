@@ -44,7 +44,7 @@ final class Patch101 implements DbPatchInterface
     ALTER TABLE ' . Tables::userInfos() . '
       ADD COLUMN `nb_image_page` smallint(3) unsigned NOT NULL default \'15\'
   ;');
-        } elseif (in_array($dblayer, ['pgsql', 'sqlite', 'pdo-sqlite'])) {
+        } elseif (in_array($dblayer, ['pgsql', 'sqlite', 'pdo-sqlite'], true)) {
             $conn->executeStatement('
     ALTER TABLE ' . Tables::userInfos() . '
       ADD COLUMN "nb_image_page" INTEGER default 15 NOT NULL

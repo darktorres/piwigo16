@@ -60,7 +60,7 @@ class PwgImage
         $extension = strtolower(\Piwigo\Core\StringHelper::getExtension($this->source_filepath));
 
         $picture_ext = is_array(\Piwigo\Config\Config::pictureExtensions()) ? \Piwigo\Config\Config::pictureExtensions() : [];
-        if (! in_array($extension, $picture_ext)) {
+        if (! in_array($extension, $picture_ext, true)) {
             die('[Image] unsupported file extension');
         }
 
@@ -157,7 +157,7 @@ class PwgImage
     public static function get_resize_dimensions(int|float $width, int|float $height, int $max_width, int $max_height, ?int $rotation = null, bool $crop = false, bool $follow_orientation = true): array
     {
         $rotate_for_dimensions = false;
-        if (isset($rotation) and in_array(abs($rotation), [90, 270])) {
+        if (isset($rotation) and in_array(abs($rotation), [90, 270], true)) {
             $rotate_for_dimensions = true;
         }
 
@@ -306,11 +306,11 @@ class PwgImage
 
         if ($exif_orientation !== null and (bool) preg_match('/^\s*(\d)/', $exif_orientation, $matches)) {
             $orientation = $matches[1];
-            if (in_array($orientation, [3, 4])) {
+            if (in_array($orientation, ['3', '4'], true)) {
                 $rotation = 180;
-            } elseif (in_array($orientation, [5, 6])) {
+            } elseif (in_array($orientation, ['5', '6'], true)) {
                 $rotation = 270;
-            } elseif (in_array($orientation, [7, 8])) {
+            } elseif (in_array($orientation, ['7', '8'], true)) {
                 $rotation = 90;
             }
         }

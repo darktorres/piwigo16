@@ -574,7 +574,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                             // int so it's safe to use as an array key below.
                             $parent_id = $db_categories[$ids]['parent'] ?? null;
                             $parent_id = is_int($parent_id) ? $parent_id : null;
-                            while ($parent_id !== null && in_array($parent_id, $category_ids)) {
+                            while ($parent_id !== null && in_array($parent_id, $category_ids, true)) {
                                 $parent_id = $db_categories[$parent_id]['parent'] ?? null;
                                 $parent_id = is_int($parent_id) ? $parent_id : null;
                             }
@@ -902,7 +902,7 @@ DELETE
             foreach (array_diff($db_elements, array_keys($fs)) as $path) {
                 // $path is sourced from $db_elements itself (via array_diff), so
                 // it's always found in it
-                $element_id = array_search($path, $db_elements);
+                $element_id = array_search($path, $db_elements, true);
                 assert($element_id !== false);
                 $to_delete_elements[] = (int) $element_id;
                 $infos[] = [

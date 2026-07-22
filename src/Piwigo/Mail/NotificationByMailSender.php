@@ -479,7 +479,7 @@ final class NotificationByMailSender
     {
         $returnList = [];
 
-        if (in_array($action, ['list_to_send', 'send'])) {
+        if (in_array($action, ['list_to_send', 'send'], true)) {
             // Env::now() rather than SQL's NOW() -- matches
             // SessionRepository/CommentRepository's own established
             // reasoning: invisible to PIWIGO_TEST_NOW, so a fixture-dated

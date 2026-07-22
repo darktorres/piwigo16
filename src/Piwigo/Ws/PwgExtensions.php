@@ -127,7 +127,7 @@ final class PwgExtensions
         if ($errors !== []) {
             return new PwgError(500, implode(', ', array_filter($errors, is_string(...))));
         } else {
-            if (in_array($params['action'], ['activate', 'deactivate'])) {
+            if (in_array($params['action'], ['activate', 'deactivate'], true)) {
                 $template->delete_compiled_templates();
             }
             return true;
@@ -173,7 +173,7 @@ final class PwgExtensions
         if ($errors !== []) {
             return new PwgError(500, implode(', ', $errors));
         } else {
-            if (in_array($params['action'], ['activate', 'deactivate'])) {
+            if (in_array($params['action'], ['activate', 'deactivate'], true)) {
                 $template->delete_compiled_templates();
             }
             return true;
@@ -205,7 +205,7 @@ final class PwgExtensions
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (! in_array($params['type'], ['plugins', 'themes', 'languages'])) {
+        if (! in_array($params['type'], ['plugins', 'themes', 'languages'], true)) {
             return new PwgError(403, 'invalid extension type');
         }
 
@@ -354,12 +354,12 @@ final class PwgExtensions
             return true;
         }
 
-        if (in_array($params['id'], [null, ''], true) or in_array($params['type'], [null, ''], true) or ! in_array($params['type'], ['plugins', 'themes', 'languages'])) {
+        if (in_array($params['id'], [null, ''], true) or in_array($params['type'], [null, ''], true) or ! in_array($params['type'], ['plugins', 'themes', 'languages'], true)) {
             return new PwgError(403, 'Invalid parameters');
         }
 
         // Add or remove extension from ignore list
-        if (! in_array($params['id'], $updates_ignored[$params['type']])) {
+        if (! in_array($params['id'], $updates_ignored[$params['type']], true)) {
             $updates_ignored[$params['type']][] = $params['id'];
         }
 

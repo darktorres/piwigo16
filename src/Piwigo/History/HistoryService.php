@@ -181,8 +181,8 @@ final readonly class HistoryService
             \Piwigo\Config\Config::override('history_sections_cache', $historySectionsCache);
 
             if (
-                in_array($pageSection, $historySectionsCache)
-                or in_array(strtolower($pageSection), array_map(strtolower(...), $historySectionsCache))
+                in_array($pageSection, $historySectionsCache, true)
+                or in_array(strtolower($pageSection), array_map(strtolower(...), $historySectionsCache), true)
             ) {
                 $section = $pageSection;
             } elseif ((bool) preg_match('/^[a-zA-Z0-9_-]+$/', $pageSection)) {

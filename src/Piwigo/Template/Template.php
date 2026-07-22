@@ -292,7 +292,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         // standard pages can't get the header to load the html header
         if (
             $theme !== 'default'
-            and in_array(\Piwigo\Core\PageFilterHelper::scriptBasename(), ['identification', 'register', 'password', 'profile'])
+            and in_array(\Piwigo\Core\PageFilterHelper::scriptBasename(), ['identification', 'register', 'password', 'profile'], true)
             and ((bool) ($themeconf['use_standard_pages'] ?? false) or (bool) (\Piwigo\Config\Config::all()['use_standard_pages'] ?? false))
         ) {
             $theme = 'standard_pages';

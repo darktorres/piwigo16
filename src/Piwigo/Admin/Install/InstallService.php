@@ -93,7 +93,7 @@ final class InstallService
         $fs_themes = new ExtensionScanner()
             ->scan(ExtensionType::Theme, $urlService);
         foreach ($fs_themes as $theme_id => $fs_theme) {
-            if (in_array($theme_id, ['modus'])) {
+            if (in_array($theme_id, ['modus'], true)) {
                 $lifecycle->performAction(ExtensionType::Theme, 'activate', $theme_id, $fs_theme);
             }
         }
@@ -115,7 +115,7 @@ final class InstallService
             ->scan(ExtensionType::Plugin, $urlService);
 
         foreach ($fs_plugins as $plugin_id => $fs_plugin) {
-            if (in_array($plugin_id, [])) {
+            if (in_array($plugin_id, [], true)) {
                 $lifecycle->performAction(ExtensionType::Plugin, 'activate', $plugin_id, $fs_plugin);
             }
         }

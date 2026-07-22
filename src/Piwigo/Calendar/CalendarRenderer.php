@@ -154,7 +154,7 @@ final readonly class CalendarRenderer
         $chronology_view = $chronologyView;
 
         if ($chronology_view === null or
-             ! in_array($chronology_view, $views)) {
+             ! in_array($chronology_view, $views, true)) {
             $chronology_view = CalendarBase::CAL_VIEW_LIST;
         }
 
@@ -271,7 +271,7 @@ final readonly class CalendarRenderer
                 $order_by = $conf_order_by;
             } else {
                 if (count($page_chronology_date) === 0
-                     or in_array('any', $page_chronology_date)) {// selected period is very big so we show newest first
+                     or in_array('any', $page_chronology_date, true)) {// selected period is very big so we show newest first
                     $order = ' DESC, ';
                 } else {// selected period is small (month,week) so we show oldest first
                     $order = ' ASC, ';

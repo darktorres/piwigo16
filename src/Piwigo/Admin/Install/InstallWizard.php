@@ -262,7 +262,7 @@ final class InstallWizard
         if (isset($_GET['language']) && is_string($_GET['language'])) {
             $language = strip_tags($_GET['language']);
 
-            if (! in_array($language, array_keys($this->fsLanguages))) {
+            if (! in_array($language, array_keys($this->fsLanguages), true)) {
                 $language = AppInfo::DEFAULT_LANGUAGE;
             }
         } else {

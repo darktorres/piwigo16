@@ -58,13 +58,13 @@ final class PwgComments
 
         // accepted status values
         $accepted_status = ['all', 'pending', 'validated'];
-        if (! in_array($params['status'], $accepted_status)) {
+        if (! in_array($params['status'], $accepted_status, true)) {
             return new PwgError(401, 'Status must be: all, pending or validated');
         }
 
         // accepted values must match pagination options (5,10,25,50)
         $items_number = [5, 10, 25, 50];
-        if (! in_array($params['per_page'], $items_number)) {
+        if (! in_array($params['per_page'], $items_number, true)) {
             return new PwgError(401, 'Per page must be: 5, 10, 25 or 50');
         }
 

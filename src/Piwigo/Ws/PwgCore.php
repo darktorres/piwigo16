@@ -798,7 +798,7 @@ SELECT
     public static function historyLog(array $params, PwgServer &$service): void
     {
         $section = null;
-        if (! in_array($params['section'], [null, ''], true) and in_array($params['section'], new DbInfo(DbConnection::build())->getEnums(Tables::history(), 'section'))) {
+        if (! in_array($params['section'], [null, ''], true) and in_array($params['section'], new DbInfo(DbConnection::build())->getEnums(Tables::history(), 'section'), true)) {
             $section = $params['section'];
         }
 

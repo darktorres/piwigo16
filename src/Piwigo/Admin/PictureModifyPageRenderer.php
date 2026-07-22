@@ -350,7 +350,7 @@ SELECT
         $src_image = new SrcImage($row);
 
         // in case the photo needs a rotation of 90 degrees (clockwise or counterclockwise), we switch width and height
-        if (in_array($row['rotation'], [1, 3])) {
+        if (in_array(is_numeric($row['rotation']) ? (int) $row['rotation'] : null, [1, 3], true)) {
             [$row['width'], $row['height']] = [$row['height'], $row['width']];
         }
 
@@ -471,7 +471,7 @@ SELECT *
 
         $row_path = is_string($row['path']) ? $row['path'] : null;
         $picture_ext = is_array(\Piwigo\Config\Config::pictureExtensions()) ? \Piwigo\Config\Config::pictureExtensions() : [];
-        if (in_array(\Piwigo\Core\StringHelper::getExtension($row_path), $picture_ext)) {
+        if (in_array(\Piwigo\Core\StringHelper::getExtension($row_path), $picture_ext, true)) {
             $template->assign('U_COI', $this->urlService->getRootUrl() . 'admin.php?page=picture_coi&amp;image_id=' . $image_id);
         }
 

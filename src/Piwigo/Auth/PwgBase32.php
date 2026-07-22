@@ -106,7 +106,7 @@ class PwgBase32
         }
         $paddingCharCount = substr_count($input, self::$map[32]);
         $allowedValues = [6, 4, 3, 1, 0];
-        if (! in_array($paddingCharCount, $allowedValues)) {
+        if (! in_array($paddingCharCount, $allowedValues, true)) {
             return false;
         }
         for ($i = 0; $i < 4; $i++) {
@@ -122,7 +122,7 @@ class PwgBase32
         $binaryString = '';
         for ($i = 0; $i < count($input); $i += 8) {
             $x = '';
-            if (! in_array($input[$i], self::$map)) {
+            if (! in_array($input[$i], self::$map, true)) {
                 return false;
             }
             for ($j = 0; $j < 8; $j++) {

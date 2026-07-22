@@ -110,7 +110,7 @@ final class ElementSetRanksPageRenderer
             }
 
             if (! in_array($_POST['image_order_choice'] ?? null, [null, false, 0, '0', '', []], true)
-                && in_array($_POST['image_order_choice'], $image_order_choices)) {
+                && in_array($_POST['image_order_choice'], $image_order_choices, true)) {
                 $image_order_choice = $_POST['image_order_choice'];
             }
 

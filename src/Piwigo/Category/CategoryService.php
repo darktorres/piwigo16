@@ -629,7 +629,7 @@ final readonly class CategoryService
         // $filter['visible_categories'] and $filter['visible_images']
         // are not used because it's not necessary (filter <> restriction)
         $forbiddenCategoriesStr = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
-        if (in_array($categoryId, explode(',', $forbiddenCategoriesStr))) {
+        if (in_array((string) $categoryId, explode(',', $forbiddenCategoriesStr), true)) {
             $htmlRenderer->accessDenied($redirectService);
         }
     }

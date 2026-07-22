@@ -899,7 +899,7 @@ SELECT *
                 $params['allwords_fields'] = $allwords_fields_available;
             }
             foreach ($params['allwords_fields'] as $field) {
-                if (! in_array($field, $allwords_fields_available)) {
+                if (! in_array($field, $allwords_fields_available, true)) {
                     return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter allwords_fields');
                 }
             }
@@ -1140,7 +1140,7 @@ SELECT *
 
         $available_permission_levels = \Piwigo\Config\Config::availablePermissionLevels();
 
-        if (! in_array($params['level'], $available_permission_levels)) {
+        if (! in_array($params['level'], $available_permission_levels, true)) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
         }
 
@@ -1320,9 +1320,10 @@ UPDATE ' . Tables::imageCategory() . '
 
         $logger->debug('[ws_images_add_chunk] data length : ' . strlen($params['data']), 'WS');
 
-        $bytes_written = file_put_contents(
+        $decoded_data = base64_decode($params['data'], true);
+        $bytes_written = $decoded_data === false ? false : file_put_contents(
             $upload_dir . '/' . $filename,
-            base64_decode($params['data'])
+            $decoded_data
         );
 
         if ($bytes_written === false) {
@@ -2408,7 +2409,7 @@ SELECT
                 $mult_form = false;
                 if (isset($format_db[$img_id])) {
                     $format_ext = pathinfo($format_filename, PATHINFO_EXTENSION);
-                    if (array_search($format_ext, $format_db[$img_id]) !== false) {
+                    if (array_search($format_ext, array_map(strval(...), array_filter($format_db[$img_id], is_scalar(...))), true) !== false) {
                         $mult_form = true;
                     }
                 }

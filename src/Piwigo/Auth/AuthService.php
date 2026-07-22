@@ -486,7 +486,7 @@ final readonly class AuthService
         }
 
         // admin/webmaster/guest can't get connected with authentication keys
-        if ($valid_key === 'auth_key' and ! in_array($key['status'], ['normal', 'generic'])) {
+        if ($valid_key === 'auth_key' and ! in_array($key['status'], ['normal', 'generic'], true)) {
             return false;
         }
 
@@ -581,7 +581,7 @@ final readonly class AuthService
             }
         }
 
-        if (! in_array($userStatus, ['normal', 'generic'])) {
+        if (! in_array($userStatus, ['normal', 'generic'], true)) {
             return false;
         }
 

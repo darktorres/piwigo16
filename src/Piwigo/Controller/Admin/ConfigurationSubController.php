@@ -309,7 +309,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                                 $order_by = $order_by_inside_category = array_slice($order_by_input, 0, (int) ceil(count($sort_fields) / 2));
 
                                 // there is no rank outside categories
-                                if (($i = array_search('`rank` ASC', $order_by)) !== false) {
+                                if (($i = array_search('`rank` ASC', $order_by, true)) !== false) {
                                     unset($order_by[$i]);
                                 }
 
@@ -427,7 +427,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             }
 
             // updating configuration if no error found
-            if (! in_array($page_section, ['sizes', 'watermark']) and ! \Piwigo\Core\PageState::current()->hasErrors() and \Piwigo\Auth\AccessControl::isWebmaster()) {
+            if (! in_array($page_section, ['sizes', 'watermark'], true) and ! \Piwigo\Core\PageState::current()->hasErrors() and \Piwigo\Auth\AccessControl::isWebmaster()) {
                 // echo '<pre>'; print_r($_POST); echo '</pre>';
                 foreach ($conn->fetchAllAssociative('SELECT param FROM ' . Tables::config()) as $row) {
                     if (! is_string($row['param'])) {
@@ -561,7 +561,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         'order_by' => $order_by,
                         'order_by_options' => $sort_fields,
                         'email_admin_on_new_user' => $conf_email_admin_on_new_user !== 'none',
-                        'email_admin_on_new_user_filter' => in_array($conf_email_admin_on_new_user, ['none', 'all']) ? 'all' : 'group',
+                        'email_admin_on_new_user_filter' => in_array($conf_email_admin_on_new_user, ['none', 'all'], true) ? 'all' : 'group',
                         'email_admin_on_new_user_filter_group' => ((bool) preg_match('/^group:(\d+)$/', $conf_email_admin_on_new_user, $matches)) ? $matches[1] : -1,
                     ]
                 );
@@ -1358,7 +1358,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         if ($step !== 0) {
             $change_name .= '-' . $step;
         }
-        if (in_array($change_name, $list)) {
+        if (in_array($change_name, $list, true)) {
             return self::getWatermarkFilename($list, $candidate, $step + 1);
         }
         return $change_name . '.png';

@@ -87,7 +87,7 @@ class CheckIntegrity
             foreach ($this->retrieve_list as $i => $c13y) {
                 if (! in_array($c13y['correction_fct'] ?? null, [null, false, 0, '0', '', []], true) and
                     (bool) $c13y['is_callable'] and
-                    in_array($c13y['id'], $c13y_selection)) {
+                    in_array((string) $c13y['id'], array_map(strval(...), $c13y_selection), true)) {
                     if (is_array($c13y['correction_fct_args'])) {
                         $args = $c13y['correction_fct_args'];
                     } elseif ($c13y['correction_fct_args'] !== null) {
@@ -128,7 +128,7 @@ class CheckIntegrity
                 $ignored_count = 0;
 
                 foreach ($this->retrieve_list as $i => $c13y) {
-                    if (in_array($c13y['id'], $c13y_selection)) {
+                    if (in_array((string) $c13y['id'], array_map(strval(...), $c13y_selection), true)) {
                         $this->build_ignore_list[] = $c13y['id'];
                         $this->retrieve_list[$i]['ignored'] = true;
                         ++$ignored_count;
@@ -248,7 +248,7 @@ class CheckIntegrity
     {
         $id = md5($anomaly . $correction_fct . serialize($correction_fct_args) . $correction_msg);
 
-        if (in_array($id, $this->ignore_list)) {
+        if (in_array($id, array_map(strval(...), array_filter($this->ignore_list, is_scalar(...))), true)) {
             $this->build_ignore_list[] = $id;
         } else {
             $this->retrieve_list[] =

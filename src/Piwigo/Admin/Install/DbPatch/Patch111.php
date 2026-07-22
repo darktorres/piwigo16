@@ -43,7 +43,7 @@ final class Patch111 implements DbPatchInterface
             $query .= ' `activation_key` char(20) default NULL';
         }
 
-        if (in_array($dblayer, ['pgsql', 'sqlite', 'pdo-sqlite'])) {
+        if (in_array($dblayer, ['pgsql', 'sqlite', 'pdo-sqlite'], true)) {
             $query .= ' "activation_key" CHAR(20) default NULL';
         }
 

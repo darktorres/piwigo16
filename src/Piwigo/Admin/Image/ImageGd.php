@@ -23,7 +23,7 @@ class ImageGd implements ImageInterface
         $gd_info = gd_info();
         $extension = strtolower(\Piwigo\Core\StringHelper::getExtension($source_filepath));
 
-        if (in_array($extension, ['jpg', 'jpeg'])) {
+        if (in_array($extension, ['jpg', 'jpeg'], true)) {
             $image = imagecreatefromjpeg($source_filepath);
         } elseif ($extension === 'png') {
             $image = imagecreatefrompng($source_filepath);

@@ -562,7 +562,9 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $user['id'] = $userId;
         $user = array_merge($user, $this->getUserData($userId, $useCache));
 
-        if ($user['id'] == \Piwigo\Config\Config::guestId() and ($user['status'] ?? null) != 'guest') {
+        $userStatusValue = $user['status'] ?? null;
+        if (is_numeric($user['id']) and (int) $user['id'] === \Piwigo\Config\Config::guestId()
+            and (! is_string($userStatusValue) or $userStatusValue !== 'guest')) {
             $user['status'] = 'guest';
             $internal_status = $user['internal_status'] ?? [];
             if (! is_array($internal_status)) {
@@ -684,7 +686,7 @@ SELECT
 
             if (! isset($userdata['need_update'])
                 or ! is_bool($userdata['need_update'])
-                or $userdata['need_update'] == true) {
+                or $userdata['need_update']) {
                 $logger->info($logger_msg_prefix . 'needs user_cache to be rebuilt');
 
                 $exec_id = \Piwigo\Core\UniqueExecLock::begins($cache_generation_token_name);
@@ -790,7 +792,7 @@ SELECT COUNT(DISTINCT(image_id)) as total
                 if (! AccessControl::isAdmin($status)) { // for non admins we forbid categories with no image (feature 1053)
                     $forbidden_ids = [];
                     foreach ($user_cache_cats as $cat) {
-                        if ($cat['count_images'] == 0) {
+                        if ((is_numeric($cat['count_images']) ? (int) $cat['count_images'] : 0) === 0) {
                             $cat_id = $cat['cat_id'];
                             assert(is_string($cat_id));
                             $forbidden_ids[] = $cat_id;
@@ -1157,7 +1159,7 @@ DELETE FROM ' . Tables::favorites() . '
         if (isset($params['username'])) {
             $username_check = $params['username'];
             assert(is_string($username_check));
-            if (strlen(str_replace(' ', '', $username_check)) == 0) {
+            if (strlen(str_replace(' ', '', $username_check)) === 0) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1186,7 +1188,7 @@ DELETE FROM ' . Tables::favorites() . '
             $user_ids[] = (int) $raw_user_id;
         }
 
-        if (count($user_ids) == 1) {
+        if (count($user_ids) === 1) {
             if ($this->getUsername($user_ids[0]) === false) {
                 return [
                     'error' => [
@@ -1200,7 +1202,7 @@ DELETE FROM ' . Tables::favorites() . '
                 $username_param = $params['username'];
                 assert(is_string($username_param));
                 $user_id = $this->getUserId($username_param);
-                if ((bool) $user_id and $user_id != $user_ids[0]) {
+                if ((bool) $user_id and $user_id !== $user_ids[0]) {
                     return [
                         'error' => [
                             'code' => WsError::INVALID_PARAM,
@@ -1208,7 +1210,7 @@ DELETE FROM ' . Tables::favorites() . '
                         ],
                     ];
                 }
-                if ($username_param != strip_tags($username_param)) {
+                if ($username_param !== strip_tags($username_param)) {
                     return [
                         'error' => [
                             'code' => WsError::INVALID_PARAM,
@@ -1222,7 +1224,7 @@ DELETE FROM ' . Tables::favorites() . '
             if (! empty($params['email'])) {
                 $email_param = $params['email'];
                 assert(is_string($email_param));
-                if (($error = $this->validateMailAddress($user_ids[0], $email_param)) != '') {
+                if (($error = $this->validateMailAddress($user_ids[0], $email_param)) !== '') {
                     return [
                         'error' => [
                             'code' => WsError::INVALID_PARAM,
@@ -1419,7 +1421,7 @@ UPDATE ' . Tables::userInfos() . ' SET
 
             // we delete sessions, ie disconnect, for users if status becomes "guest".
             // It's like deactivating the user.
-            if ($update_status == 'guest') {
+            if ($update_status === 'guest') {
                 foreach ($user_ids_for_status as $user_id_for_status) {
                     SessionService::get()->deleteUserSessions($user_id_for_status);
                 }

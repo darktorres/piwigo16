@@ -11,6 +11,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Http\ResponseFactory;
+use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\BlockManager;
@@ -348,15 +350,15 @@ final class HtmlService implements HtmlRenderingInterface
     }
 
     /**
-     * Exits the current script.
+     * Workstream C3: throws Piwigo\Http\ResponseReadyException (a 401 page
+     * or a redirect to the login page) instead of exiting directly -- see
+     * that exception class's own docblock for why and where it's caught.
      */
     #[\Override]
     public function accessDenied(RedirectServiceInterface $redirectService): never
     {
         if (\Piwigo\Users\CurrentUser::isInitialized() and ! \Piwigo\Auth\AccessControl::isAGuest()) {
-            $this->setStatusHeader(401);
-
-            echo '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+            $html = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="shortcut icon" type="image/x-icon" href="themes/default/icon/favicon.ico">
 <div style="display: flex; justify-content: center;align-items: center;height: 100vh;margin: 0;color: #3C3C3C;font-family: \'Open Sans\', sans-serif;font-size: 20px;font-style: normal;font-weight: 600;line-height: normal;">
   <div style="text-align:center;">
@@ -365,7 +367,7 @@ final class HtmlService implements HtmlRenderingInterface
     <a href="' . $this->urlService()->makeIndexUrl() . '" style="display: inline-block;padding: 10px 20px;margin: 10px;margin-top: 50px;border-radius: 7px;cursor: pointer;width: 150px;background-color: #F77000;color: #fff;text-decoration: none;border: 2px solid #F77000;">' . Lang::t('Home') . '</a>
   </div>
 </div>';
-            exit();
+            throw new ResponseReadyException(ResponseFactory::html($html, 401));
         }
 
         $request_uri = $_SERVER['REQUEST_URI'] ?? '';
@@ -374,12 +376,13 @@ final class HtmlService implements HtmlRenderingInterface
     }
 
     /**
-     * Exits the current script with 403 code.
+     * Workstream C3: redirectHtml()'s own new $status param carries the
+     * 403 through to the built Response instead of a separate
+     * setStatusHeader() call.
      * @todo nice display if $template loaded
      */
     public function pageForbidden(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
     {
-        $this->setStatusHeader(403);
         if ($alternateUrl === null) {
             $alternateUrl = $this->urlService()
                 ->makeIndexUrl();
@@ -390,17 +393,19 @@ final class HtmlService implements HtmlRenderingInterface
 <h1 style="text-align:left; font-size:36px;">' . Lang::t('Forbidden') . '</h1><br>'
 . $msg . '</div>',
             5,
+            403,
         );
     }
 
     /**
-     * Exits the current script with 400 code.
+     * Workstream C3: redirectHtml()'s own new $status param carries the
+     * 400 through to the built Response instead of a separate
+     * setStatusHeader() call.
      * @todo nice display if $template loaded
      */
     #[\Override]
     public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
     {
-        $this->setStatusHeader(400);
         if ($alternateUrl === null) {
             $alternateUrl = $this->urlService()
                 ->makeIndexUrl();
@@ -411,11 +416,14 @@ final class HtmlService implements HtmlRenderingInterface
 <h1 style="text-align:left; font-size:36px;">' . Lang::t('Bad request') . '</h1><br>'
 . $msg . '</div>',
             5,
+            400,
         );
     }
 
     /**
-     * Exits the current script with 404 code.
+     * Workstream C3: redirectHtml()'s own new $status param carries the
+     * 404 through to the built Response instead of a separate
+     * setStatusHeader() call.
      * @todo nice display if $template loaded
      *
      * @param string|null $msg null is treated the same as '' below (string
@@ -424,7 +432,6 @@ final class HtmlService implements HtmlRenderingInterface
     #[\Override]
     public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
     {
-        $this->setStatusHeader(404);
         if ($alternateUrl === null) {
             $alternateUrl = $this->urlService()
                 ->makeIndexUrl();
@@ -435,11 +442,15 @@ final class HtmlService implements HtmlRenderingInterface
 <h1 style="text-align:left; font-size:36px;">' . Lang::t('Page not found') . '</h1><br>'
 . $msg . '</div>',
             5,
+            404,
         );
     }
 
     /**
-     * Exits the current script with 500 code.
+     * Workstream C3: throws Piwigo\Http\ResponseReadyException (a 500
+     * page) instead of exiting directly, after still logging via
+     * trigger_error() -- see this method's own body for why that call is
+     * genuinely reachable.
      * @todo nice display if $template loaded
      */
     #[\Override]
@@ -466,9 +477,7 @@ final class HtmlService implements HtmlRenderingInterface
 <b>{$msg}</b>
 {$btrace_msg}
 </pre>\n";
-
-        @$this->setStatusHeader(500);
-        echo $display . str_repeat(' ', 300); // IE6 doesn't error output if below a size
+        $display .= str_repeat(' ', 300); // IE6 doesn't error output if below a size
 
         if (function_exists('ini_set')) { // if possible turn off error display (we display it)
             ini_set('display_errors', false);
@@ -482,7 +491,7 @@ final class HtmlService implements HtmlRenderingInterface
         // active (installed for every real request via common.inc.php) — static
         // analysis has no way to know set_error_handler() changes this.
         // @phpstan-ignore deadCode.unreachable
-        die(0);
+        throw new ResponseReadyException(ResponseFactory::html($display, 500));
     }
 
     /**

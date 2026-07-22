@@ -6,6 +6,7 @@ use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
+use Piwigo\Http\ResponseReadyException;
 use Piwigo\Routing\RouteResult;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -70,6 +71,33 @@ test('invokes the resolved handler for a found route and passes route args', fun
 
     expect((string) $response->getBody())->toBe('invoked');
     expect($captured['args'])->toBe(['id' => '5']);
+});
+
+test('catches ResponseReadyException from the controller and returns its response normally', function (): void {
+    // Workstream C3's real regression: PHP's exit()/die() skip pending
+    // `finally` blocks, so a controller that used to terminate the
+    // process directly (RedirectService/HtmlService, before their own
+    // conversion) left every outer middleware's own `finally` (e.g.
+    // SentryMiddleware's transaction close) unexecuted. Catching
+    // ResponseReadyException here and returning its response like any
+    // other Response means the caller (RequestPipeline's own middleware
+    // stack) sees a completely normal return -- no different from a
+    // controller that never throws at all.
+    $controller = new readonly class () implements ControllerInterface {
+        #[Override]
+        public function __invoke(ServerRequestInterface $request): ResponseInterface
+        {
+            throw new ResponseReadyException(new Response(302, ['Location' => '/elsewhere']));
+        }
+    };
+
+    $middleware = new ControllerInvokerMiddleware(containerInvokerFakeContainer($controller));
+    $request = new ServerRequest('GET', '/')->withAttribute(RouteResult::class, RouteResult::found('X', []));
+
+    $response = $middleware->process($request, containerInvokerNoopHandler());
+
+    expect($response->getStatusCode())->toBe(302);
+    expect($response->getHeaderLine('Location'))->toBe('/elsewhere');
 });
 
 test('returns 404 when the route was not found', function (): void {

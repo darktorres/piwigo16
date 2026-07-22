@@ -6,6 +6,7 @@ namespace Piwigo\Http\Middleware;
 
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Http\ResponseReadyException;
 use Piwigo\Routing\RouteMatchStatus;
 use Piwigo\Routing\RouteResult;
 use Psr\Container\ContainerInterface;
@@ -49,6 +50,18 @@ final readonly class ControllerInvokerMiddleware implements MiddlewareInterface
             );
         }
 
-        return $controller($request->withAttribute('route_args', $result->args));
+        // Workstream C3, catch point 2: the innermost/terminal middleware,
+        // so catching here (not in ExceptionHandlerMiddleware) means every
+        // outer middleware (SentryMiddleware's own `finally`,
+        // ServerTimingMiddleware's post-processing, SessionMiddleware's
+        // persist, SecurityHeadersMiddleware) sees a normal Response
+        // return value and unwinds exactly as if the controller had
+        // returned it directly -- see ResponseReadyException's own
+        // docblock for the real bug this fixes.
+        try {
+            return $controller($request->withAttribute('route_args', $result->args));
+        } catch (ResponseReadyException $e) {
+            return $e->response();
+        }
     }
 }

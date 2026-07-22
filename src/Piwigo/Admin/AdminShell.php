@@ -71,7 +71,28 @@ final class AdminShell
         return new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)));
     }
 
+    /**
+     * Workstream C3, catch point 3: runDispatch() below is the entire
+     * original run() body, unchanged -- extracted into its own method
+     * (rather than wrapping its ~430 lines in a try block directly) so
+     * this thin wrapper is the one, easily-reviewed place that catches
+     * Piwigo\Http\ResponseReadyException. AdminShell has no PSR-7
+     * request/response of its own yet, so this reuses the existing
+     * Piwigo\Http\ResponseEmitter class (already used by every P22 root
+     * file) for just this exceptional-exit path, not a full AdminShell-
+     * onto-PSR7 migration.
+     */
     public function run(): void
+    {
+        try {
+            $this->runDispatch();
+        } catch (\Piwigo\Http\ResponseReadyException $e) {
+            new \Piwigo\Http\ResponseEmitter()
+                ->emit($e->response());
+        }
+    }
+
+    private function runDispatch(): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
         $conn = DbConnection::build();

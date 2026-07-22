@@ -189,8 +189,10 @@ final class RequestBootstrap
         ConfigLoader::applyEnvOverrides();
 
         if (! file_exists($paths->siteLocal . Env::testModeInstalledStamp())) {
-            header('Location: install.php');
-            exit;
+            // Workstream C3, catch point 1: throws instead of the former
+            // raw header()+exit() -- see the 503 maintenance-page site
+            // below for the same conversion and why.
+            throw new \Piwigo\Http\ResponseReadyException(\Piwigo\Http\ResponseFactory::redirect('install.php'));
         }
     }
 
@@ -508,13 +510,17 @@ final class RequestBootstrap
             $pageState->addHeaderMessage(Lang::t('The gallery is locked for maintenance. Please, come back later.'));
 
             if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'identification' and ! \Piwigo\Auth\AccessControl::isAdmin()) {
-                new HtmlService()
-                    ->setStatusHeader(503, 'Service Unavailable');
-                @header('Retry-After: 900');
-                header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
-                echo '<a href="' . new UrlService(new HtmlService())->getAbsoluteRootUrl(false) . 'identification.php">' . Lang::t('The gallery is locked for maintenance. Please, come back later.') . '</a>';
-                echo str_repeat(' ', 512); // IE6 doesn't error output if below a size
-                exit();
+                // Workstream C3, catch point 1: throws instead of the
+                // former raw header()+echo+exit() -- caught in
+                // include/common.inc.php, the one seam both dispatch
+                // contexts that reach this code (pipeline-routed root
+                // files and admin.php/admin/popuphelp.php) include.
+                $body = '<a href="' . new UrlService(new HtmlService())->getAbsoluteRootUrl(false) . 'identification.php">' . Lang::t('The gallery is locked for maintenance. Please, come back later.') . '</a>';
+                $body .= str_repeat(' ', 512); // IE6 doesn't error output if below a size
+                throw new \Piwigo\Http\ResponseReadyException(\Piwigo\Http\ResponseFactory::raw($body, [
+                    'Retry-After' => '900',
+                    'Content-Type' => 'text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset(),
+                ], 503));
             }
         }
 

@@ -8,11 +8,7 @@ use Nyholm\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
 
 /**
- * json()/text()/html() -- the shapes real callers need. No redirect() yet;
- * legacy redirect()/access_denied() (include/functions.inc.php) still exit
- * directly rather than returning a Response (P22's own accepted
- * limitation, see docs/plan/manifest.yaml's P22 entry) -- add redirect()
- * here once a real non-exiting RedirectResponse replaces them.
+ * json()/text()/html()/redirect() -- the shapes real callers need.
  */
 final class ResponseFactory
 {
@@ -28,6 +24,22 @@ final class ResponseFactory
             ],
             json_encode($data, JSON_THROW_ON_ERROR)
         );
+    }
+
+    /**
+     * Workstream C3: fills the gap this class's own docblock used to name
+     * ("No redirect() yet ... add redirect() here once a real non-exiting
+     * RedirectResponse replaces [redirect_http()/redirect_html()]"). Just
+     * a Location header + empty body -- the Request-URI/Content-Location
+     * headers the legacy redirect_http() also sent were already identified
+     * as pointless and dropped elsewhere (SEC-35's ImageDerivativeController
+     * fix), not carried forward here either.
+     */
+    public static function redirect(string $url, int $status = 302): ResponseInterface
+    {
+        return new Response($status, [
+            'Location' => $url,
+        ]);
     }
 
     public static function text(string $body, int $status = 200): ResponseInterface

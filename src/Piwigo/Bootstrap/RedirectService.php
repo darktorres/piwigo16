@@ -24,7 +24,7 @@ use Piwigo\Users\UserService;
  * (`Piwigo\Http\functions.php`, now deleted), ported verbatim. Lives in
  * `Bootstrap` (L4Integration) for the same reason the deleted
  * include/page_tail.php seam did: `redirectHtml()`'s real body calls
- * `PageTail::render()`, itself L4Integration -- see
+ * `PageTail::renderToString()`, itself L4Integration -- see
  * `Piwigo\Core\RedirectServiceInterface`'s own docblock. Needs zero
  * constructor args -- every dependency is constructed inline, exactly as
  * the free functions already did.
@@ -37,6 +37,20 @@ use Piwigo\Users\UserService;
  * redirectHtml()-reaching call site (the "database needs upgrading"
  * redirect), so the container is guaranteed available at every real call
  * site of this class, including the early-crash fallback path below.
+ *
+ * Workstream C3: redirectHttp()/redirectHtml() now throw
+ * Piwigo\Http\ResponseReadyException instead of calling header()/echo/
+ * exit() directly -- see that exception class's own docblock for why
+ * (the real Sentry-transaction/Server-Timing bug this fixes) and where
+ * it's caught. redirectHtml() keeps every line up through
+ * $template->parse('redirect') unchanged: neither PageHeaderRenderer::
+ * render() nor Template::parse($handle, false) (the default) echo --
+ * both accumulate into Template's own internal buffer (see
+ * Template::fetchOutput()'s docblock), same mechanism
+ * Controller\AboutController already relies on. Only the former
+ * PageTail::render(); exit(); tail changes, to PageTail::renderToString()
+ * (the same buffer, drained as a string instead of echoed) feeding the
+ * thrown exception's Response body.
  */
 final class RedirectService implements RedirectServiceInterface
 {
@@ -60,19 +74,13 @@ final class RedirectService implements RedirectServiceInterface
     #[\Override]
     public function redirectHttp(string $url): never
     {
-        if (ob_get_length() !== false) {
-            ob_clean();
-        }
         // default url is on html format
         $url = html_entity_decode($url);
-        header('Request-URI: ' . $url);
-        header('Content-Location: ' . $url);
-        header('Location: ' . $url);
-        exit();
+        throw new \Piwigo\Http\ResponseReadyException(\Piwigo\Http\ResponseFactory::redirect($url));
     }
 
     #[\Override]
-    public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0): never
+    public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never
     {
         // $template/lang_info are genuinely not always set here: this method
         // can be called very early (e.g. a fatal before common.inc.php finishes
@@ -137,9 +145,8 @@ final class RedirectService implements RedirectServiceInterface
 
         $template->parse('redirect');
 
-        PageTail::render();
-
-        exit();
+        $body = PageTail::renderToString();
+        throw new \Piwigo\Http\ResponseReadyException(\Piwigo\Http\ResponseFactory::html($body, $status));
     }
 
     #[\Override]

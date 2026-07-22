@@ -759,18 +759,19 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         'Controller/WsController.php' => 1,
         'Bootstrap/UserBootstrap.php' => 2,
 
-        // Html/HtmlService.php: the sanctioned HtmlRenderingInterface exit
-        // mechanism itself (accessDenied()/fatalError()) -- every other
-        // controller/service that needs to stop the request with an error
-        // page routes through this, not a bare die()/exit() of its own.
-        'Html/HtmlService.php' => 2,
-
-        // Bootstrap/RedirectService.php: redirectHttp()/redirectHtml(), the
-        // canonical redirect() mechanism used throughout the whole
-        // codebase -- same class of sanctioned exit point as HtmlService.
-        // Legacy Coupling Retirement Phase 4b: relocated here verbatim from
-        // the deleted Http/functions.php (same 2-call count).
-        'Bootstrap/RedirectService.php' => 2,
+        // Workstream C3: Html/HtmlService.php's accessDenied()/badRequest()/
+        // pageNotFound()/pageForbidden()/fatalError() and Bootstrap/
+        // RedirectService.php's redirectHttp()/redirectHtml() -- the
+        // sanctioned HtmlRenderingInterface/RedirectServiceInterface exit
+        // mechanism every other controller/service routes through -- no
+        // longer call die()/exit() at all. Both now throw
+        // Piwigo\Http\ResponseReadyException instead, carrying a real
+        // Response up to one of 3 dispatch-context catch points (see that
+        // exception class's own docblock for why: exit()/die() skip
+        // pending `finally` blocks, which used to leave
+        // SentryMiddleware's performance transaction unfinished and
+        // ServerTimingMiddleware's header silently skipped on every
+        // redirect/error page).
 
         // AJAX/JSON action endpoints: echo a JSON (or CSV/file) body
         // directly and stop, deliberately not falling through to the
@@ -784,10 +785,28 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         'Controller/Admin/IntroSubController.php' => 1,
         'Controller/ActionController.php' => 2,
 
-        // 503 Service-Unavailable raw responses (custom Retry-After
-        // header + hand-written body, no template): gallery-locked and
-        // user-cache-still-generating pages.
-        'Bootstrap/RequestBootstrap.php' => 2,
+        // Workstream C3: Bootstrap/RequestBootstrap.php's own 2 raw sites
+        // (the install-redirect in configure(), the gallery-locked 503 in
+        // finalize()) now throw Piwigo\Http\ResponseReadyException too,
+        // caught by the same include/common.inc.php catch point as
+        // RequestBootstrap::configure()/connect()/finalize()'s other
+        // short-circuits -- both reachable from exactly one dispatch
+        // context (the bootstrap phase), unlike UserService.php below.
+
+        // 503 Service-Unavailable raw response (custom Retry-After header
+        // + hand-written body, no template): the user-cache-still-
+        // generating page. Deliberately NOT converted alongside
+        // RequestBootstrap.php's own 2 sites above: UserService::
+        // getUserData() is reachable from 3 different dispatch contexts
+        // (UserBootstrap -> the bootstrap phase, catch point 1;
+        // Controller\PasswordController/Admin\ConfigurationSubController
+        // -> the controller phase, catch point 2; Ws\PwgUsers.php's WS
+        // methods -> no catch point at all, same excluded WS-protocol-
+        // internals category as Ws/PwgServer.php above) -- converting it
+        // would either leave the WS path with an uncaught exception
+        // (worse than today's clean exit()) or need its own dedicated
+        // design pass (a 4th catch point, or a parameter threading the
+        // right behaviour through), not a mechanical single-site fix.
         'Users/UserService.php' => 1,
 
         // Full legacy template render + exit(), matching the pre-rewrite

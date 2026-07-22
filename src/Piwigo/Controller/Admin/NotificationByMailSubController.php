@@ -198,7 +198,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                     // Update param
                     foreach ($conn->fetchAllAssociative('select param, value from ' . Tables::config() . ' where param like \'nbm\\_%\'') as $nbm_user) {
                         // 'param' is the config table's primary key, never null.
-                        if (! is_string($nbm_user['param'])) {
+                        if (! is_string($nbm_user['param']) || $nbm_user['param'] === '') {
                             continue;
                         }
                         if (isset($_POST[$nbm_user['param']])) {

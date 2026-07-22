@@ -176,7 +176,9 @@ SELECT
             if ($row === false) {
                 throw new \Exception("cat_modify: aggregate photo count/date query returned no row for category #{$category_id}");
             }
-            [$image_count, $min_date, $max_date] = $row;
+            $image_count = $row[0] ?? null;
+            $min_date = $row[1] ?? null;
+            $max_date = $row[2] ?? null;
             // date_available is a NOT NULL column but the driver still types every
             // fetched value as string|null; format_date()'s phpDoc param forbids
             // null, so fall back to false (its "no date" sentinel) if that ever

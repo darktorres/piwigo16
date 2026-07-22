@@ -108,7 +108,8 @@ SELECT
 ;';
         $row = $conn->fetchNumeric($query);
         if ($row !== false) {
-            [$stats['nb_formats'], $stats['formats_disk_usage']] = $row;
+            $stats['nb_formats'] = $row[0] ?? null;
+            $stats['formats_disk_usage'] = $row[1] ?? null;
         } else {
             $stats['nb_formats'] = 0;
             $stats['formats_disk_usage'] = 0;

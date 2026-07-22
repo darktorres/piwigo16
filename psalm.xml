@@ -247,6 +247,34 @@
                      `in_array($_SERVER['HTTPS'] ?? null, [...])` in the
                      same expression. -->
                 <file name="src/Piwigo/Admin/Install/InstallWizard.php"/>
+                <!-- Same disagreement on $category['id_uppercat'], guarded
+                     by `in_array($category['id_uppercat'] ?? null, [...])`
+                     in the same expression. -->
+                <file name="src/Piwigo/Controller/Admin/SiteUpdateSubController.php"/>
+                <!-- Same disagreement on $options['language'], guarded by
+                     `in_array($options['language'] ?? null, [...])` in the
+                     same expression. -->
+                <file name="src/Piwigo/Core/Lang.php"/>
+                <!-- Same disagreement on $filter['matches'], guarded by
+                     `is_array($filter['matches'] ?? null)` in the same
+                     expression. -->
+                <file name="src/Piwigo/Filter/FilterService.php"/>
+                <!-- Same disagreement on $merged['uppercats'], guarded by
+                     `is_string($merged['uppercats'] ?? null)` in the same
+                     expression. -->
+                <file name="src/Piwigo/Category/CategoryCatsRenderer.php"/>
+                <!-- Same disagreement on $_POST['group'], guarded by
+                     `in_array($_POST['group'] ?? null, [...])` in the
+                     enclosing elseif condition. -->
+                <file name="src/Piwigo/Admin/AlbumNotificationPageRenderer.php"/>
+                <!-- Same disagreement on $_POST['virtual_name'], guarded by
+                     `is_string($_POST['virtual_name'] ?? null)` in the same
+                     expression. -->
+                <file name="src/Piwigo/Admin/CatListPageRenderer.php"/>
+                <!-- Same disagreement on $_POST['image_order_choice'],
+                     guarded by `in_array($_POST['image_order_choice'] ??
+                     null, [...])` in the same condition. -->
+                <file name="src/Piwigo/Admin/ElementSetRanksPageRenderer.php"/>
             </errorLevel>
         </PossiblyUndefinedArrayOffset>
         <PossiblyNullArrayAccess>
@@ -274,6 +302,12 @@
         <PossiblyInvalidArrayOffset>
             <errorLevel type="suppress">
                 <file name="src/Piwigo/Admin/PictureCoiPageRenderer.php"/>
+                <!-- $get_param is a plain `string` method parameter used as
+                     an `$_GET[$get_param]` offset; Psalm wants
+                     non-empty-string but every real caller passes a
+                     literal, non-empty column-name string. composer
+                     analyse:phpstan is clean here with zero changes. -->
+                <file name="src/Piwigo/Controller/Admin/PermalinksSubController.php"/>
             </errorLevel>
         </PossiblyInvalidArrayOffset>
         <!-- `$last_rank = count($items) - 1` reads as possibly -1 to Psalm,
@@ -321,6 +355,18 @@
                 <file name="src/Piwigo/Search/SearchFilterRenderer.php"/>
                 <file name="src/Piwigo/Admin/Install/DbPatch/LegacyDbLayer.php"/>
                 <file name="src/Piwigo/Admin/Install/DbPatch/Patch153.php"/>
+                <!-- $associatedTree is a by-ref-mutated tree
+                     (`$the_place = &$associatedTree[...]`), same "by-ref
+                     loses narrowing" class as SearchFilterRenderer.php
+                     above. composer analyse:phpstan is clean here with
+                     zero changes. -->
+                <file name="src/Piwigo/Admin/AlbumsPageRenderer.php"/>
+                <!-- Same dynamic-include $conf pattern as LegacyDbLayer.php/
+                     Patch153.php above (already @phpstan-ignore'd inline
+                     for the identical reason). -->
+                <file name="src/Piwigo/Admin/UserListPageRenderer.php"/>
+                <!-- Same dynamic config/feature-flags.php `require`. -->
+                <file name="src/Piwigo/Core/FeatureFlag.php"/>
             </errorLevel>
         </EmptyArrayAccess>
     </issueHandlers>

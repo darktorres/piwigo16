@@ -82,7 +82,7 @@ class PwgBase32
         $base32 = '';
         $i = 0;
         while ($i < count($fiveBitBinaryArray)) {
-            $base32 .= self::$map[base_convert(str_pad($fiveBitBinaryArray[$i], 5, '0'), 2, 10)];
+            $base32 .= self::$map[(int) base_convert(str_pad($fiveBitBinaryArray[$i], 5, '0'), 2, 10)];
             $i++;
         }
         if ($padding && ($x = strlen($binaryString) % 40) !== 0) {

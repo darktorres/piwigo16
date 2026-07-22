@@ -148,7 +148,7 @@ final readonly class HistoryService
             }
         }
 
-        $ip = $_SERVER['REMOTE_ADDR'];
+        $ip = $_SERVER['REMOTE_ADDR'] ?? null;
         $ip = is_string($ip) ? $ip : '';
         // IPv6 should not be longer than 39 chars, and that is the maximum length of
         // the column in the database, but in case it would be longer, let's truncate it.

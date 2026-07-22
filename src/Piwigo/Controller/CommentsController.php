@@ -291,8 +291,8 @@ final class CommentsController implements ControllerInterface
                 // check_input_parameter() validated this against
                 // ValidationPattern::ID (/^\d+$/) above -- it would have
                 // called fatal_error() otherwise.
-                assert(is_numeric($_GET[$action]));
-                $comment_id = (int) $_GET[$action];
+                assert(is_numeric($_GET[$action] ?? null));
+                $comment_id = (int) ($_GET[$action] ?? 0);
                 break;
             }
         }

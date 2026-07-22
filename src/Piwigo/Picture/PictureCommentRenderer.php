@@ -273,7 +273,7 @@ final class PictureCommentRenderer
                             $url_self,
                             [
                                 'action' => 'validate_comment',
-                                'comment_to_validate' => $row['id'],
+                                'comment_to_validate' => $row['id'] ?? null,
                                 'pwg_token' => new \Piwigo\Csrf\CsrfService()
                                     ->getToken(),
                             ]

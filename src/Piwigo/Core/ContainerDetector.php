@@ -46,7 +46,7 @@ final class ContainerDetector
             // Check for official container tagfile
             if (is_readable($info_file_path)) {
                 $file_lines = @file($info_file_path);
-                if (is_array($file_lines) && trim($file_lines[0]) === 'Official Piwigo container') {
+                if (is_array($file_lines) && $file_lines !== [] && trim($file_lines[0]) === 'Official Piwigo container') {
                     $container_version = null;
                     // Take the last line and remove prefix (Build Version)
                     if (preg_match('/^Build Version (.*)$/', $file_lines[count($file_lines) - 1], $matches) === 1) {

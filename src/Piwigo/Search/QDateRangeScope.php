@@ -31,10 +31,10 @@ class QDateRangeScope extends QSearchScope
         $strict = [0, 0];
         if (($pos = strpos($str, '..')) !== false) {
             $range = [substr($str, 0, $pos), substr($str, $pos + 2)];
-        } elseif (@$str[0] == '>') {
+        } elseif (@$str[0] === '>') {
             $range = [substr($str, 1), ''];
             $strict[0] = 1;
-        } elseif (@$str[0] == '<') {
+        } elseif (@$str[0] === '<') {
             $range = ['', substr($str, 1)];
             $strict[1] = 1;
         } elseif ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_BEGIN)) {
@@ -63,7 +63,7 @@ class QDateRangeScope extends QSearchScope
             }
         }
 
-        if (! $this->nullable && $range[0] == '' && $range[1] == '') {
+        if (! $this->nullable && $range[0] === '' && $range[1] === '') {
             return false;
         }
 
@@ -79,15 +79,17 @@ class QDateRangeScope extends QSearchScope
         // static property type.
         $scope_data = $token->scope_data;
         $date_range = is_array($scope_data) ? $scope_data : ['', ''];
-        $date_range_0 = $date_range[0] ?? '';
-        $date_range_1 = $date_range[1] ?? '';
+        $date_range_0_raw = $date_range[0] ?? '';
+        $date_range_0 = is_scalar($date_range_0_raw) ? (string) $date_range_0_raw : '';
+        $date_range_1_raw = $date_range[1] ?? '';
+        $date_range_1 = is_scalar($date_range_1_raw) ? (string) $date_range_1_raw : '';
 
         $clauses = [];
-        if ($date_range_0 != '') {
-            $clauses[] = $field . ' >= \'' . (is_scalar($date_range_0) ? (string) $date_range_0 : '') . '\'';
+        if ($date_range_0 !== '') {
+            $clauses[] = $field . ' >= \'' . $date_range_0 . '\'';
         }
-        if ($date_range_1 != '') {
-            $clauses[] = $field . ' <= \'' . (is_scalar($date_range_1) ? (string) $date_range_1 : '') . '\'';
+        if ($date_range_1 !== '') {
+            $clauses[] = $field . ' <= \'' . $date_range_1 . '\'';
         }
 
         if (empty($clauses)) {

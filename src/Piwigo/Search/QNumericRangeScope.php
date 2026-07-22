@@ -33,10 +33,10 @@ class QNumericRangeScope extends QSearchScope
         $range_requested = true;
         if (($pos = strpos($str, '..')) !== false) {
             $range = [substr($str, 0, $pos), substr($str, $pos + 2)];
-        } elseif (@$str[0] == '>') {// ratio:>1
+        } elseif (@$str[0] === '>') {// ratio:>1
             $range = [substr($str, 1), ''];
             $strict[0] = 1;
-        } elseif (@$str[0] == '<') { // size:<5mp
+        } elseif (@$str[0] === '<') { // size:<5mp
             $range = ['', substr($str, 1)];
             $strict[1] = 1;
         } elseif ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_BEGIN)) {
@@ -55,7 +55,7 @@ class QNumericRangeScope extends QSearchScope
                 $val = floatval($matches[1]);
                 if (isset($matches[2])) {
                     $mult = 1;
-                    if ($matches[2] == 'k' || $matches[2] == 'K') {
+                    if ($matches[2] === 'k' || $matches[2] === 'K') {
                         $mult = 1000;
                     } else {
                         $mult = 1000000;

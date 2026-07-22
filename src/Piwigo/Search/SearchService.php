@@ -129,7 +129,7 @@ final readonly class SearchService
         $search = $this->getSearchInfo($candidate);
 
         if ($search !== null) {
-            if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'ws' and $clausePattern == 'id = ?' and isset($search['search_uuid'])) {
+            if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws' and $clausePattern === 'id = ?' and isset($search['search_uuid'])) {
                 $this->htmlRenderer->fatalError('this search is not reachable with its id, need the search_uuid instead');
             }
 

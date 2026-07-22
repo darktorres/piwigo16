@@ -120,8 +120,8 @@ final class FilterService implements FilterUpdaterInterface
                 $filter_key['time'] <= $currentUser->cacheUpdateTime or
                 // Date, period, user are changed
                 $filter_key['user'] !== $currentUser->id or
-                $filter_key['recent_period'] != $filter['recent_period'] or
-                $filter_key['date'] != date('Ymd')
+                (is_numeric($filter_key['recent_period']) ? (int) $filter_key['recent_period'] : 0) !== $filter_recent_period or
+                (is_string($filter_key['date']) ? $filter_key['date'] : '') !== date('Ymd')
             ) {
                 // Need to compute dats
                 $filter_key = [

@@ -219,12 +219,12 @@ final readonly class HistoryService
             'authKeyId' => $authKeyId,
             'tagsString' => $tagsString,
         ]);
-        if ($historyId % 1000 == 0) {
+        if ($historyId % 1000 === 0) {
             $this->summarize(50000);
         }
 
         $historyAutopurgeEvery = \Piwigo\Config\Config::historyAutopurgeEvery();
-        if ($historyAutopurgeEvery > 0 and $historyId % $historyAutopurgeEvery == 0) {
+        if ($historyAutopurgeEvery > 0 and $historyId % $historyAutopurgeEvery === 0) {
             $this->autopurge();
         }
 

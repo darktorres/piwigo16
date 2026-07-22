@@ -364,7 +364,7 @@ final class RequestBootstrap
     public static function pemUrl(): string
     {
 
-        if (\Piwigo\Config\Config::has('alternative_pem_url') and \Piwigo\Config\Config::alternativePemUrl() != '') {
+        if (\Piwigo\Config\Config::has('alternative_pem_url') and \Piwigo\Config\Config::alternativePemUrl() !== '') {
             $alternative_pem_url = \Piwigo\Config\Config::alternativePemUrl();
             return is_scalar($alternative_pem_url) ? (string) $alternative_pem_url : '';
         }
@@ -464,7 +464,7 @@ final class RequestBootstrap
             $template = new Template(CurrentPaths::get()->root . 'admin/themes', $admin_theme);
         } else { // Classic template
             $theme = CurrentUser::get()->theme;
-            if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'ws' and \Piwigo\Core\DeviceHelper::mobileTheme()) {
+            if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws' and \Piwigo\Core\DeviceHelper::mobileTheme()) {
                 $theme = \Piwigo\Config\Config::mobilTheme();
             }
             $template = new Template(CurrentPaths::get()->root . 'themes', $theme);
@@ -504,7 +504,7 @@ final class RequestBootstrap
         if (\Piwigo\Config\Config::galleryLocked()) {
             $pageState->addHeaderMessage(Lang::t('The gallery is locked for maintenance. Please, come back later.'));
 
-            if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'identification' and ! \Piwigo\Auth\AccessControl::isAdmin()) {
+            if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'identification' and ! \Piwigo\Auth\AccessControl::isAdmin()) {
                 // Workstream C3, catch point 1: throws instead of the
                 // former raw header()+echo+exit() -- caught in
                 // include/common.inc.php, the one seam both dispatch

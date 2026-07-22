@@ -45,7 +45,7 @@ final class PictureRateRenderer
             'score' => $picture['current']['rating_score'],
             'average' => null,
         ];
-        if ($rate_summary['score'] != null) {
+        if ($rate_summary['score'] !== null) {
             // images.id is the NOT NULL primary key, always a numeric string
             // once fetched (see the matching assert in picture.php).
             $picture_current_id = $picture['current']['id'];

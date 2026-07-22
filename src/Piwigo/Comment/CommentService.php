@@ -163,8 +163,8 @@ final readonly class CommentService
 
             // if a guest tries to use the name of an already existing user,
             // they must be rejected
-            if ($comm['author'] !== 'guest') {
-                $authorName = is_string($comm['author']) ? $comm['author'] : '';
+            if (($comm['author'] ?? null) !== 'guest') {
+                $authorName = is_string($comm['author'] ?? null) ? $comm['author'] : '';
                 $user_fields = \Piwigo\Config\Config::userFields();
                 $usernameColumn = $user_fields['username'];
 
@@ -197,7 +197,7 @@ final readonly class CommentService
                 $commentAction = 'reject';
                 self::pushCrReason('website_url');
             } else {
-                $websiteUrl = is_string($comm['website_url']) ? $comm['website_url'] : '';
+                $websiteUrl = is_string($comm['website_url'] ?? null) ? $comm['website_url'] : '';
                 $websiteUrl = strip_tags($websiteUrl);
                 if (preg_match('/^https?/i', $websiteUrl) !== 1) {
                     $websiteUrl = 'http://' . $websiteUrl;
@@ -221,7 +221,7 @@ final readonly class CommentService
                 $commentAction = 'reject';
             }
         } else {
-            $email = is_string($comm['email']) ? $comm['email'] : null;
+            $email = is_string($comm['email'] ?? null) ? $comm['email'] : null;
             if (! \Piwigo\Validation\InputValidator::checkEmailFormat($email)) {
                 $infos[] = Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
                 $commentAction = 'reject';
@@ -265,10 +265,10 @@ final readonly class CommentService
         $commentAction = is_string($result) ? $result : 'reject';
 
         if ($commentAction !== 'reject') {
-            $author = is_string($comm['author']) ? $comm['author'] : '';
-            $content = is_string($comm['content']) ? $comm['content'] : '';
-            $websiteUrl = ! self::emptyValue($comm['website_url'] ?? null) && is_string($comm['website_url']) ? $comm['website_url'] : null;
-            $email = ! self::emptyValue($comm['email'] ?? null) && is_string($comm['email']) ? $comm['email'] : null;
+            $author = is_string($comm['author'] ?? null) ? $comm['author'] : '';
+            $content = is_string($comm['content'] ?? null) ? $comm['content'] : '';
+            $websiteUrl = ! self::emptyValue($comm['website_url'] ?? null) && is_string($comm['website_url'] ?? null) ? $comm['website_url'] : null;
+            $email = ! self::emptyValue($comm['email'] ?? null) && is_string($comm['email'] ?? null) ? $comm['email'] : null;
 
             $id = $this->repo->insert([
                 'author' => $author,

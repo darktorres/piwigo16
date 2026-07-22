@@ -702,7 +702,7 @@ SELECT
 ;';
                         $row = $this->conn->fetchNumeric($query);
                         assert($row !== false);
-                        [$nb_cache_lines] = $row;
+                        $nb_cache_lines = $row[0] ?? null;
 
                         $logger_msg = $logger_msg_prefix . 'user_cache generation waiting k=' . $k . ' ';
                         $waiting_time = \Piwigo\Core\TimingHelper::getElapsedTime($user_cache_waiting_start_time, \Piwigo\Core\TimingHelper::getMoment());
@@ -777,7 +777,7 @@ SELECT COUNT(DISTINCT(image_id)) as total
     AND image_id ' . $image_access_type . ' (' . $image_access_list . ')';
                 $row = $this->conn->fetchNumeric($query);
                 assert($row !== false);
-                [$nb_total_images] = $row;
+                $nb_total_images = $row[0] ?? null;
                 $nb_total_images = is_scalar($nb_total_images) ? (string) $nb_total_images : '0';
                 $userdata['nb_total_images'] = $nb_total_images;
 
@@ -1027,14 +1027,16 @@ DELETE FROM ' . Tables::favorites() . '
         foreach ($q_values as $i => $q_value) {
             // if the exact language variant is present, make sure it's chosen
             // en-US;q=0.9 => en_us => en_US
-            if (array_key_exists($accept_languages_full[$i], $languages_available)) {
-                return $languages_available[$accept_languages_full[$i]];
+            $accept_language_full = strtolower($accept_languages_full[$i]);
+            if (array_key_exists($accept_language_full, $languages_available)) {
+                return $languages_available[$accept_language_full];
             }
             // only in case that an exact match was not available,
             // should we fallback to other variants in the same language family
             // fr_CH => fr => fr_FR
-            if (array_key_exists($accept_languages_short[$i], $languages_available)) {
-                return $languages_available[$accept_languages_short[$i]];
+            $accept_language_short = strtolower($accept_languages_short[$i]);
+            if (array_key_exists($accept_language_short, $languages_available)) {
+                return $languages_available[$accept_language_short];
             }
         }
 
@@ -1220,7 +1222,7 @@ DELETE FROM ' . Tables::favorites() . '
             }
 
             if (! self::emptyValue($params['email'] ?? null)) {
-                $email_param = $params['email'];
+                $email_param = $params['email'] ?? null;
                 assert(is_string($email_param));
                 if (($error = $this->validateMailAddress($user_ids[0], $email_param)) !== '') {
                     return [
@@ -1263,7 +1265,7 @@ SELECT
                     }
                 }
 
-                $password_param = $params['password'];
+                $password_param = $params['password'] ?? null;
                 assert(is_string($password_param));
                 $updates[$user_fields['password']] = $this->passwordService()
                     ->hash($password_param);
@@ -1271,7 +1273,8 @@ SELECT
         }
 
         if (! self::emptyValue($params['status'] ?? null)) {
-            if (in_array($params['status'], ['webmaster', 'admin'], true) and ! AccessControl::isWebmaster()) {
+            $status_param = $params['status'] ?? null;
+            if (in_array($status_param, ['webmaster', 'admin'], true) and ! AccessControl::isWebmaster()) {
                 return [
                     'error' => [
                         'code ' => 403,
@@ -1280,7 +1283,7 @@ SELECT
                 ];
             }
 
-            if (! in_array($params['status'], ['guest', 'generic', 'normal', 'admin', 'webmaster'], true)) {
+            if (! in_array($status_param, ['guest', 'generic', 'normal', 'admin', 'webmaster'], true)) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1315,14 +1318,15 @@ SELECT
             // set of users (current, guest and webmaster can't be changed)
             $user_ids_for_status = array_diff($user_ids, array_filter($protected_users, is_scalar(...)));
 
-            $update_status = $params['status'];
+            $update_status = $status_param;
         }
 
-        if (! self::emptyValue($params['level'] ?? null) or @$params['level'] === 0) {
+        if (! self::emptyValue($params['level'] ?? null) or @($params['level'] ?? null) === 0) {
+            $level_param = $params['level'] ?? null;
             // \Piwigo\Config\Config::availablePermissionLevels() defaults to [0, 1, 2, 4, 8]
             // (see include/config_default.inc.php), always an array
             $available_permission_levels = \Piwigo\Config\Config::availablePermissionLevels();
-            if (! in_array(is_numeric($params['level']) ? (int) $params['level'] : null, $available_permission_levels, true)) {
+            if (! in_array(is_numeric($level_param) ? (int) $level_param : null, $available_permission_levels, true)) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1330,11 +1334,12 @@ SELECT
                     ],
                 ];
             }
-            $updates_infos['level'] = $params['level'];
+            $updates_infos['level'] = $level_param;
         }
 
         if (! self::emptyValue($params['language'] ?? null)) {
-            if (! in_array($params['language'], array_keys(\Piwigo\Lang\LangService::getLanguages()), true)) {
+            $language_param = $params['language'] ?? null;
+            if (! in_array($language_param, array_keys(\Piwigo\Lang\LangService::getLanguages()), true)) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1342,11 +1347,12 @@ SELECT
                     ],
                 ];
             }
-            $updates_infos['language'] = $params['language'];
+            $updates_infos['language'] = $language_param;
         }
 
         if (! self::emptyValue($params['theme'] ?? null)) {
-            if (! in_array($params['theme'], array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes()), true)) {
+            $theme_param = $params['theme'] ?? null;
+            if (! in_array($theme_param, array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes()), true)) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1354,31 +1360,31 @@ SELECT
                     ],
                 ];
             }
-            $updates_infos['theme'] = $params['theme'];
+            $updates_infos['theme'] = $theme_param;
         }
 
         if (! self::emptyValue($params['nb_image_page'] ?? null)) {
-            $updates_infos['nb_image_page'] = $params['nb_image_page'];
+            $updates_infos['nb_image_page'] = $params['nb_image_page'] ?? null;
         }
 
-        if (! self::emptyValue($params['recent_period'] ?? null) or @$params['recent_period'] === 0) {
-            $updates_infos['recent_period'] = $params['recent_period'];
+        if (! self::emptyValue($params['recent_period'] ?? null) or @($params['recent_period'] ?? null) === 0) {
+            $updates_infos['recent_period'] = $params['recent_period'] ?? null;
         }
 
-        if (! self::emptyValue($params['expand'] ?? null) or @$params['expand'] === false) {
-            $updates_infos['expand'] = SqlDialect::booleanToString($params['expand']);
+        if (! self::emptyValue($params['expand'] ?? null) or @($params['expand'] ?? null) === false) {
+            $updates_infos['expand'] = SqlDialect::booleanToString($params['expand'] ?? null);
         }
 
-        if (! self::emptyValue($params['show_nb_comments'] ?? null) or @$params['show_nb_comments'] === false) {
-            $updates_infos['show_nb_comments'] = SqlDialect::booleanToString($params['show_nb_comments']);
+        if (! self::emptyValue($params['show_nb_comments'] ?? null) or @($params['show_nb_comments'] ?? null) === false) {
+            $updates_infos['show_nb_comments'] = SqlDialect::booleanToString($params['show_nb_comments'] ?? null);
         }
 
-        if (! self::emptyValue($params['show_nb_hits'] ?? null) or @$params['show_nb_hits'] === false) {
-            $updates_infos['show_nb_hits'] = SqlDialect::booleanToString($params['show_nb_hits']);
+        if (! self::emptyValue($params['show_nb_hits'] ?? null) or @($params['show_nb_hits'] ?? null) === false) {
+            $updates_infos['show_nb_hits'] = SqlDialect::booleanToString($params['show_nb_hits'] ?? null);
         }
 
-        if (! self::emptyValue($params['enabled_high'] ?? null) or @$params['enabled_high'] === false) {
-            $updates_infos['enabled_high'] = SqlDialect::booleanToString($params['enabled_high']);
+        if (! self::emptyValue($params['enabled_high'] ?? null) or @($params['enabled_high'] ?? null) === false) {
+            $updates_infos['enabled_high'] = SqlDialect::booleanToString($params['enabled_high'] ?? null);
         }
 
         // perform updates
@@ -1447,7 +1453,7 @@ UPDATE ' . Tables::userInfos() . ' SET ';
 
         // manage association to groups
         if (! self::emptyValue($params['group_id'] ?? null)) {
-            $group_id_param = $params['group_id'];
+            $group_id_param = $params['group_id'] ?? null;
             assert(is_array($group_id_param));
             $group_ids_param = [];
             foreach ($group_id_param as $raw_group_id) {

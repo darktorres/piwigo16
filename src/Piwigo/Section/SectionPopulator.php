@@ -426,7 +426,7 @@ SELECT id
                 $items = $this->tagService->getImageIdsForTags($tag_ids);
 
                 if (count($items) === 0) {
-                    $remote_addr = $_SERVER['REMOTE_ADDR'];
+                    $remote_addr = $_SERVER['REMOTE_ADDR'] ?? null;
                     $remote_addr = is_string($remote_addr) ? $remote_addr : '';
                     $logger->info(
                         'attempt to see the name of the tag #' . implode(', #', array_map(strval(...), $tag_ids))

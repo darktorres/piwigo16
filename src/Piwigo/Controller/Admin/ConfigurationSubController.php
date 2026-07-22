@@ -292,7 +292,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                             // $pattern, but that guarantee isn't visible to static
                             // analysis; re-derive it into a local, string-only copy
                             // (values from an HTTP request are always strings here).
-                            $order_by_input = is_array($_POST['order_by']) ? array_filter($_POST['order_by'], is_string(...)) : [];
+                            $order_by_input = is_array($_POST['order_by'] ?? null) ? array_filter($_POST['order_by'], is_string(...)) : [];
 
                             $used = [];
                             foreach ($order_by_input as $i => $val) {
@@ -334,7 +334,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         if (self::emptyValue($_POST['email_admin_on_new_user_filter_group'] ?? null)) {
                             $_POST['email_admin_on_new_user'] = 'all';
                         } else {
-                            $filter_group = $_POST['email_admin_on_new_user_filter_group'];
+                            $filter_group = $_POST['email_admin_on_new_user_filter_group'] ?? null;
                             $_POST['email_admin_on_new_user'] = 'group:' . (is_string($filter_group) ? $filter_group : '');
                         }
                     }
@@ -360,8 +360,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     // included
                     $nb_comment_page = $_POST['nb_comment_page'] ?? null;
                     if (! (bool) preg_match($int_pattern, is_scalar($nb_comment_page) ? (string) $nb_comment_page : '')
-                         or $_POST['nb_comment_page'] < 5
-                         or $_POST['nb_comment_page'] > 50) {
+                         or $nb_comment_page < 5
+                         or $nb_comment_page > 50) {
                         \Piwigo\Core\PageState::current()->addError(Lang::t('The number of comments a page must be between 5 and 50 included.'));
                     }
                     foreach ($comments_checkboxes as $checkbox) {
@@ -378,16 +378,17 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                     $nb_categories_page = $_POST['nb_categories_page'] ?? null;
                     if (! (bool) preg_match($int_pattern, is_scalar($nb_categories_page) ? (string) $nb_categories_page : '')
-                          or $_POST['nb_categories_page'] < 4) {
+                          or $nb_categories_page < 4) {
                         \Piwigo\Core\PageState::current()->addError(Lang::t('The number of albums a page must be above 4.'));
                     }
                     foreach ($display_checkboxes as $checkbox) {
                         $_POST[$checkbox] = self::emptyValue($_POST[$checkbox] ?? null) ? 'false' : 'true';
                     }
-                    $picture_informations = is_array($_POST['picture_informations'] ?? null) ? $_POST['picture_informations'] : [];
+                    $picture_informations_raw = is_array($_POST['picture_informations'] ?? null) ? $_POST['picture_informations'] : [];
+                    $picture_informations = array_fill_keys($display_info_checkboxes, false);
                     foreach ($display_info_checkboxes as $checkbox) {
                         $picture_informations[$checkbox] =
-                          self::emptyValue($picture_informations[$checkbox] ?? null) ? false : true;
+                          ! self::emptyValue($picture_informations_raw[$checkbox] ?? null);
                     }
                     // Phase 5: no addslashes() -- that was only ever needed
                     // to survive the old raw-SQL write's quote-doubling
@@ -403,10 +404,12 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 case 'search':
 
                     $filters_views_box = is_array($_POST['filters_views_box'] ?? null) ? $_POST['filters_views_box'] : [];
-                    $filters_views_post = is_array($_POST['filters_views'] ?? null) ? $_POST['filters_views'] : [];
+                    $filters_views_raw = is_array($_POST['filters_views'] ?? null) ? $_POST['filters_views'] : [];
 
+                    $filters_views_post = [];
                     foreach ($filters_names_checkboxes as $checkbox) {
-                        $filter_conf = is_array($filters_views_post[$checkbox] ?? null) ? $filters_views_post[$checkbox] : [];
+                        $checkbox_raw = $filters_views_raw[$checkbox] ?? null;
+                        $filter_conf = is_array($checkbox_raw) ? $checkbox_raw : [];
 
                         if (self::emptyValue($filters_views_box[$checkbox] ?? null)) {
                             $filter_conf['access'] = 'nobody';
@@ -419,7 +422,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         $filters_views_post[$checkbox] = $filter_conf;
                     }
                     $filters_views_post['last_filters_conf'] =
-                      self::emptyValue($filters_views_post['last_filters_conf'] ?? null) ? false : true;
+                      self::emptyValue($filters_views_raw['last_filters_conf'] ?? null) ? false : true;
                     // Phase 5: no addslashes() -- same reasoning as
                     // picture_informations above.
                     $_POST['filters_views'] = serialize($filters_views_post);
@@ -430,7 +433,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             if (! in_array($page_section, ['sizes', 'watermark'], true) and ! \Piwigo\Core\PageState::current()->hasErrors() and \Piwigo\Auth\AccessControl::isWebmaster()) {
                 // echo '<pre>'; print_r($_POST); echo '</pre>';
                 foreach ($conn->fetchAllAssociative('SELECT param FROM ' . Tables::config()) as $row) {
-                    if (! is_string($row['param'])) {
+                    if (! is_string($row['param']) || $row['param'] === '') {
                         // `param` is the config table's NOT NULL primary key; a
                         // non-string row here would mean the query result changed
                         // shape, not a real config param to update.
@@ -942,7 +945,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             if (isset($pderivative['crop'])) {
                 $pderivative['crop'] = 100;
                 $pderivative['minw'] = $pderivative['w'];
-                $pderivative['minh'] = $pderivative['h'];
+                $pderivative['minh'] = $pderivative['h'] ?? null;
             } else {
                 $pderivative['crop'] = 0;
                 $pderivative['minw'] = null;

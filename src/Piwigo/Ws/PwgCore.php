@@ -101,7 +101,8 @@ final class PwgCore
         $query = 'SELECT MAX(id)+1, COUNT(*) FROM ' . Tables::images() . ';';
         $row = $conn->fetchNumeric($query);
         assert($row !== false);
-        [$max_id, $image_count] = $row;
+        $max_id = $row[0] ?? null;
+        $image_count = $row[1] ?? null;
         // COUNT(*) is always numeric; MAX(id)+1 is numeric whenever rows
         // exist, which the $image_count == 0 early return below guarantees
         // for every later use of $max_id.
@@ -280,6 +281,7 @@ SELECT id, path, representative_ext, width, height, rotation
         $infos = [];
         $infos['cache_size'] = null;
         if (function_exists('exec')) {
+            $return_array_cache = [];
             @exec('du -sk ' . $path_cache, $return_array_cache);
             if (
                 isset($return_array_cache[0]) && $return_array_cache[0] !== '' && $return_array_cache[0] !== '0'
@@ -322,6 +324,7 @@ SELECT id, path, representative_ext, width, height, rotation
         $path_template_c = $data_location . 'templates_c';
         $infos['tsizes'] = null;
         if (function_exists('exec')) {
+            $return_array_template_c = [];
             @exec('du -sk ' . $path_template_c, $return_array_template_c);
             if (
                 isset($return_array_template_c[0]) && $return_array_template_c[0] !== '' && $return_array_template_c[0] !== '0'
@@ -522,7 +525,7 @@ DELETE FROM ' . Tables::rate() . '
         $conn = DbConnection::build();
 
         foreach (['date_min', 'date_max'] as $datefield) {
-            if (! in_array($param[$datefield], [null, ''], true) and ! \Piwigo\Core\DateHelper::isValidMysqlDatetime($param[$datefield])) {
+            if (! in_array($param[$datefield] ?? null, [null, ''], true) and ! \Piwigo\Core\DateHelper::isValidMysqlDatetime($param[$datefield] ?? null)) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid ' . $datefield);
             }
         }
@@ -739,15 +742,13 @@ SELECT
         }
 
         foreach ($output_lines as $idx => $output_line) {
-            // @phpstan-ignore offsetAccess.notFound (see line 660's comment)
-            if ($output_line['object'] === 'user') {
+            if (($output_line['object'] ?? null) === 'user') {
                 foreach ($output_line['object_id'] as $user_id) {
                     if (! is_string($user_id)) {
                         continue;
                     }
 
-                    // @phpstan-ignore offsetAccess.notFound (see line 660's comment)
-                    $details = $output_lines[$idx]['details'];
+                    $details = $output_lines[$idx]['details'] ?? [];
 
                     $users = $details['users'] ?? [];
                     if (! is_array($users)) {
@@ -759,16 +760,14 @@ SELECT
                     $output_lines[$idx]['details'] = $details;
                 }
 
-                // @phpstan-ignore offsetAccess.notFound (see line 660's comment)
-                $details = $output_lines[$idx]['details'];
+                $details = $output_lines[$idx]['details'] ?? [];
                 if (isset($details['users']) and is_array($details['users'])) {
                     $details['users_string'] = implode(', ', array_filter($details['users'], is_string(...)));
                     $output_lines[$idx]['details'] = $details;
                 }
             }
 
-            // @phpstan-ignore offsetAccess.notFound (see line 660's comment)
-            $user_id_val = $output_lines[$idx]['user_id'];
+            $user_id_val = $output_lines[$idx]['user_id'] ?? null;
             $user_id_key = is_string($user_id_val) ? $user_id_val : '';
             $output_lines[$idx]['username'] = 'user#' . $user_id_key;
             if (isset($username_of[$user_id_key])) {

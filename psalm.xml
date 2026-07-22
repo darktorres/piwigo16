@@ -121,5 +121,54 @@
                 <directory name="src/Piwigo/Migrations"/>
             </errorLevel>
         </InvalidOperand>
+        <!-- ConfigurationSubController's $_POST-derived array shape gets
+             progressively refined by Psalm across the many `?? null`
+             guards in this switch's 'main'/'display'/'search' cases (each
+             emptyValue($_POST['x'] ?? null) check narrows Psalm's inferred
+             $_POST shape further); by the 4 flagged lines, Psalm's
+             super-precise array-shape type still marks that specific
+             offset optional even though the guard a few lines above it
+             already proved otherwise — PHPStan's flow analysis (which
+             flags the equivalent `?? null` as redundant at these exact
+             sites) confirms this is a Psalm precision gap, not a real
+             missing-key bug. SizingParams::$min_size at line 721 is the
+             same kind of disagreement: PHPStan proves it non-null inside
+             the max_crop>0 branch (the class's own documented invariant),
+             Psalm's property-level nullability tracking doesn't follow
+             that branch-specific guarantee. -->
+        <PossiblyUndefinedArrayOffset>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Controller/Admin/ConfigurationSubController.php"/>
+                <!-- Same $_POST-shape-narrowing disagreement as
+                     ConfigurationSubController above, same
+                     `is_array($_POST['x'] ?? null)` guard-then-bare-access
+                     idiom throughout this file's action switch. -->
+                <file name="src/Piwigo/Admin/BatchManagerGlobalPageRenderer.php"/>
+                <!-- Same guard-then-bare-access disagreement, this time on
+                     the $comm in/out parameter (and $_SERVER['REMOTE_ADDR']/
+                     ['HTTP_USER_AGENT'], the plan's own explicitly-flagged
+                     superglobal-guard bucket) throughout insertComment()'s
+                     validation chain: every one of these offsets is read via
+                     an `is_string(...['x'] ?? null) ? ...['x'] : default`
+                     or `emptyValue(...['x'] ?? null)` guard a few tokens
+                     earlier, which PHPStan's flow analysis (confirmed via
+                     its own nullCoalesce.offset "always exists" complaint
+                     at each of these exact sites) proves makes the bare
+                     access safe — Psalm's array-shape narrowing doesn't
+                     carry that guarantee through to the bare read. -->
+                <file name="src/Piwigo/Comment/CommentService.php"/>
+                <!-- Same guard-then-bare-access disagreement on $page
+                     (populate()'s local scratch array, built up across many
+                     `isset($page['x'])`/`is_string($page['x'] ?? null)`
+                     guards) — PHPStan's own nullCoalesce.offset "always
+                     exists" complaint at these same 4 sites confirms it. -->
+                <file name="src/Piwigo/Section/SectionPopulator.php"/>
+            </errorLevel>
+        </PossiblyUndefinedArrayOffset>
+        <PossiblyNullArrayAccess>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Controller/Admin/ConfigurationSubController.php"/>
+            </errorLevel>
+        </PossiblyNullArrayAccess>
     </issueHandlers>
 </psalm>

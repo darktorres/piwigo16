@@ -338,7 +338,7 @@ DELETE
                 foreach ($collection as $image_id) {
                     $datas[] = [
                         'id' => $image_id,
-                        'author' => $_POST['author'],
+                        'author' => $_POST['author'] ?? null,
                     ];
                 }
 
@@ -368,7 +368,7 @@ DELETE
                 foreach ($collection as $image_id) {
                     $datas[] = [
                         'id' => $image_id,
-                        'name' => $_POST['title'],
+                        'name' => $_POST['title'] ?? null,
                     ];
                 }
 
@@ -393,7 +393,7 @@ DELETE
                 if (isset($_POST['remove_date_creation']) || ($_POST['date_creation'] ?? '') === '') {
                     $date_creation = null;
                 } else {
-                    $date_creation = $_POST['date_creation'];
+                    $date_creation = $_POST['date_creation'] ?? null;
                 }
 
                 $datas = [];
@@ -505,10 +505,10 @@ DELETE
                 }
             } elseif ($action === 'generate_derivatives') {
                 if (($_POST['regenerateSuccess'] ?? '0') !== '0') {
-                    \Piwigo\Core\PageState::current()->addInfo(Lang::t('%s photos have been regenerated', $_POST['regenerateSuccess']));
+                    \Piwigo\Core\PageState::current()->addInfo(Lang::t('%s photos have been regenerated', $_POST['regenerateSuccess'] ?? '0'));
                 }
                 if (($_POST['regenerateError'] ?? '0') !== '0') {
-                    \Piwigo\Core\PageState::current()->addWarning(Lang::t('%s photos can not be regenerated', $_POST['regenerateError']));
+                    \Piwigo\Core\PageState::current()->addWarning(Lang::t('%s photos can not be regenerated', $_POST['regenerateError'] ?? '0'));
                 }
             }
 
@@ -652,8 +652,9 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
 
                 $order_by_inside_category_conf = \Piwigo\Config\Config::all()['order_by_inside_category'] ?? null;
                 $order_by = is_string($order_by_inside_category_conf) ? $order_by_inside_category_conf : '';
-                if (is_string($category_info['image_order'] ?? null) && $category_info['image_order'] !== '') {
-                    $order_by = ' ORDER BY ' . $category_info['image_order'];
+                $category_image_order = $category_info !== null ? ($category_info['image_order'] ?? null) : null;
+                if (is_string($category_image_order) && $category_image_order !== '') {
+                    $order_by = ' ORDER BY ' . $category_image_order;
                 }
 
                 $query .= '

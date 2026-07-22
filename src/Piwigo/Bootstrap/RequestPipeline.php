@@ -21,12 +21,9 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Runs the real 7-middleware pipeline. Not yet reachable from any real
- * request -- index.php still only calls CommonBootstrap::run() (P7);
- * nothing routes real traffic through here until P22 has real Controllers
- * for config/routes.php to reference. Trimmed to the middleware buildable
- * without Config/CurrentUser/real Controllers -- Auth/Csrf/Filter land in
- * P16/P16+.
+ * Runs the real middleware pipeline -- 7 middleware by default (every P22
+ * root file's own call shape, unparametrized: `RequestPipeline::
+ * handle($request)`).
  *
  * Order: Exception stays outermost to catch everything downstream.
  * SecurityHeaders next. Session before ServerTiming/Sentry so a session
@@ -41,10 +38,59 @@ use Psr\Http\Server\RequestHandlerInterface;
  * depend on L0. Uses Kernel::container(), which an existing arch test
  * already restricts to Bootstrap/ + index.php -- this class is exactly the
  * kind of caller that boundary anticipated.
+ *
+ * Workstream C3 Part III: the optional $middleware parameter is the "per-
+ * route middleware selection" this endpoint's own leaner bootstrap needs --
+ * deliberately an explicit override the calling *entry file* opts into
+ * (i.php passes self::WITHOUT_SESSION), not a config/routes.php `_middleware`
+ * route default resolved dynamically. A route-default approach was
+ * considered and rejected: RoutingMiddleware (which resolves the matched
+ * route) is itself one of the 7 middleware being selected between, so
+ * deciding the middleware set *from* the route match would need dispatching
+ * every request twice (once to pick the middleware list, once for real) or
+ * restructuring routing to run outside the pipeline entirely -- real
+ * complexity this app has exactly one real use case for today. An
+ * entry-file-level override needs neither: i.php already makes its own
+ * request-shape decisions this way (see its own docblock), the same
+ * pattern admin/popuphelp.php already uses for RequestMountDepth::set().
  */
 final class RequestPipeline
 {
-    public static function handle(ServerRequestInterface $request): ResponseInterface
+    /**
+     * @var list<class-string<MiddlewareInterface>>
+     */
+    public const array DEFAULT_MIDDLEWARE = [
+        ExceptionHandlerMiddleware::class,
+        SecurityHeadersMiddleware::class,
+        SessionMiddleware::class,
+        ServerTimingMiddleware::class,
+        SentryMiddleware::class,
+        RoutingMiddleware::class,
+        ControllerInvokerMiddleware::class,
+    ];
+
+    /**
+     * DEFAULT_MIDDLEWARE minus SessionMiddleware -- its own session_start()
+     * call is pure overhead on a route whose permission check is already a
+     * direct, DB-backed lookup that never touches native $_SESSION (see
+     * Controller\ImageDerivativeController's own docblock).
+     *
+     * @var list<class-string<MiddlewareInterface>>
+     */
+    public const array WITHOUT_SESSION = [
+        ExceptionHandlerMiddleware::class,
+        SecurityHeadersMiddleware::class,
+        ServerTimingMiddleware::class,
+        SentryMiddleware::class,
+        RoutingMiddleware::class,
+        ControllerInvokerMiddleware::class,
+    ];
+
+    /**
+     * @param ?list<class-string<MiddlewareInterface>> $middleware defaults
+     *   to DEFAULT_MIDDLEWARE (the real 7-middleware list) when omitted
+     */
+    public static function handle(ServerRequestInterface $request, ?array $middleware = null): ResponseInterface
     {
         $container = Kernel::container();
 
@@ -57,15 +103,10 @@ final class RequestPipeline
         };
 
         return new MiddlewarePipeline(
-            [
-                self::resolveMiddleware($container, ExceptionHandlerMiddleware::class),
-                self::resolveMiddleware($container, SecurityHeadersMiddleware::class),
-                self::resolveMiddleware($container, SessionMiddleware::class),
-                self::resolveMiddleware($container, ServerTimingMiddleware::class),
-                self::resolveMiddleware($container, SentryMiddleware::class),
-                self::resolveMiddleware($container, RoutingMiddleware::class),
-                self::resolveMiddleware($container, ControllerInvokerMiddleware::class),
-            ],
+            array_map(
+                static fn (string $id): MiddlewareInterface => self::resolveMiddleware($container, $id),
+                $middleware ?? self::DEFAULT_MIDDLEWARE,
+            ),
             $notFound,
         )->handle($request);
     }

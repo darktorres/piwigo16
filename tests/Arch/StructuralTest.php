@@ -348,9 +348,10 @@ test('CurrentConfigService::reset() is only called from tests/', function (): vo
 // migration (this specific claim -- zero define() calls -- was already
 // true before this phase; the 52-constant sweep confirmed it, this locks
 // it in). Legacy include//admin/ root entry points are explicitly NOT
-// scanned: PHPWG_ROOT_PATH keeps being define()'d there (its own literal
-// './' value, deliberately unchanged -- see index.php's own docblock) for
-// the not-yet-migrated call sites.
+// scanned here (this test only covers src/Piwigo/): PHPWG_ROOT_PATH used
+// to keep being define()'d in i.php for its own not-yet-migrated call
+// sites, fully retired now (Workstream C3 Part III) -- see the sibling
+// "no PHPWG_ROOT_PATH/PWG_LOCAL_DIR reads" test below, zero-tolerance.
 //
 // The sibling "no PHPWG_ROOT_PATH/PWG_LOCAL_DIR read in src/Piwigo/" test
 // this comment used to defer (P16: ~50 real call sites across 12 files,
@@ -359,11 +360,14 @@ test('CurrentConfigService::reset() is only called from tests/', function (): vo
 // entry-shell define()/include round: both constants replaced by
 // Piwigo\Core\Paths/CurrentPaths -- DI-constructed classes get Paths
 // threaded through their constructor, everything else reads
-// CurrentPaths::get()). Only Controller/ImageDerivativeController.php
-// still reads the raw constant, deliberately: its 2 sites are genuine
-// URL generation, not filesystem paths, and are deferred to this same
-// gap-closure effort's own Part III (i.php joining the real routing
-// pipeline) rather than fixed here as a rushed, unreviewed guess.
+// CurrentPaths::get()). Controller/ImageDerivativeController.php's own 2
+// sites (genuine URL generation, not filesystem paths) were the one
+// deliberately deferred exception, closed by Workstream C3 Part III
+// (i.php joining the real routing pipeline): UrlService::
+// getAbsoluteRootUrl(false) replaces them, the same request-depth-
+// independent mechanism (cookiePath(), SCRIPT_NAME/REDIRECT_URL-based)
+// this codebase already uses elsewhere -- zero-tolerance now, matching the
+// IN_ADMIN/IN_WS/... test below.
 //
 // Comment-aware (unlike findCallSites() above, plain substring match):
 // "define()" is common in explanatory prose (e.g. "the N define()
@@ -432,14 +436,14 @@ test('src/Piwigo/ contains no define() calls', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('src/Piwigo/ contains no PHPWG_ROOT_PATH/PWG_LOCAL_DIR reads outside the documented ImageDerivativeController sites', function (): void {
+test('src/Piwigo/ contains no PHPWG_ROOT_PATH/PWG_LOCAL_DIR reads', function (): void {
     // Legacy Coupling Retirement gap-closure (entry-shell define()/include
-    // round): both constants are gone everywhere except i.php's own
-    // deliberate define() (kept for these 2 sites) -- see this file's own
-    // docblock a few lines above for why they're deferred rather than
-    // fixed. A changed count here, or a hit in any other file, means a new
-    // raw read was introduced and must be migrated onto Paths/CurrentPaths
-    // instead, not added to this allowlist.
+    // round) + Workstream C3 Part III: both constants are fully retired,
+    // zero-tolerance -- Controller/ImageDerivativeController.php's own last
+    // 2 sites (see this file's own docblock a few lines above) are gone
+    // too. A hit anywhere means a new raw read was introduced and must be
+    // migrated onto Paths/CurrentPaths (or UrlService::
+    // getAbsoluteRootUrl(false) for URL generation) instead of allowlisted.
     $repoRoot = __DIR__ . '/../..';
 
     $hits = [
@@ -447,13 +451,7 @@ test('src/Piwigo/ contains no PHPWG_ROOT_PATH/PWG_LOCAL_DIR reads outside the do
         ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PWG_LOCAL_DIR'),
     ];
 
-    $unexpected = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! str_ends_with($hit['path'], 'Controller/ImageDerivativeController.php')
-    ));
-
-    expect(describeCallSites($unexpected))->toBe([]);
-    expect(count($hits))->toBe(2);
+    expect(describeCallSites($hits))->toBe([]);
 });
 
 test('src/Piwigo/ contains no raw IN_ADMIN/IN_WS/PHPWG_INSTALLED/PHPWG_URL/PHPWG_DOMAIN/PEM_URL reads', function (): void {
@@ -830,11 +828,13 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // plan named).
         'Page/NoPhotoYetRenderer.php' => 1,
 
-        // Controller/ImageDerivativeController.php (i.php): runs before
-        // ConfigLoader::applyDefaults() even executes on some paths, so no
-        // HtmlRenderingInterface/DI container is available yet -- a raw
-        // die()/exit() is the only option this early.
-        'Controller/ImageDerivativeController.php' => 6,
+        // Controller/ImageDerivativeController.php (i.php): Workstream C3
+        // Part III converted every real die()/exit() (ierror() now throws
+        // ResponseReadyException, sendDerivative() returns a real
+        // ResponseInterface) -- the 2 genuine early-`return` guards that
+        // still run before CurrentLogger's own construction (so ierror()
+        // itself can't be called yet) return a Response directly, not
+        // die()/exit(). Gone from this allowlist.
 
         // Image-library internals (Admin/Image/*.php): low-level decode/
         // library-availability guards inside ImageGd/ImageExtImagick/

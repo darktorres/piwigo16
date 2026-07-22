@@ -9,6 +9,7 @@ use Piwigo\Controller\CommentsController;
 use Piwigo\Controller\FeedController;
 use Piwigo\Controller\GalleryController;
 use Piwigo\Controller\IdentificationController;
+use Piwigo\Controller\ImageDerivativeController;
 use Piwigo\Controller\NbmController;
 use Piwigo\Controller\NotificationController;
 use Piwigo\Controller\PasswordController;
@@ -122,6 +123,26 @@ $routes->add('ws', new Route('/ws.php', [
 // rewritten-to filename (see that file's own docblock).
 $routes->add('analytics_vitals', new Route('/analytics/vitals', [
     '_controller' => VitalsController::class,
+]));
+
+// Workstream C3 Part III: i.php supports 2 URL styles depending on
+// Config::questionMarkInUrls() -- query-string ("/i.php?/upload/...", where
+// the query string never becomes part of the URI path Router matches
+// against, leaving a bare "/i.php") and PATH_INFO ("/i.php/upload/...",
+// a real tail after the script name) -- confirmed live via a direct
+// diagnostic request, not assumed. The wildcard `{tail}` (default '',
+// requirement '.*' so it matches slashes too) is the one route pattern in
+// this file that isn't a flat literal path, needed to match both shapes;
+// ImageDerivativeController itself still parses the real derivative
+// request from $_SERVER['PATH_INFO']/['QUERY_STRING'] directly (like every
+// other already-migrated P22 controller reads $_GET/$_POST), not from this
+// route's own {tail} capture -- see tests/Unit/Routing/RouterTest.php's own
+// dedicated coverage of this exact pattern.
+$routes->add('derivative_image', new Route('/i.php{tail}', [
+    '_controller' => ImageDerivativeController::class,
+    'tail' => '',
+], [
+    'tail' => '.*',
 ]));
 
 return $routes;

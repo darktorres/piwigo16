@@ -17,8 +17,9 @@ namespace Piwigo\Core;
  * Two construction sites, matching the two independent bootstrap paths
  * that each build their own Logger: `Piwigo\Bootstrap\RequestBootstrap::
  * connect()` (the normal request pipeline) and
- * `Piwigo\Controller\ImageDerivativeController::serve()` (the fast
- * derivative-image path, which deliberately never runs RequestBootstrap).
+ * `Piwigo\Controller\ImageDerivativeController::__invoke()` (the fast
+ * derivative-image path -- a real routed controller since Workstream C3
+ * Part III, but still deliberately never runs RequestBootstrap itself).
  */
 final class CurrentLogger
 {
@@ -27,7 +28,7 @@ final class CurrentLogger
     public static function get(): Logger
     {
         if (! self::$instance instanceof Logger) {
-            throw new \LogicException('CurrentLogger not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect() or Piwigo\Controller\ImageDerivativeController::serve() first.');
+            throw new \LogicException('CurrentLogger not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect() or Piwigo\Controller\ImageDerivativeController::__invoke() first.');
         }
 
         return self::$instance;

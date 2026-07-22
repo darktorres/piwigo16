@@ -16,6 +16,9 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\ControllerInterface;
+use Piwigo\Http\ResponseFactory;
+use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\ImageRepository;
@@ -25,27 +28,47 @@ use Piwigo\Permission\ImageVisibilityChecker;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionUserResolver;
 use Piwigo\Url\UrlService;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * The derivative image server -- P23 batch 8f: ported from i.php's ~900
  * top-level lines and 13 free functions; i.php is now a thin entry shell
- * (root-path define + config includes + autoload boundary + dispatch).
+ * (Paths::fromRoot() + minimal config include + autoload boundary +
+ * CommonBootstrap::run() + RequestPipeline::handle() dispatch, matching
+ * every other P22/P23 root file's own shape).
  *
- * FAST-BOOTSTRAP CONTRACT (hard requirement, not a transition state): this
- * controller serves derivative images WITHOUT the full common.inc.php
- * request pipeline -- no plugin loading, no user/session bootstrap, no
- * template. Do not route this through RequestBootstrap. This is a
- * request-shape decision (this endpoint genuinely needs none of that),
- * independent of the DB layer: all DB work here goes through one shared
- * DBAL Connection (image/permission/session lookups alike) --
- * previously this file also kept a separate legacy-mysqli connection for
- * the image/permission lookups specifically to avoid the DI-container
- * construction cost on this endpoint's per-request PHP-FPM hot path;
- * that reasoning no longer applies once the app runs under FrankenPHP
- * workers (the container is built once per worker, not per request), so
- * Legacy Coupling Retirement: DI+DBAL migration retargeted those two
- * calls onto the same Connection/QueryBuilder pattern used everywhere
- * else in this codebase.
+ * FAST-BOOTSTRAP CONTRACT, revised (Workstream C3 Part III -- joining the
+ * real routing pipeline): this controller is now a real, routed
+ * Piwigo\Http\ControllerInterface, invoked by ControllerInvokerMiddleware
+ * like every other frontend controller -- but still does NOT route through
+ * include/common.inc.php's RequestBootstrap::configure()/connect()/
+ * finalize() chain (no plugin loading, no native $_SESSION bootstrap, no
+ * template). That was never really about avoiding DI-container construction
+ * cost (fully mooted by FrankenPHP's per-worker, not per-request,
+ * container build) -- it's that PluginLoader::loadPlugins() (runs every
+ * installed plugin's registration code) and UserBootstrap::initialize()
+ * (cookie/auto-login/API-key resolution) are genuinely per-request work
+ * this endpoint, the highest-QPS one in the app, has no use for: its own
+ * permission check is already a direct, DB-backed SessionUserResolver/
+ * SessionRepository lookup (never touches native $_SESSION), and it serves
+ * no template/plugin-hookable content at all. It's dispatched with a
+ * deliberately leaner per-route middleware set (i.php passes
+ * Piwigo\Bootstrap\RequestPipeline::WITHOUT_SESSION as handle()'s own
+ * optional $middleware argument) than every other route: SessionMiddleware
+ * is skipped specifically (its own session_start() call
+ * would be pure overhead here, confirmed by reading both SessionRepository/
+ * SessionUserResolver -- neither touches $_SESSION).
+ *
+ * All DB work here goes through one shared DBAL Connection
+ * (image/permission/session lookups alike) -- previously this file also
+ * kept a separate legacy-mysqli connection for the image/permission
+ * lookups specifically to avoid the DI-container construction cost on
+ * this endpoint's per-request PHP-FPM hot path; that reasoning no longer
+ * applies once the app runs under FrankenPHP workers (the container is
+ * built once per worker, not per request), so Legacy Coupling Retirement:
+ * DI+DBAL migration retargeted those two calls onto the same
+ * Connection/QueryBuilder pattern used everywhere else in this codebase.
  *
  * Note on plugin events: the old i.php carried a local no-op
  * trigger_notify() stub so that PwgImage's constructor (which fires
@@ -76,19 +99,27 @@ use Piwigo\Url\UrlService;
  * so nothing ever read it here. The
  * throwaway $conf_unused/$prefixeTable_unused locals below only exist to
  * satisfy Env::applyEnvToConf()'s by-ref parameters. The
- * rootPath/derivativePath/derivativeExt/derivativeType/coi/srcLocation/
- * srcPath/srcUrl/originalSize/rotationAngle/derivativeParams
+ * derivativePath/derivativeUrlSuffix/derivativeExt/derivativeType/coi/
+ * srcLocation/srcPath/srcUrl/originalSize/rotationAngle/derivativeParams
  * scratch state below is this controller's own -- never read outside it
  * (this fast-bootstrap path never runs alongside the normal
  * RequestBootstrap flow that populates the unrelated, same-named
  * $page['root_path'] gallery-navigation concept elsewhere) -- so it's
  * private instance state instead of going through PageState at all.
  */
-final class ImageDerivativeController
+final class ImageDerivativeController implements ControllerInterface
 {
-    private string $rootPath = '';
-
     private string $derivativePath = '';
+
+    /**
+     * The raw request string (PATH_INFO or QUERY_STRING, whichever
+     * derivativeUrlStyle the site uses), captured before parseRequest()
+     * mutates $req -- exactly the URL suffix that follows `i.php?/` (or
+     * `i.php/`), reused by trySwitchSource() to build a redirect to a
+     * *different* already-cached derivative type via the same
+     * permission-checked i.php path, not a raw filesystem link.
+     */
+    private string $derivativeUrlSuffix = '';
 
     private string $derivativeExt = '';
 
@@ -112,14 +143,17 @@ final class ImageDerivativeController
         private readonly Paths $paths,
     ) {}
 
-    public function serve(): void
+    #[\Override]
+    public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         // \Piwigo\Config\Config::dataLocation() needs narrowing here specifically (used
         // before Env::applyEnvToConf() below widens $conf_unused's per-key
         // type info again -- see the comment near the Logger construction).
+        // Direct return, not ierror(): CurrentLogger isn't constructed yet
+        // (a few lines below), and ierror() itself reads CurrentLogger::get().
         $data_location = \Piwigo\Config\Config::dataLocation();
         if (! is_string($data_location)) {
-            die("Invalid \\Piwigo\Config\Config::dataLocation() configuration: expected a string.");
+            return ResponseFactory::text("Invalid \\Piwigo\Config\Config::dataLocation() configuration: expected a string.", 500);
         }
 
         Env::loadEnvFile($this->paths->root);
@@ -153,7 +187,9 @@ final class ImageDerivativeController
         $log_dir = \Piwigo\Config\Config::logDir();
         $db_password = \Piwigo\Config\Config::dbPassword();
         if (! is_string($log_data_location) || ! is_string($log_dir) || ! is_string($db_password)) {
-            die("Invalid \\Piwigo\Config\Config::dataLocation()/'log_dir'/'db_password' configuration: expected strings.");
+            // Direct return, not ierror(): still before CurrentLogger's own
+            // construction a few lines below.
+            return ResponseFactory::text("Invalid \\Piwigo\Config\Config::dataLocation()/'log_dir'/'db_password' configuration: expected strings.", 500);
         }
 
         $logger = new Logger([
@@ -286,6 +322,19 @@ final class ImageDerivativeController
                     }
                     $this->rotationAngle = PwgImage::get_rotation_angle_from_code((int) $rotation);
                 }
+            } catch (ResponseReadyException $e) {
+                // Part III: a real, security-critical regression this catch
+                // block would otherwise cause -- ierror()/
+                // checkDerivativePermission() above now throw instead of
+                // exit()ing (the whole reason exit() was safe inside this
+                // try/catch and a throw is not: exit() bypasses any
+                // enclosing catch entirely, a throw does not). Without this
+                // catch-and-rethrow, the generic catch (\Exception) below
+                // would silently swallow a real 403 Forbidden/404/500 and
+                // let this method continue as if nothing happened --
+                // confirmed live, a real anonymous request for a private
+                // album's derivative was served instead of denied.
+                throw $e;
             } catch (\Exception $e) {
                 $logger->error($e->getMessage(), 'i.php');
             }
@@ -303,9 +352,13 @@ final class ImageDerivativeController
 
         $expires = false;
         $now = time();
+        // Applied to whichever Response one of this method's 3 return
+        // points below ends up building (was a bare header() call,
+        // unconditionally queued regardless of which branch ran next).
+        $noStoreCacheControl = false;
         if (isset($_GET['b'])) {
             $expires = $now + 100;
-            header('Cache-control: no-store, max-age=100');
+            $noStoreCacheControl = true;
         } elseif ($now > (max($src_mtime, $params->last_mod_time) + 24 * 3600)) {// somehow arbitrary - if derivative params or src didn't change for the last 24 hours, we send an expire header for several days
             $expires = $now + 10 * 24 * 3600;
         }
@@ -314,12 +367,16 @@ final class ImageDerivativeController
             $if_modified_since = $_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? null;
             if (is_string($if_modified_since)
               and strtotime($if_modified_since) == $derivative_mtime) {// send the last mod time of the file back
-                header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $derivative_mtime) . ' GMT', true, 304);
-                header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 10 * 24 * 3600) . ' GMT', true, 304);
-                exit;
+                $response = ResponseFactory::raw('', [
+                    'Last-Modified' => gmdate('D, d M Y H:i:s', $derivative_mtime) . ' GMT',
+                    'Expires' => gmdate('D, d M Y H:i:s', time() + 10 * 24 * 3600) . ' GMT',
+                ], 304);
+
+                return $noStoreCacheControl ? $response->withHeader('Cache-Control', 'no-store, max-age=100') : $response;
             }
-            $this->sendDerivative($expires);
-            exit;
+            $response = $this->sendDerivative($expires);
+
+            return $noStoreCacheControl ? $response->withHeader('Cache-Control', 'no-store, max-age=100') : $response;
         }
 
         if (! $this->trySwitchSource($params, $src_mtime) && $params->type == ImageStdParams::CUSTOM) {
@@ -437,13 +494,12 @@ final class ImageDerivativeController
 
         // no change required - redirect to source
         if (! (bool) $changes) {
-            header('X-i: No change');
-            // Part II (web-root isolation): $this->srcUrl is a raw link
-            // into upload/ (via the still-PHPWG_ROOT_PATH-based
-            // $this->rootPath, deliberately deferred to Part III's own
-            // pass on this controller) -- upload/ is deliberately
+            // Part II/III (web-root isolation): $this->srcUrl used to be a
+            // raw link into upload/ (via PHPWG_ROOT_PATH, now fully retired
+            // from this class -- see parseRequest()'s/trySwitchSource()'s
+            // own comments) -- upload/ and _data/i/ are both deliberately
             // unreachable now (SEC-33/35/38/47), so that redirect target
-            // 404s. Found live (a real Visual Regression failure, decoded
+            // 404d. Found live (a real Visual Regression failure, decoded
             // and diffed rather than dismissed): every derivative whose
             // computed size is identity to the source hits this exact
             // path, not a rare edge case. $image_id is only set for a real
@@ -453,11 +509,18 @@ final class ImageDerivativeController
             // set, redirect through action.php?part=e instead, the same
             // permission-checked path Controller\ActionController's own
             // 'e' case already re-verifies (including the HD-access check
-            // that a raw upload/ link also silently bypassed).
+            // that a raw upload/ link also silently bypassed). $this->srcUrl
+            // itself may also already be an i.php?/... redirect to a
+            // *different* already-cached derivative type (trySwitchSource()'s
+            // own permission-checked redirect, see its own comment).
             if ($image_id !== null) {
-                $this->ierror(new UrlService(new HtmlService())->getActionUrl($image_id, 'e', false), 301);
+                $this->ierror(new UrlService(new HtmlService())->getActionUrl($image_id, 'e', false), 301, [
+                    'X-i' => 'No change',
+                ]);
             }
-            $this->ierror($this->srcUrl, 301);
+            $this->ierror($this->srcUrl, 301, [
+                'X-i' => 'No change',
+            ]);
         }
 
         if (\Piwigo\Config\Config::derivativesStripMetadataThreshold() > $d_size[0] * $d_size[1]) {// strip metadata for small images
@@ -476,7 +539,7 @@ final class ImageDerivativeController
         @chmod($this->derivativePath, 0644);
         $timing['save'] = $this->timeStep($step);
 
-        $this->sendDerivative($expires);
+        $response = $this->sendDerivative($expires);
         $timing['send'] = $this->timeStep($step);
 
         $timing['total'] = $this->timeStep($begin);
@@ -492,6 +555,8 @@ final class ImageDerivativeController
                 'quality' => $compression_quality,
             ]);
         }
+
+        return $noStoreCacheControl ? $response->withHeader('Cache-Control', 'no-store, max-age=100') : $response;
     }
 
     /**
@@ -531,13 +596,28 @@ final class ImageDerivativeController
         }
     }
 
-    private function ierror(string $msg, int $code): never
+    /**
+     * Part III (real routing pipeline): throws instead of header()+echo()+
+     * exit()ing directly -- a throw satisfies this method's own `: never`
+     * return type exactly like exit() did, so every one of this class's
+     * ~25 call sites (some several frames deep, e.g. parseRequest()/
+     * parseCustomParams()/checkDerivativePermission()) needed zero changes,
+     * the same zero-call-site-ripple mechanism Workstream C3 already
+     * established for RedirectService/HtmlService. Caught by
+     * ControllerInvokerMiddleware's own catch point, since this class is
+     * now a real, routed ControllerInterface -- no new catch point needed.
+     *
+     * @param array<string, string> $extraHeaders only ever used by the one
+     *   redirect call site that used to queue an extra diagnostic header()
+     *   call of its own right before calling this method -- a raw header()
+     *   call here would never reach the client now (nothing echoes the
+     *   response directly any more, ResponseEmitter only emits whatever's
+     *   actually attached to the Response object this throws).
+     */
+    private function ierror(string $msg, int $code, array $extraHeaders = []): never
     {
         $logger = \Piwigo\Core\CurrentLogger::get();
-        if ($code == 301 || $code == 302) {
-            if (ob_get_length() !== false) {
-                ob_clean();
-            }
+        if ($code === 301 || $code === 302) {
             // default url is on html format
             $url = html_entity_decode($msg);
             $logger->debug($code . ' ' . $url, 'i.php', [
@@ -547,26 +627,17 @@ final class ImageDerivativeController
             // back as response headers with no purpose beyond the real
             // Location redirect -- dropped, not just cosmetic (the original
             // request path/query never needs to reach the client twice).
-            header('Location: ' . $url);
-            exit;
+            $response = ResponseFactory::redirect($url, $code);
+            foreach ($extraHeaders as $name => $value) {
+                $response = $response->withHeader($name, $value);
+            }
+            throw new ResponseReadyException($response);
         }
-        if ($code >= 400) {
-            $protocol = $_SERVER['SERVER_PROTOCOL'] ?? null;
-            if (! is_string($protocol)) {
-                $protocol = 'HTTP/1.0';
-            }
-            if (($protocol != 'HTTP/1.1') && ($protocol != 'HTTP/1.0')) {
-                $protocol = 'HTTP/1.0';
-            }
 
-            header("{$protocol} {$code} {$msg}", true, $code);
-        }
-        // todo improve
-        echo $msg;
         $logger->error($code . ' ' . $msg, 'i.php', [
             'url' => $_SERVER['REQUEST_URI'],
         ]);
-        exit;
+        throw new ResponseReadyException(ResponseFactory::text($msg, $code));
     }
 
     private function timeStep(float &$step): int
@@ -617,21 +688,24 @@ final class ImageDerivativeController
 
     private function parseRequest(): DerivativeParams
     {
-        // $this->rootPath deliberately keeps reading the raw PHPWG_ROOT_PATH
-        // constant (still defined by i.php, not eliminated there yet) rather
-        // than $this->paths->root: it's a *relative* URL prefix embedded in
-        // $this->srcUrl (a real 301 redirect target / generated URL, not a
-        // filesystem path) -- PHPWG_ROOT_PATH's relative './' shape is
-        // exactly what makes it valid there; $this->paths->root (absolute)
-        // would leak the server's real filesystem path into a client-facing
-        // URL. Legacy Coupling Retirement gap-closure (entry-shell
-        // define()/include round): every genuine filesystem-path read in
-        // this class already moved to $this->paths above -- this one
-        // URL-generation concern is deliberately left for Workstream C3
-        // Part III's own dedicated, careful pass (this class is already
-        // flagged there as needing isolated treatment: the highest-QPS
-        // endpoint in the app, and the one place a subtle mistake here would
-        // be a real security/correctness bug, not just style debt).
+        // Part III (real routing pipeline): $this->srcUrl (a real 301
+        // redirect target for the theme/plugin/representative fallback --
+        // see the "no change required" branch's own comment for the real
+        // DB-image case, already routed through action.php) used to be
+        // built from a PHPWG_ROOT_PATH-relative prefix, with the PATH_INFO
+        // branch below computing how many '../' to prepend based on the
+        // *request's own* apparent URL depth (i.php/upload/2026/08/01/...
+        // looks 4 directories deep from the browser's own relative-URL
+        // resolution, even though i.php itself is a top-level entry file)
+        // -- genuinely fragile (get the depth count wrong and the redirect
+        // 404s or lands somewhere else entirely), and PHPWG_ROOT_PATH is
+        // gone from every other entry file (Part 0). UrlService::
+        // getAbsoluteRootUrl(false) (no scheme) resolves the app's real
+        // mount path from cookiePath() -- SCRIPT_NAME/REDIRECT_URL-based,
+        // already the established, request-depth-independent mechanism
+        // this exact class's own CookieService dependency uses elsewhere in
+        // this codebase -- so building $this->srcUrl from it needs no
+        // depth computation of any kind, in either URL style below.
         if (\Piwigo\Config\Config::questionMarkInUrls() === false and
              isset($_SERVER['PATH_INFO']) and ! empty($_SERVER['PATH_INFO'])) {
             $req = $_SERVER['PATH_INFO'];
@@ -641,8 +715,6 @@ final class ImageDerivativeController
             // than cast.
             $req = is_string($req) ? $req : '';
             $req = str_replace('//', '/', $req);
-            $path_count = count(explode('/', $req));
-            $this->rootPath = PHPWG_ROOT_PATH . str_repeat('../', $path_count - 1);
         } else {
             $req = $_SERVER['QUERY_STRING'];
             $req = is_string($req) ? $req : '';
@@ -650,7 +722,6 @@ final class ImageDerivativeController
                 $req = substr($req, 0, $pos);
             }
             $req = rawurldecode($req);
-            $this->rootPath = PHPWG_ROOT_PATH;
         }
 
         $req = ltrim($req, '/');
@@ -670,6 +741,7 @@ final class ImageDerivativeController
         }
 
         $this->derivativePath = $this->paths->root . Config::derivativeDir() . $req;
+        $this->derivativeUrlSuffix = $req;
 
         $pos = strrpos($req, '.');
         $pos !== false || $this->ierror('Missing .', 400);
@@ -727,7 +799,8 @@ final class ImageDerivativeController
 
         $this->srcLocation = $req . $ext;
         $this->srcPath = $this->paths->root . $this->srcLocation;
-        $this->srcUrl = $this->rootPath . $this->srcLocation;
+        $this->srcUrl = new UrlService(new HtmlService())
+            ->getAbsoluteRootUrl(false) . '/' . $this->srcLocation;
 
         // Every non-erroring path above sets $this->derivativeParams itself
         // (either from the ImageStdParams::get_defined_type_map() match or from
@@ -816,27 +889,76 @@ final class ImageDerivativeController
             $params->use_watermark = false;
             $params->sharpen = min(1, $params->sharpen);
             $this->srcPath = $candidate_path;
-            // $this->rootPath is still a raw PHPWG_ROOT_PATH-relative prefix
-            // (see parseRequest()'s own comment) -- $candidate_path is now
-            // built from $this->paths->root (absolute), so the strip length
-            // must match that, not the old relative constant's length.
-            $this->srcUrl = $this->rootPath . substr($candidate_path, strlen($this->paths->root));
+            // Part III: the "0 changes needed" redirect below (serve()'s own
+            // "no change required" branch) must send the browser to this
+            // *candidate derivative*, not the true original -- found live
+            // while retiring this class's own remaining PHPWG_ROOT_PATH
+            // reads: a raw filesystem-relative link straight into _data/i/
+            // (the same link shape parseRequest()'s own $this->srcUrl fix
+            // just closed for the true-original case) would 404, since
+            // _data/i/ is deliberately unreachable now (SEC-33/35/38/47).
+            // Same i.php?/{loc} URL shape DerivativeImage::build() already
+            // uses, applying the identical type-token substitution to the
+            // *request's own URL suffix* (captured in parseRequest(), before
+            // $req lost its extension/type token) instead of to a
+            // filesystem path -- still routes through this same
+            // permission-checked controller, at a different derivative type.
+            $rel_url = self::derivativeUrlPath($this->derivativeUrlSuffix, $params->type, $candidate->type);
+            $this->srcUrl = new UrlService(new HtmlService())
+                ->getAbsoluteRootUrl(false) . '/' . $rel_url;
             $this->rotationAngle = 0;
             return true;
         }
         return false;
     }
 
-    private function sendDerivative(false|int $expires): void
+    /**
+     * Part III: the mount-relative (no host/scheme, no app root prefix)
+     * i.php URL for $urlSuffix (the raw request string, e.g.
+     * 'upload/2026/08/01/foo-th.jpg') with its own derivative-type token
+     * substituted from $fromType to $toType -- same i/[.php]/[?]/{loc}
+     * shape Image\DerivativeImage::build() already uses for real (non-
+     * redirect) derivative URL generation elsewhere in this codebase.
+     * Static and side-effect-free (reads only Config::phpExtensionInUrls()/
+     * questionMarkInUrls()) so trySwitchSource()'s own type-substitution
+     * logic -- the one piece of new, security-adjacent URL-construction
+     * code this method introduces -- is directly unit-testable without the
+     * rest of this class's DB/filesystem dependencies.
+     */
+    private static function derivativeUrlPath(string $urlSuffix, string $fromType, string $toType): string
+    {
+        $suffix = str_replace('-' . DerivativeUrlCodec::derivativeToUrl($fromType), '-' . DerivativeUrlCodec::derivativeToUrl($toType), $urlSuffix);
+        $rel_url = 'i';
+        if (\Piwigo\Config\Config::phpExtensionInUrls()) {
+            $rel_url .= '.php';
+        }
+        if (\Piwigo\Config\Config::questionMarkInUrls()) {
+            $rel_url .= '?';
+        }
+
+        return $rel_url . '/' . $suffix;
+    }
+
+    /**
+     * Part III: the response body is read fully into a string rather than
+     * streamed (former fpassthru()) -- same trade-off Controller\
+     * ActionController's own docblock already established for original-file
+     * serving: ResponseEmitter::emit() calls `echo $response->getBody()`,
+     * which fully materializes a StreamInterface body into a string via
+     * __toString() anyway, so a stream-backed body would buy nothing here;
+     * genuine chunked streaming would need ResponseEmitter itself to
+     * change, out of this phase's scope.
+     */
+    private function sendDerivative(false|int $expires): ResponseInterface
     {
         $derivative_path = $this->derivativePath;
 
         if (isset($_GET['ajaxload']) and $_GET['ajaxload'] == 'true') {
             $urlService = new UrlService(new HtmlService());
-            echo json_encode([
+
+            return ResponseFactory::json([
                 'url' => $urlService->embellishUrl($urlService->getAbsoluteRootUrl() . $derivative_path),
             ]);
-            return;
         }
         $fp = fopen($derivative_path, 'rb');
         if ($fp === false) {
@@ -845,13 +967,22 @@ final class ImageDerivativeController
 
         $fstat = fstat($fp);
         if ($fstat === false) {
+            fclose($fp);
             $this->ierror('Unable to stat derivative file', 500);
         }
-        header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $fstat['mtime']) . ' GMT');
-        if ($expires !== false) {
-            header('Expires: ' . gmdate('D, d M Y H:i:s', $expires) . ' GMT');
+        $body = stream_get_contents($fp);
+        fclose($fp);
+        if ($body === false) {
+            $this->ierror('Unable to read derivative file', 500);
         }
-        header('Connection: close');
+
+        $headers = [
+            'Last-Modified' => gmdate('D, d M Y H:i:s', $fstat['mtime']) . ' GMT',
+            'Connection' => 'close',
+        ];
+        if ($expires !== false) {
+            $headers['Expires'] = gmdate('D, d M Y H:i:s', $expires) . ' GMT';
+        }
 
         $derivative_ext = $this->derivativeExt;
 
@@ -866,9 +997,8 @@ final class ImageDerivativeController
             case '.webp': $ctype = 'image/webp';
                 break;
         }
-        header("Content-Type: {$ctype}");
+        $headers['Content-Type'] = $ctype;
 
-        fpassthru($fp);
-        fclose($fp);
+        return ResponseFactory::raw($body, $headers);
     }
 }

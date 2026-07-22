@@ -80,6 +80,36 @@ test('dispatch falls back to the raw path when SCRIPT_NAME is absent (e.g. CLI/t
     expect($result->status)->toBe(RouteMatchStatus::NotFound);
 });
 
+test('dispatch matches a wildcard-tail route pattern for both i.php URL styles', function (): void {
+    // i.php (Workstream C3 Part III) supports 2 URL styles depending on
+    // Config::questionMarkInUrls(): query-string ("/i.php?/upload/...",
+    // where the query string never becomes part of the URI path Router
+    // matches against, so the routable path is bare "/i.php") and
+    // PATH_INFO ("/i.php/upload/...", where the routable path has a real
+    // tail) -- confirmed live via a real diagnostic request (both
+    // SCRIPT_NAME/PATH_INFO/QUERY_STRING captured directly), not assumed.
+    // config/routes.php's own '/i.php{tail}' pattern (tail requirement
+    // '.*', default '') must match both shapes with the same one route.
+    $routes = new RouteCollection();
+    $routes->add('derivative_image', new Route(
+        '/i.php{tail}',
+        defaults: ['_controller' => 'ImageDerivativeController', 'tail' => ''],
+        requirements: ['tail' => '.*'],
+    ));
+
+    $bare = new Router($routes)->dispatch(new ServerRequest('GET', '/i.php', serverParams: ['SCRIPT_NAME' => '/i.php']));
+    expect($bare->status)->toBe(RouteMatchStatus::Found);
+    expect($bare->handler)->toBe('ImageDerivativeController');
+
+    $withPathInfo = new Router($routes)->dispatch(new ServerRequest(
+        'GET',
+        '/i.php/upload/2026/08/01/20260801000000-abc-th.jpg',
+        serverParams: ['SCRIPT_NAME' => '/i.php'],
+    ));
+    expect($withPathInfo->status)->toBe(RouteMatchStatus::Found);
+    expect($withPathInfo->handler)->toBe('ImageDerivativeController');
+});
+
 test('dispatch strips one extra SCRIPT_NAME directory level per MOUNT_DEPTH_ATTRIBUTE, for an entry point one subdirectory below the app root', function (): void {
     // Reproduces admin/popuphelp.php's own real shape (P23 batch 6a): a
     // routed entry point one directory below the app root, unlike every

@@ -504,6 +504,36 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Flips a category's status and recomputes the guest user's
+     * user_cache.forbidden_categories accordingly -- the same 2-step real
+     * permission recomputation a real "make this album private" admin
+     * action performs, not just the categories.status flag alone (Image\
+     * Permission\ImageVisibilityChecker::isVisibleToUser() reads
+     * user_cache.forbidden_categories exclusively, a precomputed cache
+     * column, never live category status -- confirmed live while adding
+     * this helper: flipping status alone left every existing derivative
+     * still served to anonymous requests).
+     */
+    public static function setCategoryPrivate(int $categoryId, bool $private): void
+    {
+        $db = new \mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $prefix = getenv('PIWIGO_DB_PREFIX');
+        $prefix = $prefix !== false ? $prefix : 'piwigo_';
+        $status = $private ? 'private' : 'public';
+        $db->query(sprintf("UPDATE %scategories SET status = '%s' WHERE id = %d", $prefix, $status, $categoryId));
+        // guest_id defaults to 2 (Config::guestId()) -- this fixture never
+        // overrides it.
+        $forbidden = $private ? (string) $categoryId : '0';
+        $db->query(sprintf("UPDATE %suser_cache SET forbidden_categories = '%s' WHERE user_id = 2", $prefix, $forbidden));
+        $db->close();
+    }
+
+    /**
      * Generates a small solid-color JPEG (via GD) for upload tests. Caller
      * is responsible for unlink()-ing the returned path.
      */
@@ -581,6 +611,28 @@ final class BrowserTestHelpers
         }
 
         return (int) $imageId;
+    }
+
+    /**
+     * Plain anonymous GET (no cookie jar) against a path relative to
+     * baseUrl() -- follows redirects (e.g. i.php's own "derivative
+     * identical to source" 301 to action.php) and returns the *final*
+     * HTTP status code, matching what a real browser experiences
+     * end-to-end. For asserting i.php/action.php-style permission-check
+     * responses, where the interesting signal is 200 vs 403/404, not page
+     * content.
+     */
+    public static function httpStatus(string $path): int
+    {
+        $ch = curl_init(self::baseUrl() . '/' . ltrim($path, '/'));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Piwigo-Env: test']);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
+        curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+        return $status;
     }
 
     /** @param array<string, mixed> $fields */

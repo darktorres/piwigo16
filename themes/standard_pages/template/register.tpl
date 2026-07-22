@@ -34,7 +34,7 @@
   {if 'piwigo_logo' == $STD_PGS_SELECTED_LOGO}
     <img id="piwigo-logo" src="{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg">
   {else if 'custom_logo' == $STD_PGS_SELECTED_LOGO}
-    <img id="custom-logo" src="{$STD_PGS_SELECTED_LOGO_PATH}">
+    <img id="custom-logo" src="{$ROOT_URL}logo.php">
   {else if 'gallery_title'}
     <h1>{$GALLERY_TITLE}</h1>
   {/if}

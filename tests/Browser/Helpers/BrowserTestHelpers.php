@@ -534,6 +534,129 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Sets the anonymous guest user's (user_id 2) active theme. The fixture
+     * defaults it to 'modus' -- a theme directory that doesn't exist in
+     * this repo (only 'default' and 'standard_pages' do), which
+     * Template::set_theme() silently falls back to 'default' for, meaning
+     * the standard_pages theme's own identification/register/password/
+     * profile templates are never actually exercised by a plain guest
+     * visit as fixtured. Setting this to 'standard_pages' directly is the
+     * minimal, restorable fixture mutation needed to exercise those
+     * templates for real (confirmed live: an anonymous identification.php
+     * request only renders id="piwigo-logo"/"logo-section" once this is
+     * set).
+     */
+    public static function setGuestTheme(string $theme): void
+    {
+        $db = new \mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $prefix = getenv('PIWIGO_DB_PREFIX');
+        $prefix = $prefix !== false ? $prefix : 'piwigo_';
+        $db->query(sprintf(
+            "UPDATE %suser_infos SET theme = '%s' WHERE user_id = 2",
+            $prefix,
+            $db->real_escape_string($theme)
+        ));
+        $db->close();
+    }
+
+    /**
+     * Configures a custom standard_pages logo end to end: writes the real
+     * file onto the 'local' disk (same absolute filesystem the live
+     * Apache-served app and this test process share -- a local dev
+     * environment, confirmed by every other direct-DB-fixture helper in
+     * this class making the same assumption) and sets the 3 config keys
+     * Piwigo\Admin\ThemesStandardPagesPageRenderer's own upload form would
+     * write, without driving that form's JS/file-input UI (not a plupload
+     * widget like the photo uploader, but there's no need to automate it
+     * either way -- this is a direct-DB-fixture-manipulation test, the
+     * same class of shortcut setCategoryPrivate()/freezeImageHits() already
+     * use). $relativePath is relative to the 'local' disk root (e.g.
+     * 'logo/test.png') -- must match Piwigo\Controller\
+     * CustomLogoController's own StorageRegistry::disk('local') resolution.
+     */
+    public static function setCustomLogo(string $relativePath, string $binaryContent): void
+    {
+        $repoRoot = dirname(__DIR__, 3);
+        $absPath = $repoRoot . '/local/' . $relativePath;
+        if (! is_dir(dirname($absPath))) {
+            mkdir(dirname($absPath), 0777, true);
+        }
+        file_put_contents($absPath, $binaryContent);
+
+        $db = new \mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $prefix = getenv('PIWIGO_DB_PREFIX');
+        $prefix = $prefix !== false ? $prefix : 'piwigo_';
+        // use_standard_pages already defaults to 'true' in the fixture --
+        // set explicitly anyway so this helper is correct standalone.
+        foreach ([
+            'use_standard_pages' => 'true',
+            'standard_pages_selected_logo' => 'custom_logo',
+            'standard_pages_selected_logo_path' => $relativePath,
+        ] as $param => $value) {
+            $escaped = $db->real_escape_string($value);
+            $db->query(sprintf(
+                "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON DUPLICATE KEY UPDATE value = '%s'",
+                $prefix,
+                $param,
+                $escaped,
+                $escaped
+            ));
+        }
+        $db->close();
+    }
+
+    /** Reverts setCustomLogo() -- deletes the file and the 2 config keys it set (leaves use_standard_pages, already true by default). */
+    public static function clearCustomLogo(string $relativePath): void
+    {
+        $repoRoot = dirname(__DIR__, 3);
+        @unlink($repoRoot . '/local/' . $relativePath);
+
+        $db = new \mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $prefix = getenv('PIWIGO_DB_PREFIX');
+        $prefix = $prefix !== false ? $prefix : 'piwigo_';
+        $db->query(sprintf(
+            "DELETE FROM %sconfig WHERE param IN ('standard_pages_selected_logo', 'standard_pages_selected_logo_path')",
+            $prefix
+        ));
+        $db->close();
+    }
+
+    /** Generates a tiny solid-color PNG (via GD), returned as raw binary content -- for CustomLogoController tests. */
+    public static function makeTestPng(): string
+    {
+        $img = imagecreatetruecolor(16, 16);
+        if ($img === false) {
+            throw new ExpectationFailedException('imagecreatetruecolor failed');
+        }
+
+        $color = imagecolorallocate($img, 10, 20, 30);
+        if ($color === false) {
+            throw new ExpectationFailedException('imagecolorallocate failed');
+        }
+        imagefill($img, 0, 0, $color);
+
+        ob_start();
+        imagepng($img);
+
+        return ob_get_clean();
+    }
+
+    /**
      * Generates a small solid-color JPEG (via GD) for upload tests. Caller
      * is responsible for unlink()-ing the returned path.
      */
@@ -633,6 +756,24 @@ final class BrowserTestHelpers
         $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 
         return $status;
+    }
+
+    /**
+     * Plain anonymous GET, returning the raw response body -- for
+     * assertions against rendered markup that don't need a real browser
+     * (e.g. confirming an <img> tag's src attribute), matching
+     * httpStatus()'s own curl shape.
+     */
+    public static function httpBody(string $path): string
+    {
+        $ch = curl_init(self::baseUrl() . '/' . ltrim($path, '/'));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Piwigo-Env: test']);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
+        $body = curl_exec($ch);
+
+        return is_string($body) ? $body : '';
     }
 
     /** @param array<string, mixed> $fields */

@@ -149,6 +149,7 @@ test('public/ contains exactly the relocated entry points, robots.txt, and the s
         'identification.php',
         'index.php',
         'install.php',
+        'logo.php',
         'nbm.php',
         'notification.php',
         'password.php',

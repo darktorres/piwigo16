@@ -6,6 +6,7 @@ use Piwigo\Controller\AboutController;
 use Piwigo\Controller\ActionController;
 use Piwigo\Controller\Admin\AdminPopuphelpController;
 use Piwigo\Controller\CommentsController;
+use Piwigo\Controller\CustomLogoController;
 use Piwigo\Controller\FeedController;
 use Piwigo\Controller\GalleryController;
 use Piwigo\Controller\IdentificationController;
@@ -88,6 +89,10 @@ $routes->add('search', new Route('/search.php', [
 
 $routes->add('feed', new Route('/feed.php', [
     '_controller' => FeedController::class,
+]));
+
+$routes->add('logo', new Route('/logo.php', [
+    '_controller' => CustomLogoController::class,
 ]));
 
 $routes->add('index', new Route('/index.php', [

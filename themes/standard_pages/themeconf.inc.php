@@ -20,8 +20,3 @@ $theme_template_vars = [
     // repo-wide grep), so the fallback always won in practice already.
     'GALLERY_TITLE' => \Piwigo\Config\Config::galleryTitle(),
 ];
-
-// Send custom logo path if custom_logo is the selected option
-if ((\Piwigo\Config\Config::all()['standard_pages_selected_logo'] ?? 'piwigo_logo') == 'custom_logo') {
-    $theme_template_vars['STD_PGS_SELECTED_LOGO_PATH'] = \Piwigo\Config\Config::all()['standard_pages_selected_logo_path'] ?? '';
-}

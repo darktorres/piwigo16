@@ -3705,6 +3705,18 @@ parameters:
 		-
 			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
 			identifier: method.internalClass
+			count: 4
+			path: tests/Browser/CustomLogoTest.php
+
+		-
+			rawMessage: 'Call to method toContain() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Browser/CustomLogoTest.php
+
+		-
+			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
 			count: 5
 			path: tests/Browser/DerivativePermissionTest.php
 
@@ -5357,12 +5369,6 @@ parameters:
 			identifier: method.internalClass
 			count: 6
 			path: tests/Unit/Validation/InputValidatorTest.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: themes/standard_pages/themeconf.inc.php
 
 		-
 			rawMessage: Short ternary operator is not allowed. Use null coalesce operator if applicable or consider using long ternary.

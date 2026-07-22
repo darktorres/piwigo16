@@ -142,22 +142,30 @@ final class ThemesStandardPagesPageRenderer
                         : '';
                     $pathinfo = pathinfo($std_pgs_logo_name);
 
-                    $file_path = $upload_dir . '/' . \Piwigo\Core\StringHelper::str2url($pathinfo['filename']) . '.' . $allowed_mimes[$mime_type];
+                    $logo_filename = \Piwigo\Core\StringHelper::str2url($pathinfo['filename']) . '.' . $allowed_mimes[$mime_type];
 
-                    $this->configService->confUpdateParam('standard_pages_selected_logo_path', $file_path, true);
+                    // Disk-relative path (relative to the 'local' disk's own
+                    // root, e.g. 'logo/mylogo.png') -- stored in config so
+                    // Piwigo\Controller\CustomLogoController can resolve and
+                    // stream it later. Deliberately NOT the absolute
+                    // filesystem $upload_dir path: 'local/' is intentionally
+                    // unreachable from public/ (Legacy Coupling Retirement's
+                    // web-root isolation work), and an absolute path was
+                    // never a valid URL anyway -- CustomLogoController is the
+                    // one, permission-free, server-resolved way this single
+                    // intentionally-public file is served.
+                    $relative_path = 'logo/' . $logo_filename;
 
-                    // $upload_dir is PWG_LOCAL_DIR . 'logo', a subdirectory of the
-                    // 'local' disk's own root -- the disk-relative path needs the
-                    // 'logo/' prefix back on (unlike the watermarks disk, whose
-                    // root IS its upload dir).
+                    $this->configService->confUpdateParam('standard_pages_selected_logo_path', $relative_path, true);
+
                     $logo_stream = fopen($std_pgs_logo_tmp_name, 'rb');
                     if ($logo_stream !== false) {
-                        StorageRegistry::disk('local')->writeStream('logo/' . basename($file_path), $logo_stream);
+                        StorageRegistry::disk('local')->writeStream($relative_path, $logo_stream);
                         fclose($logo_stream);
                     } else {
                         $template->assign(
                             [
-                                'save_error' => "{$file_path} " . Lang::t('no write access'),
+                                'save_error' => "{$upload_dir}/{$logo_filename} " . Lang::t('no write access'),
                             ]
                         );
                     }
@@ -192,6 +200,16 @@ final class ThemesStandardPagesPageRenderer
         // |                          template output                              |
         // +-----------------------------------------------------------------------+
 
+        // Served by Piwigo\Controller\CustomLogoController (public/logo.php) --
+        // a fixed, parameter-less, server-resolved URL, not the disk-relative
+        // path stored in config. null (not the raw config value) is what
+        // gates the template's own "existing logo preview" vs. "upload a
+        // logo" UI toggle, so an unset/empty config value must stay null here.
+        $configured_logo_path = \Piwigo\Config\Config::all()['standard_pages_selected_logo_path'] ?? null;
+        $std_pgs_selected_logo_path = is_string($configured_logo_path) && $configured_logo_path !== ''
+            ? $this->urlService->getRootUrl() . 'logo.php'
+            : null;
+
         // Send all info to template
         $template->assign(
             [
@@ -202,7 +220,7 @@ final class ThemesStandardPagesPageRenderer
                 'std_pgs_skin_options' => $std_pgs_skin_options,
                 'is_standard_pages_used' => $is_standard_pages_used,
                 'standard_pages_used_by' => $standard_pages_used_by,
-                'std_pgs_selected_logo_path' => \Piwigo\Config\Config::all()['standard_pages_selected_logo_path'] ?? null,
+                'std_pgs_selected_logo_path' => $std_pgs_selected_logo_path,
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
             ]

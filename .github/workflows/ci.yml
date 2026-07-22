@@ -791,7 +791,16 @@ jobs:
       # throwaway snapshot for SBOM purposes only, never committed (bun.lock
       # stays authoritative for installs).
       - run: npm install --package-lock-only --ignore-scripts
-      - run: bunx cyclonedx-npm --package-lock-only --output-format JSON --output-file sbom-npm.cdx.json
+      # npx, not bunx: cyclonedx-npm does its own npm-version detection
+      # (requires >= 9.0.0) via the invoking package manager's own env vars
+      # — bunx sets those to point at bun itself, which cyclonedx-npm can't
+      # parse as an npm version, failing with "Unsupported NPM version.
+      # Expected >= 9.0.0, got <bun's own version>" (confirmed live, and
+      # confirmed this was already failing in CI on the existing v5.0.0
+      # pin, unrelated to any version bump — real npm is already set up on
+      # PATH via actions/setup-node above, so npx is a correct, no-new-
+      # dependency fix, not a workaround).
+      - run: npx --yes @cyclonedx/cyclonedx-npm --package-lock-only --output-format JSON --output-file sbom-npm.cdx.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: sbom

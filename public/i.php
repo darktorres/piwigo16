@@ -59,12 +59,19 @@ Env::loadEnvFile($paths->root);
 // instead of) this controller's own existing lightweight targeted 2-key
 // DBAL read (Config::override() for just 'derivatives'/
 // 'disabled_derivatives', see ImageDerivativeController::__invoke()'s own
-// comment) -- a real, measurable, not-obviously-worker-amortizable cost
-// this phase's own scope didn't extend to removing. Flagged here rather
-// than silently accepted or hastily "fixed" under this phase's own time
-// budget; a future pass could investigate whether this route genuinely
-// needs the full ConfigService::loadConfFromDb() call CommonBootstrap::run()
-// always makes, or could skip straight to Kernel::boot() instead.
+// comment).
+//
+// Decided, not left open: this route keeps the full CommonBootstrap::run()
+// call rather than growing a bespoke leaner Kernel::boot()-only path.
+// i.php already matches every other public/*.php entry file's own
+// CommonBootstrap::run($paths) call -- a route-specific shortcut here would
+// trade a real, verified, consistent boot sequence for a marginal win on
+// one endpoint, reintroducing exactly the kind of special-casing this
+// phase's own WITHOUT_SESSION/no-common.inc.php design already keeps to a
+// minimum (and only where there's a concrete per-request cost to skip, not
+// a one-time boot cost). The measurement above stays as a documented,
+// honest data point about the dev environment (mod_php, not the
+// FrankenPHP worker-mode production target), not a call to action.
 CommonBootstrap::run($paths);
 
 $response = RequestPipeline::handle(RequestFactory::fromGlobals(), RequestPipeline::WITHOUT_SESSION);

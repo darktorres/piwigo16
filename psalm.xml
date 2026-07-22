@@ -203,6 +203,17 @@
                      disjoint array-shape union doesn't reach the same
                      conclusion. -->
                 <file name="src/Piwigo/Ws/PwgTags.php"/>
+                <!-- str2DateTime()'s `count($ymdhms) < 3` early-return
+                     guarantees offsets 0-2 exist by the setDate() call;
+                     PHPStan's list<T> flow-length tracking proves it
+                     (nullCoalesce.offset "always exists"), Psalm's doesn't
+                     carry the count() guard into a list-length guarantee. -->
+                <file name="src/Piwigo/Core/DateHelper.php"/>
+                <!-- Same $_POST/$params-shape-narrowing disagreement as
+                     ConfigurationSubController above:
+                     `is_numeric($params['max_level'] ?? null)` guards the
+                     bare `$params['max_level']` reads a few tokens later. -->
+                <file name="src/Piwigo/Ws/PwgUsers.php"/>
             </errorLevel>
         </PossiblyUndefinedArrayOffset>
         <PossiblyNullArrayAccess>

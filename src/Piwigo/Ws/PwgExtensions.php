@@ -251,9 +251,9 @@ final class PwgExtensions
             }
 
             $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService)[$extension_id] ?? null;
-            [$upgrade_status] = $lifecycle->performAction(ExtensionType::Plugin, 'update', $extension_id, $fsEntry, [
+            $upgrade_status = $lifecycle->performAction(ExtensionType::Plugin, 'update', $extension_id, $fsEntry, [
                 'revision' => $revision,
-            ]);
+            ])[0] ?? null;
             $extension_name = $scanner->scan(ExtensionType::Plugin, $urlService)[$extension_id]['name'] ?? $extension_id;
 
             if (isset($params['reactivate'])) {
@@ -389,7 +389,7 @@ final class PwgExtensions
             $coreUpdateService->checkPiwigoUpgrade();
         }
 
-        $result['piwigo_need_update'] = $_SESSION['need_update' . AppInfo::VERSION];
+        $result['piwigo_need_update'] = $_SESSION['need_update' . AppInfo::VERSION] ?? null;
 
         if (! isset($_SESSION['extensions_need_update'])) {
             $updateChecker->checkExtensions();
@@ -397,7 +397,7 @@ final class PwgExtensions
             $updateChecker->checkUpdatedExtensions();
         }
 
-        if (! is_array($_SESSION['extensions_need_update'])) {
+        if (! is_array($_SESSION['extensions_need_update'] ?? null)) {
             $result['ext_need_update'] = null;
         } else {
             $result['ext_need_update'] = $_SESSION['extensions_need_update'] !== [];

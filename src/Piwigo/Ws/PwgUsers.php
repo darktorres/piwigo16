@@ -496,7 +496,7 @@ SELECT DISTINCT ';
         $user_id = $result['userId'] ?? false;
 
         if (! (bool) $user_id) {
-            return new PwgError(WsError::INVALID_PARAM, $errors[0]);
+            return new PwgError(WsError::INVALID_PARAM, $errors[0] ?? '');
         }
 
         return $service->invoke('pwg.users.getList', [
@@ -893,7 +893,7 @@ SELECT
             }
 
             foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
-                $image[$k] = $row[$k];
+                $image[$k] = $row[$k] ?? null;
             }
 
             $images[] = array_merge($image, WsHelper::stdGetUrls($row, new UrlService(new HtmlService())));

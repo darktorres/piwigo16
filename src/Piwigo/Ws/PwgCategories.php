@@ -190,7 +190,7 @@ SELECT SQL_CALC_FOUND_ROWS i.*
                     }
                 }
                 foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
-                    $image[$k] = $image_row[$k];
+                    $image[$k] = $image_row[$k] ?? null;
                 }
 
                 $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_name', $image['name'], __FUNCTION__);
@@ -428,7 +428,7 @@ SELECT SQL_CALC_FOUND_ROWS
                 ]
             );
             foreach (['id', 'nb_images', 'total_nb_images', 'nb_categories'] as $key) {
-                $row[$key] = is_numeric($row[$key]) ? (int) $row[$key] : 0;
+                $row[$key] = is_numeric($row[$key] ?? null) ? (int) ($row[$key] ?? 0) : 0;
             }
 
             // uppercats is a NOT NULL column of the categories table --
@@ -509,7 +509,7 @@ SELECT representative_picture_id
             if (isset($image_id) && is_numeric($image_id)) {
                 $image_id = (int) $image_id;
 
-                if (\Piwigo\Config\Config::representativeCacheOnSubcats() and $row['user_representative_picture_id'] !== $image_id) {
+                if (\Piwigo\Config\Config::representativeCacheOnSubcats() and ($row['user_representative_picture_id'] ?? null) !== $image_id) {
                     $user_representative_updates_for[$row['id']] = $image_id;
                 }
 

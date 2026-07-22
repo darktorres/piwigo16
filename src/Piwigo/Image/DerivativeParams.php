@@ -69,7 +69,7 @@ final class DerivativeParams
     public function compute_final_size(array $in_size): array
     {
         $this->sizing->compute($in_size, null, $crop_rect, $scale_size);
-        return $scale_size != null ? array_map(intval(...), $scale_size) : $in_size;
+        return $scale_size !== null ? array_map(intval(...), $scale_size) : $in_size;
     }
 
     /**

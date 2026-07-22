@@ -99,7 +99,7 @@ final class DerivativeImage
         $src_image = is_object($infos) ? $infos : new SrcImage($infos);
         $params = is_string($type) ? ImageStdParams::get_by_type($type) : $type;
         self::build($src_image, $params, $rel_path, $rel_url);
-        if ($params == null) {
+        if ($params === null) {
             return $src_image->get_url();
         }
         $default_url = self::urlService()->getRootUrl() . $rel_url;
@@ -203,10 +203,10 @@ final class DerivativeImage
                 }
                 $defined_types = array_keys(ImageStdParams::get_defined_type_map());
                 for ($i = 0; $i < count($defined_types); $i++) {
-                    if ($defined_types[$i] == $params->type) {
+                    if ($defined_types[$i] === $params->type) {
                         for ($i--; $i >= 0; $i--) {
                             $smaller = ImageStdParams::get_by_type($defined_types[$i]);
-                            if ($smaller->sizing->max_crop == $params->sizing->max_crop && $smaller->is_identity($src_size)) {
+                            if ($smaller->sizing->max_crop === $params->sizing->max_crop && $smaller->is_identity($src_size)) {
                                 $params = $smaller;
                                 self::build($src, $params, $rel_path, $rel_url, $is_cached);
                                 return;
@@ -221,14 +221,14 @@ final class DerivativeImage
         $tokens = [];
         $tokens[] = substr($params->type, 0, 2);
 
-        if ($params->type == ImageStdParams::CUSTOM) {
+        if ($params->type === ImageStdParams::CUSTOM) {
             $params->add_url_tokens($tokens);
         }
 
         $loc = $src->rel_path;
-        if (substr_compare($loc, './', 0, 2) == 0) {
+        if (substr_compare($loc, './', 0, 2) === 0) {
             $loc = substr($loc, 2);
-        } elseif (substr_compare($loc, '../', 0, 3) == 0) {
+        } elseif (substr_compare($loc, '../', 0, 3) === 0) {
             $loc = substr($loc, 3);
         }
         $dot = strrpos($loc, '.');
@@ -250,7 +250,7 @@ final class DerivativeImage
             }
         }
 
-        if ($url_style == 2) {
+        if ($url_style === 2) {
             $rel_url = 'i';
             if (\Piwigo\Config\Config::phpExtensionInUrls()) {
                 $rel_url .= '.php';
@@ -271,7 +271,7 @@ final class DerivativeImage
 
     public function get_url(): string
     {
-        if ($this->params == null) {
+        if ($this->params === null) {
             return $this->src_image->get_url();
         }
         $default_url = self::urlService()->getRootUrl() . $this->rel_url;
@@ -290,7 +290,7 @@ final class DerivativeImage
 
     public function same_as_source(): bool
     {
-        return $this->params == null;
+        return $this->params === null;
     }
 
     /**
@@ -298,7 +298,7 @@ final class DerivativeImage
      */
     public function get_type()
     {
-        if ($this->params == null) {
+        if ($this->params === null) {
             return 'Original';
         }
         return $this->params->type;
@@ -310,7 +310,7 @@ final class DerivativeImage
     public function get_size(): ?array
     {
         $src_size = $this->src_image->get_size();
-        if ($this->params == null || $src_size == null) {
+        if ($this->params === null || $src_size === null) {
             return $src_size;
         }
         return $this->params->compute_final_size($src_size);

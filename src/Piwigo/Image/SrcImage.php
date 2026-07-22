@@ -183,7 +183,7 @@ final class SrcImage
             $this->rel_path = is_string($mimetype_location) ? $mimetype_location : $default_mimetype_location;
             $this->flags |= self::IS_MIMETYPE;
             if (($size = @getimagesize(CurrentPaths::get()->root . $this->rel_path)) === false) {
-                if ($ext == 'svg') {
+                if ($ext === 'svg') {
                     $this->rel_path = $path;
                 } else {
                     $this->rel_path = 'themes/default/icon/mimetypes/unknown.png';
@@ -268,7 +268,7 @@ final class SrcImage
 
     public function has_size(): bool
     {
-        return $this->size != null;
+        return $this->size !== null;
     }
 
     /**
@@ -276,7 +276,7 @@ final class SrcImage
      */
     public function get_size(): ?array
     {
-        if ($this->size == null) {
+        if ($this->size === null) {
             if ((bool) ($this->flags & self::DIM_NOT_GIVEN)) {
                 self::fatalError('SrcImage dimensions required but not provided');
             }

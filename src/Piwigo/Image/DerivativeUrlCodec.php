@@ -29,7 +29,7 @@ final class DerivativeUrlCodec
      */
     public static function sizeToUrl(array $size): int|string
     {
-        if ($size[0] == $size[1]) {
+        if ($size[0] === $size[1]) {
             return $size[0];
         }
 
@@ -61,7 +61,7 @@ final class DerivativeUrlCodec
      */
     public static function sizeEquals(array $size1, array $size2): bool
     {
-        return $size1[0] == $size2[0] && $size1[1] == $size2[1];
+        return $size1[0] === $size2[0] && $size1[1] === $size2[1];
     }
 
     /**

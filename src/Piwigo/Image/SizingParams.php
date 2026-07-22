@@ -55,9 +55,9 @@ final class SizingParams
      */
     public function add_url_tokens(array &$tokens): void
     {
-        if ($this->max_crop == 0) {
+        if ($this->max_crop === 0.0) {
             $tokens[] = 's' . DerivativeUrlCodec::sizeToUrl($this->ideal_size);
-        } elseif ($this->max_crop == 1 && DerivativeUrlCodec::sizeEquals($this->ideal_size, $this->min_size)) {
+        } elseif ($this->max_crop === 1.0 && DerivativeUrlCodec::sizeEquals($this->ideal_size, $this->min_size)) {
             $tokens[] = 'e' . DerivativeUrlCodec::sizeToUrl($this->ideal_size);
         } else {
             $tokens[] = DerivativeUrlCodec::sizeToUrl($this->ideal_size);
@@ -122,7 +122,7 @@ final class SizingParams
         }
 
         $crop_rect = null;
-        if ($destCrop->width() != $in_size[0] || $destCrop->height() != $in_size[1]) {
+        if ((float) $destCrop->width() !== (float) $in_size[0] || (float) $destCrop->height() !== (float) $in_size[1]) {
             $crop_rect = $destCrop;
         }
     }

@@ -578,7 +578,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
         // install path ever reads that constant (its only real readers are
         // the frozen install/upgrade_*.php scripts, which never run during
         // a fresh install), so it stays a plain local here.
-        [$dbnow] = $row;
+        $dbnow = $row[0] ?? null;
         $datas = [];
         foreach (UpgradeService::getAvailableUpgradeIds() as $upgrade_id) {
             $datas[] = [

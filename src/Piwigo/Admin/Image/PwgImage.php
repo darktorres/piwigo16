@@ -431,6 +431,7 @@ class PwgImage
 
         $imagick_dir = \Piwigo\Config\Config::extImagickDir();
         // [SEC-16] see the escapeshellarg() note above.
+        $returnarray = [];
         @exec(escapeshellarg($imagick_dir) . self::get_ext_imagick_command() . ' -version', $returnarray);
         if (isset($returnarray[0]) && $returnarray[0] !== '' && $returnarray[0] !== '0' and (bool) preg_match('/ImageMagick/i', $returnarray[0])) {
             if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
@@ -496,8 +497,9 @@ class PwgImage
         switch ($library) {
             case 'ext_imagick':
                 $ext_imagick_dir = \Piwigo\Config\Config::extImagickDir();
+                $returnarray = [];
                 exec($ext_imagick_dir . self::get_ext_imagick_command() . ' -version', $returnarray);
-                if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
+                if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0] ?? '', $match)) {
                     $library .= '/' . $match[1];
                 }
                 break;

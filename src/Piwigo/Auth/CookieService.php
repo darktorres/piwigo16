@@ -34,7 +34,7 @@ final class CookieService
             // cookie to the path shown in the browser otherwise it will be discarded.
             if (
                 $path_info !== '' and
-                ($_SERVER['REDIRECT_URL'] !== $_SERVER['PATH_INFO']) and
+                ($_SERVER['REDIRECT_URL'] !== ($_SERVER['PATH_INFO'] ?? null)) and
                 (str_ends_with($redirect_url, $path_info))
             ) {
                 $scr = substr(
@@ -46,7 +46,7 @@ final class CookieService
                 $scr = $_SERVER['REDIRECT_URL'];
             }
         } else {
-            $scr = $_SERVER['SCRIPT_NAME'];
+            $scr = $_SERVER['SCRIPT_NAME'] ?? null;
         }
 
         $scr = is_string($scr) ? $scr : '';

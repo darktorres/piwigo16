@@ -230,6 +230,23 @@
                      null, ...)`) and $row['id'] (guarded by
                      `is_numeric($row['id'] ?? null)` immediately before). -->
                 <file name="src/Piwigo/Admin/PictureModifyPageRenderer.php"/>
+                <!-- Same disagreement on min_width/min_height, each guarded
+                     by its own `in_array($params['x'] ?? null, [...])` a
+                     few lines earlier. -->
+                <file name="src/Piwigo/Template/Template.php"/>
+                <!-- $image['id'] is proven int by `assert(is_int($image['id']
+                     ?? null))` the line before; PHPStan's assert-narrowing
+                     carries through to the array-offset read that follows,
+                     Psalm's doesn't. -->
+                <file name="src/Piwigo/Ws/PwgImages.php"/>
+                <!-- Same disagreement on login/mail_address, each guarded
+                     by its own `is_string($_POST['x'] ?? null)` a few
+                     tokens earlier. -->
+                <file name="src/Piwigo/Controller/RegisterController.php"/>
+                <!-- Same disagreement on $_SERVER['HTTPS'], guarded by
+                     `in_array($_SERVER['HTTPS'] ?? null, [...])` in the
+                     same expression. -->
+                <file name="src/Piwigo/Admin/Install/InstallWizard.php"/>
             </errorLevel>
         </PossiblyUndefinedArrayOffset>
         <PossiblyNullArrayAccess>
@@ -240,6 +257,11 @@
                      confirmed by composer analyse:phpstan already being
                      clean at this exact line with zero changes needed. -->
                 <file name="src/Piwigo/Controller/ImageDerivativeController.php"/>
+                <!-- Same disagreement, this time in SizingParams::compute()
+                     itself — the very method whose max_crop>0 branch
+                     establishes the min_size-non-null invariant relied on
+                     by the other two suppressed files above. -->
+                <file name="src/Piwigo/Image/SizingParams.php"/>
             </errorLevel>
         </PossiblyNullArrayAccess>
         <!-- $row_coi is narrowed via `$row_coi !== '' && $row_coi !== '0'`
@@ -263,6 +285,26 @@
         <InvalidArrayOffset>
             <errorLevel type="suppress">
                 <file name="src/Piwigo/Controller/PictureController.php"/>
+                <!-- Two independent imprecisions in the same file, both
+                     confirmed clean by composer analyse:phpstan: (1)
+                     $rating['count'] is set by an earlier `$rating += [...]`
+                     merge in a separate loop, which Psalm's array-shape
+                     tracking doesn't carry into the model type it infers
+                     for the loop variable in this later foreach; (2)
+                     $available_order_by[$i] uses a `for ($i = 0; $i <
+                     count($available_order_by); ...)` bound, which Psalm
+                     doesn't tie back to the literal 5-element array's
+                     actual index range. -->
+                <file name="src/Piwigo/Admin/RatingUserPageRenderer.php"/>
+                <!-- $data_storage[$type]['total']['nb_files'] — Psalm infers
+                     $data_storage[$type]['total']'s shape from only the
+                     immediately-preceding `['filesize'] = ...` assignment
+                     a few lines above, not the stable shape both keys build
+                     up to across the two nearly-identical loops in this
+                     method; each read already carries its own `?? 0`
+                     fallback. composer analyse:phpstan is clean here with
+                     zero changes. -->
+                <file name="src/Piwigo/Controller/Admin/IntroSubController.php"/>
             </errorLevel>
         </InvalidArrayOffset>
         <!-- $searchFields is `&$mySearch['fields']` — a by-ref alias. The

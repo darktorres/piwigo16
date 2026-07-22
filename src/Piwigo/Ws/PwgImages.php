@@ -805,7 +805,7 @@ SELECT *
                     }
                 }
                 foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
-                    $image[$k] = $row[$k];
+                    $image[$k] = $row[$k] ?? null;
                 }
 
                 $rendered_image_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_name', $image['name'], __FUNCTION__);
@@ -813,7 +813,7 @@ SELECT *
                 $image['comment'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_description', $image['comment'], __FUNCTION__);
 
                 $image = array_merge($image, WsHelper::stdGetUrls($row, new UrlService(new HtmlService())));
-                assert(is_int($image['id']));
+                assert(is_int($image['id'] ?? null));
                 $images[$image_ids[$image['id']]] = $image;
             }
             ksort($images, SORT_NUMERIC);

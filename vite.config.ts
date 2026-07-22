@@ -10,6 +10,19 @@ export default defineConfig({
   // Resolve dynamic chunk URLs via import.meta.url so they work under any
   // Apache document root prefix (Piwigo can be served at /, /piwigo17/, etc.).
   base: "./",
+  // Vite's own default publicDir ("<root>/public") collides with this
+  // project's public/ -- the PHP app's web root (Legacy Coupling
+  // Retirement's web-root isolation work), not a "static assets to copy
+  // into the build output" directory in Vite's sense. Left at the default,
+  // the build's own publicDir-copy step walks into public/dist (a symlink
+  // back to this very outDir, bridging the built assets so the PHP app can
+  // serve them) and recursively copies dist/ into itself without bound --
+  // confirmed live: a real `vite build` run filled the disk
+  // (dist/dist/dist/... nested ~100 levels deep, ENOSPC) before this was
+  // set. Nothing here needs Vite's copy step anyway: outDir already IS what
+  // public/dist symlinks to, so the built assets are already reachable at
+  // /dist/... with zero copying.
+  publicDir: false,
   build: {
     outDir: "dist",
     emptyOutDir: true,

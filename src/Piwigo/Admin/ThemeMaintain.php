@@ -31,15 +31,24 @@ class ThemeMaintain
      *   same third-party-subclass contravariance reason as PluginMaintain
      *   above.
      */
-    public function activate($theme_version, &$errors = []) {}
+    public function activate($theme_version, &$errors = [])
+    {
+        return null;
+    }
 
     /**
      * @return mixed - see activate()'s @return docblock
      */
-    public function deactivate() {}
+    public function deactivate()
+    {
+        return null;
+    }
 
     /**
      * @return mixed - see activate()'s @return docblock
      */
-    public function delete() {}
+    public function delete()
+    {
+        return null;
+    }
 }

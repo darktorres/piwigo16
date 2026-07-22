@@ -39,7 +39,7 @@ final class Patch111 implements DbPatchInterface
         // Add column
         $query = 'ALTER TABLE ' . Tables::userInfos() . ' ADD COLUMN ';
 
-        if ($dblayer === 'mysql') {
+        if (in_array($dblayer, ['mysql', 'mysqli'], true)) {
             $query .= ' `activation_key` char(20) default NULL';
         }
 

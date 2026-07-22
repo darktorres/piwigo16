@@ -32,24 +32,36 @@ class PluginMaintain
      *   maintain.class.php subclass whose own override declares no return type
      *   at all (verified empirically: PHP fatals on such a mismatch)
      */
-    public function install($plugin_version, &$errors = []) {}
+    public function install($plugin_version, &$errors = [])
+    {
+        return null;
+    }
 
     /**
      * @param string $plugin_version
      * @param array<int, string> $errors - used to return error messages
      * @return mixed - see install()'s @return docblock
      */
-    public function activate($plugin_version, &$errors = []) {}
+    public function activate($plugin_version, &$errors = [])
+    {
+        return null;
+    }
 
     /**
      * @return mixed - see install()'s @return docblock
      */
-    public function deactivate() {}
+    public function deactivate()
+    {
+        return null;
+    }
 
     /**
      * @return mixed - see install()'s @return docblock
      */
-    public function uninstall() {}
+    public function uninstall()
+    {
+        return null;
+    }
 
     /**
      * @param string $old_version

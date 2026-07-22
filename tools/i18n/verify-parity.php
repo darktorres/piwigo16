@@ -22,6 +22,7 @@ function read_po_keys(string $poFile): array
         ->loadFile($poFile);
     $keys = [];
     foreach ($translations->getTranslations() as $t) {
+        /** @var \Gettext\Translation $t Translations::getTranslations() has no generic @return annotation */
         $orig = $t->getOriginal();
         if ($orig !== '') {
             $keys[$orig] = true;
@@ -32,6 +33,10 @@ function read_po_keys(string $poFile): array
         }
     }
 
+    // getOriginal(): string and getPlural(): ?string (Gettext\Translation) --
+    // every key assigned above is a real string, but PHPStan's accumulator
+    // inference across the loop widens $keys to array<true> anyway.
+    // @phpstan-ignore return.type
     return $keys;
 }
 
@@ -42,6 +47,7 @@ if ($root === false) {
 }
 $filterLocale = null;
 
+/** @var list<string> $argv register_argc_argv is always on for the CLI SAPI this script runs under */
 foreach ($argv as $arg) {
     if (str_starts_with($arg, '--root=')) {
         $root = substr($arg, 7);

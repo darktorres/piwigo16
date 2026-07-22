@@ -171,20 +171,17 @@ final class FeedController implements ControllerInterface
             }
         }
 
-        // recent_post_dates is a config array of per-notification-kind int
-        // settings (see include/config_default.inc.php); narrow the 'RSS'
-        // entry to the array<string, int> shape
-        // NotificationService::getRecentPostDatesArray() expects.
-        $recent_post_dates_conf = \Piwigo\Config\Config::recentPostDates();
-        $rss_recent_post_dates_raw = (is_array($recent_post_dates_conf) and is_array($recent_post_dates_conf['RSS'] ?? null))
-            ? $recent_post_dates_conf['RSS']
-            : [];
-        $rss_recent_post_dates_args = [];
-        foreach ($rss_recent_post_dates_raw as $arg_key => $arg_value) {
-            if (is_string($arg_key) and is_int($arg_value)) {
-                $rss_recent_post_dates_args[$arg_key] = $arg_value;
-            }
-        }
+        // Real bug found via PHPStan: Config::recentPostDates() was retyped
+        // to return a NotificationConfig object, but this caller still
+        // checked is_array() against it -- always false, so RSS recent-post-
+        // date limits always fell back to getRecentPostDatesArray()'s own
+        // hardcoded 3/3/3 defaults, ignoring any configured values.
+        $rss_config = \Piwigo\Config\Config::recentPostDates()->rss;
+        $rss_recent_post_dates_args = [
+            'max_dates' => $rss_config->maxDates,
+            'max_elements' => $rss_config->maxElements,
+            'max_cats' => $rss_config->maxCats,
+        ];
 
         /** @var array<int, array<string, mixed>> $dates */
         $dates = $notificationService->getRecentPostDatesArray($rss_recent_post_dates_args);

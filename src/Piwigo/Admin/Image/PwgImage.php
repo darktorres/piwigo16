@@ -83,6 +83,7 @@ class PwgImage
     public function __call(string $method, array $arguments): mixed
     {
         $image = $this->getImage();
+        // @phpstan-ignore method.dynamicName
         return $image->{$method}(...$arguments);
     }
 

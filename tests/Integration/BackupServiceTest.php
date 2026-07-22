@@ -80,11 +80,15 @@ final class BackupServiceTest extends IntegrationTestCase
 
         $imagesResult = $scratch->query(sprintf('SELECT COUNT(*) FROM `%simages`', $this->dbPrefix));
         self::assertInstanceOf(\mysqli_result::class, $imagesResult);
-        $imageCount = (int) $imagesResult->fetch_row()[0];
+        $imageRow = $imagesResult->fetch_row();
+        self::assertIsArray($imageRow);
+        $imageCount = (int) $imageRow[0];
 
         $usersResult = $scratch->query(sprintf('SELECT COUNT(*) FROM `%susers`', $this->dbPrefix));
         self::assertInstanceOf(\mysqli_result::class, $usersResult);
-        $userCount = (int) $usersResult->fetch_row()[0];
+        $userRow = $usersResult->fetch_row();
+        self::assertIsArray($userRow);
+        $userCount = (int) $userRow[0];
 
         self::assertGreaterThanOrEqual(1, $imageCount, 'Restored DB should have at least one image');
         self::assertGreaterThanOrEqual(1, $userCount, 'Restored DB should have at least one user');

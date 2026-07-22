@@ -657,6 +657,14 @@ SELECT
                         $prev_counter = $output_lines[$last_idx]['counter'];
                         $output_lines[$last_idx]['counter'] = $prev_counter + 1;
 
+                        // $output_lines elements are always built with the
+                        // full literal shape below (id/object/object_id/...)
+                        // -- PHPStan loses that precision once the array is
+                        // both grown (`$output_lines[] = [...]`) and mutated
+                        // by dynamic index in the same loop, widening every
+                        // field to optional. Verified safe: $last_idx only
+                        // reaches here after at least one element exists.
+                        // @phpstan-ignore offsetAccess.notFound
                         $prev_object_ids = $output_lines[$last_idx]['object_id'];
                         $prev_object_ids[] = $row_object_id;
                         $output_lines[$last_idx]['object_id'] = $prev_object_ids;
@@ -732,12 +740,14 @@ SELECT
         }
 
         foreach ($output_lines as $idx => $output_line) {
+            // @phpstan-ignore offsetAccess.notFound (see line 660's comment)
             if ($output_line['object'] === 'user') {
                 foreach ($output_line['object_id'] as $user_id) {
                     if (! is_string($user_id)) {
                         continue;
                     }
 
+                    // @phpstan-ignore offsetAccess.notFound (see line 660's comment)
                     $details = $output_lines[$idx]['details'];
 
                     $users = $details['users'] ?? [];
@@ -750,6 +760,7 @@ SELECT
                     $output_lines[$idx]['details'] = $details;
                 }
 
+                // @phpstan-ignore offsetAccess.notFound (see line 660's comment)
                 $details = $output_lines[$idx]['details'];
                 if (isset($details['users']) and is_array($details['users'])) {
                     $details['users_string'] = implode(', ', array_filter($details['users'], is_string(...)));
@@ -757,6 +768,7 @@ SELECT
                 }
             }
 
+            // @phpstan-ignore offsetAccess.notFound (see line 660's comment)
             $user_id_val = $output_lines[$idx]['user_id'];
             $user_id_key = is_string($user_id_val) ? $user_id_val : '';
             $output_lines[$idx]['username'] = 'user#' . $user_id_key;
@@ -1412,7 +1424,7 @@ SELECT
 
         $max_page = ceil(count($result) / 300);
         $result = array_reverse($result, true);
-        $result = array_slice($result, $param['pageNumber'] * 300, 300);
+        $result = array_slice($result, ($param['pageNumber'] ?? 0) * 300, 300);
 
         // always array: see the loop-invariant comment on 'guests_IP' above.
         $guests_ip_final = $summary['guests_IP'];
@@ -1423,11 +1435,9 @@ SELECT
 
             // we delete the "guest" from the $username_of hash so that it is
             // avoided in next steps
-            $guest_id = \Piwigo\Config\Config::guestId();
-            $guest_id_key = is_string($guest_id) || is_int($guest_id) ? $guest_id : null;
-            if ($guest_id_key !== null) {
-                unset($username_of[$guest_id_key]);
-            }
+            // Config::guestId() is SCHEMA-typed 'int' only.
+            $guest_id_key = \Piwigo\Config\Config::guestId();
+            unset($username_of[$guest_id_key]);
         }
 
         $summary['nb_members'] = count($username_of);

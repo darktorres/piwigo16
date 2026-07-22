@@ -247,7 +247,7 @@ SELECT
                 foreach ($images as $idx => $img) {
                     $image_cats = [];
 
-                    $image_id = $img['id'];
+                    $image_id = $img['id'] ?? null;
                     if (! is_int($image_id)) {
                         continue;
                     }
@@ -266,7 +266,7 @@ SELECT
                             [
                                 'category' => $details_for_category[$cat_id],
                                 'image_id' => $image_id,
-                                'image_file' => $img['file'],
+                                'image_file' => $img['file'] ?? null,
                             ]
                         );
 

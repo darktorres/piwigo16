@@ -30,6 +30,11 @@ final class DbPatchRegistry
     /**
      * @var array<string, class-string<DbPatchInterface>>
      */
+    // Every PatchNN class from 61-181 verified to `implements
+    // DbPatchInterface`; PHPStan's class-string<T> narrowing doesn't scale
+    // through a 121-entry array literal and widens to plain class-string
+    // for the constant as a whole.
+    // @phpstan-ignore classConstant.value
     private const array PATCHES = [
         '61' => Patch61::class,
         '62' => Patch62::class,

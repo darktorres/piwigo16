@@ -164,8 +164,9 @@ final readonly class HistoryService
                 $this->configService->confUpdateParam('history_sections_cache', $this->repo->getSectionEnumOptions(), true);
             }
 
+            // Config::historySectionsCache() already unserializes internally
+            // and returns list<string>|null -- no further decoding needed.
             $cachedSections = \Piwigo\Config\Config::historySectionsCache();
-            $cachedSections = is_string($cachedSections) || is_array($cachedSections) ? \Piwigo\Core\ArrayHelper::safeUnserialize($cachedSections) : null;
             if (! is_array($cachedSections)) {
                 $cachedSections = $this->repo->getSectionEnumOptions();
             }

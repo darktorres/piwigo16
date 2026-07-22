@@ -39,10 +39,11 @@ final class DeviceHelper
     public static function mobileTheme(): bool
     {
 
+        // Config::mobilTheme() is SCHEMA-typed 'string' only (never null/int/
+        // float/bool/array) -- '' and '0' are the only two of empty()'s
+        // falsy cases a string value can actually satisfy.
         $mobile_theme_conf = \Piwigo\Config\Config::mobilTheme();
-        if ($mobile_theme_conf === null || $mobile_theme_conf === '' || $mobile_theme_conf === 0
-            || $mobile_theme_conf === 0.0 || $mobile_theme_conf === '0' || $mobile_theme_conf === false
-            || $mobile_theme_conf === []) {
+        if ($mobile_theme_conf === '' || $mobile_theme_conf === '0') {
             return false;
         }
 

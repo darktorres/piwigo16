@@ -48,11 +48,17 @@ final class Patch112 implements DbPatchInterface
 
         $dir = CurrentPaths::get()->local . 'combined/';
         if (is_dir($dir)) {
-            foreach (glob($dir . '*.css') as $file) {
-                @unlink($file);
+            $cssFiles = glob($dir . '*.css');
+            if ($cssFiles !== false) {
+                foreach ($cssFiles as $file) {
+                    @unlink($file);
+                }
             }
-            foreach (glob($dir . '*.js') as $file) {
-                @unlink($file);
+            $jsFiles = glob($dir . '*.js');
+            if ($jsFiles !== false) {
+                foreach ($jsFiles as $file) {
+                    @unlink($file);
+                }
             }
             @unlink($dir . 'index.htm');
             @rmdir($dir);

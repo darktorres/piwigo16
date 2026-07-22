@@ -20,6 +20,7 @@ if ($root === false) {
     fwrite(STDERR, "Could not resolve the current working directory.\n");
     exit(1);
 }
+/** @var list<string> $argv register_argc_argv is always on for the CLI SAPI this script runs under */
 $dryRun = in_array('--dry-run', $argv, true);
 
 foreach ($argv as $arg) {

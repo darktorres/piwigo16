@@ -122,17 +122,10 @@ final class StatsPageRenderer
         $lang_month = \Piwigo\Core\Lang::months();
         ksort($lang_month);
 
-        // \Piwigo\Config\Config::statCompareYearDisplayed() can come back as a numeric string
-        // when overridden from the config table (see load_conf_from_db()), or the
-        // int default from config_default.inc.php; narrow it once to the 'all'|int
-        // shape getMonthOfLastYears() expects.
+        // Config::statCompareYearDisplayed() is SCHEMA-typed 'int' only (no
+        // 'all' sentinel) -- getMonthOfLastYears()'s own 'all' default is
+        // unreachable from this call site, not dead code to resurrect here.
         $stat_compare_year_displayed = \Piwigo\Config\Config::statCompareYearDisplayed();
-        if (is_numeric($stat_compare_year_displayed)) {
-        } elseif ($stat_compare_year_displayed === 'all') {
-            $stat_compare_year_displayed = 'all';
-        } else {
-            $stat_compare_year_displayed = 5;
-        }
 
         $template->assign([
             'compareYears' => self::getMonthOfLastYears($conn, $stat_compare_year_displayed),

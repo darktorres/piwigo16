@@ -82,7 +82,7 @@ final class Patch108 implements DbPatchInterface
                 // update local file (delete lines)
                 $local_config = file($local_file);
                 $new_local_config = [];
-                foreach ($local_config as $line) {
+                foreach ($local_config !== false ? $local_config : [] as $line) {
                     if (! str_contains($line, 'order_by')) {
                         $new_local_config[] = $line;
                     }

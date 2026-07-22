@@ -309,8 +309,8 @@ DELETE FROM phpwebgallery_group_access
 
         ];
 
-        foreach ($queries as $query) {
-            $query = str_replace('phpwebgallery_', Config::dbPrefix(), $query);
+        foreach ($queries as $queryTemplate) {
+            $query = str_replace('phpwebgallery_', Config::dbPrefix(), $queryTemplate);
             $conn->executeStatement($query);
         }
 

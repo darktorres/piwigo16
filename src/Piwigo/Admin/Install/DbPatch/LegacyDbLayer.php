@@ -45,6 +45,10 @@ final class LegacyDbLayer
             return $conf;
         })();
 
+        // database.inc.php is a site-local file outside this codebase;
+        // PHPStan can't see the include's effect on $conf and treats it as
+        // permanently empty.
+        // @phpstan-ignore function.impossibleType
         return is_string($localConf['dblayer'] ?? null) ? $localConf['dblayer'] : 'mysqli';
     }
 }

@@ -109,7 +109,7 @@ final readonly class ExtensionUpdateChecker
                 continue;
             }
 
-            $ignoredForType = $updatesIgnored[$type->value] ?? null;
+            $ignoredForType = $updatesIgnored[$type->updatesIgnoredKey()] ?? null;
             $ignoredForType = is_array($ignoredForType) ? $ignoredForType : [];
 
             $ignoreList = [];
@@ -122,7 +122,7 @@ final readonly class ExtensionUpdateChecker
                 $revisionNameRaw = $data['server']['revision_name'] ?? null;
                 $_SESSION['extensions_need_update'][$type->value][$extId] = is_string($revisionNameRaw) ? $revisionNameRaw : '';
             }
-            $updatesIgnored[$type->value] = $ignoreList;
+            $updatesIgnored[$type->updatesIgnoredKey()] = $ignoreList;
         }
 
         \Piwigo\Config\Config::override('updates_ignored', $updatesIgnored);

@@ -46,6 +46,24 @@ enum ExtensionType: string
         };
     }
 
+    /**
+     * This type's key in Config::updatesIgnored()'s
+     * array{plugins: list<string>, themes: list<string>, languages: list<string>}
+     * shape -- plural, unlike $this->value (singular). Real bug found via
+     * PHPStan: ExtensionUpdateChecker::checkExtensions() used to index that
+     * array with $type->value directly, silently missing every read/write
+     * (the ignore-list feature never actually excluded anything, and every
+     * run persisted stray singular-keyed junk alongside the real data).
+     */
+    public function updatesIgnoredKey(): string
+    {
+        return match ($this) {
+            self::Plugin => 'plugins',
+            self::Theme => 'themes',
+            self::Language => 'languages',
+        };
+    }
+
     public function scanDirectory(): string
     {
         return match ($this) {

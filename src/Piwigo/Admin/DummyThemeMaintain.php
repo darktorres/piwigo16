@@ -32,6 +32,7 @@ class DummyThemeMaintain extends ThemeMaintain
     {
         // @phpstan-ignore function.impossibleType
         if (is_callable('theme_activate')) {
+            // @phpstan-ignore function.notFound
             return theme_activate($this->theme_id, $theme_version, $errors);
         }
 
@@ -43,6 +44,7 @@ class DummyThemeMaintain extends ThemeMaintain
     {
         // @phpstan-ignore function.impossibleType
         if (is_callable('theme_deactivate')) {
+            // @phpstan-ignore function.notFound
             return theme_deactivate($this->theme_id);
         }
 
@@ -54,6 +56,7 @@ class DummyThemeMaintain extends ThemeMaintain
     {
         // @phpstan-ignore function.impossibleType
         if (is_callable('theme_delete')) {
+            // @phpstan-ignore function.notFound
             return theme_delete($this->theme_id);
         }
 

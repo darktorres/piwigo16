@@ -327,6 +327,8 @@ final class DerivativeImage
         if ((bool) $size) {
             return 'width:' . $size[0] . 'px; height:' . $size[1] . 'px';
         }
+
+        return '';
     }
 
     /**
@@ -340,6 +342,8 @@ final class DerivativeImage
         if ((bool) $size) {
             return 'width="' . $size[0] . '" height="' . $size[1] . '"';
         }
+
+        return '';
     }
 
     /**
@@ -353,6 +357,8 @@ final class DerivativeImage
         if ((bool) $size) {
             return $size[0] . ' x ' . $size[1];
         }
+
+        return '';
     }
 
     /**
@@ -392,6 +398,8 @@ final class DerivativeImage
         if ((bool) $size) {
             return 'width="' . $size[0] . '" height="' . $size[1] . '"';
         }
+
+        return '';
     }
 
     public function is_cached(): bool

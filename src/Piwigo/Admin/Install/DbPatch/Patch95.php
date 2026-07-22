@@ -41,7 +41,7 @@ final class Patch95 implements DbPatchInterface
         // Add column
         $query = 'ALTER TABLE ' . Tables::userCacheCategories() . ' ADD COLUMN ';
 
-        if ($dblayer === 'mysql') {
+        if (in_array($dblayer, ['mysql', 'mysqli'], true)) {
             $query .= ' `user_representative_picture_id` mediumint(8) unsigned default NULL';
         }
 

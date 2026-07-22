@@ -130,7 +130,6 @@ class PwgRestEncoder extends PwgResponseEncoder
     public function encode(mixed $data, array $xml_attributes = []): void
     {
         switch (gettype($data)) {
-            case 'null':
             case 'NULL':
                 $this->writer()
                     ->write_content('');

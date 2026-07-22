@@ -39,7 +39,7 @@ final class Patch101 implements DbPatchInterface
         $dblayer = LegacyDbLayer::value();
 
         // add column
-        if ($dblayer === 'mysql') {
+        if (in_array($dblayer, ['mysql', 'mysqli'], true)) {
             $conn->executeStatement('
     ALTER TABLE ' . Tables::userInfos() . '
       ADD COLUMN `nb_image_page` smallint(3) unsigned NOT NULL default \'15\'

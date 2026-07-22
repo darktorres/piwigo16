@@ -68,6 +68,7 @@ SELECT language, COUNT(user_id) AS count FROM ' . Tables::userInfos() . '
   GROUP BY language';
         foreach ($conn->fetchAllAssociative($query) as $row) {
             $language = is_scalar($row['language']) ? (string) $row['language'] : '';
+            $count = is_scalar($row['count']) ? (string) $row['count'] : '';
             $lang_def = explode('.', $language);
             if (count($lang_def) == 2) {
                 $new_lang = $lang_def[0];
@@ -81,7 +82,7 @@ SELECT language, COUNT(user_id) AS count FROM ' . Tables::userInfos() . '
                 'new_lang' => $new_lang,
                 'charset' => $charset,
             ];
-            $upgrade_log .= ">>user_lang\t" . $language . "\t" . $row['count'] . "\n";
+            $upgrade_log .= ">>user_lang\t" . $language . "\t" . $count . "\n";
         }
         $upgrade_log .= "\n";
 

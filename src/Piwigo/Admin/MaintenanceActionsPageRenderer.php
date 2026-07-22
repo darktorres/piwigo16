@@ -92,11 +92,12 @@ final class MaintenanceActionsPageRenderer
         // \Piwigo\Config\Config::cacheSizes() is a serialized 4-row [name, value] list produced by
         // ws_getCacheSize() (cache_size, msizes, tsizes, last_date_calc); row 3's
         // value is the last_date_calc date string used for time_since().
-        $cache_sizes_raw = \Piwigo\Config\Config::cacheSizes() ?? null;
-        $cache_sizes = is_string($cache_sizes_raw) ? unserialize($cache_sizes_raw) : null;
-        if (! is_array($cache_sizes)) {
-            $cache_sizes = null;
-        }
+        // Real bug found via PHPStan: Config::cacheSizes() already unserializes
+        // internally and returns array|null, so the is_string()/unserialize()
+        // dance that used to live here was permanently dead -- $cache_sizes was
+        // always null, meaning $time_elapsed_since_last_calc below never
+        // actually populated.
+        $cache_sizes = \Piwigo\Config\Config::cacheSizes();
         $time_elapsed_since_last_calc = null;
         if ($cache_sizes !== null) {
             $last_calc_row = $cache_sizes[3] ?? null;

@@ -615,22 +615,20 @@ final class NotificationByMailSender
 
                                 $nbmSendRecentPostDates = \Piwigo\Config\Config::nbmSendRecentPostDates();
                                 if ($nbmSendHtmlMail and $nbmSendRecentPostDates) {
-                                    // recent_post_dates is a config array of
-                                    // per-notification-kind int settings (see
-                                    // include/config_default.inc.php); narrow the
-                                    // 'NBM' entry to the array<string, int> shape
-                                    // NotificationService::getRecentPostDatesArray()
-                                    // expects.
-                                    $recentPostDatesConf = \Piwigo\Config\Config::recentPostDates();
-                                    $nbmRecentPostDatesRaw = (is_array($recentPostDatesConf) and is_array($recentPostDatesConf['NBM'] ?? null))
-                                        ? $recentPostDatesConf['NBM']
-                                        : [];
-                                    $nbmRecentPostDatesArgs = [];
-                                    foreach ($nbmRecentPostDatesRaw as $argKey => $argValue) {
-                                        if (is_string($argKey) and is_int($argValue)) {
-                                            $nbmRecentPostDatesArgs[$argKey] = $argValue;
-                                        }
-                                    }
+                                    // Real bug found via PHPStan (same shape as
+                                    // FeedController's RSS equivalent):
+                                    // Config::recentPostDates() returns a typed
+                                    // NotificationConfig object, not a raw array --
+                                    // the old is_array() check here was always
+                                    // false, so NBM recent-post-date limits always
+                                    // fell back to getRecentPostDatesArray()'s own
+                                    // hardcoded 3/3/3 defaults.
+                                    $nbmConfig = \Piwigo\Config\Config::recentPostDates()->nbm;
+                                    $nbmRecentPostDatesArgs = [
+                                        'max_dates' => $nbmConfig->maxDates,
+                                        'max_elements' => $nbmConfig->maxElements,
+                                        'max_cats' => $nbmConfig->maxCats,
+                                    ];
 
                                     $recentPostDates = $this->notificationService->getRecentPostDatesArray($nbmRecentPostDatesArgs);
                                     foreach ($recentPostDates as $dateDetail) {

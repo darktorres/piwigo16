@@ -109,13 +109,11 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         $this->cssLoader = new CssLoader();
         $this->smarty = new Smarty();
         $this->smarty->escape_html = false;
-        // config_default.inc.php ships these as plain bool, but Smarty's own
-        // $debugging accepts bool|int -- a hand-edited config is allowed to
-        // set debug_template=2 for Smarty's "per-template debug window"
-        // mode (vendor/smarty/smarty/src/Smarty.php), so int must survive
-        // as-is and only non-int values fall back to a bool coercion.
-        $debug_template = \Piwigo\Config\Config::debugTemplate();
-        $this->smarty->debugging = is_int($debug_template) ? $debug_template : $debug_template;
+        // Config::debugTemplate() is SCHEMA-typed 'bool' only -- the
+        // int=2 "per-template debug window" mode Smarty's own $debugging
+        // property supports (vendor/smarty/smarty/src/Smarty.php) isn't a
+        // reachable value here, so no is_int() passthrough is needed.
+        $this->smarty->debugging = \Piwigo\Config\Config::debugTemplate();
         if (! (bool) $this->smarty->debugging) {
             $this->smarty->error_reporting = error_reporting() & ~E_NOTICE;
         }
@@ -764,6 +762,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
             // qualified so it keeps failing the same way, not silently
             // resolving to a new Piwigo\Template\Smarty_Internal_Debug
             // lookup).
+            // @phpstan-ignore class.notFound
             \Smarty_Internal_Debug::display_debug($this->smarty);
         }
     }
@@ -780,6 +779,10 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
             if (($str[0] == '\'' && $str[strlen($str) - 1] == '\'')
               || ($str[0] == '"' && $str[strlen($str) - 1] == '"')) {
                 eval('$tmp=' . $str . ';');
+                // Same eval() blind spot as prefilter_white_space() below:
+                // PHPStan treats variables only ever assigned inside eval()
+                // as undefined in the enclosing scope.
+                // @phpstan-ignore variable.undefined
                 return $tmp;
             }
         }
@@ -1357,7 +1360,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
                 // as undefined in the enclosing scope (it doesn't parse the
                 // evaluated string) -- there's no provable guard possible,
                 // this is a genuine static-analysis blind spot on eval().
-                // @phpstan-ignore cast.string, isset.variable
+                // @phpstan-ignore cast.string, isset.variable, variable.undefined
                 return isset($tmp) ? (string) $tmp : '';
             },
             $source

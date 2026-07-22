@@ -562,7 +562,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $user['id'] = $userId;
         $user = array_merge($user, $this->getUserData($userId, $useCache));
 
-        if ($user['id'] == \Piwigo\Config\Config::guestId() and $user['status'] != 'guest') {
+        if ($user['id'] == \Piwigo\Config\Config::guestId() and ($user['status'] ?? null) != 'guest') {
             $user['status'] = 'guest';
             $internal_status = $user['internal_status'] ?? [];
             if (! is_array($internal_status)) {

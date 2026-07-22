@@ -32,6 +32,7 @@ class DummyPluginMaintain extends PluginMaintain
     {
         // @phpstan-ignore function.impossibleType
         if (is_callable('plugin_install')) {
+            // @phpstan-ignore function.notFound
             return plugin_install($this->plugin_id, $plugin_version, $errors);
         }
 
@@ -46,6 +47,7 @@ class DummyPluginMaintain extends PluginMaintain
     {
         // @phpstan-ignore function.impossibleType
         if (is_callable('plugin_activate')) {
+            // @phpstan-ignore function.notFound
             return plugin_activate($this->plugin_id, $plugin_version, $errors);
         }
 
@@ -57,6 +59,7 @@ class DummyPluginMaintain extends PluginMaintain
     {
         // @phpstan-ignore function.impossibleType
         if (is_callable('plugin_deactivate')) {
+            // @phpstan-ignore function.notFound
             return plugin_deactivate($this->plugin_id);
         }
 
@@ -68,6 +71,7 @@ class DummyPluginMaintain extends PluginMaintain
     {
         // @phpstan-ignore function.impossibleType
         if (is_callable('plugin_uninstall')) {
+            // @phpstan-ignore function.notFound
             return plugin_uninstall($this->plugin_id);
         }
 

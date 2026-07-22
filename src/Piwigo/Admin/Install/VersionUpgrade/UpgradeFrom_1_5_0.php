@@ -422,7 +422,8 @@ SELECT id, keywords
         foreach ($conn->fetchAllAssociative($query) as $row) {
             $keywords = is_scalar($row['keywords']) ? (string) $row['keywords'] : '';
             $image_id = is_scalar($row['id']) ? (string) $row['id'] : '';
-            foreach (preg_split('/[,]+/', $keywords) as $keyword) {
+            $keywordParts = preg_split('/[,]+/', $keywords);
+            foreach ($keywordParts !== false ? $keywordParts : [] as $keyword) {
                 if (! isset($tag_id[$keyword])) {
                     $tag_id[$keyword] = $current_id++;
                 }
@@ -439,11 +440,11 @@ SELECT id, keywords
         }
 
         $datas = [];
-        foreach ($tag_id as $tag_name => $tag_id) {
+        foreach ($tag_id as $tag_name => $currentTagId) {
             array_push(
                 $datas,
                 [
-                    'id' => $tag_id,
+                    'id' => $currentTagId,
                     'name' => $tag_name,
                     'url_name' => StringHelper::str2url($tag_name),
                 ]
@@ -460,12 +461,12 @@ SELECT id, keywords
         }
 
         $datas = [];
-        foreach ($tag_images as $tag_id => $images) {
+        foreach ($tag_images as $currentTagId => $images) {
             foreach (array_unique($images) as $image_id) {
                 array_push(
                     $datas,
                     [
-                        'tag_id' => $tag_id,
+                        'tag_id' => $currentTagId,
                         'image_id' => $image_id,
                     ]
                 );

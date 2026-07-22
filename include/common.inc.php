@@ -58,6 +58,14 @@ declare(strict_types=1);
  *      order), the same intent the former defined('PHPWG_ROOT_PATH')
  *      guard had.
  */
+// The @var tag above tells PHPStan $paths is always Piwigo\Core\Paths here,
+// which makes this guard look dead -- but the whole point of the guard is
+// to catch the real-world case where that promise is violated (this file
+// included out of order, or requested directly). Removing the @var would
+// just break every other $paths-typed read in this file instead (trigger_
+// error(..., E_USER_ERROR) isn't a narrowing construct PHPStan recognizes,
+// so nothing downstream would stay typed). Keep the real runtime check.
+// @phpstan-ignore isset.variable, booleanOr.alwaysFalse, instanceof.alwaysTrue
 if (! isset($paths) || ! $paths instanceof \Piwigo\Core\Paths) {
     trigger_error('Hacking attempt!', E_USER_ERROR);
 }

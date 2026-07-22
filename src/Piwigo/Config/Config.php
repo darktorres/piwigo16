@@ -3425,8 +3425,23 @@ final class Config
                 'default' => false,
             ],
         ];
-        $v = self::src()['default_filters_views'] ?? $default;
-        return is_array($v) ? $v : $default;
+        $v = self::src()['default_filters_views'] ?? null;
+        if (! is_array($v)) {
+            return $default;
+        }
+        $result = [];
+        foreach ($default as $key => $defaultEntry) {
+            $entry = $v[$key] ?? null;
+            if (is_array($entry) && is_string($entry['access'] ?? null) && is_bool($entry['default'] ?? null)) {
+                $result[$key] = [
+                    'access' => $entry['access'],
+                    'default' => $entry['default'],
+                ];
+            } else {
+                $result[$key] = $defaultEntry;
+            }
+        }
+        return $result;
     }
 
     public static function derivatives(): ?string
@@ -3488,14 +3503,18 @@ final class Config
     public static function updateNotifyLastNotification(): ?array
     {
         $v = self::src()['update_notify_last_notification'] ?? null;
-        if (is_array($v)) {
-            return $v;
-        }
-        if (! is_string($v)) {
+        $arr = is_string($v) ? \Piwigo\Core\ArrayHelper::safeUnserialize($v) : $v;
+        if (! is_array($arr)) {
             return null;
         }
-        $unserialized = \Piwigo\Core\ArrayHelper::safeUnserialize($v);
-        return is_array($unserialized) ? $unserialized : null;
+        $result = [];
+        if (array_key_exists('version', $arr)) {
+            $result['version'] = $arr['version'];
+        }
+        if (array_key_exists('notified_on', $arr)) {
+            $result['notified_on'] = $arr['notified_on'];
+        }
+        return $result;
     }
 
     /**

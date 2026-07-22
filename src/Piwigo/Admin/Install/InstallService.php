@@ -66,7 +66,7 @@ final class InstallService
                 $query = str_replace($replaced, $replacing, $query);
                 // we don't execute "DROP TABLE" queries
                 if (! (bool) preg_match('/^DROP TABLE/i', $query)) {
-                    if ($dblayer == 'mysql') {
+                    if (in_array($dblayer, ['mysql', 'mysqli'], true)) {
                         if ((bool) preg_match('/^(CREATE TABLE .*)[\s]*;[\s]*/im', $query, $matches)) {
                             $query = $matches[1] . ' DEFAULT CHARACTER SET utf8;';
                         }

@@ -24,6 +24,7 @@ function extract_plural_pairs(string $root): array
     );
 
     foreach ($files as $file) {
+        /** @var \SplFileInfo $file RecursiveDirectoryIterator always yields SplFileInfo */
         if (! $file->isFile() || $file->getExtension() !== 'php') {
             continue;
         }

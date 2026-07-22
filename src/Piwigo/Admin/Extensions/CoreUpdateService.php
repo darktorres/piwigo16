@@ -180,7 +180,7 @@ final readonly class CoreUpdateService
             $notify = true;
         } else {
             $lastNotificationSetting = \Piwigo\Config\Config::updateNotifyLastNotification();
-            $lastNotificationRaw = (is_array($lastNotificationSetting) || is_string($lastNotificationSetting))
+            $lastNotificationRaw = is_array($lastNotificationSetting)
                 ? \Piwigo\Core\ArrayHelper::safeUnserialize($lastNotificationSetting)
                 : false;
             $lastNotificationData = is_array($lastNotificationRaw) ? $lastNotificationRaw : [];

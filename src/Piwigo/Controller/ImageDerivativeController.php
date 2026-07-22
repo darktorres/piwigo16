@@ -435,7 +435,9 @@ final class ImageDerivativeController implements ControllerInterface
         }
 
         if ((bool) $params->sharpen) {
-            $changes += $image->sharpen($params->sharpen);
+            if ($image->sharpen($params->sharpen)) {
+                $changes++;
+            }
             $timing['sharpen'] = $this->timeStep($step);
         }
 

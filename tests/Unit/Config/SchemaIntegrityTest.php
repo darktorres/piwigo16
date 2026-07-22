@@ -52,7 +52,9 @@ test('every zero-arg public static accessor has a SCHEMA entry', function (): vo
 test('custom flag matches which side of the accessor sentinel the method lives on', function (): void {
     $reflection = new ReflectionClass(Config::class);
     $sourceLines = file((string) $reflection->getFileName());
-    expect($sourceLines)->not->toBeFalse();
+    if ($sourceLines === false) {
+        throw new \RuntimeException('Unable to read ' . $reflection->getFileName());
+    }
 
     $endSentinelLine = null;
     foreach ($sourceLines as $lineNo => $text) {

@@ -24,6 +24,10 @@ test('constructor defaults version to 0 and is_template to false', function (): 
 test('a null path leaves path unset (well-known path filled in later)', function (): void {
     $combinable = new Combinable('jquery.ui.widget', null);
 
+    // Combinable::$path is a typed, non-nullable property with no default --
+    // genuinely uninitialized (not null) here, which is exactly what this
+    // test verifies. PHPStan doesn't model that state for isset().
+    // @phpstan-ignore isset.property
     expect(isset($combinable->path))->toBeFalse();
 });
 

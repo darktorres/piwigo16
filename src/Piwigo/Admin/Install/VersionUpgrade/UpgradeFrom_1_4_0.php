@@ -188,8 +188,8 @@ CREATE TABLE piwigo_user_infos (
 ;",
         ];
 
-        foreach ($queries as $query) {
-            $query = str_replace('piwigo_', Config::dbPrefix(), $query);
+        foreach ($queries as $queryTemplate) {
+            $query = str_replace('piwigo_', Config::dbPrefix(), $queryTemplate);
             $conn->executeStatement($query);
         }
 

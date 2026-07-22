@@ -38,7 +38,7 @@ final class Patch100 implements DbPatchInterface
     {
         $dblayer = LegacyDbLayer::value();
 
-        if ($dblayer === 'mysql') {
+        if (in_array($dblayer, ['mysql', 'mysqli'], true)) {
             $query = 'ALTER TABLE ' . Tables::images() . '
     ADD COLUMN `high_width` smallint(9) unsigned default NULL,
     ADD COLUMN `high_height` smallint(9) unsigned default NULL;';
@@ -50,6 +50,11 @@ final class Patch100 implements DbPatchInterface
     ADD COLUMN "high_height" INTEGER;';
         }
 
+        // LegacyDbLayer::value() only ever produces one of the 5 values
+        // checked above (mysql/mysqli/pgsql/sqlite/pdo-sqlite) anywhere in
+        // this codebase, so $query is always set in practice; PHPStan can't
+        // prove that from value()'s unbounded `string` return type.
+        // @phpstan-ignore variable.undefined
         $conn->executeStatement($query);
 
         echo "\n"

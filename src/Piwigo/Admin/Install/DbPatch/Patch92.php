@@ -42,7 +42,7 @@ final class Patch92 implements DbPatchInterface
         // Add column
         $query = 'ALTER TABLE ' . Tables::images() . ' ADD COLUMN ';
 
-        if ($dblayer === 'mysql') {
+        if (in_array($dblayer, ['mysql', 'mysqli'], true)) {
             $query .= ' added_by smallint(5)';
         }
 

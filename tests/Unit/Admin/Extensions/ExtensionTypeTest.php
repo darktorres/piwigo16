@@ -31,6 +31,12 @@ test('configCategoryKey returns each type\'s own pem category conf key', functio
         ->and(ExtensionType::Language->configCategoryKey())->toBe('pem_languages_category');
 });
 
+test('updatesIgnoredKey returns each type\'s plural Config::updatesIgnored() key', function (): void {
+    expect(ExtensionType::Plugin->updatesIgnoredKey())->toBe('plugins')
+        ->and(ExtensionType::Theme->updatesIgnoredKey())->toBe('themes')
+        ->and(ExtensionType::Language->updatesIgnoredKey())->toBe('languages');
+});
+
 test('scanDirectory returns each type\'s own filesystem root', function (): void {
     // P23 batch 8f-4: the PHPWG_PLUGINS_PATH define is gone --
     // Piwigo\Admin\PluginLoader::pluginsPath() is the canonical value now.

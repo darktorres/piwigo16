@@ -444,7 +444,7 @@ SELECT COUNT(*)
             }
         }
 
-        $release_note_url = PHPWG_URL . '/releases/' . $whats_new_major_version . '.0.0';
+        $release_note_url = AppInfo::URL . '/releases/' . $whats_new_major_version . '.0.0';
 
         $whats_new_imgs = [
             '1' => 'https://upstream.example.invalid/whats-new-1.png',

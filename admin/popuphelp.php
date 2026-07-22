@@ -28,6 +28,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Bootstrap\RequestPipeline;
+use Piwigo\Core\AdminContext;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Http\RequestFactory;
@@ -36,7 +37,7 @@ use Piwigo\Routing\Router;
 
 $paths = Paths::fromRoot(dirname(__DIR__));
 RequestMountDepth::set(1);
-define('IN_ADMIN', true);
+AdminContext::mark();
 include_once $paths->root . 'include/common.inc.php';
 
 CommonBootstrap::run($paths);

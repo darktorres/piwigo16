@@ -45,7 +45,7 @@ final readonly class NoPhotoYetRenderer
     public function render(): void
     {
         if (
-            ! defined('IN_ADMIN')   // no message inside administration
+            ! \Piwigo\Core\AdminContext::isActive()   // no message inside administration
             and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'identification' // keep the ability to login
             and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'password'       // keep the ability to reset password
             and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws'             // keep the ability to discuss with web API

@@ -206,7 +206,7 @@ final class UrlService implements UrlServiceInterface
     public function addUrlParams(string $url, array $params, string $argSeparator = '&amp;'): string
     {
         if ($params !== []) {
-            if (defined('IN_WS') and $argSeparator === '&amp;') {
+            if (\Piwigo\Core\WsContext::isActive() and $argSeparator === '&amp;') {
                 $argSeparator = '&';
             }
 

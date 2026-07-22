@@ -81,20 +81,18 @@ include $paths->root . 'include/env.inc.php';
 // instead of relying on a `global $t2;` bridge.
 \Piwigo\Bootstrap\RequestBootstrap::configure($paths, $t2);
 
-defined('PHPWG_INSTALLED') or define('PHPWG_INSTALLED', true);
+\Piwigo\Core\InstallationFlag::mark();
 
 // error collector, session save handler, DB connection,
 // DB-backed config, logger, plugins, current-user resolution
 \Piwigo\Bootstrap\RequestBootstrap::connect();
 
-// This fork does not call back to the real piwigo.org — upstream.example.invalid
-// (.invalid TLD per RFC 2606, guaranteed not to resolve) stops it from sending
-// telemetry or fetching news/updates/merged-extension lists from the upstream
-// server, and makes any accidental outbound call fail fast (DNS failure) rather
-// than hang waiting on a real, possibly rate-limiting host.
-define('PHPWG_DOMAIN', 'upstream.example.invalid');
-define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
-define('PEM_URL', \Piwigo\Bootstrap\RequestBootstrap::pemUrl());
+// Legacy Coupling Retirement gap-closure (entry-shell define()/include
+// round, Part 0b): the former PHPWG_DOMAIN/PHPWG_URL/PEM_URL define()s
+// are gone -- every real reader now goes through Piwigo\Core\AppInfo::
+// DOMAIN/URL (fixed consts) or Bootstrap\RequestBootstrap::pemUrl()
+// (computed fresh at each read site; cheap and side-effect-free, so no
+// per-request cache is needed the way Piwigo\Core\CurrentPaths needs one).
 
 // language loading, auth-key messages, template creation, request filter,
 // default event handlers, trigger_notify('init')

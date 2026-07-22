@@ -108,11 +108,11 @@ final class ProfileFormHandler
             $_POST['language'] = self::userService($conn)->getDefaultLanguage();
         }
 
-        if (! defined('IN_ADMIN')) {
+        if (! \Piwigo\Core\AdminContext::isActive()) {
             unset($_POST['username']);
         }
 
-        if (\Piwigo\Config\Config::allowUserCustomization() or defined('IN_ADMIN')) {
+        if (\Piwigo\Config\Config::allowUserCustomization() or \Piwigo\Core\AdminContext::isActive()) {
             $int_pattern = '/^\d+$/';
             $nb_image_page = $_POST['nb_image_page'] ?? null;
             $nb_image_page_is_empty = $nb_image_page === null || $nb_image_page === '' || $nb_image_page === '0'
@@ -166,7 +166,7 @@ final class ProfileFormHandler
                 $errors[] = Lang::t('The passwords do not match');
             }
 
-            if (! defined('IN_ADMIN')) {// changing password requires old password
+            if (! \Piwigo\Core\AdminContext::isActive()) {// changing password requires old password
                 $query = '
   SELECT ' . $user_fields['password'] . ' AS password
     FROM ' . Tables::users() . '
@@ -263,7 +263,7 @@ final class ProfileFormHandler
                 $activity_details_tables[] = 'users';
             }
 
-            if (\Piwigo\Config\Config::allowUserCustomization() or defined('IN_ADMIN')) {
+            if (\Piwigo\Config\Config::allowUserCustomization() or \Piwigo\Core\AdminContext::isActive()) {
                 // update user "additional" informations (specific to Piwigo)
                 $fields = [
                     'nb_image_page', 'language',
@@ -359,7 +359,7 @@ final class ProfileFormHandler
 
         $special_user = in_array($userdata['id'], [\Piwigo\Config\Config::guestId(), \Piwigo\Config\Config::defaultUserId()], true);
         $template->assign('SPECIAL_USER', $special_user);
-        $template->assign('IN_ADMIN', defined('IN_ADMIN'));
+        $template->assign('IN_ADMIN', \Piwigo\Core\AdminContext::isActive());
 
         // api key expiration choice
         $conn = DbConnection::build();

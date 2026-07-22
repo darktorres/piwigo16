@@ -254,7 +254,7 @@ final class MaintenanceActionDispatcher
 
             case 'check_upgrade':
 
-                $result = HttpClientService::fetch(PHPWG_URL . '/download/latest_version');
+                $result = HttpClientService::fetch(AppInfo::URL . '/download/latest_version');
                 if ($result === false) {
                     \Piwigo\Core\PageState::current()->addError(Lang::t('Unable to check for upgrade.'));
                 } else {

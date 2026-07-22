@@ -838,7 +838,7 @@ final class MailService implements MailerInterface
                             ->addUrlParams($galleryHomeUrl, $addUrlParams),
                         'GALLERY_TITLE' => \Piwigo\Config\Config::galleryTitle(),
                         'VERSION' => ((bool) (\Piwigo\Config\Config::showVersion())) ? AppInfo::VERSION : '',
-                        'PHPWG_URL' => defined('PHPWG_URL') ? PHPWG_URL : '',
+                        'PHPWG_URL' => AppInfo::URL,
                         'CONTENT_ENCODING' => \Piwigo\Core\CharsetHelper::getPwgCharset(),
                         'CONTACT_MAIL' => $confMail['email_webmaster'],
                     ]

@@ -149,11 +149,7 @@ final class PluginsNewPageRenderer
             $beta_test = true;
         }
 
-        // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl()) in
-        // one branch of include/common.inc.php, so PHPStan can't prove it's a
-        // string across that file boundary -- narrow it once here (same pattern as
-        // plugins.class.php::extract_plugin_files()).
-        $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
+        $pem_base_url = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
 
         $fs_plugin_ids = [];
         foreach ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService) as $fs_plugin) {

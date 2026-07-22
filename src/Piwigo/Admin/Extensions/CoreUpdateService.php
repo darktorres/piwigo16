@@ -23,7 +23,7 @@ use Piwigo\Mail\MailService;
  * concern from the PEM extension catalog (PemCatalog/ExtensionScanner/
  * ExtensionLifecycle) -- updates.class.php's own get_piwigo_new_versions()/
  * notify_piwigo_new_versions()/upgrade_to() never touch the plugins/themes/
- * languages tables or PEM_URL at all, they talk to PHPWG_URL directly.
+ * languages tables or PEM_URL at all, they talk to AppInfo::URL directly.
  * Extracted here rather than folded into PemCatalog to keep that class's
  * "one generic PEM-communication concern, parameterized by ExtensionType"
  * shape clean.
@@ -51,7 +51,7 @@ final readonly class CoreUpdateService
         $_SESSION['need_update' . AppInfo::VERSION] = null;
 
         if ((bool) preg_match('/(\d+\.\d+)\.(\d+)/', AppInfo::VERSION)
-          and is_string($result = @HttpClientService::fetch(PHPWG_URL . '/download/all_versions.php?rand=' . md5(uniqid((string) mt_rand(), true))))) {
+          and is_string($result = @HttpClientService::fetch(AppInfo::URL . '/download/all_versions.php?rand=' . md5(uniqid((string) mt_rand(), true))))) {
             $allVersions = @explode("\n", $result);
             $newVersion = trim($allVersions[0]);
             $_SESSION['need_update' . AppInfo::VERSION] = version_compare(AppInfo::VERSION, $newVersion, '<');
@@ -81,7 +81,7 @@ final readonly class CoreUpdateService
         $newVersions['is_dev'] = false;
         $actualBranch = \Piwigo\Core\VersionHelper::getBranchFromVersion($env === 'Official' ? substr((string) $buildVersion, 0, -1) : AppInfo::VERSION);
 
-        $url = PHPWG_URL . '/download/all_versions.php';
+        $url = AppInfo::URL . '/download/all_versions.php';
         $url .= '?rand=' . md5(uniqid((string) mt_rand(), true));
         $url .= $env === 'Official' ? '&docker' : '&show_requirements';
         $secretKeyRaw = \Piwigo\Config\Config::secretKey();
@@ -288,7 +288,7 @@ final readonly class CoreUpdateService
 
         while (! $end) {
             $chunkNum++;
-            if (is_string($result = @HttpClientService::fetch(PHPWG_URL . '/download/dlcounter.php?code=' . $dlCode . '&chunk_num=' . $chunkNum))
+            if (is_string($result = @HttpClientService::fetch(AppInfo::URL . '/download/dlcounter.php?code=' . $dlCode . '&chunk_num=' . $chunkNum))
               and (bool) ($input = @unserialize($result))) {
                 if (is_array($input)) {
                     $remaining = $input['remaining'] ?? null;

@@ -56,12 +56,17 @@ use Piwigo\Users\UserService;
  * include/env.inc.php, and then calls the three phases below in order.
  *
  * Why three phases instead of one run(): src/Piwigo/ code may not call
- * define() (arch rule SEC-60), and the legacy bootstrap defines
- * PHPWG_INSTALLED mid-sequence (after the install-redirect check, before
- * the session handler registration that tests defined('PHPWG_INSTALLED'))
- * and PHPWG_DOMAIN/PHPWG_URL/PEM_URL later (after UserBootstrap, before
- * language loading). Those define() calls stay in the seam file, slotted
- * between the phases, preserving the original statement order exactly.
+ * define() (arch rule SEC-60), and the legacy bootstrap marks
+ * Piwigo\Core\InstallationFlag active mid-sequence (after the
+ * install-redirect check, before the session handler registration that
+ * reads InstallationFlag::isActive()). That one call stays in the seam
+ * file, slotted between the phases, preserving the original statement
+ * order exactly. The former PHPWG_DOMAIN/PHPWG_URL/PEM_URL define()s
+ * that used to sit here too (after UserBootstrap, before language
+ * loading) are gone entirely (Legacy Coupling Retirement gap-closure,
+ * entry-shell define()/include round, Part 0b) -- every real reader now
+ * goes through Piwigo\Core\AppInfo::DOMAIN/URL or this class's own
+ * pemUrl(), neither of which needs seam-file sequencing at all.
  *
  * Legacy Coupling Retirement Phase 8, 8a (the "boot-first" fix):
  * configure() now calls Kernel::boot($paths) as its own first statement --
@@ -351,9 +356,13 @@ final class RequestBootstrap
     }
 
     /**
-     * The PEM_URL value the seam file define()s right after connect() —
-     * kept as a method so the config-conditional lives on the class, not
-     * in the seam (which keeps only the define() call itself, SEC-60).
+     * The PEM (piwigo extension market) base URL every real reader now
+     * calls directly instead of reading a cached PEM_URL constant (Legacy
+     * Coupling Retirement gap-closure, entry-shell define()/include
+     * round, Part 0b) -- cheap and side-effect-free (a Config read plus a
+     * string concat), so recomputing at each read site is simpler than a
+     * per-request cache and behaviourally identical (Config doesn't
+     * change mid-request).
      */
     public static function pemUrl(): string
     {
@@ -363,7 +372,7 @@ final class RequestBootstrap
             return is_scalar($alternative_pem_url) ? (string) $alternative_pem_url : '';
         }
 
-        return 'https://' . PHPWG_DOMAIN . '/ext';
+        return AppInfo::URL . '/ext';
     }
 
     /**
@@ -389,7 +398,7 @@ final class RequestBootstrap
             $conn,
         ));
         Lang::load('common.lang');
-        if (\Piwigo\Auth\AccessControl::isAdmin() || (defined('IN_ADMIN') and IN_ADMIN)) {
+        if (\Piwigo\Auth\AccessControl::isAdmin() || \Piwigo\Core\AdminContext::isActive()) {
             Lang::load('admin.lang');
             // Add language for temporary strings for new popup, from piwigo 15
             Lang::load('whats_new_' . \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
@@ -446,7 +455,7 @@ final class RequestBootstrap
         }
 
         // template instance
-        if (defined('IN_ADMIN') and IN_ADMIN) {// Admin template
+        if (\Piwigo\Core\AdminContext::isActive()) {// Admin template
             // getParam() has no return type declaration (its own value
             // comes from CurrentUser::get()->preferences[$param], an
             // untyped array<string, mixed>), so its return is inferred as

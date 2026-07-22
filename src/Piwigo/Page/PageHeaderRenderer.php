@@ -48,7 +48,7 @@ final class PageHeaderRenderer
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_page_header');
 
         $show_mobile_app_banner = \Piwigo\Config\Config::all()['show_mobile_app_banner_in_gallery'] ?? false;
-        if (defined('IN_ADMIN') and IN_ADMIN) {
+        if (\Piwigo\Core\AdminContext::isActive()) {
             $show_mobile_app_banner = \Piwigo\Config\Config::all()['show_mobile_app_banner_in_admin'] ?? true;
         }
 

@@ -92,11 +92,7 @@ final class UpdatesExtPageRenderer
         // partial result no legacy code path could ever produce.
         $all_types_reachable = true;
 
-        // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl()) in
-        // one branch of include/common.inc.php, so PHPStan can't prove it's a
-        // string across that file boundary -- narrow it once here (see the
-        // identical narrowing in updates::get_server_extensions()).
-        $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
+        $pem_base_url = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
 
         foreach ($types_to_check as $extension_type) {
             $type = $plural_by_type[$extension_type->value];

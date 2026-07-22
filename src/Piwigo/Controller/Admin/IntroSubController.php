@@ -12,6 +12,7 @@ use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
@@ -645,7 +646,7 @@ SELECT
         $lang_code = is_string($lang_code) ? $lang_code : '';
         $cache_path = \Piwigo\Core\CurrentPaths::get()->root . $data_location . 'cache/piwigo_latest_news-' . $lang_code . '.cache.php';
         if (! is_file($cache_path) or filemtime($cache_path) < strtotime('24 hours ago')) {
-            $url = PHPWG_URL . '/ws.php?method=porg.news.getLatest&format=json';
+            $url = AppInfo::URL . '/ws.php?method=porg.news.getLatest&format=json';
 
             $content = HttpClientService::fetch($url);
             if ($content !== false) {

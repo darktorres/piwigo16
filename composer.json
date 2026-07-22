@@ -137,6 +137,11 @@
         "Add Chromium launch flags for deterministic screenshot rendering on Linux (font hinting/LCD text/color profile) -- the plugin's own maintainers don't trust screenshot assertions on Linux/CI without this class of mitigation, see PR pestphp/pest-plugin-browser#175": "patches/pest-plugin-browser-4.3.1-deterministic-screenshot-flags.patch",
         "Fix Execution::resetAssertions() passing Assert::class instead of null as ReflectionProperty::setValue()'s first argument for a static property (PHP 8.1 deprecation)": "patches/pest-plugin-browser-4.3.1-reset-assertions-static-property.patch"
       }
+    },
+    "phpstan/extension-installer": {
+      "ignore": [
+        "tomasvotruba/type-coverage"
+      ]
     }
   },
   "minimum-stability": "dev",

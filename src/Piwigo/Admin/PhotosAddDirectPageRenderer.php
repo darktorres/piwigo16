@@ -9,6 +9,7 @@ use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -145,7 +146,7 @@ SELECT COUNT(*)
             $template->assign('PROMOTE_MOBILE_APPS', false);
         }
 
-        $template->assign('PHPWG_URL', PHPWG_URL);
+        $template->assign('PHPWG_URL', AppInfo::URL);
 
         // +-------------------------------------------------------------------+
         // |                             Formats Mode                          |

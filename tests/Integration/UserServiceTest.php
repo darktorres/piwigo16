@@ -9,13 +9,11 @@ declare(strict_types=1);
 // tests/Unit/PasswordHashTest.php / tests/Integration/AuthServiceTest.php.
 namespace {
     // validateMailAddress()/validateLoginCase() both gate their real
-    // DB-uniqueness check on defined('PHPWG_INSTALLED') -- a genuine
-    // "skip during the install wizard, before there's even a DB" guard in
-    // the original code, faithfully preserved. Define it so the tests
-    // below exercise the real check.
-    if (! defined('PHPWG_INSTALLED')) {
-        define('PHPWG_INSTALLED', true);
-    }
+    // DB-uniqueness check on Piwigo\Core\InstallationFlag::isActive() -- a
+    // genuine "skip during the install wizard, before there's even a DB"
+    // guard in the original code, faithfully preserved. Marked in this
+    // class's own setUp() (IntegrationTestCase::tearDown() already resets
+    // it) so the tests below exercise the real check.
 
     if (! function_exists('l10n')) {
         function l10n(string $key, mixed ...$args): string
@@ -87,6 +85,7 @@ namespace Piwigo\Tests\Integration {
         {
             parent::setUp();
             $this->setUpConnectionFromEnv();
+            \Piwigo\Core\InstallationFlag::mark();
 
             if (! self::$fixtureReady) {
                 $this->resetDatabase();

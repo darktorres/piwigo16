@@ -100,7 +100,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             return Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         }
 
-        if (\defined('PHPWG_INSTALLED') && ! $isEmpty) {
+        if (\Piwigo\Core\InstallationFlag::isActive() && ! $isEmpty) {
             /** @var array<string, string> $user_fields */
             $user_fields = \Piwigo\Config\Config::userFields();
 
@@ -119,7 +119,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     public function validateLoginCase(string $login): string
     {
 
-        if (\defined('PHPWG_INSTALLED')) {
+        if (\Piwigo\Core\InstallationFlag::isActive()) {
             /** @var array<string, string> $user_fields */
             $user_fields = \Piwigo\Config\Config::userFields();
 

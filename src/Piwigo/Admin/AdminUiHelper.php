@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -66,23 +67,23 @@ final class AdminUiHelper
     public static function pwgUrl(): array
     {
         return [
-            'HOME' => PHPWG_URL,
-            'WIKI' => PHPWG_URL . '/doc',
-            'DEMO' => PHPWG_URL . '/demo',
-            'FORUM' => PHPWG_URL . '/forum',
-            'BUGS' => PHPWG_URL . '/bugs',
-            'EXTENSIONS' => PHPWG_URL . '/ext',
+            'HOME' => AppInfo::URL,
+            'WIKI' => AppInfo::URL . '/doc',
+            'DEMO' => AppInfo::URL . '/demo',
+            'FORUM' => AppInfo::URL . '/forum',
+            'BUGS' => AppInfo::URL . '/bugs',
+            'EXTENSIONS' => AppInfo::URL . '/ext',
         ];
     }
 
     public static function getNewsletterSubscribeBaseUrl(string $language = 'en_UK'): string
     {
-        return PHPWG_URL . '/announcement/subscribe/';
+        return AppInfo::URL . '/announcement/subscribe/';
     }
 
     public static function getOldNewslettersBaseUrl(string $language = 'en_UK'): string
     {
-        return PHPWG_URL . '/newsletter';
+        return AppInfo::URL . '/newsletter';
     }
 
     public static function getActiveMenu(string $menuPage): int

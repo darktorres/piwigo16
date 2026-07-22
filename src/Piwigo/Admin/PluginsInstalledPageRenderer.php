@@ -180,11 +180,7 @@ final class PluginsInstalledPageRenderer
             // under 'uri' (defaults to '', overwritten by a regex-extracted URI).
             $fs_plugin_uri = $fs_plugin['uri'] ?? '';
             $fs_plugin_uri = is_string($fs_plugin_uri) ? $fs_plugin_uri : '';
-            // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl())
-            // in common.inc.php on one branch, so PHPStan infers the constant's
-            // global type as mixed even though it's always a URL string at runtime.
-            $pem_url = PEM_URL;
-            $pem_url = is_string($pem_url) ? $pem_url : '';
+            $pem_url = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
             $visit_url = str_replace($url_to_replace, $pem_url, $fs_plugin_uri);
 
             $tpl_plugin = [

@@ -456,6 +456,44 @@ test('src/Piwigo/ contains no PHPWG_ROOT_PATH/PWG_LOCAL_DIR reads outside the do
     expect(count($hits))->toBe(2);
 });
 
+test('src/Piwigo/ contains no raw IN_ADMIN/IN_WS/PHPWG_INSTALLED/PHPWG_URL/PHPWG_DOMAIN/PEM_URL reads', function (): void {
+    // Legacy Coupling Retirement gap-closure (entry-shell define()/include
+    // round, Part 0b): all 6 are fully retired, zero-tolerance -- typed
+    // replacements (Piwigo\Core\AdminContext/WsContext/InstallationFlag/
+    // AppInfo::DOMAIN/AppInfo::URL/Bootstrap\RequestBootstrap::pemUrl())
+    // cover every real caller, so unlike PHPWG_ROOT_PATH/PWG_LOCAL_DIR
+    // above there's no legitimate exception left to allowlist. The 2
+    // entry-shell define()s that still legitimately exist (admin.php/
+    // admin/popuphelp.php call AdminContext::mark(), not define()) and
+    // install.php's own `define('PHPWG_INSTALLED', true)` (matching
+    // PWG_CHARSET/DB_CHARSET/DB_COLLATE's own established
+    // Admin\Install\DbPatch\UpgradeCharset precedent) are outside
+    // src/Piwigo/, so this scan never sees them.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'IN_ADMIN'),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'IN_WS'),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PHPWG_INSTALLED'),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PHPWG_URL'),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PHPWG_DOMAIN'),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PEM_URL'),
+    ];
+
+    // Piwigo\Core\InstallationFlag::isActive() itself legitimately reads
+    // `defined('PHPWG_INSTALLED')` -- it IS the typed replacement, not a
+    // caller of it (matches Admin\Install\DbPatch\UpgradeCharset's own
+    // identical defined('PWG_CHARSET')/defined('DB_CHARSET') self-reads,
+    // which this same style of test elsewhere in this file doesn't ban
+    // either, since there's no sibling "no PWG_CHARSET" test at all).
+    $unexpected = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! str_ends_with($hit['path'], 'Core/InstallationFlag.php')
+    ));
+
+    expect(describeCallSites($unexpected))->toBe([]);
+});
+
 test('src/Piwigo/ contains no global $filter/$pwg_loaded_plugins/$template/$page declarations', function (): void {
     // Phase 2 global-residual sweep (2026-07-19): all 4 clusters were
     // fully retired, not just reduced -- $filter/$pwg_loaded_plugins onto

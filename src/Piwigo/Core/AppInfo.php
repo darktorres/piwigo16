@@ -26,4 +26,21 @@ final class AppInfo
     public const string DEFAULT_TEMPLATE = 'modus';
 
     public const string REQUIRED_PHP_VERSION = '8.5.0';
+
+    // Legacy Coupling Retirement gap-closure (entry-shell define()/include
+    // round, Part 0b): typed replacement for PHPWG_DOMAIN/PHPWG_URL. This
+    // fork does not call back to the real piwigo.org -- upstream.example.invalid
+    // (.invalid TLD per RFC 2606, guaranteed not to resolve) stops it from
+    // sending telemetry or fetching news/updates/merged-extension lists
+    // from the upstream server, and makes any accidental outbound call
+    // fail fast (DNS failure) rather than hang waiting on a real, possibly
+    // rate-limiting host. Both were fixed, hardcoded literals at every
+    // former define() site (install.php/upgrade.php/include/common.inc.php
+    // all defined the exact same values) -- no runtime/Config dependency,
+    // unlike PEM_URL (Bootstrap\RequestBootstrap::pemUrl(), which honours
+    // Config::alternativePemUrl()), so these are real const expressions,
+    // not a per-request accessor.
+    public const string DOMAIN = 'upstream.example.invalid';
+
+    public const string URL = 'https://' . self::DOMAIN;
 }

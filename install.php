@@ -84,11 +84,6 @@ Config::override('db_prefix', $prefixeTable);
 // install.php never runs.
 \Piwigo\Template\ScriptLoader::setUrlService(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService()));
 
-// See include/common.inc.php for why this fork never points PHPWG_DOMAIN at
-// the real piwigo.org.
-define('PHPWG_DOMAIN', 'upstream.example.invalid');
-define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
-
 // ---------------------------------------------------------------- orchestration
 $wizard = new InstallWizard($prefixeTable, $paths);
 // InstallWizard::boot() itself calls InstallBootstrap::activateConfigService()

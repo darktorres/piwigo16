@@ -69,7 +69,7 @@ final class UpdatesPwgPageRenderer
         if ($ct_env === 'Official') {
             $template->assign([
                 'CONTAINER_VERSION' => $ct_build_version,
-                'DOCKER_UPDATE_GUIDE_URL' => PHPWG_URL . '/guide-update-docker',
+                'DOCKER_UPDATE_GUIDE_URL' => AppInfo::URL . '/guide-update-docker',
             ]);
             // Remove optional ? on [a-z]? since it will only be available on piwigo 16.3
             // Docker images started to use letter suffix in 16.2
@@ -175,7 +175,7 @@ final class UpdatesPwgPageRenderer
                     'MINOR_RELEASE_URL' => (
                         ($ct_env === 'Official')
                     ? 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions['minor'])
-                    : PHPWG_URL . '/releases/' . $new_versions['minor']
+                    : AppInfo::URL . '/releases/' . $new_versions['minor']
                     ),
                 ]
             );
@@ -185,7 +185,7 @@ final class UpdatesPwgPageRenderer
             $template->assign(
                 [
                     'MAJOR_VERSION' => $new_versions['major'],
-                    'MAJOR_RELEASE_URL' => PHPWG_URL . '/releases/' .
+                    'MAJOR_RELEASE_URL' => AppInfo::URL . '/releases/' .
                       (($ct_env === 'Official') ? substr($new_versions['major'], 0, -1) : $new_versions['major']),
                     'MAJOR_DOCKER_RELEASE_URL' => 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions['major']),
                     'MAJOR_VERSION_PWG' => preg_replace('/[a-z]$/', '', $new_versions['major']), // Remove container build ver

@@ -348,7 +348,7 @@ SELECT
                 if (in_array($finfo_type, ['image/svg', 'image/svg+xml'], true) and $original_extension !== 'svg') {
                     unlink($source_filepath);
                     $error_msg = 'File extension "' . $original_extension . '" for file "' . $original_filename . '" does not match file MIME type "' . $finfo_type . '"';
-                    if (defined('IN_WS') && $service !== null) {
+                    if (\Piwigo\Core\WsContext::isActive() && $service !== null) {
                         $service->sendResponse(new PwgError(415, $error_msg));
                         exit;
                     }

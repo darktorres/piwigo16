@@ -175,7 +175,7 @@ final class UpgradeRunner
         $template->assign(
             [
                 'RELEASE' => AppInfo::VERSION,
-                'L_UPGRADE_HELP' => Lang::t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),
+                'L_UPGRADE_HELP' => Lang::t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', AppInfo::URL . '/forum'),
             ]
         );
 

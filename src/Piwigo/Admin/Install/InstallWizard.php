@@ -626,7 +626,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
                 'F_ADMIN_EMAIL' => $this->adminMail,
                 'EMAIL' => '<span class="adminEmail">' . $this->adminMail . '</span>',
                 'F_NEWSLETTER_SUBSCRIBE' => $this->isNewsletterSubscribe,
-                'L_INSTALL_HELP' => Lang::t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),
+                'L_INSTALL_HELP' => Lang::t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', AppInfo::URL . '/forum'),
             ]
         );
 
@@ -731,7 +731,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
                     Lang::buildArgs('Password: ********** (no copy by email)', ''),
                     Lang::buildArgs('Email: %s', $this->adminMail),
                     Lang::buildArgs('', ''),
-                    Lang::buildArgs('Don\'t hesitate to consult our forums for any help: %s', PHPWG_URL),
+                    Lang::buildArgs('Don\'t hesitate to consult our forums for any help: %s', AppInfo::URL),
                 ];
 
                 new MailService()

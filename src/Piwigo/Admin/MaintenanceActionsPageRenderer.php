@@ -127,7 +127,7 @@ final class MaintenanceActionsPageRenderer
                 'purge_derivatives' => $purge_urls,
                 'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=maintenance',
 
-                'PHPWG_URL' => PHPWG_URL,
+                'PHPWG_URL' => AppInfo::URL,
                 'PWG_VERSION' => AppInfo::VERSION,
                 'U_CHECK_UPGRADE' => sprintf($url_format, 'check_upgrade'),
                 'OS' => PHP_OS,

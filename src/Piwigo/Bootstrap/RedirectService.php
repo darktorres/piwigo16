@@ -101,7 +101,7 @@ final class RedirectService implements RedirectServiceInterface
             ]);
             $template = new Template($paths->root . 'themes', self::userService()->getDefaultTheme());
             CurrentTemplate::set($template);
-        } elseif (defined('IN_ADMIN') and IN_ADMIN) {
+        } elseif (\Piwigo\Core\AdminContext::isActive()) {
             $template = new Template(CurrentPaths::get()->root . 'themes', self::userService()->getDefaultTheme());
             CurrentTemplate::set($template);
         }

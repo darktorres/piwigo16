@@ -120,6 +120,14 @@ abstract class IntegrationTestCase extends TestCase
         \Piwigo\Core\PageState::reset();
         \Piwigo\Core\FilterState::reset();
         CurrentPaths::reset();
+        // Legacy Coupling Retirement gap-closure (entry-shell define()/
+        // include round, Part 0b) -- same per-request-singleton shape as
+        // the resets above; harmless even for test classes that never
+        // call mark() at all, same reasoning as CurrentConfigService::
+        // reset() above.
+        \Piwigo\Core\AdminContext::reset();
+        \Piwigo\Core\WsContext::reset();
+        \Piwigo\Core\InstallationFlag::reset();
         parent::tearDown();
     }
 

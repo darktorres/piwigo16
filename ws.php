@@ -19,12 +19,13 @@ require __DIR__ . '/vendor/autoload.php';
 use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Bootstrap\RequestPipeline;
 use Piwigo\Core\Paths;
+use Piwigo\Core\WsContext;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 
 // ----------------------------------------------------------- include
 $paths = Paths::fromIndex(__FILE__);
-define('IN_WS', true);
+WsContext::mark();
 include_once $paths->root . 'include/common.inc.php';
 
 CommonBootstrap::run($paths);

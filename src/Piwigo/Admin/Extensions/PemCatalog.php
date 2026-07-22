@@ -39,7 +39,7 @@ final readonly class PemCatalog
     public function getVersionsToCheck(ExtensionType $type, bool $betaTest = false, string $version = AppInfo::VERSION): array
     {
 
-        $pemBaseUrl = is_string(PEM_URL) ? PEM_URL : '';
+        $pemBaseUrl = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
         $versionsToCheck = [];
         $url = $pemBaseUrl . '/api/get_version_list.php';
         $getData = [
@@ -114,7 +114,7 @@ final readonly class PemCatalog
             return null;
         }
 
-        $pemBaseUrl = is_string(PEM_URL) ? PEM_URL : '';
+        $pemBaseUrl = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
         $url = $pemBaseUrl . '/api/get_revision_list-next.php';
         $userLanguage = \Piwigo\Users\CurrentUser::get()->language;
         $getData = [
@@ -207,7 +207,7 @@ final readonly class PemCatalog
             }
         }
 
-        $pemBaseUrl = is_string(PEM_URL) ? PEM_URL : '';
+        $pemBaseUrl = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
         $url = $pemBaseUrl . '/api/get_revision_list.php';
         $getData = [
             'category_id' => \Piwigo\Config\Config::all()[$type->configCategoryKey()],
@@ -279,7 +279,7 @@ final readonly class PemCatalog
             ];
         }
 
-        $pemBaseUrl = is_string(PEM_URL) ? PEM_URL : '';
+        $pemBaseUrl = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
         $url = $pemBaseUrl . '/download.php';
         $getData = [
             'rid' => $revision,

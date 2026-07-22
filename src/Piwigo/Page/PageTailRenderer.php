@@ -80,7 +80,7 @@ final readonly class PageTailRenderer
         $template->assign(
             [
                 'VERSION' => \Piwigo\Config\Config::showVersion() ? AppInfo::VERSION : '',
-                'PHPWG_URL' => defined('PHPWG_URL') ? str_replace('http:', 'https:', PHPWG_URL) : '',
+                'PHPWG_URL' => AppInfo::URL,
                 // web-vitals RUM beacon (docs/PLAN-REPLAY.md P1, item 11b) --
                 // fixed, non-hashed filename (vite.config.ts), so no
                 // manifest.json lookup is needed to reference it.

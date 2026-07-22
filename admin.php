@@ -25,12 +25,13 @@ use Piwigo\Admin\AdminShell;
 use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Core\AdminContext;
 use Piwigo\Core\Paths;
 use Piwigo\Html\HtmlService;
 use Piwigo\Url\UrlService;
 
 $paths = Paths::fromIndex(__FILE__);
-define('IN_ADMIN', true);
+AdminContext::mark();
 
 include_once $paths->root . 'include/common.inc.php';
 

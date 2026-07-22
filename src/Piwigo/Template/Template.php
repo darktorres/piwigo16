@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Template;
 
 use Piwigo\Auth\AccessControl;
+use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\DeviceHelper;
@@ -238,7 +239,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         $this->smarty->setTemplateDir([]);
         if (! empty($theme)) {
             $this->set_theme($root, $theme, $path);
-            if (! defined('IN_ADMIN')) {
+            if (! AdminContext::isActive()) {
                 $this->set_prefilter('header', self::prefilter_local_css(...));
             }
         } else {
@@ -257,7 +258,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         Lang::setLangInfo($lang_info);
         $this->smarty->assign('lang_info', $lang_info);
 
-        if (! defined('IN_ADMIN') and \Piwigo\Config\Config::has('extents_for_templates')) {
+        if (! AdminContext::isActive() and \Piwigo\Config\Config::has('extents_for_templates')) {
             $this->set_extents(\Piwigo\Config\Config::extentsForTemplates(), './template-extension/', true, $theme);
         }
     }

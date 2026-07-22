@@ -304,7 +304,7 @@ final class Lang
         }
         $dirname .= 'language/';
 
-        $default_language = (defined('PHPWG_INSTALLED') and ! UpgradeFlow::isActive())
+        $default_language = (InstallationFlag::isActive() and ! UpgradeFlow::isActive())
             ? (self::$defaultLanguageProvider?->getDefaultLanguage() ?? AppInfo::DEFAULT_LANGUAGE)
             : AppInfo::DEFAULT_LANGUAGE;
 

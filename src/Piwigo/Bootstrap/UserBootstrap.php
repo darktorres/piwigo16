@@ -118,7 +118,7 @@ final class UserBootstrap
 
         // HTTP_AUTHORIZATION api_key
         if (
-            defined('IN_WS')
+            \Piwigo\Core\WsContext::isActive()
             and isset($_SERVER['HTTP_X_PIWIGO_API'])
             and is_string($_SERVER['HTTP_X_PIWIGO_API'])
             and ! self::emptyValue($_SERVER['HTTP_X_PIWIGO_API'])
@@ -158,7 +158,7 @@ final class UserBootstrap
         }
 
         if (
-            defined('IN_WS')
+            \Piwigo\Core\WsContext::isActive()
             and is_string($_REQUEST['method'] ?? null)
             and $_REQUEST['method'] === 'pwg.images.uploadAsync'
             and is_string($_POST['username'] ?? null)
@@ -182,7 +182,7 @@ final class UserBootstrap
 
         $http_referer = $_SERVER['HTTP_REFERER'] ?? null;
         $user_use_cache = self::shouldUseUserCache(
-            defined('IN_ADMIN') && (bool) IN_ADMIN,
+            \Piwigo\Core\AdminContext::isActive(),
             isset($_REQUEST['method']),
             is_string($http_referer) ? $http_referer : null,
         );

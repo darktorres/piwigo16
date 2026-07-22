@@ -129,11 +129,6 @@ InstallBootstrap::activateConfigService();
 // never runs.
 \Piwigo\Template\ScriptLoader::setUrlService(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService()));
 
-// See include/common.inc.php for why this fork never points PHPWG_DOMAIN at
-// the real piwigo.org.
-define('PHPWG_DOMAIN', 'upstream.example.invalid');
-define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
-
 $runner = new UpgradeRunner($config_file, $config_file_contents, $php_end_tag, $paths);
 
 // Language pick + Lang loads, before the DB connection on purpose: a

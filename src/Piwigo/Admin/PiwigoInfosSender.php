@@ -218,11 +218,7 @@ SELECT
 
         // $conf['pem_plugins_category'] = 12;
         // $conf['pem_themes_category'] = 10;
-        // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl())
-        // in common.inc.php on one branch, so PHPStan infers the constant's
-        // global type as mixed even though it's always a URL string at runtime.
-        $pemUrl = PEM_URL;
-        $pemUrl = is_string($pemUrl) ? $pemUrl : '';
+        $pemUrl = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
         $url = $pemUrl . '/api/get_extension_list.php';
         // unserialize() is typed mixed by PHP's own stub; the PEM API's
         // contract is an array of {eid: {...}} extension records, but a
@@ -602,8 +598,8 @@ SELECT
 
         // conf_get_param() reads $conf with a dynamic (non-literal) key, so its
         // return stays mixed even though this param is always a URL string.
-        $updateUrlBase = \Piwigo\Config\Config::all()['send_piwigo_infos_update_url'] ?? PHPWG_URL;
-        $updateUrlBase = is_string($updateUrlBase) ? $updateUrlBase : PHPWG_URL;
+        $updateUrlBase = \Piwigo\Config\Config::all()['send_piwigo_infos_update_url'] ?? AppInfo::URL;
+        $updateUrlBase = is_string($updateUrlBase) ? $updateUrlBase : AppInfo::URL;
         $url = $updateUrlBase . '/ws.php';
 
         $getData = [

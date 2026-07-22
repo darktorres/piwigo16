@@ -71,10 +71,24 @@ SELECT id
 // |                                redirect                               |
 // +-----------------------------------------------------------------------+
 
-new \Piwigo\Bootstrap\RedirectService()
-    ->redirect(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService())->makeIndexUrl([
-        'list' => array_map(
-            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            $conn->fetchFirstColumn($query)
-        ),
-    ]));
+// This file never calls RequestPipeline::handle() (unlike every P22
+// controller's own root file) -- it's a raw top-level script, so none of
+// Workstream C3's 3 pipeline/bootstrap catch points wrap this call. Found
+// live (real 500, uncaught ResponseReadyException) while re-verifying
+// Part I's own "every RedirectService/HtmlService caller is covered by one
+// of the 3 catch points" claim against actual call sites rather than
+// trusting it -- this file was never audited because it isn't reached from
+// config/routes.php. A 4th, file-local catch point, same shape as
+// AdminShell::run()'s own dispatch-context catch point.
+try {
+    new \Piwigo\Bootstrap\RedirectService()
+        ->redirect(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService())->makeIndexUrl([
+            'list' => array_map(
+                static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+                $conn->fetchFirstColumn($query)
+            ),
+        ]));
+} catch (\Piwigo\Http\ResponseReadyException $e) {
+    new \Piwigo\Http\ResponseEmitter()
+        ->emit($e->response());
+}

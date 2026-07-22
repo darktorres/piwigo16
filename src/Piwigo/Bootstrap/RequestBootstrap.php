@@ -213,17 +213,12 @@ final class RequestBootstrap
         // with the frozen install/db scripts and its top-level define()s
         // became MysqliDb class constants, so nothing on this path needs it.
 
-        if (\Piwigo\Config\Config::has('show_php_errors') && ! empty(\Piwigo\Config\Config::showPhpErrors())) {
-            if (is_scalar(\Piwigo\Config\Config::showPhpErrors())) {
-                @ini_set('error_reporting', \Piwigo\Config\Config::showPhpErrors());
-            }
-            if (\Piwigo\Config\Config::showPhpErrorsOnFrontend()) {
-                // Route errors to DevTools (X-PHP-Error-N response headers)
-                // instead of inline output, which corrupts JSON/XML/binary
-                // responses (see Piwigo\Core\ErrorCollector).
-                ErrorCollector::install();
-            }
-        }
+        // Route errors to DevTools (X-PHP-Error-N response headers) instead
+        // of inline output, which corrupts JSON/XML/binary responses -- and
+        // is also load-bearing for HtmlService::fatalError()'s own
+        // trigger_error(E_USER_ERROR)+throw sequence (see
+        // ErrorCollector::installIfConfigured()'s own docblock).
+        ErrorCollector::installIfConfigured();
 
         if (\Piwigo\Config\Config::sessionGcProbability() > 0) {
             @ini_set('session.gc_divisor', 100);

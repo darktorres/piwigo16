@@ -1245,13 +1245,7 @@ parameters:
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
-			count: 4
-			path: src/Piwigo/Bootstrap/RequestBootstrap.php
-
-		-
-			rawMessage: If condition is always true.
-			identifier: if.alwaysTrue
-			count: 1
+			count: 3
 			path: src/Piwigo/Bootstrap/RequestBootstrap.php
 
 		-
@@ -2003,6 +1997,18 @@ parameters:
 			identifier: identical.alwaysFalse
 			count: 1
 			path: src/Piwigo/Core/DeviceHelper.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: src/Piwigo/Core/ErrorCollector.php
+
+		-
+			rawMessage: If condition is always true.
+			identifier: if.alwaysTrue
+			count: 1
+			path: src/Piwigo/Core/ErrorCollector.php
 
 		-
 			rawMessage: 'Call to function is_array() with list<string> will always evaluate to true.'
@@ -3675,7 +3681,7 @@ parameters:
 		-
 			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
 			identifier: method.internalClass
-			count: 5
+			count: 8
 			path: tests/Arch/LegacyDirectoryTest.php
 
 		-

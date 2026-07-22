@@ -7,6 +7,7 @@ namespace Piwigo\Bootstrap;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 
@@ -52,6 +53,14 @@ final class InstallBootstrap
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot($paths);
+
+        // Found live while verifying Part II's public/ relocation --
+        // unrelated to the move itself, but install.php's own "already
+        // installed" InstallWizard::boot() -> HtmlService::fatalError()
+        // path was a real, pre-existing 500 (uncaught PHP fatal error, not
+        // the intended clean error page) because this was never called
+        // here. See ErrorCollector::installIfConfigured()'s own docblock.
+        ErrorCollector::installIfConfigured();
     }
 
     public static function activateConfigService(): void

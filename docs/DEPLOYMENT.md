@@ -91,7 +91,28 @@ no-new-privileges`, `seccompProfile: RuntimeDefault`, `readOnlyRootFilesystem` (
 `/tmp` as tmpfs/emptyDir and the four directories above as the only other writable
 mounts).
 
-## Sensitive-path deny rules (SEC-01)
+## Web root (SEC-01, SEC-33, SEC-35, SEC-38, SEC-47)
+
+Document root is `public/`, not the repo/image root (`docs/PLAN-REPLAY.md`'s P32
+"web-root isolation" goal, pulled forward as its own phase) — every PHP entry point
+(`index.php`, `admin.php`, `i.php`, ...) lives there, plus symlinks back to the 4 static
+asset directories real requests actually need (`themes/`, `admin/themes/`, `dist/`,
+`_data/combined/`). Everything else stays outside `public/` on purpose, most importantly
+`upload/`, `galleries/`, `local/`, `language/`, `plugins/`, and every other `_data/`
+subdirectory (`i/` — image derivatives — `logs/`, `backups/`, `cache/`, `templates_c/`,
+`tmp/`): these are permission-gated (`i.php`/`ImageDerivativeController` and
+`action.php`'s own permission checks, `Lang::load()`/`StorageRegistry` reading
+`language/`/`local/`/`plugins/` server-side), and being directly, statically
+web-reachable let a private album's originals/derivatives be served to anyone who
+knew/guessed the URL, forever, without ever touching the permission check again once a
+derivative was cached (found live during Part II's own investigation — not hypothetical).
+`DocumentRoot=public/` is what actually closes this: none of these directories need web
+reachability at all, so unlike the SEC-01 deny rules below (URL-pattern rules, matched
+regardless of whether the underlying path exists), there's no rule to write here — the
+fix is structural, requests to any of them 404 like any other nonexistent path. Verified
+by CI (`.github/workflows/ci.yml`'s `apache-deny-rules`/`container-deny-rules` jobs) with
+a real on-disk fixture file at each path, confirming genuine unreachability rather than
+"this path happens not to exist".
 
 `config/`, `tools/`, `dev/`, `src/`, `tests/`, `install/` (the directory — `install.php`
 itself stays reachable, it's the routed install entry point), `vendor/`, `node_modules/`,
@@ -109,7 +130,7 @@ those config files still returning `200` in the shipped image/Apache checkout �
 `COPY --from=builder`, so excluding it from `.dockerignore` alone was never enough.
 Shipped as:
 
-- **Apache**: root `.htaccess` (`mod_rewrite`-based, portable to any `REQUEST_URI`
+- **Apache**: `public/.htaccess` (`mod_rewrite`-based, portable to any `REQUEST_URI`
   prefix a shared host might mount this under) — one rule for the denied directories,
   a second for the denied root files (matched by basename, not anchored to root).
 - **FrankenPHP/Caddy**: `docker/Caddyfile` (baked into the production image) — same

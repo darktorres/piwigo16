@@ -15,7 +15,17 @@
 }
 
 :80 {
-	root * /app
+	# Part II (web-root isolation, docs/PLAN-REPLAY.md P32's pulled-forward
+	# entry-file-relocation slice): DocumentRoot is now /app/public, not
+	# /app itself. config/tools/dev/src/tests/install/vendor/node_modules/
+	# docs/deploy/.git -- and now also upload/galleries/local/language/
+	# plugins/_data (except _data/combined, symlinked into public/) -- are
+	# structurally unreachable by construction, no longer just deny-listed.
+	# The @denied/@denied_files rules below stay as defense-in-depth
+	# (matching this repo's own established SEC-01 precedent of keeping a
+	# rule even once its target is provably unreachable another way), not
+	# deleted.
+	root * /app/public
 	encode zstd br gzip
 
 	# SEC-01: deny directories that must never be served directly.

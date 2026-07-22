@@ -109,15 +109,72 @@ test('include/ contains exactly the sanctioned bootstrap seam files', function (
     ]);
 });
 
-test('admin/ contains only the anti-listing stub, popuphelp.php, and theme assets', function (): void {
-    // admin/popuphelp.php is a finished real entry point (P23 8a decision)
-    // and admin/themes/ holds the live admin theme assets. admin/include/
-    // died with batch 9; no other PHP belongs at admin/ root -- every
-    // admin page is an AdminDispatcher sub-controller now.
+test('admin/ contains only the anti-listing stub and theme assets', function (): void {
+    // Part II (web-root isolation): admin/popuphelp.php moved to
+    // public/admin/popuphelp.php (a real entry point, must live under the
+    // new DocumentRoot) -- admin/themes/ stays here and is bridged back via
+    // public/admin/themes's own symlink instead of moving, matching
+    // themes/ itself. admin/include/ died with batch 9; no other PHP
+    // belongs at admin/ root -- every admin page is an AdminDispatcher
+    // sub-controller now.
     expect(listDirectoryEntries(dirname(__DIR__, 2) . '/admin'))->toBe([
         'index.php',
+        'themes',
+    ]);
+});
+
+test('public/ contains exactly the relocated entry points, robots.txt, and the sanctioned asset symlinks', function (): void {
+    // Part II (web-root isolation, docs/PLAN-REPLAY.md P32's pulled-forward
+    // slice): DocumentRoot is public/, not the repo root -- every PHP entry
+    // point lives here now, plus symlinks back to the 4 static asset
+    // directories real requests need (themes/, admin/themes/, dist/,
+    // _data/combined/). upload/galleries/local/language/plugins and every
+    // other _data/ subdirectory are deliberately NOT bridged here -- being
+    // directly, statically reachable was a live SEC-33/35/38/47 gap this
+    // phase closes, not a feature to preserve (see docs/DEPLOYMENT.md's
+    // "Web root" section).
+    expect(listDirectoryEntries(dirname(__DIR__, 2) . '/public'))->toBe([
+        '.htaccess',
+        '_data',
+        'about.php',
+        'action.php',
+        'admin',
+        'admin.php',
+        'analytics_vitals.php',
+        'comments.php',
+        'dist',
+        'feed.php',
+        'health.php',
+        'i.php',
+        'identification.php',
+        'index.php',
+        'install.php',
+        'nbm.php',
+        'notification.php',
+        'password.php',
+        'picture.php',
+        'popuphelp.php',
+        'profile.php',
+        'qsearch.php',
+        'random.php',
+        'ready.php',
+        'register.php',
+        'robots.txt',
+        'search.php',
+        'tags.php',
+        'themes',
+        'upgrade.php',
+        'upgrade_feed.php',
+        'ws.php',
+    ]);
+
+    expect(listDirectoryEntries(dirname(__DIR__, 2) . '/public/admin'))->toBe([
         'popuphelp.php',
         'themes',
+    ]);
+
+    expect(listDirectoryEntries(dirname(__DIR__, 2) . '/public/_data'))->toBe([
+        'combined',
     ]);
 });
 
@@ -136,40 +193,19 @@ test('install/ contains only data files and the anti-listing stub', function ():
     ]);
 });
 
-test('root directory PHP files are exactly the known entry points and tool configs', function (): void {
+test('root directory PHP files are exactly the tool configs -- every entry point moved to public/', function (): void {
+    // Part II (web-root isolation): the ~26 real entry points now live
+    // under public/ (see the dedicated public/ test above) -- only tool
+    // configs remain at the repo root, since they're read by CLI tooling
+    // (composer/rector/ecs), never a web request, and have their own
+    // SEC-01 deny-rule coverage regardless of location.
     $names = array_map(basename(...), globPaths(dirname(__DIR__, 2) . '/*.php'));
     sort($names);
 
     expect($names)->toBe([
-        'about.php',
-        'action.php',
-        'admin.php',
-        'analytics_vitals.php',
-        'comments.php',
         'composer-unused.php',
         'ecs.php',
-        'feed.php',
-        'health.php',
-        'i.php',
-        'identification.php',
-        'index.php',
-        'install.php',
-        'nbm.php',
-        'notification.php',
-        'password.php',
-        'picture.php',
-        'popuphelp.php',
-        'profile.php',
-        'qsearch.php',
-        'random.php',
-        'ready.php',
         'rector.php',
-        'register.php',
-        'search.php',
-        'tags.php',
-        'upgrade.php',
-        'upgrade_feed.php',
-        'ws.php',
     ]);
 });
 
@@ -181,6 +217,8 @@ test('no include/require statement targets a legacy path outside the sanctioned 
         globPaths($root . '/config/*.php'),
         globPaths($root . '/include/*.php'),
         globPaths($root . '/admin/*.php'),
+        globPaths($root . '/public/*.php'),
+        globPaths($root . '/public/admin/*.php'),
     );
     $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root . '/src', FilesystemIterator::SKIP_DOTS));
     foreach ($iterator as $fileInfo) {

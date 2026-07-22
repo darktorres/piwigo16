@@ -20,6 +20,18 @@ parameters:
             # that knplabs/github-api must be `composer require`d manually
             # before running it — it's not one of this project's own deps.
             - tools/github_issues.php
+            # Part II (web-root isolation): these 4 are symlinks bridging
+            # public/ (the new DocumentRoot) back to already-scanned real
+            # directories (themes/, admin/themes/, dist/, _data/combined/).
+            # PHPStan follows symlinked directories when scanning `.` --
+            # without this, the exact same file content gets analysed twice
+            # under two different path strings, and any existing baseline
+            # entry (keyed to the real path) doesn't match the symlinked
+            # duplicate, surfacing as a spurious "new" error.
+            - public/themes/*
+            - public/admin/themes/*
+            - public/dist/*
+            - public/_data/combined/*
             # ECS config: references PhpCsFixer\Fixer\...\*Fixer::class
             # constants that only exist nested inside
             # vendor/symplify/easy-coding-standard/vendor/friendsofphp/

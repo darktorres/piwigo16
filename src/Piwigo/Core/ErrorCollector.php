@@ -50,6 +50,30 @@ final class ErrorCollector
         register_shutdown_function(self::flush(...));
     }
 
+    /**
+     * Installs (per the same show_php_errors/show_php_errors_on_frontend
+     * config gate) from every bootstrap that has its own fatalError()-
+     * reachable call graph -- originally only Bootstrap\RequestBootstrap::
+     * connect() (the main HTTP pipeline); Bootstrap\InstallBootstrap::boot()
+     * (install.php/upgrade.php/upgrade_feed.php) needs the identical
+     * sequence for the exact same reason (see HtmlService::fatalError()'s
+     * own comment: without this installed, its trigger_error(E_USER_ERROR)
+     * hard-halts the script before ever reaching the ResponseReadyException
+     * throw that follows it) -- confirmed live, a real install.php 500
+     * rather than the intended clean error page.
+     */
+    public static function installIfConfigured(): void
+    {
+        if (\Piwigo\Config\Config::has('show_php_errors') && ! empty(\Piwigo\Config\Config::showPhpErrors())) {
+            if (is_scalar(\Piwigo\Config\Config::showPhpErrors())) {
+                @ini_set('error_reporting', \Piwigo\Config\Config::showPhpErrors());
+            }
+            if (\Piwigo\Config\Config::showPhpErrorsOnFrontend()) {
+                self::install();
+            }
+        }
+    }
+
     public static function isActive(): bool
     {
         return self::$active;

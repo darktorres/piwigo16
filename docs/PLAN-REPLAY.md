@@ -7177,6 +7177,28 @@ move — but reuses the permission check `ActionController` already enforces in 
 **Web-root isolation:** Only `public/` is HTTP-reachable. `vendor/`, `src/`,
 `var/` outside the web root. Private albums become actually private.
 
+> **Pulled forward early:** the entry-file-relocation + web-root-isolation slice of this
+> (not the directory-renaming steps 1/5/6 above, which stay gated behind P31) landed via
+> Legacy Coupling Retirement's own "Part II" work, ahead of P32 proper. `public/` already
+> exists with the ~26 root PHP entry points + 4 symlinks back to non-renamed asset
+> directories (`themes/`, `admin/themes/`, `dist/`, `_data/combined/`) — `upload/`,
+> `galleries/`, `local/`, `language/`, `plugins/`, and every other `_data/` subdirectory
+> are deliberately *not* bridged, closing SEC-33/35/38/47 (a live gap found during that
+> work: these were directly, statically web-reachable, bypassing `i.php`'s/`action.php`'s
+> own permission checks entirely) rather than preserving it via a blanket symlink. P32
+> proper still owns the full directory rename (`_data/`→`var/`, `galleries/`+`upload/`→
+> `var/media/`, `themes/`→`resources/`, `language/`→`resources/lang/`) and the new
+> permission-checked `?/p/<id>` original-file route — this early slice only moved PHP
+> files and closed the reachability gap, it didn't rename or restructure anything. Also
+> found during that investigation, flagged here rather than fixed (unrelated to the
+> reachability gap, a pre-existing bug): `ThemesStandardPagesPageRenderer` stores an
+> *absolute filesystem path* into the `standard_pages_selected_logo_path` config key,
+> rendered directly as an `<img src>` in the standard_pages theme's templates — happens
+> to "work" only because `DocumentRoot` was historically the repo root; already broken as
+> a URL on any deployment where that isn't true (including, now, this repo's own `public/`
+> layout). Needs its own fix (store a URL, not a filesystem path) as part of a future
+> phase, not folded into either this slice or P32 proper.
+
 **Also handles:**
 
 - `template-extension/` directory (sample overrides in origin — delete or migrate)

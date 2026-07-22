@@ -54,10 +54,10 @@ class CalendarMonthly extends CalendarBase
     public function generate_category_content(\Piwigo\Core\TemplateInterface $template): bool
     {
         $view_type = $this->chronology_view;
-        if ($view_type == self::CAL_VIEW_CALENDAR) {
+        if ($view_type === self::CAL_VIEW_CALENDAR) {
             $tpl_var = [];
             $nb_date_parts = count($this->chronology_date);
-            if ($nb_date_parts == 0) {// case A: no year given - display all years+months
+            if ($nb_date_parts === 0) {// case A: no year given - display all years+months
                 if ($this->build_global_calendar($tpl_var)) {
                     $template->assign('chronology_calendar', $tpl_var);
                     return true;
@@ -68,7 +68,7 @@ class CalendarMonthly extends CalendarBase
             // selection down to a single year (see its own doc comment), so
             // chronology_date must be re-read, not cached above.
             $nb_date_parts = count($this->chronology_date);
-            if ($nb_date_parts == 1) {// case B: year given - display all days in given year
+            if ($nb_date_parts === 1) {// case B: year given - display all days in given year
                 if ($this->build_year_calendar($tpl_var)) {
                     $template->assign('chronology_calendar', $tpl_var);
                     $this->build_nav_bar(self::CYEAR, null, $template); // years
@@ -79,7 +79,7 @@ class CalendarMonthly extends CalendarBase
             // same reasoning: build_year_calendar() may have narrowed down
             // to a single month.
             $nb_date_parts = count($this->chronology_date);
-            if ($nb_date_parts == 2) {// case C: year+month given - display a nice month calendar
+            if ($nb_date_parts === 2) {// case C: year+month given - display a nice month calendar
                 if ($this->build_month_calendar($tpl_var)) {
                     $template->assign('chronology_calendar', $tpl_var);
                 }
@@ -89,14 +89,14 @@ class CalendarMonthly extends CalendarBase
         }
 
         $nb_date_parts = count($this->chronology_date);
-        if ($view_type == self::CAL_VIEW_LIST or $nb_date_parts == 3) {
-            if ($nb_date_parts == 0) {
+        if ($view_type === self::CAL_VIEW_LIST or $nb_date_parts === 3) {
+            if ($nb_date_parts === 0) {
                 $this->build_nav_bar(self::CYEAR, null, $template); // years
             }
-            if ($nb_date_parts == 1) {
+            if ($nb_date_parts === 1) {
                 $this->build_nav_bar(self::CMONTH, null, $template); // month
             }
-            if ($nb_date_parts == 2) {
+            if ($nb_date_parts === 2) {
                 $chronology_date = $this->chronology_date;
                 $year = $chronology_date[self::CYEAR] ?? null;
                 $year = is_int($year) || is_string($year) ? $year : 0;
@@ -193,9 +193,9 @@ class CalendarMonthly extends CalendarBase
             31,
         ];
 
-        if (is_numeric($year) and $month == 2) {
+        if (is_numeric($year) and (string) $month === '2') {
             $nb_days = $md[2];
-            if (($year % 4 == 0) and (($year % 100 != 0) or ($year % 400 != 0))) {
+            if (($year % 4 === 0) and (($year % 100 !== 0) or ($year % 400 !== 0))) {
                 $nb_days++;
             }
         } elseif (is_numeric($month)) {
@@ -213,7 +213,7 @@ class CalendarMonthly extends CalendarBase
     protected function build_global_calendar(array &$tpl_var): bool
     {
         $page_chronology_date = $this->chronology_date;
-        assert(count($page_chronology_date) == 0);
+        assert(count($page_chronology_date) === 0);
         $query = '
   SELECT ' . \Piwigo\Db\SqlDialect::getDateYYYYMM($this->date_field) . ' as period,
     COUNT(distinct id) as count';
@@ -247,7 +247,7 @@ class CalendarMonthly extends CalendarBase
             $items[$y]['nb_images'] += $count;
         }
         // echo ('<pre>'. var_export($items, true) . '</pre>');
-        if (count($items) == 1) {// only one year exists so bail out to year view
+        if (count($items) === 1) {// only one year exists so bail out to year view
             [$y] = array_keys($items);
             $this->chronology_date[self::CYEAR] = $y;
             return false;
@@ -289,7 +289,7 @@ class CalendarMonthly extends CalendarBase
     protected function build_year_calendar(array &$tpl_var): bool
     {
         $page_chronology_date = $this->chronology_date;
-        assert(count($page_chronology_date) == 1);
+        assert(count($page_chronology_date) === 1);
         $query = 'SELECT ' . \Piwigo\Db\SqlDialect::getDateMMDD($this->date_field) . ' as period,
               COUNT(DISTINCT id) as count';
         $query .= $this->inner_sql;
@@ -321,7 +321,7 @@ class CalendarMonthly extends CalendarBase
             $items[$m]['children'][$d] = $count;
             $items[$m]['nb_images'] += $count;
         }
-        if (count($items) == 1) { // only one month exists so bail out to month view
+        if (count($items) === 1) { // only one month exists so bail out to month view
             [$m] = array_keys($items);
             $this->chronology_date[self::CMONTH] = $m;
             return false;
@@ -427,7 +427,7 @@ class CalendarMonthly extends CalendarBase
             $wday_labels = \Piwigo\Core\Lang::days();
 
             if (\Piwigo\Config\Config::weekStartsOn() === 'monday') {
-                if ($first_day_dow == 0) {
+                if ($first_day_dow === 0) {
                     $first_day_dow = 6;
                 } else {
                     --$first_day_dow;
@@ -454,7 +454,7 @@ class CalendarMonthly extends CalendarBase
                 $day <= $this->get_all_days_in_month($year, $month);
                 $day++) {
                 $dow = ($first_day_dow + $day - 1) % 7;
-                if ($dow == 0 and $day != 1) {
+                if ($dow === 0 and $day !== 1) {
                     $tpl_weeks[] = $tpl_crt_week; // add finished week to week list
                     $tpl_crt_week = []; // start new week
                 }

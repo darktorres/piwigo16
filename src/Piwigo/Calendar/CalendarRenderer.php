@@ -158,7 +158,7 @@ final readonly class CalendarRenderer
             $chronology_view = CalendarBase::CAL_VIEW_LIST;
         }
 
-        if ($chronology_view == CalendarBase::CAL_VIEW_CALENDAR and
+        if ($chronology_view === CalendarBase::CAL_VIEW_CALENDAR and
               ! $styles[$cal_style]['view_calendar']) {
 
             $chronology_view = CalendarBase::CAL_VIEW_LIST;
@@ -174,15 +174,15 @@ final readonly class CalendarRenderer
 
         $any_count = 0;
         for ($i = 0; $i < count($page_chronology_date); $i++) {
-            if ($page_chronology_date[$i] == 'any') {
-                if ($chronology_view == CalendarBase::CAL_VIEW_CALENDAR) {// we dont allow any in calendar view
+            if ($page_chronology_date[$i] === 'any') {
+                if ($chronology_view === CalendarBase::CAL_VIEW_CALENDAR) {// we dont allow any in calendar view
                     while ($i < count($page_chronology_date)) {
                         array_pop($page_chronology_date);
                     }
                     break;
                 }
                 $any_count++;
-            } elseif ($page_chronology_date[$i] == '') {
+            } elseif ($page_chronology_date[$i] === '') {
                 while ($i < count($page_chronology_date)) {
                     array_pop($page_chronology_date);
                 }
@@ -191,7 +191,7 @@ final readonly class CalendarRenderer
                 $page_chronology_date[$i] = is_numeric($chronology_date_part) ? (int) $chronology_date_part : 0;
             }
         }
-        if ($any_count == 3) {
+        if ($any_count === 3) {
             array_pop($page_chronology_date);
         }
 
@@ -203,7 +203,7 @@ final readonly class CalendarRenderer
 
         $comment = '';
         $must_show_list = true; // true until calendar generates its own display
-        if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'picture') { // basename without file extention
+        if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'picture') { // basename without file extention
             if ($calendar->generate_category_content($template)) {
                 $items = [];
                 $must_show_list = false;
@@ -214,10 +214,10 @@ final readonly class CalendarRenderer
 
             foreach ($styles as $style => $style_data) {
                 foreach ($views as $view) {
-                    if ($style_data['view_calendar'] or $view != CalendarBase::CAL_VIEW_CALENDAR) {
+                    if ($style_data['view_calendar'] or $view !== CalendarBase::CAL_VIEW_CALENDAR) {
                         $selected = false;
 
-                        if ($style != $cal_style) {
+                        if ($style !== $cal_style) {
                             $chronology_date = [];
                             if (isset($page_chronology_date[0])) {
                                 $chronology_date[] = $page_chronology_date[0];
@@ -233,7 +233,7 @@ final readonly class CalendarRenderer
                             ]
                         );
 
-                        if ($style == $cal_style and $view == $chronology_view) {
+                        if ($style === $cal_style and $view === $chronology_view) {
                             $selected = true;
                         }
 
@@ -270,7 +270,7 @@ final readonly class CalendarRenderer
             if ($superOrderBy) {
                 $order_by = $conf_order_by;
             } else {
-                if (count($page_chronology_date) == 0
+                if (count($page_chronology_date) === 0
                      or in_array('any', $page_chronology_date)) {// selected period is very big so we show newest first
                     $order = ' DESC, ';
                 } else {// selected period is small (month,week) so we show oldest first
@@ -284,8 +284,8 @@ final readonly class CalendarRenderer
             }
 
             if ($section === 'categories' && $category === null
-              && (count($page_chronology_date) == 0
-                    or ($page_chronology_date[0] == 'any' && count($page_chronology_date) == 1))
+              && (count($page_chronology_date) === 0
+                    or ($page_chronology_date[0] === 'any' && count($page_chronology_date) === 1))
             ) {
                 $currentUser = \Piwigo\Users\CurrentUser::get();
                 $cache_key = $persistent_cache->make_key($currentUser->id . $currentUser->cacheUpdateTime

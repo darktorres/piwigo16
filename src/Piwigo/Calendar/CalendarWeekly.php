@@ -73,13 +73,13 @@ class CalendarWeekly extends CalendarBase
     public function generate_category_content(\Piwigo\Core\TemplateInterface $template): bool
     {
         $nb_date_parts = count($this->chronology_date);
-        if ($nb_date_parts == 0) {
+        if ($nb_date_parts === 0) {
             $this->build_nav_bar(self::CYEAR, null, $template); // years
         }
-        if ($nb_date_parts == 1) {
+        if ($nb_date_parts === 1) {
             $this->build_nav_bar(self::CWEEK, [], $template); // week nav bar 1-53
         }
-        if ($nb_date_parts == 2) {
+        if ($nb_date_parts === 2) {
             $this->build_nav_bar(self::CDAY, null, $template); // days nav bar Mon-Sun
         }
         $this->build_next_prev($template);

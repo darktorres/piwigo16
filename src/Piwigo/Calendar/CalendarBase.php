@@ -228,7 +228,7 @@ abstract class CalendarBase
         for ($i = count($date_components) - 1; $i >= 0; $i--) {
             if ($date_components[$i] !== 'any') {
                 $label = $this->get_date_component_label($i, $date_components[$i]);
-                if ($res != '') {
+                if ($res !== '') {
                     $res .= ' ';
                 }
                 $res .= $label;
@@ -270,7 +270,7 @@ abstract class CalendarBase
             if (isset($labels[$item])) {
                 $label = $labels[$item];
             }
-            if ($nb_images == -1) {
+            if ($nb_images === -1) {
                 $tmp_datas = [
                     'LABEL' => $label,
                 ];
@@ -335,7 +335,7 @@ $this->get_date_where($level) . '
 
         $page_chronology_date = $this->chronology_date;
 
-        if (count($level_items) == 1 and
+        if (count($level_items) === 1 and
              count($page_chronology_date) < count($this->calendar_levels) - 1) {
             if (! isset($page_chronology_date[$level])) {
                 [$key] = array_keys($level_items);
@@ -343,7 +343,7 @@ $this->get_date_where($level) . '
                 $page_chronology_date = $this->chronology_date;
 
                 if ($level < count($page_chronology_date) and
-                     $level != count($this->calendar_levels) - 1) {
+                     $level !== count($this->calendar_levels) - 1) {
                     return;
                 }
             }

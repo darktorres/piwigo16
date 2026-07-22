@@ -325,7 +325,7 @@ WHERE id = ' . $creation_output['id'] . ';';
      */
     public static function delete(array $params, PwgServer &$service): PwgError|array
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -365,7 +365,7 @@ SELECT COUNT(*)
      */
     public static function rename(array $params, PwgServer &$service): PwgError|array
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -448,7 +448,7 @@ SELECT
      */
     public static function duplicate(array $params, PwgServer &$service): PwgError|array
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -543,7 +543,7 @@ SELECT image_id
      */
     public static function merge(array $params, PwgServer &$service): PwgError|array
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 

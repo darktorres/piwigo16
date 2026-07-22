@@ -147,7 +147,7 @@ SELECT
 
             $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
             if (empty($order_by)
-                  and count($params['cat_id']) == 1
+                  and count($params['cat_id']) === 1
                   and isset($cats[$params['cat_id'][0]]['image_order'])
                   and is_string($cats[$params['cat_id'][0]]['image_order'])
             ) {
@@ -379,7 +379,7 @@ SELECT SQL_CALC_FOUND_ROWS
     ON id=cat_id AND user_id=' . $join_user . '
   WHERE ' . implode("\n    AND ", $where);
 
-        if (isset($params['search']) and $params['search'] != '') {
+        if (isset($params['search']) and $params['search'] !== '') {
             $query .= '
     AND name LIKE ' . $categoryConn->quote('%' . $params['search'] . '%');
             if (! isset($params['limit'])) {
@@ -688,7 +688,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
   FROM ' . Tables::categories() . '
   WHERE ' . implode("\n    AND ", $where);
 
-        if (isset($params['search']) and $params['search'] != '') {
+        if (isset($params['search']) and $params['search'] !== '') {
             $query .= '
   AND name LIKE ' . $conn->quote('%' . $params['search'] . '%') . '
   LIMIT ' . (is_numeric(\Piwigo\Config\Config::linkedAlbumSearchLimit()) ? (int) \Piwigo\Config\Config::linkedAlbumSearchLimit() : 0);
@@ -804,7 +804,7 @@ SELECT
      */
     public static function add(array $params, PwgServer &$service): PwgError|array
     {
-        if (isset($params['pwg_token']) and new CsrfService()->getToken() != $params['pwg_token']) {
+        if (isset($params['pwg_token']) and new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -862,7 +862,7 @@ SELECT id, id_uppercat, `rank`
 ;';
         $categories = $conn->fetchAllAssociative($query);
 
-        if (count($categories) == 0) {
+        if (count($categories) === 0) {
             return new PwgError(404, 'category_id not found');
         }
 
@@ -902,7 +902,7 @@ SELECT id
             $was_inserted = false;
             $i = 1;
             foreach ($order_old as $category_id) {
-                if ($i == ($params['rank'] ?? null)) {
+                if ($i === ($params['rank'] ?? null)) {
                     $order_new[] = $params['category_id'];
                     $was_inserted = true;
                 }
@@ -936,7 +936,7 @@ SELECT id
     public static function setInfo(array $params, PwgServer &$service): ?PwgError
     {
 
-        if (isset($params['pwg_token']) and new CsrfService()->getToken() != $params['pwg_token']) {
+        if (isset($params['pwg_token']) and new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -949,7 +949,7 @@ SELECT *
   WHERE id = ' . $params['category_id'] . '
 ;';
         $categories = $categoryConn->fetchAllAssociative($query);
-        if (count($categories) == 0) {
+        if (count($categories) === 0) {
             return new PwgError(404, 'category_id not found');
         }
 
@@ -1208,7 +1208,7 @@ SELECT *
     {
         $categoryConn = DbConnection::build();
 
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -1242,7 +1242,7 @@ SELECT *
             }
         }
 
-        if (count($category_ids) == 0) {
+        if (count($category_ids) === 0) {
             return null;
         }
 
@@ -1255,7 +1255,7 @@ SELECT id
         // install/piwigo_structure-mysql.sql.
         $category_ids = array_map(intval(...), array_filter(array_column($categoryConn->fetchAllAssociative($query), 'id'), is_numeric(...)));
 
-        if (count($category_ids) == 0) {
+        if (count($category_ids) === 0) {
             return null;
         }
 
@@ -1288,7 +1288,7 @@ SELECT id
     {
         $categoryConn = DbConnection::build();
 
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -1312,7 +1312,7 @@ SELECT id
             }
         }
 
-        if (count($category_ids) == 0) {
+        if (count($category_ids) === 0) {
             return new PwgError(403, 'Invalid category_id input parameter, no category to move');
         }
 
@@ -1353,7 +1353,7 @@ SELECT id, name, dir, uppercats
             }
         }
 
-        if (count($categories_in_db) != count($category_ids)) {
+        if (count($categories_in_db) !== count($category_ids)) {
             $unknown_category_ids = array_diff($category_ids, array_keys($categories_in_db));
 
             return new PwgError(
@@ -1368,9 +1368,9 @@ SELECT id, name, dir, uppercats
         // does this parent exists? This check should be made in the
         // move_categories function, not here
         // 0 as parent means "move categories at gallery root"
-        if ($params['parent'] != 0) {
+        if ($params['parent'] !== 0) {
             $subcat_ids = self::categoryService($categoryConn)->getSubcatIds([$params['parent']]);
-            if (count($subcat_ids) == 0) {
+            if (count($subcat_ids) === 0) {
                 return new PwgError(403, 'Unknown parent category id');
             }
         }

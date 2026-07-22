@@ -239,7 +239,7 @@ final class PwgUsers
         // every branch below instead of drifting per-branch like array_flip()
         // of a partially-literal list would.
         $display_flags = [];
-        if ($params['display'] != 'none') {
+        if ($params['display'] !== 'none') {
             $requested_display = array_map(trim(...), explode(',', $params['display']));
 
             if (in_array('all', $requested_display, true)) {
@@ -321,7 +321,7 @@ SELECT DISTINCT ';
   WHERE
     ' . implode(' AND ', $where_clauses) . '
   ORDER BY ' . $params['order'];
-        if ($params['per_page'] != 0 || ! empty($display_flags)) {
+        if ($params['per_page'] !== 0 || ! empty($display_flags)) {
             $query .= '
     LIMIT ' . $params['per_page'] . '
     OFFSET ' . ($params['per_page'] * $params['page']) . ';
@@ -408,7 +408,7 @@ SELECT DISTINCT ';
         // in.
         $users_after_trigger = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('ws_users_getList', $users);
         $users = is_array($users_after_trigger) ? $users_after_trigger : $users;
-        if ($params['per_page'] == 0 && empty($display_flags)) {
+        if ($params['per_page'] === 0 && empty($display_flags)) {
             $method_result = $users_id_arr;
         } else {
             $method_result = [
@@ -446,16 +446,16 @@ SELECT DISTINCT ';
      */
     public static function add(array $params, PwgServer &$service): mixed
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (strlen(str_replace(' ', '', $params['username'])) == 0) {
+        if (strlen(str_replace(' ', '', $params['username'])) === 0) {
             return new PwgError(WsError::INVALID_PARAM, 'Name field must not be empty');
         }
 
         if (\Piwigo\Config\Config::doublePasswordTypeInAdmin()) {
-            if ($params['password'] != ($params['password_confirm'] ?? null)) {
+            if (($params['password'] ?? '') !== ($params['password_confirm'] ?? '')) {
                 return new PwgError(WsError::INVALID_PARAM, Lang::t('The passwords do not match'));
             }
         }
@@ -514,7 +514,7 @@ SELECT DISTINCT ';
      */
     public static function getAuthKey(array $params, PwgServer &$service): mixed
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -537,7 +537,7 @@ SELECT DISTINCT ';
      */
     public static function delete(array $params, PwgServer &$service): PwgError|string
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -598,7 +598,7 @@ SELECT
      */
     public static function setInfo(array $params, PwgServer &$service): mixed
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -639,7 +639,7 @@ SELECT
      */
     public static function setMyInfo(array $params, PwgServer &$service): PwgError|string
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -678,7 +678,7 @@ SELECT
         }
 
         if (! empty($params['password'])) {
-            if (($params['new_password'] ?? null) != ($params['conf_new_password'] ?? null)) {
+            if (($params['new_password'] ?? '') !== ($params['conf_new_password'] ?? '')) {
                 return new PwgError(403, Lang::t('The passwords do not match'));
             }
 
@@ -931,7 +931,7 @@ SELECT
      */
     public static function generatePasswordLink(array $params, PwgServer &$service): PwgError|array
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -1016,7 +1016,7 @@ SELECT
         }
 
         // check pwg_token
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -1054,7 +1054,7 @@ SELECT
             return new PwgError(401, 'Acces Denied');
         }
 
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -1099,7 +1099,7 @@ SELECT
             return new PwgError(401, 'Acces Denied');
         }
 
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, Lang::t('Invalid security token'));
         }
 
@@ -1141,7 +1141,7 @@ SELECT
             return new PwgError(401, 'Acces Denied');
         }
 
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, Lang::t('Invalid security token'));
         }
 
@@ -1184,7 +1184,7 @@ SELECT
             return new PwgError(401, 'Acces Denied');
         }
 
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 

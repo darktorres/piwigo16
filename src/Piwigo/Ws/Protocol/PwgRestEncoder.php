@@ -85,13 +85,13 @@ class PwgRestEncoder extends PwgResponseEncoder
             if (is_numeric($name)) {
                 continue;
             }
-            if ($skip_underscore and $name[0] == '_') {
+            if ($skip_underscore and $name[0] === '_') {
                 continue;
             }
             if ($value === null) {
                 continue;
             } // null means we dont put it
-            if ($name == PwgResponseEncoder::ATTRIBUTES_KEY) {
+            if ($name === PwgResponseEncoder::ATTRIBUTES_KEY) {
                 if (is_array($value)) {
                     foreach ($value as $attr_name => $attr_value) {
                         $this->writer()
@@ -110,7 +110,7 @@ class PwgRestEncoder extends PwgResponseEncoder
             if (is_numeric($name)) {
                 continue;
             }
-            if ($skip_underscore and $name[0] == '_') {
+            if ($skip_underscore and $name[0] === '_') {
                 continue;
             }
             if ($value === null) {

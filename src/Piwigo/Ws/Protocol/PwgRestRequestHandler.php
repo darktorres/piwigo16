@@ -25,10 +25,10 @@ class PwgRestRequestHandler extends PwgRequestHandler
 
         $param_array = PwgServer::isPost() ? $_POST : $_GET;
         foreach ($param_array as $name => $value) {
-            if ($name == 'format') {
+            if ($name === 'format') {
                 continue;
             } // ignore - special keys
-            if ($name == 'method') {
+            if ($name === 'method') {
                 $method = $value;
             } else {
                 $params[(string) $name] = $value;

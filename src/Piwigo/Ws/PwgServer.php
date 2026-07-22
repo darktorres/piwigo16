@@ -242,7 +242,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
     public static function makeArrayParam(mixed &$param): void
     {
-        if ($param == null) {
+        if ($param === null) {
             $param = [];
         } else {
             if (! is_array($param)) {
@@ -321,7 +321,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
     public static function hasFlag(int $val, int $flag): bool
     {
-        return ($val & $flag) == $flag;
+        return ($val & $flag) === $flag;
     }
 
     /**
@@ -334,7 +334,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
     {
         $method = @$this->_methods[$methodName];
 
-        if ($method == null) {
+        if ($method === null) {
             return new PwgError(WsError::INVALID_METHOD, 'Method name is not valid');
         }
 

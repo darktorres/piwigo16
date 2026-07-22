@@ -92,7 +92,7 @@ final class PwgExtensions
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         /** @var Template $template */
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -100,7 +100,7 @@ final class PwgExtensions
             return new PwgError(403, Lang::t('Webmaster status is required.'));
         }
 
-        if (! \Piwigo\Config\Config::enableExtensionsInstall() and $params['action'] == 'delete') {
+        if (! \Piwigo\Config\Config::enableExtensionsInstall() and $params['action'] === 'delete') {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -147,11 +147,11 @@ final class PwgExtensions
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         /** @var Template $template */
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (! \Piwigo\Config\Config::enableExtensionsInstall() and $params['action'] == 'delete') {
+        if (! \Piwigo\Config\Config::enableExtensionsInstall() and $params['action'] === 'delete') {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -201,7 +201,7 @@ final class PwgExtensions
             return new PwgError(401, Lang::t('Webmaster status is required.'));
         }
 
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -231,7 +231,7 @@ final class PwgExtensions
             $dbPluginsById = $repo->findAll(ExtensionType::Plugin);
             if (
                 isset($dbPluginsById[$extension_id])
-                and $dbPluginsById[$extension_id]['state'] == 'active'
+                and $dbPluginsById[$extension_id]['state'] === 'active'
             ) {
                 $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService)[$extension_id] ?? null;
                 $lifecycle->performAction(ExtensionType::Plugin, 'deactivate', $extension_id, $fsEntry);
@@ -272,7 +272,7 @@ final class PwgExtensions
                 'from_version' => $fsThemesBefore[$extension_id]['version'] ?? null,
             ];
 
-            if ($upgrade_status == 'ok') {
+            if ($upgrade_status === 'ok') {
                 $fsThemesAfter = $scanner->scan(ExtensionType::Theme, $urlService); // refresh list
                 $activity_details['to_version'] = $fsThemesAfter[$extension_id]['version'] ?? null;
             } else {
@@ -330,7 +330,7 @@ final class PwgExtensions
             return new PwgError(401, 'Access denied');
         }
 
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 

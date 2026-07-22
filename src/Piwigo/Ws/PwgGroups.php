@@ -110,7 +110,7 @@ final class PwgGroups
      */
     public static function delete(array $params, PwgServer &$service): PwgError|PwgNamedArray
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -137,7 +137,7 @@ final class PwgGroups
      */
     public static function setInfo(array $params, PwgServer &$service): mixed
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -173,7 +173,7 @@ final class PwgGroups
      */
     public static function addUser(array $params, PwgServer &$service): mixed
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -200,7 +200,7 @@ final class PwgGroups
      */
     public static function merge(array $params, PwgServer &$service): PwgError|array
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -232,7 +232,7 @@ final class PwgGroups
      */
     public static function duplicate(array $params, PwgServer &$service): mixed
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -259,7 +259,7 @@ final class PwgGroups
      */
     public static function deleteUser(array $params, PwgServer &$service): mixed
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 

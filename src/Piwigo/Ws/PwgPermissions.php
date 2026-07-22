@@ -124,15 +124,15 @@ SELECT group_id, cat_id
         // filter by group and user
         foreach ($perms as $cat_id => &$cat) {
             if (isset($params['group_id'])) {
-                if (empty($cat['groups']) or count(array_intersect($cat['groups'], $params['group_id'])) == 0) {
+                if (empty($cat['groups']) or count(array_intersect($cat['groups'], $params['group_id'])) === 0) {
                     unset($perms[$cat_id]);
                     continue;
                 }
             }
             if (isset($params['user_id'])) {
                 if (
-                    (empty($cat['users_indirect']) or count(array_intersect($cat['users_indirect'], $params['user_id'])) == 0)
-                    and (empty($cat['users']) or count(array_intersect($cat['users'], $params['user_id'])) == 0)
+                    (empty($cat['users_indirect']) or count(array_intersect($cat['users_indirect'], $params['user_id'])) === 0)
+                    and (empty($cat['users']) or count(array_intersect($cat['users'], $params['user_id'])) === 0)
                 ) {
                     unset($perms[$cat_id]);
                     continue;
@@ -169,7 +169,7 @@ SELECT group_id, cat_id
      */
     public static function add(array $params, PwgServer &$service): mixed
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -236,7 +236,7 @@ SELECT id
      */
     public static function remove(array $params, PwgServer &$service): mixed
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 

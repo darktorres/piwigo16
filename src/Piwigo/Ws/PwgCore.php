@@ -91,7 +91,7 @@ final class PwgCore
             $types = array_keys(ImageStdParams::get_defined_type_map());
         } else {
             $types = array_intersect(array_keys(ImageStdParams::get_defined_type_map()), $params['types']);
-            if (count($types) == 0) {
+            if (count($types) === 0) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid types');
             }
         }
@@ -108,7 +108,7 @@ final class PwgCore
         $image_count = is_numeric($image_count) ? (int) $image_count : 0;
         $max_id = is_numeric($max_id) ? (int) $max_id : 0;
 
-        if ($image_count == 0) {
+        if ($image_count === 0) {
             return [];
         }
 
@@ -153,7 +153,7 @@ SELECT id, path, representative_ext, width, height, rotation
 
                 foreach ($types as $type) {
                     $derivative = new DerivativeImage($type, $src_image);
-                    if ($type != $derivative->get_type()) {
+                    if ($type !== $derivative->get_type()) {
                         continue;
                     }
                     if (@filemtime($derivative->get_path()) === false) {
@@ -1469,7 +1469,7 @@ SELECT
                 '%d lines filtered',
                 $page_nb_lines
             ),
-            'FILESIZE' => $summary_total_filesize != 0 ? ceil($summary_total_filesize / 1024) : 0,
+            'FILESIZE' => $summary_total_filesize !== 0 ? ceil($summary_total_filesize / 1024) : 0,
             'USERS' => Translator::get()->plural(
                 '%d user',
                 '%d users',
@@ -1489,7 +1489,7 @@ SELECT
         return [
             'lines' => $result,
             'params' => $param,
-            'maxPage' => ($max_page == 0) ? 1 : $max_page,
+            'maxPage' => ($max_page === 0.0) ? 1 : $max_page,
             'summary' => $search_summary,
         ];
     }

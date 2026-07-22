@@ -282,7 +282,7 @@ GROUP BY author_id
      */
     public static function delete(array $params, PwgServer &$service): PwgError|string
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, Lang::t('Invalid security token'));
         }
 
@@ -302,7 +302,7 @@ GROUP BY author_id
      */
     public static function validate(array $params, PwgServer &$service): PwgError|string
     {
-        if (new CsrfService()->getToken() != $params['pwg_token']) {
+        if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, Lang::t('Invalid security token'));
         }
 

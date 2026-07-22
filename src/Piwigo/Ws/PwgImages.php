@@ -172,14 +172,14 @@ DELETE
             $cat_ids[] = $cat_id;
             $rank_on_category[$cat_id] = $rank;
 
-            if ($rank == 'auto') {
+            if ($rank === 'auto') {
                 $search_current_ranks = true;
             }
         }
 
         $cat_ids = array_unique($cat_ids);
 
-        if (count($cat_ids) == 0) {
+        if (count($cat_ids) === 0) {
             if ($replace_mode) {
                 $query = '
 DELETE
@@ -204,7 +204,7 @@ SELECT id
         $db_cat_ids = array_map(strval(...), array_filter(array_column($categoryConn->fetchAllAssociative($query), 'id'), is_scalar(...)));
 
         $unknown_cat_ids = array_diff($cat_ids, $db_cat_ids);
-        if (count($unknown_cat_ids) != 0) {
+        if (count($unknown_cat_ids) !== 0) {
             return new PwgError(
                 500,
                 '[ws_add_image_category_relations] the following categories are unknown: ' . implode(', ', $unknown_cat_ids)
@@ -238,7 +238,7 @@ DELETE
         }
 
         $new_cat_ids = array_diff($cat_ids, $existing_cat_ids);
-        if (count($new_cat_ids) == 0) {
+        if (count($new_cat_ids) === 0) {
             return true;
         }
 
@@ -257,7 +257,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
                     $current_rank_of[$cat_id] = 0;
                 }
 
-                if ($rank_on_category[$cat_id] == 'auto') {
+                if ($rank_on_category[$cat_id] === 'auto') {
                     $max_rank = is_numeric($current_rank_of[$cat_id]) ? (int) $current_rank_of[$cat_id] : 0;
                     $rank_on_category[$cat_id] = $max_rank + 1;
                 }
@@ -435,7 +435,7 @@ SELECT DISTINCT image_id
             case 'moderate':
                 $ret = [
                     'id' => $comm['id'],
-                    'validation' => $comment_action == 'validate',
+                    'validation' => $comment_action === 'validate',
                 ];
                 return [
                     'comment' => new PwgNamedStruct($ret),
@@ -688,7 +688,7 @@ SELECT id, date, author, content
             ['id', 'date']
         );
 
-        if ($service->_responseFormat != 'rest') {
+        if ($service->_responseFormat !== 'rest') {
             return $ret; // for backward compatibility only
         } else {
             return [
@@ -725,7 +725,7 @@ SELECT DISTINCT id
         $res = new RateService(new RateRepository(DbConnection::build()), new CookieService())
             ->rate($params['image_id'], (int) $params['rate']);
 
-        if ($res == false) {
+        if ($res === false) {
             $rate_items = \Piwigo\Config\Config::rateItems();
             $rate_items = is_array($rate_items) ? array_filter($rate_items, is_scalar(...)) : [];
             return new PwgError(403, 'Forbidden or rate not in ' . implode(',', $rate_items));
@@ -981,13 +981,13 @@ SELECT *
 
             @$search['fields']['date_posted']['preset'] = $params['date_posted_preset'];
 
-            if ($search['fields']['date_posted']['preset'] == 'custom' and empty($params['date_posted_custom'])) {
+            if ($search['fields']['date_posted']['preset'] === 'custom' and empty($params['date_posted_custom'])) {
                 return new PwgError(WsError::INVALID_PARAM, 'date_posted_custom is missing');
             }
         }
 
         if (isset($params['date_posted_custom'])) {
-            if (! isset($search['fields']['date_posted']['preset']) or $search['fields']['date_posted']['preset'] != 'custom') {
+            if (! isset($search['fields']['date_posted']['preset']) or $search['fields']['date_posted']['preset'] !== 'custom') {
                 return new PwgError(WsError::INVALID_PARAM, 'date_posted_custom provided date_posted_preset is not custom');
             }
 
@@ -995,18 +995,18 @@ SELECT *
                 $correct_format = false;
 
                 $ymd = substr($date, 0, 1);
-                if ($ymd == 'y') {
+                if ($ymd === 'y') {
                     if ((bool) preg_match('/^y(\d{4})$/', $date, $matches)) {
                         $correct_format = true;
                     }
-                } elseif ($ymd == 'm') {
+                } elseif ($ymd === 'm') {
                     if ((bool) preg_match('/^m(\d{4}-\d{2})$/', $date, $matches)) {
                         [$year, $month] = explode('-', $matches[1]);
                         if ($month >= 1 and $month <= 12) {
                             $correct_format = true;
                         }
                     }
-                } elseif ($ymd == 'd') {
+                } elseif ($ymd === 'd') {
                     if ((bool) preg_match('/^d(\d{4}-\d{2}-\d{2})$/', $date, $matches)) {
                         [$year, $month, $day] = explode('-', $matches[1]);
                         if ($month >= 1 and $month <= 12 and $day >= 1 and $day <= cal_days_in_month(CAL_GREGORIAN, (int) $month, (int) $year)) {
@@ -1030,13 +1030,13 @@ SELECT *
 
             @$search['fields']['date_created']['preset'] = $params['date_created_preset'];
 
-            if ($search['fields']['date_created']['preset'] == 'custom' and empty($params['date_created_custom'])) {
+            if ($search['fields']['date_created']['preset'] === 'custom' and empty($params['date_created_custom'])) {
                 return new PwgError(WsError::INVALID_PARAM, 'date_created_custom is missing');
             }
         }
 
         if (isset($params['date_created_custom'])) {
-            if (! isset($search['fields']['date_created']['preset']) or $search['fields']['date_created']['preset'] != 'custom') {
+            if (! isset($search['fields']['date_created']['preset']) or $search['fields']['date_created']['preset'] !== 'custom') {
                 return new PwgError(WsError::INVALID_PARAM, 'date_created_custom provided date_created_preset is not custom');
             }
 
@@ -1044,18 +1044,18 @@ SELECT *
                 $correct_format = false;
 
                 $ymd = substr($date, 0, 1);
-                if ($ymd == 'y') {
+                if ($ymd === 'y') {
                     if ((bool) preg_match('/^y(\d{4})$/', $date, $matches)) {
                         $correct_format = true;
                     }
-                } elseif ($ymd == 'm') {
+                } elseif ($ymd === 'm') {
                     if ((bool) preg_match('/^m(\d{4}-\d{2})$/', $date, $matches)) {
                         [$year, $month] = explode('-', $matches[1]);
                         if ($month >= 1 and $month <= 12) {
                             $correct_format = true;
                         }
                     }
-                } elseif ($ymd == 'd') {
+                } elseif ($ymd === 'd') {
                     if ((bool) preg_match('/^d(\d{4}-\d{2}-\d{2})$/', $date, $matches)) {
                         [$year, $month, $day] = explode('-', $matches[1]);
                         if ($month >= 1 and $month <= 12 and $day >= 1 and $day <= cal_days_in_month(CAL_GREGORIAN, (int) $month, (int) $year)) {
@@ -1292,7 +1292,7 @@ UPDATE ' . Tables::imageCategory() . '
         $logger = \Piwigo\Core\CurrentLogger::get();
 
         foreach ($params as $param_key => $param_value) {
-            if ($param_key == 'data') {
+            if ($param_key === 'data') {
                 continue;
             }
 
@@ -1368,14 +1368,14 @@ SELECT
         }
 
         // since Piwigo 2.4 and derivatives, we do not take the imported "thumb" into account
-        if ($params['type'] == 'thumb') {
+        if ($params['type'] === 'thumb') {
             self::removeChunks($image['md5sum'], $params['type']);
             return true;
         }
 
         // since Piwigo 2.4 and derivatives, we only care about the "original"
         $original_type = 'file';
-        if ($params['type'] == 'high') {
+        if ($params['type'] === 'high') {
             $original_type = 'high';
         }
 
@@ -1387,7 +1387,7 @@ SELECT
 
         // if we receive the "file", we only update the original if the "file" is
         // bigger than current original
-        if ($params['type'] == 'file') {
+        if ($params['type'] === 'file') {
             $do_update = false;
 
             $infos = new UploadService()
@@ -1462,10 +1462,10 @@ SELECT COUNT(*)
         // does the image already exists ?
         if ($params['check_uniqueness']) {
             $where_clause = '0'; // no known uniqueness_mode: skip the uniqueness check
-            if (\Piwigo\Config\Config::uniquenessMode() == 'md5sum') {
+            if (\Piwigo\Config\Config::uniquenessMode() === 'md5sum') {
                 $where_clause = "md5sum = '" . $params['original_sum'] . "'";
             }
-            if (\Piwigo\Config\Config::uniquenessMode() == 'filename') {
+            if (\Piwigo\Config\Config::uniquenessMode() === 'filename') {
                 $where_clause = "file = '" . $params['original_filename'] . "'";
             }
 
@@ -1601,7 +1601,7 @@ SELECT id, name, permalink
         }
         $uploaded_image = $_FILES['image'];
 
-        if (isset($uploaded_image['error']) && $uploaded_image['error'] != 0) {
+        if (isset($uploaded_image['error']) && $uploaded_image['error'] !== 0) {
             $upload_error = $uploaded_image['error'];
             $message = match ($upload_error) {
                 UPLOAD_ERR_INI_SIZE => 'The uploaded file exceeds the upload_max_filesize directive in php.ini.',
@@ -1748,7 +1748,7 @@ SELECT id, name, permalink
 
         $format_ext = null;
 
-        if (new \Piwigo\Csrf\CsrfService()->getToken() != $params['pwg_token']) {
+        if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -1833,7 +1833,7 @@ SELECT id, name, permalink
 
         $add_status = 'add';
         // Check if file has been uploaded
-        if (! (bool) $chunks || $chunk == $chunks - 1) {
+        if (! (bool) $chunks || $chunk === $chunks - 1) {
             // Strip the temp .part suffix off
             rename("{$filePath}.part", $filePath);
 
@@ -2034,7 +2034,7 @@ SELECT COUNT(*)
 
         // MD5 checksum
         $chunk_md5 = md5_file($chunkfile_path);
-        if ($chunk_md5 != $params['chunk_sum']) {
+        if ($chunk_md5 !== $params['chunk_sum']) {
             unlink($chunkfile_path);
             $logger->error(__FUNCTION__ . ' ' . $chunkfile_path . ' MD5 checksum mismatched');
             return new PwgError(500, 'MD5 checksum chunk file mismatched');
@@ -2050,7 +2050,7 @@ SELECT COUNT(*)
             }
         }
 
-        if ($params['chunks'] != count($chunk_ids_uploaded)) {
+        if ($params['chunks'] !== count($chunk_ids_uploaded)) {
             // all chunks are not yet available
             $logger->debug(__FUNCTION__ . ' all chunks are not uploaded yet, maybe on next chunk, exit for now');
             return [
@@ -2134,7 +2134,7 @@ SELECT COUNT(*)
         // MD5 checksum
         $merged_md5 = md5_file($output_filepath);
 
-        if ($merged_md5 != $params['original_sum']) {
+        if ($merged_md5 !== $params['original_sum']) {
             unlink($output_filepath);
             $logger->error(__FUNCTION__ . ' ' . $output_filepath . ' MD5 checksum mismatched!');
             return new PwgError(500, 'MD5 checksum merged file mismatched');
@@ -2260,7 +2260,7 @@ SELECT COUNT(*)
         $split_pattern = '/[\s,;\|]/';
         $result = [];
 
-        if (\Piwigo\Config\Config::uniquenessMode() == 'md5sum') {
+        if (\Piwigo\Config\Config::uniquenessMode() === 'md5sum') {
             // search among photos the list of photos already added, based on md5sum list
             $md5sums = preg_split(
                 $split_pattern,
@@ -2285,7 +2285,7 @@ SELECT id, md5sum
                     $result[$md5sum] = $id_of_md5[$md5sum];
                 }
             }
-        } elseif (\Piwigo\Config\Config::uniquenessMode() == 'filename') {
+        } elseif (\Piwigo\Config\Config::uniquenessMode() === 'filename') {
             // search among photos the list of photos already added, based on
             // filename list
             $filenames = preg_split(
@@ -2440,7 +2440,7 @@ SELECT
      */
     public static function formatsDelete(array $params, PwgServer $service): PwgError|bool
     {
-        if (new \Piwigo\Csrf\CsrfService()->getToken() != $params['pwg_token']) {
+        if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -2491,7 +2491,7 @@ SELECT
             $formats_of[$row['image_id']][] = $row['ext'];
         }
 
-        if (count($image_ids) == 0) {
+        if (count($image_ids) === 0) {
             return new PwgError(404, 'No format found for the id(s) given');
         }
 
@@ -2586,7 +2586,7 @@ SELECT path
 
         if (isset($compare_type)) {
             $logger->debug(__FUNCTION__ . ', md5_file($path) = ' . md5_file($path), 'WS');
-            if (md5_file($path) != $params[$compare_type . '_sum']) {
+            if (md5_file($path) !== $params[$compare_type . '_sum']) {
                 $ret[$compare_type] = 'differs';
             } else {
                 $ret[$compare_type] = 'equals';
@@ -2612,7 +2612,7 @@ SELECT path
     public static function setInfo(array $params, PwgServer $service): ?PwgError
     {
 
-        if (isset($params['pwg_token']) and new \Piwigo\Csrf\CsrfService()->getToken() != $params['pwg_token']) {
+        if (isset($params['pwg_token']) and new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -2645,11 +2645,11 @@ SELECT *
                     $params[$key] = strip_tags((string) $params[$key], '<b><strong><em><i>');
                 }
 
-                if ($params['single_value_mode'] == 'fill_if_empty') {
+                if ($params['single_value_mode'] === 'fill_if_empty') {
                     if (empty($image_row[$key])) {
                         $update[$key] = $params[$key];
                     }
-                } elseif ($params['single_value_mode'] == 'replace') {
+                } elseif ($params['single_value_mode'] === 'replace') {
                     $update[$key] = $params[$key];
                 } else {
                     return new PwgError(
@@ -2696,7 +2696,7 @@ SELECT *
             self::addImageCategoryRelations(
                 $params['image_id'],
                 $params['categories'],
-                ($params['multiple_value_mode'] == 'replace' ? true : false)
+                ($params['multiple_value_mode'] === 'replace' ? true : false)
             );
         }
 
@@ -2714,12 +2714,12 @@ SELECT *
                 }
             }
 
-            if ($params['multiple_value_mode'] == 'replace') {
+            if ($params['multiple_value_mode'] === 'replace') {
                 $tagService->setTags(
                     $tag_ids,
                     $params['image_id']
                 );
-            } elseif ($params['multiple_value_mode'] == 'append') {
+            } elseif ($params['multiple_value_mode'] === 'append') {
                 $tagService->addTags(
                     $tag_ids,
                     [$params['image_id']]
@@ -2770,7 +2770,7 @@ SELECT *
      */
     public static function delete(array $params, PwgServer $service): PwgError|int
     {
-        if (new \Piwigo\Csrf\CsrfService()->getToken() != $params['pwg_token']) {
+        if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -2852,7 +2852,7 @@ SELECT *
      */
     public static function uploadCompleted(array $params, PwgServer $service): PwgError|array
     {
-        if (new \Piwigo\Csrf\CsrfService()->getToken() != $params['pwg_token']) {
+        if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -2930,7 +2930,7 @@ SELECT
      */
     public static function setMd5sum(array $params, PwgServer $service): PwgError|array
     {
-        if (new \Piwigo\Csrf\CsrfService()->getToken() != $params['pwg_token']) {
+        if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -2961,7 +2961,7 @@ SELECT
      */
     public static function syncMetadata(array $params, PwgServer $service): PwgError|array
     {
-        if (new \Piwigo\Csrf\CsrfService()->getToken() != $params['pwg_token']) {
+        if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -3025,7 +3025,7 @@ SELECT id
      */
     public static function deleteOrphans(array $params, PwgServer $service): PwgError|array
     {
-        if (new \Piwigo\Csrf\CsrfService()->getToken() != $params['pwg_token']) {
+        if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -3055,7 +3055,7 @@ SELECT id
      */
     public static function setCategory(array $params, PwgServer $service): ?PwgError
     {
-        if (new \Piwigo\Csrf\CsrfService()->getToken() != $params['pwg_token']) {
+        if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -3074,11 +3074,11 @@ SELECT
 
         $imageService = self::imageService($imageConn);
 
-        if ($params['action'] == 'associate') {
+        if ($params['action'] === 'associate') {
             $imageService->associateImagesToCategories($params['image_id'], [$params['category_id']]);
-        } elseif ($params['action'] == 'dissociate') {
+        } elseif ($params['action'] === 'dissociate') {
             $imageService->dissociateImagesFromCategory($params['image_id'], $params['category_id']);
-        } elseif ($params['action'] == 'move') {
+        } elseif ($params['action'] === 'move') {
             $imageService->moveImagesToCategories($params['image_id'], [$params['category_id']]);
         }
 

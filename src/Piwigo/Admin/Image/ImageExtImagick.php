@@ -236,7 +236,11 @@ class ImageExtImagick implements ImageInterface
         if (! isset($dest['dirname'])) {
             throw new \Exception("write(): unable to determine directory for {$destination_filepath}");
         }
-        $exec .= ' ' . escapeshellarg(realpath($dest['dirname']) . '/' . $dest['basename']) . ' 2>&1';
+        $dest_dirname_realpath = realpath($dest['dirname']);
+        if ($dest_dirname_realpath === false) {
+            throw new \Exception("write(): unable to resolve directory {$dest['dirname']}");
+        }
+        $exec .= ' ' . escapeshellarg($dest_dirname_realpath . '/' . $dest['basename']) . ' 2>&1';
         $logger->debug($exec, 'i.php');
         @exec($exec, $returnarray);
 

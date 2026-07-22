@@ -159,7 +159,7 @@ final class UploadService
                 $pattern = $upload_form_config[$field]['pattern'];
                 $error_message = $upload_form_config[$field]['error_message'];
 
-                if (! is_int($min) || ! is_int($max) || ! is_string($pattern) || ! is_string($error_message) || ! is_scalar($value)) {
+                if (! is_int($min) || ! is_int($max) || ! is_string($pattern) || $pattern === '' || ! is_string($error_message) || ! is_scalar($value)) {
                     // every upload_form_config entry that reaches this branch
                     // (i.e. isn't the boolean toggle handled above) defines
                     // min/max/pattern/error_message as int/int/string/string;
@@ -230,6 +230,9 @@ final class UploadService
             $md5sum = $original_md5sum;
         } else {
             $md5sum = md5_file($source_filepath);
+            if ($md5sum === false) {
+                throw new \Exception("upload(): unable to compute md5sum of {$source_filepath}");
+            }
         }
 
         // we only try to detect duplicate on a new image, not when updating an existing image
@@ -313,7 +316,7 @@ SELECT
 
             // compute file path
             $date_string = preg_replace('/[^\d]/', '', $dbnow);
-            $random_string = substr((string) $md5sum, 0, 4) . '%s';
+            $random_string = substr($md5sum, 0, 4) . '%s';
             $filename_wo_ext = $date_string . '-' . $random_string;
             $file_path = $upload_dir . '/' . $filename_wo_ext . '.';
 
@@ -910,14 +913,18 @@ SELECT
         }
 
         $dest = pathinfo($representative_file_path);
-        $exec .= ' ' . escapeshellarg((string) realpath($dest['dirname']) . '/' . $dest['basename']);
+        $dest_dirname_realpath = realpath($dest['dirname']);
+        if ($dest_dirname_realpath === false) {
+            throw new \Exception("unable to resolve directory {$dest['dirname']}");
+        }
+        $exec .= ' ' . escapeshellarg($dest_dirname_realpath . '/' . $dest['basename']);
 
         $exec .= ' 2>&1';
         @exec($exec, $returnarray);
 
         // sometimes ImageMagick creates file-0.jpg (full size) + file-1.jpg
         // (thumbnail). I don't know how to avoid it.
-        $representative_file_abspath = realpath($dest['dirname']) . '/' . $dest['basename'];
+        $representative_file_abspath = $dest_dirname_realpath . '/' . $dest['basename'];
         if (! file_exists($representative_file_abspath)) {
             $first_file_abspath = preg_replace(
                 '/\.' . $representative_ext . '$/',
@@ -1047,7 +1054,11 @@ SELECT
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
 
         $dest = pathinfo($representative_file_path);
-        $exec .= ' ' . escapeshellarg((string) realpath($dest['dirname']) . '/' . $dest['basename']);
+        $dest_dirname_realpath = realpath($dest['dirname']);
+        if ($dest_dirname_realpath === false) {
+            throw new \Exception("unable to resolve directory {$dest['dirname']}");
+        }
+        $exec .= ' ' . escapeshellarg($dest_dirname_realpath . '/' . $dest['basename']);
 
         $exec .= ' 2>&1';
         $logger->info(__METHOD__ . ', exec = ' . $exec);
@@ -1055,7 +1066,7 @@ SELECT
 
         // sometimes ImageMagick creates file-0.png + file-1.png + file-2.png...
         // It seems we can't avoid it.
-        $representative_file_abspath = realpath($dest['dirname']) . '/' . $dest['basename'];
+        $representative_file_abspath = $dest_dirname_realpath . '/' . $dest['basename'];
         if (! file_exists($representative_file_abspath)) {
             $first_file_abspath = preg_replace(
                 '/\.' . $representative_ext . '$/',
@@ -1249,10 +1260,12 @@ SELECT
 
     public function fileUploadErrorMessage(int $error_code): string
     {
+        $ini_size = $this->getIniSize('upload_max_filesize', false);
+
         return match ($error_code) {
             UPLOAD_ERR_INI_SIZE => sprintf(
                 Lang::t('The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB'),
-                $this->getIniSize('upload_max_filesize', false)
+                $ini_size === false ? 'unknown' : $ini_size
             ),
             UPLOAD_ERR_FORM_SIZE => Lang::t('The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form'),
             UPLOAD_ERR_PARTIAL => Lang::t('The uploaded file was only partially uploaded'),

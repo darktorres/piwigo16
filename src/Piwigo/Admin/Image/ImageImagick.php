@@ -96,7 +96,7 @@ class ImageImagick implements ImageInterface
         if ($this->get_width() % 2 === 0
             && $this->get_height() % 2 === 0
             && $this->get_width() > 3.0 * (float) $width) {
-            $this->image->scaleImage($this->get_width() / 2, $this->get_height() / 2);
+            $this->image->scaleImage(intdiv($this->get_width(), 2), intdiv($this->get_height(), 2));
         }
 
         // Imagick::resizeImage() requires int columns/rows — see

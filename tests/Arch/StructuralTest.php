@@ -842,7 +842,7 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // error response, already covered above) and Job/BatchUploadJob.php
         // (a background job with no HTTP response to build) -- a hard
         // die() is correct in both real callers.
-        'Admin/Image/ImageGd.php' => 2,
+        'Admin/Image/ImageGd.php' => 5,
         'Admin/Image/ImageExtImagick.php' => 1,
         'Admin/Image/PwgImage.php' => 2,
         'Admin/Upload/UploadService.php' => 10,

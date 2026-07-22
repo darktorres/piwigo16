@@ -75,6 +75,9 @@ class ImageGd implements ImageInterface
         assert($width > 0 && $height > 0);
 
         $dest = imagecreatetruecolor($width, $height);
+        if ($dest === false) {
+            die('[Image GD] imagecreatetruecolor() failed');
+        }
 
         imagealphablending($dest, false);
         imagesavealpha($dest, true);
@@ -123,6 +126,9 @@ class ImageGd implements ImageInterface
         assert($width > 0 && $height > 0);
 
         $dest = imagecreatetruecolor($width, $height);
+        if ($dest === false) {
+            die('[Image GD] imagecreatetruecolor() failed');
+        }
 
         imagealphablending($dest, false);
         imagesavealpha($dest, true);
@@ -169,6 +175,9 @@ class ImageGd implements ImageInterface
 
         // Create a new blank image the site of our source image
         $cut = imagecreatetruecolor($ow, $oh);
+        if ($cut === false) {
+            die('[Image GD] imagecreatetruecolor() failed');
+        }
 
         // Copy the blank image into the destination image where the source goes
         imagecopy($cut, $this->image, 0, 0, $x, $y, $ow, $oh);

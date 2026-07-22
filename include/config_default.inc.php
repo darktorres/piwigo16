@@ -938,16 +938,21 @@ $conf['light_slideshow'] = true;
 // mandatory trailing slash.
 $conf['data_location'] = '_data/';
 
-// where should the API/UploadForm add photos? This path must be relative to
-// the Piwigo installation directory (but can be outside, as long as it's
-// reachable from your webserver).
-$conf['upload_dir'] = './upload';
+// where should the API/UploadForm add photos? Relative to the Piwigo
+// installation directory (Piwigo\Config\Config::uploadDir()'s own real
+// callers all compose this with Piwigo\Core\CurrentPaths::get()->root --
+// Part II (web-root isolation) dropped the former leading './', which was
+// CWD-relative instead, and silently broke (uploads landing inside
+// public/, the deliberately web-unreachable-on-purpose SEC-33 fix) once
+// every entry file moved to public/ and PHP's CWD followed it there).
+$conf['upload_dir'] = 'upload/';
 
 // where should the user be guided when there is no photo in his gallery yet?
 $conf['no_photo_yet_url'] = 'admin.php?page=photos_add';
 
-// directory with themes inside
-$conf['themes_dir'] = './themes';
+// directory with themes inside, relative to the Piwigo installation
+// directory -- same Part II fix as upload_dir above.
+$conf['themes_dir'] = 'themes/';
 
 // enable the synchronization method for adding photos
 $conf['enable_synchronization'] = true;
@@ -1010,7 +1015,17 @@ $conf['pem_languages_category'] = 8;
 $conf['upload_form_automatic_rotation'] = true;
 
 // 0-'auto', 1-'derivative' 2-'script'
-$conf['derivative_url_style'] = 0;
+// Part II (web-root isolation): styles 0 ('auto', prefers a direct static
+// _data/i/... link once a derivative is cached) and 1 ('derivative', always
+// a direct static link) are no longer usable -- _data/i/ is deliberately
+// unreachable now (SEC-33/35/38/47: a direct static link to a cached
+// derivative skips ImageDerivativeController's own permission check every
+// time after the first request, the exact vulnerability this closes), so
+// either style would generate a broken <img src> for every cached
+// derivative. 2 ('script', always routes through i.php, which re-checks
+// permission on every request including cache hits) is the only style that
+// still works, and is now the default.
+$conf['derivative_url_style'] = 2;
 
 $conf['chmod_value'] = substr_compare(PHP_SAPI, 'apa', 0, 3) == 0 ? 0777 : 0755;
 

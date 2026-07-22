@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Maintenance;
 
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -94,9 +95,15 @@ SELECT
         $fsqc_paths = array_column($conn->fetchAllAssociative($query), 'path', 'id');
 
         foreach ($fsqc_paths as $id => $path) {
-            // path is a NOT NULL column in the images table.
+            // path is a NOT NULL column in the images table, root-relative
+            // (Part II) -- PHP's CWD tracks the executing script's
+            // directory, not necessarily the install root, so this must be
+            // composed with CurrentPaths::get()->root rather than checked
+            // as-is (found live: a real Visual Regression failure, a
+            // spurious "some photos are missing" banner on every admin
+            // dashboard load).
             assert(is_string($path));
-            if (! file_exists($path)) {
+            if (! file_exists(CurrentPaths::get()->root . $path)) {
                 $template = \Piwigo\Template\CurrentTemplate::get();
 
                 $template->assign(

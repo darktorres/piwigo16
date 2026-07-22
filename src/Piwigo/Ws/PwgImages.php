@@ -302,7 +302,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
             }
         }
 
-        $upload_dir_conf = \Piwigo\Config\Config::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\Config::uploadDir();
         $upload_dir = $upload_dir_conf . '/buffer';
         $pattern = '/' . $original_sum . '-' . $type . '/';
         $chunks = [];
@@ -361,7 +361,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
     private static function removeChunks($original_sum, string $type): void
     {
 
-        $upload_dir_conf = \Piwigo\Config\Config::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\Config::uploadDir();
         $upload_dir = $upload_dir_conf . '/buffer';
         $pattern = '/' . $original_sum . '-' . $type . '/';
         $chunks = [];
@@ -1303,7 +1303,7 @@ UPDATE ' . Tables::imageCategory() . '
             ), 'WS');
         }
 
-        $upload_dir_conf = \Piwigo\Config\Config::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\Config::uploadDir();
         $upload_dir = $upload_dir_conf . '/buffer';
 
         // create the upload directory tree if not exists
@@ -1380,7 +1380,7 @@ SELECT
             $original_type = 'high';
         }
 
-        $upload_dir_conf = \Piwigo\Config\Config::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\Config::uploadDir();
         $file_path = $upload_dir_conf . '/buffer/' . $image['md5sum'] . '-original';
 
         self::mergeChunks($file_path, $image['md5sum'], $original_type);
@@ -1495,7 +1495,7 @@ SELECT COUNT(*)
             $original_type = 'file';
         }
 
-        $upload_dir_conf = \Piwigo\Config\Config::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\Config::uploadDir();
         $file_path = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-original';
 
         self::mergeChunks($file_path, $params['original_sum'], $original_type);
@@ -1772,7 +1772,7 @@ SELECT id, name, permalink
             }
         }
 
-        $upload_dir_conf = \Piwigo\Config\Config::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\Config::uploadDir();
         $upload_dir = $upload_dir_conf . '/buffer';
 
         // create the upload directory tree if not exists
@@ -1998,7 +1998,7 @@ SELECT COUNT(*)
             }
         }
 
-        $upload_dir_conf = \Piwigo\Config\Config::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\Config::uploadDir();
         $output_filepath_prefix = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-u' . \Piwigo\Users\CurrentUser::get()->id;
         $chunkfile_path_pattern = $output_filepath_prefix . '-%03uof%03u.chunk';
 
@@ -2016,14 +2016,15 @@ SELECT COUNT(*)
         if (! is_string($uploaded_chunk_tmp_name)) {
             return new PwgError(500, 'missing uploaded chunk file');
         }
-        // $chunkfile_path is relative (built from \Piwigo\Config\Config::uploadDir() without a
-        // Paths::$root prefix) -- normalize to absolute before stripRoot()
-        // can compute the 'uploads' disk-relative path; everything downstream
-        // keeps using the original relative $chunkfile_path unchanged, since
+        // $chunkfile_path is already absolute ($upload_dir_conf above
+        // includes the CurrentPaths::get()->root prefix, Part II) -- just
+        // normalize backslashes/'/./' segments before stripRoot() can
+        // compute the 'uploads' disk-relative path; everything downstream
+        // keeps using the original absolute $chunkfile_path unchanged, since
         // the 'uploads' disk is rooted at the same real filesystem location.
         $paths = CurrentPaths::get();
         $chunk_root = $paths->root . Config::uploadDir();
-        $chunk_abs_path = $paths->root . ltrim(str_replace(['\\', '/./'], ['/', '/'], $chunkfile_path), '/');
+        $chunk_abs_path = str_replace(['\\', '/./'], ['/', '/'], $chunkfile_path);
         $chunk_rel_path = StorageRegistry::stripRoot($chunk_root, $chunk_abs_path);
         $chunk_stream = fopen($uploaded_chunk_tmp_name, 'rb');
         if ($chunk_stream !== false) {

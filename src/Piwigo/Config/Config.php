@@ -494,9 +494,17 @@ final class Config
         ],
         'derivative_url_style' => [
             'type' => 'int',
-            'default' => 0,
+            // Part II (web-root isolation): was 0 ('auto', prefers a direct
+            // static _data/i/... link once a derivative is cached) -- see
+            // config_default.inc.php's own comment on this same key for why
+            // that (and style 1, always-static) are no longer usable now
+            // that _data/i/ is deliberately unreachable (SEC-33/35/38/47).
+            'default' => 2,
             'method' => 'derivativeUrlStyle',
-            'description' => 'Derivative URL format: 0 = path-based, 1 = query-string-based.',
+            // Stale description found while fixing the default above: only
+            // documented 2 of the 3 real values (0/1/2, see
+            // config_default.inc.php's own comment) and mislabeled style 1.
+            'description' => 'Derivative URL format: 0 = auto (static link if already cached, else routed through i.php), 1 = always a static link, 2 = always routed through i.php.',
         ],
         'derivatives' => [
             'type' => 'string',
@@ -1710,9 +1718,17 @@ final class Config
         ],
         'themes_dir' => [
             'type' => 'string',
-            'default' => './themes',
+            // Part II (web-root isolation): was './themes' -- CWD-relative,
+            // silently broken once every entry file moved to public/ (PHP's
+            // CWD tracks the executing script's directory). Root-relative
+            // (no leading './', matching Config::dataLocation()'s own
+            // '_data/' convention) -- every real filesystem caller must
+            // compose it with CurrentPaths::get()->root itself (see
+            // ThemeCatalog::checkThemeInstalled() and config/storage.php's
+            // 'themes' disk, both fixed alongside this).
+            'default' => 'themes/',
             'method' => 'themesDir',
-            'description' => 'Filesystem path to the directory containing installed themes.',
+            'description' => 'Root-relative path to the directory containing installed themes (compose with CurrentPaths::get()->root for an absolute filesystem path).',
         ],
         'tiff_representative_ext' => [
             'type' => 'string',
@@ -1793,9 +1809,22 @@ final class Config
         ],
         'upload_dir' => [
             'type' => 'string',
-            'default' => './upload',
+            // Part II (web-root isolation): was './upload' -- CWD-relative,
+            // silently broken (and, worse, silently created a stray
+            // public/upload/ once every entry file moved to public/, since
+            // PHP's CWD tracks the executing script's directory -- found
+            // live via a real Visual Regression run, real uploaded chunk
+            // files landing inside the new, structurally-unreachable-on-
+            // purpose web root instead of the real upload/ SEC-33 fix
+            // deliberately keeps unreachable). Root-relative now (no
+            // leading './', matching Config::dataLocation()'s own
+            // '_data/' convention) -- every real filesystem caller must
+            // compose it with CurrentPaths::get()->root itself (see
+            // Ws/PwgImages.php's and Admin/Upload/UploadService.php's own
+            // call sites, all fixed alongside this).
+            'default' => 'upload/',
             'method' => 'uploadDir',
-            'description' => 'Filesystem path to the directory where uploaded files are stored.',
+            'description' => 'Root-relative path to the directory where uploaded files are stored (compose with CurrentPaths::get()->root for an absolute filesystem path).',
         ],
         'upload_form_all_types' => [
             'type' => 'bool',
@@ -2273,7 +2302,10 @@ final class Config
 
     public static function derivativeUrlStyle(): int
     {
-        return self::getInt('derivative_url_style', 0);
+        // Part II (web-root isolation): matches config_default.inc.php's own
+        // default -- see that file's comment for why 2 ('script') is the
+        // only style that still works now that _data/i/ is unreachable.
+        return self::getInt('derivative_url_style', 2);
     }
 
     public static function derivativesStripMetadataThreshold(): int
@@ -3132,7 +3164,8 @@ final class Config
 
     public static function themesDir(): string
     {
-        return self::getString('themes_dir', './themes');
+        // Root-relative -- see SCHEMA['themes_dir']'s own comment.
+        return self::getString('themes_dir', 'themes/');
     }
 
     public static function tiffRepresentativeExt(): string
@@ -3190,7 +3223,8 @@ final class Config
 
     public static function uploadDir(): string
     {
-        return self::getString('upload_dir', './upload');
+        // Root-relative -- see SCHEMA['upload_dir']'s own comment.
+        return self::getString('upload_dir', 'upload/');
     }
 
     public static function uploadFormAllTypes(): bool

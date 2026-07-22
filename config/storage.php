@@ -25,7 +25,7 @@ use Piwigo\Config\Config;
 $paths = \Piwigo\Core\CurrentPaths::get();
 
 return [
-    // User photo uploads: ./upload/YYYY/MM/DD/
+    // User photo uploads: upload/YYYY/MM/DD/
     'uploads' => static fn (): Filesystem => new Filesystem(
         new LocalFilesystemAdapter(rtrim($paths->root . Config::uploadDir(), '/')),
     ),
@@ -42,7 +42,7 @@ return [
 
     // Theme files
     'themes' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter($paths->root . ltrim(Config::themesDir(), './')),
+        new LocalFilesystemAdapter($paths->root . Config::themesDir()),
     ),
 
     // Plugin files

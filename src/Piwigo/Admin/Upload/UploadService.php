@@ -1312,14 +1312,14 @@ SELECT
     public function readyForUploadMessage(): ?string
     {
 
-        $upload_dir = \Piwigo\Config\Config::uploadDir();
-
-        // Config::uploadDir()'s own default ('./upload') is CWD-relative, not
-        // Paths-based (same convention as Config::themesDir()) -- this only
-        // strips a leading './' for display, so the literal string replaces
-        // the former PHPWG_ROOT_PATH read (always './' in every real entry
-        // file) rather than Paths::$root, which is an absolute path.
-        $relative_dir = preg_replace('#^\./#', '', $upload_dir);
+        // Config::uploadDir()'s own default ('upload/') is root-relative
+        // (Part II), not CWD-relative -- the real is_dir()/is_writable()/
+        // chmod() calls below need an absolute path (PHP's CWD tracks the
+        // executing script's directory, not necessarily the install root),
+        // while $relative_dir stays the short, root-relative form for
+        // display (replaces the former PHPWG_ROOT_PATH-stripped './' read).
+        $relative_dir = \Piwigo\Config\Config::uploadDir();
+        $upload_dir = \Piwigo\Core\CurrentPaths::get()->root . $relative_dir;
 
         if (! is_dir($upload_dir)) {
             if (! is_writable(dirname($upload_dir))) {

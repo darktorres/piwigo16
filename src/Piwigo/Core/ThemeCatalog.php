@@ -80,7 +80,14 @@ SELECT
     public static function checkThemeInstalled(string $themeId): bool
     {
 
-        $themes_dir = \Piwigo\Config\Config::themesDir();
+        // Config::themesDir() is root-relative (Part II) -- compose with
+        // CurrentPaths::get()->root for a real filesystem check, don't rely
+        // on PHP's CWD (which tracks the executing script's directory, not
+        // necessarily the install root -- this "happened" to still resolve
+        // correctly pre-fix only because public/themes is itself a symlink
+        // back to the real themes/, not because the CWD-relative read was
+        // actually safe).
+        $themes_dir = CurrentPaths::get()->root . \Piwigo\Config\Config::themesDir();
 
         return file_exists($themes_dir . '/' . $themeId . '/themeconf.inc.php');
     }

@@ -677,8 +677,14 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             // build_user() returns array<string, mixed>; the 'id' key we just set
             // to the literal user id 1 doesn't retain that literal type through
             // the return, so narrow to what log_user() actually accepts.
-            $login_user_id = $user['id'];
-            $login_user_id = is_int($login_user_id) || (is_string($login_user_id) && is_numeric($login_user_id)) ? $login_user_id : false;
+            $raw_login_user_id = $user['id'];
+            if (is_int($raw_login_user_id)) {
+                $login_user_id = $raw_login_user_id;
+            } elseif (is_string($raw_login_user_id) && is_numeric($raw_login_user_id)) {
+                $login_user_id = $raw_login_user_id;
+            } else {
+                $login_user_id = false;
+            }
             new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())
                 ->logUser($login_user_id, false);
             $_SESSION['connected_with'] = 'pwg_ui';

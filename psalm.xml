@@ -443,5 +443,42 @@
                 <file name="src/Piwigo/Admin/BatchManagerGlobalPageRenderer.php"/>
             </errorLevel>
         </TypeDoesNotContainType>
+        <!-- Frozen, already-applied DbPatch script (see the "don't hand-edit
+             frozen migrations/DbPatch scripts" precedent applied elsewhere
+             in this file). preg_replace()'s templated $subject constraint
+             (array<TKey:fn-preg_replace as array-key, ...>) doesn't accept
+             this method's own real array<int, string>|string parameter type
+             cleanly — a Psalm-only generic-template imprecision, not a real
+             bug. composer analyse:phpstan is clean here with zero changes. -->
+        <PossiblyInvalidArgument>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Admin/Install/DbPatch/Patch125.php"/>
+            </errorLevel>
+        </PossiblyInvalidArgument>
+        <!-- mb_convert_encoding(string, ...) always returns a string given a
+             string $string argument — PHPStan's own stub treats this as
+             certain (a real `=== false` guard added here is flagged as
+             `identical.alwaysFalse`, provably dead code). Psalm's stub is
+             more pessimistic (string|false). composer analyse:phpstan is
+             clean here with zero changes. -->
+        <PossiblyFalseArgument>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Admin/Install/UpgradeService.php"/>
+            </errorLevel>
+        </PossiblyFalseArgument>
+        <!-- $secret_key is only read inside the `$valid_key === 'api_key'`
+             branch, where it was unconditionally set (from
+             explode(':', $authKey)[1]) by the same elseif that set
+             $valid_key to that value — PHPStan's flow analysis proves this
+             across the two variables and flags an explicit null guard here
+             as `identical.alwaysFalse` (provably dead code). Psalm doesn't
+             carry the correlation between the two separately-assigned
+             locals. composer analyse:phpstan is clean here with zero
+             changes. -->
+        <PossiblyNullArgument>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Auth/AuthService.php"/>
+            </errorLevel>
+        </PossiblyNullArgument>
     </issueHandlers>
 </psalm>

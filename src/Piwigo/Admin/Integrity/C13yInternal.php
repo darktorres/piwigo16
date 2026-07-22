@@ -257,7 +257,7 @@ class C13yInternal
 
                         self::userService($conn)->createUserInfos([$id]);
 
-                        \Piwigo\Core\PageState::current()->addInfo(sprintf(Lang::t('User "%s" created with "%s" like password'), $name, $password));
+                        \Piwigo\Core\PageState::current()->addInfo(sprintf(Lang::t('User "%s" created with "%s" like password'), $name, $password ?? ''));
 
                         $result = true;
                     }
@@ -288,7 +288,8 @@ class C13yInternal
                                 $updates
                             );
 
-                        \Piwigo\Core\PageState::current()->addInfo(sprintf(Lang::t('Status of user "%s" updated'), self::userService($conn)->getUsername($id)));
+                        $updated_username = self::userService($conn)->getUsername($id);
+                        \Piwigo\Core\PageState::current()->addInfo(sprintf(Lang::t('Status of user "%s" updated'), $updated_username === false ? '' : $updated_username));
 
                         $result = true;
                     }

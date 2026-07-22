@@ -220,13 +220,13 @@ define(\'DB_COLLATE\',  \'\');'
 
         UpgradeCharset::set($pwg_charset, $db_charset);
 
-        if (version_compare(new DbInfo($conn)->version(), '4.1.0', '>=') and $db_charset !== '') {
+        if (version_compare(new DbInfo($conn)->version(), '4.1.0', '>=')) {
             $conn->executeStatement('SET NAMES "' . $db_charset . '"');
         }
 
         echo $upgrade_log;
         $fp = @fopen(CurrentPaths::get()->root . 'upgrade65.log', 'w');
-        if ($fp) {
+        if ($fp !== false) {
             @fputs($fp, $upgrade_log, strlen($upgrade_log));
             @fclose($fp);
         }
@@ -266,7 +266,7 @@ define(\'DB_COLLATE\',  \'\');'
             $field = is_scalar($row['Field']) ? (string) $row['Field'] : '';
             $changes[] = 'MODIFY COLUMN ' . $field . ' ' . $binaryType;
         }
-        if (count($changes)) {
+        if (count($changes) > 0) {
             $query = 'ALTER TABLE ' . $table . ' ' . implode(', ', $changes);
             $conn->executeStatement($query);
         }
@@ -296,13 +296,13 @@ define(\'DB_COLLATE\',  \'\');'
             if ($null !== 'YES') {
                 $query .= ' NOT NULL';
                 if (isset($row['Default'])) {
-                    $query .= ' DEFAULT "' . addslashes((string) $row['Default']) . '"';
+                    $query .= ' DEFAULT "' . addslashes(is_scalar($row['Default']) ? (string) $row['Default'] : '') . '"';
                 }
             } else {
                 if (! isset($row['Default'])) {
                     $query .= ' DEFAULT NULL';
                 } else {
-                    $query .= ' DEFAULT "' . addslashes((string) $row['Default']) . '"';
+                    $query .= ' DEFAULT "' . addslashes(is_scalar($row['Default']) ? (string) $row['Default'] : '') . '"';
                 }
             }
 
@@ -313,7 +313,7 @@ define(\'DB_COLLATE\',  \'\');'
             $changes[] = 'MODIFY COLUMN ' . $query;
         }
 
-        if (count($changes)) {
+        if (count($changes) > 0) {
             $query = 'ALTER TABLE `' . $table . '` ' . implode(', ', $changes);
             $conn->executeStatement($query);
         }

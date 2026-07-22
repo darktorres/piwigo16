@@ -36,7 +36,7 @@ final class Patch156 implements DbPatchInterface
     {
         $row = $conn->fetchAssociative('SHOW COLUMNS FROM `' . Tables::activity() . '` LIKE "occured_on";');
         $type = $row !== false && is_scalar($row['Type']) ? (string) $row['Type'] : '';
-        if (! preg_match('/^TIMESTAMP/i', $type)) {
+        if (preg_match('/^TIMESTAMP/i', $type) !== 1) {
             $query = 'ALTER TABLE `' . Tables::activity() . '` CHANGE `occured_on` `occured_on` TIMESTAMP DEFAULT CURRENT_TIMESTAMP;';
             $conn->executeStatement($query);
         }

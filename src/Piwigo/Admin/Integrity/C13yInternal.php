@@ -255,7 +255,7 @@ class C13yInternal
                         new BatchWriter($conn)
                             ->massInsert(Tables::users(), array_keys($inserts[0]), $inserts);
 
-                        self::userService($conn)->createUserInfos($id);
+                        self::userService($conn)->createUserInfos([$id]);
 
                         \Piwigo\Core\PageState::current()->addInfo(sprintf(Lang::t('User "%s" created with "%s" like password'), $name, $password));
 

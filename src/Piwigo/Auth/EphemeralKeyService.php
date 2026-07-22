@@ -35,7 +35,6 @@ final class EphemeralKeyService
         $remote_addr = $_SERVER['REMOTE_ADDR'] ?? '';
         $remote_addr = is_string($remote_addr) ? $remote_addr : '';
         $secret_key = \Piwigo\Config\Config::secretKey();
-        $secret_key = is_scalar($secret_key) ? (string) $secret_key : '';
 
         return $time . ':' . $validAfterSeconds . ':'
             . hash_hmac(
@@ -74,7 +73,6 @@ final class EphemeralKeyService
         $remote_addr = $_SERVER['REMOTE_ADDR'] ?? '';
         $remote_addr = is_string($remote_addr) ? $remote_addr : '';
         $secret_key = \Piwigo\Config\Config::secretKey();
-        $secret_key = is_scalar($secret_key) ? (string) $secret_key : '';
 
         $expected = hash_hmac(
             'sha256',

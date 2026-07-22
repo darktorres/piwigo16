@@ -59,7 +59,7 @@ class PwgImage
 
         $extension = strtolower(\Piwigo\Core\StringHelper::getExtension($this->source_filepath));
 
-        $picture_ext = is_array(\Piwigo\Config\Config::pictureExtensions()) ? \Piwigo\Config\Config::pictureExtensions() : [];
+        $picture_ext = \Piwigo\Config\Config::pictureExtensions();
         if (! in_array($extension, $picture_ext, true)) {
             die('[Image] unsupported file extension');
         }

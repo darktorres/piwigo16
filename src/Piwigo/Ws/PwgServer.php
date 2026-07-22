@@ -332,11 +332,11 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
      */
     public function invoke(string $methodName, array $params): mixed
     {
-        $method = @$this->_methods[$methodName];
-
-        if ($method === null) {
+        if (! isset($this->_methods[$methodName])) {
             return new PwgError(WsError::INVALID_METHOD, 'Method name is not valid');
         }
+
+        $method = $this->_methods[$methodName];
 
         if (isset($method['options']['post_only']) and (bool) $method['options']['post_only'] and ! self::isPost()) {
             return new PwgError(405, 'This method requires HTTP POST');
@@ -526,9 +526,6 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             or (isset($_SESSION['connected_with']) and $_SESSION['connected_with'] === 'ws_session_login_api_key')
         ) {
             $forbidden_methods = \Piwigo\Config\Config::apiKeyForbiddenMethods();
-            if (! is_array($forbidden_methods)) {
-                $forbidden_methods = [];
-            }
 
             $requested_method = $_REQUEST['method'] ?? null;
             $requested_method = is_scalar($requested_method) ? (string) $requested_method : '';

@@ -49,7 +49,15 @@ final class Patch177 implements DbPatchInterface
         $new_derivatives = [ImageStdParams::THREE_XLARGE, ImageStdParams::FOUR_XLARGE];
 
         // get current disabled derivative_std_params
-        $disabled_derivatives = ArrayHelper::safeUnserialize(ImageStdParams::get_disabled_type_map());
+        $disabled_derivatives_raw = ArrayHelper::safeUnserialize(ImageStdParams::get_disabled_type_map());
+        $disabled_derivatives = [];
+        if (is_array($disabled_derivatives_raw)) {
+            foreach ($disabled_derivatives_raw as $key => $value) {
+                if ($value instanceof \Piwigo\Image\DerivativeParams) {
+                    $disabled_derivatives[$key] = $value;
+                }
+            }
+        }
 
         // get the new derivative_std_params and merge with current disabled derivative_std_params
         $new_disabled_derivatives = array_intersect_key($default_sizes, array_flip($new_derivatives));

@@ -153,7 +153,7 @@ SELECT
             ) {
                 $order_by = $cats[$params['cat_id'][0]]['image_order'];
             }
-            $order_by = $order_by === '' ? (is_string((\Piwigo\Config\Config::all()['order_by'] ?? null)) ? (\Piwigo\Config\Config::all()['order_by'] ?? null) : '') : 'ORDER BY ' . $order_by;
+            $order_by = $order_by === '' ? (is_string(\Piwigo\Config\Config::all()['order_by']) ? \Piwigo\Config\Config::all()['order_by'] : '') : 'ORDER BY ' . $order_by;
             $favorite_ids = $urlService->getUserFavorites();
 
             $query = '
@@ -354,7 +354,7 @@ SELECT
             $where[] = 'status = "public"';
             $where[] = 'visible = "true"';
 
-            $join_user = is_numeric(\Piwigo\Config\Config::guestId()) ? (int) \Piwigo\Config\Config::guestId() : 0;
+            $join_user = \Piwigo\Config\Config::guestId();
         } elseif (\Piwigo\Auth\AccessControl::isAdmin()) {
             // in this very specific case, we don't want to hide empty
             // categories. Function calculate_permissions will only return
@@ -383,7 +383,7 @@ SELECT SQL_CALC_FOUND_ROWS
             $query .= '
     AND name LIKE ' . $categoryConn->quote('%' . $params['search'] . '%');
             if (! isset($params['limit'])) {
-                $query .= ' LIMIT ' . (is_numeric(\Piwigo\Config\Config::linkedAlbumSearchLimit()) ? (int) \Piwigo\Config\Config::linkedAlbumSearchLimit() : 0);
+                $query .= ' LIMIT ' . \Piwigo\Config\Config::linkedAlbumSearchLimit();
             }
         }
 
@@ -521,7 +521,7 @@ SELECT representative_picture_id
             // management of the album thumbnail -- stops here
 
             if (! is_string($row['image_order']) || $row['image_order'] === '') {
-                $row['image_order'] = str_replace('ORDER BY ', '', is_string((\Piwigo\Config\Config::all()['order_by'] ?? null)) ? (\Piwigo\Config\Config::all()['order_by'] ?? null) : '');
+                $row['image_order'] = str_replace('ORDER BY ', '', is_string(\Piwigo\Config\Config::all()['order_by']) ? \Piwigo\Config\Config::all()['order_by'] : '');
             }
 
             $cats[] = $row;
@@ -691,7 +691,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
         if (isset($params['search']) and $params['search'] !== '') {
             $query .= '
   AND name LIKE ' . $conn->quote('%' . $params['search'] . '%') . '
-  LIMIT ' . (is_numeric(\Piwigo\Config\Config::linkedAlbumSearchLimit()) ? (int) \Piwigo\Config\Config::linkedAlbumSearchLimit() : 0);
+  LIMIT ' . \Piwigo\Config\Config::linkedAlbumSearchLimit();
         }
 
         $query .= '
@@ -740,7 +740,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
             );
 
             if (! is_string($row['image_order']) || $row['image_order'] === '') {
-                $row['image_order'] = str_replace('ORDER BY ', '', is_string((\Piwigo\Config\Config::all()['order_by'] ?? null)) ? (\Piwigo\Config\Config::all()['order_by'] ?? null) : '');
+                $row['image_order'] = str_replace('ORDER BY ', '', is_string(\Piwigo\Config\Config::all()['order_by']) ? \Piwigo\Config\Config::all()['order_by'] : '');
             }
 
             if (in_array('full_name_with_admin_links', $params['additional_output'], true)) {

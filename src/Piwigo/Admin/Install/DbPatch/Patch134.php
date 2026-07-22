@@ -38,11 +38,12 @@ final class Patch134 implements DbPatchInterface
 
         if (extension_loaded('mysqli') and LegacyDbLayer::value() === 'mysql' and is_writable($config_file)) {
             $file_content = file_get_contents($config_file);
+            $file_content = $file_content !== false ? $file_content : '';
             $file_content = preg_replace(
                 '#\$conf\[\'dblayer\'\]( *)=( *)\'mysql\';#',
                 '$conf[\'dblayer\']$1=$2\'mysqli\';',
                 $file_content
-            );
+            ) ?? $file_content;
             file_put_contents($config_file, $file_content);
         }
 

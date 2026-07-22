@@ -56,8 +56,8 @@ final class Patch123 implements DbPatchInterface
         // Piwigo 2.3 "HD resize" settings become "original resize" settings in Piwigo 2.4
         //
 
-        if ($dbconf['upload_form_hd_keep']) {
-            if ($dbconf['upload_form_hd_resize']) {
+        if ((bool) $dbconf['upload_form_hd_keep']) {
+            if ((bool) $dbconf['upload_form_hd_resize']) {
                 $configService->confUpdateParam('original_resize', 'true');
                 $configService->confUpdateParam('original_resize_maxwidth', $asConfigValue($dbconf['upload_form_hd_maxwidth']));
                 $configService->confUpdateParam('original_resize_maxheight', $asConfigValue($dbconf['upload_form_hd_maxheight']));
@@ -94,7 +94,7 @@ final class Patch123 implements DbPatchInterface
         $thumb_height_max = 300; // slightly bigger than XXS default maxheight
 
         $thumb_is_square = false;
-        if ($dbconf['upload_form_thumb_crop']) {
+        if ((bool) $dbconf['upload_form_thumb_crop']) {
             $maxwidth = is_scalar($dbconf['upload_form_thumb_maxwidth']) ? (string) $dbconf['upload_form_thumb_maxwidth'] : '';
             $maxheight = is_scalar($dbconf['upload_form_thumb_maxheight']) ? (string) $dbconf['upload_form_thumb_maxheight'] : '';
             if ($maxwidth === $maxheight) {
@@ -122,13 +122,16 @@ final class Patch123 implements DbPatchInterface
             $dbconf['upload_form_thumb_maxheight'] = $dbconf['upload_form_thumb_maxwidth'];
         }
 
-        $size = [$dbconf['upload_form_thumb_maxwidth'], $dbconf['upload_form_thumb_maxheight']];
+        $size = [
+            is_numeric($dbconf['upload_form_thumb_maxwidth']) ? (int) $dbconf['upload_form_thumb_maxwidth'] : 0,
+            is_numeric($dbconf['upload_form_thumb_maxheight']) ? (int) $dbconf['upload_form_thumb_maxheight'] : 0,
+        ];
 
         $thumb = new DerivativeParams(
             new SizingParams(
                 $size,
-                $dbconf['upload_form_thumb_crop'] ? 1 : 0,
-                $dbconf['upload_form_thumb_crop'] ? $size : null
+                (bool) $dbconf['upload_form_thumb_crop'] ? 1 : 0,
+                (bool) $dbconf['upload_form_thumb_crop'] ? $size : null
             )
         );
 
@@ -158,7 +161,7 @@ final class Patch123 implements DbPatchInterface
 
         // if there was no "websize resize" on Piwigo 2.3, we can't take the resize
         // settings into account, we keep the default settings of Piwigo 2.4.
-        if ($dbconf['upload_form_websize_resize']) {
+        if ((bool) $dbconf['upload_form_websize_resize']) {
             $medium_width_min = 577; // default S maxwidth + 1 pixel
             $medium_width_max = 1007; // default L maxwidth - 1 pixel
             $medium_height_min = 433; // default S maxheight + 1 pixel
@@ -193,8 +196,8 @@ final class Patch123 implements DbPatchInterface
             $medium = new DerivativeParams(
                 new SizingParams(
                     [
-                        $dbconf['upload_form_websize_maxwidth'],
-                        $dbconf['upload_form_websize_maxheight'],
+                        (int) $dbconf['upload_form_websize_maxwidth'],
+                        (int) $dbconf['upload_form_websize_maxheight'],
                     ]
                 )
             );

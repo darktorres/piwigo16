@@ -181,11 +181,8 @@ final class MaintenanceActionDispatcher
 
                 SessionService::get()->sessionGc();
 
-                // \Piwigo\Config\Config::userFields() maps generic field names to actual DB column
-                // names (see include/config_default.inc.php); its values are
-                // configuration-supplied, not statically typed, hence the fallback.
                 $user_fields = \Piwigo\Config\Config::userFields();
-                $id_field = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
+                $id_field = $user_fields['id'];
 
                 $db_maintenance->purgeSessionsForDeletedUsers($id_field);
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge sessions'), Lang::t('action successfully performed.')));

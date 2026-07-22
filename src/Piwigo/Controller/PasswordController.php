@@ -596,9 +596,9 @@ SELECT
                 ->switchLangTo($reset_language);
 
             $reset_user_id = $reset_session['user_id'] ?? null;
-            $reset_user_id_str = is_numeric($reset_user_id) ? (string) $reset_user_id : '';
+            $reset_user_id_int = is_numeric($reset_user_id) ? (int) $reset_user_id : 0;
             $api_keys = new \Piwigo\Auth\ApiKeyService(new \Piwigo\Mail\MailService(), new \Piwigo\Auth\ApiKeyRepository($conn), self::passwordService($conn), $this->urlService)
-                ->getAvailable($reset_user_id_str);
+                ->getAvailable($reset_user_id_int);
             $nb_of_apikeys = (bool) $api_keys ? count($api_keys) : 0;
 
             $reset_username = $reset_session['username'] ?? '';

@@ -304,7 +304,6 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $this->createUserInfos([$userId], $override);
 
         $emailAdminOnNewUserSetting = \Piwigo\Config\Config::emailAdminOnNewUser();
-        $emailAdminOnNewUserSetting = is_scalar($emailAdminOnNewUserSetting) ? (string) $emailAdminOnNewUserSetting : 'none';
         if ($notifyAdmin && $emailAdminOnNewUserSetting !== 'none') {
             $this->notifyAdminsOfNewRegistration($userId, $login, $mailAddress, $urlService);
         }
@@ -372,7 +371,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $userIdStr = (string) $userId;
             if ($userIdStr === $webmasterId) {
                 $status = 'webmaster';
-                $level = is_array($availablePermissionLevels) && $availablePermissionLevels !== []
+                $level = $availablePermissionLevels !== []
                     ? max($availablePermissionLevels)
                     : 0;
             } elseif ($userIdStr === $guestId || $userIdStr === $defaultUserId) {
@@ -497,7 +496,6 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $groupId = null;
         $emailAdminOnNewUser = \Piwigo\Config\Config::emailAdminOnNewUser();
-        $emailAdminOnNewUser = is_scalar($emailAdminOnNewUser) ? (string) $emailAdminOnNewUser : '';
         if (preg_match('/^group:(\d+)$/', $emailAdminOnNewUser, $matches) === 1) {
             $groupId = $matches[1];
         }
@@ -1317,9 +1315,7 @@ SELECT
             // set of users (current, guest and webmaster can't be changed)
             $user_ids_for_status = array_diff($user_ids, array_filter($protected_users, is_scalar(...)));
 
-            $status_param = $params['status'];
-            assert(is_string($status_param));
-            $update_status = $status_param;
+            $update_status = $params['status'];
         }
 
         if (! self::emptyValue($params['level'] ?? null) or @$params['level'] === 0) {
@@ -1525,7 +1521,7 @@ SELECT
     {
 
         $userFields = \Piwigo\Config\Config::userFields();
-        $userIdField = is_array($userFields) && is_string($userFields['id'] ?? null) ? $userFields['id'] : 'id';
+        $userIdField = $userFields['id'];
 
         $baseUsers = $this->repo->findAllUserIds($userIdField);
         $infosUsers = $this->repo->findDistinctUserIdsInTable(Tables::userInfos());

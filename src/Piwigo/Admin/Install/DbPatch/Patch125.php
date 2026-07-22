@@ -58,7 +58,9 @@ final class Patch125 implements DbPatchInterface
         $configService->loadConfFromDb();
 
         $banner_orig = $configService->confGetParam('page_banner');
-        $banner_orig_normalized = is_array($banner_orig) || is_string($banner_orig) ? $banner_orig : '';
+        $banner_orig_normalized = is_string($banner_orig)
+            ? $banner_orig
+            : (is_array($banner_orig) ? array_values(array_filter($banner_orig, is_string(...))) : '');
         $banner_new = $this->replaceHotlinks($banner_orig_normalized, $dirThumbnail, $prefixThumbnail);
         if ($banner_orig_normalized !== $banner_new) {
             $configService->confUpdateParam('page_banner', $banner_new);
@@ -136,7 +138,10 @@ SELECT
             ]) as $row) {
                 $content_orig = is_scalar($row['datas']) ? (string) $row['datas'] : '';
                 $unserialized = unserialize($content_orig);
-                $content_new = serialize($this->replaceHotlinks(is_array($unserialized) || is_string($unserialized) ? $unserialized : '', $dirThumbnail, $prefixThumbnail));
+                $unserialized_normalized = is_string($unserialized)
+                    ? $unserialized
+                    : (is_array($unserialized) ? array_values(array_filter($unserialized, is_string(...))) : '');
+                $content_new = serialize($this->replaceHotlinks($unserialized_normalized, $dirThumbnail, $prefixThumbnail));
                 if ($content_orig !== $content_new) {
                     new BatchWriter($conn)
                         ->singleUpdate(
@@ -161,15 +166,18 @@ SELECT
 
     /**
      * Former local replace_hotlinks() function.
+     *
+     * @param array<int, string>|string $string
+     * @return array<int, string>|string
      */
-    private function replaceHotlinks(array|string $string, string $dirThumbnail, string $prefixThumbnail): string|array|null
+    private function replaceHotlinks(array|string $string, string $dirThumbnail, string $prefixThumbnail): string|array
     {
         // websize 2.3 = medium 2.4
         $string = preg_replace(
             '#(upload/\d{4}/\d{2}/\d{2}/\d{14}-\w{8})(\.(jpg|png))#',
             'i.php?/$1-me$2',
             $string
-        );
+        ) ?? $string;
 
         // I've tried but I didn't find the way to do it correctly
         // $string = preg_replace(
@@ -183,26 +191,26 @@ SELECT
             '#(upload/\d{4}/\d{2}/\d{2}/)' . $dirThumbnail . '/' . $prefixThumbnail . '(\d{14}-\w{8})(\.(jpg|png))#',
             'i.php?/$1$2-th$3',
             $string
-        );
+        ) ?? $string;
 
         $string = preg_replace(
             '#(galleries/.*?/)' . $dirThumbnail . '/' . $prefixThumbnail . '(.*?)(\.[a-z0-9]{3,4})([\'"])#',
             'i.php?/$1$2-th$3$4',
             $string
-        );
+        ) ?? $string;
 
         // HD 2.3 = original 2.4
         $string = preg_replace(
             '#(upload/\d{4}/\d{2}/\d{2}/)pwg_high/(\d{14}-\w{8}\.(jpg|png))#',
             '$1$2',
             $string
-        );
+        ) ?? $string;
 
         $string = preg_replace(
             '#(galleries/.*?)/pwg_high(/.*?\.[a-z0-9]{3,4})#',
             '$1$2',
             $string
-        );
+        ) ?? $string;
 
         return $string;
     }

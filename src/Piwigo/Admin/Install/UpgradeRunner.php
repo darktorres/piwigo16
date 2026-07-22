@@ -200,6 +200,13 @@ final class UpgradeRunner
                 ->upgradeTo('2.3.4', $step, false);
 
             $upgrade_errors = \Piwigo\Core\PageState::current()->errors;
+            // Real guard, not dead code: PHPStan can't see that
+            // CoreUpdateService::upgradeTo() may call PageState::current()
+            // ->addError() internally (cross-object singleton mutation
+            // through a method call it doesn't purity-track), so it
+            // (wrongly) proves $upgrade_errors is always the [] assigned
+            // two lines above.
+            // @phpstan-ignore notIdentical.alwaysFalse
             if ($upgrade_errors !== []) {
                 echo '<ul>';
                 foreach ($upgrade_errors as $error) {

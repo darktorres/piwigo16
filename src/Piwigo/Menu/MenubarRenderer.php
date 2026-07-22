@@ -86,7 +86,7 @@ final class MenubarRenderer
         }
 
         // --------------------------------------------------------------- external links
-        if ((bool) ($block = $menu->get_block('mbLinks')) and ! self::emptyValue(\Piwigo\Config\Config::links()) and is_array(\Piwigo\Config\Config::links())) {
+        if ((bool) ($block = $menu->get_block('mbLinks')) and ! self::emptyValue(\Piwigo\Config\Config::links())) {
             $block->data = [];
             foreach (\Piwigo\Config\Config::links() as $url => $url_data) {
                 if (! is_array($url_data)) {

@@ -218,7 +218,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
 
     $disallowed = array_values(array_filter(
         $hits,
-        static fn (array $hit): bool => ! str_contains((string) $hit['path'], '/src/Piwigo/Bootstrap/')
+        static fn (array $hit): bool => ! str_contains($hit['path'], '/src/Piwigo/Bootstrap/')
     ));
 
     expect(describeCallSites($disallowed))->toBe([]);
@@ -240,7 +240,7 @@ test('Container::build() is only called from src/Piwigo/Core/Kernel.php', functi
 
     $disallowed = array_values(array_filter(
         $hits,
-        static fn (array $hit): bool => ! str_ends_with((string) $hit['path'], '/src/Piwigo/Core/Kernel.php')
+        static fn (array $hit): bool => ! str_ends_with($hit['path'], '/src/Piwigo/Core/Kernel.php')
     ));
 
     expect(describeCallSites($disallowed))->toBe([]);

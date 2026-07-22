@@ -131,7 +131,7 @@ final class AdminShell
 
             if ($fs_quick_check_last_check !== null) {
                 $fs_quick_check_period = \Piwigo\Config\Config::fsQuickCheckPeriod();
-                if (is_numeric($fs_quick_check_period) and strtotime($fs_quick_check_last_check) < strtotime($fs_quick_check_period . ' seconds ago')) {
+                if (strtotime($fs_quick_check_last_check) < strtotime($fs_quick_check_period . ' seconds ago')) {
                     $perform_fsqc = true;
                 }
             } else {

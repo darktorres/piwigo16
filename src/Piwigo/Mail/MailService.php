@@ -203,20 +203,13 @@ final class MailService implements MailerInterface
      */
     private static function userFields(): array
     {
-        $raw = \Piwigo\Config\Config::userFields();
-
-        return [
-            'id' => isset($raw['id']) && is_scalar($raw['id']) ? (string) $raw['id'] : 'id',
-            'username' => isset($raw['username']) && is_scalar($raw['username']) ? (string) $raw['username'] : 'username',
-            'password' => isset($raw['password']) && is_scalar($raw['password']) ? (string) $raw['password'] : 'password',
-            'email' => isset($raw['email']) && is_scalar($raw['email']) ? (string) $raw['email'] : 'mail_address',
-        ];
+        return \Piwigo\Config\Config::userFields();
     }
 
     public function getMailSenderName(): string
     {
         $senderName = \Piwigo\Config\Config::mailSenderName();
-        if (is_string($senderName) && $senderName !== '') {
+        if ($senderName !== '') {
             return $senderName;
         }
 
@@ -228,7 +221,7 @@ final class MailService implements MailerInterface
     public function getMailSenderEmail(): string
     {
         $senderEmail = \Piwigo\Config\Config::mailSenderEmail();
-        if (is_string($senderEmail) && $senderEmail !== '') {
+        if ($senderEmail !== '') {
             return $senderEmail;
         }
 
@@ -243,8 +236,8 @@ final class MailService implements MailerInterface
         $smtpHost = \Piwigo\Config\Config::smtpHost();
 
         return [
-            'send_bcc_mail_webmaster' => (bool) (\Piwigo\Config\Config::sendBccMailWebmaster()),
-            'mail_allow_html' => (bool) (\Piwigo\Config\Config::mailAllowHtml()),
+            'send_bcc_mail_webmaster' => \Piwigo\Config\Config::sendBccMailWebmaster(),
+            'mail_allow_html' => \Piwigo\Config\Config::mailAllowHtml(),
             'mail_theme' => \Piwigo\Config\Config::mailTheme(),
             'use_smtp' => $smtpHost !== '',
             'smtp_host' => $smtpHost,
@@ -837,7 +830,7 @@ final class MailService implements MailerInterface
                         'GALLERY_URL' => $this->urlService()
                             ->addUrlParams($galleryHomeUrl, $addUrlParams),
                         'GALLERY_TITLE' => \Piwigo\Config\Config::galleryTitle(),
-                        'VERSION' => ((bool) (\Piwigo\Config\Config::showVersion())) ? AppInfo::VERSION : '',
+                        'VERSION' => \Piwigo\Config\Config::showVersion() ? AppInfo::VERSION : '',
                         'PHPWG_URL' => AppInfo::URL,
                         'CONTENT_ENCODING' => \Piwigo\Core\CharsetHelper::getPwgCharset(),
                         'CONTACT_MAIL' => $confMail['email_webmaster'],
@@ -972,7 +965,7 @@ final class MailService implements MailerInterface
             if (! $ret && (! (bool) ini_get('display_errors') || \Piwigo\Auth\AccessControl::isAdmin())) {
                 trigger_error('Mailer Error: ' . $errorMessage, \E_USER_WARNING);
             }
-            if ((bool) (\Piwigo\Config\Config::debugMail())) {
+            if (\Piwigo\Config\Config::debugMail()) {
                 $this->sendMailTest($ret, $email, $args, $errorMessage);
             }
         }

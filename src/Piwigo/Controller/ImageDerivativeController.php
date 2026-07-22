@@ -151,11 +151,6 @@ final class ImageDerivativeController implements ControllerInterface
         // type info again -- see the comment near the Logger construction).
         // Direct return, not ierror(): CurrentLogger isn't constructed yet
         // (a few lines below), and ierror() itself reads CurrentLogger::get().
-        $data_location = \Piwigo\Config\Config::dataLocation();
-        if (! is_string($data_location)) {
-            return ResponseFactory::text("Invalid \\Piwigo\Config\Config::dataLocation() configuration: expected a string.", 500);
-        }
-
         Env::loadEnvFile($this->paths->root);
         // Env::applyEnvToConf(array &$conf, string &$prefixeTable)'s two
         // by-ref params are both dead here now (Legacy Coupling Retirement
@@ -177,20 +172,9 @@ final class ImageDerivativeController implements ControllerInterface
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        // \Piwigo\Config\Config::dataLocation()/'log_dir'/'db_password' lost their specific
-        // string types the same way the common bootstrap's equivalent config
-        // reads do (see Piwigo\Bootstrap\RequestBootstrap): Env::
-        // applyEnvToConf(array &$conf, ...)'s by-ref `array` parameter erases
-        // the per-key type info PHPStan had built up for $conf_unused, so we
-        // re-narrow here.
         $log_data_location = \Piwigo\Config\Config::dataLocation();
         $log_dir = \Piwigo\Config\Config::logDir();
         $db_password = \Piwigo\Config\Config::dbPassword();
-        if (! is_string($log_data_location) || ! is_string($log_dir) || ! is_string($db_password)) {
-            // Direct return, not ierror(): still before CurrentLogger's own
-            // construction a few lines below.
-            return ResponseFactory::text("Invalid \\Piwigo\Config\Config::dataLocation()/'log_dir'/'db_password' configuration: expected strings.", 500);
-        }
 
         $logger = new Logger([
             'directory' => $this->paths->root . $log_data_location . $log_dir,
@@ -206,22 +190,6 @@ final class ImageDerivativeController implements ControllerInterface
         $timing = [];
         foreach (explode(',', 'load,rotate,crop,scale,sharpen,watermark,save,send') as $k) {
             $timing[$k] = '';
-        }
-
-        // $conf_unused['dblayer']/'db_host'/'db_user'/'db_base' lost their
-        // specific string types the same way described above (see the
-        // comment near the Logger construction); 'db_password' was already
-        // re-narrowed there and is reused as-is since nothing reassigns it
-        // in between. DbConnection::build() reads these same Config::
-        // accessors internally, so they're not passed explicitly, but the
-        // fail-fast friendly-500 guard on a misconfigured install is kept
-        // exactly as before rather than letting an invalid config surface
-        // as a raw, uncaught Doctrine exception instead.
-        $db_host = \Piwigo\Config\Config::dbHost();
-        $db_user = \Piwigo\Config\Config::dbUser();
-        $db_base = \Piwigo\Config\Config::dbName();
-        if (! is_string($db_host) || ! is_string($db_user) || ! is_string($db_base)) {
-            $this->ierror("Invalid \\Piwigo\Config\Config::dbHost()/'db_user'/'db_base' configuration: expected strings.", 500);
         }
 
         $conn = DbConnection::build();
@@ -579,13 +547,13 @@ final class ImageDerivativeController implements ControllerInterface
         $userId = $guestId;
 
         $sessionName = \Piwigo\Config\Config::sessionName();
-        if (is_string($sessionName) && $sessionName !== '') {
+        if ($sessionName !== '') {
             $cookieValue = $_COOKIE[$sessionName] ?? null;
             if (is_string($cookieValue) && $cookieValue !== '') {
                 $resolved = new SessionUserResolver(new SessionRepository($conn))
                     ->resolveLoggedUserId(
                         $cookieValue,
-                        (bool) (\Piwigo\Config\Config::sessionUseIpAddress()),
+                        \Piwigo\Config\Config::sessionUseIpAddress(),
                     );
                 if ($resolved !== null) {
                     $userId = $resolved;
@@ -732,12 +700,7 @@ final class ImageDerivativeController implements ControllerInterface
         if ($req_tokens === false) {
             $this->ierror('Invalid request', 400);
         }
-        // config_default.inc.php always sets \Piwigo\Config\Config::syncCharsRegex() to a
-        // string literal; guard rather than trust a local-config override.
         $sync_chars_regex = \Piwigo\Config\Config::syncCharsRegex();
-        if (! is_string($sync_chars_regex)) {
-            $this->ierror('Invalid sync_chars_regex configuration', 500);
-        }
         foreach ($req_tokens as $token) {
             (bool) preg_match($sync_chars_regex, $token) or $this->ierror('Invalid chars in request', 400);
         }

@@ -64,6 +64,11 @@ final class Patch153 implements DbPatchInterface
         if (file_exists($file)) {
             $conf = [];
             include $file;
+            // Real guard, not dead code: $conf is genuinely populated by the
+            // include above (a local config.inc.php that may assign
+            // $conf['display_fromto']), but PHPStan can't trace mutation
+            // through a dynamic include and proves $conf stays [].
+            // @phpstan-ignore isset.offset, if.alwaysFalse, logicalAnd.alwaysFalse
             if (isset($conf['display_fromto']) and $conf['display_fromto']) {
                 return 'true';
             }

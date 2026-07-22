@@ -418,12 +418,9 @@ SELECT
                     }
                 }
 
-                // \Piwigo\Config\Config::userFields() maps generic field names to actual
-                // DB columns; fall back to the generic names, matching
-                // MailService::userFields().
                 $confUserFields = \Piwigo\Config\Config::userFields();
-                $userFieldId = is_string($confUserFields['id'] ?? null) ? $confUserFields['id'] : 'id';
-                $userFieldUsername = is_string($confUserFields['username'] ?? null) ? $confUserFields['username'] : 'username';
+                $userFieldId = $confUserFields['id'];
+                $userFieldUsername = $confUserFields['username'];
 
                 $query = '
 SELECT

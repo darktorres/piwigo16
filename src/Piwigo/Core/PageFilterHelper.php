@@ -26,7 +26,7 @@ final class PageFilterHelper
                 // that guarantee (confirmed by the Integration test stub
                 // this method's real callers used to route through, before
                 // P23 batch 8d retargeted them here directly).
-                if ((bool) (\Piwigo\Config\Config::phpExtensionInUrls()) && StringHelper::getExtension($filename) !== 'php') {
+                if (\Piwigo\Config\Config::phpExtensionInUrls() && StringHelper::getExtension($filename) !== 'php') {
                     continue;
                 }
                 $basename = basename($filename, '.php');

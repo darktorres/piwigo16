@@ -124,24 +124,24 @@ SELECT group_id, cat_id
         // filter by group and user
         foreach ($perms as $cat_id => &$cat) {
             if (isset($params['group_id'])) {
-                if ((! isset($cat['groups']) || $cat['groups'] === []) or count(array_intersect($cat['groups'] ?? [], $params['group_id'])) === 0) {
+                if (! isset($cat['groups']) or count(array_intersect($cat['groups'], $params['group_id'])) === 0) {
                     unset($perms[$cat_id]);
                     continue;
                 }
             }
             if (isset($params['user_id'])) {
                 if (
-                    ((! isset($cat['users_indirect']) || $cat['users_indirect'] === []) or count(array_intersect($cat['users_indirect'] ?? [], $params['user_id'])) === 0)
-                    and ((! isset($cat['users']) || $cat['users'] === []) or count(array_intersect($cat['users'] ?? [], $params['user_id'])) === 0)
+                    (! isset($cat['users_indirect']) or count(array_intersect($cat['users_indirect'], $params['user_id'])) === 0)
+                    and (! isset($cat['users']) or count(array_intersect($cat['users'], $params['user_id'])) === 0)
                 ) {
                     unset($perms[$cat_id]);
                     continue;
                 }
             }
 
-            $cat['groups'] = isset($cat['groups']) && $cat['groups'] !== [] ? array_values(array_unique($cat['groups'])) : [];
-            $cat['users'] = isset($cat['users']) && $cat['users'] !== [] ? array_values(array_unique($cat['users'])) : [];
-            $cat['users_indirect'] = isset($cat['users_indirect']) && $cat['users_indirect'] !== [] ? array_values(array_unique($cat['users_indirect'])) : [];
+            $cat['groups'] = isset($cat['groups']) ? array_values(array_unique($cat['groups'])) : [];
+            $cat['users'] = isset($cat['users']) ? array_values(array_unique($cat['users'])) : [];
+            $cat['users_indirect'] = isset($cat['users_indirect']) ? array_values(array_unique($cat['users_indirect'])) : [];
         }
         unset($cat);
 

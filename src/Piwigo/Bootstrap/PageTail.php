@@ -69,7 +69,7 @@ final class PageTail
     {
         // ----------------------------------------------- update notification
         $update_notify_check_period = \Piwigo\Config\Config::updateNotifyCheckPeriod();
-        if (is_int($update_notify_check_period) && $update_notify_check_period > 0) {
+        if ($update_notify_check_period > 0) {
             $check_for_updates = false;
 
             $update_notify_last_check = \Piwigo\Config\Config::updateNotifyLastCheck() ?? null;

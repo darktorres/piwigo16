@@ -27,11 +27,20 @@ function convert_lang_php_to_po(string $phpFile, string $locale, array $pairs): 
         return null;
     }
 
-    $lang = [];
-    $lang_info = [];
-
-    (static function () use ($phpFile, &$lang, &$lang_info): void {
+    // get_defined_vars() (rather than reading $lang/$lang_info back out of a
+    // by-ref closure capture) keeps their real, include-dependent shape
+    // visible to static analysis -- a bare `$lang = [];` capture freezes
+    // PHPStan's inferred type at the empty-array literal, making every
+    // offset read below a permanent "does not exist" error. Matches
+    // verify-parity.php's own established fix for the same pattern.
+    [$lang, $lang_info] = (static function () use ($phpFile): array {
         include $phpFile;
+        $included = get_defined_vars();
+
+        return [
+            is_array($included['lang'] ?? null) ? $included['lang'] : [],
+            is_array($included['lang_info'] ?? null) ? $included['lang_info'] : [],
+        ];
     })();
 
     if ($lang === []) {
@@ -43,7 +52,7 @@ function convert_lang_php_to_po(string $phpFile, string $locale, array $pairs): 
     $country = is_string($lang_info['country'] ?? null) ? $lang_info['country'] : '';
     $direction = is_string($lang_info['direction'] ?? null) ? $lang_info['direction'] : 'ltr';
     $code = is_string($lang_info['code'] ?? null) ? $lang_info['code'] : '';
-    $zeroPlural = ! empty($lang_info['zero_plural']) ? 'true' : 'false';
+    $zeroPlural = ! in_array($lang_info['zero_plural'] ?? null, [null, false, 0, '0', '', []], true) ? 'true' : 'false';
     // parent: real fallback-chain data (5 locales, e.g. en_GB -> en_UK),
     // read by get_parent_language()/load_language(). jquery_code/
     // plupload_code: real, actively read by admin Smarty templates

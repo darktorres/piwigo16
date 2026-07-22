@@ -39,15 +39,12 @@ final class SessionBootstrap
 
             if (function_exists('ini_set')) {
                 $session_use_cookies = \Piwigo\Config\Config::sessionUseCookies();
-                $session_use_cookies = is_scalar($session_use_cookies) ? $session_use_cookies : null;
                 ini_set('session.use_cookies', $session_use_cookies);
 
                 $session_use_only_cookies = \Piwigo\Config\Config::sessionUseOnlyCookies();
-                $session_use_only_cookies = is_scalar($session_use_only_cookies) ? $session_use_only_cookies : null;
                 ini_set('session.use_only_cookies', $session_use_only_cookies);
 
                 $session_use_trans_sid = \Piwigo\Config\Config::sessionUseTransSid();
-                $session_use_trans_sid = is_scalar($session_use_trans_sid) ? $session_use_trans_sid : 0;
                 ini_set('session.use_trans_sid', intval($session_use_trans_sid));
                 ini_set('session.cookie_httponly', 1);
             }

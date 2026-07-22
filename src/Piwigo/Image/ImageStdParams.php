@@ -141,7 +141,7 @@ final class ImageStdParams
             return self::$disabled_type_map;
         }
 
-        $disabled_derivatives = \Piwigo\Config\Config::disabledDerivatives() ?? null;
+        $disabled_derivatives = \Piwigo\Config\Config::disabledDerivatives();
         return is_string($disabled_derivatives) ? $disabled_derivatives : [];
     }
 

@@ -52,12 +52,12 @@ final class Patch108 implements DbPatchInterface
         if (is_writable($local_file = CurrentPaths::get()->local . 'config/config.inc.php')) {
             $order_by = str_ireplace(
                 ['order by ', 'asc', 'desc'],
-                [null, 'ASC', 'DESC'],
+                ['', 'ASC', 'DESC'],
                 trim((string) $orderByInsideCategory)
             );
 
             // for a simple patern
-            if (preg_match($order_regex, $order_by . ',')) {
+            if (preg_match($order_regex, $order_by . ',') === 1) {
                 $order_by = 'ORDER BY ' . $order_by;
                 // update database
                 $query = '
@@ -117,6 +117,7 @@ final class Patch108 implements DbPatchInterface
 
                 // update local file (rename lines)
                 $local_config = file_get_contents($local_file);
+                $local_config = $local_config !== false ? $local_config : '';
                 $new_local_config = str_replace(
                     ["['order_by']", "['order_by_inside_category']"],
                     ["['order_by_custom']", "['order_by_inside_category_custom']"],

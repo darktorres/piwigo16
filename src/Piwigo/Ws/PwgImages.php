@@ -727,7 +727,6 @@ SELECT DISTINCT id
 
         if ($res === false) {
             $rate_items = \Piwigo\Config\Config::rateItems();
-            $rate_items = is_array($rate_items) ? array_filter($rate_items, is_scalar(...)) : [];
             return new PwgError(403, 'Forbidden or rate not in ' . implode(',', $rate_items));
         }
         return $res;
@@ -1299,7 +1298,7 @@ UPDATE ' . Tables::imageCategory() . '
             $logger->debug(sprintf(
                 '[ws_images_add_chunk] input param "%s" : "%s"',
                 $param_key,
-                is_scalar($param_value) ? $param_value : 'NULL'
+                is_scalar($param_value) ? (string) $param_value : 'NULL'
             ), 'WS');
         }
 
@@ -1315,7 +1314,7 @@ UPDATE ' . Tables::imageCategory() . '
             '%s-%s-%05u.block',
             $params['original_sum'],
             $params['type'],
-            $params['position']
+            (int) $params['position']
         );
 
         $logger->debug('[ws_images_add_chunk] data length : ' . strlen($params['data']), 'WS');
@@ -1441,7 +1440,7 @@ SELECT
             $logger->debug(sprintf(
                 '[pwg.images.add] input param "%s" : "%s"',
                 $param_key,
-                is_scalar($param_value) ? $param_value : 'NULL'
+                is_scalar($param_value) ? (string) $param_value : 'NULL'
             ), 'WS');
         }
 
@@ -1760,7 +1759,6 @@ SELECT id, name, permalink
             }
 
             $format_ext_list = \Piwigo\Config\Config::formatExtensions();
-            $format_ext_list = is_array($format_ext_list) ? array_filter($format_ext_list, is_string(...)) : [];
 
             // We must check if the extension is in the authorized list.
             if ((bool) preg_match('/\.(' . implode('|', $format_ext_list) . ')$/', (string) $params['name'], $matches)) {
@@ -2358,7 +2356,6 @@ SELECT
         // mutated the request-local config copy anyway, since $conf is reloaded
         // from scratch on every request)
         $format_ext_list = \Piwigo\Config\Config::formatExtensions();
-        $format_ext_list = is_array($format_ext_list) ? array_values(array_filter($format_ext_list, is_string(...))) : [];
         usort($format_ext_list, static fn (string $a, string $b): int => strlen($b) - strlen($a));
 
         $query = '

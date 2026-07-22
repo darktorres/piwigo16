@@ -228,13 +228,7 @@ final class FeedController implements ControllerInterface
             $rss_items
         );
 
-        // \Piwigo\Config\Config::dataLocation() needs narrowing here specifically (used to
-        // build the on-disk tmp path this method writes the generated feed
-        // to).
         $data_location = \Piwigo\Config\Config::dataLocation();
-        if (! is_string($data_location)) {
-            $htmlRenderer->fatalError("Invalid \\Piwigo\Config\Config::dataLocation() configuration: expected a string.");
-        }
 
         $fileName = \Piwigo\Core\CurrentPaths::get()->root . $data_location . 'tmp';
         \Piwigo\Core\FilesystemHelper::mkgetdir($fileName); // just in case

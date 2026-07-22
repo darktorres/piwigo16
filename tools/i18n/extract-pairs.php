@@ -31,10 +31,10 @@ function extract_plural_pairs(string $root): array
         $path = $file->getPathname();
         // Only scan core source, not vendor/plugins/language/tools.
         if (
-            str_contains((string) $path, DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR)
-            || str_contains((string) $path, DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR)
-            || str_contains((string) $path, DIRECTORY_SEPARATOR . 'language' . DIRECTORY_SEPARATOR)
-            || str_contains((string) $path, DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR)
+            str_contains($path, DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR)
+            || str_contains($path, DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR)
+            || str_contains($path, DIRECTORY_SEPARATOR . 'language' . DIRECTORY_SEPARATOR)
+            || str_contains($path, DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR)
         ) {
             continue;
         }

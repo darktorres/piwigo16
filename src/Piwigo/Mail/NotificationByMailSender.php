@@ -91,19 +91,13 @@ final class NotificationByMailSender
         private readonly \Piwigo\Auth\AuthService $authService,
         private readonly UrlServiceInterface $urlService,
     ) {
-        // \Piwigo\Config\Config::nbmMaxTreatmentTimeoutPercent()/'nbm_treatment_timeout_default'
-        // are always numeric (config_default.inc.php: 0.8 and 20
-        // respectively), but that isn't visible through $conf's own
-        // array<string, mixed> type.
         $nbmMaxTreatmentTimeoutPercent = \Piwigo\Config\Config::nbmMaxTreatmentTimeoutPercent();
-        $nbmMaxTreatmentTimeoutPercent = is_numeric($nbmMaxTreatmentTimeoutPercent) ? (float) $nbmMaxTreatmentTimeoutPercent : 0.8;
 
         $this->startTime = \Piwigo\Core\TimingHelper::getMoment();
         $this->sendmailTimeout = intval(ini_get('max_execution_time')) * $nbmMaxTreatmentTimeoutPercent;
 
         if ($this->sendmailTimeout <= 0) {
-            $nbmTreatmentTimeoutDefault = \Piwigo\Config\Config::nbmTreatmentTimeoutDefault();
-            $this->sendmailTimeout = is_numeric($nbmTreatmentTimeoutDefault) ? (float) $nbmTreatmentTimeoutDefault : 20.0;
+            $this->sendmailTimeout = \Piwigo\Config\Config::nbmTreatmentTimeoutDefault();
         }
     }
 

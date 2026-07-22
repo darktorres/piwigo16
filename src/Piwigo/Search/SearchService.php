@@ -222,16 +222,11 @@ final readonly class SearchService
         $imageIdsForFilter = [];
 
         $rawFiltersViews = \Piwigo\Config\Config::filtersViews() ?? \Piwigo\Config\Config::defaultFiltersViews();
-        $unserializedDisplayFilters = (is_array($rawFiltersViews) || is_string($rawFiltersViews))
-            ? \Piwigo\Core\ArrayHelper::safeUnserialize($rawFiltersViews)
-            : [];
 
         $displayFilters = [];
-        if (is_array($unserializedDisplayFilters)) {
-            foreach ($unserializedDisplayFilters as $filtName => $filtConf) {
-                if (is_string($filtName) && is_array($filtConf)) {
-                    $displayFilters[$filtName] = $filtConf;
-                }
+        foreach ($rawFiltersViews as $filtName => $filtConf) {
+            if (is_string($filtName) && is_array($filtConf)) {
+                $displayFilters[$filtName] = $filtConf;
             }
         }
 

@@ -674,11 +674,11 @@ DELETE FROM ' . Tables::caddie() . '
             )->getQuickSearchResultsNoCache($bulkFilter['search']['q'], [
                 'permissions' => false,
             ]);
-            $res_debug = is_array($res['debug'] ?? null) ? array_filter($res['debug'], is_string(...)) : [];
+            $res_debug = $res['debug'];
             unset($res['debug']);
             $template->append('footer_elements', implode("\n", $res_debug));
-            $res_items = is_array($res['items'] ?? null) ? $res['items'] : [];
-            if (count($res_items) > 0 && is_array($res['qs']) && is_array($res['qs']['unmatched_terms'] ?? null) && count($res['qs']['unmatched_terms']) > 0) {
+            $res_items = $res['items'];
+            if (count($res_items) > 0 && is_array($res['qs']['unmatched_terms'] ?? null) && count($res['qs']['unmatched_terms']) > 0) {
                 $unmatched_terms = array_filter($res['qs']['unmatched_terms'], is_string(...));
                 $template->assign('no_search_results', array_map(htmlspecialchars(...), $unmatched_terms));
             }

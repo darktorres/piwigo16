@@ -115,9 +115,9 @@ final class PwgUsers
         // extracted once here since this function reads id/username/
         // email repeatedly below.
         $user_fields = \Piwigo\Config\Config::userFields();
-        $user_field_id = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
-        $user_field_username = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
-        $user_field_email = is_string($user_fields['email'] ?? null) ? $user_fields['email'] : 'email';
+        $user_field_id = $user_fields['id'];
+        $user_field_username = $user_fields['username'];
+        $user_field_email = $user_fields['email'];
 
         $available_permission_levels = \Piwigo\Config\Config::availablePermissionLevels();
 
@@ -167,7 +167,7 @@ final class PwgUsers
             $min_register_year = $date_tokens[0];
             $min_register_month = $date_tokens[1] ?? 1;
             $min_register_day = $date_tokens[2] ?? 1;
-            $min_date = sprintf('%u-%02u-%02u', $min_register_year, $min_register_month, $min_register_day);
+            $min_date = sprintf('%u-%02u-%02u', (int) $min_register_year, (int) $min_register_month, (int) $min_register_day);
             $where_clauses[] = 'ui.registration_date >= \'' . $min_date . ' 00:00:00\'';
         }
 
@@ -189,7 +189,7 @@ final class PwgUsers
                 assert($max_register_month_ts !== false);
                 $max_register_day = date('t', $max_register_month_ts);
             }
-            $max_date = sprintf('%u-%02u-%02u', $max_register_year, $max_register_month, $max_register_day);
+            $max_date = sprintf('%u-%02u-%02u', (int) $max_register_year, (int) $max_register_month, (int) $max_register_day);
             $where_clauses[] = 'ui.registration_date <= \'' . $max_date . ' 23:59:59\'';
         }
 
@@ -686,8 +686,8 @@ SELECT
             // DB column names (see Piwigo\Users\UserService for the same
             // pattern).
             $user_fields = \Piwigo\Config\Config::userFields();
-            $user_field_password = is_string($user_fields['password'] ?? null) ? $user_fields['password'] : 'password';
-            $user_field_id = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
+            $user_field_password = $user_fields['password'];
+            $user_field_id = $user_fields['id'];
             $current_user_id = (string) $currentUser->id;
 
             $query = '

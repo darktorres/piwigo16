@@ -404,9 +404,9 @@ SELECT
         );
 
         $added_by = 'N/A';
-        $user_fields = is_array(\Piwigo\Config\Config::userFields()) ? \Piwigo\Config\Config::userFields() : [];
-        $uf_username = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : '';
-        $uf_id = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : '';
+        $user_fields = \Piwigo\Config\Config::userFields();
+        $uf_username = $user_fields['username'];
+        $uf_id = $user_fields['id'];
         $row_added_by = is_numeric($row['added_by']) ? (int) $row['added_by'] : 0;
         $added_by_username = new UserRepository($conn)
             ->findUsernameById($row_added_by, $uf_id, $uf_username);
@@ -470,7 +470,7 @@ SELECT *
         $template->assign('INTRO', $intro_vars);
 
         $row_path = is_string($row['path']) ? $row['path'] : null;
-        $picture_ext = is_array(\Piwigo\Config\Config::pictureExtensions()) ? \Piwigo\Config\Config::pictureExtensions() : [];
+        $picture_ext = \Piwigo\Config\Config::pictureExtensions();
         if (in_array(\Piwigo\Core\StringHelper::getExtension($row_path), $picture_ext, true)) {
             $template->assign('U_COI', $this->urlService->getRootUrl() . 'admin.php?page=picture_coi&amp;image_id=' . $image_id);
         }

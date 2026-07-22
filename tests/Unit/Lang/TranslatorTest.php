@@ -13,8 +13,8 @@ beforeEach(function (): void {
 afterEach(function (): void {
     Translator::reset();
     Config::reset();
-    if (file_exists($this->poFile)) {
-        unlink($this->poFile);
+    if (file_exists((is_string($this->poFile) ? $this->poFile : ''))) {
+        unlink((is_string($this->poFile) ? $this->poFile : ''));
     }
 });
 
@@ -23,7 +23,7 @@ test('translate returns the original key when no PO file is loaded', function ()
 });
 
 test('load parses a PO file and translate resolves the matching string', function (): void {
-    file_put_contents($this->poFile, <<<'PO'
+    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -32,7 +32,7 @@ test('load parses a PO file and translate resolves the matching string', functio
         msgstr "Bonjour"
         PO);
 
-    Translator::get()->load('fr', $this->poFile);
+    Translator::get()->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
 
     expect(Translator::get()->translate('Hello'))->toBe('Bonjour');
 });
@@ -44,7 +44,7 @@ test('translate falls back to the mirrored string map for keys with no PO entry'
 });
 
 test('translate applies sprintf-style args', function (): void {
-    file_put_contents($this->poFile, <<<'PO'
+    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -53,13 +53,13 @@ test('translate applies sprintf-style args', function (): void {
         msgstr "Bonjour %s"
         PO);
 
-    Translator::get()->load('fr', $this->poFile);
+    Translator::get()->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
 
     expect(Translator::get()->translate('Hello %s', 'World'))->toBe('Bonjour World');
 });
 
 test('plural picks the correct form for a 2-form language', function (): void {
-    file_put_contents($this->poFile, <<<'PO'
+    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -70,14 +70,14 @@ test('plural picks the correct form for a 2-form language', function (): void {
         msgstr[1] "%d photos"
         PO);
 
-    Translator::get()->load('en', $this->poFile);
+    Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
 
     expect(Translator::get()->plural('%d photo', '%d photos', 1))->toBe('1 photo')
         ->and(Translator::get()->plural('%d photo', '%d photos', 5))->toBe('5 photos');
 });
 
 test('plural picks the correct form for a 3-form language (Russian-style rule)', function (): void {
-    file_put_contents($this->poFile, <<<'PO'
+    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
@@ -89,7 +89,7 @@ test('plural picks the correct form for a 3-form language (Russian-style rule)',
         msgstr[2] "%d photo-many"
         PO);
 
-    Translator::get()->load('ru', $this->poFile);
+    Translator::get()->load('ru', (is_string($this->poFile) ? $this->poFile : ''));
 
     expect(Translator::get()->plural('%d photo', '%d photos', 1))->toBe('1 photo-one')
         ->and(Translator::get()->plural('%d photo', '%d photos', 2))->toBe('2 photo-few')
@@ -97,7 +97,7 @@ test('plural picks the correct form for a 3-form language (Russian-style rule)',
 });
 
 test('load mirrors translations into mirroredStrings(), translate()\'s own fallback', function (): void {
-    file_put_contents($this->poFile, <<<'PO'
+    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -111,7 +111,7 @@ test('load mirrors translations into mirroredStrings(), translate()\'s own fallb
         msgstr[1] "%d photos"
         PO);
 
-    Translator::get()->load('fr', $this->poFile);
+    Translator::get()->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
 
     $mirror = Translator::get()->mirroredStrings();
     expect($mirror['Hello'])->toBe('Bonjour')

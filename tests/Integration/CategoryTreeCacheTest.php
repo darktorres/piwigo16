@@ -67,6 +67,9 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
         parent::tearDown();
     }
 
+    /**
+     * @return array{id: int, level: int, forbidden_categories: string}
+     */
     private static function userdata(string $forbiddenCategories = ''): array
     {
         return ['id' => 1, 'level' => 0, 'forbidden_categories' => $forbiddenCategories];

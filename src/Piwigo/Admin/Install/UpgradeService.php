@@ -201,7 +201,7 @@ DELETE
 
             // what is the default theme?
             // \Piwigo\Config\Config::defaultUserId() is always an int (see include/config_default.inc.php)
-            $default_user_id = is_numeric(\Piwigo\Config\Config::defaultUserId()) ? (int) \Piwigo\Config\Config::defaultUserId() : 0;
+            $default_user_id = \Piwigo\Config\Config::defaultUserId();
             $query = '
 SELECT theme
   FROM ' . Tables::userInfos() . '
@@ -274,7 +274,8 @@ UPDATE ' . Tables::userInfos() . '
      */
     public static function checkUpgradeAccessRights(Connection $conn, string $current_release): bool
     {
-        if (version_compare($current_release, '2.0', '>=') and isset($_COOKIE[session_name()])) {
+        $session_name = session_name();
+        if (version_compare($current_release, '2.0', '>=') and $session_name !== false and isset($_COOKIE[$session_name])) {
             // Check if user is already connected as webmaster
             session_start();
             $pwg_uid = $_SESSION['pwg_uid'] ?? null;
@@ -322,9 +323,9 @@ WHERE username = :username
             // \Piwigo\Config\Config::userFields() maps generic field names to table specific
             // field names and is always array<string, string> (see
             // include/config_default.inc.php).
-            $user_fields = is_array(\Piwigo\Config\Config::userFields()) ? \Piwigo\Config\Config::userFields() : [];
-            $id_field = isset($user_fields['id']) && is_string($user_fields['id']) ? $user_fields['id'] : 'id';
-            $username_field = isset($user_fields['username']) && is_string($user_fields['username']) ? $user_fields['username'] : 'username';
+            $user_fields = \Piwigo\Config\Config::userFields();
+            $id_field = $user_fields['id'];
+            $username_field = $user_fields['username'];
             $query = '
 SELECT u.password, ui.status
 FROM ' . Tables::users() . ' AS u

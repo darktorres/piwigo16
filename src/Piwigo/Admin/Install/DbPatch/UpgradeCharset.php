@@ -49,7 +49,7 @@ final class UpgradeCharset
 
     public static function pwgCharset(): string
     {
-        if (defined('PWG_CHARSET') && is_string(PWG_CHARSET)) {
+        if (defined('PWG_CHARSET')) {
             return PWG_CHARSET;
         }
 
@@ -58,7 +58,7 @@ final class UpgradeCharset
 
     public static function dbCharset(): string
     {
-        if (defined('DB_CHARSET') && is_string(DB_CHARSET)) {
+        if (defined('DB_CHARSET')) {
             return DB_CHARSET;
         }
 

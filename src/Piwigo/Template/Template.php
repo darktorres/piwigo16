@@ -114,7 +114,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         // property supports (vendor/smarty/smarty/src/Smarty.php) isn't a
         // reachable value here, so no is_int() passthrough is needed.
         $this->smarty->debugging = \Piwigo\Config\Config::debugTemplate();
-        if (! (bool) $this->smarty->debugging) {
+        if (! $this->smarty->debugging) {
             $this->smarty->error_reporting = error_reporting() & ~E_NOTICE;
         }
         // compile_check/force_compile mirror Smarty's own setCompileCheck()/
@@ -123,14 +123,10 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         // (int / boolean respectively) don't carry the same bool|int
         // flexibility as $debugging above.
         $compile_check = \Piwigo\Config\Config::templateCompileCheck();
-        $this->smarty->compile_check = is_scalar($compile_check) ? (int) $compile_check : Smarty::COMPILECHECK_ON;
+        $this->smarty->compile_check = (int) $compile_check;
         $this->smarty->force_compile = \Piwigo\Config\Config::templateForceCompile();
 
         $conf_data_location = \Piwigo\Config\Config::dataLocation();
-        if (! is_string($conf_data_location)) {
-            new HtmlService()
-                ->fatalError("Invalid \\Piwigo\Config\Config::dataLocation() configuration: expected a string.");
-        }
 
         if (! \Piwigo\Config\Config::has('data_dir_checked')) {
             $dir = CurrentPaths::get()->root . $conf_data_location;

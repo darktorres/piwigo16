@@ -294,7 +294,6 @@ SELECT
                 if (in_array($eid, [null, false, 0, '0', '', []], true)) {
                     // let's search in the data fetched from PEM
                     $pemPluginsCategory = \Piwigo\Config\Config::pemPluginsCategory();
-                    $pemPluginsCategory = (is_int($pemPluginsCategory) || is_string($pemPluginsCategory)) ? $pemPluginsCategory : 0;
                     $eid = $officialExts[$pemPluginsCategory][$pluginId] ?? null;
                 }
 
@@ -349,7 +348,6 @@ SELECT
             if (in_array($eid, [null, false, 0, '0', '', []], true)) {
                 // let's search in the data fetched from PEM
                 $pemThemesCategory = \Piwigo\Config\Config::pemThemesCategory();
-                $pemThemesCategory = (is_int($pemThemesCategory) || is_string($pemThemesCategory)) ? $pemThemesCategory : 0;
                 $eid = $officialExts[$pemThemesCategory][$themeId] ?? null;
             }
 

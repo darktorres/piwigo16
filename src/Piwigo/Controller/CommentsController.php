@@ -200,15 +200,10 @@ final class CommentsController implements ControllerInterface
               'category_id IN (' . implode(',', $category_ids) . ')';
         }
 
-        // \Piwigo\Config\Config::userFields() maps generic field names to actual DB column
-        // names (see include/config_default.inc.php, always a
-        // string=>string map); $conf itself is only known as
-        // array<string, mixed>, so narrow with fallbacks matching the
-        // shipped defaults rather than trust the shape blindly.
         $user_fields = \Piwigo\Config\Config::userFields();
-        $username_field = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
-        $email_field = is_string($user_fields['email'] ?? null) ? $user_fields['email'] : 'mail_address';
-        $id_field = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
+        $username_field = $user_fields['username'];
+        $email_field = $user_fields['email'];
+        $id_field = $user_fields['id'];
 
         // search a particular author
         $author_raw = $_GET['author'] ?? null;

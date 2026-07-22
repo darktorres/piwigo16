@@ -90,7 +90,8 @@ SELECT
             }
 
             if (isset($config_file_contents_new)) {
-                if (! @file_put_contents($local_conf, $config_file_contents_new)) {
+                $bytes_written = @file_put_contents($local_conf, $config_file_contents_new);
+                if ($bytes_written === false || $bytes_written === 0) {
                     $error = 'Cannot write into local configuration file ' . $local_conf . ', add by hand: ' . $conf_line;
 
                     \Piwigo\Core\PageState::current()->addError($error);

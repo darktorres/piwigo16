@@ -33,7 +33,7 @@ final class RatingUserPageRenderer
             $filter_min_rates = (int) $_GET['f_min_rates'];
         }
 
-        $consensus_top_number = is_numeric(\Piwigo\Config\Config::topNumber()) ? (int) \Piwigo\Config\Config::topNumber() : 15;
+        $consensus_top_number = \Piwigo\Config\Config::topNumber();
         if (isset($_GET['consensus_top_number']) && is_numeric($_GET['consensus_top_number'])) {
             $consensus_top_number = (int) $_GET['consensus_top_number'];
         }
@@ -51,9 +51,7 @@ final class RatingUserPageRenderer
             ];
         }
 
-        $rate_items_raw = \Piwigo\Config\Config::rateItems();
-        /** @var list<int> $rate_items */
-        $rate_items = is_array($rate_items_raw) ? array_map(intval(...), array_filter($rate_items_raw, is_numeric(...))) : [];
+        $rate_items = \Piwigo\Config\Config::rateItems();
 
         $by_user_rating_model = [
             'rates' => [],

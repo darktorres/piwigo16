@@ -258,9 +258,6 @@ SELECT
 
         $level_options = [];
         foreach ($available_permission_levels as $level) {
-            if (! is_int($level)) {
-                continue;
-            }
             $level_options[$level] = Lang::t(sprintf('Level %d', $level));
         }
 

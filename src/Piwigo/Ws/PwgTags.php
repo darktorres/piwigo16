@@ -142,9 +142,6 @@ final class PwgTags
         $tags = $tagService->findTags($params['tag_id'], $params['tag_url_name'], $params['tag_name']);
         $tags_by_id = [];
         foreach ($tags as $tag) {
-            if (! is_array($tag)) {
-                continue;
-            }
             $tag_id = isset($tag['id']) && is_numeric($tag['id']) ? (int) $tag['id'] : 0;
             $tag['id'] = $tag_id;
             $tags_by_id[$tag_id] = $tag;

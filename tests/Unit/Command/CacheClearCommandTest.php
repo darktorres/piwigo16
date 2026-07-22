@@ -45,7 +45,7 @@ test('reports an already-empty Latte cache dir without erroring', function () us
         ->and($tester->getDisplay())->toContain('already empty');
 });
 
-test('clears the injected PSR-6 cache pool', function () use ($latteDir): void {
+test('clears the injected PSR-6 cache pool', function (): void {
     $pool = new ArrayAdapter();
     $item = $pool->getItem('some-key');
     $item->set('some-value');

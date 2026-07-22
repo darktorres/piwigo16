@@ -146,13 +146,6 @@ final class FilterPanelRenderer
 
         $level_options = [];
         foreach ($available_permission_levels as $level) {
-            // config_default.inc.php seeds this as [0, 1, 2, 4, 8] (always int); a
-            // non-int entry would come from a broken custom config override and has
-            // no meaningful privacy level to render.
-            if (! is_int($level)) {
-                continue;
-            }
-
             $level_options[$level] = Lang::t(sprintf('Level %d', $level));
 
             if ($level === 0) {

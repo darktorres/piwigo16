@@ -415,7 +415,7 @@ final class CategoryRepository extends AbstractRepository
      */
     public function findCategoryIdsBySite(int $siteId): array
     {
-        return array_map(intval(...), $this->conn->createQueryBuilder()
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->createQueryBuilder()
             ->select('id')
             ->from(Tables::categories())
             ->where('site_id = :siteId')
@@ -443,7 +443,7 @@ final class CategoryRepository extends AbstractRepository
             return [];
         }
 
-        return array_map(intval(...), $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
 SELECT id
   FROM ' . Tables::images() . '
   WHERE storage_category_id IN (
@@ -461,7 +461,7 @@ SELECT id
             return [];
         }
 
-        return array_map(intval(...), $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
 SELECT
     DISTINCT(image_id)
   FROM ' . Tables::imageCategory() . '
@@ -484,7 +484,7 @@ SELECT
             return [];
         }
 
-        return array_map(intval(...), $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
 SELECT
     DISTINCT(image_id)
   FROM ' . Tables::imageCategory() . '
@@ -570,7 +570,7 @@ DELETE FROM ' . Tables::userCacheCategories() . '
      */
     public function findWrongRepresentativeCategoryIds(string $whereCatsSql): array
     {
-        return array_map(intval(...), $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
 SELECT DISTINCT c.id
   FROM ' . Tables::categories() . ' AS c LEFT JOIN ' . Tables::images() . ' AS i
     ON c.representative_picture_id = i.id
@@ -598,7 +598,7 @@ UPDATE ' . Tables::categories() . '
      */
     public function findCategoriesNeedingRandomRepresentative(string $whereCatsSql): array
     {
-        return array_map(intval(...), $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
 SELECT DISTINCT id
   FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::imageCategory() . '
     ON id = category_id
@@ -612,7 +612,7 @@ SELECT DISTINCT id
      */
     public function findOrphanedColumnValues(string $table, string $column): array
     {
-        return array_values(array_unique(array_map(strval(...), $this->conn->executeQuery('
+        return array_values(array_unique(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->conn->executeQuery('
 SELECT
     ' . $column . '
   FROM ' . $table . '
@@ -705,7 +705,7 @@ SELECT
      */
     public function findAccessUserIds(int $catId): array
     {
-        return array_map(intval(...), $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
 SELECT user_id
   FROM ' . Tables::userAccess() . '
   WHERE cat_id = ' . $catId . '
@@ -717,7 +717,7 @@ SELECT user_id
      */
     public function findAccessGroupIds(int $catId): array
     {
-        return array_map(intval(...), $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
 SELECT group_id
   FROM ' . Tables::groupAccess() . '
   WHERE cat_id = ' . $catId . '
@@ -750,7 +750,7 @@ DELETE
             return [];
         }
 
-        return array_map(strval(...), $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->conn->executeQuery('
 SELECT uppercats
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $ids) . ')
@@ -859,7 +859,7 @@ SELECT id, uppercats, site_id
      */
     public function findDistinctStorageCategoryIds(): array
     {
-        return array_map(intval(...), $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
 SELECT DISTINCT(storage_category_id)
   FROM ' . Tables::images() . '
   WHERE storage_category_id IS NOT NULL

@@ -1241,10 +1241,6 @@ SELECT
             $extensions = \Piwigo\Config\Config::pictureExtensions();
         }
 
-        // $conf values are inherently mixed; only string elements can safely
-        // be passed to strtolower() below.
-        $extensions = is_array($extensions) ? array_filter($extensions, is_string(...)) : [];
-
         return array_unique(array_map(strtolower(...), $extensions));
     }
 

@@ -494,7 +494,7 @@ final readonly class AuthService
         if ($valid_key === 'api_key') {
             // check secret
             $apikey_secret = $key['apikey_secret'];
-            if ($apikey_secret === null || ! $this->passwordService->verify($secret_key ?? '', $apikey_secret)) {
+            if ($apikey_secret === null || ! $this->passwordService->verify($secret_key, $apikey_secret)) {
                 return false;
             }
 
@@ -637,13 +637,9 @@ final readonly class AuthService
 
         $activation_key = SessionService::get()->generateKey(20);
 
-        // password_activation_duration/password_reset_duration default to ints
-        // in include/config_default.inc.php, but once persisted to the config
-        // DB table they come back as raw strings (see load_conf_from_db())
         $duration = $firstLogin
         ? \Piwigo\Config\Config::passwordActivationDuration()
         : \Piwigo\Config\Config::passwordResetDuration();
-        $duration = is_numeric($duration) ? (int) $duration : 0;
         $expire = (clone Env::now())->modify('+' . $duration . ' seconds');
 
         $this->repo->setActivationKey($userId, $this->passwordService->hash($activation_key), $expire);

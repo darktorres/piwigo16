@@ -438,7 +438,11 @@ SELECT COUNT(*)
         // Split (split represented by -1)
         if (count($diff_x) > 0) {
             while (max($diff_x) > 120) {
-                $diff_x[array_search(max($diff_x), $diff_x, true)] = -1;
+                $max_idx = array_search(max($diff_x), $diff_x, true);
+                if ($max_idx === false) {
+                    break;
+                }
+                $diff_x[$max_idx] = -1;
                 $split++;
             }
         }

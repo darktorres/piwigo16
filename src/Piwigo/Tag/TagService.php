@@ -328,7 +328,7 @@ final readonly class TagService
         }
 
         $tags = [];
-        foreach ($this->repo->findCommonTags($items, $maxTags, $excludedTagIds) as $row) {
+        foreach ($this->repo->findCommonTags(array_values($items), $maxTags, array_values($excludedTagIds)) as $row) {
             $row['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $row['name'], $row);
             $tags[] = $row;
         }

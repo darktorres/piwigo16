@@ -281,6 +281,10 @@ final class BrowserTestHelpers
         $property = new ReflectionProperty(AwaitableWebpage::class, 'page');
         $rawPage = $property->getValue($page);
 
+        // This whole helper exists to reach into pest-plugin-browser's
+        // internals via reflection (see the surrounding comments); checking
+        // against its internal Page type is the point, not a mistake.
+        // @phpstan-ignore instanceof.internalClass
         if (!$rawPage instanceof Page) {
             throw new ExpectationFailedException(
                 'Could not extract the underlying Page from AwaitableWebpage — '

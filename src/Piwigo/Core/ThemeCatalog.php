@@ -47,7 +47,7 @@ SELECT
             }
 
             $mobile_theme = \Piwigo\Config\Config::mobilTheme();
-            if (is_string($mobile_theme) && $id === $mobile_theme) {
+            if ($id === $mobile_theme) {
                 if (! $showMobile) {
                     continue;
                 }

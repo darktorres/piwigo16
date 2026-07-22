@@ -750,7 +750,7 @@ final class HtmlService implements HtmlRenderingInterface
         if (\Piwigo\Config\Config::originalUrlProtection() === 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
             $path = $infos['path'] ?? null;
             $ext = \Piwigo\Core\StringHelper::getExtension(is_string($path) ? $path : null);
-            $picture_ext = is_array(\Piwigo\Config\Config::pictureExtensions()) ? \Piwigo\Config\Config::pictureExtensions() : [];
+            $picture_ext = \Piwigo\Config\Config::pictureExtensions();
             if (! in_array($ext, $picture_ext, true)) {
                 return $url;
             }

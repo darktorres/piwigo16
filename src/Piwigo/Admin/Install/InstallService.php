@@ -104,21 +104,10 @@ final class InstallService
      */
     public static function activateCorePlugins(): void
     {
-        $urlService = new UrlService(new HtmlService());
-        $lifecycle = new ExtensionLifecycle(
-            new ExtensionRepository(DbConnection::build()),
-            new PemCatalog(new ZipExtractor()),
-            $urlService,
-            CurrentConfigService::get(),
-        );
-        $fs_plugins = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, $urlService);
-
-        foreach ($fs_plugins as $plugin_id => $fs_plugin) {
-            if (in_array($plugin_id, [], true)) {
-                $lifecycle->performAction(ExtensionType::Plugin, 'activate', $plugin_id, $fs_plugin);
-            }
-        }
+        // No core plugins are auto-activated at install time (empty list,
+        // matching the original's own empty in_array() haystack).
+        new ExtensionScanner()
+            ->scan(ExtensionType::Plugin, new UrlService(new HtmlService()));
     }
 
     /**

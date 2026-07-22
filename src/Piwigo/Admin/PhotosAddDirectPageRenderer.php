@@ -224,10 +224,7 @@ SELECT *
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_photo_add_direct');
 
-        // \Piwigo\Config\Config::formatExtensions() is read twice below; narrow once and reuse instead of
-        // re-reading the offset (each re-read is `mixed`), same pattern as
-        // admin/batch_manager.php.
-        $conf_format_ext = is_array(\Piwigo\Config\Config::formatExtensions()) ? \Piwigo\Config\Config::formatExtensions() : [];
+        $conf_format_ext = \Piwigo\Config\Config::formatExtensions();
 
         $template->assign([
             'ENABLE_FORMATS' => \Piwigo\Config\Config::isFormatsEnabled(),
@@ -318,9 +315,6 @@ SELECT *
         );
 
         $upload_extensions = (\Piwigo\Config\Config::uploadFormAllTypes()) ? \Piwigo\Config\Config::fileExtensions() : \Piwigo\Config\Config::pictureExtensions();
-        // $conf values are inherently mixed; only string elements can safely
-        // be passed to strtolower() below.
-        $upload_extensions = is_array($upload_extensions) ? array_filter($upload_extensions, is_string(...)) : [];
         $unique_exts = array_unique(array_map(strtolower(...), $upload_extensions));
 
         $template->assign(
@@ -460,7 +454,7 @@ SELECT
                 $setup_warnings[] = sprintf(
                     'Piwigo setting upload_form_chunk_size (%ukB) should be smaller than PHP configuration setting upload_max_filesize (%ukB)',
                     $upload_form_chunk_size,
-                    ceil((int) $upload_max_filesize / 1024)
+                    (int) ceil((int) $upload_max_filesize / 1024)
                 );
             }
 

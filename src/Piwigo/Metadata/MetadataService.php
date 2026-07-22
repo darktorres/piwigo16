@@ -67,7 +67,7 @@ final readonly class MetadataService
                     foreach (array_keys($map, $iptcKey, true) as $pwgKey) {
                         $result[$pwgKey] = $value;
 
-                        if (! (bool) (\Piwigo\Config\Config::allowHtmlInMetadata())) {
+                        if (! \Piwigo\Config\Config::allowHtmlInMetadata()) {
                             // photo origin is unsecured (user upload) --
                             // strip HTML to avoid XSS.
                             $result[$pwgKey] = strip_tags($result[$pwgKey]);
@@ -204,7 +204,7 @@ final readonly class MetadataService
             }
         }
 
-        if (! (bool) (\Piwigo\Config\Config::allowHtmlInMetadata())) {
+        if (! \Piwigo\Config\Config::allowHtmlInMetadata()) {
             foreach ($result as $key => $value) {
                 // photo origin is unsecured (user upload) -- strip HTML to
                 // avoid XSS.
@@ -341,7 +341,7 @@ final readonly class MetadataService
 
         $updateFields = ['filesize', 'width', 'height'];
 
-        if ((bool) (\Piwigo\Config\Config::useExif())) {
+        if (\Piwigo\Config\Config::useExif()) {
             $updateFields = array_merge(
                 $updateFields,
                 array_map(strval(...), array_keys($this->stringMap(\Piwigo\Config\Config::useExifMapping()))),
@@ -349,7 +349,7 @@ final readonly class MetadataService
             );
         }
 
-        if ((bool) (\Piwigo\Config\Config::useIptc())) {
+        if (\Piwigo\Config\Config::useIptc()) {
             $updateFields = array_merge(
                 $updateFields,
                 array_map(strval(...), array_keys($this->stringMap(\Piwigo\Config\Config::useIptcMapping())))
@@ -424,11 +424,11 @@ final readonly class MetadataService
             $file = CurrentPaths::get()->root . $path;
         }
 
-        if ((bool) (\Piwigo\Config\Config::useExif())) {
+        if (\Piwigo\Config\Config::useExif()) {
             $infos = array_merge($infos, $this->getSyncExifData($file));
         }
 
-        if ((bool) (\Piwigo\Config\Config::useIptc())) {
+        if (\Piwigo\Config\Config::useIptc()) {
             $infos = array_merge($infos, $this->getSyncIptcData($file));
         }
 

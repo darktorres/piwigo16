@@ -47,12 +47,9 @@ final readonly class NotificationByMailService
         }
 
         $userFields = \Piwigo\Config\Config::userFields();
-        $usernameField = $userFields['username'] ?? 'username';
-        $usernameField = is_string($usernameField) ? $usernameField : 'username';
-        $emailField = $userFields['email'] ?? 'email';
-        $emailField = is_string($emailField) ? $emailField : 'email';
-        $idField = $userFields['id'] ?? 'id';
-        $idField = is_string($idField) ? $idField : 'id';
+        $usernameField = $userFields['username'];
+        $emailField = $userFields['email'];
+        $idField = $userFields['id'];
 
         // Matches the original's `$enabled_filter_value != ''` loose
         // comparison exactly: against a bool|string value, PHP casts the

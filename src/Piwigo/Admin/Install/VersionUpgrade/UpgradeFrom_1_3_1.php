@@ -371,7 +371,7 @@ ALTER TABLE ' . Config::dbPrefix() . $table . '
                 if (! in_array($index_name, $existing_indexes, true)) {
                     $query = '
 ALTER TABLE ' . Config::dbPrefix() . $table . '
-  ADD ' . ($index['unique'] ? 'UNIQUE' : 'INDEX') . ' '
+  ADD INDEX '
                       . $index_name . ' (' . implode(',', $index['columns']) . ')
 ;';
                     $conn->executeStatement($query);

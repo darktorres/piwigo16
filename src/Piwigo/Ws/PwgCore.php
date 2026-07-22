@@ -488,7 +488,6 @@ DELETE FROM ' . Tables::rate() . '
 
         if (\Piwigo\Auth\AccessControl::isAdmin()) {
             $upload_ext_list = (\Piwigo\Config\Config::uploadFormAllTypes()) ? \Piwigo\Config\Config::fileExtensions() : \Piwigo\Config\Config::pictureExtensions();
-            $upload_ext_list = is_array($upload_ext_list) ? array_values(array_filter($upload_ext_list, is_string(...))) : [];
 
             $res['upload_file_types'] = implode(
                 ',',
@@ -872,11 +871,11 @@ SELECT
     {
         $conn = DbConnection::build();
 
+        /** @var array<string, mixed> $page */
+        $page = [];
         if (isset($_GET['start']) and is_numeric($_GET['start'])) {
-            /** @var array<string, mixed> $page */
             $page['start'] = $_GET['start'];
         } else {
-            /** @var array<string, mixed> $page */
             $page['start'] = 0;
         }
 
@@ -1205,8 +1204,7 @@ SELECT
             }
         }
 
-        $page_start = $page['start'];
-        $page_start = is_numeric($page_start) ? (int) $page_start : 0;
+        $page_start = (int) $page['start'];
 
         $nb_logs_page = \Piwigo\Config\Config::nbLogsPage();
 
@@ -1437,8 +1435,10 @@ SELECT
             // we delete the "guest" from the $username_of hash so that it is
             // avoided in next steps
             // Config::guestId() is SCHEMA-typed 'int' only.
-            $guest_id_key = \Piwigo\Config\Config::guestId();
-            unset($username_of[$guest_id_key]);
+            $guest_id_key = (string) \Piwigo\Config\Config::guestId();
+            $username_of = array_diff_key($username_of, [
+                $guest_id_key => true,
+            ]);
         }
 
         $summary['nb_members'] = count($username_of);

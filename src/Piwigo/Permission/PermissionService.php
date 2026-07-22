@@ -48,12 +48,6 @@ final readonly class PermissionService
         $options = [];
         $label = '';
         foreach (array_reverse($available_permission_levels) as $level) {
-            // config_default.inc.php seeds this as [0, 1, 2, 4, 8] (always
-            // int); a non-int entry would come from a broken custom config
-            // override and has no meaningful privacy level to render.
-            if (! is_int($level)) {
-                continue;
-            }
             if ($level === 0) {
                 $label = Lang::t('Everybody');
             } else {
@@ -281,7 +275,7 @@ final readonly class PermissionService
         }
 
         // normalize: real callers pass a mix of int and numeric-string ids
-        $categoryIds = array_map(intval(...), $categoryIds);
+        $categoryIds = array_values(array_map(intval(...), $categoryIds));
 
         // make sure categories are private and select uppercats or subcats
         $catIds = $this->categoryRepo->findUppercatIds($categoryIds);
@@ -289,10 +283,7 @@ final readonly class PermissionService
             $catIds = array_merge($catIds, $this->categoryRepo->findSubcategoryIds($categoryIds));
         }
 
-        $catIdsForQuery = array_values(array_map(
-            static fn (mixed $catId): int => is_numeric($catId) ? (int) $catId : 0,
-            $catIds
-        ));
+        $catIdsForQuery = array_values($catIds);
         $privateCats = $this->repo->findPrivateCategoryIdsAmong($catIdsForQuery);
 
         if (count($privateCats) === 0) {

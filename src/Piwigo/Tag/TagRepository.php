@@ -101,7 +101,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
 
         $counters = [];
         foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
-            $counters[(int) $row['tag_id']] = (int) $row['counter'];
+            $counters[is_numeric($row['tag_id']) ? (int) $row['tag_id'] : 0] = is_numeric($row['counter']) ? (int) $row['counter'] : 0;
         }
 
         return $counters;
@@ -231,7 +231,7 @@ SELECT
   WHERE tag_id IN (' . implode(',', $tagIds) . ')
 ;';
         // image_id is Tables::imageTag()'s NOT NULL foreign key.
-        return array_map(intval(...), $this->conn->executeQuery($query)->fetchFirstColumn());
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery($query)->fetchFirstColumn());
     }
 
     /**

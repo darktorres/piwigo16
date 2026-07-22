@@ -289,7 +289,7 @@ final readonly class ExtensionLifecycle
 
                 $isMobile = (bool) ($fsEntry['mobile'] ?? false);
                 $currentMobileTheme = \Piwigo\Config\Config::mobilTheme();
-                $hasOtherMobileTheme = is_string($currentMobileTheme) && $currentMobileTheme !== '' && $currentMobileTheme !== '0';
+                $hasOtherMobileTheme = $currentMobileTheme !== '' && $currentMobileTheme !== '0';
                 if ($isMobile && $hasOtherMobileTheme && $currentMobileTheme !== $id) {
                     $errors[] = Lang::t('You can activate only one mobile theme.');
                     break;

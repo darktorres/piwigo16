@@ -396,10 +396,8 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             // new categories are the directories not present yet in the database
             foreach (array_diff($fs_fulldirs, array_keys($db_fulldirs)) as $fulldir) {
                 $dir = basename($fulldir);
-                // sync_chars_regex is a config default, always a regex string; treat
-                // a non-string config value the same as a non-matching name below.
                 $sync_chars_regex = \Piwigo\Config\Config::syncCharsRegex();
-                if (is_string($sync_chars_regex) && (bool) preg_match($sync_chars_regex, $dir)) {
+                if ((bool) preg_match($sync_chars_regex, $dir)) {
                     $insert = [
                         'id' => $next_id++,
                         'dir' => $dir,
@@ -483,7 +481,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                     $category_up = [];
                     foreach ($inserts as $category) {
                         $category_ids[] = $category['id'];
-                        if (! in_array($category['id_uppercat'], [null, false, 0, '0', '', []], true)) {
+                        if (! in_array($category['id_uppercat'] ?? null, [null, false, 0, '0', '', []], true)) {
                             $category_up[] = $category['id_uppercat'];
                         }
                     }
@@ -699,10 +697,8 @@ SELECT id, path
                     continue;
                 }
                 $filename = basename($path);
-                // sync_chars_regex is a config default, always a regex string; treat
-                // a non-string config value the same as a non-matching name below.
                 $sync_chars_regex = \Piwigo\Config\Config::syncCharsRegex();
-                if (! is_string($sync_chars_regex) || ! (bool) preg_match($sync_chars_regex, $filename)) {
+                if (! (bool) preg_match($sync_chars_regex, $filename)) {
                     $errors[] = [
                         'path' => $path,
                         'type' => 'PWG-UPDATE-1',

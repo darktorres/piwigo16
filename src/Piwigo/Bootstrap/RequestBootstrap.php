@@ -269,16 +269,8 @@ final class RequestBootstrap
         \Piwigo\Config\CurrentConfigService::set($configService);
         $configService->loadConfFromDb();
 
-        // \Piwigo\Config\Config::dataLocation()/'log_dir' lost their specific string types the same
-        // way $conf['dblayer'] did above (see comment near the dblayer include); we
-        // already validated 'db_password' is a string above ($db_password), so it is
-        // reused here rather than re-narrowed.
         $log_data_location = \Piwigo\Config\Config::dataLocation();
         $log_dir = \Piwigo\Config\Config::logDir();
-        if (! is_string($log_data_location) || ! is_string($log_dir)) {
-            new HtmlService()
-                ->fatalError("Invalid \\Piwigo\Config\Config::dataLocation()/'log_dir' configuration: expected strings.");
-        }
 
         \Piwigo\Core\CurrentLogger::set(new Logger([
             'directory' => CurrentPaths::get()->root . $log_data_location . $log_dir,
@@ -365,8 +357,7 @@ final class RequestBootstrap
     {
 
         if (\Piwigo\Config\Config::has('alternative_pem_url') and \Piwigo\Config\Config::alternativePemUrl() !== '') {
-            $alternative_pem_url = \Piwigo\Config\Config::alternativePemUrl();
-            return is_scalar($alternative_pem_url) ? (string) $alternative_pem_url : '';
+            return \Piwigo\Config\Config::alternativePemUrl();
         }
 
         return AppInfo::URL . '/ext';
@@ -544,7 +535,7 @@ final class RequestBootstrap
             \Piwigo\Core\FilterState::set(false);
         }
 
-        if (\Piwigo\Config\Config::has('header_notes') && is_array(\Piwigo\Config\Config::headerNotes())) {
+        if (\Piwigo\Config\Config::has('header_notes')) {
             $pageState->headerNotes = array_merge($pageState->headerNotes, \Piwigo\Config\Config::headerNotes());
         }
 

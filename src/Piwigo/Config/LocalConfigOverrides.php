@@ -40,6 +40,11 @@ final class LocalConfigOverrides
             include $localConfigFile;
         }
 
+        // Real guard, not dead code: $conf is genuinely populated by the
+        // include above (a site-local config.inc.php that may assign
+        // $conf['local_dir_site']), but PHPStan can't trace mutation
+        // through a dynamic include and proves $conf stays [].
+        // @phpstan-ignore isset.offset
         if (isset($conf['local_dir_site'])) {
             // Legacy Coupling Retirement gap-closure (entry-shell
             // define()/include round): used to read the raw PWG_LOCAL_DIR

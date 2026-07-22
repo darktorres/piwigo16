@@ -370,9 +370,7 @@ final class ProfileFormHandler
         $duration = [];
         $display_duration = [];
         $has_custom = false;
-        // \Piwigo\Config\Config::apiKeyDuration() is a plain list of day-count strings (plus
-        // the literal 'custom' sentinel) -- see include/config_default.inc.php.
-        $api_key_duration = is_array(\Piwigo\Config\Config::apiKeyDuration()) ? array_filter(\Piwigo\Config\Config::apiKeyDuration(), is_string(...)) : [];
+        $api_key_duration = \Piwigo\Config\Config::apiKeyDuration();
         foreach ($api_key_duration as $day) {
             if ($day === 'custom') {
                 $has_custom = true;

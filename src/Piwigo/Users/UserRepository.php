@@ -281,7 +281,7 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
             ->executeQuery()
             ->fetchFirstColumn();
 
-        return array_map(intval(...), $ids);
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $ids);
     }
 
     /**
@@ -316,7 +316,7 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
         }
 
         $userFields = \Piwigo\Config\Config::userFields();
-        $userIdField = is_array($userFields) && is_string($userFields['id'] ?? null) ? $userFields['id'] : 'id';
+        $userIdField = $userFields['id'];
         $this->conn->createQueryBuilder()
             ->delete(Tables::users())
             ->where($userIdField . ' = :userId')
@@ -334,7 +334,7 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
      */
     public function findAllUserIds(string $userIdColumn): array
     {
-        return array_map(intval(...), $this->conn->createQueryBuilder()
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->createQueryBuilder()
             ->select($userIdColumn . ' AS id')
             ->from(Tables::users())
             ->executeQuery()
@@ -346,7 +346,7 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
      */
     public function findDistinctUserIdsInTable(string $table): array
     {
-        return array_map(intval(...), $this->conn->createQueryBuilder()
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->createQueryBuilder()
             ->select('DISTINCT user_id')
             ->from($table)
             ->executeQuery()

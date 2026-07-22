@@ -42,7 +42,7 @@ namespace Piwigo\Admin\Category {
     /**
      * @param array<int, string> $fields
      * @param array<int, array<string, mixed>> $rows
-     * @param array<string, mixed> $options
+     * @param array{ignore?: bool} $options
      */
     function mass_inserts(string $table, array $fields, array $rows, array $options = []): void
     {
@@ -288,11 +288,11 @@ namespace Piwigo\Tests\Integration {
             self::assertTrue($result->success);
             self::assertNotNull($result->categoryId);
 
-            $created = $this->fetchCategory((int) $result->categoryId);
+            $created = $this->fetchCategory($result->categoryId);
             self::assertNotNull($created);
             self::assertSame('Integration Test Album', $created['name']);
 
-            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . (int) $result->categoryId);
+            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $result->categoryId);
         }
     }
 }

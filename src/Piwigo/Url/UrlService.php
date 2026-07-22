@@ -131,7 +131,7 @@ final class UrlService implements UrlServiceInterface
                         }
                     } else {
                         // we have a custom port
-                        $url_port = ':' . (is_scalar(\Piwigo\Config\Config::urlPort()) ? \Piwigo\Config\Config::urlPort() : '');
+                        $url_port = ':' . \Piwigo\Config\Config::urlPort();
                     }
 
                     if ($url_port !== null and strrchr($url, ':') !== $url_port) {
@@ -183,10 +183,7 @@ final class UrlService implements UrlServiceInterface
      */
     private function trustedHost(string $candidate): string
     {
-        $allowedRaw = \Piwigo\Config\Config::allowedHosts();
-        $allowed = is_array($allowedRaw)
-            ? array_values(array_filter(array_map(static fn (mixed $x): string => is_scalar($x) ? (string) $x : '', $allowedRaw), static fn (string $x): bool => $x !== ''))
-            : [];
+        $allowed = \Piwigo\Config\Config::allowedHosts();
 
         if ($allowed === [] || in_array($candidate, $allowed, true)) {
             return $candidate;

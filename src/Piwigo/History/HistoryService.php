@@ -171,12 +171,7 @@ final readonly class HistoryService
                 $cachedSections = $this->repo->getSectionEnumOptions();
             }
 
-            $historySectionsCache = [];
-            foreach ($cachedSections as $cachedSection) {
-                if (is_string($cachedSection)) {
-                    $historySectionsCache[] = $cachedSection;
-                }
-            }
+            $historySectionsCache = $cachedSections;
 
             \Piwigo\Config\Config::override('history_sections_cache', $historySectionsCache);
 

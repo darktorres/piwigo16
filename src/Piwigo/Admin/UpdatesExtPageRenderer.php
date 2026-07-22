@@ -109,10 +109,7 @@ final class UpdatesExtPageRenderer
 
             $type_updates = [];
 
-            $ignored_ids = $updates_ignored[$type] ?? [];
-            if (! is_array($ignored_ids)) {
-                $ignored_ids = [];
-            }
+            $ignored_ids = $updates_ignored[$type];
 
             foreach ($pending as $ext_id => $data) {
                 $fs_ext = $data['fs'];

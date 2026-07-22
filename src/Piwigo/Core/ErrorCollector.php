@@ -65,9 +65,7 @@ final class ErrorCollector
     public static function installIfConfigured(): void
     {
         if (\Piwigo\Config\Config::has('show_php_errors') && \Piwigo\Config\Config::showPhpErrors() !== 0) {
-            if (is_scalar(\Piwigo\Config\Config::showPhpErrors())) {
-                @ini_set('error_reporting', \Piwigo\Config\Config::showPhpErrors());
-            }
+            @ini_set('error_reporting', \Piwigo\Config\Config::showPhpErrors());
             if (\Piwigo\Config\Config::showPhpErrorsOnFrontend()) {
                 self::install();
             }

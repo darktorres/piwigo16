@@ -38,11 +38,10 @@ final class WsDefaultMethods
     {
         $service = &$arr[0];
 
-        // \Piwigo\Config\Config::availablePermissionLevels() defaults to [0, 1, 2, 4, 8] (see
-        // include/config_default.inc.php); guard against a misconfigured/empty value
-        // since max() requires a non-empty array.
+        // guard against a misconfigured/empty value since max() requires a
+        // non-empty array.
         $available_permission_levels = \Piwigo\Config\Config::availablePermissionLevels();
-        $available_permission_levels = is_array($available_permission_levels) && $available_permission_levels !== []
+        $available_permission_levels = $available_permission_levels !== []
             ? $available_permission_levels
             : [0, 1, 2, 4, 8];
 

@@ -42,7 +42,7 @@ if (! is_dir($langDir)) {
 $converted = 0;
 $skipped = 0;
 
-foreach (scandir($langDir) ?: [] as $locale) {
+foreach (scandir($langDir) !== false ? scandir($langDir) : [] as $locale) {
     if ($locale === '.' || $locale === '..') {
         continue;
     }
@@ -51,7 +51,7 @@ foreach (scandir($langDir) ?: [] as $locale) {
         continue;
     }
 
-    foreach (scandir($localeDir) ?: [] as $file) {
+    foreach (scandir($localeDir) !== false ? scandir($localeDir) : [] as $file) {
         if (! str_ends_with($file, '.lang.php')) {
             continue;
         }

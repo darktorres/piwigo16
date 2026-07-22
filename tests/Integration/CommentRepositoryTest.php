@@ -265,7 +265,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
         self::assertCount(2, $firstPage);
         self::assertCount(1, $secondPage);
-        $allIds = array_merge(array_column($firstPage, 'id'), array_column($secondPage, 'id'));
+        $allIds = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', array_merge(array_column($firstPage, 'id'), array_column($secondPage, 'id')));
         self::assertCount(3, array_unique($allIds));
     }
 

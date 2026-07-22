@@ -189,13 +189,9 @@ final class PictureCommentRenderer
                 'COMMENTS_ORDER_TITLE' => $commentsOrder === 'ASC' ? Lang::t('Show latest comments first') : Lang::t('Show oldest comments first'),
             ]);
 
-            // \Piwigo\Config\Config::userFields() maps generic field names to actual DB
-            // column names; it is always set by config_default.inc.php.
             $userFields = \Piwigo\Config\Config::userFields();
-            $userFieldEmail = $userFields['email'] ?? null;
-            $userFieldEmail = is_string($userFieldEmail) ? $userFieldEmail : '';
-            $userFieldId = $userFields['id'] ?? null;
-            $userFieldId = is_string($userFieldId) ? $userFieldId : '';
+            $userFieldEmail = $userFields['email'];
+            $userFieldId = $userFields['id'];
 
             $rows = $commentRepository->findForImage(
                 $imageId,

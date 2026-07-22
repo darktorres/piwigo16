@@ -128,7 +128,7 @@ DELETE FROM ' . Tables::images() . '
     {
         $idsStr = wordwrap(implode(', ', $ids), 80, "\n");
 
-        return array_map(intval(...), $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
 SELECT
     id
   FROM ' . Tables::categories() . '
@@ -239,7 +239,7 @@ SELECT
      */
     public function findDissociableImageIds(array $images, int|string $category): array
     {
-        return array_map(intval(...), $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
 SELECT id
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::images() . ' ON image_id = id
@@ -301,7 +301,7 @@ DELETE ' . Tables::imageCategory() . '.*
      */
     public function findImageIdsWithoutMd5sum(): array
     {
-        return array_map(intval(...), $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
 SELECT id
   FROM ' . Tables::images() . '
   WHERE md5sum is null
@@ -322,7 +322,7 @@ SELECT
   WHERE id IN (' . implode(', ', $ids) . ')
 ;')->fetchAllKeyValue();
 
-        return array_map(strval(...), $paths);
+        return array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $paths);
     }
 
     public function countAllImages(): int
@@ -362,14 +362,14 @@ SELECT
 
         if (count($loungedIds) > 0) {
             $query .= '
-    AND id NOT IN (' . implode(',', array_map(strval(...), $loungedIds)) . ')';
+    AND id NOT IN (' . implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $loungedIds)) . ')';
         }
 
         $query .= '
   ORDER BY id ASC
 ;';
 
-        return array_map(intval(...), $this->conn->executeQuery($query)->fetchFirstColumn());
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery($query)->fetchFirstColumn());
     }
 
     /**

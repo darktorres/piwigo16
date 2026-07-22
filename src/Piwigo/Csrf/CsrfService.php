@@ -65,7 +65,6 @@ final class CsrfService
         }
 
         $secret_key = \Piwigo\Config\Config::secretKey();
-        $secret_key = is_scalar($secret_key) ? (string) $secret_key : '';
 
         return hash_hmac('sha256', $session_id, $secret_key);
     }

@@ -166,7 +166,7 @@ final readonly class CommentService
             if ($comm['author'] !== 'guest') {
                 $authorName = is_string($comm['author']) ? $comm['author'] : '';
                 $user_fields = \Piwigo\Config\Config::userFields();
-                $usernameColumn = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
+                $usernameColumn = $user_fields['username'];
 
                 if ($this->repo->usernameExists($usernameColumn, $authorName)) {
                     $infos[] = Lang::t('This login is already used by another user');

@@ -339,7 +339,7 @@ final class GalleryController implements ControllerInterface
 
             $tags = $tagService->getCommonTags(
                 $page_items,
-                is_numeric(\Piwigo\Config\Config::menubarTagCloudItemsNumber()) ? (int) \Piwigo\Config\Config::menubarTagCloudItemsNumber() : 0,
+                \Piwigo\Config\Config::menubarTagCloudItemsNumber(),
                 new HtmlService(),
                 $excluded_tag_ids
             );
@@ -492,7 +492,7 @@ final class GalleryController implements ControllerInterface
             $order_idx = SessionService::get()->getSessionVar('image_order', 0);
 
             // get first order field and direction
-            $order_by = is_string((\Piwigo\Config\Config::all()['order_by'] ?? null)) ? (\Piwigo\Config\Config::all()['order_by'] ?? null) : '';
+            $order_by = is_string(\Piwigo\Config\Config::all()['order_by']) ? \Piwigo\Config\Config::all()['order_by'] : '';
             $first_order = substr($order_by, 9);
             if (($pos = strpos($first_order, ',')) !== false) {
                 $first_order = substr($first_order, 0, $pos);
@@ -614,7 +614,7 @@ final class GalleryController implements ControllerInterface
         $body_data_section = \Piwigo\Core\PageState::current()->bodyData['section'] ?? null;
         if ($page_items !== [] and $body_data_section !== 'tags') {
             $selection = array_slice($page_items, $page_start, $page_nb_image_page);
-            $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, is_numeric(\Piwigo\Config\Config::contentTagCloudItemsNumber()) ? (int) \Piwigo\Config\Config::contentTagCloudItemsNumber() : 0, new HtmlService()));
+            $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, \Piwigo\Config\Config::contentTagCloudItemsNumber(), new HtmlService()));
             $related_tags = [];
             foreach ($tags as $tag) {
                 $related_tags[] =

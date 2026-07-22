@@ -139,9 +139,6 @@ final class FilesystemHelper
         $path = rtrim($path, '/');
 
         $sync_exclude_folders = \Piwigo\Config\Config::syncExcludeFolders();
-        $sync_exclude_folders = is_array($sync_exclude_folders)
-            ? array_filter($sync_exclude_folders, is_string(...))
-            : [];
 
         $exclude_folders = array_merge(
             $sync_exclude_folders,

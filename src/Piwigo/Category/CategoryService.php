@@ -1281,7 +1281,7 @@ final readonly class CategoryService
             $parentCats = [];
 
             if (count($parentIds) > 0) {
-                $parentCats = $this->repo->findStatusByIds(array_map(intval(...), $parentIds));
+                $parentCats = $this->repo->findStatusByIds(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $parentIds));
             }
 
             $tables = [

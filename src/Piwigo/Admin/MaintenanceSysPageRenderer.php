@@ -42,12 +42,9 @@ final class MaintenanceSysPageRenderer
             if (isset($_GET['method']) && $_GET['method'] === 'pwg.activity_sys.getList') {
                 $data = [];
 
-                // \Piwigo\Config\Config::userFields() maps generic field names to actual DB column
-                // names (see include/config_default.inc.php); its values are
-                // configuration-supplied, not statically typed, hence the fallback.
                 $user_fields = \Piwigo\Config\Config::userFields();
-                $username_field = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
-                $id_field = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
+                $username_field = $user_fields['username'];
+                $id_field = $user_fields['id'];
 
                 $activity_log = new ActivityRepository(DbConnection::build())
                     ->findSystemObjectLogWithUsernames($username_field, $id_field);

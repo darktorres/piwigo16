@@ -15,11 +15,10 @@ use Psr\Container\ContainerInterface;
  * L4Integration, already allowed to depend on L2aCoreDomain) call it
  * immediately after `Kernel::boot()` instead. `PageState::attachGlobals()`
  * is ALSO not called from here, despite `Piwigo\Core\` being this class's
- * own layer -- it reference-bridges $GLOBALS['page'] (an HTTP-only
- * concept populated by include/common.inc.php before Kernel::boot() ever
- * runs), which has no meaning on the CLI path that also calls
- * `Kernel::boot()`. `CommonBootstrap::run()` calls it instead, right
- * after `CurrentUser::attachGlobals()`.
+ * own layer -- it seeds an HTTP-only per-request singleton (no `$page`
+ * concept on the CLI path that also calls `Kernel::boot()`).
+ * `CommonBootstrap::run()` calls it instead, right after
+ * `CurrentUser::attachGlobals()`.
  *
  * Deliberately does NOT run the P9 middleware pipeline -- that's
  * Piwigo\Bootstrap\RequestPipeline's job. Kernel must stay

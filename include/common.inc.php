@@ -14,27 +14,12 @@ declare(strict_types=1);
 // per-request bootstrap orchestration lives on
 // Piwigo\Bootstrap\RequestBootstrap. What remains here, in original order:
 //
-// 1. plain-data global initialization -- kept at true top-level scope on
-//    purpose: a method-scoped assignment would silently land in the
-//    method's own scope instead of $GLOBALS (the recurring AdminDispatcher
-//    bug class). The former include/config_default.inc.php +
-//    local/config/config.inc.php includes that used to sit here are gone
-//    (Legacy Coupling Retirement gap-closure, entry-shell define()/include
-//    round): they built a bare $conf array nothing downstream of this file
-//    ever read (confirmed via a repo-wide grep) -- Config::SCHEMA already
-//    carries the real defaults (ConfigLoader::applyDefaults()), and
-//    Config\LocalConfigOverrides (via ConfigLoader::applyLocalFileOverrides(),
-//    called later from CommonBootstrap::run()) already re-reads a site's
-//    real local/config/config.inc.php properly, in its own scoped context
-//    -- this file's own copy was a redundant, unread second read. Same
-//    cleanup install.php's own history already applied to itself;
-//    i.php gets it too in the same round;
-// 2. the include/env.inc.php include -- the autoload boundary. NOTHING
+// 1. the include/env.inc.php include -- the autoload boundary. NOTHING
 //    above it may reference a Piwigo\ class: thin entry points
 //    (random.php, ...) never require vendor/autoload.php themselves and
 //    rely entirely on this include (bug class caught live in 8f-3 via a
 //    random.php smoke test);
-// 3. Piwigo\Core\InstallationFlag::mark() -- slotted between the
+// 2. Piwigo\Core\InstallationFlag::mark() -- slotted between the
 //    RequestBootstrap phases exactly where the original define('PHPWG_
 //    INSTALLED', true) statement sat (install.php's own performInstall()
 //    step still does raw define() there, matching PWG_CHARSET/DB_CHARSET/
@@ -44,13 +29,24 @@ declare(strict_types=1);
 //    PHPWG_URL/PEM_URL define()s that used to sit here too are gone
 //    entirely (Legacy Coupling Retirement gap-closure, entry-shell
 //    define()/include round, Part 0b);
-// 4. the try/catch wrapping RequestBootstrap::configure()/connect()/
+// 3. the try/catch wrapping RequestBootstrap::configure()/connect()/
 //    finalize() below (Workstream C3, catch point 1) -- every
 //    bootstrap-phase short-circuit (install-redirect, upgrade-redirect,
 //    the 503 maintenance page) now throws Piwigo\Http\ResponseReadyException
 //    instead of exiting directly; this is the one place that needs to
 //    catch it for both dispatch contexts that include this seam (see
 //    that exception class's own docblock).
+//
+// The former $page/$user/$lang/$filter top-level array seeding that used
+// to sit here (feeding PageState::attachGlobals()/Lang::attachGlobals()'s
+// own $GLOBALS['page']/['header_msgs']/['header_notes']/['lang'] mirrors)
+// is gone -- re-investigated and confirmed dead: nothing outside those two
+// classes' own bridge code ever read the raw globals (PageHeaderRenderer.php/
+// RequestBootstrap.php, the two real consumers, already went through
+// PageState::current()->headerNotes/headerMessages, never the raw global;
+// the free function l10n() that used to justify mirroring $lang was
+// already deleted). See PageState.php/Lang.php's own docblocks for the
+// same finding on the write side.
 
 /**
  * @var \Piwigo\Core\Paths $paths every real entry point mints this via
@@ -68,22 +64,6 @@ if (! isset($paths) || ! $paths instanceof \Piwigo\Core\Paths) {
 
 // determine the initial instant to indicate the generation time of this page
 $t2 = microtime(true);
-
-//
-// Define some basic configuration arrays this also prevents malicious
-// rewriting of language and otherarray values via URI params
-//
-$page = [
-    'infos' => [],
-    'errors' => [],
-    'warnings' => [],
-    'messages' => [],
-    'body_classes' => [],
-    'body_data' => [],
-];
-$user = [];
-$lang = [];
-$filter = [];
 
 // -------------------------------------------------- autoload boundary --
 include $paths->root . 'include/env.inc.php';

@@ -9,19 +9,23 @@ use Gettext\Loader\PoLoader;
 use Piwigo\Lang\Translator;
 
 /**
- * Typed facade over the $lang global array.
+ * Typed facade over the legacy $lang array.
  *
- * `self::$data` IS the same array as `$GLOBALS['lang']` (a reference,
- * established by `attachGlobals()`, matching `PageState`'s own bridge
- * pattern) -- the free function `l10n()` keeps reading `$lang` directly, so
- * old call sites and new call sites through `Lang::t()` see identical
- * translation strings without double-loading or divergence.
+ * `self::$data` used to be a live reference to `$GLOBALS['lang']`
+ * (established by `attachGlobals()`), justified by "the free function
+ * `l10n()` keeps reading `$lang` directly." "Nothing is frozen" gap-closure
+ * (2026-07-22): that free function is deleted (see `Piwigo\Lang\
+ * Translator::translate()`'s own docblock) and nothing else reads
+ * `$GLOBALS['lang']` independently of this class and `Translator` -- the
+ * bridge was two classes using a global as their own private IPC channel,
+ * not a real external contract. `attachGlobals()` now pulls a one-time
+ * snapshot from `Translator::get()->mirroredStrings()` instead.
  *
  * `t()` delegates to `Piwigo\Lang\Translator` (gettext-backed, P16) rather
  * than reading `self::$data` directly -- `Translator::translate()` itself
- * falls back to the `$lang` array (via the same bridge) for keys with no
- * gettext entry, so both PHP-array-loaded and PO-loaded strings resolve
- * correctly through one call.
+ * falls back to its own mirrored string map for keys with no gettext
+ * entry, so both PHP-array-loaded and PO-loaded strings resolve correctly
+ * through one call. `self::$data` backs `has()`/`day()`/`month()` only.
  *
  * P23 batch 8d: gained `load()` (ported from the legacy `load_language()`)
  * plus its two private helpers (`getParentLanguage()`/
@@ -106,17 +110,14 @@ final class Lang
 
     /**
      * Called by CommonBootstrap::run() after include/common.inc.php's
-     * load_language() calls have populated $GLOBALS['lang'] -- HTTP-path
-     * only, mirroring PageState::attachGlobals()'s own placement and
-     * reasoning (no $lang concept on the CLI path).
+     * RequestBootstrap::finalize()/load() calls have populated
+     * Translator's own mirror -- HTTP-path only, mirroring
+     * PageState::attachGlobals()'s own placement and reasoning (no $lang
+     * concept on the CLI path).
      */
     public static function attachGlobals(): void
     {
-        $raw = $GLOBALS['lang'] ?? [];
-        if (is_array($raw)) {
-            self::$data = self::filterLangValues($raw);
-        }
-        $GLOBALS['lang'] = &self::$data;
+        self::$data = self::filterLangValues(Translator::get()->mirroredStrings());
     }
 
     /**
@@ -185,16 +186,12 @@ final class Lang
     /**
      * Restores a translation table previously obtained from snapshot(), or
      * resets to empty -- ready for a fresh load() -- when $data is null.
-     * Re-establishes the $GLOBALS['lang'] reference l10n() still reads
-     * (see attachGlobals()'s own docblock), so old and new call sites stay
-     * in sync.
      *
      * @param array<string, string|array<int, string>>|null $data
      */
     public static function restore(?array $data): void
     {
         self::$data = $data ?? [];
-        $GLOBALS['lang'] = &self::$data;
     }
 
     public static function has(string $key): bool
@@ -525,21 +522,9 @@ final class Lang
      */
     private static function langArrayGroup(string $key): array
     {
-        $raw = $GLOBALS['lang'] ?? [];
-        $lang = is_array($raw) ? $raw : [];
-        $group = $lang[$key] ?? null;
-        if (! is_array($group)) {
-            return [];
-        }
+        $group = self::$data[$key] ?? null;
 
-        $result = [];
-        foreach ($group as $k => $v) {
-            if (is_int($k) && is_string($v)) {
-                $result[$k] = $v;
-            }
-        }
-
-        return $result;
+        return is_array($group) ? $group : [];
     }
 
     private static function getParentLanguage(?string $lang_id = null): ?string
@@ -635,18 +620,25 @@ final class Lang
     // ---- Test helpers ----------------------------------------------------
 
     /**
-     * @param array<string, string> $data
+     * Also seeds Translator's own mirror (t()'s fallback path for keys
+     * with no gettext entry) -- matches this method's own pre-"nothing is
+     * frozen" behavior, when self::$data and $GLOBALS['lang'] were the
+     * same reference and Translator::translate() read that same global;
+     * one loadArray() call making both has() and t() resolve is the real
+     * test-ergonomics contract callers rely on, not an accident of how
+     * the old bridge happened to be wired.
+     *
+     * @param array<string, string|array<int, string>> $data
      */
     public static function loadArray(array $data): void
     {
         self::$data = $data;
-        $GLOBALS['lang'] = &self::$data;
+        Translator::get()->loadArray($data);
     }
 
     public static function reset(): void
     {
         self::$data = [];
-        $GLOBALS['lang'] = &self::$data;
         self::$langInfo = [];
         self::$langInfoInitialized = false;
         self::$languageFiles = [];

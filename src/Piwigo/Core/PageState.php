@@ -7,16 +7,19 @@ namespace Piwigo\Core;
 /**
  * Typed reader/writer for the per-request page state.
  *
- * `attachGlobals()` reference-bridges the well-known `$GLOBALS['page']` keys
- * (errors/warnings/messages/infos/body_classes/body_data/execution_uuid/
- * meta_robots, all seeded by include/common.inc.php) plus the standalone
- * `$GLOBALS['header_msgs']`/`$GLOBALS['header_notes']` globals (also real,
- * actively written/read -- see common.inc.php/RequestBootstrap,
- * FilterService::initializeFromRequest(), PageHeaderRenderer) onto this
- * singleton's properties. Once bridged, both
- * sides share the same underlying storage: `$page['errors'][] = 'msg'`
- * from legacy code and `PageState::current()->addError('msg')` from new
- * code are the same write, not two copies that can diverge.
+ * `attachGlobals()` used to reference-bridge `$GLOBALS['page']`/
+ * `$GLOBALS['header_msgs']`/`$GLOBALS['header_notes']` onto this
+ * singleton's properties, for legacy code that wrote `$page['errors'][] =
+ * 'msg'` directly. Re-investigated and confirmed dead ("nothing is frozen"
+ * gap-closure): `global $page` has zero hits repo-wide, and the two real
+ * consumers this docblock used to cite (PageHeaderRenderer.php,
+ * RequestBootstrap.php) already read `PageState::current()->headerNotes`/
+ * `headerMessages`, never the raw global. The bridge and
+ * `include/common.inc.php`'s own `$page`/`$GLOBALS['header_msgs']`/
+ * `$GLOBALS['header_notes']` seeding are both gone. `attachGlobals()` is
+ * kept as a name (matches `CurrentUser::attachGlobals()`'s own already-
+ * established "same call shape, no globals left to attach" precedent) --
+ * it just seeds the singleton now, same as `current()`.
  *
  * Deliberately no `keyedErrors`/`setKeyedError()` (present in the plan
  * doc's inline sketch) -- no legacy correspondent and no real caller exist
@@ -172,47 +175,18 @@ final class PageState
     private function __construct() {}
 
     /**
-     * Called by CommonBootstrap::run() after include/common.inc.php has
-     * populated $GLOBALS['page']/$GLOBALS['header_msgs']/
-     * $GLOBALS['header_notes'] -- HTTP-path only (index.php), there is no
-     * $page concept on the CLI path, so CliBootstrap never calls this.
-     * Idempotent: a second call re-points the references but preserves
-     * already-accumulated data (the arrays themselves aren't reset).
+     * Called by CommonBootstrap::run() -- HTTP-path only (index.php),
+     * matching CurrentUser::attachGlobals()/Lang::attachGlobals()'s own
+     * per-request seeding point; CliBootstrap never calls this. Idempotent:
+     * a second call is a no-op once the singleton exists (matches
+     * current()'s own semantics -- this method exists as a distinct name
+     * only to mark the intentional per-request seeding point in
+     * CommonBootstrap::run(), not because it does anything current()
+     * doesn't).
      */
     public static function attachGlobals(): void
     {
         self::$instance ??= new self();
-        $inst = self::$instance;
-
-        $GLOBALS['page'] ??= [];
-        $page = &$GLOBALS['page'];
-        if (! is_array($page)) {
-            $page = [];
-        }
-        $GLOBALS['header_msgs'] ??= [];
-        $GLOBALS['header_notes'] ??= [];
-
-        $inst->errors = self::stringList($page['errors'] ?? $inst->errors);
-        $inst->warnings = self::stringList($page['warnings'] ?? $inst->warnings);
-        $inst->messages = self::stringList($page['messages'] ?? $inst->messages);
-        $inst->infos = self::stringList($page['infos'] ?? $inst->infos);
-        $inst->bodyClasses = self::stringList($page['body_classes'] ?? $inst->bodyClasses);
-        $inst->bodyData = self::stringKeyedArray($page['body_data'] ?? $inst->bodyData);
-        $inst->executionUuid = is_string($page['execution_uuid'] ?? null) ? $page['execution_uuid'] : $inst->executionUuid;
-        $inst->metaRobots = self::stringKeyedIntMap($page['meta_robots'] ?? $inst->metaRobots);
-        $inst->headerMessages = self::stringList($GLOBALS['header_msgs']);
-        $inst->headerNotes = self::stringList($GLOBALS['header_notes']);
-
-        $page['errors'] = &$inst->errors;
-        $page['warnings'] = &$inst->warnings;
-        $page['messages'] = &$inst->messages;
-        $page['infos'] = &$inst->infos;
-        $page['body_classes'] = &$inst->bodyClasses;
-        $page['body_data'] = &$inst->bodyData;
-        $page['execution_uuid'] = &$inst->executionUuid;
-        $page['meta_robots'] = &$inst->metaRobots;
-        $GLOBALS['header_msgs'] = &$inst->headerMessages;
-        $GLOBALS['header_notes'] = &$inst->headerNotes;
     }
 
     /**
@@ -371,49 +345,6 @@ final class PageState
     public function hasErrors(): bool
     {
         return $this->errors !== [];
-    }
-
-    /**
-     * @return list<string>
-     */
-    private static function stringList(mixed $value): array
-    {
-        if (! is_array($value)) {
-            return [];
-        }
-
-        return array_values(array_filter($value, is_string(...)));
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private static function stringKeyedArray(mixed $value): array
-    {
-        if (! is_array($value)) {
-            return [];
-        }
-
-        return array_filter($value, is_string(...), ARRAY_FILTER_USE_KEY);
-    }
-
-    /**
-     * @return array<string, int>
-     */
-    private static function stringKeyedIntMap(mixed $value): array
-    {
-        if (! is_array($value)) {
-            return [];
-        }
-
-        $result = [];
-        foreach ($value as $key => $flag) {
-            if (is_string($key) && is_int($flag)) {
-                $result[$key] = $flag;
-            }
-        }
-
-        return $result;
     }
 
     /**

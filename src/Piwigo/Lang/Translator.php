@@ -27,14 +27,30 @@ use Gettext\Translator as GettextTranslator;
  * class -- same dictionary shape, one fewer (broken) indirection.
  *
  * Multiple load() calls accumulate translations (common + admin + upgrade
- * etc). The $GLOBALS['lang'] array is kept in sync (via mirrorToGlobal())
- * for plugin/theme code that reads it directly.
+ * etc). $mirror is a flat string map kept in sync (via mirror()) as
+ * translate()'s own fallback for keys gettext has no entry for -- "nothing
+ * is frozen" gap-closure (2026-07-22): this used to be $GLOBALS['lang'],
+ * justified as "for plugin/theme code that reads it directly," but nothing
+ * in-tree (nor any *code*, as opposed to a docblock claim) ever read that
+ * global independently of this class and Piwigo\Core\Lang -- external
+ * plugin/theme compatibility is never a valid reason to keep an in-tree
+ * global either way. Converted to a real private property; Piwigo\Core\
+ * Lang now pulls from mirroredStrings() instead of reading the global.
  */
 final class Translator
 {
     private static ?self $instance = null;
 
     private readonly GettextTranslator $inner;
+
+    /**
+     * Flat string map, kept in sync by mirror() -- see this class's own
+     * docblock. 'day'/'month' entries are nested list<string>, matching
+     * Piwigo\Core\Lang::$data's own documented exception.
+     *
+     * @var array<string, string|array<int, string>>
+     */
+    private array $mirror = [];
 
     public function __construct()
     {
@@ -58,7 +74,7 @@ final class Translator
 
     /**
      * Load a PO file and merge its translations into the active set. Also
-     * mirrors all strings into $GLOBALS['lang'] for backward compat.
+     * mirrors all strings into $mirror, translate()'s own fallback.
      *
      * Returns the parsed Translations (or null if the file wasn't
      * readable) so callers that also need header metadata --
@@ -76,9 +92,21 @@ final class Translator
 
         $this->inner->addTranslations($this->toDictionaryEntry($translations));
 
-        $this->mirrorToGlobal($translations);
+        $this->mirror($translations);
 
         return $translations;
+    }
+
+    /**
+     * The flat string map load() maintains as translate()'s own fallback --
+     * see this class's own docblock. Piwigo\Core\Lang::attachGlobals()
+     * pulls from here.
+     *
+     * @return array<string, string|array<int, string>>
+     */
+    public function mirroredStrings(): array
+    {
+        return $this->mirror;
     }
 
     public function translate(string $key, mixed ...$args): string
@@ -86,14 +114,10 @@ final class Translator
         $val = $this->inner->gettext($key);
 
         // gettext() returns the original when not found -- fall back to
-        // $lang global, which may have been populated by PHP lang files
-        // (e.g. from plugins without a .po file yet).
-        if ($val === $key) {
-            $raw = $GLOBALS['lang'] ?? [];
-            $global = is_array($raw) ? $raw : [];
-            if (isset($global[$key]) && is_string($global[$key])) {
-                $val = $global[$key];
-            }
+        // $mirror, which may have been populated by a PHP lang file (e.g.
+        // from a plugin without a .po file yet).
+        if ($val === $key && isset($this->mirror[$key]) && is_string($this->mirror[$key])) {
+            $val = $this->mirror[$key];
         }
 
         // Legacy Coupling Retirement Phase 4d: moved here (from the
@@ -186,22 +210,17 @@ final class Translator
         ];
     }
 
-    private function mirrorToGlobal(Translations $translations): void
+    private function mirror(Translations $translations): void
     {
-        $ref = &$GLOBALS['lang'];
-        if (! is_array($ref)) {
-            $GLOBALS['lang'] = [];
-            $ref = &$GLOBALS['lang'];
-        }
-
         // php-to-po-fn.php flattens $lang['day'][N]/$lang['month'][N] --
         // array-valued entries with no PO equivalent -- into piwigo_day_N/
-        // piwigo_month_N string entries. Captured here (rather than read
-        // back out of $ref, a $GLOBALS reference PHPStan can only ever see
-        // as mixed, which makes a nested offset read -- needed to write
-        // into $ref['day'][$i] -- an unfixable "access on mixed" error)
-        // and reassembled below into the nested shape Lang::day()/month()
-        // (via $GLOBALS['lang']['day'][N]/['month'][N]) expect.
+        // piwigo_month_N string entries. Captured here and reassembled
+        // below into the nested shape Lang::day()/month() (via
+        // $mirror['day'][N]/['month'][N]) expect -- $mirror's own value
+        // type is a string|array<int,string> union, so accumulating in a
+        // plain local array first and assigning the whole nested value
+        // once avoids PHPStan needing to narrow $mirror['day'] to its
+        // array branch on every element write.
         $days = [];
         $months = [];
 
@@ -217,7 +236,7 @@ final class Translator
 
             $str = $entry->getTranslation();
             if ($str !== null && $str !== '') {
-                $ref[$original] = $str;
+                $this->mirror[$original] = $str;
 
                 if (preg_match('/^piwigo_day_(\d+)$/', $original, $matches) === 1) {
                     $days[(int) $matches[1]] = $str;
@@ -229,20 +248,38 @@ final class Translator
             // getPluralTranslations()[0] is msgstr[1] -- the translation
             // matching the plural English key -- NOT msgstr[0] (that's
             // getTranslation(), handled above). See toDictionaryEntry()'s
-            // docblock for how this was confirmed.
+            // docblock for how this was confirmed. gettext/gettext's own
+            // Translation::$pluralTranslations has no property/return type
+            // (bare `array`), so $pluralForms[0] is genuinely unverified
+            // mixed to PHPStan -- a real gap $mirror's own now-real typed
+            // property surfaces (previously hidden: $GLOBALS['lang'] was
+            // mixed to PHPStan regardless).
             $pluralOriginal = $entry->getPlural();
             $pluralForms = $entry->getPluralTranslations();
+            $pluralForm0 = $pluralForms[0] ?? null;
 
-            if ($pluralOriginal !== null && $pluralOriginal !== '' && isset($pluralForms[0]) && $pluralForms[0] !== '') {
-                $ref[$pluralOriginal] = $pluralForms[0];
+            if ($pluralOriginal !== null && $pluralOriginal !== '' && is_string($pluralForm0) && $pluralForm0 !== '') {
+                $this->mirror[$pluralOriginal] = $pluralForm0;
             }
         }
 
         if ($days !== []) {
-            $ref['day'] = $days;
+            $this->mirror['day'] = $days;
         }
         if ($months !== []) {
-            $ref['month'] = $months;
+            $this->mirror['month'] = $months;
         }
+    }
+
+    /**
+     * Test-only. Seeds $mirror directly, matching Piwigo\Core\Lang::
+     * loadArray()'s own test-helper shape, for tests that need
+     * translate()'s fallback populated without a real PO file.
+     *
+     * @param array<string, string|array<int, string>> $data
+     */
+    public function loadArray(array $data): void
+    {
+        $this->mirror = $data;
     }
 }

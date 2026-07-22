@@ -10,7 +10,6 @@ use Piwigo\Lang\Translator;
 beforeEach(function (): void {
     Lang::reset();
     Translator::reset();
-    unset($GLOBALS['lang']);
     $this->paths = Paths::fromRoot(dirname(__DIR__, 3));
     $this->service = new LangService($this->paths);
 });
@@ -18,12 +17,10 @@ beforeEach(function (): void {
 afterEach(function (): void {
     Lang::reset();
     Translator::reset();
-    unset($GLOBALS['lang']);
 });
 
 test('t delegates to Lang::t', function (): void {
     Lang::loadArray(['greeting' => 'hi']);
-    $GLOBALS['lang'] = ['greeting' => 'hi'];
 
     expect($this->service->t('greeting'))->toBe('hi');
 });
@@ -34,7 +31,6 @@ test('t treats a null key as an empty string, matching l10n()s legacy contract',
 
 test('l10n is an alias for t', function (): void {
     Lang::loadArray(['greeting' => 'hi']);
-    $GLOBALS['lang'] = ['greeting' => 'hi'];
 
     expect($this->service->l10n('greeting'))->toBe($this->service->t('greeting'));
 });

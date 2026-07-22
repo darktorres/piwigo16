@@ -7,13 +7,11 @@ use Piwigo\Lang\Translator;
 
 beforeEach(function (): void {
     Translator::reset();
-    unset($GLOBALS['lang']);
     $this->poFile = sys_get_temp_dir() . '/piwigo-po-test-' . bin2hex(random_bytes(8)) . '.po';
 });
 
 afterEach(function (): void {
     Translator::reset();
-    unset($GLOBALS['lang']);
     Config::reset();
     if (file_exists($this->poFile)) {
         unlink($this->poFile);
@@ -39,8 +37,8 @@ test('load parses a PO file and translate resolves the matching string', functio
     expect(Translator::get()->translate('Hello'))->toBe('Bonjour');
 });
 
-test('translate falls back to the $lang global for keys with no PO entry', function (): void {
-    $GLOBALS['lang'] = ['plugin_key' => 'plugin value'];
+test('translate falls back to the mirrored string map for keys with no PO entry', function (): void {
+    Translator::get()->loadArray(['plugin_key' => 'plugin value']);
 
     expect(Translator::get()->translate('plugin_key'))->toBe('plugin value');
 });
@@ -98,7 +96,7 @@ test('plural picks the correct form for a 3-form language (Russian-style rule)',
         ->and(Translator::get()->plural('%d photo', '%d photos', 11))->toBe('11 photo-many');
 });
 
-test('load mirrors translations into $GLOBALS[lang] for plugin/theme code', function (): void {
+test('load mirrors translations into mirroredStrings(), translate()\'s own fallback', function (): void {
     file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
@@ -115,9 +113,10 @@ test('load mirrors translations into $GLOBALS[lang] for plugin/theme code', func
 
     Translator::get()->load('fr', $this->poFile);
 
-    expect($GLOBALS['lang']['Hello'])->toBe('Bonjour')
-        ->and($GLOBALS['lang']['%d photo'])->toBe('%d photo')
-        ->and($GLOBALS['lang']['%d photos'])->toBe('%d photos');
+    $mirror = Translator::get()->mirroredStrings();
+    expect($mirror['Hello'])->toBe('Bonjour')
+        ->and($mirror['%d photo'])->toBe('%d photo')
+        ->and($mirror['%d photos'])->toBe('%d photos');
 });
 
 test('load on an unreadable file is a silent no-op', function (): void {
@@ -160,7 +159,7 @@ test('translate does not warn about a missing key when debug_l10n is disabled', 
 
 test('translate does not warn about a resolved key even when debug_l10n is enabled', function (): void {
     Config::override('debug_l10n', true);
-    $GLOBALS['lang'] = ['known_key' => 'known value'];
+    Translator::get()->loadArray(['known_key' => 'known value']);
 
     $triggered = false;
     set_error_handler(function () use (&$triggered): bool {

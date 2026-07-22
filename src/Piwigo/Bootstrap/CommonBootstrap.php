@@ -37,21 +37,24 @@ use Piwigo\Users\CurrentUser;
  * `CurrentUser::attachGlobals()` (guest-user init -- called here, not from
  * Kernel, since `Users` is L2aCoreDomain and Kernel/L1Infrastructure may
  * only depend on L0Data). `PageState::attachGlobals()` is also called
- * here rather than from Kernel: it reference-bridges $GLOBALS['page'] etc,
- * an HTTP-only concept (index.php's own include/common.inc.php has
- * already populated those globals by the time this runs) that has no
- * meaning on the CLI path -- CliBootstrap deliberately never calls it.
- * `Lang::attachGlobals()` follows the identical reasoning for
- * $GLOBALS['lang'] (populated by common.inc.php's load_language() calls).
+ * here rather than from Kernel: it seeds the per-request page-state
+ * singleton, an HTTP-only concept that has no meaning on the CLI path --
+ * CliBootstrap deliberately never calls it. `Lang::attachGlobals()`
+ * follows the identical reasoning: it snapshots `Translator`'s already-
+ * loaded strings (index.php's own include/common.inc.php has already run
+ * RequestBootstrap::finalize()'s load() calls by the time this runs) into
+ * `Piwigo\Core\Lang`'s own typed storage.
  *
- * P23 batch 1 adds the ConfigService::loadConfFromDb() call: common.inc.php
- * already merges DB-persisted config overrides into $GLOBALS['conf'] (via
- * the legacy load_conf_from_db()), but nothing merged them into
- * Config::$data -- ConfigLoader::applyDefaults()/applyEnvOverrides() above
- * only seed schema defaults + env vars. Config::xxx() accessors therefore
- * silently returned stale/default values whenever a setting had been
- * changed from the DB (the CsrfService secret_key bug, fixed directly in
- * P17/P18, was one symptom of this exact gap). Called here, not from
+ * P23 batch 1 adds the ConfigService::loadConfFromDb() call: at the time,
+ * common.inc.php merged DB-persisted config overrides into the legacy
+ * `$GLOBALS['conf']` (via a free function, load_conf_from_db() -- both are
+ * gone now, confirmed via a repo-wide grep, no code left that reads or
+ * writes either), but nothing merged them into Config::$data --
+ * ConfigLoader::applyDefaults()/applyEnvOverrides() above only seed schema
+ * defaults + env vars. Config::xxx() accessors therefore silently returned
+ * stale/default values whenever a setting had been changed from the DB
+ * (the CsrfService secret_key bug, fixed directly in P17/P18, was one
+ * symptom of this exact gap). Called here, not from
  * common.inc.php itself: this needs Kernel::container() (only available
  * post Kernel::boot()) to resolve ConfigService, and common.inc.php's own
  * body executes before Kernel ever boots on the HTTP path. Only wired for

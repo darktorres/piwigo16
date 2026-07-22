@@ -6,12 +6,10 @@ use Piwigo\Core\PageState;
 
 beforeEach(function (): void {
     PageState::reset();
-    unset($GLOBALS['page'], $GLOBALS['header_msgs'], $GLOBALS['header_notes']);
 });
 
 afterEach(function (): void {
     PageState::reset();
-    unset($GLOBALS['page'], $GLOBALS['header_msgs'], $GLOBALS['header_notes']);
 });
 
 test('current lazily creates an empty instance before attachGlobals runs', function (): void {
@@ -83,52 +81,13 @@ test('addQueryTime accumulates count and time, resetQueryCounters zeroes both', 
         ->and($state->queriesTime)->toBe(0.0);
 });
 
-test('attachGlobals seeds from an already-populated $GLOBALS[page]', function (): void {
-    $GLOBALS['page'] = [
-        'errors' => ['pre-existing error'],
-        'body_data' => ['section' => 'categories'],
-        'execution_uuid' => 'abc123',
-        'meta_robots' => ['noindex' => 1],
-    ];
-    $GLOBALS['header_msgs'] = ['upgrade needed'];
-
+test('attachGlobals seeds the singleton like current(), idempotently', function (): void {
     PageState::attachGlobals();
     $state = PageState::current();
+    $state->addError('bad thing');
 
-    expect($state->errors)->toBe(['pre-existing error'])
-        ->and($state->bodyData)->toBe(['section' => 'categories'])
-        ->and($state->executionUuid)->toBe('abc123')
-        ->and($state->metaRobots)->toBe(['noindex' => 1])
-        ->and($state->headerMessages)->toBe(['upgrade needed']);
-});
-
-test('attachGlobals bridges $GLOBALS[page] so legacy array writes are visible on the typed side', function (): void {
     PageState::attachGlobals();
-    $state = PageState::current();
 
-    $GLOBALS['page']['errors'][] = 'legacy push';
-
-    expect($state->errors)->toBe(['legacy push']);
-});
-
-test('attachGlobals bridges the typed side so add* calls are visible on $GLOBALS[page]', function (): void {
-    PageState::attachGlobals();
-    $state = PageState::current();
-
-    $state->addWarning('typed push');
-    $state->setMetaRobotsFlag('noindex');
-
-    expect($GLOBALS['page']['warnings'])->toBe(['typed push'])
-        ->and($GLOBALS['page']['meta_robots'])->toBe(['noindex' => 1]);
-});
-
-test('attachGlobals bridges $GLOBALS[header_msgs] and $GLOBALS[header_notes] independently of $page', function (): void {
-    PageState::attachGlobals();
-    $state = PageState::current();
-
-    $GLOBALS['header_msgs'][] = 'legacy header msg';
-    $state->addHeaderNote('typed header note');
-
-    expect($state->headerMessages)->toBe(['legacy header msg'])
-        ->and($GLOBALS['header_notes'])->toBe(['typed header note']);
+    expect(PageState::current())->toBe($state)
+        ->and($state->errors)->toBe(['bad thing']);
 });

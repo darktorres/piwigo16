@@ -80,9 +80,11 @@ final class RegisterController implements ControllerInterface
                 $errors['register_form_error'] = Lang::t('The passwords do not match');
             }
 
-            $post_login = is_string($_POST['login'] ?? null) ? $_POST['login'] : '';
+            $post_login_raw = $_POST['login'] ?? null;
+            $post_login = is_string($post_login_raw) ? $post_login_raw : '';
             $post_password = is_string($post_password_raw) ? $post_password_raw : '';
-            $post_mail_address = is_string($_POST['mail_address'] ?? null) ? $_POST['mail_address'] : null;
+            $post_mail_address_raw = $_POST['mail_address'] ?? null;
+            $post_mail_address = is_string($post_mail_address_raw) ? $post_mail_address_raw : null;
 
             // UserService::registerUser()'s $registration_errors is a plain
             // list<string> of validation messages, a different shape than

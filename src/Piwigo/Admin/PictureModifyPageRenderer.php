@@ -230,7 +230,13 @@ SELECT id
             $raw_tags_post = $_POST['tags'] ?? null;
             if (! in_array($raw_tags_post, [null, false, 0, '0', '', []], true)) {
                 if (is_array($raw_tags_post)) {
-                    $tag_ids = $tagService->getTagIds(array_filter($raw_tags_post, is_string(...)));
+                    $raw_tags_post_strings = [];
+                    foreach ($raw_tags_post as $raw_tag) {
+                        if (is_string($raw_tag)) {
+                            $raw_tags_post_strings[] = $raw_tag;
+                        }
+                    }
+                    $tag_ids = $tagService->getTagIds($raw_tags_post_strings);
                 } elseif (is_string($raw_tags_post)) {
                     $tag_ids = $tagService->getTagIds($raw_tags_post);
                 }

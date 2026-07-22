@@ -55,7 +55,8 @@ InstallBootstrap::boot($paths);
 if (isset($_POST['install'])) {
     // Narrow to string (and guard the possibly-missing array key) rather than
     // trusting raw POST data downstream in SQL/file-content concatenation.
-    $prefixeTable = is_string($_POST['prefix'] ?? null) ? $_POST['prefix'] : InstallWizard::DEFAULT_PREFIX_TABLE;
+    $post_prefix = $_POST['prefix'] ?? null;
+    $prefixeTable = is_string($post_prefix) ? $post_prefix : InstallWizard::DEFAULT_PREFIX_TABLE;
 } else {
     $prefixeTable = InstallWizard::DEFAULT_PREFIX_TABLE;
 }

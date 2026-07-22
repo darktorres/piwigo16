@@ -57,12 +57,14 @@ final class SizingParams
     {
         if ($this->max_crop === 0.0) {
             $tokens[] = 's' . DerivativeUrlCodec::sizeToUrl($this->ideal_size);
-        } elseif ($this->max_crop === 1.0 && DerivativeUrlCodec::sizeEquals($this->ideal_size, $this->min_size)) {
+        } elseif ($this->max_crop === 1.0 && $this->min_size !== null && DerivativeUrlCodec::sizeEquals($this->ideal_size, $this->min_size)) {
             $tokens[] = 'e' . DerivativeUrlCodec::sizeToUrl($this->ideal_size);
         } else {
             $tokens[] = DerivativeUrlCodec::sizeToUrl($this->ideal_size);
             $tokens[] = DerivativeUrlCodec::fractionToChar($this->max_crop);
-            $tokens[] = DerivativeUrlCodec::sizeToUrl($this->min_size);
+            if ($this->min_size !== null) {
+                $tokens[] = DerivativeUrlCodec::sizeToUrl($this->min_size);
+            }
         }
     }
 

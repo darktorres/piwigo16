@@ -292,7 +292,15 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                             // $pattern, but that guarantee isn't visible to static
                             // analysis; re-derive it into a local, string-only copy
                             // (values from an HTTP request are always strings here).
-                            $order_by_input = is_array($_POST['order_by'] ?? null) ? array_filter($_POST['order_by'], is_string(...)) : [];
+                            $post_order_by = $_POST['order_by'] ?? null;
+                            $order_by_input = [];
+                            if (is_array($post_order_by)) {
+                                foreach ($post_order_by as $raw_order_by_key => $raw_order_by_value) {
+                                    if (is_string($raw_order_by_value)) {
+                                        $order_by_input[$raw_order_by_key] = $raw_order_by_value;
+                                    }
+                                }
+                            }
 
                             $used = [];
                             foreach ($order_by_input as $i => $val) {
@@ -1055,7 +1063,9 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                         if ($same
                             and $new_params->sizing->max_crop !== 0.0
-                            and ! DerivativeUrlCodec::sizeEquals($old_params->sizing->min_size, $new_params->sizing->min_size)) {
+                            and ($old_params->sizing->min_size === null
+                                || $new_params->sizing->min_size === null
+                                || ! DerivativeUrlCodec::sizeEquals($old_params->sizing->min_size, $new_params->sizing->min_size))) {
                             $same = false;
                         }
 

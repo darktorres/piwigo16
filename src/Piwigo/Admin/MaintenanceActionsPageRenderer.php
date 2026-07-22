@@ -55,7 +55,8 @@ final class MaintenanceActionsPageRenderer
 
         FilesystemIntegrityChecker::fsQuickCheck();
 
-        $action = is_string($_GET['action'] ?? null) ? $_GET['action'] : '';
+        $action_raw = $_GET['action'] ?? null;
+        $action = is_string($action_raw) ? $action_raw : '';
         new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService)
             ->dispatch($action);
 

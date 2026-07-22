@@ -406,9 +406,11 @@ final class Lang
             }
         }
 
-        $parent_language = is_string($load_lang_info['parent'] ?? null) && $load_lang_info['parent'] !== ''
-            ? $load_lang_info['parent']
-            : (is_string($lang_info['parent'] ?? null) ? $lang_info['parent'] : null);
+        $load_lang_info_parent = $load_lang_info['parent'] ?? null;
+        $lang_info_parent = $lang_info['parent'] ?? null;
+        $parent_language = is_string($load_lang_info_parent) && $load_lang_info_parent !== ''
+            ? $load_lang_info_parent
+            : (is_string($lang_info_parent) ? $lang_info_parent : null);
 
         if (! in_array($parent_language, [null, ''], true) && $parent_language !== $selected_language) {
             $parent_po = $dirname . $parent_language . '/' . basename($po_file);

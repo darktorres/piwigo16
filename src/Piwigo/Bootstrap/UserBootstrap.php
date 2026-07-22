@@ -157,18 +157,20 @@ final class UserBootstrap
             }
         }
 
+        $post_username = $_POST['username'] ?? null;
+        $post_password = $_POST['password'] ?? null;
         if (
             \Piwigo\Core\WsContext::isActive()
             and is_string($_REQUEST['method'] ?? null)
             and $_REQUEST['method'] === 'pwg.images.uploadAsync'
-            and is_string($_POST['username'] ?? null)
-            and is_string($_POST['password'] ?? null)
+            and is_string($post_username)
+            and is_string($post_password)
         ) {
             $service = \Piwigo\Ws\WsInitializer::init();
 
             $credentials = [
-                'username' => $_POST['username'],
-                'password' => $_POST['password'],
+                'username' => $post_username,
+                'password' => $post_password,
             ];
 
             $login = PwgCore::sessionLogin($credentials, $service);

@@ -71,7 +71,8 @@ final class PhotoSubController implements AdminSubControllerInterface
         // check_input_parameter() above already validated $_GET['image_id'] against
         // ValidationPattern::ID (digits only) when present; $_GET values are always strings
         // (or arrays, for foo[]=... params) so is_string() is the real narrowing.
-        $get_image_id = is_string($_GET['image_id'] ?? null) ? $_GET['image_id'] : '';
+        $get_image_id_raw = $_GET['image_id'] ?? null;
+        $get_image_id = is_string($get_image_id_raw) ? $get_image_id_raw : '';
 
         $adminPhotoBaseUrl = $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $get_image_id;
         CoreTabs::setContext(new CoreTabsContext(adminPhotoBaseUrl: $adminPhotoBaseUrl));

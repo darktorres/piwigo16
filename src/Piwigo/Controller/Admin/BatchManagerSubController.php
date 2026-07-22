@@ -121,7 +121,8 @@ final class BatchManagerSubController implements AdminSubControllerInterface
 
         // used both for the action-specific redirects below and for the
         // "category no longer exists" redirect further down
-        $get_page = is_string($_GET['page'] ?? null) ? $_GET['page'] : '';
+        $get_page_raw = $_GET['page'] ?? null;
+        $get_page = is_string($get_page_raw) ? $get_page_raw : '';
 
         $this->handleGetActions($get_page, $user_id);
 

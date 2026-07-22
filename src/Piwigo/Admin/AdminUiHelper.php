@@ -105,7 +105,7 @@ final class AdminUiHelper
         $numbers = ($numbers === 0 || $numbers === 0.0) ? 0 : $numbers;
 
         while ($numbers >= 1000) {
-            $numbers /= 1000;
+            $numbers = (float) $numbers / 1000.0;
             $index++;
 
             if ($index > count($readable) - 1) {

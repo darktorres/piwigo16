@@ -26,7 +26,7 @@ test('createNavigationBar computes the current page and total page count', funct
 
     $navbar = $service->createNavigationBar('index.php', 100, 40, 20);
 
-    expect($navbar['CURRENT_PAGE'])->toBe(3);
+    expect($navbar['CURRENT_PAGE'])->toBe(3.0);
     expect($navbar['NB_PAGE'])->toBe(5);
 });
 
@@ -57,7 +57,7 @@ test('createNavigationBar clamps a negative start to zero', function (): void {
 
     $navbar = $service->createNavigationBar('index.php', 100, -5, 20);
 
-    expect($navbar['CURRENT_PAGE'])->toBe(1);
+    expect($navbar['CURRENT_PAGE'])->toBe(1.0);
 });
 
 test('createNavigationBar accepts numeric strings for nbElement and start', function (): void {
@@ -65,7 +65,7 @@ test('createNavigationBar accepts numeric strings for nbElement and start', func
 
     $navbar = $service->createNavigationBar('index.php', '100', '40', 20);
 
-    expect($navbar['CURRENT_PAGE'])->toBe(3);
+    expect($navbar['CURRENT_PAGE'])->toBe(3.0);
 });
 
 test('createNavigationBar builds clean-url-style page links when requested', function (): void {

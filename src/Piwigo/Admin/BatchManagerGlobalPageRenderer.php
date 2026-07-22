@@ -688,7 +688,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
                 $row_filesize = is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0;
                 $row_width = is_scalar($row['width']) ? (string) $row['width'] : '';
                 $row_height = is_scalar($row['height']) ? (string) $row['height'] : '';
-                $ttitle .= '<br>' . $row_width . '&times;' . $row_height . ' pixels, ' . sprintf('%.2f', $row_filesize / 1024) . 'MB';
+                $ttitle .= '<br>' . $row_width . '&times;' . $row_height . ' pixels, ' . sprintf('%.2f', $row_filesize / 1024.0) . 'MB';
 
                 $row_id = is_scalar($row['id']) ? (string) $row['id'] : '';
                 $template->append(

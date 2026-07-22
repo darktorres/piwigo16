@@ -217,7 +217,7 @@ final class UrlService implements UrlServiceInterface
                 }
                 $url .= $param;
                 if (isset($val)) {
-                    $url .= '=' . (is_scalar($val) ? $val : '');
+                    $url .= '=' . (is_scalar($val) ? (string) $val : '');
                 }
             }
         }
@@ -344,7 +344,7 @@ final class UrlService implements UrlServiceInterface
         $picture_url_style = \Piwigo\Config\Config::pictureUrlStyle();
         switch ($picture_url_style) {
             case 'id-file':
-                $url .= is_scalar($image_id) ? $image_id : '';
+                $url .= is_scalar($image_id) ? (string) $image_id : '';
                 if (isset($params['image_file']) and is_string($params['image_file'])) {
                     $url .= '-' . \Piwigo\Core\StringHelper::str2url(\Piwigo\Core\StringHelper::getFilenameWoExtension($params['image_file']));
                 }
@@ -361,7 +361,7 @@ final class UrlService implements UrlServiceInterface
                 }
                 // no break
             default:
-                $url .= is_scalar($image_id) ? $image_id : '';
+                $url .= is_scalar($image_id) ? (string) $image_id : '';
         }
         if (! isset($params['category'])) { // make urls shorter ...
             unset($params['flat']);
@@ -381,14 +381,14 @@ final class UrlService implements UrlServiceInterface
     {
         if (isset($params['chronology_field'])) {
             $chronology_field = $params['chronology_field'];
-            $url .= '/' . (is_scalar($chronology_field) ? $chronology_field : '');
+            $url .= '/' . (is_scalar($chronology_field) ? (string) $chronology_field : '');
 
             $chronology_style = $params['chronology_style'] ?? null;
-            $url .= '-' . (is_scalar($chronology_style) ? $chronology_style : '');
+            $url .= '-' . (is_scalar($chronology_style) ? (string) $chronology_style : '');
 
             if (isset($params['chronology_view'])) {
                 $chronology_view = $params['chronology_view'];
-                $url .= '-' . (is_scalar($chronology_view) ? $chronology_view : '');
+                $url .= '-' . (is_scalar($chronology_view) ? (string) $chronology_view : '');
             }
             if (isset($params['chronology_date']) && $params['chronology_date'] !== []) {
                 $chronology_date = $params['chronology_date'];
@@ -402,7 +402,7 @@ final class UrlService implements UrlServiceInterface
 
         if (isset($params['start']) and $params['start'] > 0) {
             $start = $params['start'];
-            $url .= '/start-' . (is_scalar($start) ? $start : '');
+            $url .= '/start-' . (is_scalar($start) ? (string) $start : '');
         }
 
         return $url;
@@ -464,14 +464,14 @@ final class UrlService implements UrlServiceInterface
                     $section_string .= '/category/';
                     if (! isset($category_info['permalink']) || $category_info['permalink'] === '') {
                         $category_id = $category_info['id'] ?? null;
-                        $section_string .= is_scalar($category_id) ? $category_id : '';
+                        $section_string .= is_scalar($category_id) ? (string) $category_id : '';
                         if (\Piwigo\Config\Config::categoryUrlStyle() === 'id-name') {
                             $category_name = $category_info['name'] ?? null;
                             $section_string .= '-' . \Piwigo\Core\StringHelper::str2url(is_string($category_name) ? $category_name : '');
                         }
                     } else {
                         $category_permalink = $category_info['permalink'];
-                        $section_string .= is_scalar($category_permalink) ? $category_permalink : '';
+                        $section_string .= is_scalar($category_permalink) ? (string) $category_permalink : '';
                     }
 
                     if (isset($params['combined_categories']) and is_array($params['combined_categories'])) {
@@ -484,14 +484,14 @@ final class UrlService implements UrlServiceInterface
 
                             if (! isset($category['permalink']) || $category['permalink'] === '') {
                                 $combined_id = $category['id'] ?? null;
-                                $section_string .= is_scalar($combined_id) ? $combined_id : '';
+                                $section_string .= is_scalar($combined_id) ? (string) $combined_id : '';
                                 if (\Piwigo\Config\Config::categoryUrlStyle() === 'id-name') {
                                     $combined_name = $category['name'] ?? null;
                                     $section_string .= '-' . \Piwigo\Core\StringHelper::str2url(is_string($combined_name) ? $combined_name : '');
                                 }
                             } else {
                                 $combined_permalink = $category['permalink'];
-                                $section_string .= is_scalar($combined_permalink) ? $combined_permalink : '';
+                                $section_string .= is_scalar($combined_permalink) ? (string) $combined_permalink : '';
                             }
                         }
                     }
@@ -513,20 +513,20 @@ final class UrlService implements UrlServiceInterface
                     $tag_url_name = $tag['url_name'] ?? null;
                     switch ($tag_url_style) {
                         case 'id':
-                            $section_string .= '/' . (is_scalar($tag_id) ? $tag_id : '');
+                            $section_string .= '/' . (is_scalar($tag_id) ? (string) $tag_id : '');
 
                             break;
                         case 'tag':
                             if (isset($tag_url_name) && is_scalar($tag_url_name)) {
-                                $section_string .= '/' . $tag_url_name;
+                                $section_string .= '/' . (string) $tag_url_name;
 
                                 break;
                             }
                             // no break
                         default:
-                            $section_string .= '/' . (is_scalar($tag_id) ? $tag_id : '');
+                            $section_string .= '/' . (is_scalar($tag_id) ? (string) $tag_id : '');
                             if (isset($tag_url_name) && is_scalar($tag_url_name)) {
-                                $section_string .= '-' . $tag_url_name;
+                                $section_string .= '-' . (string) $tag_url_name;
                             }
                     }
                 }
@@ -536,7 +536,7 @@ final class UrlService implements UrlServiceInterface
             case 'search':
 
                 $search_param = $params['search'] ?? null;
-                $section_string .= '/search/' . (is_scalar($search_param) ? $search_param : '');
+                $section_string .= '/search/' . (is_scalar($search_param) ? (string) $search_param : '');
 
                 break;
 

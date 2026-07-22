@@ -656,7 +656,7 @@ SELECT
                 if (! is_numeric($row['filesize'])) {
                     continue;
                 }
-                $bucket = sprintf('%.1f', (float) $row['filesize'] / 1024);
+                $bucket = sprintf('%.1f', (float) $row['filesize'] / 1024.0);
                 $filesizes[$bucket] = ($filesizes[$bucket] ?? 0) + 1;
             }
 
@@ -688,8 +688,8 @@ SELECT
                     'max' => end($uniqueFilesizes),
                 ],
                 'selected' => [
-                    'min' => (is_numeric($filesizeMin) && (float) $filesizeMin !== 0.0) ? sprintf('%.1f', (float) $filesizeMin / 1024) : $uniqueFilesizes[0],
-                    'max' => (is_numeric($filesizeMax) && (float) $filesizeMax !== 0.0) ? sprintf('%.1f', (float) $filesizeMax / 1024) : end($uniqueFilesizes),
+                    'min' => (is_numeric($filesizeMin) && (float) $filesizeMin !== 0.0) ? sprintf('%.1f', (float) $filesizeMin / 1024.0) : $uniqueFilesizes[0],
+                    'max' => (is_numeric($filesizeMax) && (float) $filesizeMax !== 0.0) ? sprintf('%.1f', (float) $filesizeMax / 1024.0) : end($uniqueFilesizes),
                 ],
             ];
 

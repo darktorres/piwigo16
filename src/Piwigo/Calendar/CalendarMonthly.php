@@ -195,7 +195,7 @@ class CalendarMonthly extends CalendarBase
 
         if (is_numeric($year) and (string) $month === '2') {
             $nb_days = $md[2];
-            if (($year % 4 === 0) and (($year % 100 !== 0) or ($year % 400 !== 0))) {
+            if (((int) $year % 4 === 0) and (((int) $year % 100 !== 0) or ((int) $year % 400 !== 0))) {
                 $nb_days++;
             }
         } elseif (is_numeric($month)) {

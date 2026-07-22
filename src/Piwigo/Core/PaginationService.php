@@ -56,12 +56,12 @@ final class PaginationService
         if ($nbElement > $nbElementPage) {
             $url_start = $url . $start_str;
 
-            $cur_page = $navbar['CURRENT_PAGE'] = $start / $nbElementPage + 1;
+            $cur_page = $navbar['CURRENT_PAGE'] = (float) $start / (float) $nbElementPage + 1.0;
             $maximum = (int) ceil($nbElement / $nbElementPage);
 
-            $start = $nbElementPage * round($start / $nbElementPage);
-            $previous = $start - $nbElementPage;
-            $next = $start + $nbElementPage;
+            $start = (float) $nbElementPage * round((float) $start / (float) $nbElementPage);
+            $previous = $start - (float) $nbElementPage;
+            $next = $start + (float) $nbElementPage;
             $last = ($maximum - 1) * $nbElementPage;
 
             // link to first page and previous page?
@@ -69,20 +69,20 @@ final class PaginationService
             // computed before $start is normalized to a page boundary below) --
             // compare numerically as floats, matching the original's loose "!="
             // exactly, rather than a type-sensitive "!==".
-            if ((float) $cur_page !== 1.0) {
+            if ($cur_page !== 1.0) {
                 $navbar['URL_FIRST'] = $url;
-                $navbar['URL_PREV'] = $previous > 0 ? $url_start . $previous : $url;
+                $navbar['URL_PREV'] = $previous > 0 ? $url_start . (string) $previous : $url;
             }
             // link on next page and last page?
-            if ((float) $cur_page !== (float) $maximum) {
-                $navbar['URL_NEXT'] = $url_start . ($next < $last ? $next : $last);
+            if ($cur_page !== (float) $maximum) {
+                $navbar['URL_NEXT'] = $url_start . (string) ($next < $last ? $next : $last);
                 $navbar['URL_LAST'] = $url_start . $last;
             }
 
             // pages to display
             $navbar['pages'] = [];
             $navbar['pages'][1] = $url;
-            for ($i = (int) max(floor($cur_page) - $pages_around, 2), $stop = min(ceil($cur_page) + $pages_around + 1, $maximum);
+            for ($i = (int) max(floor($cur_page) - (float) $pages_around, 2), $stop = min(ceil($cur_page) + (float) $pages_around + 1.0, (float) $maximum);
                 $i < $stop; $i++) {
                 $navbar['pages'][$i] = $url . $start_str . (($i - 1) * $nbElementPage);
             }

@@ -94,7 +94,7 @@ final class NotificationByMailSender
         $nbmMaxTreatmentTimeoutPercent = \Piwigo\Config\Config::nbmMaxTreatmentTimeoutPercent();
 
         $this->startTime = \Piwigo\Core\TimingHelper::getMoment();
-        $this->sendmailTimeout = intval(ini_get('max_execution_time')) * $nbmMaxTreatmentTimeoutPercent;
+        $this->sendmailTimeout = (float) intval(ini_get('max_execution_time')) * $nbmMaxTreatmentTimeoutPercent;
 
         if ($this->sendmailTimeout <= 0) {
             $this->sendmailTimeout = \Piwigo\Config\Config::nbmTreatmentTimeoutDefault();

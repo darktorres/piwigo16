@@ -348,11 +348,11 @@ final class ImageDerivativeController implements ControllerInterface
         }
 
         if (! $this->trySwitchSource($params, $src_mtime) && $params->type === ImageStdParams::CUSTOM) {
-            $sharpen = 0;
+            $sharpen = 0.0;
             foreach (ImageStdParams::get_defined_type_map() as $std_params) {
                 $sharpen += $std_params->sharpen;
             }
-            $params->sharpen = round($sharpen / count(ImageStdParams::get_defined_type_map()));
+            $params->sharpen = round($sharpen / (float) count(ImageStdParams::get_defined_type_map()));
         }
 
         // Same semantics as the old local mkgetdir(): recursive + index.htm
@@ -433,23 +433,23 @@ final class ImageDerivativeController implements ControllerInterface
                 $wm_size = $wm_scaled_size;
                 $wm_image->resize($wm_scaled_size[0], $wm_scaled_size[1]);
             }
-            $x = round(($wm->xpos / 100) * ($d_size[0] - $wm_size[0]));
-            $y = round(($wm->ypos / 100) * ($d_size[1] - $wm_size[1]));
+            $x = round(((float) $wm->xpos / 100.0) * ((float) $d_size[0] - (float) $wm_size[0]));
+            $y = round(((float) $wm->ypos / 100.0) * ((float) $d_size[1] - (float) $wm_size[1]));
             if ($image->compose($wm_image, $x, $y, $wm->opacity)) {
                 $changes++;
                 if ((bool) $wm->xrepeat || (bool) $wm->yrepeat) {
-                    $xpad = $wm_size[0] + max(30, round($wm_size[0] / 4));
-                    $ypad = $wm_size[1] + max(30, round($wm_size[1] / 4));
+                    $xpad = (float) $wm_size[0] + (float) max(30, round((float) $wm_size[0] / 4.0));
+                    $ypad = (float) $wm_size[1] + (float) max(30, round((float) $wm_size[1] / 4.0));
 
                     for ($i = -$wm->xrepeat; $i <= $wm->xrepeat; $i++) {
                         for ($j = -$wm->yrepeat; $j <= $wm->yrepeat; $j++) {
                             if (! (bool) $i && ! (bool) $j) {
                                 continue;
                             }
-                            $x2 = $x + $i * $xpad;
-                            $y2 = $y + $j * $ypad;
-                            if ($x2 >= 0 && $x2 + $wm_size[0] < $d_size[0] &&
-                                $y2 >= 0 && $y2 + $wm_size[1] < $d_size[1]) {
+                            $x2 = $x + (float) $i * $xpad;
+                            $y2 = $y + (float) $j * $ypad;
+                            if ($x2 >= 0 && $x2 + (float) $wm_size[0] < $d_size[0] &&
+                                $y2 >= 0 && $y2 + (float) $wm_size[1] < $d_size[1]) {
                                 if (! $image->compose($wm_image, $x2, $y2, $wm->opacity)) {
                                     break;
                                 }
@@ -614,7 +614,7 @@ final class ImageDerivativeController implements ControllerInterface
     {
         $tmp = $step;
         $step = microtime(true);
-        return intval(1000 * ($step - $tmp));
+        return intval(1000.0 * ($step - $tmp));
     }
 
     /**

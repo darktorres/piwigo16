@@ -103,7 +103,7 @@ class ImageExtImagick implements ImageInterface
         $this->height = $height;
 
         // the final "!" is added to crop the canva too, for animated picture (with WebP in mind)
-        $this->add_command('crop', $width . 'x' . $height . '+' . $x . '+' . $y . '!');
+        $this->add_command('crop', (string) $width . 'x' . (string) $height . '+' . (string) $x . '+' . (string) $y . '!');
         return true;
     }
 
@@ -154,7 +154,7 @@ class ImageExtImagick implements ImageInterface
         $this->height = $height;
 
         $this->add_command('filter', 'Lanczos');
-        $this->add_command('resize', $width . 'x' . $height . '!');
+        $this->add_command('resize', (string) $width . 'x' . (string) $height . '!');
         return true;
     }
 
@@ -187,9 +187,9 @@ class ImageExtImagick implements ImageInterface
             throw new \Exception("compose(): unable to resolve overlay path {$overlay_backend->source_filepath}");
         }
 
-        $param = 'compose dissolve -define compose:args=' . $opacity;
+        $param = 'compose dissolve -define compose:args=' . (string) $opacity;
         $param .= ' ' . escapeshellarg($overlay_realpath);
-        $param .= ' -gravity NorthWest -geometry +' . $x . '+' . $y;
+        $param .= ' -gravity NorthWest -geometry +' . (string) $x . '+' . (string) $y;
         $param .= ' -composite';
         $this->add_command($param);
         return true;
@@ -228,7 +228,7 @@ class ImageExtImagick implements ImageInterface
         foreach ($this->commands as $command => $params) {
             $exec .= ' -' . $command;
             if (! in_array($params, [null, 0, 0.0, '0', ''], true)) {
-                $exec .= ' ' . $params;
+                $exec .= ' ' . (string) $params;
             }
         }
         $dest = pathinfo($destination_filepath);

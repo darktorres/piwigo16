@@ -128,7 +128,7 @@ final readonly class TagService
         }
 
         // average count of available tags will determine the level of each tag
-        $tagAverageCount = $totalCount / count($tags);
+        $tagAverageCount = (float) $totalCount / (float) count($tags);
 
         // tag levels threshold calculation: a tag with an average rate
         // must have the middle level.
@@ -136,7 +136,7 @@ final readonly class TagService
 
         $thresholdOfLevel = [];
         for ($i = 1; $i < $tagsLevels; $i++) {
-            $thresholdOfLevel[$i] = 2 * $i * $tagAverageCount / $tagsLevels;
+            $thresholdOfLevel[$i] = 2.0 * (float) $i * $tagAverageCount / (float) $tagsLevels;
         }
 
         foreach ($tags as &$tag) {

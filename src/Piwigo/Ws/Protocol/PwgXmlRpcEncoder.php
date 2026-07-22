@@ -73,7 +73,7 @@ EOD;
             case 'integer':
                 return '<int>' . $data . '</int>';
             case 'double':
-                return '<double>' . $data . '</double>';
+                return '<double>' . (string) $data . '</double>';
             case 'string':
                 return '<string>' . htmlspecialchars($data) . '</string>';
             case 'object':

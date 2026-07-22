@@ -812,7 +812,7 @@ SELECT
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
         $exec .= ' ' . escapeshellarg((string) realpath($file_path) . '[0]');
         if ($ext === 'jpg') {
-            $exec .= ' -quality ' . $jpg_quality;
+            $exec .= ' -quality ' . (string) $jpg_quality;
         }
         $exec .= ' ' . escapeshellarg($representative_file_path);
         $exec .= ' 2>&1';
@@ -967,19 +967,19 @@ SELECT
         exec('ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' . escapeshellarg($file_path), $O, $S);
 
         if (isset($O[0]) && $O[0] !== '') {
-            $second = min(floor((float) $O[0] * 10) / 10, 2);
+            $second = min(floor((float) $O[0] * 10.0) / 10.0, 2);
         } else {
             $second = 0; // Safest position of the poster
         }
 
-        $logger->info(__METHOD__ . ', Poster at ' . $second . 's');
+        $logger->info(__METHOD__ . ', Poster at ' . (string) $second . 's');
 
         // Generate poster, see https://trac.ffmpeg.org/wiki/Seeking
         $ffmpeg_dir = \Piwigo\Config\Config::ffmpegDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above (same
         // dir-prefix pattern applied to the ffmpeg/avconv binaries here).
         $ffmpeg = escapeshellarg($ffmpeg_dir) . 'ffmpeg';
-        $ffmpeg .= ' -ss ' . $second;  // Fast seeking
+        $ffmpeg .= ' -ss ' . (string) $second;  // Fast seeking
         $ffmpeg .= ' -i ' . escapeshellarg($file_path); // Video file
         $ffmpeg .= ' -frames:v 1';  // Extract one frame
         $ffmpeg .= ' ' . escapeshellarg($representative_file_path); // Output file
@@ -1392,6 +1392,6 @@ SELECT
 
         $margin_coef = 1.5;
 
-        return [(int) ($w * $margin_coef), (int) ($h * $margin_coef)];
+        return [(int) ((float) $w * $margin_coef), (int) ((float) $h * $margin_coef)];
     }
 }

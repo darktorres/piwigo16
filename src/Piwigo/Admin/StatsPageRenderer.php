@@ -233,11 +233,11 @@ ORDER BY
 
         if ($last !== 'all') {
             $date = new DateTime();
-            $limit = ($last - 1) * 12 + $date->format('n') - 1;
+            $limit = ($last - 1) * 12 + (int) $date->format('n') - 1;
             $query .=
-' LIMIT ' . $limit;
+' LIMIT ' . (string) $limit;
             $result = $conn->fetchAllAssociative($query . ';');
-            $lastDate = $date->sub(new DateInterval('P' . ($last - 1) . 'Y' . ($date->format('n') - 1) . 'M'));
+            $lastDate = $date->sub(new DateInterval('P' . ($last - 1) . 'Y' . ((int) $date->format('n') - 1) . 'M'));
             return self::setMissingValues('month', $result, $lastDate, new DateTime());
         }
 
@@ -321,7 +321,7 @@ FROM ' . Tables::historySummary() . '
 WHERE
   (
   year = ' . $date->format('Y') . ' OR
-  (year = ' . ($date->format('Y') - 1) . ' and month > ' . $date->format('n') . ')
+  (year = ' . ((int) $date->format('Y') - 1) . ' and month > ' . $date->format('n') . ')
   )
   AND day IS NOT NULL
   AND hour IS NULL

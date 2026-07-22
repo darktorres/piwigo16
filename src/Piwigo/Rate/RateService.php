@@ -125,19 +125,19 @@ final readonly class RateService
         }
 
         if ($allRatesCount > 0) {
-            $allRatesAvg /= $allRatesCount;
-            $itemRatecountAvg = $allRatesCount / count($byItem);
+            $allRatesAvg /= (float) $allRatesCount;
+            $itemRatecountAvg = (float) $allRatesCount / (float) count($byItem);
         }
 
         $return = null;
         $updates = [];
         foreach ($byItem as $id => $summary) {
-            $score = ($itemRatecountAvg * $allRatesAvg + $summary['rsum']) / ($itemRatecountAvg + $summary['rcount']);
+            $score = ($itemRatecountAvg * $allRatesAvg + $summary['rsum']) / ($itemRatecountAvg + (float) $summary['rcount']);
             $score = round($score, 2);
             if ($id === $elementId) {
                 $return = [
                     'score' => $score,
-                    'average' => round($summary['rsum'] / $summary['rcount'], 2),
+                    'average' => round($summary['rsum'] / (float) $summary['rcount'], 2),
                     'count' => $summary['rcount'],
                 ];
             }

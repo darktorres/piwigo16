@@ -126,8 +126,8 @@ final class RatingUserPageRenderer
             $c = 0;
             $s = 0;
             $ss = 0;
-            $consensus_dev = 0;
-            $consensus_dev_top = 0;
+            $consensus_dev = 0.0;
+            $consensus_dev_top = 0.0;
             $consensus_dev_top_count = 0;
             foreach ($rating['rates'] as $rate => $rates) {
                 $ct = count($rates);
@@ -135,7 +135,7 @@ final class RatingUserPageRenderer
                 $s += $ct * $rate;
                 $ss += $ct * $rate * $rate;
                 foreach ($rates as $id_date) {
-                    $dev = abs($rate - $all_img_sum[$id_date['id']]['avg']);
+                    $dev = abs((float) $rate - $all_img_sum[$id_date['id']]['avg']);
                     $consensus_dev += $dev;
                     if (isset($best_rated[$id_date['id']])) {
                         $consensus_dev_top += $dev;
@@ -144,17 +144,17 @@ final class RatingUserPageRenderer
                 }
             }
 
-            $consensus_dev /= $c;
+            $consensus_dev /= (float) $c;
             if ($consensus_dev_top_count > 0) {
-                $consensus_dev_top /= $consensus_dev_top_count;
+                $consensus_dev_top /= (float) $consensus_dev_top_count;
             }
 
-            $var = ($ss - $s * $s / $c) / $c;
+            $var = ((float) $ss - (float) $s * (float) $s / (float) $c) / (float) $c;
             $rating += [
                 'id' => $id,
                 'count' => $c,
                 'avg' => $s / $c,
-                'cv' => $s === 0 ? -1 : sqrt($var) / ($s / $c), // http://en.wikipedia.org/wiki/Coefficient_of_variation
+                'cv' => $s === 0 ? -1 : sqrt($var) / ((float) $s / (float) $c), // http://en.wikipedia.org/wiki/Coefficient_of_variation
                 'cd' => $consensus_dev,
                 'cdtop' => $consensus_dev_top_count > 0 ? $consensus_dev_top : '',
             ];

@@ -95,7 +95,7 @@ class ImageImagick implements ImageInterface
         // -- GD's imagecopyresampled() doesn't need it.
         if ($this->get_width() % 2 === 0
             && $this->get_height() % 2 === 0
-            && $this->get_width() > 3 * $width) {
+            && $this->get_width() > 3.0 * (float) $width) {
             $this->image->scaleImage($this->get_width() / 2, $this->get_height() / 2);
         }
 
@@ -131,7 +131,7 @@ class ImageImagick implements ImageInterface
         }*/
 
         if (! $overlay_backend->dirtyTrickXrepeatApplied && $opacity < 100) {// NOTE: Using setImageOpacity will destroy current alpha channels!
-            $ioverlay->evaluateImage(\Imagick::EVALUATE_MULTIPLY, $opacity / 100, \Imagick::CHANNEL_ALPHA);
+            $ioverlay->evaluateImage(\Imagick::EVALUATE_MULTIPLY, (float) $opacity / 100.0, \Imagick::CHANNEL_ALPHA);
             $overlay_backend->dirtyTrickXrepeatApplied = true;
         }
 

@@ -484,7 +484,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
                 return false;
             }
 
-            if ((stripos(implode('', array_keys($_GET)), '/' . $param) !== false or (is_string($param) and $param === 'N/A'))
+            if ((stripos(implode('', array_keys($_GET)), '/' . (string) $param) !== false or (is_string($param) and $param === 'N/A'))
               and ((is_string($thm) and $thm === $theme) or (is_string($thm) and $thm === 'N/A'))
               and (! isset($this->extents[$handle]) or $overwrite)
               and file_exists($dir . $filename)) {
@@ -967,7 +967,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
                 $crop_val = $params['crop'];
                 is_numeric($crop_val) or new HtmlService()
                     ->fatalError('define_derivative crop must be numeric');
-                $crop = round((float) $crop_val / 100, 2);
+                $crop = round((float) $crop_val / 100.0, 2);
             }
 
             if ((bool) $crop) {

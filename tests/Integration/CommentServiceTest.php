@@ -443,9 +443,9 @@ namespace Piwigo\Tests\Integration {
             $issuedAt = round(microtime(true), 1) - 1.0;
             $remoteAddr = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
             $secretKey = Config::secretKey();
-            $signature = hash_hmac('sha256', $issuedAt . substr($remoteAddr, 0, 5) . '0' . $imageId, $secretKey);
+            $signature = hash_hmac('sha256', (string) $issuedAt . substr($remoteAddr, 0, 5) . '0' . $imageId, $secretKey);
 
-            return $issuedAt . ':0:' . $signature;
+            return (string) $issuedAt . ':0:' . $signature;
         }
 
         private function fetchColumn(int $commentId, string $column): ?string

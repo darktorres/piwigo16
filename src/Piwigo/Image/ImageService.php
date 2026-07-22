@@ -148,7 +148,7 @@ final readonly class ImageService
                 continue;
             }
 
-            $result .= '+' . $name . '-' . $value;
+            $result .= '+' . $name . '-' . (string) $value;
         }
 
         return $result;

@@ -69,11 +69,13 @@ final class ConfigKeyExistsRule implements Rule
         'use_standard_pages',
     ];
 
+    #[\Override]
     public function getNodeType(): string
     {
         return StaticCall::class;
     }
 
+    #[\Override]
     public function processNode(Node $node, Scope $scope): array
     {
         if (! $node->class instanceof Name) {

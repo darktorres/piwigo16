@@ -163,7 +163,7 @@ final class InstallWizard
             header('Pragma: no-cache');
             header('Content-Disposition: attachment; filename="database.inc.php"');
             header('Content-Transfer-Encoding: binary');
-            header('Content-Length: ' . filesize($filename));
+            header('Content-Length: ' . (string) filesize($filename));
             echo file_get_contents($filename);
             unlink($filename);
             exit();

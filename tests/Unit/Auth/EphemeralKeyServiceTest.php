@@ -25,8 +25,8 @@ test('generate then verify round-trips immediately', function (): void {
     // hand-crafted, 1-second-old key sidesteps the race entirely.
     $service = new EphemeralKeyService();
     $issuedAt = round(microtime(true), 1) - 1.0;
-    $signature = hash_hmac('sha256', $issuedAt . substr('127.0.0.1', 0, 5) . '0', 'test-secret-key');
-    $key = $issuedAt . ':0:' . $signature;
+    $signature = hash_hmac('sha256', (string) $issuedAt . substr('127.0.0.1', 0, 5) . '0', 'test-secret-key');
+    $key = (string) $issuedAt . ':0:' . $signature;
 
     expect($service->verify($key))->toBeTrue();
 });
@@ -40,9 +40,9 @@ test('verify rejects a key before its valid_after_seconds window has elapsed', f
 
 test('verify rejects a key older than the 60 minute expiration', function (): void {
     $service = new EphemeralKeyService();
-    $issuedAt = round(microtime(true), 1) - 3601;
-    $signature = hash_hmac('sha256', $issuedAt . substr('127.0.0.1', 0, 5) . '0', 'test-secret-key');
-    $key = $issuedAt . ':0:' . $signature;
+    $issuedAt = round(microtime(true), 1) - 3601.0;
+    $signature = hash_hmac('sha256', (string) $issuedAt . substr('127.0.0.1', 0, 5) . '0', 'test-secret-key');
+    $key = (string) $issuedAt . ':0:' . $signature;
 
     expect($service->verify($key))->toBeFalse();
 });
@@ -69,8 +69,8 @@ test('verify rejects a key generated with different additional data', function (
     // -- same reasoning as the "older than 60 minute expiration" test above.
     $service = new EphemeralKeyService();
     $issuedAt = round(microtime(true), 1) - 1.0;
-    $signature = hash_hmac('sha256', $issuedAt . substr('127.0.0.1', 0, 5) . '0form-a', 'test-secret-key');
-    $key = $issuedAt . ':0:' . $signature;
+    $signature = hash_hmac('sha256', (string) $issuedAt . substr('127.0.0.1', 0, 5) . '0form-a', 'test-secret-key');
+    $key = (string) $issuedAt . ':0:' . $signature;
 
     expect($service->verify($key, 'form-b'))->toBeFalse()
         ->and($service->verify($key, 'form-a'))->toBeTrue();

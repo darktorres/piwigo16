@@ -437,7 +437,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 $post_count = count($_POST[$post_keyname]);
                 $treated_count = count($check_key_treated);
                 if ($treated_count !== 0) {
-                    $time_refresh = (int) ceil((\Piwigo\Core\TimingHelper::getMoment() - $nbmSender->startTime()) * $post_count / $treated_count);
+                    $time_refresh = (int) ceil((\Piwigo\Core\TimingHelper::getMoment() - $nbmSender->startTime()) * (float) $post_count / (float) $treated_count);
                 } else {
                     $time_refresh = 0;
                 }

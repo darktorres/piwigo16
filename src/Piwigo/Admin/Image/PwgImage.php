@@ -173,33 +173,33 @@ class PwgImage
                 [$max_width, $max_height] = [$max_height, $max_width];
             }
 
-            $img_ratio = $width / $height;
-            $dest_ratio = $max_width / $max_height;
+            $img_ratio = (float) $width / (float) $height;
+            $dest_ratio = (float) $max_width / (float) $max_height;
 
             if ($dest_ratio > $img_ratio) {
-                $destHeight = round($width * $max_height / $max_width);
-                $y = round(($height - $destHeight) / 2);
+                $destHeight = round((float) $width * (float) $max_height / (float) $max_width);
+                $y = round(((float) $height - $destHeight) / 2.0);
                 $height = $destHeight;
             } elseif ($dest_ratio < $img_ratio) {
-                $destWidth = round($height * $max_width / $max_height);
-                $x = round(($width - $destWidth) / 2);
+                $destWidth = round((float) $height * (float) $max_width / (float) $max_height);
+                $x = round(((float) $width - $destWidth) / 2.0);
                 $width = $destWidth;
             }
         }
 
-        $ratio_width = $width / $max_width;
-        $ratio_height = $height / $max_height;
+        $ratio_width = (float) $width / (float) $max_width;
+        $ratio_height = (float) $height / (float) $max_height;
         $destination_width = $width;
         $destination_height = $height;
 
         // maximal size exceeded ?
         if ($ratio_width > 1 or $ratio_height > 1) {
             if ($ratio_width < $ratio_height) {
-                $destination_width = round($width / $ratio_height);
+                $destination_width = round((float) $width / $ratio_height);
                 $destination_height = $max_height;
             } else {
                 $destination_width = $max_width;
-                $destination_height = round($height / $ratio_width);
+                $destination_height = round((float) $height / $ratio_width);
             }
         }
 
@@ -339,7 +339,7 @@ class PwgImage
      */
     public static function get_rotation_angle_from_code(int|string $rotation_code): int
     {
-        return match ($rotation_code % 4) {
+        return match ((int) $rotation_code % 4) {
             0 => 0,
             1 => 90,
             2 => 180,
@@ -356,12 +356,12 @@ class PwgImage
     public static function get_sharpen_matrix(int|float $amount): array
     {
         // Amount should be in the range of 48-10
-        $amount = round(abs(-48 + ($amount * 0.38)), 2);
+        $amount = round(abs(-48.0 + ((float) $amount * 0.38)), 2);
 
         $matrix = [
-            [-1,   -1,    -1],
-            [-1, $amount, -1],
-            [-1,   -1,    -1],
+            [-1.0,   -1.0,    -1.0],
+            [-1.0, $amount, -1.0],
+            [-1.0,   -1.0,    -1.0],
         ];
 
         $norm = array_sum(array_map(array_sum(...), $matrix));
@@ -389,8 +389,8 @@ class PwgImage
             'destination' => $destination_filepath,
             'width' => $width,
             'height' => $height,
-            'size' => floor($destination_filesize / 1024) . ' KB',
-            'time' => ((bool) $time) ? number_format((\Piwigo\Core\TimingHelper::getMoment() - $time) * 1000, 2, '.', ' ') . ' ms' : null,
+            'size' => (string) floor($destination_filesize / 1024) . ' KB',
+            'time' => ((bool) $time) ? number_format((\Piwigo\Core\TimingHelper::getMoment() - $time) * 1000.0, 2, '.', ' ') . ' ms' : null,
             'library' => $this->library,
         ];
     }

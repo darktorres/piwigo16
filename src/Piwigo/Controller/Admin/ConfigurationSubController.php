@@ -714,7 +714,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                         if ((bool) $params) {
                             [$tpl_var['w'], $tpl_var['h']] = $params->sizing->ideal_size;
-                            if (($tpl_var['crop'] = round(100 * $params->sizing->max_crop)) > 0) {
+                            if (($tpl_var['crop'] = round(100.0 * $params->sizing->max_crop)) > 0) {
                                 [$tpl_var['minw'], $tpl_var['minh']] = $params->sizing->min_size;
                             } else {
                                 $tpl_var['minw'] = $tpl_var['minh'] = '';
@@ -1317,11 +1317,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 }
                 if (! $changed and $params->use_watermark) {
                     // if thresholds change and before/after the threshold is lower than the corresponding derivative side -> some derivatives might switch the watermark
-                    (bool) ($changed |= $watermark->min_size[0] !== $old_watermark->min_size[0]) and ($watermark->min_size[0] < $params->max_width() or $old_watermark->min_size[0] < $params->max_width());
-                    (bool) ($changed |= $watermark->min_size[1] !== $old_watermark->min_size[1]) and ($watermark->min_size[1] < $params->max_height() or $old_watermark->min_size[1] < $params->max_height());
+                    $changed = $watermark->min_size[0] !== $old_watermark->min_size[0]
+                        || $watermark->min_size[1] !== $old_watermark->min_size[1];
                 }
 
-                if ((bool) $changed) {
+                if ($changed) {
                     $params->last_mod_time = time();
                     $changed_types[] = $type;
                 }

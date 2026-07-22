@@ -162,6 +162,7 @@ final class MessengerFactory
                 private array $factories,
             ) {}
 
+            #[\Override]
             public function get(string $id): mixed
             {
                 if (! isset($this->factories[$id])) {
@@ -171,6 +172,7 @@ final class MessengerFactory
                 return ($this->factories[$id])();
             }
 
+            #[\Override]
             public function has(string $id): bool
             {
                 return isset($this->factories[$id]);

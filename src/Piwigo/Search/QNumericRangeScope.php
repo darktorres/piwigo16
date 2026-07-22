@@ -60,14 +60,16 @@ class QNumericRangeScope extends QSearchScope
                     } else {
                         $mult = 1000000;
                     }
-                    $val *= $mult;
+                    $val *= (float) $mult;
                     if (((bool) $i) && ! $range_requested) {// round up the upper limit if possible - e.g 6k goes up to 6999, but 6.12k goes only up to 6129
+                        $divisor = 1;
                         if (($dot_pos = strpos($matches[1], '.')) !== false) {
                             $requested_precision = strlen($matches[1]) - $dot_pos - 1;
-                            $mult /= 10 ** $requested_precision;
+                            $divisor = 10 ** $requested_precision;
                         }
-                        if ($mult > 1) {
-                            $val += $mult - 1;
+                        $roundingMult = (float) $mult / (float) $divisor;
+                        if ($roundingMult > 1) {
+                            $val += $roundingMult - 1.0;
                         }
                     }
                 }
@@ -76,9 +78,9 @@ class QNumericRangeScope extends QSearchScope
             }
             if (is_numeric($val)) {
                 if ((bool) ($i ^ $strict[$i])) {
-                    $val += $this->epsilon;
+                    $val += (float) $this->epsilon;
                 } else {
-                    $val -= $this->epsilon;
+                    $val -= (float) $this->epsilon;
                 }
             }
         }

@@ -422,7 +422,7 @@ SELECT
             'date' => Lang::t('Posted the %s', \Piwigo\Core\DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false, ['day', 'month', 'year'])),
             'age' => Lang::t(ucfirst(\Piwigo\Core\DateHelper::timeSince(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : '', 'year'))),
             'added_by' => Lang::t('Added by %s', $row['added_by']),
-            'size' => Lang::t('%s pixels, %.2f MB', (is_scalar($row['width']) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height']) ? (string) $row['height'] : ''), (is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0) / 1024),
+            'size' => Lang::t('%s pixels, %.2f MB', (is_scalar($row['width']) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height']) ? (string) $row['height'] : ''), (is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0) / 1024.0),
             'stats' => Lang::t('Visited %d times', $row['hit']),
             'id' => Lang::t(is_string($row['id']) ? $row['id'] : ''),
             'ext' => Lang::t('%s file type', strtoupper(end($extTab))),
@@ -461,7 +461,7 @@ SELECT *
             foreach ($formats as $format) {
                 $format_ext = is_scalar($format['ext']) ? (string) $format['ext'] : '';
                 $format_filesize = is_numeric($format['filesize']) ? (float) $format['filesize'] : 0.0;
-                $format_strings[] = sprintf('%s (%.2fMB)', $format_ext, $format_filesize / 1024);
+                $format_strings[] = sprintf('%s (%.2fMB)', $format_ext, $format_filesize / 1024.0);
             }
 
             $intro_vars['formats'] = Lang::t('Formats: %s', implode(', ', $format_strings));

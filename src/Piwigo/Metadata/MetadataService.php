@@ -198,7 +198,7 @@ final readonly class MetadataService
                         $result['latitude'] = $latitude;
                         $result['longitude'] = $longitude;
                     } else {
-                        $logger->info('[getExifData][filename=' . $filename . '] invalid GPS coordinates, latitude=' . $latitude . ' longitude=' . $longitude);
+                        $logger->info('[getExifData][filename=' . $filename . '] invalid GPS coordinates, latitude=' . (string) $latitude . ' longitude=' . (string) $longitude);
                     }
                 }
             }
@@ -229,7 +229,7 @@ final readonly class MetadataService
      * @param  list<string>  $raw  eg: ['41/1', '54/1', '9843/500']
      * @param  string  $ref  'S', 'N', 'E', 'W'
      */
-    public function parseExifGpsData(array $raw, string $ref): float|int
+    public function parseExifGpsData(array $raw, string $ref): float
     {
         $parsed = [];
         foreach ($raw as $component) {
@@ -238,7 +238,7 @@ final readonly class MetadataService
             $parsed[] = $denominator === 0.0 ? 0.0 : (float) $parts[0] / $denominator;
         }
 
-        $v = ($parsed[0] ?? 0) + ($parsed[1] ?? 0) / 60 + ($parsed[2] ?? 0) / 3600;
+        $v = (float) ($parsed[0] ?? 0) + (float) ($parsed[1] ?? 0) / 60.0 + (float) ($parsed[2] ?? 0) / 3600.0;
 
         $ref = strtoupper($ref);
         if ($ref === 'S' || $ref === 'W') {

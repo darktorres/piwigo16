@@ -370,14 +370,14 @@ final class DerivativeImage
     {
         $size = $this->get_size();
         if ((bool) $size) {
-            $ratio_w = $size[0] / $maxw;
-            $ratio_h = $size[1] / $maxh;
+            $ratio_w = (float) $size[0] / (float) $maxw;
+            $ratio_h = (float) $size[1] / (float) $maxh;
             if ($ratio_w > 1 || $ratio_h > 1) {
                 if ($ratio_w > $ratio_h) {
                     $size[0] = $maxw;
-                    $size[1] = (int) floor($size[1] / $ratio_w);
+                    $size[1] = (int) floor((float) $size[1] / $ratio_w);
                 } else {
-                    $size[0] = (int) floor($size[0] / $ratio_h);
+                    $size[0] = (int) floor((float) $size[0] / $ratio_h);
                     $size[1] = $maxh;
                 }
             }

@@ -36,10 +36,10 @@ final class EphemeralKeyService
         $remote_addr = is_string($remote_addr) ? $remote_addr : '';
         $secret_key = \Piwigo\Config\Config::secretKey();
 
-        return $time . ':' . $validAfterSeconds . ':'
+        return (string) $time . ':' . $validAfterSeconds . ':'
             . hash_hmac(
                 'sha256',
-                $time . substr($remote_addr, 0, 5) . $validAfterSeconds . $additionalDataToHash,
+                (string) $time . substr($remote_addr, 0, 5) . $validAfterSeconds . $additionalDataToHash,
                 $secret_key
             );
     }
@@ -66,7 +66,7 @@ final class EphemeralKeyService
             return false;
         }
 
-        if ((float) $issuedAt < $time - 3600) { // 60 minutes expiration
+        if ((float) $issuedAt < $time - 3600.0) { // 60 minutes expiration
             return false;
         }
 

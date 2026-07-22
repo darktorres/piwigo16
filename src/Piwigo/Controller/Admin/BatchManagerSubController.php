@@ -732,7 +732,7 @@ SELECT
             if (is_numeric($row['width']) && is_numeric($row['height']) && $row['width'] > 0 && $row['height'] > 0) {
                 $widths[] = $row['width'];
                 $heights[] = $row['height'];
-                $ratios[] = floor((float) $row['width'] / (float) $row['height'] * 100) / 100;
+                $ratios[] = floor((float) $row['width'] / (float) $row['height'] * 100.0) / 100.0;
             }
         }
         if ($widths === []) { // arbitrary values, only used when no photos on the gallery
@@ -821,7 +821,7 @@ SELECT
 ;';
         foreach (DbConnection::build()->fetchAllAssociative($query) as $row) {
             if (is_numeric($row['filesize'])) {
-                $filesizes[] = sprintf('%.1f', (float) $row['filesize'] / 1024);
+                $filesizes[] = sprintf('%.1f', (float) $row['filesize'] / 1024.0);
             }
         }
 

@@ -152,7 +152,7 @@ SELECT COUNT(*)
 
             $message = '<a href="' . $locked_album_url . '"><i class="icon-cone"></i>';
             $message .= Lang::t('Locked album') . '</a>';
-            $message .= '<span class="adminMenubarCounter">' . $locked_album . '</span>';
+            $message .= '<span class="adminMenubarCounter">' . (string) $locked_album . '</span>';
 
             \Piwigo\Core\PageState::current()->addWarning($message);
         }
@@ -222,7 +222,7 @@ SELECT COUNT(*)
         $nb_views = is_numeric($nb_views) ? (float) $nb_views : 0.0;
 
         $du_decimals = 1;
-        $du_gb = $disk_usage / (1024 * 1024);
+        $du_gb = $disk_usage / (1024.0 * 1024.0);
         if ($du_gb > 100) {
             $du_decimals = 0;
         }
@@ -431,7 +431,7 @@ SELECT COUNT(*)
             // is_numeric()+> 0 above).
             $current_x = $temp_data[$i]['x'];
             $previous_x = $temp_data[$i - 1]['x'];
-            $diff_x[] = $current_x / $previous_x * 100;
+            $diff_x[] = (float) $current_x / (float) $previous_x * 100.0;
         }
 
         $split = 0;
@@ -590,13 +590,13 @@ SELECT
                 $cache_size_zero = $cache_sizes[0] ?? null;
                 $cache_size_value = is_array($cache_size_zero) ? ($cache_size_zero['value'] ?? null) : null;
                 if (is_numeric($cache_size_value)) {
-                    @$data_storage['Cache']['total']['filesize'] = $cache_size_value / 1024;
+                    @$data_storage['Cache']['total']['filesize'] = (float) $cache_size_value / 1024.0;
                 }
             }
         }
 
         // Calculate total storage
-        $total_storage = 0;
+        $total_storage = 0.0;
         foreach ($data_storage as $value) {
             $storage_filesize = $value['total']['filesize'] ?? 0;
             $storage_filesize = is_numeric($storage_filesize) ? (float) $storage_filesize : 0.0;

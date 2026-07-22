@@ -33,7 +33,7 @@ final class ServerTiming
             return;
         }
 
-        self::$durations[$name] = (microtime(true) - self::$starts[$name]) * 1000;
+        self::$durations[$name] = (microtime(true) - self::$starts[$name]) * 1000.0;
         unset(self::$starts[$name]);
     }
 

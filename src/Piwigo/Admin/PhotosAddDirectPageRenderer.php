@@ -190,7 +190,7 @@ SELECT *
 
                     foreach ($formats as $format) {
                         $format_ext = is_scalar($format['ext']) ? (string) $format['ext'] : '';
-                        $format_filesize = is_numeric($format['filesize']) ? ((float) $format['filesize']) / 1024 : 0.0;
+                        $format_filesize = is_numeric($format['filesize']) ? ((float) $format['filesize']) / 1024.0 : 0.0;
                         $format_strings[] = sprintf('%s (%.2fMB)', $format_ext, $format_filesize);
                         $formats_exts[] = strtolower($format_ext);
                     }
@@ -275,14 +275,14 @@ SELECT *
             // memory_limit is a core php.ini directive, always present
             assert($memory_limit !== false);
             $available_memory = (int) $memory_limit - memory_get_usage();
-            $max_upload_width = round(sqrt($available_memory / (2 * $fudge_factor)));
-            $max_upload_height = round(2 * $max_upload_width / 3);
+            $max_upload_width = round(sqrt((float) $available_memory / (2.0 * $fudge_factor)));
+            $max_upload_height = round(2.0 * $max_upload_width / 3.0);
 
             // we don't want dimensions like 2995x1992 but 3000x2000
-            $max_upload_width = round($max_upload_width / 100) * 100;
-            $max_upload_height = round($max_upload_height / 100) * 100;
+            $max_upload_width = round($max_upload_width / 100.0) * 100.0;
+            $max_upload_height = round($max_upload_height / 100.0) * 100.0;
 
-            $max_upload_resolution = floor($max_upload_width * $max_upload_height / (1000000));
+            $max_upload_resolution = floor($max_upload_width * $max_upload_height / 1000000.0);
 
             // no need to display a limitation warning if the limitation is huge like 20MP
             if ($max_upload_resolution < 25) {

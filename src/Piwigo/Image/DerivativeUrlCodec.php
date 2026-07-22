@@ -79,7 +79,7 @@ final class DerivativeUrlCodec
     {
         // $fraction can come straight from user input (admin/picture_coi.php's
         // COI form fields), so clamp rather than trust it's within [0, 1]
-        $codepoint = ord('a') + (int) round($fraction * 25);
+        $codepoint = ord('a') + (int) round($fraction * 25.0);
         if ($codepoint < 0) {
             $codepoint = 0;
         } elseif ($codepoint > 255) {

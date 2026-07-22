@@ -356,7 +356,7 @@ SELECT id
                     // must be the one that's set
                     assert($page_category !== null);
                     $normal_mode_cat_id = $page_category['id'] ?? null;
-                    $where_sql = 'category_id = ' . (is_scalar($normal_mode_cat_id) ? $normal_mode_cat_id : '0');
+                    $where_sql = 'category_id = ' . (is_scalar($normal_mode_cat_id) ? (string) $normal_mode_cat_id : '0');
                 }
 
                 // $cache_key is only ever assigned via
@@ -790,7 +790,7 @@ SELECT id
 
         if ($section === 'categories' && $page_category !== null) {
             $body_category_id = $page_category['id'] ?? null;
-            $body_category_id = is_scalar($body_category_id) ? $body_category_id : '';
+            $body_category_id = is_scalar($body_category_id) ? (string) $body_category_id : '';
             array_push($body_classes, 'category-' . $body_category_id);
             $body_data['category_id'] = $body_category_id;
 
@@ -799,7 +799,7 @@ SELECT id
                 $combined_categories_for_body = is_array($page['combined_categories']) ? $page['combined_categories'] : [];
                 foreach ($combined_categories_for_body as $combined_category) {
                     $combined_body_id = is_array($combined_category) ? ($combined_category['id'] ?? null) : null;
-                    $combined_body_id = is_scalar($combined_body_id) ? $combined_body_id : '';
+                    $combined_body_id = is_scalar($combined_body_id) ? (string) $combined_body_id : '';
                     array_push($body_classes, 'category-' . $combined_body_id);
                     $combined_category_ids[] = $combined_body_id;
                 }
@@ -810,19 +810,19 @@ SELECT id
             $tags_for_body = is_array($page['tags']) ? $page['tags'] : [];
             foreach ($tags_for_body as $tag) {
                 $body_tag_id = is_array($tag) ? ($tag['id'] ?? null) : null;
-                $body_tag_id = is_scalar($body_tag_id) ? $body_tag_id : '';
+                $body_tag_id = is_scalar($body_tag_id) ? (string) $body_tag_id : '';
                 array_push($body_classes, 'tag-' . $body_tag_id);
                 $body_tag_ids[] = $body_tag_id;
             }
             $body_data['tag_ids'] = $body_tag_ids;
         } elseif (isset($page['search'])) {
-            $body_search_id = is_scalar($page['search']) ? $page['search'] : '';
+            $body_search_id = is_scalar($page['search']) ? (string) $page['search'] : '';
             array_push($body_classes, 'search-' . $body_search_id);
             $body_data['search_id'] = $body_search_id;
         }
 
         if (isset($page['image_id'])) {
-            $body_image_id = is_scalar($page['image_id']) ? $page['image_id'] : '';
+            $body_image_id = is_scalar($page['image_id']) ? (string) $page['image_id'] : '';
             array_push($body_classes, 'image-' . $body_image_id);
             $body_data['image_id'] = $body_image_id;
         }

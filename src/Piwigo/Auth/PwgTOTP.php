@@ -103,7 +103,7 @@ class PwgTOTP
         // generate a totp code for 30s intervals
         // following or preceding the current one and check it
         for ($i = -$check_interval; $i <= $check_interval; $i++) {
-            $interval_timestamp = $timestamp + $i;
+            $interval_timestamp = $timestamp + (float) $i;
             $generated_code = self::generateCodeFromTimestamp($secret, $interval_timestamp);
             if (hash_equals($generated_code, $code)) {
                 return true;

@@ -209,9 +209,9 @@ final class GalleryController implements ControllerInterface
         if ($section_context->isHomepage) {
             $canonical_url = $urlService->getGalleryHomeUrl();
         } else {
-            $start = $page_nb_image_page * round($page_start / $page_nb_image_page);
+            $start = (float) $page_nb_image_page * round($page_start / $page_nb_image_page);
             if ($start > 0 && $start >= count($page_items)) {
-                $start -= $page_nb_image_page;
+                $start -= (float) $page_nb_image_page;
             }
             $canonical_url = $urlService->duplicateIndexUrl([
                 'start' => $start,

@@ -62,7 +62,7 @@ SELECT
             }
 
             $filesize = is_numeric($format['filesize']) ? (float) $format['filesize'] : 0.0;
-            $format['filesize'] = round($filesize / 1024, 2);
+            $format['filesize'] = round($filesize / 1024.0, 2);
         }
         unset($format);
 

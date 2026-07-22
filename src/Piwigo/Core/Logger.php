@@ -404,7 +404,7 @@ class Logger
     private function getTimestamp(): string
     {
         $originalTime = microtime(true);
-        $micro = sprintf('%06d', (int) (($originalTime - floor($originalTime)) * 1000000));
+        $micro = sprintf('%06d', (int) (($originalTime - floor($originalTime)) * 1000000.0));
         $date = new \DateTime(date('Y-m-d H:i:s.' . $micro, intval($originalTime)));
 
         $dateFormat = $this->options['dateFormat'];

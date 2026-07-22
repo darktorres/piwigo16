@@ -877,7 +877,7 @@ SELECT id, id_uppercat, `rank`
             $query = '
 SELECT id
   FROM ' . Tables::categories() . '
-  WHERE id_uppercat ' . ((is_numeric($category['id_uppercat']) && (int) $category['id_uppercat'] !== 0) ? '= ' . $category['id_uppercat'] : 'IS NULL') . '
+  WHERE id_uppercat ' . ((is_numeric($category['id_uppercat']) && (int) $category['id_uppercat'] !== 0) ? '= ' . (string) $category['id_uppercat'] : 'IS NULL') . '
   ORDER BY `id` ASC
 ;';
 
@@ -892,7 +892,7 @@ SELECT id
             $query = '
 SELECT id
   FROM ' . Tables::categories() . '
-  WHERE id_uppercat ' . ((is_numeric($category['id_uppercat']) && (int) $category['id_uppercat'] !== 0) ? '= ' . $category['id_uppercat'] : 'IS NULL') . '
+  WHERE id_uppercat ' . ((is_numeric($category['id_uppercat']) && (int) $category['id_uppercat'] !== 0) ? '= ' . (string) $category['id_uppercat'] : 'IS NULL') . '
     AND id != ' . $params['category_id'] . '
   ORDER BY `rank` ASC
 ;';

@@ -369,13 +369,13 @@ final readonly class FilterResolver
             // to counter the effect of converting kB to mB and rounding, go
             // slightly lower for the minimum value.
             $where[] = 'filesize >= :min_filesize';
-            $params['min_filesize'] = ((float) $filesize['min'] - 0.1) * 1024;
+            $params['min_filesize'] = ((float) $filesize['min'] - 0.1) * 1024.0;
         }
         if (isset($filesize['max']) && is_numeric($filesize['max'])) {
             // to counter the effect of converting kB to mB and rounding, go
             // slightly higher for the maximum value.
             $where[] = 'filesize <= :max_filesize';
-            $params['max_filesize'] = ((float) $filesize['max'] + 0.1) * 1024;
+            $params['max_filesize'] = ((float) $filesize['max'] + 0.1) * 1024.0;
         }
 
         if ($where === []) {

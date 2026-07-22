@@ -1211,7 +1211,7 @@ SELECT
         $query = '
 SELECT COUNT(*)
   FROM ' . Tables::images() . '
-  WHERE id = ' . $params['image_id'] . '
+  WHERE id = ' . (string) $params['image_id'] . '
 ;';
         $count = $conn->fetchOne($query);
         $count = is_numeric($count) ? (int) $count : 0;
@@ -1223,7 +1223,7 @@ SELECT COUNT(*)
         $query = '
 SELECT COUNT(*)
   FROM ' . Tables::imageCategory() . '
-  WHERE image_id = ' . $params['image_id'] . '
+  WHERE image_id = ' . (string) $params['image_id'] . '
     AND category_id = ' . $params['category_id'] . '
 ;';
         $count = $conn->fetchOne($query);
@@ -1245,7 +1245,7 @@ SELECT MAX(`rank`) AS max_rank
 
         if (is_numeric($row['max_rank'])) {
             if ($params['rank'] > $row['max_rank']) {
-                $params['rank'] = $row['max_rank'] + 1;
+                $params['rank'] = (int) $row['max_rank'] + 1;
             }
         } else {
             $params['rank'] = 1;
@@ -1265,7 +1265,7 @@ UPDATE ' . Tables::imageCategory() . '
         $query = '
 UPDATE ' . Tables::imageCategory() . '
   SET `rank` = ' . $params['rank'] . '
-  WHERE image_id = ' . $params['image_id'] . '
+  WHERE image_id = ' . (string) $params['image_id'] . '
     AND category_id = ' . $params['category_id'] . '
 ;';
         $conn->executeStatement($query);

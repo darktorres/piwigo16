@@ -344,7 +344,7 @@ SELECT id
         $url_up = $this->urlService->duplicateIndexUrl(
             [
                 'start' => floor($current_rank / $nb_image_page)
-                  * $nb_image_page,
+                  * (float) $nb_image_page,
             ],
             [
                 'start',
@@ -877,7 +877,7 @@ SELECT *
                     // narrow explicitly.
                     if (! isset($format['download_url'])) {
                         $format_id = $format['format_id'];
-                        $format['download_url'] = 'action.php?format=' . (is_scalar($format_id) ? $format_id : '') . '&amp;download';
+                        $format['download_url'] = 'action.php?format=' . (is_scalar($format_id) ? (string) $format_id : '') . '&amp;download';
                     }
 
                     $format_ext = $format['ext'];
@@ -890,7 +890,7 @@ SELECT *
 
                     $format_filesize = $format['filesize'];
                     $format_filesize = is_numeric($format_filesize) ? (float) $format_filesize : 0.0;
-                    $format['filesize'] = sprintf('%.1fMB', $format_filesize / 1024);
+                    $format['filesize'] = sprintf('%.1fMB', $format_filesize / 1024.0);
                 }
                 unset($format);
                 $template->append('current', [

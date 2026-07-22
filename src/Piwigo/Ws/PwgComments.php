@@ -206,7 +206,7 @@ SELECT
             $list[] = [
                 'id' => $row['id'],
                 'admin_link' => new UrlService(new HtmlService())
-                    ->getRootUrl() . 'admin.php?page=photo-' . (is_scalar($row_image_id) ? $row_image_id : ''),
+                    ->getRootUrl() . 'admin.php?page=photo-' . (is_scalar($row_image_id) ? (string) $row_image_id : ''),
                 'medium_url' => $medium,
                 'file' => $row['file'],
                 'image_date_available' => \Piwigo\Core\DateHelper::formatDate($comment_date_available, ['day_name', 'day', 'month', 'year', 'time']),
@@ -266,7 +266,7 @@ GROUP BY author_id
             'paging' => [
                 'page' => $params['page'],
                 'per_page' => $params['per_page'],
-                'total_pages' => max(0, ceil($total_comments / $params['per_page']) - 1),
+                'total_pages' => max(0.0, ceil((float) $total_comments / (float) $params['per_page']) - 1.0),
             ],
         ];
     }

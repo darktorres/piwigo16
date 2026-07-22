@@ -152,7 +152,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         // though it's always a numeric byte count in practice.
         $diskUsageKb = $piwigoInfos['general_stats']['disk_usage'];
         $diskUsageKb = is_numeric($diskUsageKb) ? (float) $diskUsageKb : 0.0;
-        $piwigoInfos['general_stats']['disk_usage'] = intval($diskUsageKb / 1024);
+        $piwigoInfos['general_stats']['disk_usage'] = intval($diskUsageKb / 1024.0);
 
         $piwigoInfos['general_stats']['installed_on'] = InstallationStats::getInstallationDate();
         $piwigoInfos['general_stats']['nb_photos_synced'] = 0;
@@ -308,7 +308,7 @@ SELECT
                 }
 
                 $codename = $pemExtensions[$eid]['archive_root_dir'] ?? $pluginId;
-                $codename = is_scalar($codename) ? $codename : $pluginId;
+                $codename = is_scalar($codename) ? (string) $codename : $pluginId;
 
                 $piwigoInfos['plugins'][] = '#' . $eid . '/' . $codename . '/' . $pluginVersion;
             }
@@ -362,7 +362,7 @@ SELECT
             }
 
             $codename = $pemExtensions[$eid]['archive_root_dir'] ?? $themeId;
-            $codename = is_scalar($codename) ? $codename : $themeId;
+            $codename = is_scalar($codename) ? (string) $codename : $themeId;
 
             $piwigoInfos['themes'][] = '#' . $eid . '/' . $codename . '/' . $themeVersion;
         }

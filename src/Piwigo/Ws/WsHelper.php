@@ -69,10 +69,10 @@ final class WsHelper
 
         $clauses = [];
         if (is_numeric($params['f_min_rate'])) {
-            $clauses[] = $tbl_name . 'rating_score>=' . $params['f_min_rate'];
+            $clauses[] = $tbl_name . 'rating_score>=' . (string) $params['f_min_rate'];
         }
         if (is_numeric($params['f_max_rate'])) {
-            $clauses[] = $tbl_name . 'rating_score<=' . $params['f_max_rate'];
+            $clauses[] = $tbl_name . 'rating_score<=' . (string) $params['f_max_rate'];
         }
         if (is_numeric($params['f_min_hit'])) {
             $clauses[] = $tbl_name . 'hit>=' . $params['f_min_hit'];
@@ -93,10 +93,10 @@ final class WsHelper
             $clauses[] = $tbl_name . "date_creation<'" . $params['f_max_date_created'] . "'";
         }
         if (is_numeric($params['f_min_ratio'])) {
-            $clauses[] = $tbl_name . 'width/' . $tbl_name . 'height>=' . $params['f_min_ratio'];
+            $clauses[] = $tbl_name . 'width/' . $tbl_name . 'height>=' . (string) $params['f_min_ratio'];
         }
         if (is_numeric($params['f_max_ratio'])) {
-            $clauses[] = $tbl_name . 'width/' . $tbl_name . 'height<=' . $params['f_max_ratio'];
+            $clauses[] = $tbl_name . 'width/' . $tbl_name . 'height<=' . (string) $params['f_max_ratio'];
         }
         if (is_numeric($params['f_max_level'])) {
             $clauses[] = $tbl_name . 'level <= ' . $params['f_max_level'];

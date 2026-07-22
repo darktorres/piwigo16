@@ -398,7 +398,7 @@ final readonly class SearchService
             $hasFiltersFilled = true;
             $imageIdsForFilter['filesize'] = $this->queryImageIdsFor(
                 'filesize BETWEEN ? AND ?',
-                [(float) $filesizeMinRaw - 100, (float) $filesizeMaxRaw + 100],
+                [(float) $filesizeMinRaw - 100.0, (float) $filesizeMaxRaw + 100.0],
                 $forbidden
             );
         }
@@ -1260,7 +1260,7 @@ final readonly class SearchService
         $whereClauses[] = "i.id IN ({$placeholders})";
         $params = [...$params, ...$ids];
         if (isset($options['images_where']) && $options['images_where'] !== '' && is_scalar($options['images_where'])) {
-            $whereClauses[] = '(' . $options['images_where'] . ')';
+            $whereClauses[] = '(' . (string) $options['images_where'] . ')';
         }
 
         if ($permissions) {

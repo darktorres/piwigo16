@@ -1436,7 +1436,7 @@ UPDATE ' . Tables::userInfos() . ' SET ';
                     $first = false;
                 }
                 assert(is_scalar($value));
-                $query .= $field . ' = "' . $value . '"';
+                $query .= $field . ' = "' . (string) $value . '"';
             }
 
             $query .= '

@@ -84,20 +84,20 @@ final class SizingParams
         $destCrop = new ImageRect($in_size);
 
         if ($this->max_crop > 0) {
-            $ratio_w = $destCrop->width() / $this->ideal_size[0];
-            $ratio_h = $destCrop->height() / $this->ideal_size[1];
+            $ratio_w = $destCrop->width() / (float) $this->ideal_size[0];
+            $ratio_h = $destCrop->height() / (float) $this->ideal_size[1];
             if ($ratio_w > 1 || $ratio_h > 1) {
                 if ($ratio_w > $ratio_h) {
                     $h = $destCrop->height() / $ratio_w;
                     if ($h < $this->min_size[1]) {
-                        $idealCropPx = $destCrop->width() - floor($destCrop->height() * $this->ideal_size[0] / $this->min_size[1]);
+                        $idealCropPx = $destCrop->width() - floor($destCrop->height() * (float) $this->ideal_size[0] / (float) $this->min_size[1]);
                         $maxCropPx = round($this->max_crop * $destCrop->width());
                         $destCrop->crop_h((int) min($idealCropPx, $maxCropPx), $coi);
                     }
                 } else {
                     $w = $destCrop->width() / $ratio_h;
                     if ($w < $this->min_size[0]) {
-                        $idealCropPx = $destCrop->height() - floor($destCrop->width() * $this->ideal_size[1] / $this->min_size[0]);
+                        $idealCropPx = $destCrop->height() - floor($destCrop->width() * (float) $this->ideal_size[1] / (float) $this->min_size[0]);
                         $maxCropPx = round($this->max_crop * $destCrop->height());
                         $destCrop->crop_v((int) min($idealCropPx, $maxCropPx), $coi);
                     }
@@ -107,8 +107,8 @@ final class SizingParams
 
         $scale_size = [$destCrop->width(), $destCrop->height()];
 
-        $ratio_w = $destCrop->width() / $this->ideal_size[0];
-        $ratio_h = $destCrop->height() / $this->ideal_size[1];
+        $ratio_w = $destCrop->width() / (float) $this->ideal_size[0];
+        $ratio_h = $destCrop->height() / (float) $this->ideal_size[1];
         if ($ratio_w > 1 || $ratio_h > 1) {
             if ($ratio_w > $ratio_h) {
                 $scale_size[0] = $this->ideal_size[0];
@@ -122,7 +122,7 @@ final class SizingParams
         }
 
         $crop_rect = null;
-        if ((float) $destCrop->width() !== (float) $in_size[0] || (float) $destCrop->height() !== (float) $in_size[1]) {
+        if ($destCrop->width() !== (float) $in_size[0] || $destCrop->height() !== (float) $in_size[1]) {
             $crop_rect = $destCrop;
         }
     }

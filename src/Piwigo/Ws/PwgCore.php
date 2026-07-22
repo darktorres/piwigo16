@@ -136,7 +136,7 @@ SELECT id, path, representative_ext, width, height, rotation
   FROM ' . Tables::images() . '
   WHERE ' . implode(' AND ', $where_clauses) . '
   ORDER BY id DESC
-  LIMIT ' . $qlimit . '
+  LIMIT ' . (string) $qlimit . '
 ;';
 
         $urls = [];
@@ -285,7 +285,7 @@ SELECT id, path, representative_ext, width, height, rotation
                 isset($return_array_cache[0]) && $return_array_cache[0] !== '' && $return_array_cache[0] !== '0'
                 and (bool) preg_match('/^(\d+)\s/', $return_array_cache[0], $matches_cache)
             ) {
-                $infos['cache_size'] = $matches_cache[1] * 1024;
+                $infos['cache_size'] = (int) $matches_cache[1] * 1024;
             }
         }
 
@@ -327,7 +327,7 @@ SELECT id, path, representative_ext, width, height, rotation
                 isset($return_array_template_c[0]) && $return_array_template_c[0] !== '' && $return_array_template_c[0] !== '0'
                 and (bool) preg_match('/^(\d+)\s/', $return_array_template_c[0], $matches_template_c)
             ) {
-                $infos['tsizes'] = $matches_template_c[1] * 1024;
+                $infos['tsizes'] = (int) $matches_template_c[1] * 1024;
             }
         }
 
@@ -1189,7 +1189,7 @@ SELECT
         // the only place in the codebase that touches $name_of_tag. The
         // `global` keyword was always redundant; kept as a plain local.
         $name_of_tag = [];
-        if ($has_tags > 0) {
+        if ($has_tags) {
             $query = '
 SELECT
     id,

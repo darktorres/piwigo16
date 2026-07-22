@@ -47,14 +47,14 @@ final class ImageRect
         $this->b = $l[1];
     }
 
-    public function width(): int|float
+    public function width(): float
     {
-        return $this->r - $this->l;
+        return (float) $this->r - (float) $this->l;
     }
 
-    public function height(): int|float
+    public function height(): float
     {
-        return $this->b - $this->t;
+        return (float) $this->b - (float) $this->t;
     }
 
     /**
@@ -71,20 +71,20 @@ final class ImageRect
         $tlcrop = floor($pixels / 2);
 
         if ($coi !== null && $coi !== '') {
-            $coil = floor($this->r * DerivativeUrlCodec::charToFraction($coi[0]));
-            $coir = ceil($this->r * DerivativeUrlCodec::charToFraction($coi[2]));
-            $availableL = $coil > $this->l ? $coil - $this->l : 0;
-            $availableR = $coir < $this->r ? $this->r - $coir : 0;
+            $coil = floor((float) $this->r * (float) DerivativeUrlCodec::charToFraction($coi[0]));
+            $coir = ceil((float) $this->r * (float) DerivativeUrlCodec::charToFraction($coi[2]));
+            $availableL = $coil > $this->l ? $coil - (float) $this->l : 0.0;
+            $availableR = $coir < $this->r ? (float) $this->r - $coir : 0.0;
             if ($availableL + $availableR >= $pixels) {
                 if ($availableL < $tlcrop) {
                     $tlcrop = $availableL;
                 } elseif ($availableR < $tlcrop) {
-                    $tlcrop = $pixels - $availableR;
+                    $tlcrop = (float) $pixels - $availableR;
                 }
             }
         }
-        $this->l += $tlcrop;
-        $this->r -= $pixels - $tlcrop;
+        $this->l = (float) $this->l + $tlcrop;
+        $this->r = (float) $this->r - ((float) $pixels - $tlcrop);
     }
 
     /**
@@ -101,19 +101,19 @@ final class ImageRect
         $tlcrop = floor($pixels / 2);
 
         if ($coi !== null && $coi !== '') {
-            $coit = floor($this->b * DerivativeUrlCodec::charToFraction($coi[1]));
-            $coib = ceil($this->b * DerivativeUrlCodec::charToFraction($coi[3]));
-            $availableT = $coit > $this->t ? $coit - $this->t : 0;
-            $availableB = $coib < $this->b ? $this->b - $coib : 0;
+            $coit = floor((float) $this->b * (float) DerivativeUrlCodec::charToFraction($coi[1]));
+            $coib = ceil((float) $this->b * (float) DerivativeUrlCodec::charToFraction($coi[3]));
+            $availableT = $coit > $this->t ? $coit - (float) $this->t : 0.0;
+            $availableB = $coib < $this->b ? (float) $this->b - $coib : 0.0;
             if ($availableT + $availableB >= $pixels) {
                 if ($availableT < $tlcrop) {
                     $tlcrop = $availableT;
                 } elseif ($availableB < $tlcrop) {
-                    $tlcrop = $pixels - $availableB;
+                    $tlcrop = (float) $pixels - $availableB;
                 }
             }
         }
-        $this->t += $tlcrop;
-        $this->b -= $pixels - $tlcrop;
+        $this->t = (float) $this->t + $tlcrop;
+        $this->b = (float) $this->b - ((float) $pixels - $tlcrop);
     }
 }

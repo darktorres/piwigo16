@@ -554,7 +554,7 @@ SELECT
                             'TITLE' => $htmlRenderer->renderElementName($row),
                             'DIMENSIONS' => $row_width . 'x' . $row_height . ' px',
                             'FORMAT' => ($row_width >= $row_height) ? 1 : 0, // 0:horizontal, 1:vertical
-                            'FILESIZE' => Lang::t('%.2f MB', $row_filesize / 1024),
+                            'FILESIZE' => Lang::t('%.2f MB', $row_filesize / 1024.0),
                             'REGISTRATION_DATE' => \Piwigo\Core\DateHelper::formatDate($row_date_available),
                             'EXT' => Lang::t('%s file type', end($extTab)),
                             'POST_DATE' => Lang::t('Added on %s', \Piwigo\Core\DateHelper::formatDate($row_date_available, ['day', 'month', 'year'])),

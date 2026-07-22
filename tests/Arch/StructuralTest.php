@@ -352,20 +352,18 @@ test('CurrentConfigService::reset() is only called from tests/', function (): vo
 // './' value, deliberately unchanged -- see index.php's own docblock) for
 // the not-yet-migrated call sites.
 //
-// A sibling "no PHPWG_ROOT_PATH read in src/Piwigo/" test was deliberately
-// NOT added here despite the plan doc's "already true today" claim for it
-// too -- that claim was verified WRONG: PHPWG_ROOT_PATH is read directly
-// in ~50 real (non-comment) call sites across 12 src/Piwigo/ files
-// (Image/SrcImage.php, Image/DerivativeImage.php, Template/Template.php,
-// Template/FileCombiner.php, Cache/PersistentFileCache.php among them --
-// the legacy Admin/{updates,plugins,languages,themes}.php god-classes
-// named here originally were fully retired in Legacy Coupling Retirement
-// Phase 8, 8j), all pre-existing (P6-era), not introduced by
-// P16. This is exactly the "885-usage bulk Paths migration across
-// include//admin/" work already scoped to P17-23 by this phase's own
-// plan -- adding an enforcement test for a claim that isn't true yet would
-// need a ~50-entry exclusion list that only grows, defeating the point of
-// a regression guard. Revisit once that migration actually lands.
+// The sibling "no PHPWG_ROOT_PATH/PWG_LOCAL_DIR read in src/Piwigo/" test
+// this comment used to defer (P16: ~50 real call sites across 12 files,
+// "revisit once that migration actually lands") is below, now that the
+// migration has actually landed (Legacy Coupling Retirement gap-closure,
+// entry-shell define()/include round: both constants replaced by
+// Piwigo\Core\Paths/CurrentPaths -- DI-constructed classes get Paths
+// threaded through their constructor, everything else reads
+// CurrentPaths::get()). Only Controller/ImageDerivativeController.php
+// still reads the raw constant, deliberately: its 2 sites are genuine
+// URL generation, not filesystem paths, and are deferred to this same
+// gap-closure effort's own Part III (i.php joining the real routing
+// pipeline) rather than fixed here as a rushed, unreviewed guess.
 //
 // Comment-aware (unlike findCallSites() above, plain substring match):
 // "define()" is common in explanatory prose (e.g. "the N define()
@@ -432,6 +430,30 @@ test('src/Piwigo/ contains no define() calls', function (): void {
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'define(');
 
     expect(describeCallSites($hits))->toBe([]);
+});
+
+test('src/Piwigo/ contains no PHPWG_ROOT_PATH/PWG_LOCAL_DIR reads outside the documented ImageDerivativeController sites', function (): void {
+    // Legacy Coupling Retirement gap-closure (entry-shell define()/include
+    // round): both constants are gone everywhere except i.php's own
+    // deliberate define() (kept for these 2 sites) -- see this file's own
+    // docblock a few lines above for why they're deferred rather than
+    // fixed. A changed count here, or a hit in any other file, means a new
+    // raw read was introduced and must be migrated onto Paths/CurrentPaths
+    // instead, not added to this allowlist.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PHPWG_ROOT_PATH'),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PWG_LOCAL_DIR'),
+    ];
+
+    $unexpected = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! str_ends_with($hit['path'], 'Controller/ImageDerivativeController.php')
+    ));
+
+    expect(describeCallSites($unexpected))->toBe([]);
+    expect(count($hits))->toBe(2);
 });
 
 test('src/Piwigo/ contains no global $filter/$pwg_loaded_plugins/$template/$page declarations', function (): void {

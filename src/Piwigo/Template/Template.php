@@ -613,6 +613,13 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         }
 
         $this->smarty->assign('ROOT_URL', self::urlService()->getRootUrl());
+        // Legacy Coupling Retirement gap-closure (entry-shell define()/
+        // include round): the .tpl-side equivalent of PHPWG_ROOT_PATH for
+        // the handful of templates that need a real filesystem existence
+        // check (datepicker.inc.tpl/photos_add_direct.tpl's own
+        // `{if $ROOT_PATH|@cat:...|@file_exists}`), not a URL -- ROOT_URL
+        // above is request-relative and wrong for file_exists().
+        $this->smarty->assign('ROOT_PATH', CurrentPaths::get()->root);
 
         $save_compile_id = $this->smarty->compile_id;
         $this->load_external_filters($handle);

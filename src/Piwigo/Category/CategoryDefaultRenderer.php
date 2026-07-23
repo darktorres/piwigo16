@@ -77,8 +77,9 @@ final readonly class CategoryDefaultRenderer
             $rankOf = array_flip($selection);
 
             foreach ($this->imageRepo->findByIds($selection) as $imageId => $row) {
-                $row['rank'] = $rankOf[$imageId] ?? 0;
-                $pictures[] = $row;
+                $pictureRow = $row->toArray();
+                $pictureRow['rank'] = $rankOf[$imageId] ?? 0;
+                $pictures[] = $pictureRow;
             }
 
             usort($pictures, CategoryService::compareByRank(...));
@@ -125,10 +126,8 @@ final readonly class CategoryDefaultRenderer
         $tplThumbnailsVar = [];
 
         foreach ($pictures as $row) {
-            // 'id' is the images table's NOT NULL primary key -- the ''
-            // fallback only satisfies the array-key type, it never changes
-            // real behavior.
-            $imageId = $row['id'] ?? '';
+            $imageId = $row['id'];
+            $imageIdKey = (string) $imageId;
 
             // link on picture.php page
             $url = $this->urlService->duplicatePictureUrl(
@@ -140,19 +139,15 @@ final readonly class CategoryDefaultRenderer
             );
 
             if ($nbCommentsOf !== null) {
-                $nbComments = is_scalar($imageId) ? ($nbCommentsOf[(string) $imageId] ?? 0) : 0;
+                $nbComments = array_key_exists($imageIdKey, $nbCommentsOf) ? $nbCommentsOf[$imageIdKey] : 0;
                 $row['NB_COMMENTS'] = $row['nb_comments'] = $nbComments;
             }
 
             $name = $this->htmlRenderer->renderElementName($row);
             $desc = $this->htmlRenderer->renderElementDescription($row, 'main_page_element_description');
 
-            // 'path'/'file' are non-nullable text columns in practice, but
-            // $row is a dynamically-fetched DB row (SELECT *), so PHPStan
-            // only knows them as possibly-non-string -- narrow for real
-            // before get_extension().
-            $rowPath = is_string($row['path']) ? $row['path'] : null;
-            $rowFile = is_string($row['file']) ? $row['file'] : null;
+            $rowPath = $row['path'];
+            $rowFile = $row['file'];
 
             $tplVar = array_merge($row, [
                 'TN_ALT' => htmlspecialchars(strip_tags($name)),
@@ -180,14 +175,23 @@ final readonly class CategoryDefaultRenderer
 
             switch ($section) {
                 case 'best_rated':
+                    // `rating_score` is a native DBAL float|null, never a
+                    // string/int -- P17-23 gap-closure found live: the
+                    // original `is_string(...) || is_int(...)` guard
+                    // (written for mysqli's always-string legacy fetch
+                    // mode) was always false here, so the best-rated
+                    // special page's thumbnail name label always rendered
+                    // "() Name" instead of "(4.5) Name", silently, since
+                    // $row was untyped `mixed` before this domain's
+                    // Projection retype made the always-false condition
+                    // visible to PHPStan.
                     $ratingScore = $row['rating_score'];
-                    $name = '(' . (is_string($ratingScore) || is_int($ratingScore) ? $ratingScore : '') . ') ' . $name;
+                    $name = '(' . ($ratingScore ?? '') . ') ' . $name;
                     break;
 
                 case 'most_visited':
                     if (! (bool) \Piwigo\Users\CurrentUser::get()->rawAttributes['show_nb_hits']) {
-                        $hit = $row['hit'];
-                        $name = '(' . (is_string($hit) || is_int($hit) ? $hit : '') . ') ' . $name;
+                        $name = '(' . $row['hit'] . ') ' . $name;
                     }
                     break;
             }

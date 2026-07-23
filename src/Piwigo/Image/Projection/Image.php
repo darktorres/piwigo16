@@ -1,0 +1,124 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Image\Projection;
+
+/**
+ * Typed row shape for `piwigo_images` (P17-23 Stage 1b, Image domain --
+ * `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection shapes"
+ * reference). `fromRow()` centralises the `is_string($row['x']) ? ... :
+ * default` narrowing every {@see \Piwigo\Image\ImageRepository} caller used
+ * to duplicate for itself; `toArray()` hands that already-narrowed data
+ * back out as a precisely-shaped array for the handful of consumers that
+ * genuinely need array semantics (a growing Smarty template-variable bag,
+ * or a legacy `array<string, mixed>|SrcImage` signature not itself in
+ * scope here) rather than a real accessor object.
+ *
+ * `dateAvailable`/`dateCreation`/`dateMetadataUpdate`/`lastmodified` stay
+ * `string`, not `\DateTimeImmutable` -- every real consumer today
+ * (`DateHelper::formatDate()`/`timeSince()`, raw SQL comparisons) already
+ * expects the raw DB DATETIME string form; converting only these 4 fields
+ * to real date objects while every call site still wants a string would
+ * just move the casting instead of removing it.
+ */
+final readonly class Image
+{
+    public function __construct(
+        public int $id,
+        public string $file,
+        public ?string $dateAvailable,
+        public ?string $dateCreation,
+        public ?string $name,
+        public ?string $comment,
+        public ?string $author,
+        public int $hit,
+        public ?int $filesize,
+        public ?int $width,
+        public ?int $height,
+        public ?string $coi,
+        public ?string $representativeExt,
+        public ?string $dateMetadataUpdate,
+        public ?float $ratingScore,
+        public string $path,
+        public ?int $storageCategoryId,
+        public int $level,
+        public ?string $md5sum,
+        public ?int $addedBy,
+        public ?int $rotation,
+        public ?float $latitude,
+        public ?float $longitude,
+        public string $lastmodified,
+    ) {}
+
+    /**
+     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `piwigo_images`
+     */
+    public static function fromRow(array $row): self
+    {
+        return new self(
+            id: is_numeric($row['id']) ? (int) $row['id'] : 0,
+            file: is_string($row['file']) ? $row['file'] : '',
+            dateAvailable: is_string($row['date_available']) ? $row['date_available'] : null,
+            dateCreation: is_string($row['date_creation'] ?? null) ? $row['date_creation'] : null,
+            name: is_string($row['name'] ?? null) ? $row['name'] : null,
+            comment: is_string($row['comment'] ?? null) ? $row['comment'] : null,
+            author: is_string($row['author'] ?? null) ? $row['author'] : null,
+            hit: is_numeric($row['hit'] ?? null) ? (int) $row['hit'] : 0,
+            filesize: is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : null,
+            width: is_numeric($row['width'] ?? null) ? (int) $row['width'] : null,
+            height: is_numeric($row['height'] ?? null) ? (int) $row['height'] : null,
+            coi: is_string($row['coi'] ?? null) ? $row['coi'] : null,
+            representativeExt: is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
+            dateMetadataUpdate: is_string($row['date_metadata_update'] ?? null) ? $row['date_metadata_update'] : null,
+            ratingScore: is_numeric($row['rating_score'] ?? null) ? (float) $row['rating_score'] : null,
+            path: is_string($row['path'] ?? null) ? $row['path'] : '',
+            storageCategoryId: is_numeric($row['storage_category_id'] ?? null) ? (int) $row['storage_category_id'] : null,
+            level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
+            md5sum: is_string($row['md5sum'] ?? null) ? $row['md5sum'] : null,
+            addedBy: is_numeric($row['added_by'] ?? null) ? (int) $row['added_by'] : null,
+            rotation: is_numeric($row['rotation'] ?? null) ? (int) $row['rotation'] : null,
+            latitude: is_numeric($row['latitude'] ?? null) ? (float) $row['latitude'] : null,
+            longitude: is_numeric($row['longitude'] ?? null) ? (float) $row['longitude'] : null,
+            lastmodified: is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : '',
+        );
+    }
+
+    /**
+     * @return array{id: int, file: string, date_available: ?string, date_creation: ?string,
+     *   name: ?string, comment: ?string, author: ?string, hit: int, filesize: ?int,
+     *   width: ?int, height: ?int, coi: ?string, representative_ext: ?string,
+     *   date_metadata_update: ?string, rating_score: ?float, path: string,
+     *   storage_category_id: ?int, level: int, md5sum: ?string, added_by: ?int,
+     *   rotation: ?int, latitude: ?float, longitude: ?float, lastmodified: string}
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'file' => $this->file,
+            'date_available' => $this->dateAvailable,
+            'date_creation' => $this->dateCreation,
+            'name' => $this->name,
+            'comment' => $this->comment,
+            'author' => $this->author,
+            'hit' => $this->hit,
+            'filesize' => $this->filesize,
+            'width' => $this->width,
+            'height' => $this->height,
+            'coi' => $this->coi,
+            'representative_ext' => $this->representativeExt,
+            'date_metadata_update' => $this->dateMetadataUpdate,
+            'rating_score' => $this->ratingScore,
+            'path' => $this->path,
+            'storage_category_id' => $this->storageCategoryId,
+            'level' => $this->level,
+            'md5sum' => $this->md5sum,
+            'added_by' => $this->addedBy,
+            'rotation' => $this->rotation,
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
+            'lastmodified' => $this->lastmodified,
+        ];
+    }
+}

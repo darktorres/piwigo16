@@ -256,8 +256,8 @@ final readonly class CategoryCatsRenderer
             $newImageIds = [];
 
             foreach ($this->imageRepo->findByIds(array_values(array_filter($imageIds, is_string(...)))) as $imageRowId => $row) {
-                if ($row['level'] <= $currentUser->level) {
-                    $infosOfImage[$imageRowId] = $row;
+                if ($row->level <= $currentUser->level) {
+                    $infosOfImage[$imageRowId] = $row->toArray();
                 } else {
                     // problem: we must not display the thumbnail of a photo which has a
                     // higher privacy level than user privacy level
@@ -269,7 +269,17 @@ final readonly class CategoryCatsRenderer
 
                     foreach ($categories as &$category) {
                         $categoryRepresentativePictureId = $category['representative_picture_id'] ?? null;
-                        if ($imageRowId === $categoryRepresentativePictureId) {
+                        // Docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: found live
+                        // while retyping ImageRepository::findByIds() -- PHP
+                        // canonicalises a numeric string array key ('5') back to an
+                        // int key (5), so $imageRowId (this foreach's key) is always
+                        // an int, while $categoryRepresentativePictureId is always the
+                        // numeric *string* this file normalizes representative_picture_id
+                        // to (~line 212 above). The bare `===` between them was always
+                        // false, so a category whose representative photo became too
+                        // privacy-restricted for the current viewer never got a
+                        // substitute picked -- silently missing, not swapped.
+                        if ((string) $imageRowId === $categoryRepresentativePictureId) {
                             // searching a random representant among elements in sub-categories
                             $newImageIdRaw = $categoryService->getRandomImageInCategory($category);
                             $newImageId = $newImageIdRaw !== null ? (string) $newImageIdRaw : null;
@@ -295,7 +305,7 @@ final readonly class CategoryCatsRenderer
 
             if (count($newImageIds) > 0) {
                 foreach ($this->imageRepo->findByIds($newImageIds) as $newImageRowId => $row) {
-                    $infosOfImage[$newImageRowId] = $row;
+                    $infosOfImage[$newImageRowId] = $row->toArray();
                 }
             }
 

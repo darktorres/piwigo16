@@ -10,6 +10,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\Projection\Image;
 
 final class ImageRepositoryTest extends IntegrationTestCase
 {
@@ -120,5 +121,65 @@ final class ImageRepositoryTest extends IntegrationTestCase
             ->fetchOne();
 
         self::assertNull($coi);
+    }
+
+    public function test_find_by_id_returns_a_typed_image_projection(): void
+    {
+        $image = $this->repo->findById(1);
+
+        self::assertInstanceOf(Image::class, $image);
+        self::assertSame(1, $image->id);
+        self::assertSame('fixture-photo-1.jpg', $image->file);
+        self::assertSame(200, $image->width);
+        self::assertSame(150, $image->height);
+    }
+
+    public function test_find_by_id_returns_null_for_a_nonexistent_image(): void
+    {
+        self::assertNull($this->repo->findById(999999));
+    }
+
+    public function test_find_by_path_returns_the_matching_image(): void
+    {
+        $path = $this->conn->createQueryBuilder()
+            ->select('path')
+            ->from(Tables::images())
+            ->where('id = 1')
+            ->executeQuery()
+            ->fetchOne();
+        self::assertIsString($path);
+
+        $image = $this->repo->findByPath($path);
+
+        self::assertInstanceOf(Image::class, $image);
+        self::assertSame(1, $image->id);
+        self::assertSame($path, $image->path);
+    }
+
+    public function test_find_by_path_returns_null_for_an_unknown_path(): void
+    {
+        self::assertNull($this->repo->findByPath('upload/does/not/exist.jpg'));
+    }
+
+    public function test_find_by_ids_returns_typed_images_keyed_by_id(): void
+    {
+        $images = $this->repo->findByIds(['1', '2']);
+
+        self::assertCount(2, $images);
+
+        $ids = [];
+        foreach ($images as $key => $image) {
+            // PHP canonicalises a numeric-string array key ('1') back to an
+            // int key (1) -- the key is always int, never the original string.
+            self::assertSame($key, $image->id);
+            $ids[] = $image->id;
+        }
+        sort($ids);
+        self::assertSame([1, 2], $ids);
+    }
+
+    public function test_find_by_ids_returns_empty_array_for_empty_input(): void
+    {
+        self::assertSame([], $this->repo->findByIds([]));
     }
 }

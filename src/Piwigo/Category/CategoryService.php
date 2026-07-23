@@ -1346,10 +1346,14 @@ final readonly class CategoryService
         if ($row === null) {
             throw new \Exception("getCategoryRepresentantProperties(): image {$imageId} does not exist (stale representative_picture_id?)");
         }
+        // DerivativeImage::thumb_url()/url() take array<string, mixed>|SrcImage --
+        // a legacy signature shared with ~17 other call sites across the
+        // codebase, not itself in scope for this domain's typed-row migration.
+        $rowArray = $row->toArray();
         if ($size === null) {
-            $src = DerivativeImage::thumb_url($row);
+            $src = DerivativeImage::thumb_url($rowArray);
         } else {
-            $src = DerivativeImage::url($size, $row);
+            $src = DerivativeImage::url($size, $rowArray);
         }
         $url = $urlService->getRootUrl() . 'admin.php?page=photo-' . $imageId;
 

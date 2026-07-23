@@ -7,6 +7,7 @@ namespace Piwigo\Image;
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
+use Piwigo\Image\Projection\Image;
 
 /**
  * Persistence layer for the image domain's own data-touching function from
@@ -384,10 +385,7 @@ UPDATE ' . Tables::images() . '
 ;');
     }
 
-    /**
-     * @return array<string, mixed>|null
-     */
-    public function findById(int|string $imageId): ?array
+    public function findById(int|string $imageId): ?Image
     {
         $rows = $this->conn->executeQuery('
 SELECT *
@@ -395,16 +393,14 @@ SELECT *
   WHERE id = ' . $imageId . '
 ;')->fetchAllAssociative();
 
-        return $rows[0] ?? null;
+        return isset($rows[0]) ? Image::fromRow($rows[0]) : null;
     }
 
     /**
      * ImageDerivativeController (i.php)'s own source-file-to-image-row
      * lookup.
-     *
-     * @return array<string, mixed>|null
      */
-    public function findByPath(string $path): ?array
+    public function findByPath(string $path): ?Image
     {
         $row = $this->conn->createQueryBuilder()
             ->select('*')
@@ -414,7 +410,7 @@ SELECT *
             ->executeQuery()
             ->fetchAssociative();
 
-        return $row === false ? null : $row;
+        return $row === false ? null : Image::fromRow($row);
     }
 
     public function updateRotation(int $imageId, int $rotationCode): void
@@ -430,7 +426,9 @@ SELECT *
 
     /**
      * @param  list<int|string>  $ids
-     * @return array<string, array<string, mixed>> keyed by image id
+     * @return array<int, Image> keyed by image id -- PHP canonicalises a
+     *   numeric-string array key back to an int key, so this is always
+     *   int-keyed at runtime regardless of `$ids`' own element types.
      */
     public function findByIds(array $ids): array
     {
@@ -451,8 +449,8 @@ SELECT *
         $byId = [];
         foreach ($rows as $row) {
             $id = $row['id'] ?? null;
-            if (is_scalar($id)) {
-                $byId[(string) $id] = $row;
+            if (is_numeric($id)) {
+                $byId[(int) $id] = Image::fromRow($row);
             }
         }
 

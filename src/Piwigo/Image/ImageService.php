@@ -609,6 +609,15 @@ final readonly class ImageService
     /**
      * Get infos related to an image.
      *
+     * Returns a plain array, not the repository's typed Image projection --
+     * every real caller (PictureModifyPageRenderer, PhotoSubController,
+     * photos_add_direct) stores this straight into a growing Smarty
+     * template-variable bag (`$page['image']`), including reassigning
+     * individual keys on it after the fact, which a readonly projection
+     * can't support. The narrowing win still applies: {@see
+     * \Piwigo\Image\Projection\Image::fromRow()} does it once, this just
+     * unboxes back to array at this public boundary.
+     *
      * @since 2.9
      * @param int|string $imageId several callers (Piwigo\Admin\
      *   PictureModifyPageRenderer, Piwigo\Controller\Admin\PhotoSubController,
@@ -631,6 +640,6 @@ final readonly class ImageService
             return null;
         }
 
-        return $image;
+        return $image->toArray();
     }
 }

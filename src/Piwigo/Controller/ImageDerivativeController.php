@@ -257,20 +257,15 @@ final class ImageDerivativeController implements ControllerInterface
                     $this->ierror('Db file path not found', 404);
                 }
 
-                $image_id = $row['id'];
-                $image_id = is_numeric($image_id) ? (int) $image_id : null;
-                if ($image_id === null) {
-                    $this->ierror('Invalid image id in database', 500);
-                }
+                $image_id = $row->id;
                 $this->checkDerivativePermission($conn, $image_id);
 
-                if (isset($row['width'])) {
-                    $this->originalSize = [$row['width'], $row['height']];
+                if ($row->width !== null) {
+                    $this->originalSize = [$row->width, $row->height];
                 }
-                $rowCoi = $row['coi'];
-                $this->coi = is_string($rowCoi) ? $rowCoi : null;
+                $this->coi = $row->coi;
 
-                if (! isset($row['rotation'])) {
+                if ($row->rotation === null) {
                     // get_rotation_angle() returns null for "no EXIF
                     // orientation / non-JPEG source" -- get_rotation_code_
                     // from_angle()'s own docblock confirms that means the
@@ -279,16 +274,7 @@ final class ImageDerivativeController implements ControllerInterface
 
                     $imageRepo->updateRotation($image_id, PwgImage::get_rotation_code_from_angle($this->rotationAngle));
                 } else {
-                    // get_rotation_angle_from_code() accepts int|string; the
-                    // `rotation` column is a native DBAL int once retargeted
-                    // off the legacy driver's own always-string fetch mode --
-                    // still guarded explicitly rather than trusted, since
-                    // isset() alone doesn't prove the numeric shape.
-                    $rotation = $row['rotation'];
-                    if (! is_numeric($rotation)) {
-                        $this->ierror('Invalid rotation value in database', 500);
-                    }
-                    $this->rotationAngle = PwgImage::get_rotation_angle_from_code((int) $rotation);
+                    $this->rotationAngle = PwgImage::get_rotation_angle_from_code($row->rotation);
                 }
             } catch (ResponseReadyException $e) {
                 // Part III: a real, security-critical regression this catch

@@ -311,7 +311,15 @@ SELECT
             [$year, $month, $day] = $date_parts;
 
             // upload directory hierarchy
-            $conf_upload_dir = \Piwigo\Config\Config::uploadDir();
+            //
+            // Real bug, found via a fixture-regeneration discrepancy:
+            // Config::uploadDir()'s own default already ends in '/'
+            // ('upload/'), so appending another literal '/' before %s below
+            // produced a double slash (e.g. 'upload//2026/08/01/...') in
+            // every stored images.path -- rtrim() here matches the same
+            // defensive normalization this class's own addUploadedFile()
+            // already applies a few lines up ($upload_root).
+            $conf_upload_dir = rtrim(\Piwigo\Config\Config::uploadDir(), '/');
             $upload_dir = sprintf(
                 \Piwigo\Core\CurrentPaths::get()->root . $conf_upload_dir . '/%s/%s/%s',
                 $year,

@@ -64,7 +64,13 @@ final class MetadataRepositoryTest extends IntegrationTestCase
         // Asserts the stable date-based upload path, not the filename's
         // opaque content-hash suffix (regenerated whenever the fixture SQL
         // itself is regenerated, unlike the rest of this row's data).
-        self::assertStringContainsString('/upload/2026/08/01/', $rows[0]['path'] . $rows[1]['path']);
+        // images.path is stored root-relative with no leading slash (see
+        // UploadService::addUploadedFile()'s own preg_replace() against
+        // Paths::$root) -- this assertion's leading '/' never matched
+        // anything, pre-existing and unrelated to the sibling double-slash
+        // bug (Config::uploadDir() already ending in '/') fixed alongside
+        // this same investigation.
+        self::assertStringContainsString('upload/2026/08/01/', $rows[0]['path'] . $rows[1]['path']);
     }
 
     public function test_find_images_by_ids_returns_empty_for_no_ids(): void

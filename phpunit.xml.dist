@@ -27,7 +27,7 @@
 
     <source ignoreIndirectDeprecations="true">
         <include>
-            <directory>include</directory>
+            <directory>src/Piwigo</directory>
         </include>
     </source>
 </phpunit>

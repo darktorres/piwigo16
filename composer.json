@@ -100,7 +100,7 @@
       "@analyse:phpstan"
     ],
     "test": "@php vendor/bin/pest --testsuite Unit,Arch",
-    "test:coverage": "@php vendor/bin/pest --testsuite Unit,Arch --coverage --min=0.1",
+    "test:coverage": "@php vendor/bin/pest --testsuite Unit,Arch --coverage --min=5",
     "test:integration": "@php vendor/bin/pest --testsuite Integration",
     "test:contract": "@php vendor/bin/pest --testsuite Contract",
     "test:browser": [

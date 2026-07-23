@@ -30,7 +30,7 @@ class CssLoader
         $this->clear();
     }
 
-    public function clear(): void
+    final public function clear(): void
     {
         $this->registered_css = [];
         $this->counter = 0;

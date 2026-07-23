@@ -809,5 +809,45 @@
                 <file name="src/Piwigo/Ws/PwgServer.php"/>
             </errorLevel>
         </InvalidArgument>
+        <!-- Combinable::$path is deliberately left unset by a null $path
+             constructor argument (see the class's own docblock:
+             "null leaves $path unset — callers ... rely on a well-known
+             path being filled in afterwards", e.g.
+             ScriptLoader::add()'s UI-core-dependency recursion). Real
+             two-phase construct-then-fill contract, not an oversight —
+             converting to ?string would ripple a null-guard into every
+             $this->path read site for a state that's guaranteed non-null
+             by contract before real use. Applies to Combinable and both
+             its subclasses (Css/Script share the same property). -->
+        <PropertyNotSetInConstructor>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Template/Combinable.php"/>
+                <file name="src/Piwigo/Template/Css.php"/>
+                <file name="src/Piwigo/Template/Script.php"/>
+                <!-- DisplayBlock::$_position/$template/$raw_content: same
+                     real, deliberate two-phase construct-then-fill contract
+                     as Combinable::$path above — BlockManager constructs
+                     the object, then callers (set_position(),
+                     MenubarRenderer's per-block $block->template writes)
+                     fill these in before real use. -->
+                <file name="src/Piwigo/Menu/DisplayBlock.php"/>
+                <!-- CalendarBase::$date_field/$inner_sql/$calendar_levels
+                     (inherited by CalendarMonthly/CalendarWeekly): per the
+                     class's own docblock, set by CalendarRenderer before
+                     initialize() is called — an abstract base whose real
+                     contract guarantees the subclass is initialized by its
+                     one real caller before any other method runs. -->
+                <file name="src/Piwigo/Calendar/CalendarBase.php"/>
+                <file name="src/Piwigo/Calendar/CalendarMonthly.php"/>
+                <file name="src/Piwigo/Calendar/CalendarWeekly.php"/>
+                <!-- InstallWizard::$fsLanguages/$template: filled in by the
+                     public boot() method, called exactly once by
+                     public/install.php right after construction — same
+                     real two-phase construct-then-boot() contract as
+                     other install/upgrade orchestration classes in this
+                     codebase. -->
+                <file name="src/Piwigo/Admin/Install/InstallWizard.php"/>
+            </errorLevel>
+        </PropertyNotSetInConstructor>
     </issueHandlers>
 </psalm>

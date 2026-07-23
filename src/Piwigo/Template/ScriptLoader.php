@@ -86,7 +86,7 @@ class ScriptLoader
         return self::$urlService;
     }
 
-    public function clear(): void
+    final public function clear(): void
     {
         $this->registered_scripts = [];
         $this->inline_scripts = [];

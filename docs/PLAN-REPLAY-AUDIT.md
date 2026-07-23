@@ -70,9 +70,14 @@ documented — doc is stale, not necessarily a real gap).
      `user_cache` itself was deleted in P23's own cache-table rationalization — a
      legitimate reason those two specifically don't need doing, but it doesn't explain
      the other 41.)
-   - The documented divergences elsewhere in P23 (`include/`/`admin/` not fully deleted,
-     `$GLOBALS`/static-bridge retirement deferred) are deliberate and well-reasoned per
-     the doc's own 2026-07-17 notes — not gaps, and not what this finding is about.
+   - `include/` and `admin/` are now fully deleted (previously a documented, deliberate
+     divergence per the doc's own 2026-07-17 notes — `common.inc.php`'s body moved into
+     a real `RequestBootstrap::bootEntryPoint()` method, called directly by every entry
+     point; `admin/themes/`'s live assets relocated to `themes/admin/`; both directories
+     removed; `tests/Arch/LegacyDirectoryTest.php` updated to assert they're gone). The
+     `$GLOBALS`/static-bridge retirement remains deliberately deferred per that same
+     2026-07-17 note (its "zero callers remain" premise still doesn't hold in this fork)
+     — a real, standing, intentional divergence, not resolved by the directory deletion.
 4. **P26 (REST resource layer), P29 (Latte templates), and P30 (Tailwind/CSS) have zero
    foundation, confirmed at the dependency level, not just missing output.**
    `composer.json` has no `latte/latte` and no OpenAPI tooling package
@@ -247,7 +252,7 @@ documented — doc is stale, not necessarily a real gap).
 | P20 — Domain tier 4 | diverged | Same DTO gap; the `SectionInitializer`/`GalleryController` absorption gap from a 2026-07-13 note is confirmed remediated. |
 | P21 — Admin controller migration | done | Admin god-class decomposition confirmed: no monolithic controller exists by any of the reference's names; split into sub-controllers and PageRenderers, largest 276 lines. |
 | P22 — Frontend controller migration | done | 60 files (21 frontend + 39 admin sub-controllers); sampled 5 for real handler logic (38–660 lines each), not placeholders. |
-| P23 — Legacy deletion & cleanup | diverged by design + 3 unflagged gaps | Deliberate divergence (`include/`/`admin/` partially retained, `$GLOBALS` bridges kept) is well-documented and reasoned. But see findings #1–#3 for 3 real, previously-unflagged gate failures in this phase's own stated text. |
+| P23 — Legacy deletion & cleanup | partial — `include/`/`admin/` deletion now done; 3 unflagged gaps + 1 standing deliberate divergence remain | `include/` and `admin/` are fully deleted (`common.inc.php` inlined into `RequestBootstrap::bootEntryPoint()`, `admin/themes/` relocated to `themes/admin/`). `$GLOBALS`/static-bridge retirement remains deliberately deferred per the doc's own 2026-07-17 note — a real, intentional divergence, not a gap. See findings #1–#3 for 3 real, previously-unflagged gate failures in this phase's own stated text (typed DTOs, per-namespace tests, Listener/Subscriber classes, 43 column migrations) that are still open. |
 | P24 — Vite + TypeScript conversion | missing | See finding #5. |
 | P25 — Inline JS extraction | missing | See finding #5; depends on P24. |
 | P26 — REST resource layer + OpenAPI | missing | See finding #4. |

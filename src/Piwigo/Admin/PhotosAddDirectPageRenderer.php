@@ -165,7 +165,7 @@ SELECT COUNT(*)
 
             $formats_id_param = $_GET['formats'];
             $formats_original_info = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)))
-                ->getImageInfos(is_int($formats_id_param) || is_string($formats_id_param) ? $formats_id_param : '', $htmlRenderer);
+                ->getImageInfos(is_string($formats_id_param) ? $formats_id_param : '', $htmlRenderer);
             if ((bool) $formats_original_info) {
                 $src_image = new SrcImage($formats_original_info);
 

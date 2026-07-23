@@ -524,6 +524,23 @@
                 <file name="src/Piwigo/Rate/RateService.php"/>
                 <file name="src/Piwigo/Session/SessionService.php"/>
                 <file name="src/Piwigo/Controller/Admin/BatchManagerSubController.php"/>
+                <!-- HTTP_HOST/SCRIPT_NAME guards — same "$_SERVER stub is
+                     more optimistic than reality" class. -->
+                <file name="src/Piwigo/Admin/Install/InstallWizard.php"/>
+                <!-- $commandClasses is `require`d from config/commands.php —
+                     Psalm statically resolves the include and infers the
+                     exact literal array shape, so its own is_array()/
+                     is_string() re-validation reads as dead. The guard is
+                     real defense against a runtime edit to that config file
+                     (a plain array return, not type-checked at write time). -->
+                <file name="src/Piwigo/Bootstrap/CliBootstrap.php"/>
+                <!-- Same require()-of-a-literal-array-returning-config-file
+                     over-precision as CliBootstrap.php above, applied to
+                     config/migrations.php (container.php) and
+                     config/container.php's own definitions array (the two
+                     container tests). -->
+                <file name="config/container.php"/>
+                <file name="tests/Unit/Core/ContainerDefinitionsTest.php"/>
             </errorLevel>
         </TypeDoesNotContainType>
         <!-- ProfileFormHandler.php: $new_pwd_present_raw's `!== null` check
@@ -607,6 +624,8 @@
                      shape-narrowing-loss disagreement as this batch's other
                      guard-then-bare-access sites. -->
                 <file name="src/Piwigo/Controller/Admin/BatchManagerSubController.php"/>
+                <file name="src/Piwigo/Admin/Install/InstallWizard.php"/>
+                <file name="tests/Integration/ContainerSmokeTest.php"/>
             </errorLevel>
         </RedundantCondition>
         <!-- Frozen, already-applied DbPatch script (see the "don't hand-edit

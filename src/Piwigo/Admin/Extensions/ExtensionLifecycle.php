@@ -180,7 +180,7 @@ final readonly class ExtensionLifecycle
                 if ($dbRow === null) {
                     $errors = $this->performPluginAction('install', $id, $fsEntry, $options);
                     $dbRow = $this->repo->find(ExtensionType::Plugin, $id);
-                } elseif (($dbRow['state'] ?? null) === 'active') {
+                } elseif ($dbRow['state'] === 'active') {
                     break;
                 }
 

@@ -291,9 +291,7 @@ final readonly class PemCatalog
 
         $handle = @fopen($archive, 'wb');
         if ($handle !== false && HttpClientService::fetchToFile($handle, $url, $getData)) {
-            if (is_resource($handle)) {
-                fclose($handle);
-            }
+            fclose($handle);
 
             $status = 'archive_error';
             $list = $this->zipExtractor->listFilenames($archive);

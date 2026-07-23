@@ -141,7 +141,7 @@ class Tabsheet
      */
     public function get_selected(): ?array
     {
-        if (! in_array($this->selected, [null, ''], true)) {
+        if ($this->selected !== '') {
             return $this->sheets[$this->selected];
         } else {
             return null;

@@ -127,7 +127,7 @@ final class UrlService implements UrlServiceInterface
                         $server_port_raw = $_SERVER['SERVER_PORT'] ?? null;
                         $server_port = is_numeric($server_port_raw) ? (int) $server_port_raw : null;
                         if ((! $is_https && $server_port !== 80) || ($is_https && $server_port !== 443)) {
-                            $url_port = ':' . ((is_string($server_port_raw) || is_int($server_port_raw)) ? $server_port_raw : '');
+                            $url_port = ':' . (is_string($server_port_raw) ? $server_port_raw : '');
                         }
                     } else {
                         // we have a custom port

@@ -197,7 +197,7 @@ class ScriptLoader
             if ($script->load_mode > 0) {
                 break;
             }
-            if (! in_array($script->path, [null, ''], true)) {
+            if ($script->path !== '') {
                 $this->head_done_scripts[$id] = $script;
             } else {
                 trigger_error("Script {$id} has an undefined path", E_USER_WARNING);

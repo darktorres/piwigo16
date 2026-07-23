@@ -541,6 +541,12 @@
                      container tests). -->
                 <file name="config/container.php"/>
                 <file name="tests/Unit/Core/ContainerDefinitionsTest.php"/>
+                <file name="src/Piwigo/Controller/Admin/IntroSubController.php"/>
+                <!-- Same require()-of-a-literal-array-returning-config-file
+                     over-precision as CliBootstrap.php/container.php above,
+                     applied to config/feature-flags.php. -->
+                <file name="src/Piwigo/Core/FeatureFlag.php"/>
+                <file name="src/Piwigo/Section/SectionInitializer.php"/>
             </errorLevel>
         </TypeDoesNotContainType>
         <!-- ProfileFormHandler.php: $new_pwd_present_raw's `!== null` check
@@ -626,6 +632,28 @@
                 <file name="src/Piwigo/Controller/Admin/BatchManagerSubController.php"/>
                 <file name="src/Piwigo/Admin/Install/InstallWizard.php"/>
                 <file name="tests/Integration/ContainerSmokeTest.php"/>
+                <!-- $get_part's third elseif branch is provably true given
+                     the two preceding branches already excluded 'e'/'r' —
+                     real, necessary if/elseif structure, not dead logic. -->
+                <file name="src/Piwigo/Controller/ActionController.php"/>
+                <!-- $current_nb_files = $data_storage[$type]['total']
+                     ['nb_files'] ?? 0 — same $apps[$appName]['counter']
+                     disagreement class as PiwigoInfosSender.php above
+                     (dynamic array built up across loop iterations). -->
+                <file name="src/Piwigo/Controller/Admin/IntroSubController.php"/>
+                <!-- basename($filename, '.php') can genuinely return '' for
+                     unusual inputs (e.g. a filename that is exactly
+                     '.php') — real defensive check, not dead code. -->
+                <file name="src/Piwigo/Core/PageFilterHelper.php"/>
+                <!-- `for ($stop = false; ! $stop && ...)` — $stop is
+                     mutated inside the loop body to eventually exit; Psalm
+                     evaluates the initial literal `false` at the loop
+                     header and misses the later reassignment. -->
+                <file name="src/Piwigo/Search/QMultiToken.php"/>
+                <!-- Same PATH_INFO PHPStan-vs-Psalm disagreement as
+                     ImageDerivativeController.php above (see the method's
+                     own inline comment). -->
+                <file name="src/Piwigo/Section/SectionInitializer.php"/>
             </errorLevel>
         </RedundantCondition>
         <!-- Frozen, already-applied DbPatch script (see the "don't hand-edit

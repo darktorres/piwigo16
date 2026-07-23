@@ -21,6 +21,7 @@ use Piwigo\Controller\QSearchController;
 use Piwigo\Controller\RegisterController;
 use Piwigo\Controller\SearchController;
 use Piwigo\Controller\TagsController;
+use Piwigo\Controller\TestErrorsController;
 use Piwigo\Controller\VitalsController;
 use Piwigo\Controller\WsController;
 use Symfony\Component\Routing\Route;
@@ -148,6 +149,13 @@ $routes->add('derivative_image', new Route('/i.php{tail}', [
     'tail' => '',
 ], [
     'tail' => '.*',
+]));
+
+// Test-mode-only error drain (docs/PLAN-REPLAY-AUDIT.md finding #7) --
+// TestErrorsController itself 404s outside test mode; this route is safe
+// to register unconditionally.
+$routes->add('test_errors', new Route('/__test/errors', [
+    '_controller' => TestErrorsController::class,
 ]));
 
 return $routes;

@@ -36,6 +36,11 @@
     # via config/routes.php), which needs the full bootstrap unlike
     # health.php/ready.php above.
     RewriteRule ^analytics/vitals$ analytics_vitals.php [L]
+
+    # Test-mode-only error drain (docs/PLAN-REPLAY-AUDIT.md finding #7) --
+    # Piwigo\Controller\TestErrorsController itself 404s outside test mode,
+    # so no extra guard is needed here.
+    RewriteRule ^__test/errors$ __test_errors.php [L]
 </IfModule>
 
 # SEC-05: Brotli compression (15-20% better than gzip for text assets).

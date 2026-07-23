@@ -131,6 +131,7 @@ test('public/ contains exactly the relocated entry points, robots.txt, and the s
     // root" section).
     expect(listDirectoryEntries(dirname(__DIR__, 2) . '/public'))->toBe([
         '.htaccess',
+        '__test_errors.php',
         '_data',
         'about.php',
         'action.php',

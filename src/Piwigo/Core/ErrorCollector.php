@@ -85,6 +85,25 @@ final class ErrorCollector
         return self::$collected;
     }
 
+    /**
+     * Returns the collected buffer, then clears it -- the read side of the
+     * `GET /__test/errors` test-mode route (see Piwigo\Controller\
+     * TestErrorsController), which Integration tests poll via
+     * IntegrationTestCase::assertNoPhpErrors() after exercising a real HTTP
+     * request. Distinct from collected() (a non-destructive peek with no
+     * real caller yet) so a test can drain exactly the errors its own
+     * request produced without earlier requests' errors leaking forward.
+     *
+     * @return list<string>
+     */
+    public static function drain(): array
+    {
+        $collected = self::$collected;
+        self::$collected = [];
+
+        return $collected;
+    }
+
     public static function reset(): void
     {
         self::$active = false;
@@ -106,12 +125,32 @@ final class ErrorCollector
 
         $label = self::label($errno);
         $short = basename($errfile) . ':' . $errline;
-        self::$collected[] = "[{$label}] {$errstr} in {$short}";
+        $entry = "[{$label}] {$errstr} in {$short}";
+        self::$collected[] = $entry;
 
         // Keep the Apache error log as the authoritative server-side record.
         error_log("PHP {$label}: {$errstr} in {$errfile} on line {$errline}");
+        self::writeTestErrorsLog($entry);
 
         return true; // Suppress PHP's built-in inline output.
+    }
+
+    /**
+     * Belt-and-suspenders record of every collected error, independent of
+     * the per-request `GET /__test/errors` drain -- covers the case where a
+     * fatal error/exit prevents the response (and its X-PHP-Error-N
+     * headers) from ever reaching the test client. Test-mode only: this is
+     * not a general-purpose log, `_data/logs/piwigo.log` (Monolog) already
+     * is one.
+     */
+    private static function writeTestErrorsLog(string $entry): void
+    {
+        if (! Env::testModeIsActive()) {
+            return;
+        }
+
+        $path = CurrentPaths::get()->logs . 'test_errors.log';
+        file_put_contents($path, $entry . "\n", FILE_APPEND);
     }
 
     /**
@@ -124,7 +163,9 @@ final class ErrorCollector
         if ($last !== null && (bool) ($last['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR))) {
             $label = self::label($last['type']);
             $short = basename($last['file']) . ':' . $last['line'];
-            self::$collected[] = "[{$label}] {$last['message']} in {$short}";
+            $entry = "[{$label}] {$last['message']} in {$short}";
+            self::$collected[] = $entry;
+            self::writeTestErrorsLog($entry);
         }
 
         if (self::$collected === [] || headers_sent()) {

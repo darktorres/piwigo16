@@ -66,9 +66,9 @@ final class WsInitializer
         $responseFormat = null;
 
         if (isset($_GET['format'])) {
-            // cast defensively: PwgServer::setEncoder() requires a string, but
-            // $_GET['format'] could be an array for a malformed ?format[]=x request
-            $responseFormat = is_scalar($_GET['format']) ? (string) $_GET['format'] : '';
+            // $_GET['format'] could be an array for a malformed ?format[]=x
+            // request -- PwgServer::setEncoder() requires a string.
+            $responseFormat = is_string($_GET['format']) ? $_GET['format'] : '';
         }
 
         if (! isset($responseFormat)) {

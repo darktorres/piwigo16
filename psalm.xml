@@ -809,6 +809,18 @@
                 <file name="src/Piwigo/Ws/PwgServer.php"/>
             </errorLevel>
         </InvalidArgument>
+        <!-- ProfileFormHandler.php: (string) $nb_image_page / (string)
+             $recent_period casts inside preg_match() calls — already
+             verified in the argument-safety batch that removing these
+             casts breaks PHPStan's own preg_match() argument.type check
+             ("expects string, bool|float|int|string given"); the two tools
+             disagree in opposite directions on whether $_POST values here
+             are string-only. -->
+        <RedundantCast>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Controller/ProfileFormHandler.php"/>
+            </errorLevel>
+        </RedundantCast>
         <!-- Combinable::$path is deliberately left unset by a null $path
              constructor argument (see the class's own docblock:
              "null leaves $path unset — callers ... rely on a well-known

@@ -106,7 +106,7 @@ final class IdentificationController implements ControllerInterface
                 $redirect_raw = $_POST['redirect'] ?? null;
                 $redirect_to = is_string($redirect_raw) ? urldecode($redirect_raw) : '';
                 $remember_me_raw = $_POST['remember_me'] ?? null;
-                $remember_me = isset($_POST['remember_me']) && is_scalar($remember_me_raw) && (string) $remember_me_raw === '1';
+                $remember_me = isset($_POST['remember_me']) && is_string($remember_me_raw) && $remember_me_raw === '1';
 
                 if (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())->tryLogUser($username, $password, $remember_me)) {
                     // security (level 2): force redirect within Piwigo. We

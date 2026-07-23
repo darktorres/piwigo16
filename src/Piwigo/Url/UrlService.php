@@ -97,8 +97,8 @@ final class UrlService implements UrlServiceInterface
         if ($withScheme) {
             $is_https = false;
             $https_value = $_SERVER['HTTPS'] ?? null;
-            if (is_scalar($https_value) &&
-              ((strtolower((string) $https_value) === 'on') or ((string) $https_value === '1'))) {
+            if (is_string($https_value) &&
+              ((strtolower($https_value) === 'on') or ($https_value === '1'))) {
                 $is_https = true;
                 $url .= 'https://';
             } else {

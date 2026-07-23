@@ -561,8 +561,8 @@ SELECT id, path, representative_ext, level
                             }
                             if (\Piwigo\Config\Config::representativeCacheOnLevel()) {
                                 $category_id = $category['id'];
-                                if (is_numeric($category_id)) {
-                                    $user_representative_updates_for[(int) $category_id] = $image_id;
+                                if (is_int($category_id)) {
+                                    $user_representative_updates_for[$category_id] = $image_id;
                                 }
                             }
 

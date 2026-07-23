@@ -528,7 +528,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             $forbidden_methods = \Piwigo\Config\Config::apiKeyForbiddenMethods();
 
             $requested_method = $_REQUEST['method'] ?? null;
-            $requested_method = is_scalar($requested_method) ? (string) $requested_method : '';
+            $requested_method = is_string($requested_method) ? $requested_method : '';
             if (in_array($requested_method, array_map(strval(...), array_filter($forbidden_methods, is_scalar(...))), true)) {
                 return false;
             }

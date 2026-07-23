@@ -149,12 +149,12 @@ final class SearchController implements ControllerInterface
                 ->validate('cat_id', $_GET, false, ValidationPattern::ID);
 
             $cat_id_value = $_GET['cat_id'];
-            if (! is_scalar($cat_id_value)) {
+            if (! is_string($cat_id_value)) {
                 new HtmlService()
                     ->fatalError('[Hacking attempt] the input parameter "cat_id" is not valid');
             }
 
-            $cat_id = (string) $cat_id_value;
+            $cat_id = $cat_id_value;
 
             // P23 batch 3: user_cache_categories's row-existence check below
             // used to mean "category exists AND isn't forbidden/empty for
@@ -197,12 +197,12 @@ SELECT
                     ->validate('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
 
                 $tag_id_value = $_GET['tag_id'];
-                if (! is_scalar($tag_id_value)) {
+                if (! is_string($tag_id_value)) {
                     new HtmlService()
                         ->fatalError('[Hacking attempt] the input parameter "tag_id" is not valid');
                 }
 
-                $tag_ids = explode(',', (string) $tag_id_value);
+                $tag_ids = explode(',', $tag_id_value);
             }
 
             if (count($tag_ids) > 0 or in_array('tags', $fields, true)) {

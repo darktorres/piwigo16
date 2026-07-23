@@ -1789,7 +1789,7 @@ SELECT id, name, permalink
 
         // change the name of the file in the buffer to avoid any unexpected
         // extension. Function add_uploaded_file will eventually clean the mess.
-        $fileName = md5(is_scalar($fileName) ? (string) $fileName : '');
+        $fileName = md5(is_string($fileName) ? $fileName : '');
 
         $filePath = $upload_dir . DIRECTORY_SEPARATOR . $fileName;
 
@@ -2747,7 +2747,7 @@ SELECT *
             // plan's other occurrences.
             $cleaned_tag_list = [];
             foreach ($_REQUEST['tag_list'] as $tag_candidate) {
-                $cleaned_tag_list[] = strip_tags(stripslashes(is_scalar($tag_candidate) ? (string) $tag_candidate : ''));
+                $cleaned_tag_list[] = strip_tags(stripslashes(is_string($tag_candidate) ? $tag_candidate : ''));
             }
 
             $tag_list = $tagService->getTagIds($cleaned_tag_list);

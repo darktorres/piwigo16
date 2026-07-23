@@ -48,7 +48,7 @@ final class PictureCoiPageRenderer
 
         if (isset($_POST['submit'])) {
             $coi_l = $_POST['l'] ?? null;
-            $coi_l_str = is_scalar($coi_l) ? (string) $coi_l : '';
+            $coi_l_str = is_string($coi_l) ? $coi_l : '';
 
             if ($coi_l_str === '') {
                 $coi = null;

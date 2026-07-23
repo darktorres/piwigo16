@@ -117,7 +117,7 @@ final class ThemesNewPageRenderer
 
                 default:
                     $installstatus_raw = $_GET['installstatus'];
-                    $installstatus_str = is_scalar($installstatus_raw) ? (string) $installstatus_raw : '';
+                    $installstatus_str = is_string($installstatus_raw) ? $installstatus_raw : '';
                     \Piwigo\Core\PageState::current()->addError(
                         Lang::t(
                             'An error occured during extraction (%s).',

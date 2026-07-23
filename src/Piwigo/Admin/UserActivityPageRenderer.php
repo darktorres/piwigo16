@@ -167,11 +167,10 @@ SELECT COUNT(*)
         foreach ($additional_filters as $filter_key => $filter_table) {
             if (isset($_GET[$filter_key])) {
                 $filter_value = $_GET[$filter_key];
-                if (! is_scalar($filter_value)) {
+                if (! is_string($filter_value)) {
                     new HtmlService()
                         ->fatalError('[Hacking attempt] the input parameter "' . $filter_key . '" is not valid');
                 }
-                $filter_value = (string) $filter_value;
 
                 $query = '
 SELECT

@@ -117,7 +117,7 @@ SELECT COUNT(*)
             // non-matching value, but only narrows the type on its own end; $_POST
             // itself is still mixed to PHPStan, so re-derive the validated string here.
             $post_id = $_POST['id'] ?? null;
-            $post_id = is_scalar($post_id) ? (string) $post_id : '';
+            $post_id = is_string($post_id) ? $post_id : '';
 
             $query = '
 SELECT id

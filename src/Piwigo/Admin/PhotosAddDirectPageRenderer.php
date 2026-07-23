@@ -91,7 +91,7 @@ DELETE FROM ' . Tables::caddie() . '
 
             $inserts = [];
             $batch_param = $_GET['batch'];
-            foreach (array_unique(explode(',', is_scalar($batch_param) ? (string) $batch_param : '')) as $image_id) {
+            foreach (array_unique(explode(',', is_string($batch_param) ? $batch_param : '')) as $image_id) {
                 $inserts[] = [
                     'user_id' => $user_id,
                     'element_id' => $image_id,

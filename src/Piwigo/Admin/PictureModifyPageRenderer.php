@@ -192,7 +192,7 @@ SELECT id
             $to_sanitize_fields = ['name', 'author', 'comment'];
             foreach ($to_sanitize_fields as $field) {
                 $raw_field_value = $_POST[$field] ?? null;
-                $field_value = is_scalar($raw_field_value) ? (string) $raw_field_value : '';
+                $field_value = is_string($raw_field_value) ? $raw_field_value : '';
                 $data[$field] = (\Piwigo\Config\Config::allowHtmlDescriptions()) ? $field_value : strip_tags($field_value);
             }
 

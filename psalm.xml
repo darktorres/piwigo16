@@ -816,9 +816,21 @@
              ("expects string, bool|float|int|string given"); the two tools
              disagree in opposite directions on whether $_POST values here
              are string-only. -->
+        <!-- PiwigoInfosSender.php: $currentCounter's (int) cast — same
+             $apps[$appName]['counter'] PHPStan-vs-Psalm disagreement
+             documented in the RedundantCondition block above (dynamic array
+             built up across loop iterations). -->
         <RedundantCast>
             <errorLevel type="suppress">
                 <file name="src/Piwigo/Controller/ProfileFormHandler.php"/>
+                <file name="src/Piwigo/Admin/PiwigoInfosSender.php"/>
+                <!-- CatModifyPageRenderer.php: $category['is_virtual']'s
+                     (bool) casts — $category['is_virtual'] is assigned a
+                     real bool earlier in the method, but PHPStan doesn't
+                     carry that narrowing through the plain array<string,
+                     mixed> $category (removing the cast fails PHPStan's own
+                     booleanNot.exprNotBoolean/if.condNotBoolean checks). -->
+                <file name="src/Piwigo/Admin/CatModifyPageRenderer.php"/>
             </errorLevel>
         </RedundantCast>
         <!-- Combinable::$path is deliberately left unset by a null $path

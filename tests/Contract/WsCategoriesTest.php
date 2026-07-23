@@ -20,18 +20,21 @@ final class WsCategoriesTest extends ContractTestCase
 
         $result = $response['result'] ?? null;
         if (!is_array($result)) {
-            self::fail('WS response result is not an array: ' . json_encode($response));
+            $encoded = json_encode($response);
+            self::fail('WS response result is not an array: ' . ($encoded === false ? 'null' : $encoded));
         }
 
         $categories = $result['categories'] ?? null;
         if (!is_array($categories)) {
-            self::fail('WS response result.categories is not an array: ' . json_encode($response));
+            $encoded = json_encode($response);
+            self::fail('WS response result.categories is not an array: ' . ($encoded === false ? 'null' : $encoded));
         }
         self::assertNotEmpty($categories, 'Fixture must contain at least one album');
 
         $first = $categories[0] ?? null;
         if (!is_array($first)) {
-            self::fail('First category is not an array: ' . json_encode($response));
+            $encoded = json_encode($response);
+            self::fail('First category is not an array: ' . ($encoded === false ? 'null' : $encoded));
         }
         self::assertIsInt($first['id'] ?? null);
         self::assertIsString($first['name'] ?? null);
@@ -70,7 +73,8 @@ final class WsCategoriesTest extends ContractTestCase
 
         $result = $response['result'] ?? null;
         if (!is_array($result)) {
-            self::fail('WS response result is not an array: ' . json_encode($response));
+            $encoded = json_encode($response);
+            self::fail('WS response result is not an array: ' . ($encoded === false ? 'null' : $encoded));
         }
         self::assertArrayHasKey('paging', $result);
         self::assertArrayHasKey('images', $result);

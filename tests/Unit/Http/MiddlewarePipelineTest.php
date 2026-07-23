@@ -26,9 +26,9 @@ function tracingMiddleware(string $label, ArrayObject $trace): MiddlewareInterfa
         #[Override]
         public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
         {
-            $this->trace[] = "before:{$this->label}";
+            $this->trace->append("before:{$this->label}");
             $response = $handler->handle($request);
-            $this->trace[] = "after:{$this->label}";
+            $this->trace->append("after:{$this->label}");
 
             return $response;
         }
@@ -51,7 +51,7 @@ function terminalHandler(ArrayObject $trace): RequestHandlerInterface
         #[Override]
         public function handle(ServerRequestInterface $request): ResponseInterface
         {
-            $this->trace[] = 'fallback';
+            $this->trace->append('fallback');
 
             return new Response(200, [], 'terminal');
         }

@@ -122,6 +122,9 @@ test('encodeSlideshowParams encodes a changed boolean', function (): void {
 test('countPdfPages counts page markers', function (): void {
     $tmp = tempnam(sys_get_temp_dir(), 'pwg-pdf-test');
     expect($tmp)->toBeString();
+    if ($tmp === false) {
+        return;
+    }
     file_put_contents($tmp, "%PDF-1.4\n1 0 obj\n<< /Type /Page >>\nendobj\n2 0 obj\n<< /Type /Page >>\nendobj\n");
 
     expect(new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))->countPdfPages($tmp))->toBe(2);

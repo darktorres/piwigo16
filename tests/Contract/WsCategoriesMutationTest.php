@@ -155,12 +155,14 @@ final class WsCategoriesMutationTest extends ContractTestCase
     {
         $result = $response['result'] ?? null;
         if (!is_array($result)) {
-            self::fail('WS response result is not an array: ' . json_encode($response));
+            $encoded = json_encode($response);
+            self::fail('WS response result is not an array: ' . ($encoded === false ? 'null' : $encoded));
         }
 
         $id = $result['id'] ?? null;
         if (!is_numeric($id)) {
-            self::fail('WS response result.id is not numeric: ' . json_encode($response));
+            $encoded = json_encode($response);
+            self::fail('WS response result.id is not numeric: ' . ($encoded === false ? 'null' : $encoded));
         }
 
         return (int) $id;

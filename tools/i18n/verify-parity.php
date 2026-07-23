@@ -131,7 +131,8 @@ foreach (scandir($langDir) !== false ? scandir($langDir) : [] as $locale) {
                 continue;
             }
             if (! isset($poKeys[$key])) {
-                echo "MISSING KEY [{$locale}/{$domain}]: " . json_encode($key) . "\n";
+                $encoded_key = json_encode($key);
+                echo "MISSING KEY [{$locale}/{$domain}]: " . ($encoded_key === false ? $key : $encoded_key) . "\n";
                 $errors++;
             }
         }

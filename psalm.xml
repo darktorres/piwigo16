@@ -496,6 +496,16 @@
                 <file name="src/Piwigo/Admin/Install/UpgradeService.php"/>
                 <file name="src/Piwigo/Controller/ImageDerivativeController.php"/>
                 <file name="src/Piwigo/Search/SearchService.php"/>
+                <!-- ob_get_clean() immediately after ob_start()+imagejpeg()
+                     (which writes to the just-opened buffer) always returns
+                     a real string here, never false — PHPStan's flow
+                     analysis proves this and flags an explicit
+                     assertIsString() re-check as
+                     staticMethod.alreadyNarrowedType (provably redundant).
+                     Psalm's stub is more pessimistic (string|false).
+                     composer analyse:phpstan is clean here with zero
+                     changes. -->
+                <file name="tests/Integration/MetadataServiceTest.php"/>
                 <!-- strtotime('+1 month') is a literal, always-valid
                      relative-time string — PHPStan's own stub treats its
                      return as certain int here and flags an explicit

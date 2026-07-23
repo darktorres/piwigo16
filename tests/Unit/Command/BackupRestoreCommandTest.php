@@ -30,6 +30,9 @@ test('aborts when the file does not exist', function (): void {
 test('aborts without --force even when the file exists', function (): void {
     $tmpFile = tempnam(sys_get_temp_dir(), 'piwigo-backup-test-');
     expect($tmpFile)->not->toBeFalse();
+    if ($tmpFile === false) {
+        return;
+    }
 
     try {
         $command = new BackupRestoreCommand(new BackupService());
@@ -47,6 +50,9 @@ test('aborts without --force even when the file exists', function (): void {
 test('a valid file with --force reaches the backup service', function (): void {
     $tmpFile = tempnam(sys_get_temp_dir(), 'piwigo-backup-test-');
     expect($tmpFile)->not->toBeFalse();
+    if ($tmpFile === false) {
+        return;
+    }
     file_put_contents($tmpFile, 'not a real tar.gz archive');
 
     try {

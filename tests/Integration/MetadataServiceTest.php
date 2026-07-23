@@ -161,6 +161,7 @@ final class MetadataServiceTest extends IntegrationTestCase
         // markers) to reach exactly 2048 bytes for the filesize assertion
         // below.
         $image = imagecreatetruecolor(1, 1);
+        self::assertNotFalse($image);
         ob_start();
         imagejpeg($image);
         $jpegBytes = ob_get_clean();

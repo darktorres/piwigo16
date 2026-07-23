@@ -220,7 +220,7 @@ abstract class IntegrationTestCase extends TestCase
         $stderr = stream_get_contents($pipes[2]);
         fclose($pipes[2]);
         $exit = proc_close($proc);
-        self::assertSame(0, $exit, 'mysql fixture load failed: ' . $stderr);
+        self::assertSame(0, $exit, 'mysql fixture load failed: ' . ($stderr === false ? '' : $stderr));
 
         $this->settleDatabase();
     }

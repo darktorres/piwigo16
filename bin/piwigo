@@ -14,7 +14,6 @@ declare(strict_types=1);
 // orchestration lives in Piwigo\Bootstrap\CliBootstrap (P12).
 
 require __DIR__ . '/../vendor/autoload.php';
-require __DIR__ . '/../include/env.inc.php';
 
 use Piwigo\Bootstrap\CliBootstrap;
 use Piwigo\Core\Env;

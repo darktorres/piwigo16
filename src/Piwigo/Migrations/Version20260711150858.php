@@ -18,19 +18,33 @@ use Piwigo\Config\Config;
  * The 9 `varchar(N) binary` columns (categories.permalink, images.file,
  * old_permalinks.permalink, plugins.id, sessions.id, tags.url_name,
  * user_feed.id, user_mail_notification.check_key, users.username) are
- * fixed to an explicit `COLLATE utf8mb4_bin` in the SAME statement as
- * their table's charset conversion -- this is NOT part of the 43
- * column-type changes deferred to P17-23. The legacy `binary` column
- * attribute is a charset-relative shorthand (pre-utf8mb4 MySQL 4.x
- * syntax): the moment a table's charset changes, those columns MUST be
- * given an explicit collation or they silently become case-insensitive
- * utf8mb4_unicode_ci comparisons -- a real regression (e.g. a
- * case-insensitive users.username breaks the uniqueness guarantee
+ * fixed to an explicit `COLLATE utf8mb4_bin` in a SEPARATE `ALTER TABLE`
+ * statement immediately after their table's charset conversion -- this is
+ * NOT part of the 43 column-type changes deferred to P17-23. The legacy
+ * `binary` column attribute is a charset-relative shorthand (pre-utf8mb4
+ * MySQL 4.x syntax): the moment a table's charset changes, those columns
+ * MUST be given an explicit collation or they silently become
+ * case-insensitive utf8mb4_unicode_ci comparisons -- a real regression
+ * (e.g. a case-insensitive users.username breaks the uniqueness guarantee
  * between "Alice" and "alice"; a case-insensitive sessions.id is a
- * genuine session-token comparison weakness). Mechanically inseparable
- * from the charset conversion itself, confirmed against the reference's
- * real, working equivalent migration which made the identical combined
- * change in a single commit.
+ * genuine session-token comparison weakness).
+ *
+ * **Docs/PLAN-REPLAY-AUDIT.md gap-closure finding, 2026-07-23:** an
+ * earlier version of this migration combined both clauses into ONE
+ * `ALTER TABLE ... ENGINE=InnoDB, CONVERT TO CHARACTER SET ..., MODIFY
+ * ... COLLATE utf8mb4_bin ...` statement (matching what this class's own
+ * comment described as "mechanically inseparable," and what looked like
+ * the reference's own equivalent) -- confirmed live, against a real
+ * MySQL 8 instance, that this does NOT work: `CONVERT TO CHARACTER SET`
+ * silently wins over the same statement's own column-specific `MODIFY
+ * ... COLLATE`, leaving every one of the 9 columns at
+ * `utf8mb4_unicode_ci` regardless. Every one of the 9 columns was
+ * affected, undetected until now because Doctrine's abstract `Types::`
+ * system has no concept of collation at all -- a broken and a correct
+ * column both report as `Types::STRING`, so no type-level check could
+ * have caught this. Splitting the two `ALTER TABLE` statements (this
+ * class's own two-`addSql()`-calls-per-table shape below) is the
+ * confirmed-working fix.
  */
 final class Version20260711150858 extends AbstractMigration
 {
@@ -82,11 +96,10 @@ final class Version20260711150858 extends AbstractMigration
         $prefix = Config::dbPrefix();
         foreach (self::TABLES as $table) {
             $tableName = $prefix . $table;
-            $clauses = ['ENGINE=InnoDB', 'CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'];
+            $this->addSql('ALTER TABLE `' . $tableName . '` ENGINE=InnoDB, CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
             if (isset(self::BINARY_COLUMN_FIXES[$table])) {
-                $clauses[] = self::BINARY_COLUMN_FIXES[$table];
+                $this->addSql('ALTER TABLE `' . $tableName . '` ' . self::BINARY_COLUMN_FIXES[$table]);
             }
-            $this->addSql('ALTER TABLE `' . $tableName . '` ' . implode(', ', $clauses));
         }
     }
 

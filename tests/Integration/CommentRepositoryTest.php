@@ -199,10 +199,15 @@ final class CommentRepositoryTest extends IntegrationTestCase
     public function test_username_exists_matches_an_existing_username(): void
     {
         self::assertTrue($this->repo->usernameExists('username', 'fixture_admin'));
-        // the `users` table uses a `_ci` (case-insensitive) collation, same
-        // as the original's own plain `=` comparison -- not a property of
-        // this query, but of the schema it queries.
-        self::assertTrue($this->repo->usernameExists('username', 'FIXTURE_ADMIN'));
+        // users.username is utf8mb4_bin (case-sensitive) -- fixed in
+        // Migrations\Version20260711150858, whose combined ALTER TABLE
+        // (CONVERT TO CHARACTER SET + MODIFY ... COLLATE utf8mb4_bin in one
+        // statement) turned out not to work: CONVERT TO CHARACTER SET
+        // silently won, leaving this and 8 other columns case-insensitive
+        // utf8mb4_unicode_ci. This assertion previously expected that bug's
+        // behavior (a case-insensitive match) as if it were correct; not a
+        // property of this query, but of the schema it queries.
+        self::assertFalse($this->repo->usernameExists('username', 'FIXTURE_ADMIN'));
         self::assertFalse($this->repo->usernameExists('username', 'does-not-exist'));
     }
 

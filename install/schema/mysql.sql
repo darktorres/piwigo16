@@ -76,7 +76,7 @@ CREATE TABLE `piwigo_categories` (
   `commentable` enum('true','false') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'true',
   `global_rank` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `image_order` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `permalink` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `permalink` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `lastmodified` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `categories_i3` (`permalink`),
@@ -275,7 +275,7 @@ CREATE TABLE `piwigo_image_tag` (
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_images` (
   `id` mediumint unsigned NOT NULL AUTO_INCREMENT,
-  `file` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `file` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `date_available` datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
   `date_creation` datetime DEFAULT NULL,
   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -349,7 +349,7 @@ CREATE TABLE `piwigo_lounge` (
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_old_permalinks` (
   `cat_id` smallint unsigned NOT NULL DEFAULT '0',
-  `permalink` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `permalink` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `date_deleted` datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
   `last_hit` datetime DEFAULT NULL,
   `hit` int unsigned NOT NULL DEFAULT '0',
@@ -368,7 +368,7 @@ CREATE TABLE `piwigo_plugin_migrations` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_plugins` (
-  `id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `state` enum('inactive','active') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'inactive',
   `version` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
@@ -417,7 +417,7 @@ CREATE TABLE `piwigo_search_filter_view` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_sessions` (
-  `id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `expiration` datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
   PRIMARY KEY (`id`)
@@ -437,7 +437,7 @@ CREATE TABLE `piwigo_sites` (
 CREATE TABLE `piwigo_tags` (
   `id` smallint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `url_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `url_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `lastmodified` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `tags_i1` (`url_name`),
@@ -548,7 +548,7 @@ CREATE TABLE `piwigo_user_failed_logins` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_user_feed` (
-  `id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `user_id` mediumint unsigned NOT NULL DEFAULT '0',
   `last_check` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -598,7 +598,7 @@ CREATE TABLE `piwigo_user_infos` (
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_user_mail_notification` (
   `user_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `check_key` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `check_key` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `enabled` enum('true','false') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'false',
   `last_send` datetime DEFAULT NULL,
   PRIMARY KEY (`user_id`),
@@ -610,7 +610,7 @@ CREATE TABLE `piwigo_user_mail_notification` (
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_users` (
   `id` mediumint unsigned NOT NULL AUTO_INCREMENT,
-  `username` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `username` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `mail_address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),

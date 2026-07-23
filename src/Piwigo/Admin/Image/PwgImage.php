@@ -165,10 +165,13 @@ final class PwgImage
             [$width, $height] = [$height, $width];
         }
 
-        if ($crop) {
-            $x = 0;
-            $y = 0;
+        // Only ever read below when $crop is true (where they're also
+        // assigned) -- declared here so Psalm can see they're always
+        // defined by the time they're used, ~50 lines further down.
+        $x = 0;
+        $y = 0;
 
+        if ($crop) {
             if ($width < $height and $follow_orientation) {
                 [$max_width, $max_height] = [$max_height, $max_width];
             }

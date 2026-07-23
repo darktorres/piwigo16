@@ -267,6 +267,11 @@ SELECT
         }
 
         $file_path = null;
+        // Only ever read in the "new photo" branch below (where it's also
+        // assigned) -- declared here so Psalm can see it's always defined
+        // by the time it's used, without relying on the two branches'
+        // isset($image_id) conditions staying in sync 200 lines apart.
+        $dbnow = null;
 
         if (isset($image_id)) {
             // this photo already exists, we update it

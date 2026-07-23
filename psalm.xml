@@ -809,6 +809,30 @@
                 <file name="src/Piwigo/Ws/PwgServer.php"/>
             </errorLevel>
         </InvalidArgument>
+        <!-- FileCombiner.php: $file is only ever null-typed for Psalm's
+             benefit (see the method's own inline comment declaring it null
+             so PossiblyUndefinedVariable is resolvable); by the time
+             $combinable->path = $file runs, $return_content is
+             provably still false (unchanged since the earlier guard), so
+             $file is always the real string assigned inside that same `if`
+             block. composer analyse:phpstan is clean here with zero
+             changes. -->
+        <PossiblyNullPropertyAssignmentValue>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Template/FileCombiner.php"/>
+            </errorLevel>
+        </PossiblyNullPropertyAssignmentValue>
+        <!-- Frozen, already-applied DbPatch script (see the "don't
+             hand-edit frozen migrations/DbPatch scripts" precedent
+             elsewhere in this file). $query is always set in practice
+             (LegacyDbLayer::value() only ever produces one of the 5 cases
+             checked above) — already documented with a matching
+             @phpstan-ignore variable.undefined comment at the same site. -->
+        <PossiblyUndefinedVariable>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Admin/Install/DbPatch/Patch100.php"/>
+            </errorLevel>
+        </PossiblyUndefinedVariable>
         <!-- ProfileFormHandler.php: (string) $nb_image_page / (string)
              $recent_period casts inside preg_match() calls — already
              verified in the argument-safety batch that removing these

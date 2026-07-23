@@ -552,6 +552,11 @@ final class NotificationByMailSender
                             $nbmSendDetailedContent = \Piwigo\Config\Config::nbmSendDetailedContent();
                             $nbmSendHtmlMail = \Piwigo\Config\Config::nbmSendHtmlMail();
 
+                            // Only ever read below inside `if
+                            // ($nbmSendDetailedContent)` (where it's also
+                            // assigned) -- declared here so Psalm can see
+                            // it's always defined by the time it's used.
+                            $news = [];
                             if ($nbmSendDetailedContent) {
                                 $news = $this->notificationService->news($nbmUser['last_send'], $dbnow, false, $nbmSendHtmlMail, $auth);
                                 $existData = count($news) > 0;

@@ -146,6 +146,10 @@ SELECT id
             [$order_by_field, $order_by_asc] = explode(' ', $post_order);
 
             $order_by_date = false;
+            // Only ever read below when $order_by_date is true (where it's
+            // also assigned) -- declared here so Psalm can see it's always
+            // defined by the time the loop reads it.
+            $ref_dates = [];
             if (str_starts_with($order_by_field, 'date_')) {
                 $order_by_date = true;
 

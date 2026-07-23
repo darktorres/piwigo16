@@ -248,8 +248,11 @@ final readonly class CategoryCatsRenderer
         // see above) -- no second usort($categories, global_rank_compare(...))
         // pass is needed for recent_cats.
 
+        // Only ever read below inside this same `if` block (where it's also
+        // assigned) -- declared here so Psalm can see it's always defined
+        // regardless of the nesting further down.
+        $infosOfImage = [];
         if (count($categories) > 0) {
-            $infosOfImage = [];
             $newImageIds = [];
 
             foreach ($this->imageRepo->findByIds(array_values(array_filter($imageIds, is_string(...)))) as $imageRowId => $row) {

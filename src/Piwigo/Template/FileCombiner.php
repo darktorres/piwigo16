@@ -148,6 +148,11 @@ final class FileCombiner
     private function process_combinable($combinable, bool $return_content, bool $force, string &$header): ?string
     {
         if ($combinable->is_template) {
+            // Only ever read below when $return_content is false (where
+            // it's also assigned) -- $return_content doesn't change value
+            // in between, but declaring this here lets Psalm see it's
+            // always defined without tracing that correlation itself.
+            $file = null;
             if (! $return_content) {
                 $key = [$combinable->path, $combinable->version];
                 if (\Piwigo\Config\Config::templateCompileCheck()) {

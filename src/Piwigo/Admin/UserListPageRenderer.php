@@ -315,14 +315,17 @@ SELECT id, name, is_default
             $template->assign('pagination', self::preferencesService($conn)->getParam('user-manager-pagination', 10));
         }
 
-        if ((bool) self::webmasterIdIsLocal()) {
+        if (self::webmasterIdIsLocal()) {
             \Piwigo\Core\PageState::current()->addWarning(Lang::t('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
         }
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'user_list');
     }
 
-    private static function webmasterIdIsLocal(): mixed
+    // PHPStan can't see the @include below mutating $conf, so it thinks
+    // this never returns true.
+    // @phpstan-ignore return.tooWideBool
+    private static function webmasterIdIsLocal(): bool
     {
         // A presence check ("did the site owner override webmaster_id in
         // their OWN local/config/config.inc.php"), not a value read --
@@ -349,7 +352,10 @@ SELECT id, name, is_default
         if (isset($conf['local_dir_site'])) {
             @include $paths->siteLocal . 'config/config.inc.php';
         }
-        // @phpstan-ignore nullCoalesce.offset
-        return $conf['webmaster_id'] ?? false;
+        // PHPStan can't see the @include above mutating $conf, so it thinks
+        // this is always false/never true -- both ignores are that same
+        // blind spot, not a real narrowing bug.
+        // @phpstan-ignore nullCoalesce.offset, cast.useless
+        return (bool) ($conf['webmaster_id'] ?? false);
     }
 }

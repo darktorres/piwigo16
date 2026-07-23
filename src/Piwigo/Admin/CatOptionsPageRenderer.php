@@ -143,12 +143,12 @@ final class CatOptionsPageRenderer
                 '
 SELECT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . '
-  WHERE commentable = \'true\'
+  WHERE commentable = 1
 ;',
                 '
 SELECT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . '
-  WHERE commentable = \'false\'
+  WHERE commentable = 0
 ;',
                 Lang::t('Authorize users to add comments on selected albums'),
                 Lang::t('Authorized'),
@@ -158,12 +158,12 @@ SELECT id,name,uppercats,global_rank
                 '
 SELECT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . '
-  WHERE visible = \'true\'
+  WHERE visible = 1
 ;',
                 '
 SELECT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . '
-  WHERE visible = \'false\'
+  WHERE visible = 0
 ;',
                 Lang::t('Lock albums'),
                 Lang::t('Unlocked'),

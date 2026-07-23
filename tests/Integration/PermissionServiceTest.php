@@ -56,7 +56,7 @@ use Piwigo\Category\CategoryRepository;
         #[\Override]
         protected function tearDown(): void
         {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public', visible = 'true'");
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public', visible = 1");
             $this->conn->executeStatement('DELETE FROM ' . Tables::userAccess());
             parent::tearDown();
         }
@@ -95,14 +95,14 @@ use Piwigo\Category\CategoryRepository;
 
         public function test_a_locked_category_is_forbidden_to_a_non_admin(): void
         {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET visible = 'false' WHERE id = 2");
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET visible = 0 WHERE id = 2');
 
             self::assertSame('2', $this->service->getForbiddenCategories(2, 'normal'));
         }
 
         public function test_a_locked_category_is_not_forbidden_to_an_admin(): void
         {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET visible = 'false' WHERE id = 2");
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET visible = 0 WHERE id = 2');
 
             self::assertSame('0', $this->service->getForbiddenCategories(2, 'admin'));
         }
@@ -110,7 +110,7 @@ use Piwigo\Category\CategoryRepository;
         public function test_private_and_locked_categories_combine(): void
         {
             $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 1");
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET visible = 'false' WHERE id = 2");
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET visible = 0 WHERE id = 2');
 
             $forbidden = explode(',', $this->service->getForbiddenCategories(2, 'normal'));
             sort($forbidden);

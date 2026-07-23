@@ -166,26 +166,25 @@ SELECT
             return;
         }
 
-        $idList = implode(',', $catIds);
-
         match ($section) {
-            'comments' => pwg_query('
-UPDATE ' . Tables::categories() . '
-  SET commentable = \'' . ($value ? 'true' : 'false') . '\'
-  WHERE id IN (' . $idList . ')
-;'),
-            'visible' => $this->categoryService->setCatVisible($catIds, $value ? 'true' : 'false'),
+            // Docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: this whole
+            // match used to call the bare global pwg_query()/query2array()
+            // free functions for 2 of its 4 branches -- neither has ever
+            // had a real production definition (only a namespace-shadowing
+            // spy in CategoryAdminServiceTest.php, invisible outside that
+            // test process), so toggling "comments" or un-toggling
+            // "representative" here fatal-errored on every real request.
+            // Retargeted onto the same typed repository/service methods the
+            // "visible"/"status" branches already correctly used.
+            'comments' => $this->categoryService->setCatCommentable($catIds, $value),
+            'visible' => $this->categoryService->setCatVisible($catIds, $value),
             'status' => $this->categoryService->setCatStatus($catIds, $value ? 'public' : 'private'),
             'representative' => $value
                 // theoretically, all categories in $catIds contain at least
                 // one element when $value is true, so Piwigo can find a
                 // representant (matches the original's own comment).
                 ? $this->categoryService->setRandomRepresentant($catIds)
-                : pwg_query('
-UPDATE ' . Tables::categories() . '
-  SET representative_picture_id = NULL
-  WHERE id IN (' . $idList . ')
-;'),
+                : $this->categoryService->clearRepresentativePictures($catIds),
             default => null,
         };
 

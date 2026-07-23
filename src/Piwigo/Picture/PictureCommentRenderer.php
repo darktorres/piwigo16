@@ -65,7 +65,11 @@ final class PictureCommentRenderer
      * caller directly rather than a registry read.
      */
     /**
-     * @param list<array<string, string|null>> $related_categories
+     * @param list<array<string, mixed>> $related_categories row shape is
+     *   mixed, not uniformly string|null: `commentable` is this table's
+     *   real tinyint column (int|bool depending on the driver), `id` a
+     *   native DBAL int -- only `uppercats`/`status`/`global_rank` are
+     *   genuinely string|null.
      */
     public function render(?int $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self): void
     {
@@ -80,7 +84,7 @@ final class PictureCommentRenderer
         // which is commentable
         $showComments = false;
         foreach ($related_categories as $category) {
-            if ($category['commentable'] === 'true') {
+            if ((bool) $category['commentable']) {
                 $showComments = true;
                 break;
             }

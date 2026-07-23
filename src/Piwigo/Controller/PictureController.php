@@ -615,7 +615,10 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             'visible_categories' => 'id',
         ], 'AND') . '
 ;';
-        /** @var list<array<string, string|null>> $related_categories */
+        // Row shape is mixed, not uniformly string|null -- see
+        // PictureCommentRenderer::render()'s own param docblock for the
+        // real per-column breakdown.
+        /** @var list<array<string, mixed>> $related_categories */
         $related_categories = $conn->fetchAllAssociative($query);
         usort($related_categories, CategoryService::compareByGlobalRank(...));
         // ---------------------- first, prev, current, next & last picture management
@@ -1185,7 +1188,8 @@ SELECT COUNT(*) AS nb_fav
         } else { // use only 1 sql query to get names for all related categories
             $ids = [];
             foreach ($related_categories as $category) {// add all uppercats to $ids
-                $ids = array_merge($ids, explode(',', (string) $category['uppercats']));
+                $categoryUppercats = $category['uppercats'];
+                $ids = array_merge($ids, explode(',', is_scalar($categoryUppercats) ? (string) $categoryUppercats : ''));
             }
             $ids = array_unique($ids);
             $query = '
@@ -1196,7 +1200,8 @@ SELECT id, name, permalink
             $cat_map = array_column($conn->fetchAllAssociative($query), null, 'id');
             foreach ($related_categories as $category) {
                 $cats = [];
-                foreach (explode(',', (string) $category['uppercats']) as $id) {
+                $categoryUppercats = $category['uppercats'];
+                foreach (explode(',', is_scalar($categoryUppercats) ? (string) $categoryUppercats : '') as $id) {
                     $cats[] = $cat_map[$id];
                 }
                 $template->append('related_categories', new HtmlService()->getCatDisplayName($cats));

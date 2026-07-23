@@ -42,9 +42,9 @@ final class PermissionRepositoryTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        // Both fixture categories default to status='public', visible='true'
+        // Both fixture categories default to status='public', visible=1
         // -- restore that baseline regardless of which mutation test ran.
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public', visible = 'true'");
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public', visible = 1");
         $this->conn->executeStatement('DELETE FROM ' . Tables::userAccess());
         parent::tearDown();
     }
@@ -68,7 +68,7 @@ final class PermissionRepositoryTest extends IntegrationTestCase
 
     public function test_find_locked_category_ids_reflects_an_invisible_category(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET visible = 'false' WHERE id = 2");
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET visible = 0 WHERE id = 2');
 
         self::assertSame([2], $this->repo->findLockedCategoryIds());
     }

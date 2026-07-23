@@ -194,9 +194,19 @@ final readonly class CategoryService
             return null;
         }
 
-        foreach ($cat as $k => $v) {
-            if ($v === 'true' || $v === 'false') {
-                $cat[$k] = \Piwigo\Db\SqlDialect::getBoolean($v);
+        // Docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: used to be a
+        // generic `foreach ($cat as $k => $v) { if ($v === 'true' || $v
+        // === 'false') ... }` scan -- worked only because commentable/
+        // visible were the table's own enum('true','false') string
+        // columns. Now they're real tinyint columns, so that scan would
+        // silently stop matching anything and leave both as a raw int
+        // instead of the bool this method's own callers/tests expect
+        // (CategoryServiceTest::test_get_category_info_coerces_true_false_
+        // string_columns_to_bool()). Named explicitly instead of
+        // pattern-matched by value.
+        foreach (['commentable', 'visible'] as $k) {
+            if (isset($cat[$k])) {
+                $cat[$k] = (bool) $cat[$k];
             }
         }
 
@@ -1186,6 +1196,34 @@ final readonly class CategoryService
     }
 
     /**
+     * Change the **commentable** property on a set of categories. Unlike
+     * {@see setCatVisible()}, this has no parent/child cascade of its own
+     * -- callers wanting to also apply the change to sub-albums pass their
+     * own already-expanded id list (e.g. Ws\PwgCategories::setInfo()'s
+     * `apply_commentable_to_subalbums`). Same `bool|string` acceptance as
+     * setCatVisible() -- Ws\PwgCategories::setInfo()'s own $params still
+     * carry the WS API's 'true'/'false' string wire format.
+     *
+     * @param int[] $categories
+     */
+    public function setCatCommentable(array $categories, bool|string $value): void
+    {
+        $this->repo->updateCategoryCommentable($categories, filter_var($value, FILTER_VALIDATE_BOOLEAN));
+    }
+
+    /**
+     * Clears the representative picture of a set of categories (they fall
+     * back to a random/none representant per
+     * Config::representativeCacheOnLevel() the next time one is needed).
+     *
+     * @param int[] $categories
+     */
+    public function clearRepresentativePictures(array $categories): void
+    {
+        $this->repo->clearRepresentativePictureIds(array_values($categories));
+    }
+
+    /**
      * Change the **status** property on a set of categories : private or public.
      *
      * @param int[] $categories
@@ -1599,7 +1637,6 @@ final readonly class CategoryService
         } else {
             $insert['commentable'] = \Piwigo\Config\Config::newcatDefaultCommentable();
         }
-        $insert['commentable'] = \Piwigo\Db\SqlDialect::booleanToString($insert['commentable']);
 
         // is the album temporarily locked? (only visible by administrators,
         // whatever permissions) (may be overwritten if parent album is not
@@ -1609,7 +1646,6 @@ final readonly class CategoryService
         } else {
             $insert['visible'] = \Piwigo\Config\Config::newcatDefaultVisible();
         }
-        $insert['visible'] = \Piwigo\Db\SqlDialect::booleanToString($insert['visible']);
 
         // is the album private? (may be overwritten if parent album is private)
         if (isset($options['status']) && $options['status'] === 'private') {
@@ -1639,8 +1675,8 @@ final readonly class CategoryService
             // at creation, must a category be visible or not ? Warning : if the
             // parent category is invisible, the category is automatically create
             // invisible. (invisible = locked)
-            if ($parent['visible'] === 'false') {
-                $insert['visible'] = 'false';
+            if (! (bool) $parent['visible']) {
+                $insert['visible'] = false;
             }
 
             // at creation, must a category be public or private ? Warning : if the

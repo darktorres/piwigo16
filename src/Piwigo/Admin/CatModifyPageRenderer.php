@@ -132,7 +132,7 @@ final class CatModifyPageRenderer
                 'CAT_ID' => $category_id,
                 'CAT_NAME' => @htmlspecialchars(is_string($category['name']) ? $category['name'] : ''),
                 'CAT_COMMENT' => @htmlspecialchars(is_string($category['comment']) ? $category['comment'] : ''),
-                'IS_VISIBLE' => SqlDialect::booleanToString($category['visible']),
+                'IS_VISIBLE' => SqlDialect::booleanToString((bool) $category['visible']),
                 'CAT_ADMIN_ACCESS' => $categoryService->catAdminAccess($category_id),
 
                 'U_DELETE' => $base_url . 'albums',
@@ -151,7 +151,7 @@ final class CatModifyPageRenderer
         );
 
         if (\Piwigo\Config\Config::activateComments()) {
-            $template->assign('CAT_COMMENTABLE', SqlDialect::booleanToString($category['commentable']));
+            $template->assign('CAT_COMMENTABLE', SqlDialect::booleanToString((bool) $category['commentable']));
         }
 
         // manage album elements link

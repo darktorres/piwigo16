@@ -352,7 +352,7 @@ SELECT
 
         if ($params['public']) {
             $where[] = 'status = "public"';
-            $where[] = 'visible = "true"';
+            $where[] = 'visible = 1';
 
             $join_user = \Piwigo\Config\Config::guestId();
         } elseif (\Piwigo\Auth\AccessControl::isAdmin()) {
@@ -815,7 +815,18 @@ SELECT
             \Piwigo\Config\Config::override('newcat_default_position', $params['position']);
         }
 
-        $options = [];
+        // Docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: $params['visible']/
+        // ['commentable'] (both WsParamType::BOOL, real bools by the time
+        // they reach this handler) were validated by the WS param schema
+        // but never actually read here -- a real, standalone bug (not
+        // caused by the enum->tinyint migration, just found alongside it):
+        // pwg.categories.add's own documented visible/commentable params
+        // silently did nothing, every category created via this WS method
+        // got the site-wide default regardless of what the caller asked for.
+        $options = [
+            'visible' => $params['visible'],
+            'commentable' => $params['commentable'],
+        ];
         if (! in_array($params['status'], [null, ''], true) and in_array($params['status'], ['private', 'public'], true)) {
             $options['status'] = $params['status'];
         }
@@ -977,11 +988,15 @@ SELECT *
             }
         }
 
-        if (! in_array($params['visible'], [null, ''], true) and ($params['visible'] !== $category['visible'])) {
+        if (! in_array($params['visible'], [null, ''], true)
+            and filter_var($params['visible'], FILTER_VALIDATE_BOOLEAN) !== (bool) $category['visible']) {
             $categoryService->setCatVisible([$params['category_id']], $params['visible']);
         }
 
-        $info_columns = ['name', 'comment', 'commentable'];
+        // 'commentable' is handled separately below (same setCatX() shape
+        // as 'visible' above, needing bool coercion for the tinyint
+        // column), not through this generic strip_tags loop.
+        $info_columns = ['name', 'comment'];
 
         $perform_update = false;
         foreach ($info_columns as $key) {
@@ -994,13 +1009,11 @@ SELECT *
         if (isset($params['commentable']) && isset($params['apply_commentable_to_subalbums']) && (bool) $params['apply_commentable_to_subalbums']) {
             $subcats = $categoryService->getSubcatIds([$params['category_id']]);
             if (count($subcats) > 0) {
-                $query = '
-UPDATE ' . Tables::categories() . '
-  SET commentable = \'' . $params['commentable'] . '\'
-  WHERE id IN (' . implode(',', $subcats) . ')
-;';
-                $categoryConn->executeStatement($query);
+                $categoryService->setCatCommentable($subcats, $params['commentable']);
             }
+        } elseif (isset($params['commentable'])
+            and filter_var($params['commentable'], FILTER_VALIDATE_BOOLEAN) !== (bool) $category['commentable']) {
+            $categoryService->setCatCommentable([$params['category_id']], $params['commentable']);
         }
 
         if ($perform_update) {

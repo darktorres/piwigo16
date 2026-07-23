@@ -655,10 +655,27 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
      */
     public function updateCategoryVisibility(array $ids, bool $visible): void
     {
+        // Bound as int, not bool: a plain executeStatement() param array
+        // (no explicit Types::) can't always tell mysqli how to bind a raw
+        // PHP bool -- found live, it silently became the empty string ''
+        // instead of 0/1, which strict SQL mode then rejects outright
+        // ("Incorrect integer value: '' for column"). An int has one
+        // unambiguous wire representation on every platform.
         $this->conn->executeStatement('
 UPDATE ' . Tables::categories() . '
-  SET visible = \'' . ($visible ? 'true' : 'false') . '\'
-  WHERE id IN (' . implode(',', $ids) . ')');
+  SET visible = ?
+  WHERE id IN (' . implode(',', $ids) . ')', [(int) $visible]);
+    }
+
+    /**
+     * @param  array<int>  $ids  same non-list caveat as {@see updateCategoryVisibility()}
+     */
+    public function updateCategoryCommentable(array $ids, bool $commentable): void
+    {
+        $this->conn->executeStatement('
+UPDATE ' . Tables::categories() . '
+  SET commentable = ?
+  WHERE id IN (' . implode(',', $ids) . ')', [(int) $commentable]);
     }
 
     /**
@@ -944,7 +961,7 @@ SELECT MAX(`rank`) AS max_rank
     }
 
     /**
-     * @return array{id: int, uppercats: string, global_rank: string, visible: string, status: string}|null
+     * @return array{id: int, uppercats: string, global_rank: string, visible: int, status: string}|null
      */
     public function findParentCategoryForCreate(int|string $parentId): ?array
     {
@@ -954,7 +971,7 @@ SELECT id, uppercats, global_rank, visible, status
   WHERE id = ' . $parentId . '
 ;')->fetchAssociative();
 
-        /** @var array{id: int, uppercats: string, global_rank: string, visible: string, status: string}|false $row */
+        /** @var array{id: int, uppercats: string, global_rank: string, visible: int, status: string}|false $row */
         return $row === false ? null : $row;
     }
 

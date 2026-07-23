@@ -403,7 +403,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
 SELECT DISTINCT image_id
   FROM ' . Tables::imageCategory() . '
       INNER JOIN ' . Tables::categories() . ' ON category_id=id
-  WHERE commentable="true"
+  WHERE commentable=1
     AND image_id=' . $params['image_id'] .
           self::permissionService($conn)->getSqlConditionFandF([
               'forbidden_categories' => 'id',
@@ -517,7 +517,7 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
         $is_commentable = false;
         $related_categories = [];
         foreach ($conn->fetchAllAssociative($query) as $row) {
-            if ($row['commentable'] === 'true') {
+            if ((bool) $row['commentable']) {
                 $is_commentable = true;
             }
             unset($row['commentable']);

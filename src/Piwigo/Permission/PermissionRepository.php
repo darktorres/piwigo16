@@ -44,7 +44,7 @@ final class PermissionRepository extends AbstractRepository
             ->select('id')
             ->from(Tables::categories())
             ->where('visible = :visible')
-            ->setParameter('visible', 'false')
+            ->setParameter('visible', false)
             ->executeQuery()
             ->fetchFirstColumn();
 

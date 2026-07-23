@@ -403,9 +403,9 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         'dir' => $dir,
                         'name' => str_replace('_', ' ', $dir),
                         'site_id' => $site_id,
-                        'commentable' => SqlDialect::booleanToString(\Piwigo\Config\Config::newcatDefaultCommentable()),
+                        'commentable' => \Piwigo\Config\Config::newcatDefaultCommentable(),
                         'status' => \Piwigo\Config\Config::newcatDefaultStatus(),
-                        'visible' => SqlDialect::booleanToString(\Piwigo\Config\Config::newcatDefaultVisible()),
+                        'visible' => \Piwigo\Config\Config::newcatDefaultVisible(),
                     ];
 
                     if (isset($db_fulldirs[dirname($fulldir)])) {
@@ -432,8 +432,8 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         if ($db_categories[$parent]['status'] === 'private') {
                             $insert['status'] = 'private';
                         }
-                        if ($db_categories[$parent]['visible'] === 'false') {
-                            $insert['visible'] = 'false';
+                        if (! (bool) $db_categories[$parent]['visible']) {
+                            $insert['visible'] = false;
                         }
                     } else {
                         $insert['uppercats'] = $insert['id'];

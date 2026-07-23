@@ -143,7 +143,7 @@ namespace Piwigo\Tests\Integration {
         #[\Override]
         protected function tearDown(): void
         {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET commentable = 'true', visible = 'true', status = 'public', representative_picture_id = NULL, image_order = NULL");
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET commentable = 1, visible = 1, status = 'public', representative_picture_id = NULL, image_order = NULL");
             parent::tearDown();
         }
 
@@ -165,7 +165,7 @@ namespace Piwigo\Tests\Integration {
 
             $category = $this->fetchCategory(1);
             self::assertNotNull($category);
-            self::assertSame('false', $category['commentable']);
+            self::assertSame(0, $category['commentable']);
 
             self::assertCount(1, $logger->calls);
             self::assertSame('album', $logger->calls[0]['object']);
@@ -180,7 +180,7 @@ namespace Piwigo\Tests\Integration {
 
             $category = $this->fetchCategory(2);
             self::assertNotNull($category);
-            self::assertSame('true', $category['visible']);
+            self::assertSame(1, $category['visible']);
         }
 
         public function test_set_category_option_status_false_sets_private(): void

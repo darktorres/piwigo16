@@ -11,6 +11,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -386,7 +387,12 @@ SELECT
             // pre-migration numeric string (mysqli) breaks that comparison,
             // so keep it a string across the DBAL migration.
             $orderedCat['id'] = $cat_id;
-            $orderedCat['visible'] = $cat_row['visible'];
+            // themes/admin/default/js/albums.js's node.visible == 'false'
+            // check is a loose string comparison -- same JSON-wire-format
+            // reasoning as $orderedCat['id'] above, kept as the 'true'/
+            // 'false' string this tree has always sent, not the tinyint
+            // column's own real int|bool runtime type.
+            $orderedCat['visible'] = SqlDialect::booleanToString((bool) $cat_row['visible']);
             $orderedCat['uppercats'] = $cat_row['uppercats'];
             $orderedCat['nb_images'] = $nb_photos_in[$cat_id] ?? 0;
             $orderedCat['last_updates'] = $cat_row['lastmodified'];

@@ -847,6 +847,17 @@
                      other install/upgrade orchestration classes in this
                      codebase. -->
                 <file name="src/Piwigo/Admin/Install/InstallWizard.php"/>
+                <!-- tests/Integration/*Test.php: every test class
+                     initializes its $conn/$repo/$service properties in
+                     setUp() (PHPUnit's own per-test lifecycle hook, run
+                     before each test method), not in the constructor — no
+                     psalm-plugin-phpunit is installed to teach Psalm this
+                     framework convention, so it flags every one. This is
+                     the standard PHPUnit test-fixture shape throughout this
+                     suite (see IntegrationTestCase's own setUp()/
+                     setUpConnectionFromEnv() pattern), not a real
+                     initialization gap. -->
+                <directory name="tests/Integration"/>
             </errorLevel>
         </PropertyNotSetInConstructor>
     </issueHandlers>

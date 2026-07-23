@@ -276,7 +276,7 @@ CREATE TABLE `piwigo_image_tag` (
 CREATE TABLE `piwigo_images` (
   `id` mediumint unsigned NOT NULL AUTO_INCREMENT,
   `file` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
-  `date_available` datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
+  `date_available` datetime DEFAULT NULL,
   `date_creation` datetime DEFAULT NULL,
   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `comment` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
@@ -297,7 +297,7 @@ CREATE TABLE `piwigo_images` (
   `rotation` tinyint unsigned DEFAULT NULL,
   `latitude` double(8,6) DEFAULT NULL,
   `longitude` double(9,6) DEFAULT NULL,
-  `lastmodified` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `images_i2` (`date_available`),
   KEY `images_i3` (`rating_score`),

@@ -57,7 +57,8 @@ $langDir = $root . '/language';
 $errors = 0;
 $checked = 0;
 
-foreach (scandir($langDir) !== false ? scandir($langDir) : [] as $locale) {
+$locales = scandir($langDir);
+foreach ($locales !== false ? $locales : [] as $locale) {
     if ($locale === '.' || $locale === '..') {
         continue;
     }
@@ -70,7 +71,8 @@ foreach (scandir($langDir) !== false ? scandir($langDir) : [] as $locale) {
         continue;
     }
 
-    foreach (scandir($localeDir) !== false ? scandir($localeDir) : [] as $file) {
+    $files = scandir($localeDir);
+    foreach ($files !== false ? $files : [] as $file) {
         if (! str_ends_with($file, '.lang.php')) {
             continue;
         }

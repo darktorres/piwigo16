@@ -481,6 +481,9 @@ final readonly class MetadataService
         }
 
         $attributes = $svg->attributes();
+        if ($attributes === null) {
+            return null;
+        }
         $widthAttr = $attributes->width;
         $heightAttr = $attributes->height;
         $viewBox = explode(' ', (string) $attributes->viewBox);

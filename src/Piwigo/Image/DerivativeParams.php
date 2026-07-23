@@ -34,7 +34,7 @@ final class DerivativeParams
     /**
      * @var float from 0=no sharpening to 1=max sharpening
      */
-    public $sharpen = 0;
+    public $sharpen = 0.0;
 
     /**
      * @param SizingParams $sizing

@@ -31,6 +31,11 @@
                  exist at analysis time. Not part of the analyzed
                  application. -->
             <file name="tools/test_piwigo.php"/>
+            <!-- Standalone maintenance script; its own header comment
+                 documents that knplabs/github-api must be `composer
+                 require`d manually before running it — mirrors
+                 phpstan.neon's own excludePaths entry for this file. -->
+            <file name="tools/github_issues.php"/>
         </ignoreFiles>
     </projectFiles>
     <stubs>
@@ -934,5 +939,53 @@
                 <directory name="tests/Integration"/>
             </errorLevel>
         </PropertyNotSetInConstructor>
+        <UndefinedClass>
+            <errorLevel type="suppress">
+                <!-- CacheFactory::buildRedis() forwards to Symfony Cache's
+                     RedisAdapter::createConnection(), whose return type
+                     unions \Redis|\RedisArray|\RedisCluster|
+                     \Predis\ClientInterface|Relay\Relay|Relay\Cluster — all
+                     optional peer dependencies of symfony/cache that this
+                     app doesn't require (no ext-redis, predis/predis, or
+                     cheprasov/php-relay in composer.json). Real code, real
+                     vendor stub; the classes are simply not installed. -->
+                <file name="src/Piwigo/Cache/CacheFactory.php"/>
+                <!-- Template.php's Smarty_Internal_Debug::display_debug()
+                     call is a pre-existing, already-documented bug (see the
+                     inline comment + @phpstan-ignore class.notFound right
+                     above it): the class genuinely doesn't exist and this
+                     call fatals whenever debugTemplate() is enabled.
+                     Preserved verbatim, not fixed here — matches PHPStan's
+                     own suppression of the identical finding. -->
+                <file name="src/Piwigo/Template/Template.php"/>
+            </errorLevel>
+        </UndefinedClass>
+        <DocblockTypeContradiction>
+            <errorLevel type="suppress">
+                <!-- include/common.inc.php: the isset()/instanceof guard on
+                     $paths is a real runtime "Hacking attempt!" trap for
+                     this file being included out of order or requested
+                     directly — the @var tag that makes Psalm/PHPStan call
+                     it dead is documenting the promise the guard exists to
+                     verify, not a claim it's unconditionally true. Already
+                     carries a matching @phpstan-ignore with the same
+                     rationale immediately above it. -->
+                <file name="include/common.inc.php"/>
+                <!-- Template.php::set_template_dir()'s isset() check on
+                     Smarty's own $compile_id contradicts Smarty's own @var
+                     string docblock vs its `= null` default (vendor code,
+                     not ours) — already carries a matching
+                     @phpstan-ignore isset.property immediately above it. -->
+                <file name="src/Piwigo/Template/Template.php"/>
+                <!-- PwgCore.php: $added_size's is_int() re-guard is the
+                     real runtime safety net for an @-suppressed possibly-
+                     undefined array offset read; PHPStan's
+                     treatPhpDocTypesAsCertain makes it (wrongly) prove the
+                     offset always exists and is always int. Already carries
+                     a matching @phpstan-ignore function.alreadyNarrowedType
+                     immediately above it. -->
+                <file name="src/Piwigo/Ws/PwgCore.php"/>
+            </errorLevel>
+        </DocblockTypeContradiction>
     </issueHandlers>
 </psalm>

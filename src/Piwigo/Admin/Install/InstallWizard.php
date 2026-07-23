@@ -170,10 +170,14 @@ final class InstallWizard
         }
 
         // Obtain various vars
-        $this->dbhost = (is_string($_POST['dbhost'] ?? null) && $_POST['dbhost'] !== '') ? $_POST['dbhost'] : 'localhost';
-        $this->dbuser = (is_string($_POST['dbuser'] ?? null) && $_POST['dbuser'] !== '') ? $_POST['dbuser'] : '';
-        $this->dbpasswd = (is_string($_POST['dbpasswd'] ?? null) && $_POST['dbpasswd'] !== '') ? $_POST['dbpasswd'] : '';
-        $this->dbname = (is_string($_POST['dbname'] ?? null) && $_POST['dbname'] !== '') ? $_POST['dbname'] : '';
+        $dbhost_raw = $_POST['dbhost'] ?? null;
+        $this->dbhost = (is_string($dbhost_raw) && $dbhost_raw !== '') ? $dbhost_raw : 'localhost';
+        $dbuser_raw = $_POST['dbuser'] ?? null;
+        $this->dbuser = (is_string($dbuser_raw) && $dbuser_raw !== '') ? $dbuser_raw : '';
+        $dbpasswd_raw = $_POST['dbpasswd'] ?? null;
+        $this->dbpasswd = (is_string($dbpasswd_raw) && $dbpasswd_raw !== '') ? $dbpasswd_raw : '';
+        $dbname_raw = $_POST['dbname'] ?? null;
+        $this->dbname = (is_string($dbname_raw) && $dbname_raw !== '') ? $dbname_raw : '';
 
         // Same reasoning as the db_prefix seeding in the install.php entry
         // shell: InstallBootstrap::boot() (Legacy Coupling Retirement Phase
@@ -241,10 +245,14 @@ final class InstallWizard
         }
         $this->dblayer = 'mysqli';
 
-        $this->adminName = (is_string($_POST['admin_name'] ?? null) && $_POST['admin_name'] !== '') ? $_POST['admin_name'] : '';
-        $this->adminPass1 = (is_string($_POST['admin_pass1'] ?? null) && $_POST['admin_pass1'] !== '') ? $_POST['admin_pass1'] : '';
-        $this->adminPass2 = (is_string($_POST['admin_pass2'] ?? null) && $_POST['admin_pass2'] !== '') ? $_POST['admin_pass2'] : '';
-        $this->adminMail = (is_string($_POST['admin_mail'] ?? null) && $_POST['admin_mail'] !== '') ? $_POST['admin_mail'] : '';
+        $admin_name_raw = $_POST['admin_name'] ?? null;
+        $this->adminName = (is_string($admin_name_raw) && $admin_name_raw !== '') ? $admin_name_raw : '';
+        $admin_pass1_raw = $_POST['admin_pass1'] ?? null;
+        $this->adminPass1 = (is_string($admin_pass1_raw) && $admin_pass1_raw !== '') ? $admin_pass1_raw : '';
+        $admin_pass2_raw = $_POST['admin_pass2'] ?? null;
+        $this->adminPass2 = (is_string($admin_pass2_raw) && $admin_pass2_raw !== '') ? $admin_pass2_raw : '';
+        $admin_mail_raw = $_POST['admin_mail'] ?? null;
+        $this->adminMail = (is_string($admin_mail_raw) && $admin_mail_raw !== '') ? $admin_mail_raw : '';
 
         if (isset($_POST['install'])) {
             $this->isNewsletterSubscribe = isset($_POST['newsletter_subscribe']);

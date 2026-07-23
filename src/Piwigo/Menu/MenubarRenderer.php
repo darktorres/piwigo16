@@ -79,7 +79,7 @@ final class MenubarRenderer
         }
         $menu->prepare_display();
 
-        if ($section_context?->section === 'search' and $section_context->qsearchDetails !== []) {
+        if ($section_context !== null && $section_context->section === 'search' && $section_context->qsearchDetails !== []) {
             $qsearch_q = $section_context->qsearchDetails['q'] ?? '';
             $qsearch_q = is_string($qsearch_q) ? $qsearch_q : '';
             $template->assign('QUERY_SEARCH', htmlspecialchars($qsearch_q));
@@ -163,7 +163,8 @@ final class MenubarRenderer
         $page_items = $section_context?->items;
 
         if (
-            is_array($page_items)
+            $section_context !== null
+            and is_array($page_items)
             and count($page_items) < \Piwigo\Config\Config::relatedAlbumsMaximumItemsToCompute()
             and $block !== null
             and $page_items !== []

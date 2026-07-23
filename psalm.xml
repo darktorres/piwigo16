@@ -506,6 +506,24 @@
                      class as CommentsController's own REQUEST_URI guard
                      (documented above) and ActivityService's HTTP_* guards. -->
                 <file name="src/Piwigo/Html/HtmlService.php"/>
+                <!-- Same "$_SERVER stub is more optimistic than reality"
+                     class, extended to REMOTE_ADDR/PATH_INFO guards across
+                     these files, and $_COOKIE mixed-vs-string guards
+                     (lang/cookie_lang) matching AuthService's own case
+                     above. All verified PHPStan-clean with the guard
+                     present. -->
+                <file name="src/Piwigo/Audit/AuditService.php"/>
+                <file name="src/Piwigo/Auth/EphemeralKeyService.php"/>
+                <file name="src/Piwigo/Bootstrap/RequestBootstrap.php"/>
+                <file name="src/Piwigo/Controller/Admin/PermalinksSubController.php"/>
+                <file name="src/Piwigo/Controller/IdentificationController.php"/>
+                <file name="src/Piwigo/Controller/ProfileController.php"/>
+                <file name="src/Piwigo/Controller/RegisterController.php"/>
+                <file name="src/Piwigo/Page/PageTailRenderer.php"/>
+                <file name="src/Piwigo/Picture/PictureRateRenderer.php"/>
+                <file name="src/Piwigo/Rate/RateService.php"/>
+                <file name="src/Piwigo/Session/SessionService.php"/>
+                <file name="src/Piwigo/Controller/Admin/BatchManagerSubController.php"/>
             </errorLevel>
         </TypeDoesNotContainType>
         <!-- ProfileFormHandler.php: $new_pwd_present_raw's `!== null` check
@@ -558,6 +576,37 @@
                      genuinely not always sent by real clients, same
                      "$_SERVER stub is more optimistic than reality" class. -->
                 <file name="src/Piwigo/Template/FileCombiner.php"/>
+                <file name="src/Piwigo/Audit/AuditService.php"/>
+                <file name="src/Piwigo/Auth/EphemeralKeyService.php"/>
+                <file name="src/Piwigo/Bootstrap/RequestBootstrap.php"/>
+                <file name="src/Piwigo/Bootstrap/UserBootstrap.php"/>
+                <file name="src/Piwigo/Controller/Admin/PermalinksSubController.php"/>
+                <file name="src/Piwigo/Http/HttpClientService.php"/>
+                <file name="src/Piwigo/Page/PageTailRenderer.php"/>
+                <file name="src/Piwigo/Picture/PictureRateRenderer.php"/>
+                <file name="src/Piwigo/Rate/RateService.php"/>
+                <file name="src/Piwigo/Session/SessionService.php"/>
+                <!-- Same $_POST-shape-narrowing disagreement as
+                     ProfileFormHandler.php's $new_pwd_present_raw above,
+                     applied to $post_password_raw's null-check. -->
+                <file name="src/Piwigo/Controller/RegisterController.php"/>
+                <!-- Same $_POST-array-always-non-empty stub optimism as
+                     BatchManagerGlobalPageRenderer.php's own
+                     TypeDoesNotContainType suppression (documented near the
+                     top of this file) — a real request can submit a
+                     genuinely empty array field. -->
+                <file name="src/Piwigo/Admin/BatchManagerUnitPageRenderer.php"/>
+                <file name="src/Piwigo/Admin/CatOptionsPageRenderer.php"/>
+                <file name="src/Piwigo/Admin/PictureModifyPageRenderer.php"/>
+                <file name="src/Piwigo/Controller/Admin/SiteManagerSubController.php"/>
+                <file name="src/Piwigo/Admin/BatchManagerGlobalPageRenderer.php"/>
+                <!-- $watermark_upload (a $_FILES entry) — same $_FILES
+                     real-defense class as PwgImages.php above. -->
+                <file name="src/Piwigo/Controller/Admin/ConfigurationSubController.php"/>
+                <!-- $raw_filter_tags/$_GET['filter'] — same $_POST/$_GET-
+                     shape-narrowing-loss disagreement as this batch's other
+                     guard-then-bare-access sites. -->
+                <file name="src/Piwigo/Controller/Admin/BatchManagerSubController.php"/>
             </errorLevel>
         </RedundantCondition>
         <!-- Frozen, already-applied DbPatch script (see the "don't hand-edit

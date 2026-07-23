@@ -471,6 +471,21 @@
                 <!-- Same $apps[$appName]['counter'] disagreement as the
                      RedundantCondition suppression below. -->
                 <file name="src/Piwigo/Admin/PiwigoInfosSender.php"/>
+                <!-- $_FILES['image']/$_FILES['file'] is_array() guards
+                     (upload endpoints) — Psalm's stub assumes $_FILES
+                     entries always match its precise upload-error shape,
+                     but a real client (malformed multipart, an attacker
+                     probing the upload endpoint) can send $_FILES data that
+                     doesn't match — same "$_SERVER/$_FILES stub is more
+                     optimistic than reality" class as ActivityService's
+                     $_SERVER guards above, extended to file uploads. -->
+                <file name="src/Piwigo/Ws/PwgImages.php"/>
+                <!-- $searchFields = &$mySearch['fields'] is a by-ref alias
+                     (project's known "by-ref loses narrowing" limitation,
+                     already documented for this same file's EmptyArrayAccess
+                     suppression above). composer analyse:phpstan is clean
+                     here with zero changes. -->
+                <file name="src/Piwigo/Search/SearchFilterRenderer.php"/>
             </errorLevel>
         </TypeDoesNotContainType>
         <!-- ProfileFormHandler.php: $new_pwd_present_raw's `!== null` check
@@ -505,6 +520,15 @@
                      $counterValue`) — the two tools disagree in opposite
                      directions. -->
                 <file name="src/Piwigo/Admin/PiwigoInfosSender.php"/>
+                <file name="src/Piwigo/Ws/PwgImages.php"/>
+                <!-- Same by-ref-loses-narrowing class as above ($searchFields
+                     sites), plus $cacheApplicable
+                     (! preg_match('/^image_id IN/', $filterClause)) — a real,
+                     reachable runtime branch (Psalm's static evaluation of
+                     the negated preg_match narrows to literal `true`, which
+                     PHPStan does not do; the guard gates real cache-write
+                     logic and must stay). -->
+                <file name="src/Piwigo/Search/SearchFilterRenderer.php"/>
             </errorLevel>
         </RedundantCondition>
         <!-- Frozen, already-applied DbPatch script (see the "don't hand-edit

@@ -2194,7 +2194,7 @@ SELECT COUNT(*)
         UserCacheInvalidator::invalidate();
 
         // trick to bypass get_sql_condition_FandF
-        if (! in_array($params['level'], [null, 0], true) and $params['level'] > \Piwigo\Users\CurrentUser::get()->level) {
+        if ($params['level'] !== 0 and $params['level'] > \Piwigo\Users\CurrentUser::get()->level) {
             // this will not persist -- Legacy Coupling Retirement Phase 8,
             // 8i: CurrentUser is the only real reader now (the parallel
             // `global $user;` array was never read by anything else in

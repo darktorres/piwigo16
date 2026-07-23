@@ -453,15 +453,34 @@
                narrowing here is the imprecise one; the 'all' fallback is
                real, reachable behavior (this list's own numeric-or-'all'
                contract), not dead code. -->
+        <!-- PictureController.php: $http_user_agent's is_string() guard on
+             $_SERVER['HTTP_USER_AGENT'] — genuinely NOT always present in
+             real requests (curl, some proxies, WS API clients), per this
+             project's own "$_SERVER stub is more optimistic than reality"
+             precedent. Must not be trimmed. -->
         <TypeDoesNotContainType>
             <errorLevel type="suppress">
                 <file name="src/Piwigo/Admin/BatchManagerGlobalPageRenderer.php"/>
                 <file name="src/Piwigo/Controller/CommentsController.php"/>
+                <file name="src/Piwigo/Controller/PictureController.php"/>
             </errorLevel>
         </TypeDoesNotContainType>
+        <!-- ProfileFormHandler.php: $new_pwd_present_raw's `!== null` check
+             is real — $_POST['use_new_pwd'] genuinely may be unset (the
+             `?? null` default is reachable for a real request that omits
+             the field) — composer analyse:phpstan stays clean with this
+             check present, confirming Psalm's "can never contain null" is
+             the imprecise call here, not a real dead branch. -->
+        <!-- PictureController.php: $_COOKIE['picture_deriv']'s is_string()
+             guard — PHPStan doesn't consider $_COOKIE values always-string
+             (array_key_exists() without the guard fails PHPStan's own
+             argument.type check), so the two tools disagree in opposite
+             directions here too; the guard must stay. -->
         <RedundantCondition>
             <errorLevel type="suppress">
                 <file name="src/Piwigo/Controller/CommentsController.php"/>
+                <file name="src/Piwigo/Controller/ProfileFormHandler.php"/>
+                <file name="src/Piwigo/Controller/PictureController.php"/>
             </errorLevel>
         </RedundantCondition>
         <!-- Frozen, already-applied DbPatch script (see the "don't hand-edit

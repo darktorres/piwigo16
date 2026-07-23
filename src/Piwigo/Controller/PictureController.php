@@ -431,7 +431,7 @@ UPDATE ' . Tables::categories() . '
                 case 'rate':
 
                     $rate = $_POST['rate'] ?? null;
-                    if (! is_int($rate) and ! is_string($rate)) {
+                    if (! is_string($rate)) {
                         $rate = null;
                     }
                     new RateService(new RateRepository($conn), new CookieService())
@@ -457,7 +457,9 @@ UPDATE ' . Tables::categories() . '
 
                     if (\Piwigo\Auth\AccessControl::canManageComment('edit', $author_id)) {
                         $edit_content_raw = $_POST['content'] ?? null;
-                        if (is_scalar($edit_content_raw) && $edit_content_raw !== '' && $edit_content_raw !== '0' && $edit_content_raw !== 0 && $edit_content_raw !== 0.0 && $edit_content_raw !== false) {
+                        // $_POST values are always strings (or arrays) --
+                        // never a real PHP int/float/bool.
+                        if (is_string($edit_content_raw) && $edit_content_raw !== '' && $edit_content_raw !== '0') {
                             new \Piwigo\Csrf\CsrfService()
                                 ->checkOrFail(new HtmlService(), $this->redirectService);
                             $post_key = $_POST['key'] ?? null;

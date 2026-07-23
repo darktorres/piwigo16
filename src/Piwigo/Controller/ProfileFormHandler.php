@@ -114,9 +114,12 @@ final class ProfileFormHandler
 
         if (\Piwigo\Config\Config::allowUserCustomization() or \Piwigo\Core\AdminContext::isActive()) {
             $int_pattern = '/^\d+$/';
+            // $_POST values are always strings or arrays -- never a real
+            // PHP int/float/bool -- so only the null/string/array-emptiness
+            // checks are reachable here.
             $nb_image_page = $_POST['nb_image_page'] ?? null;
             $nb_image_page_is_empty = $nb_image_page === null || $nb_image_page === '' || $nb_image_page === '0'
-                || $nb_image_page === 0 || $nb_image_page === false || $nb_image_page === [];
+                || $nb_image_page === [];
             if ($nb_image_page_is_empty
                 or (! is_scalar($nb_image_page))
                 or (! (bool) preg_match($int_pattern, (string) $nb_image_page))) {
@@ -152,9 +155,11 @@ final class ProfileFormHandler
             }
         }
 
+        // $_POST values are always strings or arrays -- see
+        // $nb_image_page_is_empty's own comment above.
         $new_pwd_present_raw = $_POST['use_new_pwd'] ?? null;
         $new_pwd_present = $new_pwd_present_raw !== null && $new_pwd_present_raw !== '' && $new_pwd_present_raw !== '0'
-            && $new_pwd_present_raw !== 0 && $new_pwd_present_raw !== false && $new_pwd_present_raw !== [];
+            && $new_pwd_present_raw !== [];
         if ($new_pwd_present) {
             // password must be the same as its confirmation
             $new_pwd_raw = $_POST['use_new_pwd'] ?? null;

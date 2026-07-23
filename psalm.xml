@@ -463,6 +463,14 @@
                 <file name="src/Piwigo/Admin/BatchManagerGlobalPageRenderer.php"/>
                 <file name="src/Piwigo/Controller/CommentsController.php"/>
                 <file name="src/Piwigo/Controller/PictureController.php"/>
+                <file name="src/Piwigo/Activity/ActivityService.php"/>
+                <!-- REDIRECT_SCRIPT_NAME/REDIRECT_URL/PATH_INFO are only
+                     ever set under specific rewrite-rule configurations,
+                     never guaranteed present. -->
+                <file name="src/Piwigo/Auth/CookieService.php"/>
+                <!-- Same $apps[$appName]['counter'] disagreement as the
+                     RedundantCondition suppression below. -->
+                <file name="src/Piwigo/Admin/PiwigoInfosSender.php"/>
             </errorLevel>
         </TypeDoesNotContainType>
         <!-- ProfileFormHandler.php: $new_pwd_present_raw's `!== null` check
@@ -475,12 +483,28 @@
              guard — PHPStan doesn't consider $_COOKIE values always-string
              (array_key_exists() without the guard fails PHPStan's own
              argument.type check), so the two tools disagree in opposite
-             directions here too; the guard must stay. -->
+             directions here too; the guard must stay.
+             ActivityService.php: HTTP_USER_AGENT/HTTP_REFERER/REMOTE_ADDR
+             guards — genuinely not always present in real requests (curl,
+             CLI, some proxy setups), same "$_SERVER stub is more optimistic
+             than reality" precedent as PictureController's HTTP_USER_AGENT
+             guard above. -->
         <RedundantCondition>
             <errorLevel type="suppress">
                 <file name="src/Piwigo/Controller/CommentsController.php"/>
                 <file name="src/Piwigo/Controller/ProfileFormHandler.php"/>
                 <file name="src/Piwigo/Controller/PictureController.php"/>
+                <file name="src/Piwigo/Activity/ActivityService.php"/>
+                <file name="src/Piwigo/Auth/CookieService.php"/>
+                <!-- $apps[$appName]['counter'] — $apps starts as [] and is
+                     built up dynamically across loop iterations; Psalm
+                     infers a too-precise `int` shape for the 'counter' key
+                     from its own writes, but PHPStan sees the read as
+                     `mixed` (removing the is_numeric()+cast guard fails
+                     PHPStan's binaryOp.invalid check on `$currentCounter +
+                     $counterValue`) — the two tools disagree in opposite
+                     directions. -->
+                <file name="src/Piwigo/Admin/PiwigoInfosSender.php"/>
             </errorLevel>
         </RedundantCondition>
         <!-- Frozen, already-applied DbPatch script (see the "don't hand-edit

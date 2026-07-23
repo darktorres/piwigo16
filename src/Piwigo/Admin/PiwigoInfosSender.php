@@ -291,7 +291,7 @@ SELECT
                     }
                 }
 
-                if (in_array($eid, [null, false, 0, '0', '', []], true)) {
+                if (in_array($eid, [null, 0, '0', ''], true)) {
                     // let's search in the data fetched from PEM
                     $pemPluginsCategory = \Piwigo\Config\Config::pemPluginsCategory();
                     $eid = $officialExts[$pemPluginsCategory][$pluginId] ?? null;
@@ -301,7 +301,7 @@ SELECT
                 //
                 // * has no eid
                 // * OR has un unknown plugin_id among all "Archive root directory" in PEM
-                if (in_array($eid, [null, false, 0, '0', '', []], true)) {
+                if (in_array($eid, [null, 0, '0', ''], true)) {
                     $logger->info('[' . __FUNCTION__ . '][exec=' . $execId . '] ' . $pluginId . ' is a private plugin, not sent to piwigo.org');
                     $piwigoInfos['general_stats']['nb_private_plugins']++;
                     continue;
@@ -345,7 +345,7 @@ SELECT
                 }
             }
 
-            if (in_array($eid, [null, false, 0, '0', '', []], true)) {
+            if (in_array($eid, [null, 0, '0', ''], true)) {
                 // let's search in the data fetched from PEM
                 $pemThemesCategory = \Piwigo\Config\Config::pemThemesCategory();
                 $eid = $officialExts[$pemThemesCategory][$themeId] ?? null;
@@ -355,7 +355,7 @@ SELECT
             //
             // * has no eid
             // * OR has un unknown theme_id among all "Archive root directory" in PEM
-            if (in_array($eid, [null, false, 0, '0', '', []], true)) {
+            if (in_array($eid, [null, 0, '0', ''], true)) {
                 $logger->info('[' . __FUNCTION__ . '][exec=' . $execId . '] ' . $themeId . ' is a private theme, not sent to piwigo.org');
                 $privateThemes[$themeId] = 1;
                 continue;

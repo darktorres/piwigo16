@@ -1084,3 +1084,35 @@ test('RequestFactory, ResponseEmitter, CommonBootstrap, and the P9 middleware/pi
         expect(array_values($violations))->toBe([]);
     }
 });
+
+test('every tools/*.php script guards against non-CLI execution (SEC-02)', function (): void {
+    // docs/PLAN-REPLAY-AUDIT.md finding #16: tools/build-config-accessors.php
+    // had no PHP_SAPI guard and would run its logic (regenerating
+    // src/Piwigo/Config/Config.php) under any calling context -- not
+    // web-reachable today (tools/ isn't among public/'s symlinks), but a
+    // real, literal SEC-02 gap regardless of current reachability. tools/
+    // index.php is deliberately excluded -- it's the anti-directory-listing
+    // stub (same shape as install/index.php), not a CLI tool, and is
+    // designed to run for any web request rather than reject it.
+    $root = dirname(__DIR__, 2);
+    $scripts = array_values(array_diff(
+        globPaths($root . '/tools/*.php'),
+        [$root . '/tools/index.php']
+    ));
+
+    expect($scripts)->not->toBeEmpty();
+
+    $missingGuard = [];
+    foreach ($scripts as $script) {
+        $source = file_get_contents($script);
+        if ($source === false) {
+            throw new RuntimeException("Unreadable file: {$script}");
+        }
+
+        if (! str_contains($source, "PHP_SAPI !== 'cli'")) {
+            $missingGuard[] = basename($script);
+        }
+    }
+
+    expect($missingGuard)->toBe([]);
+});

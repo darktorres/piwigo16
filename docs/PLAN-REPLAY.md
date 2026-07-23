@@ -125,23 +125,33 @@ then the reference is forward-looking, not dangling.
 
 | Doc | Created in | Status |
 | --- | --- | --- |
-| `docs/DEVELOPMENT.md` | P0 | planned |
+| `docs/DEVELOPMENT.md` | P0 | created (P0) |
 | `docs/ARCHITECTURE.md` | P6 (extended P7–P23, P27, P32) | created (P6) |
-| `docs/CONFIG.md` | P13 | planned |
+| `docs/CONFIG.md` | P13 | created (P17–P23 gap-closure) |
 | `docs/FRONTEND.md` | P24 (extended P29–P30) | planned |
 | `docs/API.md` (REST) | P26 | planned |
 | `docs/SECURITY.md` | P28 | planned |
 | `docs/PLUGINS.md`, `docs/EVENTS.md` | P31 | planned |
-| `docs/DEPLOYMENT.md` | P4 / P10 | planned |
+| `docs/DEPLOYMENT.md` | P4 / P10 | created (P4) |
 | `docs/schemas/plugin.schema.json`, `theme.schema.json` | P31 | planned |
 | `docs/STRUCTURE.md` | P32 | planned |
 | `docs/STRUCTURE-PLAN.md` | — | **exists on the `16.x-rewrite` reference branch** (P32 source) |
-| `docs/PRIVACY.md` | P17–P23 | planned |
+| `docs/PRIVACY.md` | P17–P23 (backend), P26/P29 (REST + UI exposure) | planned — see note below |
 | `docs/AI.md` | T3·AI | planned |
-| `docs/adr/` (+ `0000-template.md`) | P0 (**hard gate**); new ADRs added per phase | planned |
-| `docs/plan/manifest.yaml` | P0 (**hard gate**) | planned |
-| `tools/plan-lint` | P0 (minimal: asserts every phase commit maps to a manifest step) | planned |
+| `docs/adr/` (+ `0000-template.md`) | P0 (**hard gate**); new ADRs added per phase | created (P0) |
+| `docs/plan/manifest.yaml` | P0 (**hard gate**) | created (P0) |
+| `tools/plan-lint` | P0 (minimal: asserts every phase commit maps to a manifest step) | created (P0) |
 | `tests/Load/` (k6) | P29 (perf budgets) — *moved from P0; no load surface exists until then* | planned |
+
+This table was a frozen, pre-P0 snapshot until now (`docs/PLAN-REPLAY-AUDIT.md` finding #10) —
+6 rows were marked `planned` despite the file already existing and being actively used/CI-wired.
+**`docs/PRIVACY.md` is a different kind of gap, not just a missing file:** its "Created in"
+column names P17–P23, but the doc's own GDPR/privacy-tooling section (`PrivacyService`, SEC-56)
+says the service is "exposed as REST endpoints (`/api/v1`, P26) + a user/admin UI (P29)" — and
+`PrivacyService` itself doesn't exist anywhere in the codebase yet. Writing this doc before that
+service is built would document a feature that isn't real; it stays `planned` until the backend
+lands (P17–P23-shaped work, but not yet done) and its full scope isn't documentable until P26/P29
+exist too.
 
 **Plan self-enforcement (P0 hard gates).** The plan is only worth its guarantees if it enforces
 itself; three cheap mechanisms make drift *visible* instead of silent, and are hard P0 gates (not
@@ -158,6 +168,15 @@ itself; three cheap mechanisms make drift *visible* instead of silent, and are h
   documents the one-command bootstrap (`composer install && composer dump-autoload
   --classmap-authoritative`, `bun install`) so the gate is reproducible off any fresh worktree — a
   green claim that can't be reproduced from a clean checkout does not count.
+
+  **A commit's `(pN)` scope is attributable to *a* phase, not necessarily the phase whose numbered
+  steps the work matches** (`docs/PLAN-REPLAY-AUDIT.md` finding #11): a full `git log` shows every
+  tag P0–P22 tracking this doc's own phase numbers with plausible small counts, but `(p23)` and
+  `(p24)` both ballooned into catch-all buckets for gap-closure/legacy-coupling-retirement work
+  that matches this doc's P23/P27 *content*, not its literal P24 ("Vite + TypeScript conversion",
+  separately real and still unbuilt as of this note). Trust the commit-tag ↔ doc-phase mapping for
+  P0–P22; for anything tagged `(p23)`/`(p24)`, read the commit/phase content against evidence
+  before assuming the tag names the actual phase being worked.
 
 ## Context
 

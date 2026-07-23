@@ -35,6 +35,15 @@ phases:
   - {id: P20, tier: T1,    depends_on: [P19],   status: done,    epoch: E}
   - {id: P21, tier: T1,    depends_on: [P20],   status: done,    epoch: E}
   - {id: P22, tier: T1,    depends_on: [P21],   status: done,    epoch: E}
+  # This field is binary (done/planned) by design (see this file's own header
+  # comment) and can't express partial completion -- docs/PLAN-REPLAY-AUDIT.md
+  # finding #9 flags that nuance for P23 specifically: its own gate text
+  # claims typed DTOs (finding #1), per-namespace tests (finding #2), and all
+  # 43 column-type migrations (finding #3) that were not actually built.
+  # `status: done` here means "P23's own numbered steps landed and the phase
+  # sequence correctly advanced to P24," not "every claim in P23's prose is
+  # true" -- being fixed as gap-closure backfill; re-verify against the audit
+  # before trusting this row in isolation.
   - {id: P23, tier: T1,    depends_on: [P22],   status: done,    epoch: E}
   - {id: P24, tier: T2,    depends_on: [P23],   status: planned, epoch: F}
   - {id: P25, tier: T2,    depends_on: [P24],   status: planned, epoch: F}
@@ -56,7 +65,12 @@ adoption:
 
 sec:
   - {id: SEC-01, phase: P4,  threat: "Sensitive files served over HTTP", verified_by: ".htaccess deny E2E (P4); isolation gate (P32)", status: done}
-  - {id: SEC-02, phase: P0,  threat: "Sensitive files served over HTTP", verified_by: ".htaccess deny E2E (P4); isolation gate (P32)", status: done}
+  # threat/verified_by previously a stale copy-paste of SEC-01's row; SEC-02's
+  # real definition (PLAN-REPLAY.md:470) is "CLI guards on all tools/*.php
+  # scripts". docs/PLAN-REPLAY-AUDIT.md finding #16 found
+  # tools/build-config-accessors.php missing its guard -- fixed, and
+  # tests/Arch/StructuralTest.php now enforces it on every tools/*.php script.
+  - {id: SEC-02, phase: P0,  threat: "CLI-only tools script invoked in a non-CLI context", verified_by: "PHP_SAPI guard on every tools/*.php script; tests/Arch/StructuralTest.php enforces it", status: done}
   # SEC-03 is fully closed, not just partially: confirmed via direct read of
   # .htaccess -- the SEC-01 deny ruleset's RewriteCond explicitly matches
   # "/tests/" (among other sensitive dirs) with a [F,L] (403 Forbidden,

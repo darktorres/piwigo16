@@ -17,6 +17,11 @@ declare(strict_types=1);
 // which retired its generator once its SCHEMA stopped growing) -- this
 // project's SCHEMA keeps growing through P17-23 domain migrations.
 
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('This script can only be run from the command line.');
+}
+
 require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Config\Config;

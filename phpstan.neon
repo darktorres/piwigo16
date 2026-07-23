@@ -11,9 +11,9 @@ parameters:
             # JS dependency tree — some npm packages ship stray .php files
             # (e.g. flatted's PHP port) that aren't part of this project.
             - node_modules/*
-            # Translation data files (arrays of strings), not logic.
-            - language/*.php
-            # Runtime-compiled Smarty templates + combined JS/CSS cache, not source.
+            # Runtime-compiled Smarty templates + combined JS/CSS cache, not
+            # source (verified real: temporarily un-excluding produces
+            # 1000+ errors in generated template code).
             - _data/*
             # Standalone maintenance script; its own header comment documents
             # that knplabs/github-api must be `composer require`d manually
@@ -30,10 +30,15 @@ parameters:
             # public/ (the new DocumentRoot) back to already-scanned real
             # directories (themes/, admin/themes/, dist/, _data/combined/).
             # PHPStan follows symlinked directories when scanning `.` --
-            # without this, the exact same file content gets analysed twice
-            # under two different path strings, and any existing baseline
-            # entry (keyed to the real path) doesn't match the symlinked
-            # duplicate, surfacing as a spurious "new" error.
+            # without this, the exact same 19 PHP files (11 under themes/,
+            # 8 under admin/themes/; dist/ and _data/combined/ currently
+            # hold none) get analysed twice under two different path
+            # strings -- wasted work today, and would double-report any
+            # future error under both paths. (No longer about baseline
+            # path-matching -- the PHPStan baseline was retired; verified
+            # by temporarily removing this exclusion and re-running: file
+            # count rose from 901 to 920 with the analysis otherwise
+            # unchanged.)
             - public/themes/*
             - public/admin/themes/*
             - public/dist/*

@@ -17,7 +17,7 @@ use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
 
 // provides data for site synchronization from the local file system
-class LocalSiteReader
+final class LocalSiteReader
 {
     /**
      * @var array<string, int>

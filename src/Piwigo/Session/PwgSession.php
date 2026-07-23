@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Session;
 
 // see https://php.watch/versions/8.4/session_set_save_handler-alt-signature-deprecated
-class PwgSession implements \SessionHandlerInterface
+final class PwgSession implements \SessionHandlerInterface
 {
     private readonly SessionService $service;
 

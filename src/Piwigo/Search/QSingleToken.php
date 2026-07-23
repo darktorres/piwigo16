@@ -23,7 +23,7 @@ namespace Piwigo\Search;
  * QNumericRangeScope, all in this same namespace) references them as
  * QSingleToken::QST_*.
  */
-class QSingleToken implements \Stringable
+final class QSingleToken implements \Stringable
 {
     public const int QST_QUOTED = 0x01;
 

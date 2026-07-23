@@ -50,7 +50,7 @@ final class ArrayHelper
      */
     public static function prependAppendArrayItems(array $array, string $prependStr, string $appendStr): array
     {
-        array_walk($array, function (&$value, $key) use ($prependStr, $appendStr): void {
+        array_walk($array, function (mixed &$value, int|string $key) use ($prependStr, $appendStr): void {
             $value = $prependStr . (is_scalar($value) ? (string) $value : '') . $appendStr;
         });
         return $array;

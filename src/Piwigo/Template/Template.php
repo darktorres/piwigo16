@@ -37,7 +37,7 @@ use Smarty\Smarty;
  * InstallWizard/UpgradeRunner are only ever constructed after
  * InstallBootstrap::activateConfigService()).
  */
-class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\TemplateInterface
+final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\TemplateInterface
 {
     /**
      * @var Smarty
@@ -1308,9 +1308,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param string $source
      * @param Smarty $smarty
-     * @return string|array<int|string, string|null>|null
      */
-    public static function prefilter_white_space($source, $smarty): string|array|null
+    public static function prefilter_white_space($source, $smarty): ?string
     {
         $ld = $smarty->getLeftDelimiter();
         $rd = $smarty->getRightDelimiter();
@@ -1338,9 +1337,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param string $source
      * @param Smarty $smarty
-     * @return string|array<int|string, string|null>|null
      */
-    public static function postfilter_language($source, $smarty): string|array|null
+    public static function postfilter_language($source, $smarty): ?string
     {
         // replaces echo PHP_STRING_LITERAL; with the string literal value
         $source = preg_replace_callback(

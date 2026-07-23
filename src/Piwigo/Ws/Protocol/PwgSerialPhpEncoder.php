@@ -14,7 +14,7 @@ namespace Piwigo\Ws\Protocol;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 use Piwigo\Ws\PwgError;
 
-class PwgSerialPhpEncoder extends PwgResponseEncoder
+final class PwgSerialPhpEncoder extends PwgResponseEncoder
 {
     #[\Override]
     public function encodeResponse($response): string

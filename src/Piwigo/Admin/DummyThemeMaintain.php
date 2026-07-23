@@ -14,7 +14,7 @@ namespace Piwigo\Admin;
 /**
  * used when a theme uses the old procedural declaration of maintenance methods
  */
-class DummyThemeMaintain extends ThemeMaintain
+final class DummyThemeMaintain extends ThemeMaintain
 {
     // Each is_callable() here checks for a bare function dynamically defined
     // by a theme's own maintain.inc.php (include_once'd in
@@ -22,6 +22,7 @@ class DummyThemeMaintain extends ThemeMaintain
     // knowable) — genuinely undecidable until real ThemeMaintain contracts
     // (P31) replace this pre-2.7 procedural fallback entirely.
     /**
+     * @param string $theme_version
      * @param array<int, string> $errors - not natively typed: ThemeMaintain's
      *   own base declares $errors with no native type, and PHP's parameter
      *   contravariance rules fatal on narrowing an untyped parent param to a

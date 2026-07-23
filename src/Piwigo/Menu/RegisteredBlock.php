@@ -14,7 +14,7 @@ namespace Piwigo\Menu;
 /**
  * Represents a menu block registered in a BlockManager object.
  */
-class RegisteredBlock
+final class RegisteredBlock
 {
     /**
      * @param string $id
@@ -22,9 +22,9 @@ class RegisteredBlock
      * @param string $owner
      */
     public function __construct(
-        protected $id,
-        protected $name,
-        protected $owner
+        private $id,
+        private $name,
+        private $owner
     ) {}
 
     /**

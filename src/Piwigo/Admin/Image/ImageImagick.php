@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
-class ImageImagick implements ImageInterface
+final class ImageImagick implements ImageInterface
 {
     /**
      * @var \Imagick

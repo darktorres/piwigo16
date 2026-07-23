@@ -16,7 +16,7 @@ namespace Piwigo\Core;
  *
  * @author  Kenny Katzgrau <katzgrau@gmail.com>
  */
-class Logger
+final class Logger
 {
     /**
      * Error severity, from low to high. From BSD syslog RFC, section 4.1.1

@@ -16,23 +16,23 @@ use Piwigo\Template\Template;
 /**
  * Manages a set of RegisteredBlock and DisplayBlock.
  */
-class BlockManager
+final class BlockManager
 {
     /**
      * @var RegisteredBlock[]
      */
-    protected $registered_blocks = [];
+    private $registered_blocks = [];
 
     /**
      * @var DisplayBlock[]
      */
-    protected $display_blocks = [];
+    private $display_blocks = [];
 
     /**
      * @param string $id
      */
     public function __construct(
-        protected $id
+        private $id
     ) {}
 
     /**
@@ -151,7 +151,7 @@ class BlockManager
     /**
      * Sorts the blocks.
      */
-    protected function sort_blocks(): void
+    private function sort_blocks(): void
     {
         uasort($this->display_blocks, self::cmp_by_position(...));
     }
@@ -159,7 +159,7 @@ class BlockManager
     /**
      * Callback for blocks sorting.
      */
-    protected static function cmp_by_position(DisplayBlock $a, DisplayBlock $b): int
+    private static function cmp_by_position(DisplayBlock $a, DisplayBlock $b): int
     {
         return $a->get_position() <=> $b->get_position();
     }

@@ -16,7 +16,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 
-class PwgTemplateAdapter
+final class PwgTemplateAdapter
 {
     #[\Deprecated(message: 'use "translate" modifier')]
     public function l10n(string $text): string
@@ -52,9 +52,8 @@ class PwgTemplateAdapter
     /**
      * @param string $type
      * @param array<string, mixed> $img
-     * @return string|array<int|string, mixed>
      */
-    public function derivative_url($type, $img): string|array
+    public function derivative_url($type, $img): string
     {
         return DerivativeImage::url($type, $img);
     }

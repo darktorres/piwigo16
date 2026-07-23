@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
-class QNumericRangeScope extends QSearchScope
+final class QNumericRangeScope extends QSearchScope
 {
     /**
      * @param string[] $aliases

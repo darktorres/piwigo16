@@ -7,7 +7,7 @@ namespace Piwigo\Auth;
 use Endroid\QrCode\Builder\Builder;
 use Piwigo\Core\UrlServiceInterface;
 
-class PwgTOTP
+final class PwgTOTP
 {
     /**
      * Generate a Base32 secret for TOTP

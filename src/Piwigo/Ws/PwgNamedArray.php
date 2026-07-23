@@ -16,7 +16,7 @@ namespace Piwigo\Ws;
  * Provides naming clues for xml output (xml attributes vs. xml child elements?)
  * Usually returned by web service function implementation.
  */
-class PwgNamedArray
+final class PwgNamedArray
 {
     /* private */
     /**

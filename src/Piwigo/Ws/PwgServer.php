@@ -19,7 +19,7 @@ use Piwigo\Core\WsParamType;
 use Piwigo\Html\HtmlService;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 
-class PwgServer
+final class PwgServer
 {
     public ?PwgRequestHandler $_requestHandler = null;
 

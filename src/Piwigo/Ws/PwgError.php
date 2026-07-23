@@ -16,7 +16,7 @@ use Piwigo\Html\HtmlService;
 /**
  * PwgError object can be returned from any web service function implementation.
  */
-class PwgError
+final class PwgError
 {
     private readonly int $_code;
 

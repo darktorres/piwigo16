@@ -14,7 +14,7 @@ namespace Piwigo\Search;
 /**
  * Structure of results being filled from different tables
  */
-class QResults
+final class QResults
 {
     /**
      * @var array<int, array<string, mixed>>

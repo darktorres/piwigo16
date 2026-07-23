@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\Name\UnqualifiedName;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
@@ -76,13 +78,22 @@ final class SchemaParityTest extends IntegrationTestCase
     public function test_config_table_columns_match_config_entry_mapping(): void
     {
         $metadata = $this->em->getClassMetadata(ConfigEntry::class);
+        $tableName = $metadata->getTableName();
+        if ($tableName === '') {
+            self::fail('ConfigEntry metadata has no table name');
+        }
         $sm = $this->em->getConnection()->createSchemaManager();
-        $columns = $sm->listTableColumns($metadata->getTableName());
+        $columns = $sm->introspectTableColumnsByUnquotedName($tableName);
+        $columnNames = array_map(static function (Column $column): string {
+            $objectName = $column->getObjectName();
+            self::assertInstanceOf(UnqualifiedName::class, $objectName);
+            return $objectName->getIdentifier()->getValue();
+        }, $columns);
 
         foreach (['param', 'value', 'comment'] as $mappedField) {
-            self::assertArrayHasKey(
+            self::assertContains(
                 $mappedField,
-                $columns,
+                $columnNames,
                 "ConfigEntry maps '{$mappedField}' but the live {$metadata->getTableName()} table has no such column"
             );
         }

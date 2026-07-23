@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
-class QExpression extends QMultiToken
+final class QExpression extends QMultiToken
 {
     /**
      * @var array<string, QSearchScope>

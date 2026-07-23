@@ -14,7 +14,7 @@ namespace Piwigo\Template;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
 
-class ScriptLoader
+final class ScriptLoader
 {
     /**
      * @var array<string, Script>

@@ -12,7 +12,7 @@ namespace Piwigo\Auth;
  * @author Bryan Ruiz
  * @url https://www.php.net/manual/en/function.base-convert.php#102232
  */
-class PwgBase32
+final class PwgBase32
 {
     /**
      * @var array<int, string>

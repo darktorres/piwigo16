@@ -14,19 +14,19 @@ namespace Piwigo\Menu;
 /**
  * Represents a menu block ready for display in the BlockManager object.
  */
-class DisplayBlock
+final class DisplayBlock
 {
     /**
      * @var int
      */
-    protected $_position;
+    private $_position;
 
     /**
      * @var string|null null until set_title() is called (the constructor
      *   never sets it) — get_title() falls back to the registered block's
      *   own name in that case
      */
-    protected $_title;
+    private $_title;
 
     /**
      * @var mixed
@@ -52,7 +52,7 @@ class DisplayBlock
      * @param RegisteredBlock $_registeredBlock
      */
     public function __construct(
-        protected $_registeredBlock
+        private $_registeredBlock
     ) {}
 
     /**

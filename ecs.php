@@ -8,7 +8,6 @@ use PhpCsFixer\Fixer\Phpdoc\GeneralPhpdocAnnotationRemoveFixer;
 use PhpCsFixer\Fixer\Strict\DeclareStrictTypesFixer;
 use PhpCsFixer\Fixer\StringNotation\NoTrailingWhitespaceInStringFixer;
 use PhpCsFixer\Fixer\Whitespace\LineEndingFixer;
-use Symplify\CodingStandard\Fixer\Commenting\ParamReturnAndVarTagMalformsFixer;
 use Symplify\CodingStandard\Fixer\LineLength\LineLengthFixer;
 use Symplify\EasyCodingStandard\Config\ECSConfig;
 use Symplify\EasyCodingStandard\ValueObject\Option;
@@ -28,7 +27,6 @@ return ECSConfig::configure()
         // Too aggressive on ~500 files of untouched legacy docblocks this phase.
         GeneralPhpdocAnnotationRemoveFixer::class,
         LineLengthFixer::class,
-        ParamReturnAndVarTagMalformsFixer::class,
     ])
     ->withRootFiles()
     ->withPreparedSets(

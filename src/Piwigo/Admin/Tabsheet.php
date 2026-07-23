@@ -13,7 +13,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Template\Template;
 
-class Tabsheet
+final class Tabsheet
 {
     /**
      * @var array<string, array{caption: string, url: string}>

@@ -13,7 +13,7 @@ namespace Piwigo\Template;
 
 use Piwigo\Core\UrlServiceInterface;
 
-class CssLoader
+final class CssLoader
 {
     /**
      * @var Css[]

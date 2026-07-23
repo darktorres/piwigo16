@@ -28,7 +28,7 @@ use Piwigo\Session\SessionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
-class C13yInternal
+final class C13yInternal
 {
     /**
      * Legacy Coupling Retirement Phase 8, 8k: registration used to be a

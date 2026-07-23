@@ -16,7 +16,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 
-class PwgRestEncoder extends PwgResponseEncoder
+final class PwgRestEncoder extends PwgResponseEncoder
 {
     private ?PwgXmlWriter $_writer = null;
 

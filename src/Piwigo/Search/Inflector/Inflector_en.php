@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Search\Inflector;
 
-class Inflector_en implements InflectorInterface
+final class Inflector_en implements InflectorInterface
 {
     /**
      * @var array<string, int|string>

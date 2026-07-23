@@ -14,7 +14,7 @@ namespace Piwigo\Admin;
 /**
  * used when a plugin uses the old procedural declaration of maintenance methods
  */
-class DummyPluginMaintain extends PluginMaintain
+final class DummyPluginMaintain extends PluginMaintain
 {
     // Each is_callable() here checks for a bare function dynamically defined
     // by a plugin's own maintain.inc.php (include_once'd in
@@ -22,6 +22,7 @@ class DummyPluginMaintain extends PluginMaintain
     // statically knowable) — genuinely undecidable until real PluginMaintain
     // contracts (P31) replace this pre-2.7 procedural fallback entirely.
     /**
+     * @param string $plugin_version
      * @param array<int, string> $errors - not natively typed: PluginMaintain's
      *   own base declares $errors with no native type, and PHP's parameter
      *   contravariance rules fatal on narrowing an untyped parent param to a
@@ -40,6 +41,7 @@ class DummyPluginMaintain extends PluginMaintain
     }
 
     /**
+     * @param string $plugin_version
      * @param array<int, string> $errors - see install()'s $errors docblock
      */
     #[\Override]
@@ -79,6 +81,8 @@ class DummyPluginMaintain extends PluginMaintain
     }
 
     /**
+     * @param string $old_version
+     * @param string $new_version
      * @param array<int, string> $errors - see install()'s $errors docblock
      */
     #[\Override]

@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Protocol;
 
-class PwgXmlWriter
+final class PwgXmlWriter
 {
     /**
      * @var string

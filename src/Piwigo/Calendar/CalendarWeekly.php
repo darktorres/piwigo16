@@ -16,7 +16,7 @@ use Piwigo\Core\Lang;
 /**
  * Weekly calendar style (composed of years/week in years and days in week)
  */
-class CalendarWeekly extends CalendarBase
+final class CalendarWeekly extends CalendarBase
 {
     /**
      * Initialize the calendar

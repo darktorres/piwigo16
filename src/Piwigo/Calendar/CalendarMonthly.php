@@ -18,7 +18,7 @@ use Piwigo\Image\SrcImage;
 /**
  * Monthly calendar style (composed of years/months and days)
  */
-class CalendarMonthly extends CalendarBase
+final class CalendarMonthly extends CalendarBase
 {
     /**
      * Initialize the calendar.

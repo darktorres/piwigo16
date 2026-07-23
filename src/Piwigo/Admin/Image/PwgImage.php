@@ -26,7 +26,7 @@ namespace Piwigo\Admin\Image;
  * @method bool compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity)
  * @method bool write(string $destination_filepath)
  */
-class PwgImage
+final class PwgImage
 {
     /**
      * @var ImageInterface|null null until either a 'load_image_library'
@@ -378,7 +378,7 @@ class PwgImage
     /**
      * @return array{source: string, destination: string, width: int|float, height: int|float, size: string, time: string|null, library: string|false}
      */
-    protected function get_resize_result(string $destination_filepath, int|float $width, int|float $height, ?float $time = null): array
+    private function get_resize_result(string $destination_filepath, int|float $width, int|float $height, ?float $time = null): array
     {
         // this is purely diagnostic/log output -- fall back to 0 KB rather
         // than throwing if the destination somehow isn't readable.

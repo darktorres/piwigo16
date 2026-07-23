@@ -16,7 +16,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgRequestHandler;
 use Piwigo\Ws\PwgServer;
 
-class PwgRestRequestHandler extends PwgRequestHandler
+final class PwgRestRequestHandler extends PwgRequestHandler
 {
     #[\Override]
     public function handleRequest(PwgServer &$service): void

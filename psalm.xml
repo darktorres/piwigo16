@@ -438,11 +438,32 @@
              with zero selections) — the count() === 0 guard here is real,
              reachable behavior, not dead code. composer analyse:phpstan is
              clean here with zero changes. -->
+        <!-- CommentsController.php: two genuine PHPStan-vs-Psalm
+             disagreements, each verified by attempting the real fix first.
+             - $request_uri (is_string($_SERVER['REQUEST_URI'] ?? '') guard):
+               Psalm's $_SERVER stub treats REQUEST_URI as always string;
+               removing the guard makes PHPStan flag the downstream
+               urlencode() call as "expects string, mixed given" (PHPStan
+               does NOT consider REQUEST_URI always-string) — the two tools
+               disagree in opposite directions, so the guard must stay.
+             - $items_number_value / $selected_items_number (is_numeric(...)
+               ? ... : 'all' ternaries): Psalm's flow analysis prunes 'all'
+               from the type after the preceding guard, but PHPStan doesn't
+               and reports zero errors with the ternary present — Psalm's
+               narrowing here is the imprecise one; the 'all' fallback is
+               real, reachable behavior (this list's own numeric-or-'all'
+               contract), not dead code. -->
         <TypeDoesNotContainType>
             <errorLevel type="suppress">
                 <file name="src/Piwigo/Admin/BatchManagerGlobalPageRenderer.php"/>
+                <file name="src/Piwigo/Controller/CommentsController.php"/>
             </errorLevel>
         </TypeDoesNotContainType>
+        <RedundantCondition>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Controller/CommentsController.php"/>
+            </errorLevel>
+        </RedundantCondition>
         <!-- Frozen, already-applied DbPatch script (see the "don't hand-edit
              frozen migrations/DbPatch scripts" precedent applied elsewhere
              in this file). preg_replace()'s templated $subject constraint

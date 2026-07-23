@@ -102,8 +102,11 @@ final class CommentsController implements ControllerInterface
         $comments_page_nb_comments = \Piwigo\Config\Config::commentsPageNbComments();
 
         // if the default value is not in the expected values, we add it in
-        // the $items_number array
-        if (! in_array($comments_page_nb_comments, $items_number, true)) {
+        // the $items_number array (only compare against the numeric options
+        // -- 'all' can never match an int, so filter it out rather than let
+        // Psalm/PHPStan flag that one array element as an impossible
+        // comparison).
+        if (! in_array($comments_page_nb_comments, array_filter($items_number, is_int(...)), true)) {
             $items_number_new = [];
 
             $is_inserted = false;
@@ -144,7 +147,10 @@ final class CommentsController implements ControllerInterface
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_comments');
 
         $since_raw = $_GET['since'] ?? null;
-        $since_present = is_scalar($since_raw) && $since_raw !== '' && $since_raw !== '0' && $since_raw !== 0 && $since_raw !== 0.0 && $since_raw !== false;
+        // $_GET values are always strings (or arrays, for foo[]=... params) --
+        // never a real PHP int/float/bool -- so only the string-emptiness
+        // checks are reachable here.
+        $since_present = is_string($since_raw) && $since_raw !== '' && $since_raw !== '0';
         if ($since_present) {
             $since = intval($since_raw);
         } else {
@@ -189,7 +195,7 @@ final class CommentsController implements ControllerInterface
                 ->validate('cat', $_GET, false, ValidationPattern::ID);
 
             $cat_id = $_GET['cat'];
-            $cat_id = is_scalar($cat_id) ? (string) $cat_id : '0';
+            $cat_id = is_string($cat_id) ? $cat_id : '0';
 
             $category_ids = self::categoryService($conn)->getSubcatIds([$cat_id]);
             if ($category_ids === []) {
@@ -207,8 +213,10 @@ final class CommentsController implements ControllerInterface
 
         // search a particular author
         $author_raw = $_GET['author'] ?? null;
-        if (is_scalar($author_raw) && $author_raw !== '' && $author_raw !== '0' && $author_raw !== 0 && $author_raw !== 0.0 && $author_raw !== false) {
-            $author_search = (string) $author_raw;
+        // $_GET values are always strings (or arrays) -- see $since_present's
+        // own comment above.
+        if (is_string($author_raw) && $author_raw !== '' && $author_raw !== '0') {
+            $author_search = $author_raw;
             $whereClauses[] =
               '(u.' . $username_field . ' = \'' . $author_search . '\' OR author = \'' . $author_search . '\')';
         }
@@ -216,14 +224,16 @@ final class CommentsController implements ControllerInterface
         // search a specific comment (if you're coming directly from an
         // admin notification email)
         $comment_id_raw = $_GET['comment_id'] ?? null;
-        if (is_scalar($comment_id_raw) && $comment_id_raw !== '' && $comment_id_raw !== '0' && $comment_id_raw !== 0 && $comment_id_raw !== 0.0 && $comment_id_raw !== false) {
+        // $_GET values are always strings (or arrays) -- see $since_present's
+        // own comment above.
+        if (is_string($comment_id_raw) && $comment_id_raw !== '' && $comment_id_raw !== '0') {
             new \Piwigo\Validation\InputValidator()
                 ->validate('comment_id', $_GET, false, ValidationPattern::ID);
             // check_input_parameter() validated this against
             // ValidationPattern::ID (/^\d+$/) above -- it would have called
             // fatal_error() otherwise.
             assert(is_numeric($_GET['comment_id']));
-            $get_comment_id = (string) $_GET['comment_id'];
+            $get_comment_id = $_GET['comment_id'];
 
             // currently, the $_GET['comment_id'] is only used by admins
             // from email for management purpose (validate/delete)
@@ -242,8 +252,10 @@ final class CommentsController implements ControllerInterface
 
         // search a substring among comments content
         $keyword_raw = $_GET['keyword'] ?? null;
-        if (is_scalar($keyword_raw) && $keyword_raw !== '' && $keyword_raw !== '0' && $keyword_raw !== 0 && $keyword_raw !== 0.0 && $keyword_raw !== false) {
-            $keyword_search = (string) $keyword_raw;
+        // $_GET values are always strings (or arrays) -- see $since_present's
+        // own comment above.
+        if (is_string($keyword_raw) && $keyword_raw !== '' && $keyword_raw !== '0') {
+            $keyword_search = $keyword_raw;
             $keywords = preg_split('/[\s,;]+/', $keyword_search);
             // the pattern above is a hardcoded, always-valid regex
             assert($keywords !== false);
@@ -291,8 +303,9 @@ final class CommentsController implements ControllerInterface
                 // check_input_parameter() validated this against
                 // ValidationPattern::ID (/^\d+$/) above -- it would have
                 // called fatal_error() otherwise.
-                assert(is_numeric($_GET[$action] ?? null));
-                $comment_id = (int) ($_GET[$action] ?? 0);
+                $action_id_raw = $_GET[$action] ?? null;
+                assert(is_numeric($action_id_raw));
+                $comment_id = (int) $action_id_raw;
                 break;
             }
         }
@@ -321,7 +334,9 @@ final class CommentsController implements ControllerInterface
 
                 if ($action === 'edit') {
                     $content_raw = $_POST['content'] ?? null;
-                    if (is_scalar($content_raw) && $content_raw !== '' && $content_raw !== '0' && $content_raw !== 0 && $content_raw !== 0.0 && $content_raw !== false) {
+                    // $_POST values are always strings (or arrays) -- see
+                    // $since_present's own comment above.
+                    if (is_string($content_raw) && $content_raw !== '' && $content_raw !== '0') {
                         new \Piwigo\Csrf\CsrfService()
                             ->checkOrFail(new HtmlService(), $this->redirectService);
                         $post_key = $_POST['key'] ?? null;
@@ -389,8 +404,10 @@ final class CommentsController implements ControllerInterface
             'comments' => 'comments.tpl',
             'comment_list' => 'comment_list.tpl',
         ]);
-        $keyword_param = (isset($_GET['keyword']) && is_scalar($_GET['keyword'])) ? (string) $_GET['keyword'] : null;
-        $author_param = (isset($_GET['author']) && is_scalar($_GET['author'])) ? (string) $_GET['author'] : null;
+        $keyword_param_raw = $_GET['keyword'] ?? null;
+        $keyword_param = is_string($keyword_param_raw) ? $keyword_param_raw : null;
+        $author_param_raw = $_GET['author'] ?? null;
+        $author_param = is_string($author_param_raw) ? $author_param_raw : null;
 
         $template->assign(
             [
@@ -635,7 +652,7 @@ SELECT *
                     );
 
                     $comment_id_str = is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '';
-                    if ($edit_comment !== null and is_numeric($edit_comment) and $comment_id_str === (string) $edit_comment) {
+                    if ($edit_comment !== null and is_numeric($edit_comment) and $comment_id_str === $edit_comment) {
                         $tpl_comment['IN_EDIT'] = true;
                         $key = new \Piwigo\Auth\EphemeralKeyService()
                             ->generate(2, $image_id);

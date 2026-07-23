@@ -756,8 +756,27 @@ final class ImageDerivativeController implements ControllerInterface
             }
         }
 
+        // Real bug, found via a fixture-regeneration discrepancy and
+        // confirmed present identically in the 16.x-rewrite reference
+        // (Image/DerivativePipeline.php): this used to unconditionally
+        // prepend './' when the bare request path resolves to a real file,
+        // "to match #images.path" (findByPath() below) -- but
+        // Admin\Upload\UploadService::addUploadedFile() (both here and in
+        // the reference) stores images.path WITHOUT a leading './', so that
+        // match could never succeed for any freshly-uploaded image; visibly
+        // confirmed as a broken next/previous-photo thumbnail on a real
+        // picture page, not just a theoretical mismatch. The './' served no
+        // filesystem purpose of its own ('./' is an inert path segment --
+        // is_file()/filemtime()/PwgImage all resolve it identically with or
+        // without it), and doesn't affect the str_contains() checks below
+        // (pwg_representative/themes/plugins), which don't care about a
+        // leading './' either -- so leaving $req bare here is a pure fix,
+        // not a behavior trade-off. The '../' branch is unrelated and
+        // unchanged: unlike './', a real '../' is NOT inert -- it's the
+        // only thing that makes the subsequent is_file()/filemtime() calls
+        // resolve to the correct (one-level-up) file at all.
         if (is_file($this->paths->root . $req . $ext)) {
-            $req = './' . $req; // will be used to match #iamges.path
+            // $req already matches images.path as stored -- no rewrite needed.
         } elseif (is_file($this->paths->root . '../' . $req . $ext)) {
             $req = '../' . $req;
         }

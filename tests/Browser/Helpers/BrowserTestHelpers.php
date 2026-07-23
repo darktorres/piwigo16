@@ -538,6 +538,39 @@ final class BrowserTestHelpers
     }
 
     /**
+     * The stable, date-based directory portion of an image's stored path is
+     * predictable (Env::now()'s frozen test clock -- see
+     * RegenerateFixtureTest's own comment), but the filename's random
+     * content-hash suffix is not: it's freshly generated every time the
+     * fixture is regenerated. Callers needing a real derivative URL for a
+     * specific fixture image (e.g. `i.php?/{path}-sq.jpg`) must look the
+     * current path up rather than hardcode it.
+     */
+    public static function imagePath(int $imageId): string
+    {
+        $db = new \mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $prefix = getenv('PIWIGO_DB_PREFIX');
+        $prefix = $prefix !== false ? $prefix : 'piwigo_';
+        $result = $db->query(sprintf('SELECT path FROM %simages WHERE id = %d', $prefix, $imageId));
+        if (! $result instanceof \mysqli_result) {
+            $db->close();
+            throw new \RuntimeException("imagePath(): query failed for image {$imageId}");
+        }
+        $row = $result->fetch_assoc();
+        $db->close();
+        if (! is_array($row) || ! is_string($row['path'] ?? null)) {
+            throw new \RuntimeException("imagePath(): no path found for image {$imageId}");
+        }
+
+        return $row['path'];
+    }
+
+    /**
      * Sets the anonymous guest user's (user_id 2) active theme. The fixture
      * defaults it to 'modus' -- a theme directory that doesn't exist in
      * this repo (only 'default' and 'standard_pages' do), which

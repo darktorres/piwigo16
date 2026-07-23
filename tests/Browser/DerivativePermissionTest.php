@@ -21,7 +21,33 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 //
 // Fixture shape (tests/Fixtures/piwigo-17.0.sql, see CategoryRepositoryTest's
 // own docblock): category 2 "Nested Sub Album" has 2 direct images (4, 5),
-// neither also in category 1 -- image 4 is file 20260801000000-3df68537.jpg.
+// neither also in category 1 -- image 4's path is looked up via
+// H::imagePath() below, not hardcoded: the filename's random content-hash
+// suffix is freshly generated every time the fixture is regenerated (only
+// the date-based directory portion is stable, from Env::now()'s frozen
+// test clock).
+//
+// docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: both tests below used
+// to 404 with "Db file path not found" against any freshly-uploaded image
+// (visibly confirmed as a broken next/previous-photo thumbnail on a real
+// picture page, not just here) -- a real, pre-existing bug (also present in
+// the 16.x-rewrite reference identically), fixed in
+// ImageDerivativeController::parseRequest() -- see that method's own
+// docblock at the fix site for the full explanation.
+
+/**
+ * Inserts a derivative size suffix ('sq', 'th', ...) before an image path's
+ * extension, e.g. 'upload/2026/08/01/X.jpg' -> 'upload/2026/08/01/X-sq.jpg'.
+ */
+function derivativePath(string $imagePath, string $suffix): string
+{
+    $withoutExt = preg_replace('/\.\w+$/', '', $imagePath);
+    if (! is_string($withoutExt)) {
+        throw new RuntimeException("derivativePath(): preg_replace() failed for '{$imagePath}'");
+    }
+
+    return $withoutExt . '-' . $suffix . '.jpg';
+}
 
 afterEach(function (): void {
     // Always restore, even if an assertion above failed mid-test -- a
@@ -36,7 +62,7 @@ it('denies an anonymous request for a private album\'s not-yet-cached derivative
     // unlike a size at or above 200x150 (which would 301-redirect to the
     // true original via action.php instead of generating, a different
     // code path from the one this test targets).
-    $path = 'i.php?/upload/2026/08/01/20260801000000-3df68537-sq.jpg';
+    $path = 'i.php?/' . derivativePath(H::imagePath(4), 'sq');
 
     expect(H::httpStatus($path))->toBe(200);
 
@@ -46,7 +72,7 @@ it('denies an anonymous request for a private album\'s not-yet-cached derivative
 });
 
 it('denies an anonymous request for a private album\'s already-cached derivative', function (): void {
-    $path = 'i.php?/upload/2026/08/01/20260801000000-3df68537-th.jpg';
+    $path = 'i.php?/' . derivativePath(H::imagePath(4), 'th');
 
     // Prime the cache while the album is still public.
     expect(H::httpStatus($path))->toBe(200);

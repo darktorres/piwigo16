@@ -22,10 +22,10 @@ declare(strict_types=1);
 // Router's own docblock for the real live bug this mechanism fixes, and
 // why it isn't derived from real filesystem paths). RequestMountDepth::
 // set() below carries the same fact to UrlService::getRootUrl() (outbound
-// link generation) -- set as early as possible, before include/
-// common.inc.php runs, since URL generation can be reached from deep
-// inside that bootstrap chain, well before the request object (and its
-// own MOUNT_DEPTH_ATTRIBUTE) exists.
+// link generation) -- set as early as possible, before
+// RequestBootstrap::bootEntryPoint() runs, since URL generation can be
+// reached from deep inside that bootstrap chain, well before the request
+// object (and its own MOUNT_DEPTH_ATTRIBUTE) exists.
 require __DIR__ . '/../../vendor/autoload.php';
 
 use Piwigo\Bootstrap\CommonBootstrap;
@@ -40,7 +40,7 @@ use Piwigo\Routing\Router;
 $paths = Paths::fromRoot(dirname(__DIR__, 2));
 RequestMountDepth::set(1);
 AdminContext::mark();
-include_once $paths->root . 'include/common.inc.php';
+\Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
 
 CommonBootstrap::run($paths);
 

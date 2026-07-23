@@ -13,12 +13,10 @@ declare(strict_types=1);
 // this file is now pure bootstrap + dispatch, matching index.php's own
 // final form.
 
-// vendor/autoload.php must be required directly here (not just reached
-// transitively via common.inc.php's own include/env.inc.php) -- Paths::
-// fromRoot() below needs the autoloader before common.inc.php has even
-// started running. Requiring it twice is safe (PHP's own realpath-keyed
-// include cache no-ops the second require). Mirrors index.php's own
-// ordering exactly.
+// vendor/autoload.php must be required directly here -- Paths::fromRoot()
+// below and RequestBootstrap::bootEntryPoint() are both Piwigo\ classes,
+// so the autoloader must already be active before either is referenced.
+// Mirrors index.php's own ordering exactly.
 require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Admin\AdminShell;
@@ -33,15 +31,15 @@ use Piwigo\Url\UrlService;
 $paths = Paths::fromRoot(dirname(__DIR__));
 AdminContext::mark();
 
-include_once $paths->root . 'include/common.inc.php';
+\Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
 
 // P21 boots the Kernel/DI container on the admin.php path too -- needed by
 // AdminDispatcher (inside AdminShell) to resolve AdminSubControllerInterface
-// services. Safe to run after common.inc.php's own legacy
-// config/db/session/user bootstrap: every attachGlobals() this calls is
-// additive/idempotent (CurrentUser/PageState/Lang all bridge onto or read
-// from the *existing* $GLOBALS state rather than overwriting it -- see
-// their own docblocks), same ordering index.php already uses.
+// services. Safe to run after RequestBootstrap::bootEntryPoint()'s own
+// legacy config/db/session/user bootstrap: every attachGlobals() this
+// calls is additive/idempotent (CurrentUser/PageState/Lang all bridge onto
+// or read from the *existing* $GLOBALS state rather than overwriting it --
+// see their own docblocks), same ordering index.php already uses.
 CommonBootstrap::run($paths);
 
 new AdminShell(new RedirectService(), new UrlService(new HtmlService()), CurrentConfigService::get(), $paths)

@@ -2,7 +2,7 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": [
     "build/noop.ts",
-    "admin/themes/default/js/*.js",
+    "themes/admin/default/js/*.js",
     "themes/default/js/*.js",
     "!themes/default/js/jquery.js",
     "!themes/default/js/jquery.min.js",
@@ -11,7 +11,7 @@
     "themes/standard_pages/js/*.js"
   ],
   "project": [
-    "admin/themes/default/js/*.js",
+    "themes/admin/default/js/*.js",
     "themes/default/js/*.js",
     "!themes/default/js/jquery.js",
     "!themes/default/js/jquery.min.js",

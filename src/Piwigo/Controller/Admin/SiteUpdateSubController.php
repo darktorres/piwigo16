@@ -69,7 +69,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * same condition but never re-derives the POST independently, so one
  * early check covers the whole flow); the template's own `<form>` now
  * carries a hidden pwg_token field too (see
- * admin/themes/default/template/site_update.tpl).
+ * themes/admin/default/template/site_update.tpl).
  *
  * Also fixed 2 real issues found during a fresh full re-read, not carried
  * over from the earlier batch-6j scoping pass:

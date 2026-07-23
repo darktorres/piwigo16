@@ -27,20 +27,13 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Env;
 use Piwigo\Core\Paths;
 
-// Unlike this file's own former "never requires vendor/autoload.php,
-// relies entirely on include/env.inc.php" shape (Legacy Coupling
-// Retirement Phase 8, 8b): Paths::fromRoot() below is a Piwigo\ class,
-// so the autoloader must be required explicitly first, matching every
-// other real entry point. Requiring it twice is safe (PHP's own
-// realpath-keyed include cache no-ops the second require via
-// include/env.inc.php below), same precedent index.php's own docblock
-// documents.
+// vendor/autoload.php must be required directly here -- Paths::fromRoot()
+// below is a Piwigo\ class, so the autoloader must already be active
+// before it's referenced, matching every other real entry point.
 require __DIR__ . '/../vendor/autoload.php';
 
-// ----------------------------------------------------------- include
 $paths = Paths::fromRoot(dirname(__DIR__));
 
-include $paths->root . 'include/env.inc.php';
 Env::loadEnvFile($paths->root);
 
 // Legacy Coupling Retirement Phase 8, 8b (the "boot-first" fix, extended

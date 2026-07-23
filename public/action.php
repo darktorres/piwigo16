@@ -13,9 +13,10 @@ declare(strict_types=1);
 // (config/routes.php's `/action.php` route); this file is now pure
 // bootstrap + dispatch, matching every other P22 controller's root file.
 // session_cache_limiter('public') stays here (not in the controller) --
-// it must run before session_start(), which include/common.inc.php calls
-// directly below, well before CommonBootstrap::run()/RequestPipeline::
-// handle() dispatch to the controller.
+// it must run before session_start(), which RequestBootstrap::
+// bootEntryPoint() triggers directly below, well before
+// CommonBootstrap::run()/RequestPipeline::handle() dispatch to the
+// controller.
 require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Bootstrap\CommonBootstrap;
@@ -27,7 +28,7 @@ use Piwigo\Http\ResponseEmitter;
 // ----------------------------------------------------------- include
 $paths = Paths::fromRoot(dirname(__DIR__));
 session_cache_limiter('public');
-include_once $paths->root . 'include/common.inc.php';
+\Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
 
 CommonBootstrap::run($paths);
 

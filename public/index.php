@@ -39,7 +39,7 @@ use Piwigo\Http\ResponseEmitter;
 // DocumentRoot moves to public/ together with every entry file (see
 // Router's own docblock).
 $paths = Paths::fromRoot(dirname(__DIR__));
-include_once $paths->root . 'include/common.inc.php';
+\Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
 
 CommonBootstrap::run($paths);
 

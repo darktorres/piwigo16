@@ -10,7 +10,6 @@ _data/
 
 # Legacy CSS — excluded until P30 (docs/PLAN-REPLAY.md's additive-only rule)
 themes/
-admin/themes/
 template-extension/
 tools/ws/
 

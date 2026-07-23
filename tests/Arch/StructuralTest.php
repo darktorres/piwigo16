@@ -794,10 +794,20 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // Workstream C3: Bootstrap/RequestBootstrap.php's own 2 raw sites
         // (the install-redirect in configure(), the gallery-locked 503 in
         // finalize()) now throw Piwigo\Http\ResponseReadyException too,
-        // caught by the same include/common.inc.php catch point as
-        // RequestBootstrap::configure()/connect()/finalize()'s other
+        // caught by the same RequestBootstrap::bootEntryPoint() catch point
+        // (below) as configure()/connect()/finalize()'s other
         // short-circuits -- both reachable from exactly one dispatch
         // context (the bootstrap phase), unlike UserService.php below.
+        //
+        // include/+admin/ deletion batch: bootEntryPoint()'s own catch-and-
+        // emit block (`new ResponseEmitter()->emit($e->response()); exit;`)
+        // is the exact same statement that used to live at the bottom of
+        // include/common.inc.php -- outside src/Piwigo/, so never counted
+        // by this test before. Every entry point that used to `include`
+        // that seam file now calls this method directly instead, so the
+        // one exit() site simply moved into a file this test scans; it is
+        // not new debt.
+        'Bootstrap/RequestBootstrap.php' => 1,
 
         // 503 Service-Unavailable raw response (custom Retry-After header
         // + hand-written body, no template): the user-cache-still-

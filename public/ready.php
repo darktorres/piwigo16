@@ -7,8 +7,8 @@ declare(strict_types=1);
 // \Piwigo\Db\DbConnection::build() — that helper assumes the full request
 // bootstrap (Config::, the DI container, PageState's query-count/
 // show_queries logging), which doesn't belong in a probe response. Reuses
-// only the same config-resolution path common.inc.php uses, so this
-// reflects whatever DB the real app would connect to
+// only the same config-resolution path RequestBootstrap::bootEntryPoint()
+// uses, so this reflects whatever DB the real app would connect to
 // (local/config/config.inc.php for classic installs, PIWIGO_DB_* env
 // vars for container/CI runs).
 
@@ -19,7 +19,6 @@ $paths = \Piwigo\Core\Paths::fromRoot(dirname(__DIR__));
 $conf = \Piwigo\Config\Config::defaultsArray();
 @include $paths->local . 'config/config.inc.php';
 
-require $paths->root . 'include/env.inc.php';
 \Piwigo\Core\Env::loadEnvFile($paths->root);
 $prefixeTable = '';
 \Piwigo\Core\Env::applyEnvToConf($conf, $prefixeTable);

@@ -33,7 +33,6 @@
     "_data/**",
     "vendor/**",
     "themes/**",
-    "admin/themes/**",
     "template-extension/**",
     "tools/ws/**"
   ]

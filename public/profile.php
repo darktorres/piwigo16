@@ -22,7 +22,7 @@ use Piwigo\Http\ResponseEmitter;
 
 // ----------------------------------------------------------- include
 $paths = Paths::fromRoot(dirname(__DIR__));
-include_once $paths->root . 'include/common.inc.php';
+\Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
 
 CommonBootstrap::run($paths);
 

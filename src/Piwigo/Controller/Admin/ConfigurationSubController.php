@@ -81,7 +81,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * includes each check is_webmaster()). Fixed by gating the whole block on
  * is_webmaster() (matching the sibling process-includes' own shape) plus
  * check_pwg_token(); the template's own link now carries the token too
- * (see admin/themes/default/template/configuration_sizes.tpl).
+ * (see themes/admin/default/template/configuration_sizes.tpl).
  *
  * order_by_is_local() was a top-level function declared inside this
  * file's own 'main' case with zero external callers (confirmed via a

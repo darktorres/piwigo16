@@ -379,7 +379,7 @@ SELECT
             $orderedCat['rank'] = $cat_row['rank'];
             $orderedCat['name'] = $cat_row['name'];
             $orderedCat['status'] = $cat_row['status'];
-            // admin/themes/default/js/albums.js embeds this tree as JSON and
+            // themes/admin/default/js/albums.js embeds this tree as JSON and
             // later compares node ids against the DOM's `data-id` attribute
             // (always a string, per jQuery's .attr()) via a strict-equality
             // Array.includes() -- a native int here (DBAL) instead of the

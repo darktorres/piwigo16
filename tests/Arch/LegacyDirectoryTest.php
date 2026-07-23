@@ -92,49 +92,43 @@ function findLegacyIncludeTargets(array $files): array
     return $found;
 }
 
-test('include/ contains exactly the sanctioned bootstrap seam files', function (): void {
-    // The P23 8f-5 design: include/common.inc.php stays as the thin
-    // include seam every entry point uses (top-level scope is
-    // load-bearing for the bare-variable config includes, and SEC-60
-    // keeps its define() calls out of src/), env.inc.php is the autoload
-    // boundary, and index.php is the standard anti-directory-listing
-    // stub. config_default.inc.php is gone -- "nothing is frozen"
-    // gap-closure (2026-07-22) retired it in favor of
-    // Piwigo\Config\Config::defaultsArray(), already the real source of
-    // truth for every request's actual defaults (see that method's own
-    // docblock). Anything appearing here beyond these 3 is legacy code
-    // coming back.
-    expect(listDirectoryEntries(dirname(__DIR__, 2) . '/include'))->toBe([
-        'common.inc.php',
-        'env.inc.php',
-        'index.php',
-    ]);
+test('include/ does not exist -- the bootstrap seam was inlined into RequestBootstrap::bootEntryPoint()', function (): void {
+    // P23 (include/+admin/ deletion batch): common.inc.php's body moved
+    // into Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint(), called
+    // directly by every real entry point; env.inc.php's one-line
+    // `require vendor/autoload.php` is now just done explicitly by every
+    // caller; index.php's anti-listing stub is moot once the directory
+    // itself doesn't exist to list. A resurrected include/ directory of
+    // any kind is legacy code coming back.
+    expect(is_dir(dirname(__DIR__, 2) . '/include'))->toBeFalse();
 });
 
-test('admin/ contains only the anti-listing stub and theme assets', function (): void {
+test('admin/ does not exist -- its only remaining content (themes/) moved to themes/admin/', function (): void {
     // Part II (web-root isolation): admin/popuphelp.php moved to
-    // public/admin/popuphelp.php (a real entry point, must live under the
-    // new DocumentRoot) -- admin/themes/ stays here and is bridged back via
-    // public/admin/themes's own symlink instead of moving, matching
-    // themes/ itself. admin/include/ died with batch 9; no other PHP
-    // belongs at admin/ root -- every admin page is an AdminDispatcher
-    // sub-controller now.
-    expect(listDirectoryEntries(dirname(__DIR__, 2) . '/admin'))->toBe([
-        'index.php',
-        'themes',
-    ]);
+    // public/admin/popuphelp.php (a real entry point) earlier. admin/
+    // itself is now fully gone: its last real content, the 3 admin
+    // themes' live assets, relocated to themes/admin/ (automatically
+    // web-reachable via the existing public/themes symlink, no new
+    // symlink needed) so admin/'s own anti-listing stub had nothing left
+    // to protect. admin/include/ died with batch 9; a resurrected admin/
+    // directory of any kind is legacy code coming back.
+    expect(is_dir(dirname(__DIR__, 2) . '/admin'))->toBeFalse();
 });
 
 test('public/ contains exactly the relocated entry points, robots.txt, and the sanctioned asset symlinks', function (): void {
     // Part II (web-root isolation, docs/PLAN-REPLAY.md P32's pulled-forward
     // slice): DocumentRoot is public/, not the repo root -- every PHP entry
-    // point lives here now, plus symlinks back to the 4 static asset
-    // directories real requests need (themes/, admin/themes/, dist/,
-    // _data/combined/). upload/galleries/local/language/plugins and every
-    // other _data/ subdirectory are deliberately NOT bridged here -- being
-    // directly, statically reachable was a live SEC-33/35/38/47 gap this
-    // phase closes, not a feature to preserve (see docs/DEPLOYMENT.md's
-    // "Web root" section).
+    // point lives here now, plus symlinks back to the 3 static asset
+    // directories real requests need (themes/, dist/, _data/combined/).
+    // The former separate public/admin/themes symlink is gone -- the 3
+    // admin themes' live assets relocated to themes/admin/ (include/+
+    // admin/ deletion batch), automatically covered by the existing
+    // themes/ symlink, so public/admin/ now holds only popuphelp.php.
+    // upload/galleries/local/language/plugins and every other _data/
+    // subdirectory are deliberately NOT bridged here -- being directly,
+    // statically reachable was a live SEC-33/35/38/47 gap this phase
+    // closes, not a feature to preserve (see docs/DEPLOYMENT.md's "Web
+    // root" section).
     expect(listDirectoryEntries(dirname(__DIR__, 2) . '/public'))->toBe([
         '.htaccess',
         '_data',
@@ -173,7 +167,6 @@ test('public/ contains exactly the relocated entry points, robots.txt, and the s
 
     expect(listDirectoryEntries(dirname(__DIR__, 2) . '/public/admin'))->toBe([
         'popuphelp.php',
-        'themes',
     ]);
 
     expect(listDirectoryEntries(dirname(__DIR__, 2) . '/public/_data'))->toBe([
@@ -212,14 +205,17 @@ test('root directory PHP files are exactly the tool configs -- every entry point
     ]);
 });
 
-test('no include/require statement targets a legacy path outside the sanctioned seams', function (): void {
+test('no include/require statement targets a legacy include/ or admin/ path -- both directories are gone', function (): void {
+    // Previously allowlisted 'include/common.inc.php' and 'include/env.inc.php'
+    // as the two sanctioned seam-file targets; both are deleted now
+    // (include/+admin/ deletion batch), so the sanctioned list is empty --
+    // any include/require statement reaching into either legacy path is a
+    // violation, full stop.
     $root = dirname(__DIR__, 2);
 
     $files = array_merge(
         globPaths($root . '/*.php'),
         globPaths($root . '/config/*.php'),
-        globPaths($root . '/include/*.php'),
-        globPaths($root . '/admin/*.php'),
         globPaths($root . '/public/*.php'),
         globPaths($root . '/public/admin/*.php'),
     );
@@ -230,12 +226,7 @@ test('no include/require statement targets a legacy path outside the sanctioned 
         }
     }
 
-    $sanctioned = [
-        'include/common.inc.php',
-        'include/env.inc.php',
-    ];
-
-    $violations = array_diff_key(findLegacyIncludeTargets($files), array_flip($sanctioned));
+    $violations = findLegacyIncludeTargets($files);
 
     expect($violations)->toBe([]);
 });

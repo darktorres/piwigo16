@@ -37,23 +37,12 @@ if (function_exists('ini_set')) {
     @ini_set('opcache.enable', 0);
 }
 
-// Legacy Coupling Retirement Phase 8, 8b: Paths::fromRoot() below is a
-// Piwigo\ class, so the autoloader must be required explicitly first now
-// (this file's former "resolve Piwigo\ classes with zero autoloader
-// hookup" bug, fixed in 8f-6 by the include/env.inc.php include below,
-// still needs that include to run too -- requiring twice is safe, PHP's
-// own realpath-keyed include cache no-ops the second require).
+// vendor/autoload.php must be required directly here -- Paths::fromRoot()
+// below is a Piwigo\ class, so the autoloader must already be active
+// before it's referenced, matching every other real entry point.
 require __DIR__ . '/../vendor/autoload.php';
 
 $paths = Paths::fromRoot(dirname(__DIR__));
-
-// Autoload boundary (see include/env.inc.php: it only requires
-// vendor/autoload.php). Added in the 8f-6 port -- the former file resolved
-// Piwigo\ classes (Config::override etc.) without ANY autoloader hookup on
-// its include chain, a latent "Class not found" fatal on direct
-// upgrade.php requests that nothing smoke-tested; every entry shell now
-// requires the autoloader first, matching admin.php/install.php.
-include $paths->root . 'include/env.inc.php';
 
 // Legacy Coupling Retirement Phase 8, 8b (the "boot-first" fix, extended
 // from 8a's HTTP-request-path version to install/upgrade): must run

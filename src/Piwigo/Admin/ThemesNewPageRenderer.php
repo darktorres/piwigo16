@@ -178,7 +178,7 @@ final class ThemesNewPageRenderer
         $admin_theme_pref = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('admin_theme', \Piwigo\Config\Config::adminTheme());
         $template->assign(
             'default_screenshot',
-            $this->urlService->getRootUrl() . 'admin/themes/' . (is_string($admin_theme_pref) ? $admin_theme_pref : \Piwigo\Config\Config::adminTheme()) . '/images/missing_screenshot.png'
+            $this->urlService->getRootUrl() . 'themes/admin/' . (is_string($admin_theme_pref) ? $admin_theme_pref : \Piwigo\Config\Config::adminTheme()) . '/images/missing_screenshot.png'
         );
         $template->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
 

@@ -19,20 +19,14 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
 use Piwigo\Users\CurrentUser;
 
-// Unlike this file's own former "never requires vendor/autoload.php,
-// relies entirely on common.inc.php's own include/env.inc.php" shape:
-// common.inc.php's RequestBootstrap::configure($paths) call (P24 8a, the
-// boot-first fix) now needs a real Paths in scope before the include runs,
-// and Paths::fromRoot() itself is a Piwigo\ class -- so the autoloader
-// must be required explicitly first, matching every other real entry
-// point (index.php, admin.php, ...). Requiring it twice is safe (PHP's
-// own realpath-keyed include cache no-ops the second require via
-// common.inc.php's own env.inc.php include), same precedent index.php's
-// own docblock documents.
+// vendor/autoload.php must be required directly here -- Paths::fromRoot()
+// below and RequestBootstrap::bootEntryPoint() are both Piwigo\ classes,
+// so the autoloader must already be active before either is referenced,
+// matching every other real entry point (index.php, admin.php, ...).
 require __DIR__ . '/../vendor/autoload.php';
 
 $paths = Paths::fromRoot(dirname(__DIR__));
-include_once $paths->root . 'include/common.inc.php';
+\Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |

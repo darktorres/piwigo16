@@ -1,10 +1,10 @@
 {combine_script id='jquery.ui'  load='async' path='themes/default/js/ui/minified/jquery.ui.core.min.js'}
 {combine_script id='jquery.ui.slider' require='jquery.ui' load='async' path='themes/default/js/ui/minified/jquery.ui.slider.min.js'}
 {combine_css path="themes/default/js/ui/theme/jquery.ui.slider.css" order=-999}
-{combine_script id='doubleSlider' load='footer' require='jquery.ui.slider' path='admin/themes/default/js/doubleSlider.js'}
+{combine_script id='doubleSlider' load='footer' require='jquery.ui.slider' path='themes/admin/default/js/doubleSlider.js'}
 
 {combine_script id='jquery.selectize' load='footer' path='themes/default/js/plugins/selectize.min.js'}
-{combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+{combine_css path="themes/admin/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 {combine_script id='jquery.tipTip' load='header' path='themes/default/js/plugins/jquery.tipTip.minified.js'}
 {combine_css path="themes/default/css/search.css" order=-100}
 {combine_css path="themes/default/css/{$themeconf.colorscheme}-search.css" order=-100}
@@ -541,7 +541,7 @@ const prefix_icon = 'gallery-icon-';
       </div>
     </div>
   </div>
-  {include file='admin/themes/default/template/include/album_selector.inc.tpl'}
+  {include file='themes/admin/default/template/include/album_selector.inc.tpl'}
 
   {if isset($AUTHORS)}
   <div class="filter filter-authors">

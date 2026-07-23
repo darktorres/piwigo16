@@ -26,7 +26,7 @@ use Piwigo\Http\ResponseEmitter;
 // ----------------------------------------------------------- include
 $paths = Paths::fromRoot(dirname(__DIR__));
 WsContext::mark();
-include_once $paths->root . 'include/common.inc.php';
+\Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
 
 CommonBootstrap::run($paths);
 

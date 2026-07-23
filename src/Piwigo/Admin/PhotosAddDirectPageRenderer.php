@@ -37,7 +37,7 @@ use Piwigo\Users\UserRepository;
  *
  * P23 batch 6e fix: the batch action was reachable via a plain GET with
  * no check_pwg_token() -- unlike this project's other mutating admin
- * actions -- and the JS link that drives it (admin/themes/default/js/
+ * actions -- and the JS link that drives it (themes/admin/default/js/
  * photos_add_direct.js) carried no token either, a real CSRF gap closed
  * here the same way P23 batch 6d closed the equivalent gap in
  * PictureModifyPageRenderer's sync_metadata action.

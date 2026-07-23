@@ -26,21 +26,22 @@ parameters:
             # findings (loose comparisons) are the same "not part of the
             # analyzed application" story as github_issues.php above.
             - tools/test_piwigo.php
-            # Part II (web-root isolation): these 4 are symlinks bridging
+            # Part II (web-root isolation): these are symlinks bridging
             # public/ (the new DocumentRoot) back to already-scanned real
-            # directories (themes/, admin/themes/, dist/, _data/combined/).
-            # PHPStan follows symlinked directories when scanning `.` --
-            # without this, the exact same 19 PHP files (11 under themes/,
-            # 8 under admin/themes/; dist/ and _data/combined/ currently
-            # hold none) get analysed twice under two different path
-            # strings -- wasted work today, and would double-report any
+            # directories (themes/, dist/, _data/combined/). PHPStan follows
+            # symlinked directories when scanning `.` -- without this, the
+            # exact same PHP files get analysed twice under two different
+            # path strings -- wasted work today, and would double-report any
             # future error under both paths. (No longer about baseline
             # path-matching -- the PHPStan baseline was retired; verified
             # by temporarily removing this exclusion and re-running: file
-            # count rose from 901 to 920 with the analysis otherwise
-            # unchanged.)
+            # count rose with the analysis otherwise unchanged.) The former
+            # separate public/admin/themes symlink (and its own 8 PHP files)
+            # is gone -- include/+admin/ deletion batch relocated
+            # admin/themes/ to themes/admin/, so those 8 files are already
+            # covered by the public/themes/* exclusion below, nested one
+            # level deeper.
             - public/themes/*
-            - public/admin/themes/*
             - public/dist/*
             - public/_data/combined/*
             # ECS config: references PhpCsFixer\Fixer\...\*Fixer::class

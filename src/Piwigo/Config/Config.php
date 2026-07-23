@@ -105,7 +105,7 @@ final class Config
             // a PER-USER Piwigo\Users\PreferencesService('admin_theme', ...)
             // preference (AdminShell.php/ThemesNewPageRenderer.php/
             // ExtensionScanner.php/RequestBootstrap.php), checked against
-            // the real on-disk admin/themes/{clear,default,roma}
+            // the real on-disk themes/admin/{clear,default,roma}
             // directories -- 'clear' matches its own former hardcoded
             // fallback default in all 4 of those call sites, now wired
             // through here instead of repeated as a literal 4 times.

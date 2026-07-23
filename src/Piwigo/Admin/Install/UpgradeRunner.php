@@ -167,7 +167,7 @@ final class UpgradeRunner
         // |                        template initialization                     |
         // +-------------------------------------------------------------------+
 
-        $template = new Template($this->paths->root . 'admin/themes', 'clear');
+        $template = new Template($this->paths->root . 'themes/admin', 'clear');
         \Piwigo\Template\CurrentTemplate::set($template);
         $template->set_filenames([
             'upgrade' => 'upgrade.tpl',

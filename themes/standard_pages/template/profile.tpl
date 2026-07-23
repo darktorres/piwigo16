@@ -1,6 +1,6 @@
 {combine_css id='standard_pages_css' path="themes/standard_pages/skins/{$STD_PGS_SELECTED_SKIN}.css" order=100}
 {combine_css path="themes/default/vendor/fontello/css/gallery-icon.css" order=-10}
-{combine_css path="admin/themes/default/fontello/css/fontello.css" order=-11}
+{combine_css path="themes/admin/default/fontello/css/fontello.css" order=-11}
 
 <script>
   var selected_language = `{$language_options[$language_selection]}`;
@@ -9,7 +9,7 @@
 </script>
 {combine_script id='standard_pages_js' load='async' require='jquery' path='themes/standard_pages/js/standard_pages.js'}
 {combine_script id='standard_profile_js' load='footer' require='jquery' path='themes/standard_pages/js/profile.js'}
-{combine_script id='common' load='footer' require='jquery' path='admin/themes/default/js/common.js'}
+{combine_script id='common' load='footer' require='jquery' path='themes/admin/default/js/common.js'}
 {footer_script}
 let user = {
   username: "{$USERNAME}",

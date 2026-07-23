@@ -24,21 +24,12 @@ if (version_compare(PHP_VERSION, '8.5.0', '<')) {
     die('Piwigo requires PHP 8.5 or above.');
 }
 
-// Legacy Coupling Retirement Phase 8, 8b: Paths::fromRoot() below is a
-// Piwigo\ class, so the autoloader must be required explicitly first now
-// (requiring twice is safe, PHP's own realpath-keyed include cache
-// no-ops the second require via include/env.inc.php below).
+// vendor/autoload.php must be required directly here -- Paths::fromRoot()
+// below is a Piwigo\ class, so the autoloader must already be active
+// before it's referenced, matching every other real entry point.
 require __DIR__ . '/../vendor/autoload.php';
 
 $paths = \Piwigo\Core\Paths::fromRoot(dirname(__DIR__));
-
-// Autoload boundary (see include/env.inc.php: it only requires
-// vendor/autoload.php). Added in the 8f-6 port -- the former file resolved
-// Piwigo\ classes (SessionBootstrap, MysqliDb, ...) without ANY autoloader
-// hookup on its include chain, a latent "Class not found" fatal on direct
-// upgrade_feed.php requests that nothing smoke-tested; every entry shell
-// now requires the autoloader first, matching admin.php/install.php.
-include $paths->root . 'include/env.inc.php';
 
 // Legacy Coupling Retirement Phase 8, 8b (the "boot-first" fix, extended
 // from 8a's HTTP-request-path version to install/upgrade): must run
@@ -80,8 +71,8 @@ foreach (['db_host', 'db_user', 'db_password', 'db_base'] as $dbConfKey) {
 // has no Config::SCHEMA entry either (see LegacyDbLayer::value()'s own
 // docblock for why: a different value space than Config::dbDriver()) -- but
 // the generic array<string, mixed> type of $conf erases dblayer's specific
-// type regardless of source; re-narrow at the point of use (same pattern as
-// include/common.inc.php and upgrade.php).
+// type regardless of source; re-narrow at the point of use (same pattern
+// upgrade.php uses).
 $dblayer = $conf['dblayer'];
 if (! is_string($dblayer)) {
     die("Invalid \$conf['dblayer'] configuration: expected a string.");

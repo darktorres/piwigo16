@@ -19,7 +19,7 @@ export default tseslint.config(
       "themes/default/js/jquery.min.js",
       "themes/default/js/jquery.cookie.js",
       "themes/default/js/pngfix.js",
-      "admin/themes/default/js/jquery.geoip.js",
+      "themes/admin/default/js/jquery.geoip.js",
       // Dev-only WS API debug console, not shipped application code.
       "tools/ws/**",
     ],

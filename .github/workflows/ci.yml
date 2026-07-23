@@ -914,9 +914,11 @@ jobs:
           # real /health, /ready execution is covered by the container job
           # below and the php -S-based suites above. Just confirm the rewrite
           # target isn't itself swept up by the /(config|tools|...)/deny match,
-          # and that public/'s 4 symlinks (themes/, admin/themes/, dist/,
-          # _data/combined/) still resolve through the new DocumentRoot --
-          # FollowSymLinks is required (and set) in the vhost above.
+          # and that public/'s 3 symlinks (themes/, dist/, _data/combined/)
+          # still resolve through the new DocumentRoot -- FollowSymLinks is
+          # required (and set) in the vhost above. (The former separate
+          # admin/themes symlink is gone -- its target relocated to
+          # themes/admin/, already covered by the themes/ symlink.)
           for path in health ready; do
             status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost/${path}")
             echo "GET /${path} -> ${status}"

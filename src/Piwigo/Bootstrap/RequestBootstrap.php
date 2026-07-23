@@ -46,27 +46,37 @@ use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
- * The legacy per-request bootstrap — the entire orchestration body of
- * include/common.inc.php, ported verbatim (P23 sub-batch 8f-5). That file
- * survives as the thin include seam every entry point already targets; it
- * initializes the plain-data globals ($t2/$debug/$conf/$page/...), pulls
- * in include/config_default.inc.php + local/config/config.inc.php (kept
- * at real top-level scope so a user config file writing arbitrary bare
- * variables still lands in $GLOBALS), requires the autoloader via
- * include/env.inc.php, and then calls the three phases below in order.
+ * The per-request bootstrap. Used to be the orchestration body of
+ * include/common.inc.php (ported verbatim, P23 sub-batch 8f-5), with that
+ * file kept on as a thin include seam every entry point targeted. The seam
+ * is gone (P23 batch: include/+admin/ deletion) — bootEntryPoint() below is
+ * now the real, sole entry point every root `public/*.php` file calls
+ * directly, and it does the one thing the seam file's own top-level scope
+ * used to be needed for (the bare-variable `local/config/config.inc.php`
+ * include) via Piwigo\Config\ConfigLoader::applyLocalFileOverrides()
+ * instead, called from inside configure() below.
  *
- * Why three phases instead of one run(): src/Piwigo/ code may not call
- * define() (arch rule SEC-60), and the legacy bootstrap marks
- * Piwigo\Core\InstallationFlag active mid-sequence (after the
- * install-redirect check, before the session handler registration that
- * reads InstallationFlag::isActive()). That one call stays in the seam
- * file, slotted between the phases, preserving the original statement
- * order exactly. The former PHPWG_DOMAIN/PHPWG_URL/PEM_URL define()s
- * that used to sit here too (after UserBootstrap, before language
- * loading) are gone entirely (Legacy Coupling Retirement gap-closure,
- * entry-shell define()/include round, Part 0b) -- every real reader now
- * goes through Piwigo\Core\AppInfo::DOMAIN/URL or this class's own
- * pemUrl(), neither of which needs seam-file sequencing at all.
+ * Why three phases instead of one run(): the legacy bootstrap used to mark
+ * Piwigo\Core\InstallationFlag active mid-sequence via a raw
+ * `defined('PHPWG_INSTALLED') or define('PHPWG_INSTALLED', true);` guard
+ * (after the install-redirect check, before the session handler
+ * registration that reads InstallationFlag::isActive()) — src/Piwigo/ code
+ * may not call define() (arch rule SEC-60), so that call had to live
+ * outside this class, in the seam file, slotted between the phases.
+ * InstallationFlag::mark() replaced the raw define() itself (Legacy
+ * Coupling Retirement gap-closure, entry-shell define()/include round,
+ * Part 0b) — a normal, safe static call, no longer subject to SEC-60 —
+ * which is what lets bootEntryPoint() now call it directly instead of
+ * needing an external seam to slot it in. The phases stay separate methods
+ * regardless, preserving the original statement order exactly and the
+ * standalone-callable contract `tests/Unit/Bootstrap/
+ * CommonBootstrapTest.php` exercises directly. The former PHPWG_DOMAIN/
+ * PHPWG_URL/PEM_URL define()s that used to sit here too (after
+ * UserBootstrap, before language loading) are gone entirely (Legacy
+ * Coupling Retirement gap-closure, entry-shell define()/include round,
+ * Part 0b) -- every real reader now goes through Piwigo\Core\AppInfo::
+ * DOMAIN/URL or this class's own pemUrl(), neither of which needs
+ * seam-file sequencing at all.
  *
  * Legacy Coupling Retirement Phase 8, 8a (the "boot-first" fix):
  * configure() now calls Kernel::boot($paths) as its own first statement --
@@ -90,6 +100,39 @@ use Piwigo\Users\UserService;
  */
 final class RequestBootstrap
 {
+    /**
+     * The real entry point every root `public/*.php` file calls directly —
+     * replaces the former `include $paths->root . 'include/common.inc.php';`
+     * line (P23 batch: include/+admin/ deletion). Exact same statement
+     * order as that seam file's own body: capture $t2, run the three
+     * phases below with `InstallationFlag::mark()` slotted between
+     * configure() and connect() (matching the original file's statement
+     * order precisely), catch `ResponseReadyException` from any
+     * bootstrap-phase short-circuit (install-redirect, upgrade-redirect,
+     * the 503 maintenance page) and emit it directly.
+     *
+     * Callers that never included `common.inc.php` in the first place
+     * (`i.php`, deliberately) or that skip straight to their own bespoke
+     * bootstrap (`install.php`/`upgrade.php`/`upgrade_feed.php`/
+     * `ready.php`, none of which ever depended on this class) do not call
+     * this method — see each file's own docblock for why.
+     */
+    public static function bootEntryPoint(Paths $paths): void
+    {
+        $t2 = microtime(true);
+
+        try {
+            self::configure($paths, $t2);
+            \Piwigo\Core\InstallationFlag::mark();
+            self::connect();
+            self::finalize();
+        } catch (\Piwigo\Http\ResponseReadyException $e) {
+            new \Piwigo\Http\ResponseEmitter()
+                ->emit($e->response());
+            exit;
+        }
+    }
+
     /**
      * Phase 1 — superglobal sanitization, env-file loading, static-setter
      * wiring, Config seeding, install-sentinel check
@@ -452,7 +495,7 @@ final class RequestBootstrap
             $admin_theme = new \Piwigo\Users\PreferencesService(new UserRepository($conn))
                 ->getParam('admin_theme', \Piwigo\Config\Config::adminTheme());
             $admin_theme = is_string($admin_theme) ? $admin_theme : \Piwigo\Config\Config::adminTheme();
-            $template = new Template(CurrentPaths::get()->root . 'admin/themes', $admin_theme);
+            $template = new Template(CurrentPaths::get()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
             $theme = CurrentUser::get()->theme;
             if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws' and \Piwigo\Core\DeviceHelper::mobileTheme()) {

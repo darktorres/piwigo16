@@ -219,6 +219,7 @@ final readonly class SearchService
             'visible_images' => 'id',
         ], "\n  AND");
 
+        /** @var array<string, list<int>> $imageIdsForFilter */
         $imageIdsForFilter = [];
 
         $rawFiltersViews = \Piwigo\Config\Config::filtersViews() ?? \Piwigo\Config\Config::defaultFiltersViews();

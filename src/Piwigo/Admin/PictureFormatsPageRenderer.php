@@ -29,7 +29,8 @@ final class PictureFormatsPageRenderer
         // $_GET['image_id'], when present, matches ValidationPattern::ID (digits only), but
         // that guarantee isn't visible to static analysis, hence the explicit
         // narrowing before it's used in SQL/URL concatenation below.
-        $image_id = is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0;
+        $image_id_raw = $_GET['image_id'] ?? null;
+        $image_id = is_numeric($image_id_raw) ? (int) $image_id_raw : 0;
 
         $conn = DbConnection::build();
         $query = '

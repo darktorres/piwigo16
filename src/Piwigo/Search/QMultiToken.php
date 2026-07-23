@@ -42,10 +42,10 @@ class QMultiToken implements \Stringable
             }
             if (! ($this->tokens[$i]->is_single)) {
                 $s .= '(';
-                $s .= $this->tokens[$i];
+                $s .= (string) $this->tokens[$i];
                 $s .= ')';
             } else {
-                $s .= $this->tokens[$i];
+                $s .= (string) $this->tokens[$i];
             }
         }
         return $s;
@@ -149,7 +149,7 @@ class QMultiToken implements \Stringable
                         // no break
                     default:
                         if (! (bool) $crt_scope || ! $crt_scope->process_char($ch, $crt_token)) {
-                            if (str_contains(' ,.;!?', $ch)) { // white space
+                            if (in_array($ch, [' ', ',', '.', ';', '!', '?'], true)) { // white space
                                 $this->push($crt_token, $crt_modifier, $crt_scope);
                             } else {
                                 $crt_token .= $ch;

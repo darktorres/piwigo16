@@ -47,8 +47,7 @@ final class DbConnection
      * MySQL, so it shares the mysqli branch; there is no separate
      * 'mariadb' driver value.
      *
-     * @return array{driver: 'mysqli', user: string, password: string, dbname: string, charset: string, driverOptions: array<int, bool>, host?: string, unix_socket?: string, port?: int}
-     *       | array{driver: 'pgsql', user: string, password: string, dbname: string, host: string, port?: int}
+     * @return array{driver: 'mysqli', user: string, password: string, dbname: string, charset: string, driverOptions: array<int, bool>, host?: string, unix_socket?: string, port?: int}|array{driver: 'pgsql', user: string, password: string, dbname: string, host: string, port?: int}
      */
     public static function params(): array
     {

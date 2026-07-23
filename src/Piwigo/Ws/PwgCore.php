@@ -546,23 +546,25 @@ DELETE FROM ' . Tables::rate() . '
         // condition that sets them here is true again.
         $min = null;
         $max = null;
-        if (! in_array($param['date_min'], [null, ''], true)) {
+        $date_min_raw = $param['date_min'] ?? null;
+        $date_max_raw = $param['date_max'] ?? null;
+        if (! in_array($date_min_raw, [null, ''], true)) {
             // is_valid_mysql_datetime() above already validated date_min; a
             // valid Y-m-d[ H:i:s] string always parses
-            $min_date = date_create($param['date_min']);
+            $min_date = date_create($date_min_raw);
             assert($min_date !== false);
             $min = date_format($min_date, 'Y-m-d H:i:s');
 
             // date_max may be empty/unvalidated/absent here — date_create()
             // only returns false on a genuinely malformed string, never on ''
             // (which means "now"), so a missing date_max is coalesced to ''
-            $max_date = date_create($param['date_max'] ?? '');
+            $max_date = date_create($date_max_raw ?? '');
             assert($max_date !== false);
             $max = date_format($max_date, 'Y-m-d 23:59:59');
         }
 
-        if (! in_array($param['date_max'], [null, ''], true)) {
-            $max_date = date_create($param['date_max']);
+        if (! in_array($date_max_raw, [null, ''], true)) {
+            $max_date = date_create($date_max_raw);
             assert($max_date !== false);
             $max = date_format($max_date, 'Y-m-d 23:59:59');
         }
@@ -584,12 +586,12 @@ DELETE FROM ' . Tables::rate() . '
     AND object = ' . $conn->quote($param['object']);
         }
 
-        if (! in_array($param['date_min'], [null, ''], true)) {
+        if (! in_array($date_min_raw, [null, ''], true)) {
             $where .= '
     AND occured_on >= "' . $min . '"';
         }
 
-        if (! in_array($param['date_max'], [null, ''], true)) {
+        if (! in_array($date_max_raw, [null, ''], true)) {
             $where .= '
     AND occured_on <= "' . $max . '"';
         }

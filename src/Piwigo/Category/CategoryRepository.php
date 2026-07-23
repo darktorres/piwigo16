@@ -937,7 +937,7 @@ SELECT status
         $value = $this->conn->executeQuery('
 SELECT MAX(`rank`) AS max_rank
   FROM ' . Tables::categories() . '
-  WHERE id_uppercat ' . ($parentIsEmpty ? 'IS NULL' : '= ' . $parentId) . '
+  WHERE id_uppercat ' . ($parentIsEmpty ? 'IS NULL' : '= ' . (string) $parentId) . '
 ;')->fetchOne();
 
         return is_numeric($value) ? (int) $value : null;

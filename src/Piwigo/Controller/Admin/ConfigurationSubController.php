@@ -1049,7 +1049,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                             [intval($pderivative['minw']), intval($pderivative['minh'])]
                         )
                     );
-                    $new_params->sharpen = intval($pderivative['sharpen']);
+                    $new_params->sharpen = (float) intval($pderivative['sharpen']);
 
                     ImageStdParams::apply_global($new_params);
 

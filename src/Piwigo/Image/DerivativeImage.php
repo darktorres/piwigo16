@@ -50,12 +50,12 @@ final class DerivativeImage
     /**
      * @var string
      */
-    private $rel_path;
+    private $rel_path = '';
 
     /**
      * @var string
      */
-    private $rel_url;
+    private $rel_url = '';
 
     private bool $is_cached = true;
 
@@ -98,6 +98,8 @@ final class DerivativeImage
     {
         $src_image = is_object($infos) ? $infos : new SrcImage($infos);
         $params = is_string($type) ? ImageStdParams::get_by_type($type) : $type;
+        $rel_path = '';
+        $rel_url = '';
         self::build($src_image, $params, $rel_path, $rel_url);
         if ($params === null) {
             return $src_image->get_url();

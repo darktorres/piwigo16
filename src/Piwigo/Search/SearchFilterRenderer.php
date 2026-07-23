@@ -1295,7 +1295,8 @@ SELECT
             // each to a plain string-id list here so array_intersect() below
             // has an unambiguous element type (same normalization as
             // SearchService::getRegularSearchResults()).
-            $firstFilterRaw = $imageIdsForFilter[array_shift($otherFilters)] ?? null;
+            $firstFilterKey = array_shift($otherFilters);
+            $firstFilterRaw = $imageIdsForFilter[$firstFilterKey] ?? null;
             $otherFiltersItems = [];
             if (is_array($firstFilterRaw)) {
                 foreach ($firstFilterRaw as $id) {

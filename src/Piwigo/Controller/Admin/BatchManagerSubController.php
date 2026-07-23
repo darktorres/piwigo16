@@ -348,7 +348,8 @@ DELETE FROM ' . Tables::caddie() . '
                 // real ints (config_default.inc.php seeds [0, 1, 2, 4, 8]) -- cast
                 // before the strict in_array() so a numeric-string match still
                 // succeeds, matching the original loose-comparison behavior.
-                if (is_numeric($_POST['filter_level'] ?? null) && in_array((int) $_POST['filter_level'], $availablePermissionLevels, true)) {
+                $filter_level_raw = $_POST['filter_level'] ?? null;
+                if (is_numeric($filter_level_raw) && in_array((int) $filter_level_raw, $availablePermissionLevels, true)) {
                     $_SESSION['bulk_manager_filter']['level'] = $_POST['filter_level'];
 
                     if (isset($_POST['filter_level_include_lower'])) {

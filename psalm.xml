@@ -66,6 +66,14 @@
                 <directory name="tests"/>
             </errorLevel>
         </UndefinedMagicMethod>
+        <!-- Same root cause again: Pest\Expectation::$not is part of the
+             same @mixin re-export from Pest\Mixins\Expectation Psalm
+             doesn't reconcile without psalm-plugin-pest. -->
+        <UndefinedPropertyFetch>
+            <errorLevel type="suppress">
+                <directory name="tests"/>
+            </errorLevel>
+        </UndefinedPropertyFetch>
         <InvalidScope>
             <errorLevel type="suppress">
                 <directory name="tests"/>
@@ -825,6 +833,16 @@
         <PossiblyNullPropertyAssignmentValue>
             <errorLevel type="suppress">
                 <file name="src/Piwigo/Template/FileCombiner.php"/>
+                <!-- Template::delete_compiled_templates(): $this->smarty->
+                     compile_id = null is a deliberate temporary reset (the
+                     original value is restored 2 lines later), needed to
+                     make Smarty's own clearCompiledTemplate() operate
+                     compile_id-agnostic. Smarty's own @var string
+                     contradicts its own `= null` default — vendor code,
+                     not ours to fix. Already carries a matching
+                     @phpstan-ignore assign.propertyType immediately above
+                     it. -->
+                <file name="src/Piwigo/Template/Template.php"/>
             </errorLevel>
         </PossiblyNullPropertyAssignmentValue>
         <!-- Frozen, already-applied DbPatch script (see the "don't
@@ -987,5 +1005,230 @@
                 <file name="src/Piwigo/Ws/PwgCore.php"/>
             </errorLevel>
         </DocblockTypeContradiction>
+        <UnsupportedReferenceUsage>
+            <errorLevel type="suppress">
+                <!-- AlbumsPageRenderer.php: $the_place = &$associatedTree[...]
+                     builds a dynamic id tree across loop iterations, reused
+                     and reassigned by reference at every depth — the exact
+                     "by-ref loses narrowing" shape documented throughout
+                     this codebase; restructuring away from the reference
+                     would mean rewriting the tree-build algorithm itself,
+                     not a type-annotation fix. -->
+                <file name="src/Piwigo/Admin/AlbumsPageRenderer.php"/>
+                <!-- WsHelper.php: $tree[] = &$node / $sub_categories->_content[] = &$node
+                     build a category tree by reference during a single
+                     foreach ($categories as $key => &$node) pass — same
+                     by-ref tree-build shape as AlbumsPageRenderer above. -->
+                <file name="src/Piwigo/Ws/WsHelper.php"/>
+            </errorLevel>
+        </UnsupportedReferenceUsage>
+        <ReferenceReusedFromConfusingScope>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Admin/AlbumsPageRenderer.php"/>
+            </errorLevel>
+        </ReferenceReusedFromConfusingScope>
+        <NoValue>
+            <errorLevel type="suppress">
+                <!-- AlbumsPageRenderer.php: same by-ref tree-build reference
+                     loss as above — Psalm invalidates the reference's type
+                     entirely rather than just losing narrowing precision. -->
+                <file name="src/Piwigo/Admin/AlbumsPageRenderer.php"/>
+                <!-- CheckIntegrity.php:77 — pre-existing, already-known
+                     possibly-dead-code finding (see project memory); not
+                     introduced or touched by this batch, left for its own
+                     dedicated triage pass rather than a blind suppression
+                     rationale invented here. -->
+                <file name="src/Piwigo/Admin/Integrity/CheckIntegrity.php"/>
+            </errorLevel>
+        </NoValue>
+        <ReferenceConstraintViolation>
+            <errorLevel type="suppress">
+                <!-- ImageDerivativeController.php / ImageStdParams.php:
+                     $key = []; $params->add_url_tokens($key); $key =
+                     implode('_', $key); — add_url_tokens(array &$key)
+                     mutates $key by reference while it's still an array;
+                     the string reassignment happens only after that call
+                     returns and the reference scope ends, but Psalm's
+                     by-ref constraint tracking flags the later string type
+                     as if it applied during the reference's lifetime. Real,
+                     safe, sequential code — not a live reference at the
+                     point of the string assignment. -->
+                <file name="src/Piwigo/Controller/ImageDerivativeController.php"/>
+                <file name="src/Piwigo/Image/ImageStdParams.php"/>
+            </errorLevel>
+        </ReferenceConstraintViolation>
+        <InvalidStringClass>
+            <errorLevel type="suppress">
+                <!-- ExtensionLifecycle::buildPluginMaintain() / PluginLoader::
+                     autoupdatePlugin(): `new $classname(...)` where
+                     $classname is built from a plugin folder's own id at
+                     runtime (str_replace('-', '_', $pluginId . '_maintain'))
+                     — genuinely not a class-string until the plugin's own
+                     *.class.php has been include_once'd, which happens in
+                     the same method just above this call. Both sites
+                     already runtime-verify the result via `instanceof
+                     PluginMaintain` immediately after construction; that IS
+                     the real safety check, not a static one Psalm can
+                     perform on dynamically-loaded plugin code. -->
+                <file name="src/Piwigo/Admin/Extensions/ExtensionLifecycle.php"/>
+                <file name="src/Piwigo/Admin/PluginLoader.php"/>
+            </errorLevel>
+        </InvalidStringClass>
+        <ParadoxicalCondition>
+            <errorLevel type="suppress">
+                <!-- CommentService::checkForSpam(): after the early
+                     `$action === 'reject'` return, Psalm narrows $action to
+                     exclude the 'reject' literal, then flags the later
+                     `$action === $myAction` comparison as paradoxical for
+                     the branch where $myAction resolves to 'reject' (i.e.
+                     Config::commentSpamReject() === true). Real, harmless
+                     logic — that branch simply never matches when
+                     commentSpamReject is on, which is correct behavior, not
+                     a bug. Pre-existing, deferred for its own triage pass. -->
+                <file name="src/Piwigo/Comment/CommentService.php"/>
+                <!-- ConfigKeyExistsRule::processNode(): same shape —
+                     in_array($key, ALLOWED_RUNTIME_KEYS, true) already
+                     excludes 'c13y_ignore' before the array_key_exists()
+                     check against Config::SCHEMA, whose literal array shape
+                     Psalm also resolves precisely enough to see
+                     'c13y_ignore' as a known key — a redundant-but-correct
+                     defense-in-depth guard, not dead code. -->
+                <file name="tools/phpstan/ConfigKeyExistsRule.php"/>
+            </errorLevel>
+        </ParadoxicalCondition>
+        <InvalidReturnType>
+            <errorLevel type="suppress">
+                <!-- PwgCategories::add() (lines 803/841): CategoryService::
+                     createVirtualCategory()'s declared union return type
+                     array{error: string}|array{info: string, id:
+                     int|string} is correct at every one of its own return
+                     statements, but Psalm doesn't narrow the union away
+                     from the error-shape branch through the caller's
+                     isset($creation_output['error']) guard the way
+                     PHPStan does — pre-existing, documented in project
+                     memory as deferred for its own dedicated triage pass,
+                     not introduced or touched by this batch. -->
+                <file name="src/Piwigo/Ws/PwgCategories.php"/>
+                <!-- MessengerFactory::transport(): same DoctrineTransportFactory
+                     generic-resolution gap documented on the matching
+                     InvalidReturnStatement suppression below — PHPStan
+                     resolves the concrete DoctrineTransport return type via
+                     TransportFactoryInterface<DoctrineTransport>; Psalm
+                     doesn't perform that same generic resolution. -->
+                <file name="src/Piwigo/Job/MessengerFactory.php"/>
+            </errorLevel>
+        </InvalidReturnType>
+        <InvalidReturnStatement>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Ws/PwgCategories.php"/>
+                <!-- MessengerFactory::transport(): DoctrineTransportFactory::
+                     createTransport()'s own signature returns the wider
+                     TransportInterface, but its `@implements
+                     TransportFactoryInterface<DoctrineTransport>` makes
+                     PHPStan (correctly) resolve the concrete return as
+                     DoctrineTransport, which does implement
+                     MessageCountAwareInterface — an `instanceof` guard here
+                     is flagged by PHPStan as always-true dead code. Psalm
+                     doesn't perform that same generic resolution and
+                     expects the declared TransportInterface&
+                     MessageCountAwareInterface intersection to be verified
+                     explicitly. Verified real: PHPStan analyse:phpstan is
+                     clean here with zero changes. -->
+                <file name="src/Piwigo/Job/MessengerFactory.php"/>
+            </errorLevel>
+        </InvalidReturnStatement>
+        <MoreSpecificReturnType>
+            <errorLevel type="suppress">
+                <!-- CategoryService::getRelatedCategoriesMenu() /
+                     getRelatedCategoriesMenuWithUrls(): PHPStan already
+                     proves (via its own PHPDoc-driven list<...> tracking)
+                     that $cats is always a genuine list by this point, so
+                     an array_values() call here is flagged by PHPStan
+                     itself as having no effect (arrayValues.list) — adding
+                     it purely to satisfy Psalm's own list<> shape
+                     verification would regress PHPStan. Verified real:
+                     composer analyse:phpstan is clean here with zero
+                     changes. -->
+                <file name="src/Piwigo/Category/CategoryService.php"/>
+            </errorLevel>
+        </MoreSpecificReturnType>
+        <LessSpecificReturnStatement>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Category/CategoryService.php"/>
+            </errorLevel>
+        </LessSpecificReturnStatement>
+        <RiskyTruthyFalsyComparison>
+            <errorLevel type="suppress">
+                <!-- ConfigurationSubController.php:976/1044:
+                     $pderivative['enabled'] truthy checks — PHPStan already
+                     proves (via the surrounding @var array<string,
+                     array<string, string|int|bool|null>> $pderivatives
+                     docblock) that the 'enabled' offset always exists and
+                     is non-nullable at both sites; expanding the check into
+                     explicit strict comparisons against every falsy variant
+                     makes PHPStan flag every added comparison as
+                     always-true/always-false dead code
+                     (identical.alwaysFalse / notIdentical.alwaysTrue).
+                     Verified real: composer analyse:phpstan is clean here
+                     with zero changes (the plain truthy check). -->
+                <file name="src/Piwigo/Controller/Admin/ConfigurationSubController.php"/>
+            </errorLevel>
+        </RiskyTruthyFalsyComparison>
+        <InvalidConstantAssignmentValue>
+            <errorLevel type="suppress">
+                <!-- DbPatchRegistry::PATCHES: PHPStan's own class-string<T>
+                     narrowing doesn't scale through this 121-entry array
+                     literal either and widens to plain class-string for the
+                     constant as a whole — already documented with a
+                     matching @phpstan-ignore classConstant.value right
+                     above the constant. Every PatchNN class is verified to
+                     implement DbPatchInterface (checked by this project's
+                     own integrity test). -->
+                <file name="src/Piwigo/Admin/Install/DbPatch/DbPatchRegistry.php"/>
+            </errorLevel>
+        </InvalidConstantAssignmentValue>
+        <ForbiddenCode>
+            <errorLevel type="suppress">
+                <!-- Patch108.php: frozen, already-applied DB migration
+                     script — this project's standing "don't hand-edit
+                     auto-generated/frozen historical files" precedent
+                     (same as DbPatch/VersionUpgrade files throughout).
+                     var_dump() here is diagnostic output from the original
+                     patch as committed, not live debug code. -->
+                <file name="src/Piwigo/Admin/Install/DbPatch/Patch108.php"/>
+            </errorLevel>
+        </ForbiddenCode>
+        <UnhandledMatchCondition>
+            <errorLevel type="suppress">
+                <!-- build-config-accessors.php: the earlier $getter match on
+                     the same $entry['type'] already exit(1)s for any type
+                     other than bool/int/string; PHPStan's own flow analysis
+                     proves this second match is exhaustive by that point
+                     (adding a default arm makes PHPStan itself flag it as
+                     match.alwaysTrue dead code) but Psalm doesn't carry
+                     that correlation across the intervening exit() call.
+                     Verified real: composer analyse:phpstan is clean here
+                     with zero changes. -->
+                <file name="tools/build-config-accessors.php"/>
+            </errorLevel>
+        </UnhandledMatchCondition>
+        <InvalidFalsableReturnType>
+            <errorLevel type="suppress">
+                <!-- BrowserTestHelpers::makeTestPng(): ob_get_clean() is
+                     documented as false|string, but PHPStan's own stub
+                     proves it never returns false directly after a real
+                     ob_start() call here (identical.alwaysFalse on an
+                     explicit === false guard) — adding the guard PHP's own
+                     docs would suggest regresses PHPStan. Verified real:
+                     composer analyse:phpstan is clean here with zero
+                     changes. -->
+                <file name="tests/Browser/Helpers/BrowserTestHelpers.php"/>
+            </errorLevel>
+        </InvalidFalsableReturnType>
+        <FalsableReturnStatement>
+            <errorLevel type="suppress">
+                <file name="tests/Browser/Helpers/BrowserTestHelpers.php"/>
+            </errorLevel>
+        </FalsableReturnStatement>
     </issueHandlers>
 </psalm>

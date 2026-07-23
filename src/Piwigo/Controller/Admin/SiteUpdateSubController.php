@@ -948,7 +948,7 @@ DELETE
                 ];
                 if (isset($_POST['cat'])) {
                     $cat = $_POST['cat'];
-                    $opts['category_id'] = is_string($cat) || is_int($cat) ? $cat : '';
+                    $opts['category_id'] = is_string($cat) ? $cat : '';
                     if (! isset($_POST['subcats-included']) or $_POST['subcats-included'] !== '1') {
                         $opts['recursive'] = false;
                     }
@@ -1029,7 +1029,7 @@ DELETE
 
             if (isset($_POST['cat'])) {
                 $cat = $_POST['cat'];
-                $opts['category_id'] = is_string($cat) || is_int($cat) ? $cat : '';
+                $opts['category_id'] = is_string($cat) ? $cat : '';
                 // recursive ?
                 if (! isset($_POST['subcats-included']) or $_POST['subcats-included'] !== '1') {
                     $opts['recursive'] = false;

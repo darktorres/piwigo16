@@ -486,6 +486,21 @@
                      suppression above). composer analyse:phpstan is clean
                      here with zero changes. -->
                 <file name="src/Piwigo/Search/SearchFilterRenderer.php"/>
+                <!-- $req's is_string() re-guard on $_SERVER['PATH_INFO'] is
+                     deliberate (see the method's own inline comment: PHPStan
+                     types superglobal reads as mixed, so this narrows
+                     defensively rather than casting) — Psalm's stub is more
+                     confident (non-empty-string), but composer
+                     analyse:phpstan needs the guard. -->
+                <file name="src/Piwigo/Controller/ImageDerivativeController.php"/>
+                <!-- Same $_FILES real-defense class as PwgImages.php above. -->
+                <file name="src/Piwigo/Admin/ThemesStandardPagesPageRenderer.php"/>
+                <!-- $_COOKIE['lang']/$_COOKIE[$remember_me_name] is_string()
+                     guards — same PHPStan-vs-Psalm $_COOKIE mixed-vs-string
+                     disagreement as PictureController's picture_deriv cookie
+                     guard (removing either fails PHPStan's own
+                     array_key_exists()/binaryOp checks). -->
+                <file name="src/Piwigo/Auth/AuthService.php"/>
             </errorLevel>
         </TypeDoesNotContainType>
         <!-- ProfileFormHandler.php: $new_pwd_present_raw's `!== null` check
@@ -529,6 +544,10 @@
                      PHPStan does not do; the guard gates real cache-write
                      logic and must stay). -->
                 <file name="src/Piwigo/Search/SearchFilterRenderer.php"/>
+                <file name="src/Piwigo/Controller/ImageDerivativeController.php"/>
+                <!-- Same $_FILES real-defense class as PwgImages.php above. -->
+                <file name="src/Piwigo/Admin/ThemesStandardPagesPageRenderer.php"/>
+                <file name="src/Piwigo/Auth/AuthService.php"/>
             </errorLevel>
         </RedundantCondition>
         <!-- Frozen, already-applied DbPatch script (see the "don't hand-edit

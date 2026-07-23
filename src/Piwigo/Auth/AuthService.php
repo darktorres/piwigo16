@@ -514,7 +514,7 @@ final readonly class AuthService
             $fortyEightHoursAgo = (clone $now)->modify('-48 hours');
             if (
                 $days_left <= 7 // the key expire in max 7 days
-                and ! in_array($key['email'], [null, false, 0, '0', '', []], true) // the user have an email
+                and $key['email'] !== '' // the user have an email
                 and (
                     $key['last_notified_on'] === null // we never send an email for this key
                     or strtotime($key['last_notified_on']) < $fortyEightHoursAgo->getTimestamp() // OR when the last email was sent more than 48 hours ago

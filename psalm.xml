@@ -547,6 +547,10 @@
                      applied to config/feature-flags.php. -->
                 <file name="src/Piwigo/Core/FeatureFlag.php"/>
                 <file name="src/Piwigo/Section/SectionInitializer.php"/>
+                <!-- HTTP_ACCEPT_LANGUAGE — genuinely not always present in
+                     real requests, same "$_SERVER stub is more optimistic
+                     than reality" class documented throughout this batch. -->
+                <file name="src/Piwigo/Users/UserService.php"/>
             </errorLevel>
         </TypeDoesNotContainType>
         <!-- ProfileFormHandler.php: $new_pwd_present_raw's `!== null` check
@@ -654,8 +658,27 @@
                      ImageDerivativeController.php above (see the method's
                      own inline comment). -->
                 <file name="src/Piwigo/Section/SectionInitializer.php"/>
+                <!-- $category_id ($category['id']) is docblock-typed int
+                     already; the is_numeric() re-check is defensive against
+                     a real row shape drift, not dead code in practice. -->
+                <file name="src/Piwigo/Ws/PwgCategories.php"/>
+                <!-- $type ($this narrowed to a single enum case in a match
+                     arm) — real, structurally-necessary comparison, not
+                     dead logic. -->
+                <file name="src/Piwigo/Ws/PwgExtensions.php"/>
             </errorLevel>
         </RedundantCondition>
+        <!-- $added_size ($added_size is docblock-typed int; PHPStan agrees
+             but doesn't flag the re-check as redundant) and $key
+             (docblock-typed non-empty-string; the is_numeric literal-0
+             re-check is defensive) — both real, harmless defensive
+             re-validation, not dead code. -->
+        <RedundantConditionGivenDocblockType>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Ws/PwgCore.php"/>
+                <file name="src/Piwigo/Ws/PwgNamedStruct.php"/>
+            </errorLevel>
+        </RedundantConditionGivenDocblockType>
         <!-- Frozen, already-applied DbPatch script (see the "don't hand-edit
              frozen migrations/DbPatch scripts" precedent applied elsewhere
              in this file). preg_replace()'s templated $subject constraint

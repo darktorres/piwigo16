@@ -104,7 +104,8 @@ final class RegisterController implements ControllerInterface
             // "someone tried to register your username" email instead of
             // the requester ever seeing an error here).
             $conn = DbConnection::build();
-            $registration_result = new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), $conn)
+            $userService = new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), $conn);
+            $registration_result = $userService
                 ->registerUser(
                     $post_login,
                     $post_password,
@@ -152,6 +153,18 @@ final class RegisterController implements ControllerInterface
                 // would be a full account-takeover, not just an
                 // information leak. Both cases redirect identically.
                 if ($new_user_id !== null) {
+                    // Same real bug as InstallWizard's identical fix: this
+                    // controller never goes through
+                    // Bootstrap\UserBootstrap::initialize() either, so
+                    // without this sync, ActivityService::record()
+                    // misattributes this new user's own activity -- including
+                    // the 'login' row logUser() itself records internally,
+                    // which is why this must run BEFORE calling it, not
+                    // after -- to performed_by=NULL instead of their own new id.
+                    \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray(
+                        $userService->buildUser($new_user_id, false)
+                    ));
+                    \Piwigo\Users\CurrentUser::markRealUserResolved();
                     new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())
                         ->logUser($new_user_id, false);
                 }

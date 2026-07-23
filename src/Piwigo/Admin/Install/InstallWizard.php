@@ -693,6 +693,21 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             } else {
                 $login_user_id = false;
             }
+            // Real bug, found via a fixture-regeneration discrepancy (an
+            // activity row expected to be attributed to the new admin came
+            // back performed_by=NULL instead): this install flow never goes
+            // through Bootstrap\UserBootstrap::initialize() (the only place
+            // that normally syncs Users\CurrentUser from the session for a
+            // request), so ActivityService::record()'s own
+            // CurrentUser::wasRealUserResolved() check sees "no real user
+            // resolved yet" for every activity logged this request --
+            // including the 'login' row logUser() itself records
+            // internally, which is why this sync must happen BEFORE
+            // calling it, not after. $user (built just above, same array
+            // shape UserBootstrap::initialize() uses) is already the right
+            // data; this mirrors that method's own two calls verbatim.
+            \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
+            \Piwigo\Users\CurrentUser::markRealUserResolved();
             new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())
                 ->logUser($login_user_id, false);
             $_SESSION['connected_with'] = 'pwg_ui';

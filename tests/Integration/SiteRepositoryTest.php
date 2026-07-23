@@ -83,7 +83,11 @@ final class SiteRepositoryTest extends IntegrationTestCase
 
         self::assertNotSame([], $rows);
         $urls = array_column($rows, 'galleries_url');
-        self::assertContains('./galleries/', $urls);
+        // InstallWizard::install() stores an absolute filesystem path
+        // (Piwigo\Core\Paths::$root . 'galleries/'), not a portable literal
+        // './galleries/' -- machine-specific, so computed here the same way
+        // install itself computes it, rather than a hardcoded string.
+        self::assertContains(\Piwigo\Core\CurrentPaths::get()->root . 'galleries/', $urls);
     }
 
     public function test_find_all_includes_a_newly_inserted_site(): void

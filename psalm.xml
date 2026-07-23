@@ -831,8 +831,34 @@
                      mixed> $category (removing the cast fails PHPStan's own
                      booleanNot.exprNotBoolean/if.condNotBoolean checks). -->
                 <file name="src/Piwigo/Admin/CatModifyPageRenderer.php"/>
+                <!-- Same $data_storage[$type]['total']['nb_files']
+                     dynamic-array-counter disagreement as
+                     PiwigoInfosSender.php above. -->
+                <file name="src/Piwigo/Controller/Admin/IntroSubController.php"/>
+                <!-- $parent = &$cats[$idUppercat] is a by-ref alias, same
+                     "by-ref loses narrowing" class documented elsewhere in
+                     this file. -->
+                <file name="src/Piwigo/Category/CategoryService.php"/>
+                <!-- Same $_GET/$_POST-shape-narrowing disagreement as
+                     BatchManagerSubController.php's own RedundantCondition
+                     suppression above ($_GET['filter']/$filter casts). -->
+                <file name="src/Piwigo/Controller/Admin/BatchManagerSubController.php"/>
+                <!-- tools/triggers_list.php: $file's (string) cast inside
+                     preg_replace() — removing it fails PHPStan's own
+                     argument.type check (expects
+                     array<float|int|string>|string, string|null given); the
+                     two tools disagree in opposite directions on
+                     $trigger['files']'s element type. -->
+                <file name="tools/triggers_list.php"/>
             </errorLevel>
         </RedundantCast>
+        <!-- BatchManagerSubController.php: $filter_parts[0]'s cast — same
+             $_GET-shape-narrowing disagreement as above. -->
+        <RedundantCastGivenDocblockType>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Controller/Admin/BatchManagerSubController.php"/>
+            </errorLevel>
+        </RedundantCastGivenDocblockType>
         <!-- Combinable::$path is deliberately left unset by a null $path
              constructor argument (see the class's own docblock:
              "null leaves $path unset — callers ... rely on a well-known

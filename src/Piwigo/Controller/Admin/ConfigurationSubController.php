@@ -367,7 +367,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     // the number of comments per page must be an integer between 5 and 50
                     // included
                     $nb_comment_page = $_POST['nb_comment_page'] ?? null;
-                    if (! (bool) preg_match($int_pattern, is_scalar($nb_comment_page) ? (string) $nb_comment_page : '')
+                    if (! (bool) preg_match($int_pattern, is_string($nb_comment_page) ? $nb_comment_page : '')
                          or $nb_comment_page < 5
                          or $nb_comment_page > 50) {
                         \Piwigo\Core\PageState::current()->addError(Lang::t('The number of comments a page must be between 5 and 50 included.'));
@@ -385,7 +385,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 case 'display':
 
                     $nb_categories_page = $_POST['nb_categories_page'] ?? null;
-                    if (! (bool) preg_match($int_pattern, is_scalar($nb_categories_page) ? (string) $nb_categories_page : '')
+                    if (! (bool) preg_match($int_pattern, is_string($nb_categories_page) ? $nb_categories_page : '')
                           or $nb_categories_page < 4) {
                         \Piwigo\Core\PageState::current()->addError(Lang::t('The number of albums a page must be above 4.'));
                     }
@@ -450,7 +450,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                     if (isset($_POST[$row['param']])) {
                         $post_value = $_POST[$row['param']];
-                        $value = is_scalar($post_value) ? (string) $post_value : '';
+                        $value = is_string($post_value) ? $post_value : '';
 
                         if ($row['param'] === 'gallery_title') {
                             if (! \Piwigo\Config\Config::allowHtmlDescriptions()) {

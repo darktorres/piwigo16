@@ -203,7 +203,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                         }
                         if (isset($_POST[$nbm_user['param']])) {
                             $post_value = $_POST[$nbm_user['param']];
-                            $value = is_scalar($post_value) ? (string) $post_value : '';
+                            $value = is_string($post_value) ? $post_value : '';
                             $this->configService->confUpdateParam($nbm_user['param'], $value, true);
                             $updated_param_count++;
                         }

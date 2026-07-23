@@ -87,7 +87,7 @@ final class CheckIntegrity
             foreach ($this->retrieve_list as $i => $c13y) {
                 if (! in_array($c13y['correction_fct'] ?? null, [null, false, 0, '0', '', []], true) and
                     (bool) $c13y['is_callable'] and
-                    in_array(is_string($c13y['id']) ? $c13y['id'] : '', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $c13y_selection), true)) {
+                    in_array(is_string($c13y['id']) ? $c13y['id'] : '', array_map(static fn (mixed $v): string => is_string($v) ? $v : '', $c13y_selection), true)) {
                     if (is_array($c13y['correction_fct_args'])) {
                         $args = $c13y['correction_fct_args'];
                     } elseif ($c13y['correction_fct_args'] !== null) {
@@ -128,7 +128,7 @@ final class CheckIntegrity
                 $ignored_count = 0;
 
                 foreach ($this->retrieve_list as $i => $c13y) {
-                    if (in_array(is_string($c13y['id']) ? $c13y['id'] : '', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $c13y_selection), true)) {
+                    if (in_array(is_string($c13y['id']) ? $c13y['id'] : '', array_map(static fn (mixed $v): string => is_string($v) ? $v : '', $c13y_selection), true)) {
                         $this->build_ignore_list[] = $c13y['id'];
                         $this->retrieve_list[$i]['ignored'] = true;
                         ++$ignored_count;

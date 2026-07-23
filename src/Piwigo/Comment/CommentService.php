@@ -142,8 +142,10 @@ final readonly class CommentService
     public function insertComment(array &$comm, string $key, array &$infos): string
     {
 
-        $comm['ip'] = is_scalar($_SERVER['REMOTE_ADDR'] ?? null) ? (string) $_SERVER['REMOTE_ADDR'] : '';
-        $comm['agent'] = is_scalar($_SERVER['HTTP_USER_AGENT'] ?? null) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
+        $remote_addr = $_SERVER['REMOTE_ADDR'] ?? null;
+        $comm['ip'] = is_string($remote_addr) ? $remote_addr : '';
+        $http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+        $comm['agent'] = is_string($http_user_agent) ? $http_user_agent : '';
 
         $infos = [];
         $commentAction = (! \Piwigo\Config\Config::commentsValidation() || \Piwigo\Auth\AccessControl::isAdmin()) ? 'validate' : 'moderate';

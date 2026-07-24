@@ -10,6 +10,7 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
@@ -221,16 +222,20 @@ final class PictureCommentRenderer
                     $email = $rowEmail;
                 }
 
-                // com.date is NOT NULL in the schema (default
-                // '1970-01-01 00:00:00'), so a fetched row always carries a
-                // real date string.
-                assert(is_string($row['date']));
+                // com.date is nullable now (Comment domain Stage 1a
+                // dropped its 1970-01-01 sentinel default) -- every real
+                // insert still sets it explicitly (CommentRepository::
+                // insert()), but formatDate()'s own `false` "no date"
+                // sentinel is the correct fallback, not an assert(),
+                // matching PwgComments::getList()'s own identical guard
+                // for this same column.
+                $rowDate = is_string($row['date']) ? $row['date'] : false;
 
                 $tplComment =
                   [
                       'ID' => $row['id'],
                       'AUTHOR' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_author', $row['author']),
-                      'DATE' => \Piwigo\Core\DateHelper::formatDate($row['date'], ['day_name', 'day', 'month', 'year', 'time']),
+                      'DATE' => \Piwigo\Core\DateHelper::formatDate($rowDate, ['day_name', 'day', 'month', 'year', 'time']),
                       'CONTENT' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_content', $row['content']),
                       'WEBSITE_URL' => $row['website_url'],
                   ];
@@ -272,7 +277,7 @@ final class PictureCommentRenderer
                 if (\Piwigo\Auth\AccessControl::isAdmin()) {
                     $tplComment['EMAIL'] = $email;
 
-                    if ($row['validated'] !== 'true') {
+                    if (! SqlDialect::getBoolean($row['validated'])) {
                         $tplComment['U_VALIDATE'] = $urlService->addUrlParams(
                             $url_self,
                             [

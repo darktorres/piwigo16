@@ -2,7 +2,7 @@
 -- Hand-maintained -- there is no Doctrine Migrations layer between "what
 -- the schema should be" and what a fresh install creates. Column-type
 -- fixes not yet decided for any domain (remaining user_cache/groups/
--- comments/etc. P17-23 items) are deliberately not applied here.
+-- etc. P17-23 items) are deliberately not applied here.
 
 --
 -- Table structure for table `piwigo_activity`
@@ -71,14 +71,14 @@ DROP TABLE IF EXISTS `piwigo_comments`;
 CREATE TABLE `piwigo_comments` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `image_id` mediumint(8) unsigned NOT NULL default '0',
-  `date` datetime NOT NULL default '1970-01-01 00:00:00',
+  `date` datetime default NULL,
   `author` varchar(255) default NULL,
   `email` varchar(255) default NULL,
   `author_id` mediumint(8) unsigned DEFAULT NULL,
   `anonymous_id` varchar(45) NOT NULL,
   `website_url` varchar(255) DEFAULT NULL,
   `content` longtext,
-  `validated` enum('true','false') NOT NULL default 'false',
+  `validated` tinyint(1) NOT NULL default '0',
   `validation_date` datetime default NULL,
   PRIMARY KEY  (`id`),
   KEY `comments_i2` (`validation_date`),

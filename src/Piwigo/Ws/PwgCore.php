@@ -239,7 +239,7 @@ SELECT id, path, representative_ext, width, height, rotation
 
         // unvalidated comments
         if ($infos['nb_comments'] > 0) {
-            $query = 'SELECT COUNT(*) FROM ' . Tables::comments() . ' WHERE validated=\'false\';';
+            $query = 'SELECT COUNT(*) FROM ' . Tables::comments() . ' WHERE validated=0;';
             $infos['nb_unvalidated_comments'] = $conn->fetchOne($query);
         }
 

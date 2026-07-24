@@ -340,7 +340,7 @@ final class AdminShell
             $query = '
 SELECT COUNT(*)
   FROM ' . Tables::comments() . '
-  WHERE validated=\'false\'
+  WHERE validated=0
 ;';
             $row = $conn->fetchNumeric($query);
             $nb_comments = $row !== false ? $row[0] : 0;

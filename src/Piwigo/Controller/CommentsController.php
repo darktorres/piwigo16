@@ -275,7 +275,7 @@ final class CommentsController implements ControllerInterface
 
         // which status to filter on ?
         if (! \Piwigo\Auth\AccessControl::isAdmin()) {
-            $whereClauses[] = 'validated=\'true\'';
+            $whereClauses[] = 'validated=1';
         }
 
         $whereClauses[] = self::permissionService($conn)->getSqlConditionFandF([
@@ -607,9 +607,13 @@ SELECT *
                     $email = $comment_email;
                 }
 
-                $date = $comment['date'];
-                // comments.date is a NOT NULL column
-                assert(is_string($date));
+                // comments.date is nullable now (Comment domain Stage 1a
+                // dropped its 1970-01-01 sentinel default) -- every real
+                // insert still sets it explicitly, but formatDate()'s own
+                // `false` "no date" sentinel is the correct fallback,
+                // matching PwgComments::getList()'s own identical guard
+                // for this same column.
+                $date = is_string($comment['date']) ? $comment['date'] : false;
 
                 $author_id = $comment['author_id'];
                 // comments.author_id is nullable in schema; a NULL
@@ -665,7 +669,7 @@ SELECT *
                 }
 
                 if (\Piwigo\Auth\AccessControl::canManageComment('validate', $author_id)) {
-                    if ($comment['validated'] !== 'true') {
+                    if (! SqlDialect::getBoolean($comment['validated'])) {
                         $tpl_comment['U_VALIDATE'] = $urlService->addUrlParams(
                             $url_self,
                             [

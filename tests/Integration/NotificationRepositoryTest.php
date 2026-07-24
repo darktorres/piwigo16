@@ -17,8 +17,8 @@ use Piwigo\Notification\NotificationRepository;
  * below explicitly restores graduated dates this class's own tests need to
  * exercise date-RANGE filtering meaningfully, scoped to this class's own DB
  * session only. Resulting shape: comments 1-4 validated (validation_date
- * '2026-07-07 05:02:38'), comment 5 unvalidated (validated='false', on
- * image 4); images 1-2 date_available '...05:02:36', 3-4 '...05:02:37', 5
+ * '2026-07-07 05:02:38'), comment 5 unvalidated (validated=0, on image 4);
+ * images 1-2 date_available '...05:02:36', 3-4 '...05:02:37', 5
  * '...05:02:38'; users 1-2 registered '...05:02:35', 3-4 '...05:02:38'.
  */
 final class NotificationRepositoryTest extends IntegrationTestCase
@@ -58,7 +58,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
             // test class's own DB session only (never touches the shared
             // fixture file). See this class's own docblock for the exact
             // shape these values match.
-            $this->conn->executeStatement('UPDATE ' . Tables::comments() . " SET validation_date = '2026-07-07 05:02:38' WHERE validated = 'true'");
+            $this->conn->executeStatement('UPDATE ' . Tables::comments() . " SET validation_date = '2026-07-07 05:02:38' WHERE validated = 1");
             $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:36' WHERE id IN (1, 2)");
             $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:37' WHERE id IN (3, 4)");
             $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:38' WHERE id = 5");
@@ -91,12 +91,12 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
     public function test_count_by_type_counts_unvalidated_comments(): void
     {
-        // Fixture comment 5 already has the enum's real 'false' value, so
-        // it counts as unvalidated on its own -- this insert adds a second,
-        // proving the filter counts every matching row, not just one.
+        // Fixture comment 5 is already unvalidated (validated=0) on its
+        // own -- this insert adds a second, proving the filter counts
+        // every matching row, not just one.
         $this->conn->executeStatement(
             'INSERT INTO ' . Tables::comments() . ' (image_id, date, author, anonymous_id, content, validated) VALUES (1, NOW(), ?, ?, ?, ?)',
-            ['test author', '127.0.0.9', 'pending test comment', 'false']
+            ['test author', '127.0.0.9', 'pending test comment', 0]
         );
 
         $count = $this->repo->countByType('unvalidated_comments', null, null, '');

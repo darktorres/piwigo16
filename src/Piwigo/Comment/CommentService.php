@@ -65,7 +65,7 @@ final readonly class CommentService
         if (! isset($currentUser->rawAttributes['nb_available_comments'])) {
             $where = [];
             if (! AccessControl::isAdmin()) {
-                $where[] = 'validated=\'true\'';
+                $where[] = 'validated=1';
             }
             $where[] = new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new CategoryRepository(DbConnection::build()))
                 ->getSqlConditionFandF([

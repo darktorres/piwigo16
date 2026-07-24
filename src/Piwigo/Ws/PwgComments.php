@@ -17,6 +17,7 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Core\Lang;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
@@ -107,12 +108,17 @@ final class PwgComments
             $where_clauses[] = 'content LIKE ' . $conn->quote('%' . $params['search'] . '%');
         }
 
-        // summary
+        // summary. validated is a real tinyint(1) column now (Comment
+        // domain Stage 1a) -- numeric literals, not the old
+        // enum('true','false') strings; MySQL's non-numeric-string-to-int
+        // coercion would otherwise silently convert 'true' to 0 too,
+        // inverting the validated/pending counts (same bug class
+        // Category's own commentable/visible retype found).
         $query = '
 SELECT
   count(*) as all_comments,
-  sum(validated = \'true\') as validated,
-  sum(validated = \'false\') as pending
+  sum(validated = 1) as validated,
+  sum(validated = 0) as pending
 FROM ' . Tables::comments() . '
 WHERE ' . implode(' AND ', $where_clauses) . '
 ;';
@@ -128,12 +134,12 @@ WHERE ' . implode(' AND ', $where_clauses) . '
 
         switch ($params['status']) {
             case 'pending':
-                $where_clauses[] = 'validated = \'false\'';
+                $where_clauses[] = 'validated = 0';
                 $total_comments = is_numeric($summary['pending']) ? (int) $summary['pending'] : 0;
                 break;
 
             case 'validated':
-                $where_clauses[] = 'validated = \'true\'';
+                $where_clauses[] = 'validated = 1';
                 $total_comments = is_numeric($summary['validated']) ? (int) $summary['validated'] : 0;
                 break;
         }
@@ -215,7 +221,7 @@ SELECT
                 'date' => \Piwigo\Core\DateHelper::formatDate($comment_date, ['day_name', 'day', 'month', 'year', 'time']),
                 'content' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_content', $row['content']),
                 'raw_content' => $row['content'],
-                'is_pending' => is_string($row['validated']) && $row['validated'] === 'false',
+                'is_pending' => ! SqlDialect::getBoolean($row['validated']),
             ];
         }
 

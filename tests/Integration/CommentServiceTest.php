@@ -163,7 +163,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame([], $infos);
             $id = $this->insertedId($comm);
             self::assertSame('A perfectly fine comment.', $this->fetchColumn($id, 'content'));
-            self::assertSame('true', $this->fetchColumn($id, 'validated'));
+            self::assertSame(1, $this->fetchValidated($id));
         }
 
         public function test_insert_comment_moderates_when_validation_required_and_not_admin(): void
@@ -175,7 +175,7 @@ namespace Piwigo\Tests\Integration {
             $action = $this->service->insertComment($comm, $key, $infos);
 
             self::assertSame('moderate', $action);
-            self::assertSame('false', $this->fetchColumn($this->insertedId($comm), 'validated'));
+            self::assertSame(0, $this->fetchValidated($this->insertedId($comm)));
         }
 
         public function test_insert_comment_rejects_empty_content(): void
@@ -294,7 +294,7 @@ namespace Piwigo\Tests\Integration {
 
             self::assertSame('moderate', $action);
             self::assertSame('edited content', $this->fetchColumn(2, 'content'));
-            self::assertSame('false', $this->fetchColumn(2, 'validated'));
+            self::assertSame(0, $this->fetchValidated(2));
         }
 
         public function test_update_comment_invalid_website_url_appends_a_page_error_and_rejects(): void
@@ -343,11 +343,11 @@ namespace Piwigo\Tests\Integration {
 
         public function test_validate_comment_marks_it_validated(): void
         {
-            self::assertSame('false', $this->fetchColumn(5, 'validated'));
+            self::assertSame(0, $this->fetchValidated(5));
 
             $this->service->validateComment(5);
 
-            self::assertSame('true', $this->fetchColumn(5, 'validated'));
+            self::assertSame(1, $this->fetchValidated(5));
         }
 
         // --- getCommentAuthorId() --------------------------------------------
@@ -459,6 +459,25 @@ namespace Piwigo\Tests\Integration {
                 ->fetchOne();
 
             return is_string($value) ? $value : null;
+        }
+
+        /**
+         * validated is a real tinyint(1) column now (Comment domain Stage
+         * 1a) -- fetchColumn()'s is_string() narrowing would always
+         * return null for it, same reasoning as CommentRepositoryTest's
+         * own fetchValidated().
+         */
+        private function fetchValidated(int $commentId): ?int
+        {
+            $value = $this->conn->createQueryBuilder()
+                ->select('validated')
+                ->from(Tables::comments())
+                ->where('id = :id')
+                ->setParameter('id', $commentId)
+                ->executeQuery()
+                ->fetchOne();
+
+            return is_numeric($value) ? (int) $value : null;
         }
     }
 }

@@ -211,7 +211,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             . "(%d, '%s', 'regular_user', '127.0.0.2', %d, 'Another perspective on this photo.', 1, '%s'), "
             . "(%d, '%s', 'power_user', '127.0.0.3', %d, 'Great composition and colors!', 1, '%s'), "
             . "(%d, '%s', 'power_user', '127.0.0.3', %d, 'I keep coming back to this one.', 1, '%s'), "
-            . "(%d, '%s', 'fixture_admin', '127.0.0.1', 1, 'Pending comment for moderation.', 'false', NULL)",
+            . "(%d, '%s', 'fixture_admin', '127.0.0.1', 1, 'Pending comment for moderation.', 0, NULL)",
             $this->dbPrefix,
             $photoIds[0], $now, $now,
             $photoIds[1], $now, $userIds['regular_user'], $now,

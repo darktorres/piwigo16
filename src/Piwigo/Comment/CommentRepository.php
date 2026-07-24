@@ -64,7 +64,12 @@ final class CommentRepository extends AbstractRepository implements CommentCount
             ->setParameter('anonymousId', $data['anonymousId'])
             ->setParameter('content', $data['content'])
             ->setParameter('now', $now)
-            ->setParameter('validated', $data['validated'] ? 'true' : 'false')
+            // A real tinyint(1) column now (Comment domain Stage 1a) --
+            // the old 'true'/'false' string literal is not a valid
+            // integer for the column (strict SQL mode rejects it
+            // outright), same reasoning as
+            // UserRepository::insertUserInfos()'s own bool-bind fix.
+            ->setParameter('validated', (int) $data['validated'])
             ->setParameter('imageId', $data['imageId'])
             ->setParameter('websiteUrl', $data['websiteUrl'])
             ->setParameter('email', $data['email'])
@@ -119,7 +124,7 @@ final class CommentRepository extends AbstractRepository implements CommentCount
             ->where('id = :id')
             ->setParameter('content', $data['content'])
             ->setParameter('websiteUrl', $data['websiteUrl'])
-            ->setParameter('validated', $data['validated'] ? 'true' : 'false')
+            ->setParameter('validated', (int) $data['validated'])
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('id', $id);
 
@@ -170,7 +175,7 @@ final class CommentRepository extends AbstractRepository implements CommentCount
             ->set('validated', ':validated')
             ->set('validation_date', ':now')
             ->where('id IN (:ids)')
-            ->setParameter('validated', 'true')
+            ->setParameter('validated', 1)
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
             ->executeStatement();
@@ -288,7 +293,13 @@ final class CommentRepository extends AbstractRepository implements CommentCount
             ->setParameter('imageId', $imageId);
 
         if ($onlyValidated) {
-            $qb->andWhere("validated = 'true'");
+            // A real tinyint(1) column now (Comment domain Stage 1a) -- a
+            // numeric literal, not the old enum('true','false') string;
+            // MySQL's non-numeric-string-to-int coercion would otherwise
+            // silently convert 'true' to 0 too, inverting this filter to
+            // count unvalidated comments instead (same bug class
+            // Category's own commentable/visible retype found).
+            $qb->andWhere('validated = 1');
         }
 
         $value = $qb->executeQuery()
@@ -315,7 +326,7 @@ final class CommentRepository extends AbstractRepository implements CommentCount
         $rows = $this->conn->createQueryBuilder()
             ->select('image_id', 'COUNT(*) AS nb_comments')
             ->from(Tables::comments())
-            ->where("validated = 'true'")
+            ->where('validated = 1')
             ->andWhere('image_id IN (:imageIds)')
             ->setParameter('imageIds', $imageIds, ArrayParameterType::STRING)
             ->groupBy('image_id')
@@ -378,7 +389,7 @@ final class CommentRepository extends AbstractRepository implements CommentCount
             ->setParameter('imageId', $imageId);
 
         if ($onlyValidated) {
-            $qb->andWhere("com.validated = 'true'");
+            $qb->andWhere('com.validated = 1');
         }
 
         /** @var list<array<string, mixed>> */

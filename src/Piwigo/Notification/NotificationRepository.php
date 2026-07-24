@@ -97,7 +97,14 @@ final class NotificationRepository extends AbstractRepository
         }
 
         if ($type === 'unvalidated_comments') {
-            $sql .= " AND validated = 'false'";
+            // comments.validated is a real tinyint(1) column (Comment
+            // domain Stage 1a) -- a numeric literal, not the old
+            // enum('true','false') string; MySQL's non-numeric-string-to-
+            // int coercion would otherwise silently convert 'false' to 0
+            // too, matching every row instead of filtering to unvalidated
+            // ones (same bug class Category's own commentable/visible
+            // retype found).
+            $sql .= ' AND validated = 0';
         }
 
         $sql .= ' ' . $restrictSql;

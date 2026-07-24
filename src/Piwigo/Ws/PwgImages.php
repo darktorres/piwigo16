@@ -607,7 +607,7 @@ SELECT COUNT(rate) AS count, ROUND(AVG(rate),2) AS average
 
         $where_comments = 'image_id = ' . $image_id;
         if (! \Piwigo\Auth\AccessControl::isAdmin()) {
-            $where_comments .= ' AND validated="true"';
+            $where_comments .= ' AND validated=1';
         }
 
         $query = '

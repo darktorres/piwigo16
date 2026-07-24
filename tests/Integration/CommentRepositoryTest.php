@@ -133,7 +133,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
         $this->repo->validate([$id]);
 
-        self::assertSame('true', $this->fetchValidated($id));
+        self::assertSame(1, $this->fetchValidated($id));
     }
 
     public function test_validate_is_a_no_op_for_empty_ids(): void
@@ -333,7 +333,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         return is_string($value) ? $value : null;
     }
 
-    private function fetchValidated(int $commentId): ?string
+    private function fetchValidated(int $commentId): ?int
     {
         $value = $this->conn->createQueryBuilder()
             ->select('validated')
@@ -343,6 +343,6 @@ final class CommentRepositoryTest extends IntegrationTestCase
             ->executeQuery()
             ->fetchOne();
 
-        return is_string($value) ? $value : null;
+        return is_numeric($value) ? (int) $value : null;
     }
 }

@@ -21,9 +21,8 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Runs the real middleware pipeline -- 7 middleware by default (every P22
- * root file's own call shape, unparametrized: `RequestPipeline::
- * handle($request)`).
+ * Runs the real middleware pipeline -- 7 middleware, every root file's own
+ * call shape: `RequestPipeline::handle($request)`.
  *
  * Order: Exception stays outermost to catch everything downstream.
  * SecurityHeaders next. Session before ServerTiming/Sentry so a session
@@ -38,21 +37,6 @@ use Psr\Http\Server\RequestHandlerInterface;
  * depend on L0. Uses Kernel::container(), which an existing arch test
  * already restricts to Bootstrap/ + index.php -- this class is exactly the
  * kind of caller that boundary anticipated.
- *
- * Workstream C3 Part III: the optional $middleware parameter is the "per-
- * route middleware selection" this endpoint's own leaner bootstrap needs --
- * deliberately an explicit override the calling *entry file* opts into
- * (i.php passes self::WITHOUT_SESSION), not a config/routes.php `_middleware`
- * route default resolved dynamically. A route-default approach was
- * considered and rejected: RoutingMiddleware (which resolves the matched
- * route) is itself one of the 7 middleware being selected between, so
- * deciding the middleware set *from* the route match would need dispatching
- * every request twice (once to pick the middleware list, once for real) or
- * restructuring routing to run outside the pipeline entirely -- real
- * complexity this app has exactly one real use case for today. An
- * entry-file-level override needs neither: i.php already makes its own
- * request-shape decisions this way (see its own docblock), the same
- * pattern admin/popuphelp.php already uses for RequestMountDepth::set().
  */
 final class RequestPipeline
 {
@@ -69,28 +53,7 @@ final class RequestPipeline
         ControllerInvokerMiddleware::class,
     ];
 
-    /**
-     * DEFAULT_MIDDLEWARE minus SessionMiddleware -- its own session_start()
-     * call is pure overhead on a route whose permission check is already a
-     * direct, DB-backed lookup that never touches native $_SESSION (see
-     * Controller\ImageDerivativeController's own docblock).
-     *
-     * @var list<class-string<MiddlewareInterface>>
-     */
-    public const array WITHOUT_SESSION = [
-        ExceptionHandlerMiddleware::class,
-        SecurityHeadersMiddleware::class,
-        ServerTimingMiddleware::class,
-        SentryMiddleware::class,
-        RoutingMiddleware::class,
-        ControllerInvokerMiddleware::class,
-    ];
-
-    /**
-     * @param ?list<class-string<MiddlewareInterface>> $middleware defaults
-     *   to DEFAULT_MIDDLEWARE (the real 7-middleware list) when omitted
-     */
-    public static function handle(ServerRequestInterface $request, ?array $middleware = null): ResponseInterface
+    public static function handle(ServerRequestInterface $request): ResponseInterface
     {
         $container = Kernel::container();
 
@@ -105,7 +68,7 @@ final class RequestPipeline
         return new MiddlewarePipeline(
             array_map(
                 static fn (string $id): MiddlewareInterface => self::resolveMiddleware($container, $id),
-                $middleware ?? self::DEFAULT_MIDDLEWARE,
+                self::DEFAULT_MIDDLEWARE,
             ),
             $notFound,
         )->handle($request);

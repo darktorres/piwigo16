@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\Config;
-use Piwigo\Config\ConfigLoader;
-use Piwigo\Core\Env;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -25,43 +21,30 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Permission\ImageVisibilityChecker;
-use Piwigo\Session\SessionRepository;
-use Piwigo\Session\SessionUserResolver;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * The derivative image server -- P23 batch 8f: ported from i.php's ~900
  * top-level lines and 13 free functions; i.php is now a thin entry shell
- * (Paths::fromRoot() + minimal config include + autoload boundary +
+ * (Paths::fromRoot() + RequestBootstrap::bootEntryPoint() +
  * CommonBootstrap::run() + RequestPipeline::handle() dispatch, matching
  * every other P22/P23 root file's own shape).
  *
- * FAST-BOOTSTRAP CONTRACT, revised (Workstream C3 Part III -- joining the
- * real routing pipeline): this controller is now a real, routed
- * Piwigo\Http\ControllerInterface, invoked by ControllerInvokerMiddleware
- * like every other frontend controller -- but still does NOT route through
- * include/common.inc.php's RequestBootstrap::configure()/connect()/
- * finalize() chain (no plugin loading, no native $_SESSION bootstrap, no
- * template). That was never really about avoiding DI-container construction
- * cost (fully mooted by FrankenPHP's per-worker, not per-request,
- * container build) -- it's that PluginLoader::loadPlugins() (runs every
- * installed plugin's registration code) and UserBootstrap::initialize()
- * (cookie/auto-login/API-key resolution) are genuinely per-request work
- * this endpoint, the highest-QPS one in the app, has no use for: its own
- * permission check is already a direct, DB-backed SessionUserResolver/
- * SessionRepository lookup (never touches native $_SESSION), and it serves
- * no template/plugin-hookable content at all. It's dispatched with a
- * deliberately leaner per-route middleware set (i.php passes
- * Piwigo\Bootstrap\RequestPipeline::WITHOUT_SESSION as handle()'s own
- * optional $middleware argument) than every other route: SessionMiddleware
- * is skipped specifically (its own session_start() call
- * would be pure overhead here, confirmed by reading both SessionRepository/
- * SessionUserResolver -- neither touches $_SESSION).
+ * This controller now runs through the same bootstrap as every other
+ * frontend controller -- RequestBootstrap::bootEntryPoint()'s configure()/
+ * connect()/finalize() chain (plugin loading, native $_SESSION bootstrap,
+ * full user resolution, template construction) has already run by the time
+ * ControllerInvokerMiddleware invokes __invoke() below, so this class no
+ * longer duplicates any of that: Config/CurrentLogger/CurrentUser are
+ * already populated, and the permission check reads the already-resolved
+ * CurrentUser instead of re-deriving it from the session cookie itself
+ * (see checkDerivativePermission()'s own docblock).
  *
  * All DB work here goes through one shared DBAL Connection
- * (image/permission/session lookups alike) -- previously this file also
+ * (image/permission lookups alike) -- previously this file also
  * kept a separate legacy-mysqli connection for the image/permission
  * lookups specifically to avoid the DI-container construction cost on
  * this endpoint's per-request PHP-FPM hot path; that reasoning no longer
@@ -70,42 +53,25 @@ use Psr\Http\Message\ServerRequestInterface;
  * DI+DBAL migration retargeted those two calls onto the same
  * Connection/QueryBuilder pattern used everywhere else in this codebase.
  *
- * Note on plugin events: the old i.php carried a local no-op
- * trigger_notify() stub so that PwgImage's constructor (which fires
- * 'load_image_library') would not explode on this path. Since P23 batch 7
- * the real dispatch is always available (PwgImage now calls
- * Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify() directly, a
- * plain autoloaded class, not a composer autoload.files free function --
- * the stub had in fact become a fatal "cannot redeclare" collision), and
- * on this fast path no plugins are ever loaded, so the dispatcher has no
- * handlers and the event is a natural no-op. The stub is therefore
- * deleted, not replaced: not firing plugin hooks here is achieved by not
- * registering any, which is the fast-bootstrap design itself.
- *
  * No globals left: $conf, $logger and $prefixeTable used to be (Legacy
  * Coupling Retirement Track A gap-fill batches G2/G5) -- PwgImage and
  * ImageStdParams read Piwigo\Config\Config:: accessors instead of a raw
- * $conf; this controller's own Logger instance is published via
- * Piwigo\Core\CurrentLogger::set() right after construction, the same
- * static accessor ImageExtImagick.php and every other shared consumer
- * read from now; and every real $prefixeTable read here was already the
- * same value as Piwigo\Config\Config::dbPrefix() (both trace back to the
- * same PIWIGO_DB_PREFIX env var / 'piwigo_' default) -- now moot anyway,
- * since Tables::config()/Tables::images() (used by the DBAL queries
- * below) resolve the same prefix internally. PageState's request-wide
- * query counters, previously maintained by every MysqliDb::query() call
- * on this path, are not replicated by the DBAL Connection -- this
- * endpoint never renders a page with the debug footer that stat feeds,
- * so nothing ever read it here. The
- * throwaway $conf_unused/$prefixeTable_unused locals below only exist to
- * satisfy Env::applyEnvToConf()'s by-ref parameters. The
+ * $conf; this controller's own logger is Piwigo\Core\CurrentLogger::get(),
+ * the same static accessor ImageExtImagick.php and every other shared
+ * consumer read from now; and every real $prefixeTable read here was
+ * already the same value as Piwigo\Config\Config::dbPrefix() (both trace
+ * back to the same PIWIGO_DB_PREFIX env var / 'piwigo_' default) -- now
+ * moot anyway, since Tables::config()/Tables::images() resolve the same
+ * prefix internally. PageState's request-wide query counters, previously
+ * maintained by every MysqliDb::query() call on this path, are not
+ * replicated by the DBAL Connection -- this endpoint never renders a page
+ * with the debug footer that stat feeds, so nothing ever read it here. The
  * derivativePath/derivativeUrlSuffix/derivativeExt/derivativeType/coi/
  * srcLocation/srcPath/srcUrl/originalSize/rotationAngle/derivativeParams
  * scratch state below is this controller's own -- never read outside it
- * (this fast-bootstrap path never runs alongside the normal
- * RequestBootstrap flow that populates the unrelated, same-named
- * $page['root_path'] gallery-navigation concept elsewhere) -- so it's
- * private instance state instead of going through PageState at all.
+ * (unrelated to the same-named $page['root_path'] gallery-navigation
+ * concept elsewhere) -- so it's private instance state instead of going
+ * through PageState at all.
  */
 final class ImageDerivativeController implements ControllerInterface
 {
@@ -146,45 +112,14 @@ final class ImageDerivativeController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        // \Piwigo\Config\Config::dataLocation() needs narrowing here specifically (used
-        // before Env::applyEnvToConf() below widens $conf_unused's per-key
-        // type info again -- see the comment near the Logger construction).
-        // Direct return, not ierror(): CurrentLogger isn't constructed yet
-        // (a few lines below), and ierror() itself reads CurrentLogger::get().
-        Env::loadEnvFile($this->paths->root);
-        // Env::applyEnvToConf(array &$conf, string &$prefixeTable)'s two
-        // by-ref params are both dead here now (Legacy Coupling Retirement
-        // Track A gap-fill batch G2/G5: this controller's own $conf/
-        // $prefixeTable reads are retargeted onto Piwigo\Config\Config,
-        // synced independently a few lines below via
-        // ConfigLoader::applyEnvOverrides()) -- kept only to satisfy the
-        // by-ref signature.
-        $conf_unused = [];
-        $prefixeTable_unused = '';
-        Env::applyEnvToConf($conf_unused, $prefixeTable_unused);
-
-        // [SEC-33] populates Piwigo\Config\Config, needed below for
-        // DbConnection::build() (the SessionRepository lookup backing
-        // checkDerivativePermission()) -- this is the same lightweight,
-        // side-effect-free two-liner every other domain's bootstrap already
-        // runs, not the full common.inc.php pipeline this controller
-        // deliberately avoids.
-        ConfigLoader::applyDefaults();
-        ConfigLoader::applyEnvOverrides();
-
-        $log_data_location = \Piwigo\Config\Config::dataLocation();
-        $log_dir = \Piwigo\Config\Config::logDir();
-        $db_password = \Piwigo\Config\Config::dbPassword();
-
-        $logger = new Logger([
-            'directory' => $this->paths->root . $log_data_location . $log_dir,
-            'severity' => \Piwigo\Config\Config::logLevel(),
-            // we use an hashed filename to prevent direct file access, and we salt with
-            // the db_password instead of secret_key because the log must be usable in i.php
-            // (secret_key is in the database)
-            'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $db_password) . '.txt',
-        ]);
-        \Piwigo\Core\CurrentLogger::set($logger);
+        // Config/ImageStdParams/CurrentLogger are already populated by
+        // RequestBootstrap::bootEntryPoint() (called from i.php before this
+        // controller is ever reached) -- ConfigService::loadConfFromDb()
+        // covers the 'derivatives'/'disabled_derivatives' keys this
+        // controller used to fetch itself, and connect() already calls
+        // ImageStdParams::load_from_db() and builds the same
+        // hashed-filename Logger this used to construct a second time.
+        $logger = \Piwigo\Core\CurrentLogger::get();
 
         $begin = $step = microtime(true);
         $timing = [];
@@ -194,35 +129,6 @@ final class ImageDerivativeController implements ControllerInterface
 
         $conn = DbConnection::build();
         $imageRepo = new ImageRepository($conn);
-
-        try {
-            $configRows = $conn->createQueryBuilder()
-                ->select('param', 'value')
-                ->from(Tables::config())
-                ->where('param IN (:params)')
-                ->setParameter('params', ['derivatives', 'disabled_derivatives'], ArrayParameterType::STRING)
-                ->executeQuery()
-                ->fetchAllAssociative();
-        } catch (\Exception $e) {
-            $logger->error($e->getMessage(), 'i.php');
-            $configRows = [];
-        }
-
-        foreach ($configRows as $row) {
-            // 'param' is the config table's primary key column (never NULL in
-            // practice), but is only provably `mixed` from DBAL's own row
-            // type, so an array key still needs narrowing.
-            if (! is_string($row['param'])) {
-                continue;
-            }
-            // ImageStdParams::load_from_db() reads Config::derivatives()/
-            // Config::disabledDerivatives() (Legacy Coupling Retirement
-            // Track A batch A4), not a raw $conf global, so this
-            // fast-path mini-bootstrap's own DB load only needs to sync
-            // Config::.
-            \Piwigo\Config\Config::override($row['param'], $row['value']);
-        }
-        ImageStdParams::load_from_db();
 
         // parseRequest() fills these by mutating $this's own properties;
         // returning its result directly (rather than re-reading
@@ -518,36 +424,18 @@ final class ImageDerivativeController implements ControllerInterface
     /**
      * [SEC-33] Denies (403), regardless of whether a cached derivative
      * already exists on disk, any request for an image belonging exclusively
-     * to categories the current visitor cannot see (session cookie -> 1
-     * query for the session's pwg_uid -> 1 query for the already-computed
-     * user_cache.forbidden_categories, never recomputing permissions live
-     * in this fast path). The visibility decision itself lives in
-     * Piwigo\Permission\ImageVisibilityChecker, the session lookup in
-     * Piwigo\Session\SessionUserResolver -- both share this controller's
-     * one Connection now (previously 2 separate connections: legacy
-     * mysqli for the former, a second DBAL connection for the latter).
+     * to categories the current visitor cannot see (1 query for the
+     * already-computed user_cache.forbidden_categories, never recomputing
+     * permissions live). The visibility decision itself lives in
+     * Piwigo\Permission\ImageVisibilityChecker; the user id comes from
+     * CurrentUser, already resolved by RequestBootstrap::connect() ->
+     * UserBootstrap::initialize() (cookie/auto-login/Apache-auth/auth-key,
+     * guest id when none apply) before this controller ever runs -- no
+     * separate session-cookie lookup needed here any more.
      */
     private function checkDerivativePermission(Connection $conn, int $imageId): void
     {
-        $guestId = \Piwigo\Config\Config::guestId();
-        $userId = $guestId;
-
-        $sessionName = \Piwigo\Config\Config::sessionName();
-        if ($sessionName !== '') {
-            $cookieValue = $_COOKIE[$sessionName] ?? null;
-            if (is_string($cookieValue) && $cookieValue !== '') {
-                $resolved = new SessionUserResolver(new SessionRepository($conn))
-                    ->resolveLoggedUserId(
-                        $cookieValue,
-                        \Piwigo\Config\Config::sessionUseIpAddress(),
-                    );
-                if ($resolved !== null) {
-                    $userId = $resolved;
-                }
-            }
-        }
-
-        if (! new ImageVisibilityChecker($conn)->isVisibleToUser($imageId, $userId)) {
+        if (! new ImageVisibilityChecker($conn)->isVisibleToUser($imageId, CurrentUser::get()->id)) {
             $this->ierror('Forbidden', 403);
         }
     }

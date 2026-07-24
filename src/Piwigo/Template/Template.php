@@ -168,9 +168,28 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             // (post-install, table now exists) sees Config::has('data_dir_checked')
             // still false and simply redoes the cheap mkgetdir/is_writable
             // check once more, no different from before this write existed.
+            //
+            // Widened from the narrower TableNotFoundException to the full
+            // Doctrine\DBAL\Exception interface -- found live via
+            // composer test:install against a genuinely fresh DB (a state
+            // fixture-regen's own DB always already had real credentials
+            // for, so it never exercised this): on the *first* GET to
+            // install.php, before the form is ever submitted,
+            // InstallWizard::boot()'s own Config::override('db_user', $this->dbuser)
+            // (needed so a *submitted* form's real credentials win over
+            // stale ones -- see that call site's own docblock) runs with
+            // $this->dbuser === '' (no $_POST yet), which overwrites
+            // whatever valid credentials were already loaded (e.g. a test
+            // run's .env.test-sourced ones) with empty strings. The
+            // resulting connection attempt here fails at the credential
+            // stage itself (Doctrine\DBAL\Exception\ConnectionException,
+            // "Access denied for user ''@'localhost'"), not the
+            // table-lookup stage -- a sibling failure mode this call site
+            // must tolerate for the exact same reason it already tolerates
+            // a missing table.
             try {
                 \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('data_dir_checked', 1);
-            } catch (\Doctrine\DBAL\Exception\TableNotFoundException) {
+            } catch (\Doctrine\DBAL\Exception) {
             }
         }
 

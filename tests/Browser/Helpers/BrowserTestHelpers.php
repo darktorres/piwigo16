@@ -8,6 +8,7 @@ use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
 use Pest\Browser\Playwright\Page;
+use Pest\Browser\Support\GuessLocator;
 use PHPUnit\Framework\ExpectationFailedException;
 use ReflectionMethod;
 use ReflectionProperty;
@@ -194,7 +195,10 @@ final class BrowserTestHelpers
 
     /**
      * Extracts the underlying Webpage, bypassing pest-plugin-browser's
-     * assertion-retry wrapper.
+     * assertion-retry wrapper. Public: any one-shot action slower than the
+     * ~1s-per-attempt ceiling described below needs this, not just
+     * navigate()/content() (see InstallTest.php's use for click('install'),
+     * which submits the install form -- a ~4-5s server-side operation).
      *
      * AwaitableWebpage::__call() wraps every method call (except a
      * hardcoded 2-item exclusion list) in Execution::waitForExpectation(),
@@ -251,10 +255,37 @@ final class BrowserTestHelpers
      * do), caching the result back onto the same property so a later real
      * call on the original $page reuses it rather than building another.
      */
-    private static function rawWebpage(Webpage|PendingAwaitablePage|AwaitableWebpage $page): Webpage
+    public static function rawWebpage(Webpage|PendingAwaitablePage|AwaitableWebpage $page): Webpage
     {
         if ($page instanceof Webpage) {
             return $page;
+        }
+
+        return new Webpage(self::nativePage($page), '');
+    }
+
+    /**
+     * Extracts the native Pest\Browser\Playwright\Page underlying any of
+     * the 3 page wrapper types, via the same reflection technique
+     * rawWebpage() uses -- shared so clickWithTimeout() below (which needs
+     * a raw Locator, not a Webpage) doesn't duplicate the union-unwrapping
+     * logic.
+     */
+    // @phpstan-ignore return.internalClass
+    private static function nativePage(Webpage|PendingAwaitablePage|AwaitableWebpage $page): Page
+    {
+        if ($page instanceof Webpage) {
+            $property = new ReflectionProperty(Webpage::class, 'page');
+
+            // @phpstan-ignore instanceof.internalClass
+            if (!($rawPage = $property->getValue($page)) instanceof Page) {
+                throw new ExpectationFailedException(
+                    'Could not extract the underlying Page from Webpage — '
+                    . 'pest-plugin-browser may have renamed/retyped its internal property.'
+                );
+            }
+
+            return $rawPage;
         }
 
         if ($page instanceof PendingAwaitablePage) {
@@ -292,7 +323,35 @@ final class BrowserTestHelpers
             );
         }
 
-        return new Webpage($rawPage, '');
+        return $rawPage;
+    }
+
+    /**
+     * Clicks an element with an explicit Playwright-native timeout, for the
+     * rare action whose server-side work genuinely exceeds even the raw
+     * (non-retried) default click timeout -- see InstallTest.php's use for
+     * submitting the install form (~4-5s server-side: schema creation +
+     * config seeding + admin user creation). rawWebpage()->click() alone
+     * isn't enough here: Webpage::click() (Api/Concerns/
+     * InteractsWithElements.php) calls the locator's click() with no
+     * options, so it still hits Playwright's own default action timeout
+     * (~5s) -- confirmed live, it failed the same way rawWebpage() bypassing
+     * pest-plugin-browser's separate ~1s-per-attempt retry-wrap already
+     * fixed. GuessLocator (Pest\Browser\Support, used internally by
+     * Webpage::guessLocator() -- same class, just without a public
+     * pass-through for click() options) is used directly here to reach the
+     * one native API (Locator::click(array $options)) that actually accepts
+     * a custom timeout.
+     */
+    public static function clickWithTimeout(
+        Webpage|PendingAwaitablePage|AwaitableWebpage $page,
+        string $text,
+        int $timeoutMs = 30_000
+    ): void {
+        // @phpstan-ignore new.internalClass
+        (new GuessLocator(self::nativePage($page)))
+            ->for($text)
+            ->click(['timeout' => $timeoutMs]);
     }
 
     /**

@@ -29,7 +29,7 @@ final class GroupRepository extends AbstractRepository
             ->from(Tables::groups())
             ->where('is_default = :isDefault')
             ->orderBy('id', 'ASC')
-            ->setParameter('isDefault', 'true')
+            ->setParameter('isDefault', 1)
             ->executeQuery()
             ->fetchFirstColumn();
 
@@ -54,7 +54,7 @@ final class GroupRepository extends AbstractRepository
             static fn (array $row): array => [
                 'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
                 'name' => is_string($row['name']) ? $row['name'] : '',
-                'is_default' => $row['is_default'] === 'true',
+                'is_default' => (bool) $row['is_default'],
             ],
             $rows
         );
@@ -95,8 +95,22 @@ final class GroupRepository extends AbstractRepository
                 ->setParameter('groupIds', $groupIds, ArrayParameterType::INTEGER);
         }
 
-        return $qb->executeQuery()
+        $rows = $qb->executeQuery()
             ->fetchAllAssociative();
+
+        // is_default is a real tinyint(1) column now (Group domain Stage
+        // 1a) -- ws.groups.getList's own JSON response returns this row
+        // straight through (PwgGroups::getList()), and its schema
+        // (tests/Contract/schemas/pwg.groups.getList.json) only allows
+        // string|boolean, not the raw int a tinyint fetch would otherwise
+        // produce. Normalized to real bool here, once, matching every
+        // other domain's own retype convention.
+        foreach ($rows as &$row) {
+            $row['is_default'] = (bool) $row['is_default'];
+        }
+        unset($row);
+
+        return $rows;
     }
 
     public function nameExists(string $name, ?int $excludeGroupId = null): bool
@@ -177,7 +191,7 @@ final class GroupRepository extends AbstractRepository
             ->executeQuery()
             ->fetchOne();
 
-        return $value === 'true';
+        return (bool) $value;
     }
 
     public function insert(string $name, bool $isDefault): int
@@ -193,7 +207,7 @@ final class GroupRepository extends AbstractRepository
                 'lastmodified' => ':lastmodified',
             ])
             ->setParameter('name', $name)
-            ->setParameter('isDefault', $isDefault ? 'true' : 'false')
+            ->setParameter('isDefault', (int) $isDefault)
             ->setParameter('lastmodified', Env::now()->format('Y-m-d H:i:s'))
             ->executeStatement();
 
@@ -221,7 +235,7 @@ final class GroupRepository extends AbstractRepository
 
         if (isset($updates['is_default'])) {
             $qb->set('is_default', ':isDefault')
-                ->setParameter('isDefault', $updates['is_default'] ? 'true' : 'false');
+                ->setParameter('isDefault', (int) $updates['is_default']);
         }
 
         $qb->executeStatement();

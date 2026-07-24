@@ -605,6 +605,91 @@ jobs:
           until curl -sf http://localhost:8080/index.php > /dev/null; do sleep 0.5; done
       - run: composer test:browser
 
+  install-flow:
+    name: Pest (install flow E2E)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      mysql:
+        image: mysql:9.7
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: piwigo_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1" --health-interval=10s
+          --health-timeout=5s --health-retries=5
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
+      - name: Install Playwright + Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: bunx playwright install --with-deps chromium
+      - name: Install Chromium system deps only (browser binary cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: bunx playwright install-deps chromium
+      - name: Write .env.test
+        run: |
+          cat > .env.test <<'ENVEOF'
+          PIWIGO_DB_HOST=127.0.0.1
+          PIWIGO_DB_PORT=3306
+          PIWIGO_DB_USER=root
+          PIWIGO_DB_PASSWORD=root
+          PIWIGO_DB_BASE=piwigo_test
+          PIWIGO_DB_PREFIX=piwigo_
+          PIWIGO_BASE_URL=http://localhost:8080
+          ENVEOF
+      # docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: deliberately
+      # skips the 2 steps every other Browser-suite job above has --
+      # "Provision piwigo_test from the committed fixture" and `touch
+      # local/.installed.test` -- both exist specifically so the *other*
+      # ~70 tests (which assume an already-installed, fixture-loaded app)
+      # work. This job's mysql service starts with an empty piwigo_test
+      # database by construction (MYSQL_DATABASE above), and no
+      # .installed.test marker means InstallTest.php's own
+      # markTestSkipped() guard is never reached -- this is the whole
+      # point: give the install flow a real, executed run instead of a
+      # permanent, silent skip.
+      - name: Start PHP built-in server
+        run: |
+          # docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: -t public,
+          # not -t . like the other Browser-suite jobs above -- verified
+          # directly (a real `php -S -t .` + `curl /index.php` locally)
+          # that `-t .` 404s immediately at the PHP dev server's own
+          # routing layer, before any application code runs, since
+          # index.php/health.php/etc. only exist under public/, not the
+          # repo root. This job's own health-check would spin until
+          # timeout-minutes with the other jobs' -t . -- flagged
+          # separately as a likely pre-existing issue in those jobs
+          # rather than silently copied here.
+          php -S localhost:8080 -t public > /tmp/php-server.log 2>&1 &
+          # health.php (not the clean /health URL -- that needs
+          # .htaccess's RewriteRule, which php -S doesn't process) is
+          # liveness-only: no DB, no Piwigo bootstrap, see
+          # public/health.php. Deliberately not /index.php, which
+          # depends on Piwigo's own install-state detection and has no
+          # reason to be exercised twice by two different probes.
+          until curl -sf http://localhost:8080/health.php > /dev/null; do sleep 0.5; done
+      - run: composer test:install
+
   visual-regression:
     name: Visual regression
     runs-on: ubuntu-latest
@@ -883,6 +968,27 @@ jobs:
             echo "GET /${path} -> ${status}"
             if [ "${status}" != "403" ]; then
               echo "::error::expected 403 for /${path}, got ${status}"
+              exit 1
+            fi
+          done
+      - name: Assert vendor/ nested under themes/ stays reachable (SEC-01 gap-closure)
+        run: |
+          # docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: the SEC-01
+          # vendor/ deny rule used to be unanchored across the *whole*
+          # combined regex, matching /vendor/ anywhere in the path --
+          # including themes/default/vendor/fontello/, the theme's own
+          # bundled icon font, 403ing every gallery-icon glyph sitewide.
+          # This job already asserted the real top-level vendor/ above
+          # (vendor/autoload.php -> 403) but never asserted the reverse:
+          # that a legitimate nested vendor/ under themes/ isn't swept up
+          # by the same rule. Added as a permanent regression guard so this
+          # exact class of over-broad-regex bug can't recur silently.
+          for path in themes/default/vendor/fontello/css/gallery-icon.css \
+              themes/default/vendor/fontello/font/gallery-icon.woff2; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost/${path}")
+            echo "GET /${path} -> ${status}"
+            if [ "${status}" != "200" ]; then
+              echo "::error::expected 200 for /${path} (theme-bundled asset, not Composer vendor/), got ${status}"
               exit 1
             fi
           done

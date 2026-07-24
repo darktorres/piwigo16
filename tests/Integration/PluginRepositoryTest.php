@@ -76,7 +76,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
         $plugins = $this->repo->getDbPlugins('', 'nut2');
 
         self::assertCount(1, $plugins);
-        self::assertSame('inactive', $plugins[0]['state']);
+        self::assertSame('inactive', $plugins[0]->state);
     }
 
     public function test_get_db_plugins_filters_by_state_and_id_together(): void
@@ -91,7 +91,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
         $plugins = $this->repo->getDbPlugins('', "o'brien");
 
         self::assertCount(1, $plugins);
-        self::assertSame("o'brien", $plugins[0]['id']);
+        self::assertSame("o'brien", $plugins[0]->id);
     }
 
     public function test_update_version_persists_the_new_version(): void

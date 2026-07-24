@@ -6,6 +6,7 @@ namespace Piwigo\Site;
 
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
+use Piwigo\Site\Projection\Site;
 
 /**
  * Persistence layer for the site/gallery-root domain.
@@ -58,14 +59,16 @@ final class SiteRepository extends AbstractRepository
     /**
      * Returns every site row.
      *
-     * @return list<array<string, mixed>>
+     * @return list<Site>
      */
     public function findAll(): array
     {
-        return $this->conn->createQueryBuilder()
+        $rows = $this->conn->createQueryBuilder()
             ->select('*')
             ->from(Tables::sites())
             ->executeQuery()
             ->fetchAllAssociative();
+
+        return array_map(Site::fromRow(...), $rows);
     }
 }

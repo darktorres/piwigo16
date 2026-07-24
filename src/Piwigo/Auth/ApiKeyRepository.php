@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use Piwigo\Auth\Projection\ApiKey;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 
@@ -108,12 +109,12 @@ final class ApiKeyRepository extends AbstractRepository
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<ApiKey>
      */
     public function findByUser(int $userId): array
     {
-        /** @var list<array<string, mixed>> */
-        return $this->conn->createQueryBuilder()
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $this->conn->createQueryBuilder()
             ->select('*')
             ->from(Tables::userAuthKeys())
             ->where('user_id = :userId')
@@ -121,5 +122,7 @@ final class ApiKeyRepository extends AbstractRepository
             ->setParameter('userId', $userId)
             ->executeQuery()
             ->fetchAllAssociative();
+
+        return array_map(ApiKey::fromRow(...), $rows);
     }
 }

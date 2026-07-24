@@ -6,6 +6,7 @@ namespace Piwigo\PluginConfig;
 
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
+use Piwigo\PluginConfig\Projection\Plugin;
 
 final class PluginRepository extends AbstractRepository
 {
@@ -14,9 +15,7 @@ final class PluginRepository extends AbstractRepository
      * and/or id. Bound parameters replace the original get_db_plugins()'s
      * raw string-concatenated WHERE clause (no addslashes() even).
      *
-     * @return list<array<string, string|null>> - this driver never enables
-     *   MYSQLI_OPT_INT_AND_FLOAT_NATIVE, so every column comes back as
-     *   string|null
+     * @return list<Plugin>
      */
     public function getDbPlugins(string $state = '', string $id = ''): array
     {
@@ -36,8 +35,10 @@ final class PluginRepository extends AbstractRepository
             $query .= ' WHERE ' . implode(' AND ', $clauses);
         }
 
-        /** @var list<array<string, string|null>> */
-        return $this->conn->fetchAllAssociative($query, $params);
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $this->conn->fetchAllAssociative($query, $params);
+
+        return array_map(Plugin::fromRow(...), $rows);
     }
 
     /**

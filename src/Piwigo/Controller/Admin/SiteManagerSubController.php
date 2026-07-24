@@ -167,11 +167,8 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
         $sites_detail = array_column($conn->fetchAllAssociative($query), null, 'site_id');
 
         foreach (new SiteRepository($conn)->findAll() as $row) {
-            // 'id' and 'galleries_url' are both NOT NULL columns on the sites
-            // table (see install/piwigo_structure-mysql.sql), so findAll() never
-            // returns null for either of these keys here.
-            $id = is_scalar($row['id']) ? (string) $row['id'] : '';
-            $galleries_url = is_string($row['galleries_url']) ? $row['galleries_url'] : '';
+            $id = (string) $row->id;
+            $galleries_url = $row->galleriesUrl;
             $is_remote = $this->urlService->urlIsRemote($galleries_url);
             $base_url = $this->urlService->getRootUrl() . 'admin.php';
             $base_url .= '?page=site_manager';

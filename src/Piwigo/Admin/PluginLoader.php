@@ -54,7 +54,12 @@ final class PluginLoader
         if (\Piwigo\Config\Config::enablePlugins()) {
             $plugins = new PluginRepository(DbConnection::build())->getDbPlugins('active');
             foreach ($plugins as $plugin) {// include main from a function to avoid using same function context
-                self::loadPlugin($plugin);
+                // Unboxed back to array here -- loadPlugin()/autoupdatePlugin()
+                // mutate $plugin['version'] in place through a by-reference
+                // param, which a readonly Plugin object can't support (same
+                // "unbox where genuinely needed" shape as
+                // CategoryCatsRenderer's own unboxing).
+                self::loadPlugin($plugin->toArray());
             }
             \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('plugins_loaded');
         }
@@ -64,18 +69,14 @@ final class PluginLoader
      * Loads a plugin in memory.
      * It performs autoupdate, includes the main.inc.php file and updates *$pwg_loaded_plugins*.
      *
-     * @param array<string, string|null> $plugin - matches
-     *   PluginRepository::getDbPlugins()'s real element type (its only
-     *   caller, loadPlugins(), passes rows straight from there)
+     * @param array{id: string, state: string, version: string} $plugin -
+     *   Projection\Plugin::toArray()'s own shape (its only caller,
+     *   loadPlugins(), unboxes the repository's typed row there since this
+     *   method needs mutable array semantics, not a readonly object)
      */
     private static function loadPlugin(array $plugin): void
     {
-        $plugin_id = $plugin['id'] ?? null;
-        if (! is_string($plugin_id)) {
-            // 'id' is a NOT NULL varchar primary key in the plugins table; a
-            // non-string value here means the row is not usable.
-            return;
-        }
+        $plugin_id = $plugin['id'];
 
         $file_name = self::pluginsPath() . $plugin_id . '/main.inc.php';
         if (file_exists($file_name)) {
@@ -89,19 +90,13 @@ final class PluginLoader
      * Performs update task of a plugin.
      * Autoupdate is only performed if the plugin has a maintain.class.php file.
      *
-     * @param array<string, string|null> $plugin (id, version, state) will be
-     *   updated if version changes - matches PluginRepository::getDbPlugins()'s
-     *   real element type (its only caller, loadPlugin(), already guards
-     *   'id' to string)
+     * @param array{id: string, state: string, version: string} $plugin will
+     *   be updated if version changes - matches loadPlugin()'s own param
+     *   shape (its only caller, already guards 'id' to string)
      */
     private static function autoupdatePlugin(array &$plugin): void
     {
-        $plugin_id = $plugin['id'] ?? null;
-        if (! is_string($plugin_id)) {
-            // 'id' is a NOT NULL varchar primary key in the plugins table; a
-            // non-string value here means the row is not usable.
-            return;
-        }
+        $plugin_id = $plugin['id'];
 
         // try to find the filesystem version in lines 2 to 10 of main.inc.php
         $fh = fopen(self::pluginsPath() . $plugin_id . '/main.inc.php', 'r');
@@ -123,10 +118,7 @@ final class PluginLoader
             fclose($fh);
         }
 
-        // 'version' is a NOT NULL varchar column defaulting to '0'; fall back
-        // to that same default if the row value is ever missing/non-string.
-        $plugin_version = $plugin['version'] ?? null;
-        $plugin_version = is_string($plugin_version) ? $plugin_version : '0';
+        $plugin_version = $plugin['version'];
 
         // if version is auto (dev) or superior
         if ($fs_version !== null && (

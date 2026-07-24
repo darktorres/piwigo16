@@ -82,7 +82,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findAll();
 
         self::assertNotSame([], $rows);
-        $urls = array_column($rows, 'galleries_url');
+        $urls = array_column($rows, 'galleriesUrl');
         // InstallWizard::install() stores an absolute filesystem path
         // (Piwigo\Core\Paths::$root . 'galleries/'), not a portable literal
         // './galleries/' -- machine-specific, so computed here the same way
@@ -95,7 +95,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         $url = 'p17-test-' . bin2hex(random_bytes(4));
         $this->repo->insert($url);
 
-        $urls = array_column($this->repo->findAll(), 'galleries_url');
+        $urls = array_column($this->repo->findAll(), 'galleriesUrl');
 
         self::assertContains($url, $urls);
     }

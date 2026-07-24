@@ -110,31 +110,24 @@ final readonly class ApiKeyService
 
         $now = Env::now()->format('Y-m-d H:i:s');
 
-        foreach ($api_keys as $i => $api_key) {
+        foreach ($api_keys as $i => $api_key_row) {
+            $api_key = $api_key_row->toArray();
             $api_key['apikey_secret'] = str_repeat('*', 40);
             unset($api_key['auth_key_id'], $api_key['user_id'], $api_key['key_type']);
 
-            $apikey_name = $api_key['apikey_name'];
-            $api_key['apikey_name'] = stripslashes(is_string($apikey_name) ? $apikey_name : '');
+            $api_key['apikey_name'] = stripslashes($api_key_row->apikeyName ?? '');
 
-            // extracted before any bool value is assigned into $api_key below
-            // (e.g. 'is_expired'), which would otherwise widen every sibling
-            // key's inferred type for the rest of this loop iteration
-            $created_on = $api_key['created_on'];
-            assert(is_string($created_on));
+            // created_on/expired_on are real NOT NULL columns -- Projection\
+            // ApiKey::fromRow() already guarantees a string, no assert() needed.
+            $created_on = $api_key_row->createdOn;
             $api_key['created_on_format'] = \Piwigo\Core\DateHelper::formatDate($created_on, ['day', 'month', 'year']);
 
-            $expired_on_raw = $api_key['expired_on'];
-            assert(is_string($expired_on_raw));
+            $expired_on_raw = $api_key_row->expiredOn;
             $api_key['expired_on_format'] = \Piwigo\Core\DateHelper::formatDate($expired_on_raw, ['day', 'month', 'year']);
 
-            // also extracted early, for the same reason -- read again below,
-            // after 'is_expired' has already widened $api_key's value type
-            $revoked_on = $api_key['revoked_on'];
-            $revoked_on = is_string($revoked_on) ? $revoked_on : null;
+            $revoked_on = $api_key_row->revokedOn;
 
-            $last_used_on = $api_key['last_used_on'];
-            $last_used_on = is_string($last_used_on) ? $last_used_on : null;
+            $last_used_on = $api_key_row->lastUsedOn;
             $api_key['last_used_on_since'] =
               $last_used_on !== null
               ? \Piwigo\Core\DateHelper::timeSince($last_used_on, 'day')

@@ -342,7 +342,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             return;
         }
 
-        $defaultUser = $this->getDefaultUserInfo(false);
+        $defaultUser = $this->getDefaultUserInfo();
         if ($defaultUser === false) {
             $defaultUser = [];
         }
@@ -407,15 +407,16 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * @return array<string, mixed>|false false if the default user row
      *   doesn't exist
      */
-    public function getDefaultUserInfo(bool $convertStr = true): array|false
+    public function getDefaultUserInfo(): array|false
     {
         if (! \Piwigo\Core\ProcessCache::has('default_user')) {
             $defaultUserId = \Piwigo\Config\Config::defaultUserId();
 
             $row = $this->repo->findDefaultUserInfoRow($defaultUserId);
             if ($row !== null) {
-                unset($row['user_id'], $row['status'], $row['registration_date'], $row['last_visit'], $row['last_visit_from_history']);
-                \Piwigo\Core\ProcessCache::set('default_user', $row);
+                $rowArray = $row->toArray();
+                unset($rowArray['user_id'], $rowArray['status'], $rowArray['registration_date'], $rowArray['last_visit'], $rowArray['last_visit_from_history']);
+                \Piwigo\Core\ProcessCache::set('default_user', $rowArray);
             } else {
                 \Piwigo\Core\ProcessCache::set('default_user', false);
             }
@@ -426,27 +427,20 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             return false;
         }
 
+        // Used to take a $convertStr param, converting expand/
+        // show_nb_comments/show_nb_hits/enabled_high from the table's own
+        // enum('true','false') string form via a generic `$value ===
+        // 'true'` scan -- retired along with the Stage 1a retype:
+        // {@see \Piwigo\Users\Projection\UserInfo::fromRow()} already
+        // returns those 4 as real bool, once, before this array is even
+        // cached, so there's nothing left to conditionally convert.
         /** @var array<string, mixed> $defaultUserCached */
-        if (! $convertStr) {
-            return $defaultUserCached;
-        }
-
-        $defaultUser = $defaultUserCached;
-        foreach ($defaultUser as &$value) {
-            if ($value === 'true') {
-                $value = true;
-            } elseif ($value === 'false') {
-                $value = false;
-            }
-        }
-        unset($value);
-
-        return $defaultUser;
+        return $defaultUserCached;
     }
 
     public function getDefaultUserValue(string $valueName, mixed $default): mixed
     {
-        $defaultUser = $this->getDefaultUserInfo(true);
+        $defaultUser = $this->getDefaultUserInfo();
         if ($defaultUser === false || self::emptyValue($defaultUser[$valueName] ?? null)) {
             return $default;
         }
@@ -666,6 +660,21 @@ SELECT
             }
         }
         unset($value);
+
+        // Docs/PLAN-REPLAY-AUDIT.md gap-closure, User domain Stage 1a:
+        // enabled_high/expand/last_visit_from_history/show_nb_comments/
+        // show_nb_hits are real tinyint columns now -- the generic
+        // true/false-string scan above only ever matched the *old*
+        // enum('true','false') representation, so it silently stops
+        // converting these 5 to bool (DBAL/mysqli returns a native int
+        // for a tinyint column). Named explicitly instead of
+        // pattern-matched by value, same fix as
+        // CategoryService::getCategoryInfo().
+        foreach (['enabled_high', 'expand', 'last_visit_from_history', 'show_nb_comments', 'show_nb_hits'] as $k) {
+            if (isset($userdata[$k])) {
+                $userdata[$k] = (bool) $userdata[$k];
+            }
+        }
 
         // Kept out of $userdata: unserialize()'s own return type is native
         // mixed, and merging a mixed value into $userdata here would widen
@@ -1372,19 +1381,19 @@ SELECT
         }
 
         if (! self::emptyValue($params['expand'] ?? null) or @($params['expand'] ?? null) === false) {
-            $updates_infos['expand'] = SqlDialect::booleanToString($params['expand'] ?? null);
+            $updates_infos['expand'] = SqlDialect::booleanToInt($params['expand'] ?? null);
         }
 
         if (! self::emptyValue($params['show_nb_comments'] ?? null) or @($params['show_nb_comments'] ?? null) === false) {
-            $updates_infos['show_nb_comments'] = SqlDialect::booleanToString($params['show_nb_comments'] ?? null);
+            $updates_infos['show_nb_comments'] = SqlDialect::booleanToInt($params['show_nb_comments'] ?? null);
         }
 
         if (! self::emptyValue($params['show_nb_hits'] ?? null) or @($params['show_nb_hits'] ?? null) === false) {
-            $updates_infos['show_nb_hits'] = SqlDialect::booleanToString($params['show_nb_hits'] ?? null);
+            $updates_infos['show_nb_hits'] = SqlDialect::booleanToInt($params['show_nb_hits'] ?? null);
         }
 
         if (! self::emptyValue($params['enabled_high'] ?? null) or @($params['enabled_high'] ?? null) === false) {
-            $updates_infos['enabled_high'] = SqlDialect::booleanToString($params['enabled_high'] ?? null);
+            $updates_infos['enabled_high'] = SqlDialect::booleanToInt($params['enabled_high'] ?? null);
         }
 
         // perform updates

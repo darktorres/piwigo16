@@ -10,6 +10,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
@@ -82,7 +83,39 @@ SELECT ' . implode(',', $fields) . '
         // see getuserdata() in functions_user.inc.php for the same "fetch may
         // fail" invariant handled with a real guard instead of assert()).
         $default_user = is_array($default_user) ? $default_user : [];
-        $template->assign('DEFAULT_USER_VALUES', $default_user);
+
+        // expand/show_nb_comments/show_nb_hits are real tinyint columns
+        // now (User domain Stage 1a) -- this is a raw fetchAssociative(),
+        // not routed through UserService::getUserData()'s own
+        // normalization, so these 3 are still raw ints here. Normalize to
+        // real bool BEFORE the $userdata merge below (so
+        // loadIntoTemplate()'s `(bool) $userdata[...]` stays correct --
+        // (bool) on the *string* 'false' this method used to hand it
+        // would be true, a real regression the merge would have
+        // introduced) -- then render the JS-literal-string form
+        // separately, only for the template assignment.
+        foreach (['expand', 'show_nb_comments', 'show_nb_hits'] as $k) {
+            if (isset($default_user[$k])) {
+                $default_user[$k] = SqlDialect::getBoolean($default_user[$k]);
+            }
+        }
+
+        // profile.tpl's inline JS (preferencesDefaultValues) interpolates
+        // these bare/unquoted, relying on the *old* enum('true','false')
+        // string rendering as the literal JS tokens true/false -- a real
+        // bool would render as PHP's own `1`/`` instead, so render the
+        // same JS-literal string explicitly, matching
+        // ProfileFormHandler::loadIntoTemplate()'s existing convention for
+        // the identical case. A separate array, not a mutation of
+        // $default_user itself -- that one still feeds the $userdata
+        // merge below as real bool.
+        $default_user_for_template = $default_user;
+        foreach (['expand', 'show_nb_comments', 'show_nb_hits'] as $k) {
+            if (isset($default_user_for_template[$k])) {
+                $default_user_for_template[$k] = SqlDialect::getBoolean($default_user_for_template[$k]) ? 'true' : 'false';
+            }
+        }
+        $template->assign('DEFAULT_USER_VALUES', $default_user_for_template);
 
         // Reset to default (Guest) custom settings
         if (isset($_POST['reset_to_default'])) {

@@ -93,6 +93,24 @@ final class SqlDialect
         return $var;
     }
 
+    /**
+     * Returns int 1 or 0 if the given var is boolean, for the columns
+     * User domain Stage 1a retyped from enum('true','false') to
+     * tinyint(1) (enabled_high/expand/last_visit_from_history/
+     * show_nb_comments/show_nb_hits) -- booleanToString()'s 'true'/
+     * 'false' strings are non-numeric and strict SQL mode rejects them
+     * against an int column. If the input is another type, it is not
+     * changed.
+     */
+    public static function booleanToInt(mixed $var): mixed
+    {
+        if (is_bool($var)) {
+            return $var ? 1 : 0;
+        }
+
+        return $var;
+    }
+
     public static function getRecentPeriodExpression(int|string $period, string $date = 'CURRENT_DATE'): string
     {
         // Route the default through Env::now() rather than the raw

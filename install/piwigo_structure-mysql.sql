@@ -1,8 +1,8 @@
 -- Final v17 schema (InnoDB + utf8mb4, all FK constraints, all indexes).
 -- Hand-maintained -- there is no Doctrine Migrations layer between "what
 -- the schema should be" and what a fresh install creates. Column-type
--- fixes not yet decided for any domain (remaining user_infos/user_cache/
--- etc. P17-23 items) are deliberately not applied here.
+-- fixes not yet decided for any domain (remaining user_cache/tags/groups/
+-- comments/etc. P17-23 items) are deliberately not applied here.
 
 --
 -- Table structure for table `piwigo_activity`
@@ -499,19 +499,19 @@ CREATE TABLE `piwigo_user_infos` (
   `nb_image_page` smallint(3) unsigned NOT NULL default '15',
   `status` enum('webmaster','admin','normal','generic','guest') NOT NULL default 'guest',
   `language` varchar(50) NOT NULL default 'en_UK',
-  `expand` enum('true','false') NOT NULL default 'false',
-  `show_nb_comments` enum('true','false') NOT NULL default 'false',
-  `show_nb_hits` enum('true','false') NOT NULL default 'false',
+  `expand` tinyint(1) NOT NULL default '0',
+  `show_nb_comments` tinyint(1) NOT NULL default '0',
+  `show_nb_hits` tinyint(1) NOT NULL default '0',
   `recent_period` tinyint(3) unsigned NOT NULL default '7',
   `theme` varchar(255) NOT NULL default 'modus',
-  `registration_date` datetime NOT NULL default '1970-01-01 00:00:00',
-  `enabled_high` enum('true','false') NOT NULL default 'true',
+  `registration_date` datetime default NULL,
+  `enabled_high` tinyint(1) NOT NULL default '1',
   `level` tinyint unsigned NOT NULL default '0',
   `activation_key` varchar(255) default NULL,
   `activation_key_expire` datetime default NULL,
   `last_visit` datetime default NULL,
-  `last_visit_from_history` enum('true','false') NOT NULL default 'false',
-  `lastmodified` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `last_visit_from_history` tinyint(1) NOT NULL default '0',
+  `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `preferences` TEXT default NULL,
   PRIMARY KEY (`user_id`),
   KEY `lastmodified` (`lastmodified`)

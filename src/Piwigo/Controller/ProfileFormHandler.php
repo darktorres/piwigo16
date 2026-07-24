@@ -18,6 +18,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -282,10 +283,25 @@ final class ProfileFormHandler
                 $data = [];
                 $data['user_id'] = $userdata['id'];
 
+                // expand/show_nb_hits/show_nb_comments post as the literal
+                // strings 'true'/'false' ({html_radios} in
+                // profile_content.tpl uses $radio_options's own keys as
+                // the submitted value) -- real tinyint columns now (User
+                // domain Stage 1a), so the string form must become 1/0
+                // before reaching massUpdate(); every other field in
+                // $fields is untouched.
+                $boolFields = ['expand', 'show_nb_hits', 'show_nb_comments'];
                 foreach ($fields as $field) {
-                    if (isset($_POST[$field])) {
-                        $data[$field] = $_POST[$field];
+                    if (! isset($_POST[$field])) {
+                        continue;
                     }
+
+                    $value = $_POST[$field];
+                    if (in_array($field, $boolFields, true) and is_string($value)) {
+                        $value = SqlDialect::getBoolean($value) ? '1' : '0';
+                    }
+
+                    $data[$field] = $value;
                 }
                 new BatchWriter($conn)
                     ->massUpdate(

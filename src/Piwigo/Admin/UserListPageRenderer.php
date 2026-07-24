@@ -122,7 +122,7 @@ ORDER BY registration_year, registration_month
             'user_list' => 'user_list.tpl',
         ]);
 
-        $default_user = self::userService($conn)->getDefaultUserInfo(true);
+        $default_user = self::userService($conn)->getDefaultUserInfo();
         if (! is_array($default_user)) {
             new HtmlService()
                 ->fatalError('Default user not found');

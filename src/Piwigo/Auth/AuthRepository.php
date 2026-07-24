@@ -316,13 +316,16 @@ final class AuthRepository extends AbstractRepository
      * bumping an ON UPDATE CURRENT_TIMESTAMP-style column while still
      * writing the other two columns; a raw SQL fragment (not a bound
      * parameter) is required to reference the column itself rather than a
-     * value.
+     * value. `last_visit_from_history` is a real tinyint column now (User
+     * domain Stage 1a) -- the literal unquoted `1` below is the numeric
+     * equivalent of the old `'true'` string literal, not a bound value,
+     * same reasoning as `lastmodified`.
      */
     public function saveLastVisitFromHistory(int $userId, ?string $lastVisit): void
     {
         $qb = $this->conn->createQueryBuilder()
             ->update(Tables::userInfos())
-            ->set('last_visit_from_history', "'true'")
+            ->set('last_visit_from_history', '1')
             ->set('lastmodified', 'lastmodified')
             ->where('user_id = :userId')
             ->setParameter('userId', $userId);

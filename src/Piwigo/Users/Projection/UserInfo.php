@@ -1,0 +1,113 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Users\Projection;
+
+/**
+ * Typed row shape for `piwigo_user_infos` (P17-23 Stage 1b, User domain --
+ * `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection shapes"
+ * reference). `fromRow()` centralises the `is_string($row['x']) ? ... :
+ * default` narrowing every {@see \Piwigo\Users\UserRepository} caller used
+ * to duplicate for itself, same shape as
+ * {@see \Piwigo\Category\Projection\Category}.
+ *
+ * Scoped to `findDefaultUserInfoRow()` only, per the Stage 1b plan --
+ * `UserService::getUserData()`'s own 3-way raw JOIN (`users`/`user_infos`/
+ * `user_cache`) stays a raw array; that query never selects a clean
+ * single-table row this projection could represent.
+ *
+ * `expand`/`show_nb_comments`/`show_nb_hits`/`enabled_high`/
+ * `last_visit_from_history` are real `bool` here, not the raw tinyint the
+ * column now stores -- User domain Stage 1a already made them a genuine
+ * boolean column; a repository-layer projection is the correct place to
+ * finish that conversion to a real PHP `bool` once.
+ *
+ * `registration_date`/`last_visit`/`activation_key`/`activation_key_expire`/
+ * `preferences` stay `?string`, not `\DateTimeImmutable` or a decoded
+ * value -- every real consumer today expects the raw DB DATETIME string
+ * form or, for `preferences`, the still-serialized text form (User domain
+ * Stage 1a deliberately deferred the `preferences` text->JSON retype),
+ * same reasoning as {@see \Piwigo\Image\Projection\Image}.
+ */
+final readonly class UserInfo
+{
+    public function __construct(
+        public int $userId,
+        public int $nbImagePage,
+        public string $status,
+        public string $language,
+        public bool $expand,
+        public bool $showNbComments,
+        public bool $showNbHits,
+        public int $recentPeriod,
+        public string $theme,
+        public ?string $registrationDate,
+        public bool $enabledHigh,
+        public int $level,
+        public ?string $activationKey,
+        public ?string $activationKeyExpire,
+        public ?string $lastVisit,
+        public bool $lastVisitFromHistory,
+        public string $lastmodified,
+        public ?string $preferences,
+    ) {}
+
+    /**
+     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `piwigo_user_infos`
+     */
+    public static function fromRow(array $row): self
+    {
+        return new self(
+            userId: is_numeric($row['user_id'] ?? null) ? (int) $row['user_id'] : 0,
+            nbImagePage: is_numeric($row['nb_image_page'] ?? null) ? (int) $row['nb_image_page'] : 0,
+            status: is_string($row['status'] ?? null) ? $row['status'] : 'guest',
+            language: is_string($row['language'] ?? null) ? $row['language'] : '',
+            expand: (bool) ($row['expand'] ?? false),
+            showNbComments: (bool) ($row['show_nb_comments'] ?? false),
+            showNbHits: (bool) ($row['show_nb_hits'] ?? false),
+            recentPeriod: is_numeric($row['recent_period'] ?? null) ? (int) $row['recent_period'] : 0,
+            theme: is_string($row['theme'] ?? null) ? $row['theme'] : '',
+            registrationDate: is_string($row['registration_date'] ?? null) ? $row['registration_date'] : null,
+            enabledHigh: (bool) ($row['enabled_high'] ?? false),
+            level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
+            activationKey: is_string($row['activation_key'] ?? null) ? $row['activation_key'] : null,
+            activationKeyExpire: is_string($row['activation_key_expire'] ?? null) ? $row['activation_key_expire'] : null,
+            lastVisit: is_string($row['last_visit'] ?? null) ? $row['last_visit'] : null,
+            lastVisitFromHistory: (bool) ($row['last_visit_from_history'] ?? false),
+            lastmodified: is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : '',
+            preferences: is_string($row['preferences'] ?? null) ? $row['preferences'] : null,
+        );
+    }
+
+    /**
+     * @return array{user_id: int, nb_image_page: int, status: string, language: string,
+     *   expand: bool, show_nb_comments: bool, show_nb_hits: bool, recent_period: int,
+     *   theme: string, registration_date: ?string, enabled_high: bool, level: int,
+     *   activation_key: ?string, activation_key_expire: ?string, last_visit: ?string,
+     *   last_visit_from_history: bool, lastmodified: string, preferences: ?string}
+     */
+    public function toArray(): array
+    {
+        return [
+            'user_id' => $this->userId,
+            'nb_image_page' => $this->nbImagePage,
+            'status' => $this->status,
+            'language' => $this->language,
+            'expand' => $this->expand,
+            'show_nb_comments' => $this->showNbComments,
+            'show_nb_hits' => $this->showNbHits,
+            'recent_period' => $this->recentPeriod,
+            'theme' => $this->theme,
+            'registration_date' => $this->registrationDate,
+            'enabled_high' => $this->enabledHigh,
+            'level' => $this->level,
+            'activation_key' => $this->activationKey,
+            'activation_key_expire' => $this->activationKeyExpire,
+            'last_visit' => $this->lastVisit,
+            'last_visit_from_history' => $this->lastVisitFromHistory,
+            'lastmodified' => $this->lastmodified,
+            'preferences' => $this->preferences,
+        ];
+    }
+}

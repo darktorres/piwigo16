@@ -140,7 +140,52 @@ final class UserRepositoryTest extends IntegrationTestCase
         $row = $this->repo->findDefaultUserInfoRow($id);
 
         self::assertNotNull($row);
-        self::assertSame('normal', $row['status']);
+        self::assertSame('normal', $row->status);
+
+        $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id);
+    }
+
+    public function test_insert_user_infos_accepts_real_bool_for_the_tinyint_columns(): void
+    {
+        // User domain Stage 1a: expand/show_nb_comments/show_nb_hits/
+        // enabled_high/last_visit_from_history are real tinyint(1)
+        // columns now, and UserService::createUserInfos() hands
+        // insertUserInfos() a row straight from
+        // Projection\UserInfo::toArray() -- real PHP bool, not the old
+        // enum('true','false') string. setParameter() with no explicit
+        // type binds through mysqli as a plain string, and mysqli's own
+        // string-cast of `false` is '' (PHP's own (string) false), which
+        // STRICT_TRANS_TABLES rejects as an invalid integer -- confirmed
+        // against a real tinyint(1) column before this test was written.
+        // `false` (not `true`) is the reproducing value: `(string) true`
+        // is '1', a valid numeric string, so only the `false` case ever
+        // surfaced this.
+        $username = 'p18-test-' . bin2hex(random_bytes(4));
+        $id = $this->repo->insertUser([
+            'username' => $username,
+            'password' => 'irrelevant-hash',
+            'mail_address' => null,
+        ]);
+
+        $this->repo->insertUserInfos([$id], [
+            'status' => 'normal',
+            'registration_date' => '2026-01-01 00:00:00',
+            'level' => 0,
+            'expand' => false,
+            'show_nb_comments' => false,
+            'show_nb_hits' => false,
+            'enabled_high' => true,
+            'last_visit_from_history' => false,
+        ]);
+
+        $row = $this->repo->findDefaultUserInfoRow($id);
+
+        self::assertNotNull($row);
+        self::assertFalse($row->expand);
+        self::assertFalse($row->showNbComments);
+        self::assertFalse($row->showNbHits);
+        self::assertTrue($row->enabledHigh);
+        self::assertFalse($row->lastVisitFromHistory);
 
         $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id);
     }

@@ -6,7 +6,9 @@ namespace Piwigo\Users;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
+use Piwigo\Users\Projection\UserInfo;
 
 /**
  * Persistence layer for the user domain's registration/lookup/preferences
@@ -225,7 +227,17 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
             foreach ($row as $column => $value) {
                 $placeholder = ':c' . $i;
                 $values[$column] = $placeholder;
-                $qb->setParameter('c' . $i, $value);
+                // setParameter() with no explicit type binds as a plain
+                // string (mysqli type 's') -- for a real PHP bool
+                // (expand/show_nb_comments/show_nb_hits/enabled_high,
+                // User domain Stage 1a's tinyint columns, now surfacing
+                // as real bool via UserInfo::toArray()), mysqli converts
+                // via PHP's own string-cast rule (`false` -> '', not
+                // '0'), which strict SQL mode then rejects as an invalid
+                // integer for the column. Confirmed by direct test
+                // against a real tinyint(1) column under
+                // STRICT_TRANS_TABLES.
+                $qb->setParameter('c' . $i, SqlDialect::booleanToInt($value));
                 $i++;
             }
             $qb->values($values)
@@ -233,10 +245,7 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
         }
     }
 
-    /**
-     * @return array<string, mixed>|null
-     */
-    public function findDefaultUserInfoRow(int $defaultUserId): ?array
+    public function findDefaultUserInfoRow(int $defaultUserId): ?UserInfo
     {
         $row = $this->conn->createQueryBuilder()
             ->select('*')
@@ -246,7 +255,7 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
             ->executeQuery()
             ->fetchAssociative();
 
-        return $row === false ? null : $row;
+        return $row === false ? null : UserInfo::fromRow($row);
     }
 
     public function savePreferences(int|string $userId, string $serializedPreferences): void

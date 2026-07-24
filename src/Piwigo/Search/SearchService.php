@@ -15,6 +15,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Search\Inflector\InflectorInterface;
+use Piwigo\Search\Projection\Search;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
@@ -78,10 +79,7 @@ final readonly class SearchService
         return null;
     }
 
-    /**
-     * @return array<string, mixed>|null
-     */
-    public function getSearchInfo(int|string $candidate): ?array
+    public function getSearchInfo(int|string $candidate): ?Search
     {
         $clausePattern = self::getSearchIdPattern($candidate);
         if ($clausePattern === null) {
@@ -117,9 +115,8 @@ final readonly class SearchService
      *
      * @param int|null $resolvedSearchId in/out; set to the resolved
      *   search id when $section === 'search', left untouched otherwise
-     * @return array<string, mixed>|null
      */
-    public function getValidatedSearchInfo(int|string $candidate, ?string $section, ?int &$resolvedSearchId = null): ?array
+    public function getValidatedSearchInfo(int|string $candidate, ?string $section, ?int &$resolvedSearchId = null): ?Search
     {
         $clausePattern = self::getSearchIdPattern($candidate);
         if ($clausePattern === null) {
@@ -129,13 +126,12 @@ final readonly class SearchService
         $search = $this->getSearchInfo($candidate);
 
         if ($search !== null) {
-            if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws' and $clausePattern === 'id = ?' and isset($search['search_uuid'])) {
+            if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws' and $clausePattern === 'id = ?' and $search->searchUuid !== null) {
                 $this->htmlRenderer->fatalError('this search is not reachable with its id, need the search_uuid instead');
             }
 
             if ($section === 'search') {
-                $searchId = $search['id'] ?? null;
-                $resolvedSearchId = is_numeric($searchId) ? (int) $searchId : null;
+                $resolvedSearchId = $search->id;
             }
         }
 
@@ -152,7 +148,7 @@ final readonly class SearchService
             return false;
         }
 
-        $rules = $search['rules'] ?? null;
+        $rules = $search->rules;
         if (! is_string($rules)) {
             return false;
         }
@@ -182,11 +178,11 @@ final readonly class SearchService
     public function getValidatedSearchArray(int|string $searchId, ?string $section, ?int &$resolvedSearchId = null): array|false
     {
         $search = $this->getValidatedSearchInfo($searchId, $section, $resolvedSearchId);
-        if ($search === null || $search === []) {
+        if ($search === null) {
             $this->htmlRenderer->badRequest($this->redirectService, 'this search identifier does not exist');
         }
 
-        $rules = $search['rules'] ?? null;
+        $rules = $search->rules;
         if (! is_string($rules)) {
             return false;
         }

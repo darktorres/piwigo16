@@ -864,7 +864,7 @@ SELECT *
             }
 
             $search_info = $searchService->getValidatedSearchInfo($params['search_id'], null);
-            if ($search_info === null || $search_info === []) {
+            if ($search_info === null) {
                 return new PwgError(WsError::INVALID_PARAM, 'This search does not exist.');
             }
         }
@@ -1115,8 +1115,7 @@ SELECT *
             $search['fields']['height_max'] = $params['height_max'];
         }
 
-        $search_info_id = $search_info['id'] ?? null;
-        $forked_from = is_numeric($search_info_id) ? (int) $search_info_id : null;
+        $forked_from = $search_info?->id;
         [$search_uuid, $search_url] = $searchService->saveSearch($search, new UrlService(new HtmlService()), $forked_from);
 
         return [

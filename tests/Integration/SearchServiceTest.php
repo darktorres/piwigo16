@@ -258,8 +258,8 @@ final class SearchServiceTest extends IntegrationTestCase
 
         $info = $this->service->getSearchInfo('psk-20260712-infotest01');
 
-        self::assertIsArray($info);
-        self::assertSame('psk-20260712-infotest01', $info['search_uuid']);
+        self::assertNotNull($info);
+        self::assertSame('psk-20260712-infotest01', $info->searchUuid);
     }
 
     public function test_get_search_info_returns_null_for_an_invalid_identifier(): void

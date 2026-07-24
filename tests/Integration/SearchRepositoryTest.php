@@ -56,8 +56,8 @@ final class SearchRepositoryTest extends IntegrationTestCase
 
         $row = $this->repo->findOneByClause('search_uuid = ?', ['psk-20260712-abcdefghij']);
 
-        self::assertIsArray($row);
-        self::assertSame('psk-20260712-abcdefghij', $row['search_uuid']);
+        self::assertNotNull($row);
+        self::assertSame('psk-20260712-abcdefghij', $row->searchUuid);
     }
 
     public function test_find_ids_by_clause_returns_a_list_of_ints(): void
@@ -119,9 +119,9 @@ final class SearchRepositoryTest extends IntegrationTestCase
         self::assertGreaterThan(0, $id);
 
         $row = $this->repo->findOneByClause('id = ?', [$id]);
-        self::assertIsArray($row);
-        self::assertNull($row['created_by']);
-        self::assertNull($row['forked_from']);
+        self::assertNotNull($row);
+        self::assertNull($row->createdBy);
+        self::assertNull($row->forkedFrom);
     }
 
     public function test_insert_search_stores_forked_from(): void
@@ -130,8 +130,8 @@ final class SearchRepositoryTest extends IntegrationTestCase
         $childId = $this->repo->insertSearch(serialize(['q' => 'child']), '2026-07-12 00:00:00', 1, 'psk-20260712-childuuidx', $parentId);
 
         $row = $this->repo->findOneByClause('id = ?', [$childId]);
-        self::assertIsArray($row);
-        self::assertSame($parentId, $row['forked_from']);
+        self::assertNotNull($row);
+        self::assertSame($parentId, $row->forkedFrom);
     }
 
     public function test_now_returns_a_non_empty_datetime_string(): void

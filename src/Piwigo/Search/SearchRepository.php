@@ -6,6 +6,7 @@ namespace Piwigo\Search;
 
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
+use Piwigo\Search\Projection\Search;
 
 /**
  * Persistence layer for the search domain: the `search` table (saved
@@ -24,16 +25,15 @@ final class SearchRepository extends AbstractRepository
 {
     /**
      * @param  list<mixed>  $params
-     * @return array<string, mixed>|null
      */
-    public function findOneByClause(string $whereSql, array $params = []): ?array
+    public function findOneByClause(string $whereSql, array $params = []): ?Search
     {
         $row = $this->conn->executeQuery(
             'SELECT * FROM ' . Tables::search() . ' WHERE ' . $whereSql,
             $params
         )->fetchAssociative();
 
-        return $row === false ? null : $row;
+        return $row === false ? null : Search::fromRow($row);
     }
 
     /**

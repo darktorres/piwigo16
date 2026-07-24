@@ -12,9 +12,9 @@ use Piwigo\Notification\NotificationByMailRepository;
 
 /**
  * Fixture shape: user_mail_notification has 2 rows -- user 1
- * (fixture_admin, email set, check_key 'abcdef1234567890', enabled='true'),
+ * (fixture_admin, email set, check_key 'abcdef1234567890', enabled=1),
  * user 3 (regular_user, email NULL, check_key 'ghijkl9876543210',
- * enabled='false'). Users 2 (guest)/4 (power_user) have no notification row.
+ * enabled=0). Users 2 (guest)/4 (power_user) have no notification row.
  */
 final class NotificationByMailRepositoryTest extends IntegrationTestCase
 {
@@ -81,7 +81,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
 
     public function test_find_user_notifications_filters_by_enabled_value(): void
     {
-        $rows = $this->repo->findUserNotifications('subscribe', [], 'false', 'username', 'mail_address', 'id');
+        $rows = $this->repo->findUserNotifications('subscribe', [], '0', 'username', 'mail_address', 'id');
 
         self::assertCount(1, $rows);
         self::assertSame('regular_user', $rows[0]['username']);

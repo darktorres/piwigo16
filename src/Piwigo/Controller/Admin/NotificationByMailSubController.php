@@ -533,7 +533,7 @@ order by
                 $inserts[] = [
                     'user_id' => $nbm_user['user_id'],
                     'check_key' => $nbm_user['check_key'],
-                    'enabled' => 'false', // By default if false, set to true with specific functions
+                    'enabled' => 0, // By default if false, set to true with specific functions
                 ];
 
                 $nbm_username = $nbm_user['username'];

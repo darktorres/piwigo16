@@ -1,10 +1,9 @@
 -- Final v17 schema (InnoDB + utf8mb4, all FK constraints, all indexes).
 -- Hand-maintained -- there is no Doctrine Migrations layer between "what
 -- the schema should be" and what a fresh install creates. Column-type
--- fixes not yet decided for any domain (remaining user_mail_notification/
--- history/old_permalinks/sessions/upgrade 1970-01-01-sentinel items,
--- user_infos.preferences/search.rules text->JSON) are deliberately not
--- applied here.
+-- fixes not yet decided for any domain (remaining history/old_permalinks/
+-- sessions/upgrade 1970-01-01-sentinel items, user_infos.preferences/
+-- search.rules text->JSON) are deliberately not applied here.
 
 --
 -- Table structure for table `piwigo_activity`
@@ -527,7 +526,7 @@ DROP TABLE IF EXISTS `piwigo_user_mail_notification`;
 CREATE TABLE `piwigo_user_mail_notification` (
   `user_id` mediumint(8) unsigned NOT NULL default '0',
   `check_key` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL default '',
-  `enabled` enum('true','false') NOT NULL default 'false',
+  `enabled` tinyint(1) NOT NULL default '0',
   `last_send` datetime default NULL,
   PRIMARY KEY  (`user_id`),
   UNIQUE KEY `user_mail_notification_ui1` (`check_key`)

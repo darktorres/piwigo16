@@ -347,7 +347,7 @@ final class NotificationByMailSender
 
         if (count($checkKeyList) !== 0) {
             $updates = [];
-            $enabledValue = \Piwigo\Db\SqlDialect::booleanToString($isSubscribe);
+            $enabledValue = \Piwigo\Db\SqlDialect::booleanToInt($isSubscribe);
             $dataUsers = $this->getUserNotifications('subscribe', $checkKeyList, ! $isSubscribe);
 
             // Prepare message after change language

@@ -60,10 +60,14 @@ final readonly class NotificationByMailService
         // passes `! $is_subscribe` (a bool) as this parameter.
         $hasFilter = is_bool($enabledFilterValue) ? $enabledFilterValue : $enabledFilterValue !== '';
 
+        // enabled is a real tinyint(1) column now (UserMailNotification
+        // domain Stage 1a) -- a numeric string, not the old
+        // enum('true','false') string; findUserNotifications() binds
+        // this straight through as a query parameter.
         $enabledFilterString = '';
         if ($hasFilter) {
-            $converted = \Piwigo\Db\SqlDialect::booleanToString($enabledFilterValue);
-            $enabledFilterString = is_string($converted) ? $converted : '';
+            $converted = \Piwigo\Db\SqlDialect::booleanToInt($enabledFilterValue);
+            $enabledFilterString = is_int($converted) ? (string) $converted : '';
         }
 
         return $this->repo->findUserNotifications(

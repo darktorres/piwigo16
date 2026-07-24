@@ -63,7 +63,7 @@ final class NotificationByMailRepository extends AbstractRepository
 
         if ($action === 'send') {
             $sql .= ' AND N.enabled = ? AND U.' . $emailField . ' IS NOT NULL';
-            $params[] = 'true';
+            $params[] = 1;
         }
 
         if ($checkKeyList !== []) {

@@ -296,7 +296,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // 12. Two mail notification entries.
         $db->query(sprintf(
             "INSERT INTO %suser_mail_notification (user_id, check_key, enabled, last_send) VALUES "
-            . "(1, 'abcdef1234567890', 'true', '%s'), (%d, 'ghijkl9876543210', 'false', NULL)",
+            . "(1, 'abcdef1234567890', 1, '%s'), (%d, 'ghijkl9876543210', 0, NULL)",
             $this->dbPrefix,
             $now,
             $userIds['regular_user']

@@ -174,23 +174,18 @@ SELECT COUNT(*)
                 // The 'id' column is the Tables::images() primary key: always a numeric
                 // value on a row fetched by get_image_infos(), just typed mixed
                 // because that function's return signature is array<string, mixed>.
-                $formats_image_id = is_numeric($formats_original_info['id']) ? (string) $formats_original_info['id'] : '0';
+                $formats_image_id = is_numeric($formats_original_info['id']) ? (int) $formats_original_info['id'] : 0;
 
-                // Fetch actual formats
-                $query = '
-SELECT *
-  FROM ' . Tables::imageFormat() . '
-  WHERE image_id = ' . $formats_image_id . '
-;';
-                $formats = $conn->fetchAllAssociative($query);
+                $formats = new ImageRepository($conn)
+                    ->findFormatsForImage($formats_image_id);
 
                 if ($formats !== []) {
                     $format_strings = [];
                     $formats_exts = [];
 
                     foreach ($formats as $format) {
-                        $format_ext = is_scalar($format['ext']) ? (string) $format['ext'] : '';
-                        $format_filesize = is_numeric($format['filesize']) ? ((float) $format['filesize']) / 1024.0 : 0.0;
+                        $format_ext = $format->ext;
+                        $format_filesize = ($format->filesize ?? 0) / 1024.0;
                         $format_strings[] = sprintf('%s (%.2fMB)', $format_ext, $format_filesize);
                         $formats_exts[] = strtolower($format_ext);
                     }

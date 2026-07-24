@@ -8,7 +8,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
@@ -43,39 +42,23 @@ final class PictureFormatsPageRenderer
         }
         $image = $imageRow->toArray();
 
-        // image_format's own SELECT * stays a raw array here -- deliberately
-        // out of scope for this pass. Unlike piwigo_images (ImageRepository::
-        // findById() above), image_format is touched by its own raw query in
-        // 8+ files (PwgImages/ActionController/SiteUpdateSubController/
-        // PictureModifyPageRenderer/PictureController/UploadService/
-        // PhotosAddDirectPageRenderer/IntroSubController), each with a
-        // different column subset -- giving it a real projection is its own
-        // dedicated pass, not a footnote of this one.
-        $query = '
-SELECT
-    *
-  FROM ' . Tables::imageFormat() . '
-  WHERE image_id = ' . $image_id . '
-;';
+        $formats = [];
+        foreach (new ImageRepository($conn)->findFormatsForImage($image_id) as $formatRow) {
+            $format = $formatRow->toArray();
+            $format['download_url'] = 'action.php?format=' . $formatRow->formatId . '&amp;download';
 
-        $formats = $conn->fetchAllAssociative($query);
-
-        foreach ($formats as &$format) {
-            $format_id_str = is_scalar($format['format_id']) ? (string) $format['format_id'] : '';
-            $format['download_url'] = 'action.php?format=' . $format_id_str . '&amp;download';
-
-            $format_ext = is_scalar($format['ext']) ? (string) $format['ext'] : '';
-            $format['label'] = strtoupper($format_ext);
-            $lang_key = 'format ' . strtoupper($format_ext);
+            $format['label'] = strtoupper($formatRow->ext);
+            $lang_key = 'format ' . strtoupper($formatRow->ext);
             $lang_label = \Piwigo\Core\Lang::has($lang_key) ? \Piwigo\Core\Lang::t($lang_key) : null;
             if ($lang_label !== null) {
                 $format['label'] = $lang_label;
             }
 
-            $filesize = is_numeric($format['filesize']) ? (float) $format['filesize'] : 0.0;
+            $filesize = $formatRow->filesize ?? 0;
             $format['filesize'] = round($filesize / 1024.0, 2);
+
+            $formats[] = $format;
         }
-        unset($format);
 
         $template->assign([
             'ADD_FORMATS_URL' => $urlService->getRootUrl() . 'admin.php?page=photos_add&formats=' . $image_id,

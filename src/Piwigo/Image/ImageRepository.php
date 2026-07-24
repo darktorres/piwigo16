@@ -8,6 +8,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 use Piwigo\Image\Projection\Image;
+use Piwigo\Image\Projection\ImageFormat;
 
 /**
  * Persistence layer for the image domain's own data-touching function from
@@ -60,6 +61,56 @@ SELECT
   FROM ' . Tables::imageFormat() . '
   WHERE image_id IN (' . implode(',', $imageIds) . ')
 ;')->fetchAllAssociative();
+    }
+
+    public function findFormatById(int $formatId): ?ImageFormat
+    {
+        $row = $this->conn->createQueryBuilder()
+            ->select('*')
+            ->from(Tables::imageFormat())
+            ->where('format_id = :formatId')
+            ->setParameter('formatId', $formatId)
+            ->executeQuery()
+            ->fetchAssociative();
+
+        return $row === false ? null : ImageFormat::fromRow($row);
+    }
+
+    /**
+     * @return list<ImageFormat>
+     */
+    public function findFormatsForImage(int $imageId): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('*')
+            ->from(Tables::imageFormat())
+            ->where('image_id = :imageId')
+            ->setParameter('imageId', $imageId)
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        return array_map(ImageFormat::fromRow(...), $rows);
+    }
+
+    /**
+     * @param array<int, int> $imageIds
+     * @return list<ImageFormat>
+     */
+    public function findFullFormatsByImageIds(array $imageIds): array
+    {
+        if ($imageIds === []) {
+            return [];
+        }
+
+        $rows = $this->conn->createQueryBuilder()
+            ->select('*')
+            ->from(Tables::imageFormat())
+            ->where('image_id IN (:imageIds)')
+            ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        return array_map(ImageFormat::fromRow(...), $rows);
     }
 
     /**

@@ -774,26 +774,14 @@ SELECT id, path
                     $db_formats = [];
 
                     // find formats for existing photos (already in database)
-                    $query = '
-SELECT *
-  FROM ' . Tables::imageFormat() . '
-  WHERE image_id IN (' . implode(',', $existing_ids) . ')
-;';
-                    foreach ($conn->fetchAllAssociative($query) as $row) {
-                        // image_id/ext are NOT NULL columns; skip defensively rather
-                        // than use a null/non-scalar value as an array key.
-                        $format_image_id = $row['image_id'];
-                        $format_ext = $row['ext'];
-                        if (! is_numeric($format_image_id) || ! is_string($format_ext)) {
-                            continue;
-                        }
-                        $format_image_id = (int) $format_image_id;
+                    $existing_ids_int = array_values(array_map(intval(...), array_filter($existing_ids, is_numeric(...))));
+                    foreach (new ImageRepository($conn)->findFullFormatsByImageIds($existing_ids_int) as $formatRow) {
+                        $format_image_id = $formatRow->imageId;
                         if (! isset($db_formats[$format_image_id])) {
                             $db_formats[$format_image_id] = [];
                         }
 
-                        $row_format_id = $row['format_id'];
-                        $db_formats[$format_image_id][$format_ext] = is_scalar($row_format_id) ? (string) $row_format_id : '';
+                        $db_formats[$format_image_id][$formatRow->ext] = (string) $formatRow->formatId;
                     }
 
                     // first we search the formats that were removed

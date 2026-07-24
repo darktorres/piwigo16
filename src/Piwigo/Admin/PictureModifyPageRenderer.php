@@ -453,21 +453,14 @@ SELECT
             }
         }
 
-        $row_id_str = is_numeric($row['id'] ?? null) ? (string) (int) $row['id'] : '0';
-        $query = '
-SELECT *
-  FROM ' . Tables::imageFormat() . '
-  WHERE image_id = ' . $row_id_str . '
-;';
-        $formats = $conn->fetchAllAssociative($query);
+        $formats = new ImageRepository($conn)
+            ->findFormatsForImage($image_id);
 
         if ($formats !== []) {
             $format_strings = [];
 
             foreach ($formats as $format) {
-                $format_ext = is_scalar($format['ext']) ? (string) $format['ext'] : '';
-                $format_filesize = is_numeric($format['filesize']) ? (float) $format['filesize'] : 0.0;
-                $format_strings[] = sprintf('%s (%.2fMB)', $format_ext, $format_filesize / 1024.0);
+                $format_strings[] = sprintf('%s (%.2fMB)', $format->ext, ($format->filesize ?? 0) / 1024.0);
             }
 
             $intro_vars['formats'] = Lang::t('Formats: %s', implode(', ', $format_strings));

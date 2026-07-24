@@ -855,12 +855,13 @@ SELECT *
             ], true);
 
             if (\Piwigo\Config\Config::isFormatsEnabled()) {
-                $query = '
-SELECT *
-  FROM ' . Tables::imageFormat() . '
-  WHERE image_id = ' . $picture['current']['id'] . '
-;';
-                $formats = $conn->fetchAllAssociative($query);
+                $picture_id = $picture['current']['id'];
+                $picture_id = is_numeric($picture_id) ? (int) $picture_id : 0;
+                $formats = array_map(
+                    static fn (\Piwigo\Image\Projection\ImageFormat $format): array => $format->toArray(),
+                    new ImageRepository($conn)
+                        ->findFormatsForImage($picture_id)
+                );
 
                 // let's add the original as a format among others. It
                 // will just have a specific download URL
@@ -874,19 +875,16 @@ SELECT *
                 );
 
                 foreach ($formats as &$format) {
-                    // array_unshift() above prepends a differently-
-                    // shaped literal (only download_url/ext/filesize)
-                    // onto the fetchAllAssociative() rows (format_id/
-                    // image_id/ext/filesize), so PHPStan can no longer
-                    // track a precise per-key type for $format --
-                    // narrow explicitly.
+                    // array_unshift() above prepends a differently-shaped
+                    // literal (only download_url/ext/filesize) onto the
+                    // Projection\ImageFormat::toArray() rows (format_id/
+                    // image_id/ext/filesize) -- narrow explicitly rather
+                    // than trust a per-key type across that mix.
                     if (! isset($format['download_url'])) {
-                        $format_id = $format['format_id'];
-                        $format['download_url'] = 'action.php?format=' . (is_scalar($format_id) ? (string) $format_id : '') . '&amp;download';
+                        $format['download_url'] = 'action.php?format=' . $format['format_id'] . '&amp;download';
                     }
 
                     $format_ext = $format['ext'];
-                    $format_ext = is_string($format_ext) ? $format_ext : '';
                     $format['label'] = strtoupper($format_ext);
                     $lang_key = 'format ' . strtoupper($format_ext);
                     if (\Piwigo\Core\Lang::has($lang_key)) {

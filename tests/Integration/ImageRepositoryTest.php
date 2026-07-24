@@ -44,6 +44,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET hit = 0, coi = NULL WHERE id IN (1, 2)");
+        $this->conn->executeStatement('DELETE FROM ' . Tables::imageFormat());
         parent::tearDown();
     }
 
@@ -181,5 +182,77 @@ final class ImageRepositoryTest extends IntegrationTestCase
     public function test_find_by_ids_returns_empty_array_for_empty_input(): void
     {
         self::assertSame([], $this->repo->findByIds([]));
+    }
+
+    public function test_find_format_by_id_returns_a_typed_image_format(): void
+    {
+        $formatId = $this->insertFormat(1, 'webp', 12345);
+
+        $format = $this->repo->findFormatById($formatId);
+
+        self::assertNotNull($format);
+        self::assertSame($formatId, $format->formatId);
+        self::assertSame(1, $format->imageId);
+        self::assertSame('webp', $format->ext);
+        self::assertSame(12345, $format->filesize);
+    }
+
+    public function test_find_format_by_id_returns_null_for_a_missing_format(): void
+    {
+        self::assertNull($this->repo->findFormatById(999_999));
+    }
+
+    public function test_find_formats_for_image_returns_every_format_for_that_image(): void
+    {
+        $this->insertFormat(1, 'webp', 100);
+        $this->insertFormat(1, 'avif', 200);
+        $this->insertFormat(2, 'webp', 300);
+
+        $formats = $this->repo->findFormatsForImage(1);
+
+        self::assertCount(2, $formats);
+        $exts = array_column($formats, 'ext');
+        sort($exts);
+        self::assertSame(['avif', 'webp'], $exts);
+    }
+
+    public function test_find_formats_for_image_returns_empty_for_an_image_with_no_formats(): void
+    {
+        self::assertSame([], $this->repo->findFormatsForImage(1));
+    }
+
+    public function test_find_full_formats_by_image_ids_returns_every_matching_row(): void
+    {
+        $this->insertFormat(1, 'webp', 100);
+        $this->insertFormat(2, 'avif', 200);
+
+        $formats = $this->repo->findFullFormatsByImageIds([1, 2]);
+
+        self::assertCount(2, $formats);
+        $imageIds = array_column($formats, 'imageId');
+        sort($imageIds);
+        self::assertSame([1, 2], $imageIds);
+    }
+
+    public function test_find_full_formats_by_image_ids_returns_empty_for_empty_input(): void
+    {
+        self::assertSame([], $this->repo->findFullFormatsByImageIds([]));
+    }
+
+    private function insertFormat(int $imageId, string $ext, int $filesize): int
+    {
+        $this->conn->createQueryBuilder()
+            ->insert(Tables::imageFormat())
+            ->values([
+                'image_id' => ':imageId',
+                'ext' => ':ext',
+                'filesize' => ':filesize',
+            ])
+            ->setParameter('imageId', $imageId)
+            ->setParameter('ext', $ext)
+            ->setParameter('filesize', $filesize)
+            ->executeStatement();
+
+        return (int) $this->conn->lastInsertId();
     }
 }

@@ -17,6 +17,7 @@ use Piwigo\History\HistoryService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Psr\Http\Message\ResponseInterface;
@@ -85,21 +86,14 @@ final class ActionController implements ControllerInterface
             }
             $format_id = (int) $_GET['format'];
 
-            $query = '
-SELECT
-    *
-  FROM ' . Tables::imageFormat() . '
-  WHERE format_id = ' . $format_id . '
-;';
-            $formats = $conn->fetchAllAssociative($query);
+            $format = new ImageRepository($conn)
+                ->findFormatById($format_id);
 
-            if (count($formats) === 0) {
+            if ($format === null) {
                 return $this->doError(400, 'Invalid request - format');
             }
 
-            $format = $formats[0];
-
-            $_GET['id'] = $format['image_id'];
+            $_GET['id'] = $format->imageId;
             $_GET['part'] = 'f'; // "f" for "format"
         }
 
@@ -112,15 +106,15 @@ SELECT
         }
         $_GET['id'] = (int) $_GET['id'];
 
-        $query = '
-SELECT * FROM ' . Tables::images() . '
-  WHERE id=' . $_GET['id'] . '
-;';
-
-        $element_info = $conn->fetchAssociative($query);
-        if ($element_info === false) {
+        $elementImage = new ImageRepository($conn)
+            ->findById($_GET['id']);
+        if ($elementImage === null) {
             return $this->doError(404, 'Requested id not found');
         }
+        // Mutated below (the 'f' case rewrites ['file']) -- unboxed here,
+        // not kept as the typed object, same "unbox where genuinely
+        // needed" shape as PluginLoader's own by-reference mutation.
+        $element_info = $elementImage->toArray();
 
         // special download action for admins
         $is_admin_download = false;
@@ -150,7 +144,6 @@ SELECT id
 
         // $format is only set when the enable_formats block above ran;
         // part=f is reachable directly by request even when it never ran.
-        /** @var array<string, mixed>|null $format_row */
         $format_row = $format ?? null;
 
         $file = '';
@@ -179,17 +172,9 @@ SELECT id
                 if ($format_row === null) {
                     return $this->doError(400, 'Invalid request - format');
                 }
-                $format_ext = $format_row['ext'];
-                // image_format.ext is `varchar(255) NOT NULL` in the
-                // schema -- a genuine DB row for this format always
-                // carries a string here.
-                assert(is_string($format_ext));
+                $format_ext = $format_row->ext;
                 $file = \Piwigo\Image\ImagePathHelper::originalToFormat(\Piwigo\Image\ImagePathHelper::getElementPath($element_info, $this->urlService), $format_ext);
                 $original_file = $element_info['file'];
-                // images.file is `varchar(255) NOT NULL` in the schema --
-                // a genuine DB row for this element always carries a
-                // string here.
-                assert(is_string($original_file));
                 $element_info['file'] = \Piwigo\Core\StringHelper::getFilenameWoExtension($original_file) . '.' . $format_ext;
                 break;
         }
@@ -209,10 +194,8 @@ SELECT id
             if ($format_row === null) {
                 return $this->doError(400, 'Invalid request - format');
             }
-            $format_id_val = $format_row['format_id'] ?? null;
-            $format_id_val = is_string($format_id_val) ? $format_id_val : null;
             $this->historyService($conn)
-                ->logVisit($image_id_val, 'high', $format_id_val);
+                ->logVisit($image_id_val, 'high', $format_row->formatId);
         }
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_action_before_http_headers');
@@ -260,9 +243,7 @@ SELECT id
         $http_headers['Content-Type'] = $ctype;
 
         if (isset($_GET['download'])) {
-            $element_file = $element_info['file'];
-            $element_file = is_scalar($element_file) ? (string) $element_file : '';
-            $http_headers['Content-Disposition'] = 'attachment; filename="' . htmlspecialchars_decode($element_file) . '";';
+            $http_headers['Content-Disposition'] = 'attachment; filename="' . htmlspecialchars_decode($element_info['file']) . '";';
             $http_headers['Content-Transfer-Encoding'] = 'binary';
         } else {
             $http_headers['Content-Disposition'] = 'inline; filename="'

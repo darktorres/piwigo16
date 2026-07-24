@@ -52,7 +52,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findByIdsUrlNamesOrNames([1], [], []);
 
         self::assertCount(1, $rows);
-        self::assertSame('nature', $rows[0]['name']);
+        self::assertSame('nature', $rows[0]->name);
     }
 
     public function test_find_by_ids_matches_by_url_name(): void
@@ -60,7 +60,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findByIdsUrlNamesOrNames([], ['travel'], []);
 
         self::assertCount(1, $rows);
-        self::assertSame('travel', $rows[0]['name']);
+        self::assertSame('travel', $rows[0]->name);
     }
 
     public function test_find_by_ids_matches_by_name(): void
@@ -68,7 +68,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findByIdsUrlNamesOrNames([], [], ['family']);
 
         self::assertCount(1, $rows);
-        self::assertSame('family', $rows[0]['name']);
+        self::assertSame('family', $rows[0]->name);
     }
 
     public function test_find_by_ids_combines_criteria_with_or(): void
@@ -85,6 +85,6 @@ final class TagRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findByIdsUrlNamesOrNames(['2'], [], []);
 
         self::assertCount(1, $rows);
-        self::assertSame('travel', $rows[0]['name']);
+        self::assertSame('travel', $rows[0]->name);
     }
 }

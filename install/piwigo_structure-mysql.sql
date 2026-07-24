@@ -1,7 +1,7 @@
 -- Final v17 schema (InnoDB + utf8mb4, all FK constraints, all indexes).
 -- Hand-maintained -- there is no Doctrine Migrations layer between "what
 -- the schema should be" and what a fresh install creates. Column-type
--- fixes not yet decided for any domain (remaining user_cache/tags/groups/
+-- fixes not yet decided for any domain (remaining user_cache/groups/
 -- comments/etc. P17-23 items) are deliberately not applied here.
 
 --
@@ -366,7 +366,7 @@ CREATE TABLE `piwigo_tags` (
   `id` smallint(5) unsigned NOT NULL auto_increment,
   `name` varchar(255) NOT NULL default '',
   `url_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL default '',
-  `lastmodified` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY  (`id`),
   KEY `tags_i1` (`url_name`),
   KEY `lastmodified` (`lastmodified`),

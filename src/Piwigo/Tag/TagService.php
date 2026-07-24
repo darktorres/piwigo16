@@ -13,6 +13,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Tag\Projection\Tag;
 
 /**
  * Tag domain business logic. Constructor-injects TagRepository and
@@ -79,9 +80,10 @@ final readonly class TagService
     public function getAllTags(HtmlRenderingInterface $htmlRenderer): array
     {
         $tags = [];
-        foreach ($this->repo->findAll() as $row) {
-            $row['name_raw'] = $row['name'];
-            $row['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $row['name'], $row);
+        foreach ($this->repo->findAll() as $tag) {
+            $row = $tag->toArray();
+            $row['name_raw'] = $tag->name;
+            $row['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $tag->name, $row);
             $tags[] = $row;
         }
 
@@ -101,7 +103,12 @@ final readonly class TagService
      */
     public function findTags(array $ids = [], array $urlNames = [], array $names = []): array
     {
-        return $this->repo->findByIdsUrlNamesOrNames($ids, $urlNames, $names);
+        // Unboxed back to array at this public boundary -- Ws\PwgTags::
+        // getImages() mutates $tag['id'] on the rows this returns, which
+        // needs real array semantics, not a readonly Tag object (same
+        // "narrow once, unbox where genuinely needed" shape as
+        // CategoryCatsRenderer/SearchFilterRenderer's own unboxing).
+        return array_map(static fn (Tag $tag): array => $tag->toArray(), $this->repo->findByIdsUrlNamesOrNames($ids, $urlNames, $names));
     }
 
     /**
@@ -229,14 +236,14 @@ final readonly class TagService
         }
 
         $tags = [];
-        foreach ($this->repo->findByIdsOrAll(array_keys($tagCounters)) as $row) {
-            $id = $row['id'] ?? null;
-            if ((! is_int($id) && ! is_string($id)) || ! isset($tagCounters[$id])) {
+        foreach ($this->repo->findByIdsOrAll(array_keys($tagCounters)) as $tag) {
+            if (! isset($tagCounters[$tag->id])) {
                 continue;
             }
-            $row['counter'] = $tagCounters[$id];
-            $row['name_raw'] = $row['name'];
-            $row['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $row['name'], $row);
+            $row = $tag->toArray();
+            $row['counter'] = $tagCounters[$tag->id];
+            $row['name_raw'] = $tag->name;
+            $row['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $tag->name, $row);
             $tags[] = $row;
         }
 

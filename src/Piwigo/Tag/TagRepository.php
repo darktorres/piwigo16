@@ -7,6 +7,7 @@ namespace Piwigo\Tag;
 use Piwigo\Core\Env;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
+use Piwigo\Tag\Projection\Tag;
 
 /**
  * Persistence layer for the tag domain, including the Tag+Image+Category
@@ -18,15 +19,17 @@ use Piwigo\Db\Tables;
 final class TagRepository extends AbstractRepository
 {
     /**
-     * @return list<array<string, mixed>>
+     * @return list<Tag>
      */
     public function findAll(): array
     {
-        return $this->conn->createQueryBuilder()
+        $rows = $this->conn->createQueryBuilder()
             ->select('*')
             ->from(Tables::tags())
             ->executeQuery()
             ->fetchAllAssociative();
+
+        return array_map(Tag::fromRow(...), $rows);
     }
 
     /**
@@ -40,7 +43,7 @@ final class TagRepository extends AbstractRepository
      *   strings work identically
      * @param array<int|string, string> $urlNames
      * @param array<int|string, string> $names
-     * @return list<array<string, mixed>>
+     * @return list<Tag>
      */
     public function findByIdsUrlNamesOrNames(array $ids, array $urlNames, array $names): array
     {
@@ -65,9 +68,11 @@ final class TagRepository extends AbstractRepository
             $whereClauses[] = 'name IN (:names)';
         }
 
-        return $qb->where(implode(' OR ', $whereClauses))
+        $rows = $qb->where(implode(' OR ', $whereClauses))
             ->executeQuery()
             ->fetchAllAssociative();
+
+        return array_map(Tag::fromRow(...), $rows);
     }
 
     /**
@@ -113,7 +118,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
      * large" avoidance), letting the caller filter down by its own id set.
      *
      * @param list<int> $ids
-     * @return list<array<string, mixed>>
+     * @return list<Tag>
      */
     public function findByIdsOrAll(array $ids): array
     {
@@ -123,8 +128,10 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
             $query .= ' WHERE id IN (' . implode(',', $ids) . ')';
         }
 
-        return $this->conn->executeQuery($query)
+        $rows = $this->conn->executeQuery($query)
             ->fetchAllAssociative();
+
+        return array_map(Tag::fromRow(...), $rows);
     }
 
     /**

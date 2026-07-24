@@ -9,7 +9,6 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
@@ -17,9 +16,13 @@ use Piwigo\Permission\PermissionService;
 
 /**
  * Admin-side category WRITE operations -- deliberately separate from
- * Piwigo\Category\CategoryService (P19), which is read-only (gallery
- * browsing). Matches the doc's own reference file inventory:
- * "Admin/Category/: CategoryAdminService, CreateCategoryResult".
+ * Piwigo\Category\CategoryService (P19), which was read-only (gallery
+ * browsing) when this split was made; CategoryService has since grown
+ * several of its own write methods too (setCatVisible()/setCatStatus()/
+ * setCatCommentable()/etc.) -- the split is about admin-vs-gallery call
+ * sites, not a strict read/write boundary anymore. Matches the doc's own
+ * reference file inventory: "Admin/Category/: CategoryAdminService,
+ * CreateCategoryResult".
  *
  * createVirtualCategory() delegates to the constructor-injected
  * CategoryService::createVirtualCategory() (Legacy Coupling Retirement
@@ -32,10 +35,11 @@ use Piwigo\Permission\PermissionService;
  * byte-for-byte-identical copies (admin/cat_list.php and admin/albums.php,
  * confirmed via direct diff) and the other two replace inline
  * switch/if-chains that were never shared anywhere, moved here so
- * admin/cat_options.php, admin/cat_perm.php, and admin/element_set_ranks.php
- * (all three still legacy `include` page glue, called from
- * AlbumSubController/CatOptionsSubController) can call one typed method
- * each instead of repeating raw SQL/branching inline.
+ * Controller\Admin\CatOptionsSubController/AlbumSubController (the real,
+ * routed successors to the legacy admin/cat_options.php, admin/cat_perm.php,
+ * and admin/element_set_ranks.php `include` pages, all 3 fully ported)
+ * can call one typed method each instead of repeating raw SQL/branching
+ * inline.
  */
 final class CategoryAdminService
 {
@@ -91,33 +95,13 @@ final class CategoryAdminService
             return $return;
         }
 
-        $query = '
-SELECT
-    category_id,
-    ' . $minmax . '(' . $field . ') as ref_date
-  FROM ' . Tables::imageCategory() . '
-    JOIN ' . Tables::images() . ' ON image_id = id
-  WHERE category_id IN (' . implode(',', $category_ids) . ')
-  GROUP BY category_id
-;';
-        $ref_dates = query2array($query, 'category_id', 'ref_date');
-
-        $query = '
-SELECT
-    id,
-    uppercats
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $category_ids) . ')
-;';
-        $uppercats_of = query2array($query, 'id', 'uppercats');
+        $ref_dates = $this->categoryService->getRefDatesByCategoryIds($category_ids, $field, $minmax);
+        $uppercats_of = $this->categoryService->getUppercatsById($category_ids);
 
         foreach (array_keys($uppercats_of) as $cat_id) {
             $subcat_ids = [];
 
             foreach ($uppercats_of as $id => $uppercats) {
-                if (! is_string($uppercats)) {
-                    continue;
-                }
                 if ((bool) preg_match('/(^|,)' . $cat_id . '(,|$)/', $uppercats)) {
                     $subcat_ids[] = $id;
                 }
@@ -215,23 +199,17 @@ SELECT
             return;
         }
 
+        $conn = DbConnection::build();
+        $permissionRepository = new PermissionRepository($conn);
+
         // groups
-        $groupsGranted = $this->numericColumn('
-SELECT group_id
-  FROM ' . Tables::groupAccess() . '
-  WHERE cat_id = ' . $catId . '
-;', 'group_id');
+        $groupsGranted = $this->categoryService->getAccessGroupIds($catId);
 
         $denyGroups = array_diff($groupsGranted, $groupIds);
         if (count($denyGroups) > 0) {
             // if you forbid access to an album, all sub-albums become
             // automatically forbidden
-            pwg_query('
-DELETE
-  FROM ' . Tables::groupAccess() . '
-  WHERE group_id IN (' . implode(',', $denyGroups) . ')
-    AND cat_id IN (' . implode(',', $this->categoryService->getSubcatIds([$catId])) . ')
-;');
+            $this->categoryService->denyGroupAccess($denyGroups, $this->categoryService->getSubcatIds([$catId]));
         }
 
         if (count($groupIds) > 0) {
@@ -240,12 +218,12 @@ DELETE
                 $catIdsForGrant = array_merge($catIdsForGrant, $this->categoryService->getSubcatIds([$catId]));
             }
 
-            $privateCats = query2array('
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $catIdsForGrant) . ')
-    AND status = \'private\'
-;', null, 'id');
+            // Same "only private categories need explicit access rows"
+            // filter PermissionService::addPermissionOnCategory() below
+            // already applies to its own $userIds grant -- reuses that
+            // same PermissionRepository instance rather than duplicating
+            // its findPrivateCategoryIdsAmong() on CategoryRepository too.
+            $privateCats = $permissionRepository->findPrivateCategoryIdsAmong(array_values($catIdsForGrant));
 
             $inserts = [];
             foreach ($privateCats as $privateCatId) {
@@ -257,38 +235,21 @@ SELECT id
                 }
             }
 
-            mass_inserts(
-                Tables::groupAccess(),
-                ['group_id', 'cat_id'],
-                $inserts,
-                [
-                    'ignore' => true,
-                ]
-            );
+            $this->categoryService->grantGroupAccess($inserts);
         }
 
         // users
-        $usersGranted = $this->numericColumn('
-SELECT user_id
-  FROM ' . Tables::userAccess() . '
-  WHERE cat_id = ' . $catId . '
-;', 'user_id');
+        $usersGranted = $this->categoryService->getAccessUserIds($catId);
 
         $denyUsers = array_diff($usersGranted, $userIds);
         if (count($denyUsers) > 0) {
             // if you forbid access to an album, all sub-album become
             // automatically forbidden
-            pwg_query('
-DELETE
-  FROM ' . Tables::userAccess() . '
-  WHERE user_id IN (' . implode(',', $denyUsers) . ')
-    AND cat_id IN (' . implode(',', $this->categoryService->getSubcatIds([$catId])) . ')
-;');
+            $this->categoryService->denyUserAccess($denyUsers, $this->categoryService->getSubcatIds([$catId]));
         }
 
         if (count($userIds) > 0) {
-            $conn = DbConnection::build();
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
+            new PermissionService($permissionRepository, new GroupRepository($conn), new CategoryRepository($conn))
                 ->addPermissionOnCategory($catId, $userIds);
         }
     }
@@ -299,12 +260,7 @@ DELETE
      */
     public function saveImageOrder(int $catId, ?string $imageOrder, bool $applySubcats, RedirectServiceInterface $redirectService): void
     {
-        $orderValue = $imageOrder !== null ? '\'' . $imageOrder . '\'' : 'NULL';
-
-        pwg_query('
-UPDATE ' . Tables::categories() . '
-  SET image_order = ' . $orderValue . '
-  WHERE id=' . $catId);
+        $this->categoryService->updateImageOrder($catId, $imageOrder);
 
         if (! $applySubcats) {
             return;
@@ -316,23 +272,6 @@ UPDATE ' . Tables::categories() . '
                 ->pageNotFound($redirectService, 'Requested album does not exist');
         }
 
-        pwg_query('
-UPDATE ' . Tables::categories() . '
-  SET image_order = ' . $orderValue . '
-  WHERE uppercats LIKE \'' . $catInfo['uppercats'] . ',%\'');
-    }
-
-    /**
-     * @return list<int>
-     */
-    private function numericColumn(string $query, string $column): array
-    {
-        $ids = [];
-        foreach (query2array($query, null, $column) as $rawId) {
-            if (is_numeric($rawId)) {
-                $ids[] = (int) $rawId;
-            }
-        }
-        return $ids;
+        $this->categoryService->updateImageOrderForDescendants($catInfo['uppercats'] . ',', $imageOrder);
     }
 }

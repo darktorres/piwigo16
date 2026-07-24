@@ -1376,6 +1376,76 @@ final readonly class CategoryService
     }
 
     /**
+     * @return list<int>
+     */
+    public function getAccessGroupIds(int $catId): array
+    {
+        return $this->repo->findAccessGroupIds($catId);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getAccessUserIds(int $catId): array
+    {
+        return $this->repo->findAccessUserIds($catId);
+    }
+
+    /**
+     * @param  array<int>  $groupIds
+     * @param  array<int>  $catIds
+     */
+    public function denyGroupAccess(array $groupIds, array $catIds): void
+    {
+        $this->repo->deleteGroupAccessForGroupsAndCategories($groupIds, $catIds);
+    }
+
+    /**
+     * @param  array<int>  $userIds
+     * @param  array<int>  $catIds
+     */
+    public function denyUserAccess(array $userIds, array $catIds): void
+    {
+        $this->repo->deleteUserAccessForUsersAndCategories($userIds, $catIds);
+    }
+
+    /**
+     * @param array<int, array{group_id: mixed, cat_id: mixed}> $inserts
+     */
+    public function grantGroupAccess(array $inserts): void
+    {
+        $this->repo->massInsertGroupAccess($inserts, ignore: true);
+    }
+
+    /**
+     * @param  list<int>  $categoryIds
+     * @return array<int, mixed> keyed by category_id
+     */
+    public function getRefDatesByCategoryIds(array $categoryIds, string $field, string $minmax): array
+    {
+        return $this->repo->findRefDatesByCategoryIds($categoryIds, $field, $minmax);
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @return array<int, string> keyed by id
+     */
+    public function getUppercatsById(array $ids): array
+    {
+        return $this->repo->findUppercatsById($ids);
+    }
+
+    public function updateImageOrder(int $catId, ?string $imageOrder): void
+    {
+        $this->repo->updateImageOrder($catId, $imageOrder);
+    }
+
+    public function updateImageOrderForDescendants(string $uppercatsPrefix, ?string $imageOrder): void
+    {
+        $this->repo->updateImageOrderForDescendants($uppercatsPrefix, $imageOrder);
+    }
+
+    /**
      * @return array{src: string|array<int|string, mixed>, url: string}
      */
     public function getCategoryRepresentantProperties(int|string $imageId, UrlServiceInterface $urlService, ?string $size = null): array

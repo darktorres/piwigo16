@@ -530,6 +530,51 @@ DELETE FROM ' . Tables::groupAccess() . '
     }
 
     /**
+     * Revokes a specific set of users' access to a specific set of
+     * categories -- CategoryAdminService::setCategoryPermissions()'s own
+     * "if you forbid access to an album, all sub-albums become
+     * automatically forbidden too" deny path, narrower than {@see
+     * deleteUserAccessForCategories()} (which drops every grant on a
+     * category, not just $userIds').
+     *
+     * @param  array<int>  $userIds
+     * @param  array<int>  $catIds
+     */
+    public function deleteUserAccessForUsersAndCategories(array $userIds, array $catIds): void
+    {
+        if ($userIds === [] || $catIds === []) {
+            return;
+        }
+
+        $this->conn->executeStatement('
+DELETE
+  FROM ' . Tables::userAccess() . '
+  WHERE user_id IN (' . implode(',', $userIds) . ')
+    AND cat_id IN (' . implode(',', $catIds) . ')
+;');
+    }
+
+    /**
+     * Same as {@see deleteUserAccessForUsersAndCategories()}, for groups.
+     *
+     * @param  array<int>  $groupIds
+     * @param  array<int>  $catIds
+     */
+    public function deleteGroupAccessForGroupsAndCategories(array $groupIds, array $catIds): void
+    {
+        if ($groupIds === [] || $catIds === []) {
+            return;
+        }
+
+        $this->conn->executeStatement('
+DELETE
+  FROM ' . Tables::groupAccess() . '
+  WHERE group_id IN (' . implode(',', $groupIds) . ')
+    AND cat_id IN (' . implode(',', $catIds) . ')
+;');
+    }
+
+    /**
      * @param  list<int>  $ids
      */
     public function deleteCategoriesByIds(array $ids): void
@@ -691,6 +736,37 @@ UPDATE ' . Tables::categories() . '
     }
 
     /**
+     * CategoryAdminService::saveImageOrder()'s own category (admin/
+     * element_set_ranks.php).
+     */
+    public function updateImageOrder(int $catId, ?string $imageOrder): void
+    {
+        $this->conn->createQueryBuilder()
+            ->update(Tables::categories())
+            ->set('image_order', ':imageOrder')
+            ->where('id = :id')
+            ->setParameter('imageOrder', $imageOrder)
+            ->setParameter('id', $catId)
+            ->executeStatement();
+    }
+
+    /**
+     * Same as {@see updateImageOrder()}, applied to every descendant of
+     * $uppercatsPrefix (a category's own `uppercats` value + ',') when
+     * saveImageOrder()'s $applySubcats is true.
+     */
+    public function updateImageOrderForDescendants(string $uppercatsPrefix, ?string $imageOrder): void
+    {
+        $this->conn->createQueryBuilder()
+            ->update(Tables::categories())
+            ->set('image_order', ':imageOrder')
+            ->where('uppercats LIKE :uppercatsPrefix')
+            ->setParameter('imageOrder', $imageOrder)
+            ->setParameter('uppercatsPrefix', $uppercatsPrefix . '%')
+            ->executeStatement();
+    }
+
+    /**
      * @param  list<int>  $ids
      * @return array<int, array{id: int, status: string}> keyed by id
      */
@@ -772,6 +848,75 @@ SELECT uppercats
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $ids) . ')
 ;')->fetchFirstColumn());
+    }
+
+    /**
+     * Same rows as {@see findUppercatsColumns()}, keyed by id instead of a
+     * plain list -- CategoryAdminService::getCategoriesRefDate() needs to
+     * look a specific category's uppercats back up by id while iterating.
+     *
+     * @param  list<int>  $ids
+     * @return array<int, string> keyed by id
+     */
+    public function findUppercatsById(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $rows = $this->conn->executeQuery('
+SELECT id, uppercats
+  FROM ' . Tables::categories() . '
+  WHERE id IN (' . implode(',', $ids) . ')
+;')->fetchAllKeyValue();
+
+        $byId = [];
+        foreach ($rows as $id => $uppercats) {
+            if (is_numeric($id)) {
+                $byId[(int) $id] = is_scalar($uppercats) ? (string) $uppercats : '';
+            }
+        }
+
+        return $byId;
+    }
+
+    /**
+     * Per-category MIN/MAX of a numeric/date `images` column, for every
+     * image directly in each of $categoryIds -- CategoryAdminService::
+     * getCategoriesRefDate()'s own per-category aggregate, before it rolls
+     * sub-categories' values up into their ancestors' own entry.
+     *
+     * $field/$minmax are never raw user input -- getCategoriesRefDate()'s
+     * one real caller (AlbumsPageRenderer) only reaches them after
+     * validating $_POST['order'] against a fixed whitelist.
+     *
+     * @param  list<int>  $categoryIds
+     * @return array<int, mixed> keyed by category_id
+     */
+    public function findRefDatesByCategoryIds(array $categoryIds, string $field, string $minmax): array
+    {
+        if ($categoryIds === []) {
+            return [];
+        }
+
+        $rows = $this->conn->executeQuery('
+SELECT
+    category_id,
+    ' . $minmax . '(' . $field . ') as ref_date
+  FROM ' . Tables::imageCategory() . '
+    JOIN ' . Tables::images() . ' ON image_id = id
+  WHERE category_id IN (' . implode(',', $categoryIds) . ')
+  GROUP BY category_id
+;')->fetchAllKeyValue();
+
+        $byCategoryId = [];
+        foreach ($rows as $categoryId => $refDate) {
+            if (is_numeric($categoryId)) {
+                $byCategoryId[(int) $categoryId] = $refDate;
+            }
+        }
+
+        return $byCategoryId;
     }
 
     /**
@@ -1086,12 +1231,22 @@ SELECT id, uppercats, global_rank, visible, status
     }
 
     /**
+     * $ignore matters for CategoryAdminService::setCategoryPermissions()'s
+     * own caller: re-granting a group that already has access to one of
+     * the target categories (editing permissions on an existing category,
+     * not creating a brand new one) would otherwise hit group_access's own
+     * unique constraint. createVirtualCategory()'s inheritance-on-creation
+     * caller doesn't need it -- a freshly INSERTed category id can't
+     * already have any group_access rows -- so the default is false.
+     *
      * @param array<int, array{group_id: mixed, cat_id: mixed}> $inserts
      */
-    public function massInsertGroupAccess(array $inserts): void
+    public function massInsertGroupAccess(array $inserts, bool $ignore = false): void
     {
         $this->batchWriter()
-            ->massInsert(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts);
+            ->massInsert(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts, [
+                'ignore' => $ignore,
+            ]);
     }
 
     /**

@@ -105,13 +105,14 @@
     "test:contract": "@php vendor/bin/pest --testsuite Contract",
     "test:browser": [
       "bash tools/reimport-fixture.sh",
-      "bash tools/pest-cleanup.sh --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression"
+      "bash tools/pest-cleanup.sh --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=install-flow"
     ],
     "test:fixture-regen": "bash tools/pest-cleanup.sh --testsuite Browser --group=fixture-regen",
     "test:visual": [
       "bash tools/reimport-fixture.sh",
       "bash tools/pest-cleanup.sh --testsuite Browser --group=visual-regression"
     ],
+    "test:install": "bash tools/pest-cleanup.sh --testsuite Browser --group=install-flow",
     "plan-lint": "@php tools/plan-lint.php",
     "require-checker": "@php vendor/bin/composer-require-checker check --config-file=composer-require-checker.json composer.json",
     "unused": "@php vendor/bin/composer-unused --configuration=composer-unused.php",

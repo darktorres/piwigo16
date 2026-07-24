@@ -490,80 +490,12 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         'sync' => true,
                     ]);
 
-                    $category_up = implode(',', array_unique($category_up));
-                    if (\Piwigo\Config\Config::inheritanceByDefault() and $category_up !== '') {
-                        // predeclared so both stay real arrays below even if a
-                        // query below ever returns an empty/falsy result set.
-                        $granted_grps = [];
-                        $granted_users = [];
-                        $query = '
-          SELECT *
-          FROM ' . Tables::groupAccess() . '
-          WHERE cat_id IN (' . $category_up . ')
-        ;';
-                        foreach ($conn->fetchAllAssociative($query) as $row) {
-                            // cat_id is a NOT NULL foreign key; skip defensively
-                            // if it's ever missing/non-numeric rather than using
-                            // it as an invalid array key.
-                            $cat_id = $row['cat_id'];
-                            if (! is_numeric($cat_id)) {
-                                continue;
-                            }
-                            $cat_id = (int) $cat_id;
-                            if (! isset($granted_grps[$cat_id])) {
-                                $granted_grps[$cat_id] = [];
-                            }
-                            // The real accumulation is the inner
-                            // array_push($granted_grps[$cat_id], ...) --
-                            // it appends by reference into the per-category
-                            // sub-array, which is what every later read
-                            // ($granted_grps[$parent_id] below) uses. The
-                            // outer array_push($granted_grps, [...]) is a
-                            // faithfully-preserved legacy artifact: it
-                            // appends a throwaway [$cat_id => count] entry
-                            // at the next unused integer key, which no
-                            // real code ever reads by that key -- inert in
-                            // every case that will actually occur. Not
-                            // proven safe in a pathological one: if a real
-                            // category id ever numerically collided with
-                            // one of these auto-generated small integer
-                            // keys later in the same loop, it would corrupt
-                            // that category's own entry instead of being a
-                            // no-op.
-                            array_push(
-                                $granted_grps,
-                                [
-                                    $cat_id => array_push($granted_grps[$cat_id], $row['group_id']),
-                                ]
-                            );
-                        }
-                        $query = '
-          SELECT *
-          FROM ' . Tables::userAccess() . '
-          WHERE cat_id IN (' . $category_up . ')
-        ;';
-                        foreach ($conn->fetchAllAssociative($query) as $row) {
-                            // cat_id is a NOT NULL foreign key; skip defensively
-                            // if it's ever missing/non-numeric rather than using
-                            // it as an invalid array key.
-                            $cat_id = $row['cat_id'];
-                            if (! is_numeric($cat_id)) {
-                                continue;
-                            }
-                            $cat_id = (int) $cat_id;
-                            if (! isset($granted_users[$cat_id])) {
-                                $granted_users[$cat_id] = [];
-                            }
-                            // Same shape, same reasoning as the
-                            // $granted_grps loop above -- see its own
-                            // comment.
-                            array_push(
-                                $granted_users,
-                                [
-                                    $cat_id => array_push($granted_users[$cat_id], $row['user_id']),
-                                ]
-                            );
-                        }
+                    $category_up = array_values(array_unique($category_up));
+                    if (\Piwigo\Config\Config::inheritanceByDefault() and $category_up !== []) {
+                        $granted_grps = new PermissionRepository($conn)
+                            ->findGrantedGroupIdsByCategory($category_up);
+                        $granted_users = new PermissionRepository($conn)
+                            ->findGrantedUserIdsByCategory($category_up);
                         $insert_granted_users = [];
                         $insert_granted_grps = [];
                         foreach ($category_ids as $ids) {

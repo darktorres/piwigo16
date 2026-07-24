@@ -132,6 +132,72 @@ final class PermissionRepository extends AbstractRepository
     }
 
     /**
+     * Which group ids are directly granted access to each of $catIds --
+     * SiteUpdateSubController's own "copy the parent's permissions onto
+     * newly-synchronized child categories" step.
+     *
+     * @param  list<int>  $catIds
+     * @return array<int, list<int>> keyed by cat_id
+     */
+    public function findGrantedGroupIdsByCategory(array $catIds): array
+    {
+        if ($catIds === []) {
+            return [];
+        }
+
+        $rows = $this->conn->createQueryBuilder()
+            ->select('cat_id', 'group_id')
+            ->from(Tables::groupAccess())
+            ->where('cat_id IN (:catIds)')
+            ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        $grouped = [];
+        foreach ($rows as $row) {
+            if (! is_numeric($row['cat_id']) || ! is_numeric($row['group_id'])) {
+                continue;
+            }
+            $grouped[(int) $row['cat_id']][] = (int) $row['group_id'];
+        }
+
+        return $grouped;
+    }
+
+    /**
+     * Which user ids are directly granted access to each of $catIds -- same
+     * purpose as findGrantedGroupIdsByCategory() above, for individual users
+     * rather than groups.
+     *
+     * @param  list<int>  $catIds
+     * @return array<int, list<int>> keyed by cat_id
+     */
+    public function findGrantedUserIdsByCategory(array $catIds): array
+    {
+        if ($catIds === []) {
+            return [];
+        }
+
+        $rows = $this->conn->createQueryBuilder()
+            ->select('cat_id', 'user_id')
+            ->from(Tables::userAccess())
+            ->where('cat_id IN (:catIds)')
+            ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        $grouped = [];
+        foreach ($rows as $row) {
+            if (! is_numeric($row['cat_id']) || ! is_numeric($row['user_id'])) {
+                continue;
+            }
+            $grouped[(int) $row['cat_id']][] = (int) $row['user_id'];
+        }
+
+        return $grouped;
+    }
+
+    /**
      * @param list<mixed> $values
      * @return list<int>
      */

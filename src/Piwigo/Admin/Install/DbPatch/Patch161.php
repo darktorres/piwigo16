@@ -13,6 +13,7 @@ namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Db\Tables;
 
 /**
@@ -38,24 +39,11 @@ final class Patch161 implements DbPatchInterface
         $tag_ids_added = [];
         $to_delete_activities = [];
 
-        $query = '
-SELECT
-    *
-  FROM ' . Tables::activity() . '
-  WHERE object = :object
-    AND action = :action
-  ORDER BY activity_id ASC
-;';
-
-        foreach ($conn->fetchAllAssociative($query, [
-            'object' => 'tag',
-            'action' => 'add',
-        ]) as $row) {
-            $object_id = is_int($row['object_id']) || is_string($row['object_id']) ? $row['object_id'] : '';
-            if (isset($tag_ids_added[$object_id])) {
-                array_push($to_delete_activities, is_scalar($row['activity_id']) ? (string) $row['activity_id'] : '');
+        foreach (new ActivityRepository($conn)->findIdsByObjectAndAction('tag', 'add') as $row) {
+            if (isset($tag_ids_added[$row['objectId']])) {
+                $to_delete_activities[] = $row['activityId'];
             } else {
-                $tag_ids_added[$object_id] = 1;
+                $tag_ids_added[$row['objectId']] = 1;
             }
         }
 
@@ -68,7 +56,7 @@ DELETE
             $conn->executeStatement($query, [
                 'activityIds' => $to_delete_activities,
             ], [
-                'activityIds' => ArrayParameterType::STRING,
+                'activityIds' => ArrayParameterType::INTEGER,
             ]);
         }
 

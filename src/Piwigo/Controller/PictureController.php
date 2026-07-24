@@ -634,22 +634,15 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             $ids[] = (string) $last_item;
         }
 
-        $query = '
-SELECT *
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $ids) . ')
-;';
-
-        foreach ($conn->fetchAllAssociative($query) as $row) {
-            $row_id_raw = $row['id'];
-            $row_id_str = is_scalar($row_id_raw) ? (string) $row_id_raw : '';
-            if ($previous_item !== null and $row_id_str === (string) $previous_item) {
+        foreach (new ImageRepository($conn)->findByIds($ids) as $imageRow) {
+            $row = $imageRow->toArray();
+            if ($previous_item !== null and $imageRow->id === (int) $previous_item) {
                 $i = 'previous';
-            } elseif ($next_item !== null and $row_id_str === (string) $next_item) {
+            } elseif ($next_item !== null and $imageRow->id === (int) $next_item) {
                 $i = 'next';
-            } elseif ($first_item !== null and $row_id_str === (string) $first_item) {
+            } elseif ($first_item !== null and $imageRow->id === (int) $first_item) {
                 $i = 'first';
-            } elseif ($last_item !== null and $row_id_str === (string) $last_item) {
+            } elseif ($last_item !== null and $imageRow->id === (int) $last_item) {
                 $i = 'last';
             } else {
                 $i = 'current';
@@ -658,24 +651,13 @@ SELECT *
             $row['src_image'] = new SrcImage($row);
             $row['derivatives'] = DerivativeImage::get_all($row['src_image']);
 
-            // Writing computed keys (src_image, derivatives, ...) back
-            // into $row widens PHPStan's inferred value type for every
-            // key in this array to a shared union across all of them --
-            // narrow explicitly at each still-scalar column read below
-            // instead of casting the widened union directly.
-            $row_path = $row['path'];
-            assert(is_string($row_path)); // images.path is NOT NULL
-            $row['path_ext'] = strtolower(\Piwigo\Core\StringHelper::getExtension($row_path));
-
-            $row_file = $row['file'];
-            assert(is_string($row_file)); // images.file is NOT NULL
-            $row['file_ext'] = strtolower(\Piwigo\Core\StringHelper::getExtension($row_file));
+            $row['path_ext'] = strtolower(\Piwigo\Core\StringHelper::getExtension($row['path']));
+            $row['file_ext'] = strtolower(\Piwigo\Core\StringHelper::getExtension($row['file']));
 
             if ($i === 'current') {
                 $row['element_path'] = \Piwigo\Image\ImagePathHelper::getElementPath($row, $urlService);
 
                 $row_id = $row['id'];
-                assert(is_string($row_id)); // images.id is the NOT NULL primary key
 
                 if ($row['src_image']->is_original()) {// we have a photo
                     if (\Piwigo\Users\CurrentUser::get()->enabledHigh) {

@@ -46,6 +46,7 @@ final class PermissionRepositoryTest extends IntegrationTestCase
         // -- restore that baseline regardless of which mutation test ran.
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public', visible = 1");
         $this->conn->executeStatement('DELETE FROM ' . Tables::userAccess());
+        $this->conn->executeStatement('DELETE FROM ' . Tables::groupAccess());
         parent::tearDown();
     }
 
@@ -107,5 +108,39 @@ final class PermissionRepositoryTest extends IntegrationTestCase
         $this->repo->deleteUserAccess(2, []);
 
         self::assertSame([1], $this->repo->findDirectlyAuthorizedCategoryIds(2));
+    }
+
+    public function test_find_granted_group_ids_by_category_groups_rows_by_cat_id(): void
+    {
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::groupAccess() . ' (group_id, cat_id) VALUES (1, 1), (2, 1), (3, 2)'
+        );
+
+        self::assertSame(
+            [1 => [1, 2], 2 => [3]],
+            $this->repo->findGrantedGroupIdsByCategory([1, 2])
+        );
+    }
+
+    public function test_find_granted_group_ids_by_category_with_an_empty_id_list_returns_empty(): void
+    {
+        self::assertSame([], $this->repo->findGrantedGroupIdsByCategory([]));
+    }
+
+    public function test_find_granted_user_ids_by_category_groups_rows_by_cat_id(): void
+    {
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (2, 1), (3, 1), (2, 2)'
+        );
+
+        self::assertSame(
+            [1 => [2, 3], 2 => [2]],
+            $this->repo->findGrantedUserIdsByCategory([1, 2])
+        );
+    }
+
+    public function test_find_granted_user_ids_by_category_with_an_empty_id_list_returns_empty(): void
+    {
+        self::assertSame([], $this->repo->findGrantedUserIdsByCategory([]));
     }
 }

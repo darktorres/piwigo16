@@ -85,6 +85,40 @@ final class ActivityRepository extends AbstractRepository
         return $counts;
     }
 
+    /**
+     * activity_id + object_id pairs for a given object/action, in
+     * ascending activity_id order -- DbPatch Patch161's own "find and
+     * delete doubled activities logged on tag addition" duplicate sweep.
+     *
+     * @return list<array{activityId: int, objectId: int}>
+     */
+    public function findIdsByObjectAndAction(string $object, string $action): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('activity_id', 'object_id')
+            ->from(Tables::activity())
+            ->where('object = :object')
+            ->andWhere('action = :action')
+            ->orderBy('activity_id', 'ASC')
+            ->setParameter('object', $object)
+            ->setParameter('action', $action)
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_numeric($row['activity_id']) || ! is_numeric($row['object_id'])) {
+                continue;
+            }
+            $result[] = [
+                'activityId' => (int) $row['activity_id'],
+                'objectId' => (int) $row['object_id'],
+            ];
+        }
+
+        return $result;
+    }
+
     public function findMinOccuredOn(): ?string
     {
         $value = $this->conn->createQueryBuilder()

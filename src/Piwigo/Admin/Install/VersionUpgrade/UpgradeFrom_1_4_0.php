@@ -22,10 +22,11 @@ use Piwigo\Db\Tables;
  * 1.4.0 to 1.5.0-era schema, then chain to UpgradeFrom_1_5_0. The
  * original's include_once of admin/include/functions.php (needed for
  * mass_inserts() back when it lived there) is gone -- the call targets
- * MysqliDb::massInserts() directly. The former `global $last_time;` was
- * confirmed provably dead (assigned, never read anywhere in the repo --
- * the runner-scope timing echo it fed no longer exists) and deleted
- * outright, not retargeted.
+ * BatchWriter::massInsert() directly (MysqliDb itself was deleted
+ * outright in the P24 gap-closure that retired it repo-wide). The former
+ * `global $last_time;` was confirmed provably dead (assigned, never read
+ * anywhere in the repo -- the runner-scope timing echo it fed no longer
+ * exists) and deleted outright, not retargeted.
  */
 final class UpgradeFrom_1_4_0 implements VersionUpgradeInterface
 {

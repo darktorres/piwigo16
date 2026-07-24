@@ -460,7 +460,7 @@ SELECT
             $format_strings = [];
 
             foreach ($formats as $format) {
-                $format_strings[] = sprintf('%s (%.2fMB)', $format->ext, ($format->filesize ?? 0) / 1024.0);
+                $format_strings[] = sprintf('%s (%.2fMB)', $format->ext, ((float) ($format->filesize ?? 0)) / 1024.0);
             }
 
             $intro_vars['formats'] = Lang::t('Formats: %s', implode(', ', $format_strings));

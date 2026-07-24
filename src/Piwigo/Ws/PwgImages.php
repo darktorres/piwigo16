@@ -2640,7 +2640,11 @@ SELECT path
                 }
 
                 if ($params['single_value_mode'] === 'fill_if_empty') {
-                    if (in_array($image_row[$key], [null, false, 0, 0.0, '0', '', []], true)) {
+                    // $image_row[$key] is int|null|string for every key in
+                    // $info_columns (Image::toArray()) -- false/0.0/[] can
+                    // never actually occur, so they're dropped from the
+                    // haystack rather than kept as unreachable dead entries.
+                    if (in_array($image_row[$key], [null, 0, '0', ''], true)) {
                         $update[$key] = $params[$key];
                     }
                 } elseif ($params['single_value_mode'] === 'replace') {

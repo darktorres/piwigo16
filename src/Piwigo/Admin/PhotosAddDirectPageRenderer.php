@@ -185,7 +185,7 @@ SELECT COUNT(*)
 
                     foreach ($formats as $format) {
                         $format_ext = $format->ext;
-                        $format_filesize = ($format->filesize ?? 0) / 1024.0;
+                        $format_filesize = ((float) ($format->filesize ?? 0)) / 1024.0;
                         $format_strings[] = sprintf('%s (%.2fMB)', $format_ext, $format_filesize);
                         $formats_exts[] = strtolower($format_ext);
                     }

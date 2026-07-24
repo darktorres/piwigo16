@@ -623,11 +623,12 @@ final class BrowserTestHelpers
         }
         $row = $result->fetch_assoc();
         $db->close();
-        if (! is_array($row) || ! is_string($row['path'] ?? null)) {
+        $path = is_array($row) ? ($row['path'] ?? null) : null;
+        if (! is_string($path)) {
             throw new \RuntimeException("imagePath(): no path found for image {$imageId}");
         }
 
-        return $row['path'];
+        return $path;
     }
 
     /**

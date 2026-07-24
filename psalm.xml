@@ -302,10 +302,26 @@
                      with zero changes. -->
                 <file name="tests/Unit/Config/ConfigLoaderTest.php"/>
                 <file name="tests/Unit/Db/DbCredentialsTest.php"/>
+                <file name="tests/Unit/Db/DbConnectionTest.php"/>
                 <!-- Same disagreement on $_SERVER['PATH_INFO'], guarded by
                      `in_array($_SERVER['PATH_INFO'] ?? null, [...])` in the
                      same condition. -->
                 <file name="src/Piwigo/Bootstrap/RequestBootstrap.php"/>
+                <!-- PictureController.php (line ~866): $format['format_id']
+                     inside `if (! isset($format['download_url']))` —
+                     array_unshift() above prepends a differently-shaped
+                     literal (download_url/ext/filesize only) onto
+                     Projection\ImageFormat::toArray() rows (format_id/
+                     image_id/ext/filesize); PHPStan's flow analysis proves
+                     the false branch of that isset() check is exhaustively
+                     the toArray()-shaped rows (format_id always present) —
+                     adding a `?? ''` fallback to satisfy Psalm here makes
+                     PHPStan itself flag it as nullCoalesce.offset dead code.
+                     Psalm's array-shape tracking doesn't carry the same
+                     isset()-narrowing correlation across the two merged
+                     shapes. composer analyse:phpstan is clean here with
+                     zero changes. -->
+                <file name="src/Piwigo/Controller/PictureController.php"/>
             </errorLevel>
         </PossiblyUndefinedArrayOffset>
         <PossiblyNullArrayAccess>
@@ -1179,5 +1195,17 @@
                 <file name="tests/Browser/Helpers/BrowserTestHelpers.php"/>
             </errorLevel>
         </FalsableReturnStatement>
+        <InternalClass>
+            <errorLevel type="suppress">
+                <!-- BrowserTestHelpers::clickWithTimeout(): deliberate,
+                     already-documented direct use of Pest\Browser\Support\
+                     GuessLocator (see this method's own docblock) — the only
+                     way to reach Locator::click(array $options) for a custom
+                     timeout; Webpage::click() has no options pass-through.
+                     Mirrors the existing `@phpstan-ignore new.internalClass`
+                     comment on the same call. -->
+                <file name="tests/Browser/Helpers/BrowserTestHelpers.php"/>
+            </errorLevel>
+        </InternalClass>
     </issueHandlers>
 </psalm>

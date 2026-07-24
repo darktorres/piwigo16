@@ -186,7 +186,7 @@ final readonly class CategoryDefaultRenderer
                     // Projection retype made the always-false condition
                     // visible to PHPStan.
                     $ratingScore = $row['rating_score'];
-                    $name = '(' . ($ratingScore ?? '') . ') ' . $name;
+                    $name = '(' . ($ratingScore !== null ? (string) $ratingScore : '') . ') ' . $name;
                     break;
 
                 case 'most_visited':

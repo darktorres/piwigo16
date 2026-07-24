@@ -54,7 +54,7 @@ final class PictureFormatsPageRenderer
                 $format['label'] = $lang_label;
             }
 
-            $filesize = $formatRow->filesize ?? 0;
+            $filesize = (float) ($formatRow->filesize ?? 0);
             $format['filesize'] = round($filesize / 1024.0, 2);
 
             $formats[] = $format;

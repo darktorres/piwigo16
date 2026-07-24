@@ -110,7 +110,8 @@ final readonly class ApiKeyService
 
         $now = Env::now()->format('Y-m-d H:i:s');
 
-        foreach ($api_keys as $i => $api_key_row) {
+        $results = [];
+        foreach ($api_keys as $api_key_row) {
             $api_key = $api_key_row->toArray();
             $api_key['apikey_secret'] = str_repeat('*', 40);
             unset($api_key['auth_key_id'], $api_key['user_id'], $api_key['key_type']);
@@ -165,10 +166,10 @@ final readonly class ApiKeyService
               ? Lang::t('This API key was manually revoked on %s', \Piwigo\Core\DateHelper::formatDate($revoked_on, ['day', 'month', 'year']))
               : null;
 
-            $api_keys[$i] = $api_key;
+            $results[] = $api_key;
         }
 
-        return $api_keys;
+        return $results;
     }
 
     /**

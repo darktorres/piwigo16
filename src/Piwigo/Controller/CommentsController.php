@@ -570,28 +570,32 @@ AND ', $where_clauses) . '
                 // NOT NULL columns.
                 assert(is_scalar($image_id_raw));
                 $image_id = (string) $image_id_raw;
+                // $elements is keyed by ImageRepository::findByIds()'s own
+                // real int image ids, not the string $image_id used
+                // everywhere else in this loop (URL params, template vars).
+                $image_id_int = (int) $image_id;
 
                 $category_id_raw = $comment['category_id'];
                 // image_category.category_id is a NOT NULL column
                 assert(is_scalar($category_id_raw));
                 $category_id = (string) $category_id_raw;
 
-                $element_name = $elements[$image_id]['name'] ?? null;
+                $element_name = $elements[$image_id_int]['name'] ?? null;
                 if (is_string($element_name) && $element_name !== '' && $element_name !== '0') {
                     $name = $element_name;
                 } else {
-                    $name = \Piwigo\Core\StringHelper::getNameFromFile($elements[$image_id]['file']);
+                    $name = \Piwigo\Core\StringHelper::getNameFromFile($elements[$image_id_int]['file']);
                 }
 
                 // source of the thumbnail picture
-                $src_image = new SrcImage($elements[$image_id]);
+                $src_image = new SrcImage($elements[$image_id_int]);
 
                 // link to the full size picture
                 $url = $urlService->makePictureUrl(
                     [
                         'category' => $categories[$category_id],
                         'image_id' => $image_id,
-                        'image_file' => $elements[$image_id]['file'],
+                        'image_file' => $elements[$image_id_int]['file'],
                     ]
                 );
 

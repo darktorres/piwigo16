@@ -102,7 +102,8 @@ final class PictureCoiPageRenderer
             'U_IMG' => DerivativeImage::url(ImageStdParams::LARGE, $row),
         ];
 
-        $row_coi = is_string($row['coi'] ?? null) ? $row['coi'] : '';
+        $coi_raw = $row['coi'] ?? null;
+        $row_coi = is_string($coi_raw) ? $coi_raw : '';
         if ($row_coi !== '' && $row_coi !== '0') {
             $tpl_var['coi'] = [
                 'l' => DerivativeUrlCodec::charToFraction($row_coi[0]),

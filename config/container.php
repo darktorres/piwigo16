@@ -3,10 +3,6 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
-use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
-use Doctrine\Migrations\Configuration\Migration\ConfigurationArray;
-use Doctrine\Migrations\DependencyFactory;
-use Doctrine\Migrations\Tools\Console\Command\MigrateCommand;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
@@ -240,41 +236,4 @@ return [
 
         return $repo;
     }),
-
-    // Backs bin/piwigo's registered `migrations:migrate` command. Reusing
-    // Doctrine's own real, fully-featured
-    // Doctrine\Migrations\Tools\Console\Command\MigrateCommand (dry-run,
-    // rollback, interactive confirmation) beats re-implementing a thinner
-    // Piwigo\Command wrapper. config/migrations.php starts with an empty
-    // migrations_paths directory -- P15 adds the first real migration.
-    DependencyFactory::class => factory(static function (EntityManagerInterface $em): DependencyFactory {
-        $raw = require dirname(__DIR__) . '/config/migrations.php';
-        if (! is_array($raw)) {
-            throw new \RuntimeException('config/migrations.php must return an array.');
-        }
-
-        /** @var array<string, mixed> $migrationsConfig */
-        $migrationsConfig = [];
-        foreach ($raw as $key => $value) {
-            if (! is_string($key)) {
-                throw new \RuntimeException('config/migrations.php keys must be strings.');
-            }
-            $migrationsConfig[$key] = $value;
-        }
-
-        return DependencyFactory::fromEntityManager(
-            new ConfigurationArray($migrationsConfig),
-            new ExistingEntityManager($em),
-        );
-    }),
-
-    // MigrateCommand's constructor param is an OPTIONAL/nullable
-    // DependencyFactory -- verified empirically that PHP-DI's default
-    // reflection autowiring does NOT inject optional class-typed
-    // constructor params (confirmed via a throwaway script showing the
-    // property stayed null even with the DependencyFactory entry above
-    // already registered), so it needs this explicit factory entry.
-    MigrateCommand::class => factory(
-        static fn (DependencyFactory $df): MigrateCommand => new MigrateCommand($df),
-    ),
 ];

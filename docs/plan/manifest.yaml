@@ -26,6 +26,11 @@ phases:
   - {id: P11, tier: T2,    depends_on: [P10],   status: done, epoch: C}
   - {id: P12, tier: T2,    depends_on: [P11],   status: done, epoch: C}
   - {id: P13, tier: T2,    depends_on: [P12],   status: done, epoch: D}
+  # 2026-07-24: P14/P15's Doctrine-Migrations-based schema mechanism was
+  # reversed before any real install existed -- see PLAN-REPLAY.md's
+  # Migration path section and P14's own audit note. `status: done` still
+  # holds: the DB layer/schema deliverables exist and work, just via a
+  # static install/piwigo_structure-mysql.sql instead of migrations.
   - {id: P14, tier: T2,    depends_on: [P13],   status: done,    epoch: D}
   - {id: P15, tier: T1-T2, depends_on: [P14],   status: done,    epoch: D}
   - {id: P16, tier: T1-T2, depends_on: [P15],   status: done,    epoch: D}

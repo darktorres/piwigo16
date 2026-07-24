@@ -29,9 +29,10 @@ use Symfony\Component\Console\Input\ArgvInput;
  * every other P7-P11 service does.
  *
  * P14 adds ConfigLoader::applyDefaults()/applyEnvOverrides() before
- * Kernel::boot() -- a real gap found while testing migrations:migrate:
- * config/container.php's Connection/EntityManagerInterface factories read
- * Config::dbHost()/etc (static, P13), and until now nothing seeded
+ * Kernel::boot() -- a real gap found while testing a CLI command against a
+ * freshly-installed DB: config/container.php's Connection/
+ * EntityManagerInterface factories read Config::dbHost()/etc (static,
+ * P13), and until now nothing seeded
  * Config::$data on the CLI path (P12's own commands read DB creds
  * directly via DbCredentials::fromEnv(), never through Config, so this
  * never surfaced before). Mirrors CommonBootstrap::run()'s equivalent
@@ -40,9 +41,10 @@ use Symfony\Component\Console\Input\ArgvInput;
  * Phase 5 adds CurrentConfigService::set($configService) -- resolve-and-
  * set only, deliberately not followed by ConfigService::loadConfFromDb()
  * the way CommonBootstrap::run() also calls it: that call is HTTP-only,
- * since CLI commands can run before the `config` table exists (e.g.
- * migrations:migrate on a fresh DB), where an unconditional
- * loadConfFromDb() would throw. Merely resolving/injecting ConfigService
+ * since CLI commands can run before the `config` table exists (e.g. a
+ * command run before install.php has ever been executed), where an
+ * unconditional loadConfFromDb() would throw. Merely resolving/injecting
+ * ConfigService
  * doesn't touch the DB (Doctrine repositories are lazy), so that part is
  * safe here even pre-migration.
  */

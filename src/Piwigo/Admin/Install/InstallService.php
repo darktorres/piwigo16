@@ -46,7 +46,7 @@ final class InstallService
      * useful when the SQL file contains generic words. Drop table queries are
      * not executed.
      */
-    public static function executeSqlfile(Connection $conn, string $filepath, string $replaced, string $replacing, string $dblayer): void
+    public static function executeSqlfile(Connection $conn, string $filepath, string $replaced, string $replacing): void
     {
         $sql_lines = file($filepath);
         if ($sql_lines === false) {
@@ -66,11 +66,6 @@ final class InstallService
                 $query = str_replace($replaced, $replacing, $query);
                 // we don't execute "DROP TABLE" queries
                 if (! (bool) preg_match('/^DROP TABLE/i', $query)) {
-                    if (in_array($dblayer, ['mysql', 'mysqli'], true)) {
-                        if ((bool) preg_match('/^(CREATE TABLE .*)[\s]*;[\s]*/im', $query, $matches)) {
-                            $query = $matches[1] . ' DEFAULT CHARACTER SET utf8;';
-                        }
-                    }
                     $conn->executeStatement($query);
                 }
                 $query = '';

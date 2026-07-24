@@ -59,8 +59,9 @@ use Piwigo\Users\CurrentUser;
  * post Kernel::boot()) to resolve ConfigService, and common.inc.php's own
  * body executes before Kernel ever boots on the HTTP path. Only wired for
  * the HTTP path (this class), not CliBootstrap -- CLI commands can run
- * before the `config` table exists (e.g. `migrations:migrate` on a fresh
- * DB), where an unconditional loadConfFromDb() would throw; every real
+ * before the `config` table exists (e.g. a command run before install.php
+ * has ever been executed), where an unconditional loadConfFromDb() would
+ * throw; every real
  * request reaching here has already passed common.inc.php's
  * install-check, so the table is guaranteed to exist.
  *

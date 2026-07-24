@@ -13,9 +13,7 @@ deptrac:
     # are later-phase additions, enumerated ahead of time. Db lands in P12
     # (Piwigo\Db\DbCredentials); Backup lands in P12 too (Piwigo\Backup\
     # BackupService) — infrastructure-adjacent, no domain-layer dependency.
-    # Migrations lands in P15 (Piwigo\Migrations\Version*) — same layer as
-    # Db/Config, which its migration classes read (Config::dbPrefix()) and
-    # exist to evolve the schema for. Lang lands in P16 (Piwigo\Lang\
+    # Lang lands in P16 (Piwigo\Lang\
     # Translator/LangService) — same Core-data + Service-layer split as
     # Config, no domain-layer dependency: LangService::loadLanguageForPlugin()
     # takes the active locale as an explicit parameter rather than reading
@@ -54,7 +52,7 @@ deptrac:
     - name: L1Infrastructure
       collectors:
         - type: classLike
-          value: ^Piwigo\\(Config|Core|Db|Cache|Session|Backup|Migrations|Lang|Storage|Audit|Validation)\\.*
+          value: ^Piwigo\\(Config|Core|Db|Cache|Session|Backup|Lang|Storage|Audit|Validation)\\.*
         - type: classLike
           value: ^Piwigo\\PluginConfig\\EventDispatcher$
     # L2a Core Domain — Auth/Image land here in P6; Users/Permission/Category/

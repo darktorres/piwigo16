@@ -56,9 +56,10 @@ counterpart for them).
 
 1. **Clean fork — no *in-place upgrade* from upstream Piwigo.** Existing installs cannot be
    upgraded in place into `17.x`; instead a one-way **`import:legacy`** tool migrates their data
-   into a fresh v17 install ([ADR-0025]). Version-to-version upgrades *within* the fork use
-   Doctrine Migrations (P14). This is deliberate and shapes the entire plan —
-   see [Migration path](#migration-path).
+   into a fresh v17 install ([ADR-0025]). This is deliberate and shapes the entire plan —
+   see [Migration path](#migration-path). **2026-07-24 update:** P14's original plan to use
+   Doctrine Migrations for schema evolution was reversed before any real install existed —
+   see the Migration path section and P14's own audit note.
 2. **Dual-purpose: replay + greenfield.** `16.x-rewrite` is the design/target reference for
    everything that is a *replay*; net-new features are built fresh. Each item is tagged by
    **Kind** (below).
@@ -2932,6 +2933,19 @@ their browser language automatically — no manual selection needed.
 > P23's own changes to `PermissionService`/`TagRepository`/`CategoryRepository`).
 > `Tables.php`/`AbstractRepository` are therefore **not** deleted in P23 —
 > see that phase's own note.
+
+> **Audit note (2026-07-24):** the "Implement core schema upgrades via
+> Doctrine Migrations" decision below (and P15's multi-provider migration
+> work) was reversed before any real install existed. Real installs always
+> create the schema from a static, hand-maintained
+> `install/piwigo_structure-mysql.sql` — no Doctrine Migrations layer, no
+> `install/schema/{mysql,mariadb,pgsql}.sql` snapshots, no `schema:dump`.
+> Reasoning: this is a clean fork with no in-place upgrade from a real
+> Piwigo install (ADR-0002/0025), and `InstallWizard`'s own install flow was
+> already hardcoded to MySQL only (`$this->dblayer = 'mysqli'`), so the
+> multi-provider migration path never backed a real installable option.
+> `doctrine/migrations` is no longer a dependency. See [Migration
+> path](#migration-path) for the current mechanism.
 ### P15 — Schema migration + multi-provider
 
 > **Tier** T1–T2 · **Depends on** P14 · **Greenfield delta:** FK constraints + orphan cleanup, JSON CHECK constraints, multi-provider (MariaDB/PG), `audit_log` (SEC-57). Cache tables (`user_cache`, `user_cache_categories`, `history_summary`) get engine/charset only — type-norm skipped (dropped in P23). **Replay:** InnoDB+utf8mb4, 7 new tables. *(Schema half of the DB-layer work.)*
@@ -7893,14 +7907,23 @@ existing every-commit-green + ratchet discipline, applied with extra care here.
 This is a clean fork. No *in-place upgrade* from upstream Piwigo is provided —
 but a one-way **data import** is, so existing galleries are not stranded.
 
-- **Fresh install:** `InstallController` imports the generated schema snapshot
+**2026-07-24 reversal:** P14/P15's original Doctrine-Migrations-based design (below,
+kept for history) was replaced before any real install existed. `InstallWizard`
+creates the schema directly from a single, hand-maintained, already-final-shape
+`install/piwigo_structure-mysql.sql` — no migration files, no `install/schema/`
+snapshots, no `schema:dump`. `doctrine/migrations` is no longer a dependency. Future
+schema changes are made by editing that file directly; there is currently no
+version-to-version upgrade mechanism for a shipped install, since nothing has shipped
+yet — that remains open design work for whenever it's actually needed.
+
+- ~~**Fresh install:** `InstallController` imports the generated schema snapshot
   for the configured driver (`install/schema/{mysql,mariadb,pgsql}.sql`, produced
   by `bin/piwigo schema:dump` from the migrations), seeds default config, creates
-  the admin user.
-- **Version-to-version upgrades within the fork** use Doctrine Migrations
+  the admin user.~~
+- ~~**Version-to-version upgrades within the fork** use Doctrine Migrations
   (P14). Each migration has `up()`/`down()` methods covering both DDL and
   data transformations. The `piwigo_db_version` config key tracks the
-  current state.
+  current state.~~
 - **Adopting from an existing Piwigo:** the one-way **`bin/piwigo import:legacy`**
   tool (see the **Legacy import** section) reads an old install's DB + files into a
   fresh v17 — not an in-place upgrade, so the clean-fork stance holds [ADR-0025].

@@ -500,7 +500,6 @@ define(\'DB_COLLATE\', \'\');
             $this->paths->root . 'install/piwigo_structure-mysql.sql',
             self::DEFAULT_PREFIX_TABLE,
             $this->prefixeTable,
-            'mysql'
         );
         // We fill the tables with basic informations
         InstallService::executeSqlfile(
@@ -508,7 +507,6 @@ define(\'DB_COLLATE\', \'\');
             $this->paths->root . 'install/config.sql',
             self::DEFAULT_PREFIX_TABLE,
             $this->prefixeTable,
-            'mysql'
         );
 
         $query = '

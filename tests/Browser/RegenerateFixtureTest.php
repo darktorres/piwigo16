@@ -7,12 +7,12 @@ namespace Piwigo\Tests\Browser;
 use PHPUnit\Framework\Attributes\Group;
 use Piwigo\Core\Env;
 use Piwigo\Tests\Integration\IntegrationTestCase;
-use Symfony\Component\Process\Process;
 
 /**
- * Regenerates tests/Fixtures/piwigo-17.0.sql by driving a fresh install,
- * running the real Doctrine Migrations (P15) to bring it up to the
- * current schema, seeding content, then dumping it.
+ * Regenerates tests/Fixtures/piwigo-17.0.sql by driving a fresh install
+ * (which creates the final schema directly -- no Doctrine Migrations
+ * step, since install/piwigo_structure-mysql.sql already has every fix
+ * applied), seeding content, then dumping it.
  *
  * Usage:
  *   vendor/bin/pest --group=fixture-regen
@@ -95,28 +95,6 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             'admin_mail'    => 'fixture_admin@example.test',
         ]);
         self::assertStringContainsString('Congratulations', $installBody, 'install.php must report success');
-
-        // 2b. install.php still creates the pre-P15 origin schema (MyISAM,
-        // no charset, no FKs) -- it hard-references
-        // install/piwigo_structure-mysql.sql via execute_sqlfile(), whose
-        // naive parser and hardcoded utf8 rewrite can't consume the
-        // migrations-generated schema yet (real "install flow rework"
-        // scope, deliberately not folded into P15 -- see
-        // Piwigo\Db\SchemaDumpService's docblock). Run the real migrations
-        // here instead, against the just-installed DB, so the fixture this
-        // test produces reflects the current v17 schema (InnoDB+utf8mb4,
-        // FKs, the 7 new tables) even though the live installer doesn't
-        // yet.
-        $migrateProcess = new Process(
-            ['php', 'bin/piwigo', 'migrations:migrate', '--no-interaction'],
-            cwd: dirname(__DIR__, 2),
-        );
-        $migrateProcess->setTimeout(60);
-        $migrateProcess->run();
-        self::assertTrue(
-            $migrateProcess->isSuccessful(),
-            'bin/piwigo migrations:migrate must succeed against the freshly installed DB: ' . $migrateProcess->getErrorOutput()
-        );
 
         // 3. Log in as fixture_admin via WS (same code path Piwigo uses
         // internally; avoids flaky form-login on a freshly installed gallery).
@@ -365,12 +343,8 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         $db->close();
 
         // 15. Dump the scratch DB to tests/Fixtures/piwigo-17.0.sql.
-        // --ignore-table excludes Doctrine's own migration-execution
-        // ledger (real and necessary for migrations:migrate, out of place
-        // in a fixture) and --set-gtid-purged=OFF strips a host-specific
-        // GTID set that would otherwise make every regeneration produce a
-        // spurious diff -- same fixes as Piwigo\Db\SchemaDumpService,
-        // found empirically the same way.
+        // --set-gtid-purged=OFF strips a host-specific GTID set that would
+        // otherwise make every regeneration produce a spurious diff.
         $fixturePath = dirname(__DIR__) . '/Fixtures/piwigo-17.0.sql';
         $cmd = ['mysqldump', '-u' . $this->dbUser];
         if ($this->dbPass !== '') {
@@ -380,7 +354,6 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         $cmd[] = str_starts_with($this->dbHost, '/') ? '--socket=' . $this->dbHost : '-h' . $this->dbHost;
         $cmd[] = '--no-tablespaces';
         $cmd[] = '--set-gtid-purged=OFF';
-        $cmd[] = '--ignore-table=' . $this->dbName . '.doctrine_migration_versions';
         $cmd[] = $this->dbName;
 
         $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];

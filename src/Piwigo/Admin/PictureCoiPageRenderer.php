@@ -8,7 +8,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
@@ -64,19 +63,19 @@ final class PictureCoiPageRenderer
                 ->updateCoi($image_id, $coi);
         }
 
-        $query = 'SELECT * FROM ' . Tables::images() . ' WHERE id=' . $image_id;
-        $row = $conn->fetchAssociative($query);
-        if ($row === false) {
+        $image = new ImageRepository($conn)
+            ->findById($image_id);
+        if ($image === null) {
             $htmlRenderer->pageNotFound($this->redirectService, 'Requested photo does not exist');
         }
+        $row = $image->toArray();
 
         if (isset($_POST['submit'])) {
-            $row_path = is_scalar($row['path']) ? (string) $row['path'] : '';
             $derivative_infos = [
-                'path' => $row_path,
+                'path' => $row['path'],
             ];
-            if (isset($row['representative_ext']) && $row['representative_ext'] !== '' && $row['representative_ext'] !== '0' && is_scalar($row['representative_ext'])) {
-                $derivative_infos['representative_ext'] = (string) $row['representative_ext'];
+            if (isset($row['representative_ext']) && $row['representative_ext'] !== '' && $row['representative_ext'] !== '0') {
+                $derivative_infos['representative_ext'] = $row['representative_ext'];
             }
 
             foreach (ImageStdParams::get_defined_type_map() as $params) {

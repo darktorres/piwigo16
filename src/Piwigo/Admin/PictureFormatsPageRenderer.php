@@ -9,7 +9,9 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 
 /**
@@ -33,14 +35,22 @@ final class PictureFormatsPageRenderer
         $image_id = is_numeric($image_id_raw) ? (int) $image_id_raw : 0;
 
         $conn = DbConnection::build();
-        $query = '
-SELECT *
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $image_id . '
-;';
-        $images = $conn->fetchAllAssociative($query);
-        $image = $images[0];
+        $imageRow = new ImageRepository($conn)
+            ->findById($image_id);
+        if ($imageRow === null) {
+            new HtmlService()
+                ->fatalError('image_id #' . $image_id . ' does not exist');
+        }
+        $image = $imageRow->toArray();
 
+        // image_format's own SELECT * stays a raw array here -- deliberately
+        // out of scope for this pass. Unlike piwigo_images (ImageRepository::
+        // findById() above), image_format is touched by its own raw query in
+        // 8+ files (PwgImages/ActionController/SiteUpdateSubController/
+        // PictureModifyPageRenderer/PictureController/UploadService/
+        // PhotosAddDirectPageRenderer/IntroSubController), each with a
+        // different column subset -- giving it a real projection is its own
+        // dedicated pass, not a footnote of this one.
         $query = '
 SELECT
     *

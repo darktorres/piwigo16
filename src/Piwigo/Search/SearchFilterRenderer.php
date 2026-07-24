@@ -958,15 +958,19 @@ SELECT
             return;
         }
 
-        $cats = $this->categoryRepo->findFullCategoriesByIds($allowedCatIds);
+        // CategoryRepository::findFullCategoriesByIds() (batch 4b) returns
+        // typed Category projections (P17-23 Stage 1b) -- unboxed to array
+        // here since nameCompare()'s signature (shared with every other
+        // name-sort call site in this project) takes array<string, mixed>.
+        $cats = array_map(
+            static fn (\Piwigo\Category\Projection\Category $cat): array => $cat->toArray(),
+            $this->categoryRepo->findFullCategoriesByIds($allowedCatIds)
+        );
         usort($cats, $this->htmlRenderer->nameCompare(...));
 
         $albumsFound = [];
         foreach ($cats as $cat) {
-            $uppercats = $cat['uppercats'] ?? null;
-            if (! is_string($uppercats)) {
-                continue;
-            }
+            $uppercats = $cat['uppercats'];
 
             $singleLink = false;
             $albumsFound[] = $this->htmlRenderer->getCatDisplayNameCache(

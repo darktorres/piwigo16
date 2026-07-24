@@ -194,45 +194,37 @@ final readonly class CategoryService
             return null;
         }
 
-        // Docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: used to be a
-        // generic `foreach ($cat as $k => $v) { if ($v === 'true' || $v
-        // === 'false') ... }` scan -- worked only because commentable/
-        // visible were the table's own enum('true','false') string
-        // columns. Now they're real tinyint columns, so that scan would
-        // silently stop matching anything and leave both as a raw int
-        // instead of the bool this method's own callers/tests expect
-        // (CategoryServiceTest::test_get_category_info_coerces_true_false_
-        // string_columns_to_bool()). Named explicitly instead of
-        // pattern-matched by value.
-        foreach (['commentable', 'visible'] as $k) {
-            if (isset($cat[$k])) {
-                $cat[$k] = (bool) $cat[$k];
-            }
-        }
+        // Docs/PLAN-REPLAY-AUDIT.md gap-closure, Stage 1b: commentable/
+        // visible are real `bool` on {@see \Piwigo\Category\Projection\Category}
+        // itself now -- the repository's own fromRow() does this cast once,
+        // so the manual per-key loop that used to live here is retired
+        // along with the retype (CategoryServiceTest::
+        // test_get_category_info_coerces_true_false_string_columns_to_bool()
+        // still covers this, against the projection now).
+        $result = $cat->toArray();
 
-        $uppercats = $cat['uppercats'];
-        $upperIds = explode(',', is_scalar($uppercats) ? (string) $uppercats : '');
+        $upperIds = explode(',', $cat->uppercats);
         if (count($upperIds) === 1) {
-            $cat['upper_names'] = [
+            $result['upper_names'] = [
                 [
-                    'id' => $cat['id'],
-                    'name' => $cat['name'],
-                    'permalink' => $cat['permalink'],
+                    'id' => $cat->id,
+                    'name' => $cat->name,
+                    'permalink' => $cat->permalink,
                 ],
             ];
         } else {
             $names = $this->repo->findNamesByIds(array_map(intval(...), $upperIds));
 
-            $cat['upper_names'] = [];
+            $result['upper_names'] = [];
             foreach ($upperIds as $upperId) {
                 $upperIdInt = (int) $upperId;
                 if (isset($names[$upperIdInt])) {
-                    $cat['upper_names'][] = $names[$upperIdInt];
+                    $result['upper_names'][] = $names[$upperIdInt];
                 }
             }
         }
 
-        return $cat;
+        return $result;
     }
 
     /**

@@ -143,12 +143,12 @@ final readonly class CategoryCatsRenderer
             }
         }
 
+        // findFullCategoriesByIds() (P17-23 Stage 1b) returns typed Category
+        // projections -- unboxed to array here since $fullById feeds
+        // array_merge() below, which a readonly object can't participate in.
         $fullById = [];
         foreach ($categoryRepo->findFullCategoriesByIds($catIds) as $full) {
-            $fullId = $full['id'] ?? null;
-            if (is_numeric($fullId)) {
-                $fullById[(int) $fullId] = $full;
-            }
+            $fullById[$full->id] = $full->toArray();
         }
 
         $categories = [];
@@ -183,8 +183,8 @@ final readonly class CategoryCatsRenderer
 
             $cachedRepresentative = $this->getCachedRepresentative($reprPool, $userId, $catId);
 
-            $representativePictureId = $merged['representative_picture_id'] ?? null;
-            $representativePictureIdSet = is_scalar($representativePictureId) && $representativePictureId !== '' && $representativePictureId !== '0' && $representativePictureId !== 0;
+            $representativePictureId = $merged['representative_picture_id'];
+            $representativePictureIdSet = $representativePictureId !== null && $representativePictureId !== 0;
 
             if ($cachedRepresentative !== null) {
                 $imageId = $cachedRepresentative;
@@ -194,7 +194,7 @@ final readonly class CategoryCatsRenderer
                 $imageId = $categoryService->getRandomImageInCategory($merged);
             } elseif ($merged['count_categories'] > 0 and $merged['count_images'] > 0) { // at this point, count_images should always be >0 (used as condition above)
                 // searching a random representant among representant of sub-categories
-                $uppercats = is_string($merged['uppercats'] ?? null) ? $merged['uppercats'] : '';
+                $uppercats = $merged['uppercats'];
                 $permissionCondition = $this->permissionService->getSqlConditionFandF([
                     'visible_categories' => 'id',
                 ], "\n  AND");
@@ -289,11 +289,7 @@ final readonly class CategoryCatsRenderer
                             }
 
                             if (\Piwigo\Config\Config::representativeCacheOnLevel()) {
-                                $categoryIdForUpdate = $category['id'] ?? null;
-                                $categoryIdForUpdate = is_numeric($categoryIdForUpdate) ? (int) $categoryIdForUpdate : null;
-                                if ($categoryIdForUpdate !== null) {
-                                    $userRepresentativeUpdatesFor[$categoryIdForUpdate] = $newImageId;
-                                }
+                                $userRepresentativeUpdatesFor[$category['id']] = $newImageId;
                             }
 
                             $category['representative_picture_id'] = $newImageId;

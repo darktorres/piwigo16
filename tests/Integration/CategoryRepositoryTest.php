@@ -29,6 +29,7 @@ namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;
     use Piwigo\Category\CategoryRepository;
+    use Piwigo\Category\Projection\Category;
     use Piwigo\Config\Config;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
@@ -77,12 +78,13 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_find_by_id_returns_a_fixture_category(): void
+    public function test_find_by_id_returns_a_typed_category_projection(): void
     {
         $cat = $this->repo->findById(1);
 
-        self::assertIsArray($cat);
-        self::assertSame('Sample Album', $cat['name']);
+        self::assertInstanceOf(Category::class, $cat);
+        self::assertSame(1, $cat->id);
+        self::assertSame('Sample Album', $cat->name);
     }
 
     public function test_find_by_id_returns_null_for_a_missing_category(): void
@@ -296,15 +298,16 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
         self::assertCount(1, $cats);
         $cat = $cats[0];
-        self::assertSame('Sample Album', $cat['name']);
-        // 'uppercats'/'rank'/'representative_picture_id' are real
-        // `categories` columns findCategoriesByIds()'s own narrower
-        // 6-column contract doesn't expose -- confirms this is genuinely
-        // `SELECT *`, not a duplicate of that method.
-        self::assertArrayHasKey('uppercats', $cat);
-        self::assertArrayHasKey('rank', $cat);
-        self::assertArrayHasKey('representative_picture_id', $cat);
-        self::assertArrayHasKey('comment', $cat);
+        self::assertInstanceOf(Category::class, $cat);
+        self::assertSame('Sample Album', $cat->name);
+        // uppercats/rank/representativePictureId are real `categories`
+        // columns findCategoriesByIds()'s own narrower 6-column contract
+        // doesn't expose -- confirms this is genuinely `SELECT *`, not a
+        // duplicate of that method.
+        self::assertSame('1', $cat->uppercats);
+        self::assertSame(1, $cat->rank);
+        self::assertSame(1, $cat->representativePictureId);
+        self::assertNull($cat->comment);
     }
 
     public function test_find_full_categories_by_ids_returns_empty_for_no_ids(): void

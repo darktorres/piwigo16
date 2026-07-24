@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Category\Projection\Category;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
@@ -20,10 +21,7 @@ use Piwigo\Db\Tables;
  */
 final class CategoryRepository extends AbstractRepository
 {
-    /**
-     * @return array<string, mixed>|null
-     */
-    public function findById(int $id): ?array
+    public function findById(int $id): ?Category
     {
         $row = $this->conn->createQueryBuilder()
             ->select('*')
@@ -33,7 +31,7 @@ final class CategoryRepository extends AbstractRepository
             ->executeQuery()
             ->fetchAssociative();
 
-        return $row === false ? null : $row;
+        return $row === false ? null : Category::fromRow($row);
     }
 
     /**
@@ -393,7 +391,7 @@ final class CategoryRepository extends AbstractRepository
      * tree, unlike CategoryTreeCache's own cached rollup.
      *
      * @param  list<int>  $ids
-     * @return list<array<string, mixed>>
+     * @return list<Category>
      */
     public function findFullCategoriesByIds(array $ids): array
     {
@@ -401,13 +399,15 @@ final class CategoryRepository extends AbstractRepository
             return [];
         }
 
-        return $this->conn->createQueryBuilder()
+        $rows = $this->conn->createQueryBuilder()
             ->select('*')
             ->from(Tables::categories())
             ->where('id IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
             ->executeQuery()
             ->fetchAllAssociative();
+
+        return array_map(Category::fromRow(...), $rows);
     }
 
     /**

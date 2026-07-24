@@ -12,8 +12,26 @@
     # vendor/node_modules/docs/deploy/.git were found still 200-ing during
     # the P4 audit (composer/npm dependency trees, the master plan doc with
     # its own threat model, and Helm manifests all being fully readable) —
-    # none of the original 6 named dirs happened to cover them.
-    RewriteCond %{REQUEST_URI} /(config|tools|dev|src|tests|install|vendor|node_modules|docs|deploy|\.git)/ [NC]
+    # none of the original 6 named dirs happened to cover them. vendor is
+    # handled by its own rule below, not this one.
+    RewriteCond %{REQUEST_URI} /(config|tools|dev|src|tests|install|node_modules|docs|deploy|\.git)/ [NC]
+    RewriteRule ^ - [F,L]
+
+    # SEC-01 gap-closure, docs/PLAN-REPLAY-AUDIT.md: the Composer vendor/
+    # dir needs its own rule, same unanchored reasoning as above (REQUEST_URI
+    # includes any mount-point subdirectory) -- but excluding vendor/ nested
+    # under themes/*/ or plugins/*/, which are real, publicly-servable
+    # bundled theme/plugin assets (e.g. themes/default/vendor/fontello/'s
+    # icon font), unrelated to PHP dependency source. Found live: the
+    # combined rule above used to match ANY `/vendor/` occurrence anywhere
+    # in the path, 403ing every gallery-icon glyph sitewide the moment
+    # .htaccess enforcement was active (AllowOverride All) -- confirmed via
+    # a real curl 403 + Apache access log entry, root-caused before
+    # assuming a browser-timing flake. docker/Caddyfile's own `/vendor/*`
+    # path matcher is anchored to the start of the URI and doesn't share
+    # this bug -- checked, no change needed there.
+    RewriteCond %{REQUEST_URI} /vendor/ [NC]
+    RewriteCond %{REQUEST_URI} !/(themes|plugins)/[^/]+/vendor/ [NC]
     RewriteRule ^ - [F,L]
 
     # SEC-01: deny direct access to sensitive root-level tooling configs and

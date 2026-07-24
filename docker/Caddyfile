@@ -39,6 +39,14 @@
 	# `COPY . .` and nothing cross-stage-copies them back in) but are denied
 	# here too, matching .htaccess, as a defense-in-depth guard against a
 	# future .dockerignore change silently reintroducing them.
+	#
+	# docs/PLAN-REPLAY-AUDIT.md gap-closure: /vendor/* here is safe from the
+	# bug found in .htaccess's own unanchored equivalent (which matched ANY
+	# `/vendor/` occurrence anywhere in the path, 403ing
+	# themes/default/vendor/fontello/'s icon font) -- Caddy's `path` matcher
+	# anchors each pattern to the start of the URI, so /vendor/* only ever
+	# matches the real top-level Composer vendor/, never a nested
+	# themes/*/vendor/. Checked directly, no change needed here.
 	@denied path /config/* /tools/* /dev/* /src/* /tests/* /install/* /vendor/* /node_modules/* /docs/* /deploy/* /.git/*
 	respond @denied 403
 

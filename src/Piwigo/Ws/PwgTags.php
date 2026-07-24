@@ -23,6 +23,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\TagRepository;
@@ -194,17 +195,13 @@ SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
             $rank_of = array_flip($image_ids);
             $favorite_ids = $urlService->getUserFavorites();
 
-            $query = '
-SELECT *
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $image_ids) . ')
-;';
-
-            foreach ($conn->fetchAllAssociative($query) as $row) {
-                if (! is_numeric($row['id'])) {
-                    continue;
-                }
-                $row_id = (int) $row['id'];
+            foreach (new ImageRepository($conn)->findByIds($image_ids) as $row_id => $imageRow) {
+                // Unboxed here rather than kept as the typed object -- this
+                // loop rebuilds a differently-shaped $image array from
+                // $row's fields and separately passes the whole row to
+                // WsHelper::stdGetUrls(array $image_row, ...), both of
+                // which need real array semantics.
+                $row = $imageRow->toArray();
 
                 $image = [];
                 $image['rank'] = $rank_of[$row_id];
@@ -212,7 +209,7 @@ SELECT *
 
                 foreach (['id', 'width', 'height', 'hit'] as $k) {
                     if (isset($row[$k])) {
-                        $image[$k] = is_numeric($row[$k]) ? (int) $row[$k] : 0;
+                        $image[$k] = $row[$k];
                     }
                 }
                 foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
@@ -240,7 +237,7 @@ SELECT *
                             'section' => 'tags',
                             'tags' => [$tags_by_id[$tag_id]],
                             'image_id' => $row['id'],
-                            'image_file' => $row['file'] ?? null,
+                            'image_file' => $row['file'],
                         ]
                     );
                     $image_tags[] = [

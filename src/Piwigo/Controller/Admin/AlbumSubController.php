@@ -11,11 +11,11 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\ElementSetRanksPageRenderer;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -57,16 +57,13 @@ final class AlbumSubController implements AdminSubControllerInterface
         $adminAlbumBaseUrl = $this->urlService->getRootUrl() . 'admin.php?page=album-' . $cat_id;
         CoreTabs::setContext(new CoreTabsContext(adminAlbumBaseUrl: $adminAlbumBaseUrl));
 
-        $query = '
-SELECT *
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . $cat_id . '
-;';
-        $category = DbConnection::build()->fetchAssociative($query);
-        if ($category === false || ! isset($category['id'])) {
+        $categoryRow = new CategoryRepository(DbConnection::build())
+            ->findById($cat_id);
+        if ($categoryRow === null) {
             new HtmlService()
                 ->fatalError('unknown album');
         }
+        $category = $categoryRow->toArray();
 
         $tab_param = $query_params['tab'] ?? null;
         $tab = is_string($tab_param) && in_array($tab_param, self::KNOWN_TABS, true) ? $tab_param : 'properties';
@@ -78,10 +75,9 @@ SELECT *
 
         $category_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $category['name'], 'get_cat_display_name_cache');
         if (! is_string($category_name)) {
-            $category_name = is_string($category['name']) ? $category['name'] : '';
+            $category_name = $category['name'];
         }
-        $category_id_display = $category['id'];
-        $category_id_display = is_scalar($category_id_display) ? (string) $category_id_display : '';
+        $category_id_display = (string) $category['id'];
         $template->assign([
             'ADMIN_PAGE_TITLE' => Lang::t('Edit album') . ' <strong>' . $category_name . '</strong>',
             'ADMIN_PAGE_OBJECT_ID' => '#' . $category_id_display,

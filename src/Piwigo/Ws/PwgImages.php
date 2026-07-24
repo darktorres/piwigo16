@@ -786,22 +786,22 @@ SELECT DISTINCT id
         );
 
         if ((bool) count($image_ids)) {
-            $query = '
-SELECT *
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $image_ids) . ')
-;';
             $image_ids = array_flip($image_ids);
             $favorite_ids = new UrlService(new HtmlService())
                 ->getUserFavorites();
 
-            foreach ($searchConn->fetchAllAssociative($query) as $row) {
+            foreach (new ImageRepository($searchConn)->findByIds(array_keys($image_ids)) as $imageRow) {
+                // Unboxed here rather than kept as the typed object -- this
+                // loop rebuilds a differently-shaped $image array from
+                // $row's fields and separately passes the whole row to
+                // WsHelper::stdGetUrls(array $image_row, ...), both of
+                // which need real array semantics.
+                $row = $imageRow->toArray();
                 $image = [];
-                assert(is_numeric($row['id']));
-                $image['is_favorite'] = isset($favorite_ids[(int) $row['id']]);
+                $image['is_favorite'] = isset($favorite_ids[$imageRow->id]);
                 foreach (['id', 'width', 'height', 'hit'] as $k) {
                     if (isset($row[$k])) {
-                        $image[$k] = is_numeric($row[$k]) ? (int) $row[$k] : 0;
+                        $image[$k] = $row[$k];
                     }
                 }
                 foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
@@ -1836,19 +1836,15 @@ SELECT id, name, permalink
             rename("{$filePath}.part", $filePath);
 
             if (isset($params['format_of'])) {
-                $query = '
-SELECT *
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $params['format_of'] . '
-;';
-                $image = $conn->fetchAssociative($query);
-                if ($image === false) {
+                $imageRow = new ImageRepository($conn)
+                    ->findById($params['format_of']);
+                if ($imageRow === null) {
                     return new PwgError(404, __FUNCTION__ . ' : image_id not found');
                 }
+                $image = $imageRow->toArray();
 
-                assert(is_int($image['id']) || is_string($image['id']));
                 $add_status = new UploadService()
-                    ->addFormat($filePath, $format_ext, $image['id']);
+                    ->addFormat($filePath, $format_ext, $imageRow->id);
 
                 return [
                     'image_id' => $image['id'],
@@ -2615,16 +2611,16 @@ SELECT path
         }
 
         $conn = DbConnection::build();
-        $query = '
-SELECT *
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $params['image_id'] . '
-;';
-        $image_row = $conn->fetchAssociative($query);
+        $imageRow = new ImageRepository($conn)
+            ->findById($params['image_id']);
 
-        if ($image_row === false) {
+        if ($imageRow === null) {
             return new PwgError(404, 'image_id not found');
         }
+        // Unboxed here rather than kept as the typed object -- this method
+        // reads $image_row[$key] for a dynamically-iterated column name
+        // list below, not a fixed set of named properties.
+        $image_row = $imageRow->toArray();
 
         // database registration
         $update = [];
@@ -2661,7 +2657,7 @@ SELECT *
         }
 
         if (isset($params['file'])) {
-            if (is_numeric($image_row['storage_category_id']) && (int) $image_row['storage_category_id'] !== 0) {
+            if (($image_row['storage_category_id'] ?? 0) !== 0) {
                 return new PwgError(
                     500,
                     '[ws_images_setInfo] updating "file" is forbidden on photos added by synchronization'

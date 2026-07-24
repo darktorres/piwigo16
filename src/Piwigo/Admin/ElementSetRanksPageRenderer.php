@@ -85,7 +85,7 @@ final class ElementSetRanksPageRenderer
             trigger_error('missing cat_id param', E_USER_ERROR);
         }
 
-        $category_id = $_GET['cat_id'];
+        $category_id = (int) $_GET['cat_id'];
 
         // +-------------------------------------------------------------------+
         // |                       global mode form submission                 |
@@ -104,7 +104,7 @@ final class ElementSetRanksPageRenderer
 
                 new ImageService(new ImageRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)))
                     ->saveImagesOrder(
-                        (int) $category_id,
+                        $category_id,
                         array_map(intval(...), array_keys($rank_of_image))
                     );
             }
@@ -138,7 +138,7 @@ final class ElementSetRanksPageRenderer
                     new CategoryRepository($conn),
                     new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
                 )
-            )->saveImageOrder((int) $category_id, $image_order, isset($_POST['image_order_subcats']), $this->redirectService);
+            )->saveImageOrder($category_id, $image_order, isset($_POST['image_order_subcats']), $this->redirectService);
 
             $template->assign(
                 [
@@ -158,25 +158,21 @@ final class ElementSetRanksPageRenderer
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php';
 
-        $query = '
-SELECT *
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . $category_id . '
-;';
-        $category = $conn->fetchAssociative($query);
-        if ($category === false || ! is_string($category['uppercats'] ?? null)) {
+        $category = new CategoryRepository($conn)
+            ->findById($category_id);
+        if ($category === null) {
             $htmlRenderer->pageNotFound($this->redirectService, 'Requested album does not exist');
         }
 
-        if ($category['image_order'] === 'rank ASC' or $category['image_order'] === '`rank` ASC') {
+        if ($category->imageOrder === 'rank ASC' or $category->imageOrder === '`rank` ASC') {
             $image_order_choice = 'rank';
-        } elseif ($category['image_order'] !== '') {
+        } elseif ($category->imageOrder !== '') {
             $image_order_choice = 'user_define';
         }
 
         // Navigation path
         $navigation = $htmlRenderer->getCatDisplayNameCache(
-            $category['uppercats'],
+            $category->uppercats,
             $this->urlService->getRootUrl() . 'admin.php?page=album-'
         );
 
@@ -237,8 +233,7 @@ SELECT
         // image order management
         $template->assign('image_order_options', $sort_fields);
 
-        $category_image_order = $category['image_order'] ?? '';
-        $image_order = explode(',', is_scalar($category_image_order) ? (string) $category_image_order : '');
+        $image_order = explode(',', $category->imageOrder ?? '');
 
         for ($i = 0; $i < 3; $i++) { // 3 fields
             if (isset($image_order[$i])) {

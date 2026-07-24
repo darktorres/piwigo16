@@ -954,17 +954,11 @@ SELECT id
         $categoryConn = DbConnection::build();
 
         // does the category really exist?
-        $query = '
-SELECT *
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . $params['category_id'] . '
-;';
-        $categories = $categoryConn->fetchAllAssociative($query);
-        if (count($categories) === 0) {
+        $category = new CategoryRepository($categoryConn)
+            ->findById($params['category_id']);
+        if ($category === null) {
             return new PwgError(404, 'category_id not found');
         }
-
-        $category = $categories[0];
 
         $categoryService = self::categoryService($categoryConn);
 
@@ -973,7 +967,7 @@ SELECT *
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid status, only public/private');
             }
 
-            if ($params['status'] !== $category['status']) {
+            if ($params['status'] !== $category->status) {
                 $categoryService->setCatStatus([$params['category_id']], $params['status']);
             }
         }
@@ -989,7 +983,7 @@ SELECT *
         }
 
         if (! in_array($params['visible'], [null, ''], true)
-            and filter_var($params['visible'], FILTER_VALIDATE_BOOLEAN) !== (bool) $category['visible']) {
+            and filter_var($params['visible'], FILTER_VALIDATE_BOOLEAN) !== $category->visible) {
             $categoryService->setCatVisible([$params['category_id']], $params['visible']);
         }
 
@@ -1012,7 +1006,7 @@ SELECT *
                 $categoryService->setCatCommentable($subcats, $params['commentable']);
             }
         } elseif (isset($params['commentable'])
-            and filter_var($params['commentable'], FILTER_VALIDATE_BOOLEAN) !== (bool) $category['commentable']) {
+            and filter_var($params['commentable'], FILTER_VALIDATE_BOOLEAN) !== $category->commentable) {
             $categoryService->setCatCommentable([$params['category_id']], $params['commentable']);
         }
 
@@ -1182,24 +1176,17 @@ SELECT
         self::activityService()->record('album', $params['category_id'], 'edit');
 
         // return url of the new representative
-        $query = '
-SELECT *
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . $params['category_id'] . '
-;';
-        $category = $categoryConn->fetchAssociative($query);
+        $category = new CategoryRepository($categoryConn)
+            ->findById($params['category_id']);
         // the category's existence was already verified above, and nothing
         // in between could have deleted it
-        assert(is_array($category));
+        assert($category !== null);
 
         // setRandomRepresentant() is expected to have populated
         // representative_picture_id above, but it's not a NOT NULL column, so
-        // guard for real instead of assuming the update landed. Native
-        // int|string under DBAL (vs. guaranteed string under legacy
-        // mysqli) -- getCategoryRepresentantProperties() itself accepts
-        // int|string, so narrow to that instead of forcing string.
-        $representative_picture_id = $category['representative_picture_id'];
-        if (! is_int($representative_picture_id) && ! is_string($representative_picture_id)) {
+        // guard for real instead of assuming the update landed.
+        $representative_picture_id = $category->representativePictureId;
+        if ($representative_picture_id === null) {
             return new PwgError(500, 'unable to determine a new representative picture for this category');
         }
 

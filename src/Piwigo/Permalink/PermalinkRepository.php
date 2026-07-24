@@ -8,6 +8,7 @@ use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Types\Types;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
+use Piwigo\Permalink\Projection\OldPermalink;
 
 /**
  * Persistence layer for the category-permalink domain.
@@ -149,5 +150,26 @@ final class PermalinkRepository extends AbstractRepository
             ->executeStatement();
 
         return $affected > 0;
+    }
+
+    /**
+     * Every deleted-permalink row, optionally ordered by a caller-validated
+     * column name (PermalinksSubController's own $sort_by allowlist --
+     * never raw user input, same "trusted pre-validated fragment"
+     * precedent as GroupRepository::findWithMemberCounts()'s own $order).
+     *
+     * @return list<OldPermalink>
+     */
+    public function findAllOrderedBy(?string $orderByColumn): array
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('*')
+            ->from(Tables::oldPermalinks());
+
+        if ($orderByColumn !== null) {
+            $qb->orderBy($orderByColumn);
+        }
+
+        return array_map(OldPermalink::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 }

@@ -182,24 +182,16 @@ SELECT id, permalink, uppercats, global_rank
         );
 
         $url_del_base = $this->urlService->getRootUrl() . 'admin.php?page=permalinks';
-        $query = 'SELECT * FROM ' . Tables::oldPermalinks();
-        if ((bool) count($sort_by)) {
-            $query .= ' ORDER BY ' . $sort_by[0];
-        }
+        $orderByColumn = count($sort_by) > 0 ? $sort_by[0] : null;
         $deleted_permalinks = [];
-        foreach ($conn->fetchAllAssociative($query) as $row) {
-            // cat_id is NOT NULL in the schema; DBAL's native int/float
-            // casting means this can now arrive as a native int rather
-            // than always a string, so accept both instead of only
-            // is_string().
-            $cat_id_raw = $row['cat_id'];
-            $cat_id_str = (is_int($cat_id_raw) || is_string($cat_id_raw)) ? (string) $cat_id_raw : '';
-            $row['name'] = $htmlRenderer->getCatDisplayNameCache($cat_id_str);
+        foreach (new PermalinkRepository($conn)->findAllOrderedBy($orderByColumn) as $permalinkRow) {
+            $row = $permalinkRow->toArray();
+            $row['name'] = $htmlRenderer->getCatDisplayNameCache((string) $permalinkRow->catId);
             $row['U_DELETE'] =
                 $this->urlService->addUrlParams(
                     $url_del_base,
                     [
-                        'delete_permanent' => $row['permalink'],
+                        'delete_permanent' => $permalinkRow->permalink,
                         'pwg_token' => $pwg_token,
                     ]
                 );

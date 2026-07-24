@@ -22,6 +22,7 @@ use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Mail\MailService;
@@ -551,12 +552,11 @@ AND ', $where_clauses) . '
 
         if (count($comments) > 0) {
             // retrieving element informations
-            $query = '
-SELECT *
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $element_ids) . ')
-;';
-            $elements = array_column($conn->fetchAllAssociative($query), null, 'id');
+            $elements = array_map(
+                static fn (\Piwigo\Image\Projection\Image $image): array => $image->toArray(),
+                new ImageRepository($conn)
+                    ->findByIds($element_ids)
+            );
 
             // retrieving category informations
             $query = 'SELECT id, name, permalink, uppercats
@@ -580,10 +580,7 @@ SELECT *
                 if (is_string($element_name) && $element_name !== '' && $element_name !== '0') {
                     $name = $element_name;
                 } else {
-                    $file = $elements[$image_id]['file'];
-                    // images.file is a NOT NULL column
-                    assert(is_string($file));
-                    $name = \Piwigo\Core\StringHelper::getNameFromFile($file);
+                    $name = \Piwigo\Core\StringHelper::getNameFromFile($elements[$image_id]['file']);
                 }
 
                 // source of the thumbnail picture

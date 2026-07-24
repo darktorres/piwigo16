@@ -1,9 +1,9 @@
 -- Final v17 schema (InnoDB + utf8mb4, all FK constraints, all indexes).
 -- Hand-maintained -- there is no Doctrine Migrations layer between "what
 -- the schema should be" and what a fresh install creates. Column-type
--- fixes not yet decided for any domain (remaining history/old_permalinks/
--- sessions/upgrade 1970-01-01-sentinel items, user_infos.preferences/
--- search.rules text->JSON) are deliberately not applied here.
+-- fixes not yet decided for any domain (remaining user_infos.preferences/
+-- search.rules/config.value text->JSON items) are deliberately not
+-- applied here.
 
 --
 -- Table structure for table `piwigo_activity`
@@ -142,7 +142,7 @@ CREATE TABLE `piwigo_groups` (
 DROP TABLE IF EXISTS `piwigo_history`;
 CREATE TABLE `piwigo_history` (
   `id` int(10) unsigned NOT NULL auto_increment,
-  `date` date NOT NULL default '1970-01-01',
+  `date` date default NULL,
   `time` time NOT NULL default '00:00:00',
   `user_id` mediumint(8) unsigned NOT NULL default '0',
   `IP` char(39) NOT NULL default '',
@@ -287,7 +287,7 @@ DROP TABLE IF EXISTS `piwigo_old_permalinks`;
 CREATE TABLE `piwigo_old_permalinks` (
   `cat_id` smallint(5) unsigned NOT NULL default '0',
   `permalink` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL default '',
-  `date_deleted` datetime NOT NULL default '1970-01-01 00:00:00',
+  `date_deleted` datetime default NULL,
   `last_hit` datetime default NULL,
   `hit` int(10) unsigned NOT NULL default '0',
   PRIMARY KEY  (`permalink`)
@@ -342,7 +342,7 @@ DROP TABLE IF EXISTS `piwigo_sessions`;
 CREATE TABLE `piwigo_sessions` (
   `id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL default '',
   `data` mediumtext NOT NULL,
-  `expiration` datetime NOT NULL default '1970-01-01 00:00:00',
+  `expiration` datetime default NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -393,7 +393,7 @@ CREATE TABLE `piwigo_themes` (
 DROP TABLE IF EXISTS `piwigo_upgrade`;
 CREATE TABLE `piwigo_upgrade` (
   `id` varchar(20) NOT NULL default '',
-  `applied` datetime NOT NULL default '1970-01-01 00:00:00',
+  `applied` datetime default NULL,
   `description` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

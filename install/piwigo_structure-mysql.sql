@@ -314,7 +314,7 @@ CREATE TABLE `piwigo_rate` (
   `element_id` mediumint(8) unsigned NOT NULL default '0',
   `anonymous_id` varchar(45) NOT NULL default '',
   `rate` tinyint(2) unsigned NOT NULL default '0',
-  `date` date NOT NULL default '1970-01-01',
+  `date` date default NULL,
   PRIMARY KEY  (`element_id`,`user_id`,`anonymous_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

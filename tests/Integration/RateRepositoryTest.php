@@ -327,7 +327,7 @@ final class RateRepositoryTest extends IntegrationTestCase
 
         self::assertCount(2, $rows);
         self::assertSame(9, array_sum(array_column($rows, 'rate')));
-        self::assertSame([1, 1], array_column($rows, 'element_id'));
+        self::assertSame([1, 1], array_column($rows, 'elementId'));
     }
 
     public function test_find_rate_rows_for_element_returns_empty_for_an_unrated_element(): void
@@ -360,7 +360,7 @@ final class RateRepositoryTest extends IntegrationTestCase
 
         self::assertCount(5, $rows);
         self::assertSame(19, array_sum(array_column($rows, 'rate')));
-        $rowUserIds = array_column($rows, 'user_id');
+        $rowUserIds = array_column($rows, 'userId');
         sort($rowUserIds);
         self::assertSame([1, 1, 3, 3, 4], $rowUserIds);
     }

@@ -169,17 +169,17 @@ final class RatingPageRenderer
               ];
 
             foreach ($rates as $rate_row) {
-                if (isset($users[$rate_row['user_id']])) {
-                    $user_rate = $users[$rate_row['user_id']];
+                if (isset($users[$rate_row->userId])) {
+                    $user_rate = $users[$rate_row->userId];
                 } else {
-                    $user_rate = '? ' . $rate_row['user_id'];
+                    $user_rate = '? ' . $rate_row->userId;
                 }
-                if ($rate_row['anonymous_id'] !== '') {
-                    $user_rate .= '(' . $rate_row['anonymous_id'] . ')';
+                if ($rate_row->anonymousId !== '') {
+                    $user_rate .= '(' . $rate_row->anonymousId . ')';
                 }
 
                 $tpl_image['rates'][] = [
-                    ...$rate_row,
+                    ...$rate_row->toArray(),
                     'USER' => $user_rate,
                 ];
             }

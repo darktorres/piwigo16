@@ -64,7 +64,7 @@ final class RatingUserPageRenderer
         $image_ids = [];
         $by_user_ratings = [];
         foreach ($rate_repository->findAllRatesOrderedByDateDesc() as $rate_row) {
-            $user_id = $rate_row['user_id'];
+            $user_id = $rate_row->userId;
             if (! isset($users_by_id[$user_id])) {
                 $users_by_id[$user_id] = [
                     'name' => '???' . $user_id,
@@ -73,24 +73,24 @@ final class RatingUserPageRenderer
             }
             $usr = $users_by_id[$user_id];
             if ($usr['anon']) {
-                $user_key = $usr['name'] . '(' . $rate_row['anonymous_id'] . ')';
+                $user_key = $usr['name'] . '(' . $rate_row->anonymousId . ')';
             } else {
                 $user_key = $usr['name'];
             }
             if (! isset($by_user_ratings[$user_key])) {
                 $rating = $by_user_rating_model;
                 $rating['uid'] = $user_id;
-                $rating['aid'] = $usr['anon'] ? $rate_row['anonymous_id'] : '';
-                $rating['last_date'] = $rating['first_date'] = $rate_row['date'];
+                $rating['aid'] = $usr['anon'] ? $rate_row->anonymousId : '';
+                $rating['last_date'] = $rating['first_date'] = $rate_row->date;
             } else {
                 $rating = $by_user_ratings[$user_key];
-                $rating['first_date'] = $rate_row['date'];
+                $rating['first_date'] = $rate_row->date;
             }
 
-            $element_id = $rate_row['element_id'];
-            $rating['rates'][$rate_row['rate']][] = [
+            $element_id = $rate_row->elementId;
+            $rating['rates'][$rate_row->rate][] = [
                 'id' => $element_id,
-                'date' => $rate_row['date'],
+                'date' => $rate_row->date,
             ];
             $by_user_ratings[$user_key] = $rating;
             $image_ids[$element_id] = 1;

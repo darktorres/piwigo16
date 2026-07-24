@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Rate;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Core\Env;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
+use Piwigo\Rate\Projection\Rate;
 
 /**
  * Persistence layer for the rate domain: `rate` itself, plus the
@@ -94,6 +96,12 @@ final class RateRepository extends AbstractRepository
 
     public function insertRate(int $elementId, int $userId, string $anonymousId, int $rate): void
     {
+        // Env::now() rather than SQL's NOW() -- same reasoning as
+        // CommentRepository::insert()'s own docblock: NOW() runs on the
+        // real DB-server clock, invisible to Env::now()'s PIWIGO_TEST_NOW
+        // freeze, so a fresh rate inserted during a test would silently
+        // sort before/after PIWIGO_TEST_NOW-anchored fixture dates
+        // depending on which is chronologically later.
         $this->conn->createQueryBuilder()
             ->insert(Tables::rate())
             ->values([
@@ -101,12 +109,13 @@ final class RateRepository extends AbstractRepository
                 'anonymous_id' => ':anonymousId',
                 'element_id' => ':elementId',
                 'rate' => ':rate',
-                'date' => 'NOW()',
+                'date' => ':date',
             ])
             ->setParameter('userId', $userId)
             ->setParameter('anonymousId', $anonymousId)
             ->setParameter('elementId', $elementId)
             ->setParameter('rate', $rate)
+            ->setParameter('date', Env::now()->format('Y-m-d'))
             ->executeStatement();
     }
 
@@ -305,7 +314,7 @@ final class RateRepository extends AbstractRepository
     }
 
     /**
-     * @return list<array{user_id: int, element_id: int, anonymous_id: string, rate: int, date: string}>
+     * @return list<Rate>
      */
     public function findRateRowsForElement(int $elementId): array
     {
@@ -318,7 +327,7 @@ final class RateRepository extends AbstractRepository
             ->executeQuery()
             ->fetchAllAssociative();
 
-        return array_map(self::toRateRow(...), $rows);
+        return array_map(Rate::fromRow(...), $rows);
     }
 
     public function countAllRates(): int
@@ -365,7 +374,7 @@ final class RateRepository extends AbstractRepository
     }
 
     /**
-     * @return list<array{user_id: int, element_id: int, anonymous_id: string, rate: int, date: string}>
+     * @return list<Rate>
      */
     public function findAllRatesOrderedByDateDesc(): array
     {
@@ -376,7 +385,7 @@ final class RateRepository extends AbstractRepository
             ->executeQuery()
             ->fetchAllAssociative();
 
-        return array_map(self::toRateRow(...), $rows);
+        return array_map(Rate::fromRow(...), $rows);
     }
 
     /**
@@ -463,21 +472,6 @@ final class RateRepository extends AbstractRepository
             static fn (mixed $value): int => is_numeric($value) ? (int) $value : 0,
             $values
         );
-    }
-
-    /**
-     * @param array<string, mixed> $row
-     * @return array{user_id: int, element_id: int, anonymous_id: string, rate: int, date: string}
-     */
-    private static function toRateRow(array $row): array
-    {
-        return [
-            'user_id' => is_numeric($row['user_id']) ? (int) $row['user_id'] : 0,
-            'element_id' => is_numeric($row['element_id']) ? (int) $row['element_id'] : 0,
-            'anonymous_id' => is_string($row['anonymous_id']) ? $row['anonymous_id'] : '',
-            'rate' => is_numeric($row['rate']) ? (int) $row['rate'] : 0,
-            'date' => is_string($row['date']) ? $row['date'] : '',
-        ];
     }
 
     /**

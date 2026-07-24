@@ -29,7 +29,7 @@ final class UserCacheRepository extends AbstractRepository
     {
         $this->conn->createQueryBuilder()
             ->update(Tables::userCache())
-            ->set('need_update', "'true'")
+            ->set('need_update', '1')
             ->executeStatement();
     }
 

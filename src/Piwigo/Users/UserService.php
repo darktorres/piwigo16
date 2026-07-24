@@ -661,16 +661,21 @@ SELECT
         }
         unset($value);
 
-        // Docs/PLAN-REPLAY-AUDIT.md gap-closure, User domain Stage 1a:
-        // enabled_high/expand/last_visit_from_history/show_nb_comments/
-        // show_nb_hits are real tinyint columns now -- the generic
-        // true/false-string scan above only ever matched the *old*
-        // enum('true','false') representation, so it silently stops
-        // converting these 5 to bool (DBAL/mysqli returns a native int
-        // for a tinyint column). Named explicitly instead of
+        // Docs/PLAN-REPLAY-AUDIT.md gap-closure, User domain Stage 1a (+
+        // UserCache domain Stage 1a for need_update): enabled_high/expand/
+        // last_visit_from_history/show_nb_comments/show_nb_hits
+        // (user_infos) and need_update (user_cache, joined into this same
+        // $userdata array) are all real tinyint columns now -- the
+        // generic true/false-string scan above only ever matched the
+        // *old* enum('true','false') representation, so it silently
+        // stops converting these to bool (DBAL/mysqli returns a native
+        // int for a tinyint column). Named explicitly instead of
         // pattern-matched by value, same fix as
-        // CategoryService::getCategoryInfo().
-        foreach (['enabled_high', 'expand', 'last_visit_from_history', 'show_nb_comments', 'show_nb_hits'] as $k) {
+        // CategoryService::getCategoryInfo(). need_update specifically
+        // feeds the `! is_bool($userdata['need_update'])` check just
+        // below -- left un-normalized, every request would wrongly think
+        // the cache always needs rebuilding.
+        foreach (['enabled_high', 'expand', 'last_visit_from_history', 'show_nb_comments', 'show_nb_hits', 'need_update'] as $k) {
             if (isset($userdata[$k])) {
                 $userdata[$k] = (bool) $userdata[$k];
             }
@@ -852,12 +857,14 @@ DELETE FROM ' . Tables::userCache() . '
   WHERE user_id = ' . $userId;
                 $this->conn->executeStatement($query);
 
-                // SqlDialect::booleanToString() only returns non-string when its input
-                // isn't a bool (@return mixed in
-                // dblayer/functions_mysqli.inc.php); $need_update is always a
-                // real bool here, so the result is guaranteed to be a string.
-                $need_update_str = SqlDialect::booleanToString($need_update);
-                assert(is_string($need_update_str));
+                // need_update is a real tinyint(1) column now (UserCache
+                // domain Stage 1a) -- a numeric literal, not the old
+                // enum('true','false') string; SqlDialect::booleanToInt()
+                // only returns non-int when its input isn't a bool,
+                // $need_update is always a real bool here, so the result
+                // is guaranteed to be an int.
+                $need_update_int = SqlDialect::booleanToInt($need_update);
+                assert(is_int($need_update_int));
 
                 // for the same reason as user_cache_categories, we ignore error on
                 // this insert
@@ -867,7 +874,7 @@ INSERT IGNORE INTO ' . Tables::userCache() . '
     last_photo_date,
     image_access_type, image_access_list)
   VALUES
-  (' . $userId . ',\'' . $need_update_str . '\','
+  (' . $userId . ',' . $need_update_int . ','
   . $cache_update_time . ',\''
   . $forbidden_categories . '\',' . $nb_total_images . ',' .
   (self::emptyValue($last_photo_date) ? 'NULL' : '\'' . $last_photo_date . '\'') .

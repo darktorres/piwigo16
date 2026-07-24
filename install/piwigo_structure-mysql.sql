@@ -1,8 +1,10 @@
 -- Final v17 schema (InnoDB + utf8mb4, all FK constraints, all indexes).
 -- Hand-maintained -- there is no Doctrine Migrations layer between "what
 -- the schema should be" and what a fresh install creates. Column-type
--- fixes not yet decided for any domain (remaining user_cache/etc. P17-23
--- items) are deliberately not applied here.
+-- fixes not yet decided for any domain (remaining user_mail_notification/
+-- history/old_permalinks/sessions/upgrade 1970-01-01-sentinel items,
+-- user_infos.preferences/search.rules text->JSON) are deliberately not
+-- applied here.
 
 --
 -- Table structure for table `piwigo_activity`
@@ -436,7 +438,7 @@ CREATE TABLE `piwigo_user_auth_keys` (
 DROP TABLE IF EXISTS `piwigo_user_cache`;
 CREATE TABLE `piwigo_user_cache` (
   `user_id` mediumint(8) unsigned NOT NULL default '0',
-  `need_update` enum('true','false') NOT NULL default 'true',
+  `need_update` tinyint(1) NOT NULL default '1',
   `cache_update_time` integer unsigned NOT NULL default 0,
   `forbidden_categories` mediumtext,
   `nb_total_images` mediumint(8) unsigned default NULL,

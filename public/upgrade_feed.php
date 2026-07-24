@@ -31,45 +31,33 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $paths = \Piwigo\Core\Paths::fromRoot(dirname(__DIR__));
 
-// Legacy Coupling Retirement Phase 8, 8b (the "boot-first" fix, extended
-// from 8a's HTTP-request-path version to install/upgrade): must run
-// before the database.inc.php-sourced db_* overrides below, so real,
-// site-specific credentials always win over a coincidental PIWIGO_DB_*
-// env var.
 \Piwigo\Bootstrap\InstallBootstrap::boot($paths);
 
-/**
- * @var array<string, mixed> $conf
- * @var string $prefixeTable
- */
-$conf = \Piwigo\Config\Config::defaultsArray();
+/** @var array<string, mixed> */
+$conf = \Piwigo\Config\CurrentConfig::defaultsArray();
 @include $paths->local . 'config/config.inc.php';
 
 include $paths->siteLocal . 'config/database.inc.php';
 
-// Legacy Coupling Retirement Phase 8, 8b -- real, already-diagnosed bug
-// fix, identical to upgrade.php's own: database.inc.php (just included)
-// sets $conf['db_host']/['db_user']/['db_password']/['db_base'] into the
-// legacy $conf array, but nothing previously bridged them into Config::'s
-// static state. DbPatchRegistry::make(...)->apply() below eventually
-// reaches DbConnection::build() (via UpgradeFeedRunner::run()'s own $conn),
-// which reads Config::dbHost()/dbUser()/dbPassword()/dbBase() exclusively
-// -- so every real invocation of this script silently attempted to
-// connect as an empty-string user with an empty-string password against
-// an empty-string database at 'localhost', regardless of the site's real
-// configuration, which fails for any real MySQL install.
-foreach (['db_host', 'db_user', 'db_password', 'db_base'] as $dbConfKey) {
-    $dbConfValue = $conf[$dbConfKey] ?? null;
-    if (is_string($dbConfValue)) {
-        \Piwigo\Config\Config::override($dbConfKey, $dbConfValue);
-    }
-}
+// A real, pre-existing Piwigo installation being upgraded through this
+// legacy flow has its DB credentials in database.inc.php, not .env --
+// DbConnection::build() reads Piwigo\Db\DbCredentials::current()
+// exclusively (env only), so without this, every real invocation of this
+// script would silently attempt to connect as an empty-string user with
+// an empty-string password against an empty-string database at
+// 'localhost', regardless of the site's real configuration.
+// migrateFromLegacyFile() re-reads database.inc.php independently
+// (isolated scope, same file this shell already included above) and seeds
+// the process environment (and persists into .env) only when .env
+// doesn't already have these -- a no-op for a site that already upgraded
+// once, or one InstallWizard itself installed.
+\Piwigo\Db\DbCredentials::migrateFromLegacyFile($paths);
 
 // $conf['dblayer'] is set by database.inc.php (just included) as a string
 // -- "nothing is frozen" gap-closure (2026-07-22) confirmed config_default.
 // inc.php never set it, contrary to what this comment used to claim, dblayer
-// has no Config::SCHEMA entry either (see LegacyDbLayer::value()'s own
-// docblock for why: a different value space than Config::dbDriver()) -- but
+// has no CurrentConfig property either (see LegacyDbLayer::value()'s own
+// docblock for why: a different value space than DbCredentials::current()->driver) -- but
 // the generic array<string, mixed> type of $conf erases dblayer's specific
 // type regardless of source; re-narrow at the point of use (same pattern
 // upgrade.php uses).
@@ -95,14 +83,7 @@ if (! (bool) $conf['check_upgrade_feed']) {
     die('upgrade feed is not active');
 }
 
-// P23 sub-batch 8g-6: the DbPatch classes read Piwigo\Db\Tables::*(),
-// which resolves its prefix from Config::dbPrefix(). InstallBootstrap::boot()
-// above only seeds SCHEMA defaults + env overrides, so seed the real prefix
-// directly here too (same as upgrade.php does), or every Tables::*() call
-// would fall back to whatever InstallBootstrap::boot() left in place
-// instead of the real prefix.
-\Piwigo\Config\Config::override('db_prefix', $prefixeTable);
-// Legacy Coupling Retirement Phase 8, 8d: must run after the real db_*
+// Legacy Coupling Retirement Phase 8, 8d: must run after the credential
 // seeding above, not before -- see InstallBootstrap::activateConfigService()'s
 // own docblock.
 \Piwigo\Bootstrap\InstallBootstrap::activateConfigService();

@@ -24,8 +24,8 @@ use Psr\Http\Message\ServerRequestInterface;
  * IN_WS deliberately stays defined in ws.php's own root file, not here:
  * include/user.inc.php (part of common.inc.php's own bootstrap chain)
  * checks defined('IN_WS'), so it must be set before common.inc.php runs
- * -- well before CommonBootstrap::run()/RequestPipeline::handle() reach
- * this controller. PHP constants are process-wide regardless of scope
+ * -- well before RequestPipeline::handle() reaches this controller. PHP
+ * constants are process-wide regardless of scope
  * once defined, so no `global`-style re-declaration is needed here; a
  * duplicate define() here would also violate the arch test forbidding
  * define() calls anywhere under src/Piwigo/.
@@ -50,7 +50,7 @@ final class WsController implements ControllerInterface
     {
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
-        if (! \Piwigo\Config\Config::allowWebServices()) {
+        if (! \Piwigo\Config\CurrentConfig::allowWebServices()) {
             new HtmlService()
                 ->pageForbidden($this->redirectService, 'Web services are disabled');
         }

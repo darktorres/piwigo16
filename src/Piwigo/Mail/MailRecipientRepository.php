@@ -12,7 +12,7 @@ use Piwigo\Db\Tables;
  * Persistence layer for mailing-recipient discovery: MailService's own
  * `mailAdmins()`/`mailGroup()` queries against `users`/`user_infos`/
  * `user_group`. `$idColumn`/`$usernameColumn`/`$emailColumn` are the
- * runtime-configurable column names from \Piwigo\Config\Config::userFields()
+ * runtime-configurable column names from \Piwigo\Config\CurrentConfig::userFields()
  * (resolved by the caller, matching Piwigo\Auth\AuthRepository's own
  * pattern for the same reason).
  */

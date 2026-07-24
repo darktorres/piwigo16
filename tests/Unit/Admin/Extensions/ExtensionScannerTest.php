@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Paths;
@@ -36,7 +36,7 @@ if (! function_exists('name_compare')) {
 }
 
 // ExtensionType::scanDirectory() hardcodes real app paths (PluginLoader::pluginsPath()/
-// Config::themesPath()/CurrentPaths::get()->root.'language/') with no
+// CurrentConfig::themesPath()/CurrentPaths::get()->root.'language/') with no
 // injection point, so this can't safely redirect to a disposable temp
 // directory the way ZipExtractorTest/UploadServiceTest do. Scanning the
 // real, git-tracked language/ tree read-only is safe and deterministic
@@ -49,13 +49,13 @@ if (! function_exists('name_compare')) {
 // seeded against this repo's own real root (not a disposable temp dir) so
 // the real language/ tree is genuinely reachable.
 beforeEach(function (): void {
-    Config::reset();
+    CurrentConfig::reset();
     ConfigLoader::applyDefaults();
     CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 4)));
 });
 
 afterEach(function (): void {
-    Config::reset();
+    CurrentConfig::reset();
     CurrentPaths::reset();
 });
 

@@ -8,7 +8,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigRepository;
@@ -35,7 +35,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 

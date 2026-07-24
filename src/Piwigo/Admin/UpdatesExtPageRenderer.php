@@ -47,7 +47,7 @@ final class UpdatesExtPageRenderer
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        if (! \Piwigo\Config\Config::enableExtensionsInstall()) {
+        if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
             new \Piwigo\Html\HtmlService()
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }
@@ -56,7 +56,7 @@ final class UpdatesExtPageRenderer
             \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        $updates_ignored = \Piwigo\Config\Config::updatesIgnored();
+        $updates_ignored = \Piwigo\Config\CurrentConfig::updatesIgnored();
 
         // updates.class.php::__construct() restricts itself to a single type when
         // reached from that type's own page (?page=plugins&tab=update etc.), and

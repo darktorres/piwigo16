@@ -39,11 +39,11 @@ final readonly class RateService
     public function rate(int $imageId, int|string|null $rate): array|false
     {
 
-        $rateItems = \Piwigo\Config\Config::rateItems();
+        $rateItems = \Piwigo\Config\CurrentConfig::rateItems();
 
         if (
             $rate === null
-            || ! \Piwigo\Config\Config::rateEnabled()
+            || ! \Piwigo\Config\CurrentConfig::rateEnabled()
             || ! (bool) preg_match('/^[0-9]+$/', (string) $rate)
         ) {
             return false;
@@ -60,7 +60,7 @@ final readonly class RateService
 
         $userAnonymous = ! \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic);
 
-        if ($userAnonymous && ! \Piwigo\Config\Config::rateAnonymous()) {
+        if ($userAnonymous && ! \Piwigo\Config\CurrentConfig::rateAnonymous()) {
             return false;
         }
 

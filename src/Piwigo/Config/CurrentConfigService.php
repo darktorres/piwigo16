@@ -22,11 +22,11 @@ namespace Piwigo\Config;
  *
  * Two construction sites, matching the two independent bootstrap paths
  * that each resolve their own `ConfigService` from the container:
- * `Piwigo\Bootstrap\CommonBootstrap::run()` (the HTTP request pipeline)
- * and `Piwigo\Bootstrap\CliBootstrap::buildApplication()` (the CLI
- * pipeline, resolve-and-set only -- never followed by
+ * `Piwigo\Bootstrap\RequestBootstrap::connect()` (the HTTP request
+ * pipeline) and `Piwigo\Bootstrap\CliBootstrap::buildApplication()` (the
+ * CLI pipeline, resolve-and-set only -- never followed by
  * `ConfigService::loadConfFromDb()`, which is HTTP-only; see
- * `CommonBootstrap`'s own docblock for why).
+ * `CliBootstrap`'s own docblock for why).
  */
 final class CurrentConfigService
 {
@@ -35,18 +35,19 @@ final class CurrentConfigService
     public static function get(): ConfigService
     {
         if (! self::$instance instanceof ConfigService) {
-            throw new \LogicException('CurrentConfigService not initialised -- call Piwigo\Bootstrap\CommonBootstrap::run() or Piwigo\Bootstrap\CliBootstrap::buildApplication() first.');
+            throw new \LogicException('CurrentConfigService not initialised -- call Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint() or Piwigo\Bootstrap\CliBootstrap::buildApplication() first.');
         }
 
         return self::$instance;
     }
 
     /**
-     * Legacy Coupling Retirement Phase 8, 8d -- lets CommonBootstrap::run()
-     * reuse the instance RequestBootstrap::connect() already resolved
-     * earlier in the same request instead of redoing the DB read, while
-     * staying callable standalone (tests/Unit/Bootstrap/CommonBootstrapTest.php's
-     * own contract) when nothing has set one yet.
+     * Legacy Coupling Retirement Phase 8, 8d -- lets
+     * RequestBootstrap::bootConfigOnly() reuse an instance
+     * RequestBootstrap::connect() already resolved earlier in the same
+     * request instead of redoing the DB read, while staying callable
+     * standalone (tests/Unit/Bootstrap/RequestBootstrapBootConfigOnlyTest.php's own
+     * contract) when nothing has set one yet.
      */
     public static function isSet(): bool
     {

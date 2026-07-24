@@ -35,8 +35,9 @@ final class UpgradeFeedRunner
     public function run(): void
     {
         // This request goes through InstallBootstrap::boot() (Legacy
-        // Coupling Retirement Phase 8, 8b) but never CommonBootstrap::run(),
-        // so CurrentUser is never guest-initialized either -- same latent
+        // Coupling Retirement Phase 8, 8b) but never RequestBootstrap::
+        // bootEntryPoint()/bootConfigOnly(), so CurrentUser is never
+        // guest-initialized either -- same latent
         // crash as InstallWizard::boot()'s own attachGlobals() call (see its
         // docblock). DbPatchRegistry::make(...)->apply() below dispatches
         // into frozen patch classes (Phase 1j) whose reach isn't fully
@@ -47,14 +48,14 @@ final class UpgradeFeedRunner
 
         // Same reasoning, CurrentLogger this time -- same construction
         // recipe as RequestBootstrap::connect()'s own site. Direct
-        // Config:: calls, so their declared `string` return types are
+        // CurrentConfig:: calls, so their declared `string` return types are
         // already certain, no is_string() re-guard needed.
         \Piwigo\Core\CurrentLogger::set(new Logger([
-            'directory' => \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\Config::dataLocation() . \Piwigo\Config\Config::logDir(),
-            'severity' => \Piwigo\Config\Config::logLevel(),
-            'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Config\Config::dbPassword()) . '.txt',
+            'directory' => \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::dataLocation() . \Piwigo\Config\CurrentConfig::logDir(),
+            'severity' => \Piwigo\Config\CurrentConfig::logLevel(),
+            'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Db\DbCredentials::current()->password) . '.txt',
             'globPattern' => 'log_*.txt',
-            'archiveDays' => \Piwigo\Config\Config::logArchiveDays(),
+            'archiveDays' => \Piwigo\Config\CurrentConfig::logArchiveDays(),
         ]));
 
         // +-------------------------------------------------------------------+
@@ -124,6 +125,17 @@ INSERT INTO ' . Tables::upgrade() . '
                 'id' => $upgrade_id,
                 'description' => $upgrade_description,
             ]);
+        }
+
+        // Every frozen DbPatch applied above writes the config table via
+        // raw SQL, bypassing ConfigService::confUpdateParam()/
+        // confDeleteParam() entirely -- their own cache-clearing never
+        // fires. Without this, ConfigService::allRowsFromCacheOrDb() would
+        // keep serving whatever it cached before this run to every real
+        // request afterward, until some unrelated config write happened
+        // to clear the pool.
+        if ($to_apply !== []) {
+            \Piwigo\Cache\CachePools::config()->clear();
         }
 
         echo '</pre>';

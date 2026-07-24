@@ -118,7 +118,7 @@ final class ImageImagick implements ImageInterface
         // its raw Imagick instance — only valid when both images use the
         // same backend (always true in practice: i.php constructs both
         // via `new PwgImage(...)`, which resolves the backend from the
-        // single \Piwigo\Config\Config::graphicsLibrary() setting).
+        // single \Piwigo\Config\CurrentConfig::graphicsLibrary() setting).
         $overlay_backend = $overlay->image;
         if (! $overlay_backend instanceof self) {
             throw new \LogicException('PwgImage::compose(): overlay must use the same image backend');

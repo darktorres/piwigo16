@@ -152,7 +152,7 @@ SELECT COUNT(*)
         // |                             Formats Mode                          |
         // +-------------------------------------------------------------------+
 
-        $display_formats = \Piwigo\Config\Config::isFormatsEnabled() && isset($_GET['formats']);
+        $display_formats = \Piwigo\Config\CurrentConfig::isFormatsEnabled() && isset($_GET['formats']);
 
         $have_formats_original = false;
         $formats_original_info = [];
@@ -219,10 +219,10 @@ SELECT COUNT(*)
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_photo_add_direct');
 
-        $conf_format_ext = \Piwigo\Config\Config::formatExtensions();
+        $conf_format_ext = \Piwigo\Config\CurrentConfig::formatExtensions();
 
         $template->assign([
-            'ENABLE_FORMATS' => \Piwigo\Config\Config::isFormatsEnabled(),
+            'ENABLE_FORMATS' => \Piwigo\Config\CurrentConfig::isFormatsEnabled(),
             'DISPLAY_FORMATS' => $display_formats,
             'HAVE_FORMATS_ORIGINAL' => $have_formats_original,
             'FORMATS_ORIGINAL_INFO' => $formats_original_info,
@@ -257,8 +257,8 @@ SELECT COUNT(*)
         $template->assign(
             [
                 'F_ADD_ACTION' => self::baseUrl($this->urlService),
-                'chunk_size' => \Piwigo\Config\Config::uploadFormChunkSize(),
-                'max_file_size' => \Piwigo\Config\Config::uploadFormMaxFileSize(),
+                'chunk_size' => \Piwigo\Config\CurrentConfig::uploadFormChunkSize(),
+                'max_file_size' => \Piwigo\Config\CurrentConfig::uploadFormMaxFileSize(),
                 'ADMIN_PAGE_TITLE' => Lang::t('Upload Photos'),
             ]
         );
@@ -292,11 +292,11 @@ SELECT COUNT(*)
         }
 
         // warn the user if the picture will be resized after upload
-        if (\Piwigo\Config\Config::originalResize()) {
+        if (\Piwigo\Config\CurrentConfig::originalResize()) {
             $template->assign(
                 [
-                    'original_resize_maxwidth' => \Piwigo\Config\Config::originalResizeMaxwidth(),
-                    'original_resize_maxheight' => \Piwigo\Config\Config::originalResizeMaxheight(),
+                    'original_resize_maxwidth' => \Piwigo\Config\CurrentConfig::originalResizeMaxwidth(),
+                    'original_resize_maxheight' => \Piwigo\Config\CurrentConfig::originalResizeMaxheight(),
                 ]
             );
         }
@@ -309,7 +309,7 @@ SELECT COUNT(*)
             ]
         );
 
-        $upload_extensions = (\Piwigo\Config\Config::uploadFormAllTypes()) ? \Piwigo\Config\Config::fileExtensions() : \Piwigo\Config\Config::pictureExtensions();
+        $upload_extensions = (\Piwigo\Config\CurrentConfig::uploadFormAllTypes()) ? \Piwigo\Config\CurrentConfig::fileExtensions() : \Piwigo\Config\CurrentConfig::pictureExtensions();
         $unique_exts = array_unique(array_map(strtolower(...), $upload_extensions));
 
         $template->assign(
@@ -429,7 +429,7 @@ SELECT
         if (! isset($_SESSION['upload_hide_warnings'])) {
             $setup_warnings = [];
 
-            if (\Piwigo\Config\Config::useExif() and ! function_exists('exif_read_data')) {
+            if (\Piwigo\Config\CurrentConfig::useExif() and ! function_exists('exif_read_data')) {
                 $setup_warnings[] = Lang::t('Exif extension not available, admin should disable exif use');
             }
 
@@ -441,7 +441,7 @@ SELECT
                 );
             }
 
-            $upload_form_chunk_size = \Piwigo\Config\Config::uploadFormChunkSize();
+            $upload_form_chunk_size = \Piwigo\Config\CurrentConfig::uploadFormChunkSize();
             if ($uploadService->getIniSize('upload_max_filesize') < $upload_form_chunk_size * 1024) {
                 $upload_max_filesize = $uploadService->getIniSize('upload_max_filesize');
                 // upload_max_filesize is a core php.ini directive, always present

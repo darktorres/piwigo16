@@ -109,6 +109,17 @@ abstract class IntegrationTestCase extends TestCase
         // assertNoPhpErrors() attribute an entry to the request that just
         // ran, not a previous test.
         file_put_contents(dirname(__DIR__, 2) . '/_data/logs/test_errors.log', '');
+        // ConfigService::allRowsFromCacheOrDb()'s cache is real,
+        // cross-process-persistent storage in this environment -- ext-apcu
+        // isn't installed here (confirmed elsewhere this session), so
+        // CachePools::config() falls back to FilesystemAdapter, real files
+        // under _data/cache/ visible to both this PHPUnit/Pest process and
+        // any real Apache/FrankenPHP worker serving Browser-test HTTP
+        // requests, not a per-process in-memory optimization. A test
+        // writing config via raw SQL (bypassing ConfigService, so
+        // confUpdateParam()'s own clear() never fires) would otherwise
+        // leak a stale cached row into whichever test runs next.
+        \Piwigo\Cache\CachePools::config()->clear();
     }
 
     #[\Override]
@@ -117,7 +128,7 @@ abstract class IntegrationTestCase extends TestCase
         \Piwigo\Users\CurrentUser::reset();
         \Piwigo\Core\CurrentLogger::reset();
         \Piwigo\Core\ProcessCache::reset();
-        \Piwigo\Config\Config::reset();
+        \Piwigo\Config\CurrentConfig::reset();
         // Harmless even for test classes that never call
         // buildConfigRepository()/wire CurrentConfigService::set() at
         // all -- reset() on an already-unset registry is a no-op, same
@@ -227,6 +238,14 @@ abstract class IntegrationTestCase extends TestCase
         fclose($pipes[2]);
         $exit = proc_close($proc);
         self::assertSame(0, $exit, 'mysql fixture load failed: ' . ($stderr === false ? '' : $stderr));
+
+        // The raw `mysql` import above never goes through ConfigService,
+        // so its own confUpdateParam()/confDeleteParam() cache-clearing
+        // never fires -- without this, any real server process sharing
+        // this filesystem-backed cache (see setUp()'s own comment) would
+        // keep serving whatever config rows it cached before this fixture
+        // replaced them.
+        \Piwigo\Cache\CachePools::config()->clear();
 
         $this->settleDatabase();
     }

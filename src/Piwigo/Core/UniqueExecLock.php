@@ -45,8 +45,12 @@ final class UniqueExecLock
         $exec_id = substr(sha1(random_bytes(1000)), 0, 8);
         $logger->info('[' . $tokenName . '][exec=' . $exec_id . '] starts now');
 
-        if (isset(\Piwigo\Config\Config::all()[$tokenName . '_running'])) {
-            $running_token = \Piwigo\Config\Config::all()[$tokenName . '_running'];
+        // Row keyed by $tokenName (one per lock name, including per-user-ID
+        // dynamic tokens like UserService's 'generate_user_cache-u{id}') --
+        // an unbounded key space, read straight from the config table
+        // rather than through a CurrentConfig property.
+        $running_token = $conn->fetchOne('SELECT value FROM ' . Tables::config() . ' WHERE param = "' . $tokenName . '_running"');
+        if ($running_token !== false) {
             $running_token = is_scalar($running_token) ? (string) $running_token : '';
             [$running_exec_id, $running_exec_start_time] = explode('-', $running_token);
             if (time() - (int) $running_exec_start_time > $timeout) {

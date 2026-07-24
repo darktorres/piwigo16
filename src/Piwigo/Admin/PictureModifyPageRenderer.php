@@ -193,7 +193,7 @@ SELECT id
             foreach ($to_sanitize_fields as $field) {
                 $raw_field_value = $_POST[$field] ?? null;
                 $field_value = is_string($raw_field_value) ? $raw_field_value : '';
-                $data[$field] = (\Piwigo\Config\Config::allowHtmlDescriptions()) ? $field_value : strip_tags($field_value);
+                $data[$field] = (\Piwigo\Config\CurrentConfig::allowHtmlDescriptions()) ? $field_value : strip_tags($field_value);
             }
 
             if (! in_array($_POST['date_creation'] ?? null, [null, false, 0, '0', '', []], true)) {
@@ -410,7 +410,7 @@ SELECT
         );
 
         $added_by = 'N/A';
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
         $uf_username = $user_fields['username'];
         $uf_id = $user_fields['id'];
         $row_added_by = is_numeric($row['added_by']) ? (int) $row['added_by'] : 0;
@@ -435,7 +435,7 @@ SELECT
             'is_svg' => (strtoupper(end($extTab)) === 'SVG'),
         ];
 
-        if (\Piwigo\Config\Config::rateEnabled() && ! in_array($row['rating_score'], [null, false, 0, 0.0, '0', '', []], true)) {
+        if (\Piwigo\Config\CurrentConfig::rateEnabled() && ! in_array($row['rating_score'], [null, false, 0, 0.0, '0', '', []], true)) {
             $query = '
 SELECT
     COUNT(*)
@@ -469,7 +469,7 @@ SELECT
         $template->assign('INTRO', $intro_vars);
 
         $row_path = is_string($row['path']) ? $row['path'] : null;
-        $picture_ext = \Piwigo\Config\Config::pictureExtensions();
+        $picture_ext = \Piwigo\Config\CurrentConfig::pictureExtensions();
         if (in_array(\Piwigo\Core\StringHelper::getExtension($row_path), $picture_ext, true)) {
             $template->assign('U_COI', $this->urlService->getRootUrl() . 'admin.php?page=picture_coi&amp;image_id=' . $image_id);
         }

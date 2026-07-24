@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\Config;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
@@ -31,7 +30,7 @@ use Piwigo\Db\Tables;
  *   moment it ran), became DbInfo::version();
  * - the final `DB_CHARSET != ''` re-read of the just-defined constant
  *   reads the $db_charset local instead -- same value by construction.
- * webmaster_id is read via LegacyFileConf::read() -- Config::webmasterId()
+ * webmaster_id is read via LegacyFileConf::read() -- CurrentConfig::webmasterId()
  * doesn't see a site's local/config/config.inc.php override on this path
  * (same reasoning as the rest of this file family).
  */
@@ -126,7 +125,7 @@ SELECT language FROM ' . Tables::userInfos() . '
         $all_tables = array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
             $conn->fetchFirstColumn($query, [
-                'pattern' => Config::dbPrefix() . '%',
+                'pattern' => \Piwigo\Db\DbCredentials::current()->prefix . '%',
             ])
         );
 
@@ -174,7 +173,7 @@ SELECT language FROM ' . Tables::userInfos() . '
             $pwg_charset = 'utf-8';
             $db_charset = 'utf8';
             foreach ($all_tables as $table) {
-                if (! isset($safe_tables[substr($table, strlen(Config::dbPrefix()))])) {
+                if (! isset($safe_tables[substr($table, strlen(\Piwigo\Db\DbCredentials::current()->prefix))])) {
                     $this->changeTableToBlob($conn, $table, $all_tables_definition[$table]);
                 }
                 $this->changeTableToCharset($conn, $table, $all_tables_definition[$table], 'utf8');
@@ -187,7 +186,7 @@ SELECT language FROM ' . Tables::userInfos() . '
             $pwg_charset = 'utf-8';
             $db_charset = 'utf8';
             foreach ($all_tables as $table) {
-                if (! isset($safe_tables[substr($table, strlen(Config::dbPrefix()))])) {
+                if (! isset($safe_tables[substr($table, strlen(\Piwigo\Db\DbCredentials::current()->prefix))])) {
                     $this->changeTableToBlob($conn, $table, $all_tables_definition[$table]);
                     $this->changeTableToCharset($conn, $table, $all_tables_definition[$table], 'latin2');
                 }

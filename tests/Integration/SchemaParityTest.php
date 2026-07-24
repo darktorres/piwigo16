@@ -11,7 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaValidator;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
@@ -56,7 +56,7 @@ final class SchemaParityTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 

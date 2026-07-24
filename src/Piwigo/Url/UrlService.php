@@ -121,9 +121,9 @@ final class UrlService implements UrlServiceInterface
 
                     $url_port = null;
 
-                    if (\Piwigo\Config\Config::urlPort() === 'none') {
+                    if (\Piwigo\Config\CurrentConfig::urlPort() === 'none') {
                         // do nothing
-                    } elseif (\Piwigo\Config\Config::urlPort() === 'auto') {
+                    } elseif (\Piwigo\Config\CurrentConfig::urlPort() === 'auto') {
                         $server_port_raw = $_SERVER['SERVER_PORT'] ?? null;
                         $server_port = is_numeric($server_port_raw) ? (int) $server_port_raw : null;
                         if ((! $is_https && $server_port !== 80) || ($is_https && $server_port !== 443)) {
@@ -131,7 +131,7 @@ final class UrlService implements UrlServiceInterface
                         }
                     } else {
                         // we have a custom port
-                        $url_port = ':' . \Piwigo\Config\Config::urlPort();
+                        $url_port = ':' . \Piwigo\Config\CurrentConfig::urlPort();
                     }
 
                     if ($url_port !== null and strrchr($url, ':') !== $url_port) {
@@ -153,13 +153,13 @@ final class UrlService implements UrlServiceInterface
      * batch A4's ConfigDb fix (see EphemeralKeyService's own docblock for
      * the mechanism); previously this and every other admin-configurable
      * setting in this class had to read the legacy `global $conf` instead,
-     * since Config::galleryUrl() was silently inert for every real
+     * since CurrentConfig::galleryUrl() was silently inert for every real
      * admin-configured value on a live request -- caught empirically while
      * building P18's MailService.
      */
     private function configuredHost(): ?string
     {
-        $gallery_url = \Piwigo\Config\Config::galleryUrl() ?? null;
+        $gallery_url = \Piwigo\Config\CurrentConfig::galleryUrl() ?? null;
         if (! is_string($gallery_url) || $gallery_url === '') {
             return null;
         }
@@ -175,7 +175,8 @@ final class UrlService implements UrlServiceInterface
     }
 
     /**
-     * [SEC-29] Host-header poisoning guard: when \Piwigo\Config\Config::allowedHosts() is
+     * [SEC-29] Host-header poisoning guard: when
+     * \Piwigo\Config\DeploymentPolicy::current()->allowedHosts is
      * non-empty, an unrecognized candidate host is never embedded into an
      * outbound URL -- falls back to the first configured host instead.
      * Empty allow-list means "not configured", preserving the historical
@@ -183,7 +184,7 @@ final class UrlService implements UrlServiceInterface
      */
     private function trustedHost(string $candidate): string
     {
-        $allowed = \Piwigo\Config\Config::allowedHosts();
+        $allowed = \Piwigo\Config\DeploymentPolicy::current()->allowedHosts;
 
         if ($allowed === [] || in_array($candidate, $allowed, true)) {
             return $candidate;
@@ -234,10 +235,10 @@ final class UrlService implements UrlServiceInterface
     public function makeIndexUrl(array $params = []): string
     {
         $url = $this->getRootUrl() . 'index';
-        if (\Piwigo\Config\Config::phpExtensionInUrls()) {
+        if (\Piwigo\Config\CurrentConfig::phpExtensionInUrls()) {
             $url .= '.php';
         }
-        if (\Piwigo\Config\Config::questionMarkInUrls()) {
+        if (\Piwigo\Config\CurrentConfig::questionMarkInUrls()) {
             $url .= '?';
         }
 
@@ -333,15 +334,15 @@ final class UrlService implements UrlServiceInterface
     public function makePictureUrl(array $params): string
     {
         $url = $this->getRootUrl() . 'picture';
-        if (\Piwigo\Config\Config::phpExtensionInUrls()) {
+        if (\Piwigo\Config\CurrentConfig::phpExtensionInUrls()) {
             $url .= '.php';
         }
-        if (\Piwigo\Config\Config::questionMarkInUrls()) {
+        if (\Piwigo\Config\CurrentConfig::questionMarkInUrls()) {
             $url .= '?';
         }
         $url .= '/';
         $image_id = $params['image_id'] ?? null;
-        $picture_url_style = \Piwigo\Config\Config::pictureUrlStyle();
+        $picture_url_style = \Piwigo\Config\CurrentConfig::pictureUrlStyle();
         switch ($picture_url_style) {
             case 'id-file':
                 $url .= is_scalar($image_id) ? (string) $image_id : '';
@@ -465,7 +466,7 @@ final class UrlService implements UrlServiceInterface
                     if (! isset($category_info['permalink']) || $category_info['permalink'] === '') {
                         $category_id = $category_info['id'] ?? null;
                         $section_string .= is_scalar($category_id) ? (string) $category_id : '';
-                        if (\Piwigo\Config\Config::categoryUrlStyle() === 'id-name') {
+                        if (\Piwigo\Config\CurrentConfig::categoryUrlStyle() === 'id-name') {
                             $category_name = $category_info['name'] ?? null;
                             $section_string .= '-' . \Piwigo\Core\StringHelper::str2url(is_string($category_name) ? $category_name : '');
                         }
@@ -485,7 +486,7 @@ final class UrlService implements UrlServiceInterface
                             if (! isset($category['permalink']) || $category['permalink'] === '') {
                                 $combined_id = $category['id'] ?? null;
                                 $section_string .= is_scalar($combined_id) ? (string) $combined_id : '';
-                                if (\Piwigo\Config\Config::categoryUrlStyle() === 'id-name') {
+                                if (\Piwigo\Config\CurrentConfig::categoryUrlStyle() === 'id-name') {
                                     $combined_name = $category['name'] ?? null;
                                     $section_string .= '-' . \Piwigo\Core\StringHelper::str2url(is_string($combined_name) ? $combined_name : '');
                                 }
@@ -504,7 +505,7 @@ final class UrlService implements UrlServiceInterface
                 $section_string .= '/tags';
 
                 $tags_param = $params['tags'] ?? [];
-                $tag_url_style = \Piwigo\Config\Config::tagUrlStyle();
+                $tag_url_style = \Piwigo\Config\CurrentConfig::tagUrlStyle();
                 foreach ((is_array($tags_param) ? $tags_param : []) as $tag) {
                     if (! is_array($tag)) {
                         $tag = [];
@@ -706,7 +707,7 @@ final class UrlService implements UrlServiceInterface
                     break;
                 }
 
-                if (\Piwigo\Config\Config::tagUrlStyle() !== 'tag' and (bool) preg_match('/^(\d+)(?:-(.*)|)$/', $tokens[$i], $matches)) {
+                if (\Piwigo\Config\CurrentConfig::tagUrlStyle() !== 'tag' and (bool) preg_match('/^(\d+)(?:-(.*)|)$/', $tokens[$i], $matches)) {
                     $requested_tag_ids[] = $matches[1];
                 } else {
                     $requested_tag_url_names[] = $tokens[$i];
@@ -909,7 +910,7 @@ final class UrlService implements UrlServiceInterface
     #[\Override]
     public function getGalleryHomeUrl(): mixed
     {
-        $gallery_url = \Piwigo\Config\Config::galleryUrl() ?? null;
+        $gallery_url = \Piwigo\Config\CurrentConfig::galleryUrl() ?? null;
         if (is_string($gallery_url) && $gallery_url !== '') {
             if ($this->urlIsRemote($gallery_url) or $gallery_url[0] === '/') {
                 return $gallery_url;

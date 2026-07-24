@@ -6,67 +6,393 @@ namespace Piwigo\Config;
 
 /**
  * The DI/Doctrine-backed config persistence layer -- the real writer
- * behind Piwigo\Config\Config:: (Legacy Coupling Retirement Phase 5,
- * narrowed to a two-part split in Phase 8, 8d). Piwigo\Config\Config:: is
- * the static typed read layer (SCHEMA-driven accessors) and in-memory-only
- * write via Config::override(); Piwigo\Config\ConfigService (this class)
- * is the DI/Doctrine-backed persistence layer for every real writer --
+ * behind Piwigo\Config\CurrentConfig:: (Legacy Coupling Retirement Phase
+ * 5, narrowed to a two-part split in Phase 8, 8d; retyped in full during
+ * Config generic-accessor removal). CurrentConfig is the static typed
+ * read layer (one property per key) and in-memory-only write via its own
+ * named setters; Piwigo\Config\ConfigService (this class) is the DI/
+ * Doctrine-backed persistence layer for every real writer --
  * constructor-injected where a class can be container-built, or reached
  * via Piwigo\Config\CurrentConfigService::get() otherwise (static
  * utilities, throwaway-constructed classes, and every pre-container
  * bootstrap/install/upgrade call site, including the frozen
- * DbPatch/VersionUpgrade set: Kernel::boot() now runs early enough on
- * every real entry path that a container-free writer is never actually
- * needed, so the former third leg, Piwigo\Config\ConfigDb, is gone). Not
- * a "deferred to P14" gap: P14 (DB layer + Doctrine ORM) has been done
- * for a long time, and this class's write methods already route through
- * a real Doctrine entity (ConfigEntry/ConfigRepository, mapping the
- * `config` table), matching every other domain's repository pattern in
- * this codebase.
+ * DbPatch/VersionUpgrade set).
  *
  * loadConfFromDb()/confUpdateParam() faithfully replicate the CURRENT
  * legacy encoding (include/functions.inc.php's load_conf_from_db()/
  * conf_update_param()): scalars as literal strings, 'true'/'false'
  * coerced to bool on read, arrays/objects as serialize() blobs -- NOT the
  * reference's JSON-decode logic, since config.value is still plain TEXT
- * at this point in the replay (the text->JSON conversion is one of the 43
- * column-type changes deferred to P17-23, per docs/PLAN-REPLAY.md's own
- * P15 section). No addslashes() -- Doctrine parameterizes values safely,
- * that legacy escaping was only ever needed for raw SQL string
- * concatenation.
+ * at this point in the replay. No addslashes() -- Doctrine parameterizes
+ * values safely, that legacy escaping was only ever needed for raw SQL
+ * string concatenation.
  */
 final readonly class ConfigService
 {
+    /**
+     * Config-table param name -> CurrentConfig property name. The one
+     * place this class needs to know property names don't always match
+     * their DB key mechanically (log -> logConf, rate -> rateEnabled,
+     * enable_formats -> isFormatsEnabled, anti-flood_time -> antiFloodTime,
+     * cache.backend -> cacheBackend, ...) -- loadConfFromDb() looks up each
+     * real config row's param here to find its property. Adding a new
+     * CurrentConfig property that should load from the DB needs one line
+     * here too, same as adding its property + getter + setter by hand. A
+     * param with no entry here is a genuinely dynamic/unschematized key
+     * (e.g. upload_user_access) -- confGetParam() reads those straight
+     * from the repository instead.
+     *
+     * @var array<string, string>
+     */
+    private const array KEY_TO_PROPERTY = [
+        'activate_comments' => 'activateComments',
+        'activity_display_connections' => 'activityDisplayConnections',
+        'add_cache_to_storage_chart' => 'addCacheToStorageChart',
+        'admin_theme' => 'adminTheme',
+        'album_description_on_all_pages' => 'albumDescriptionOnAllPages',
+        'album_move_delay_before_auto_opening' => 'albumMoveDelayBeforeAutoOpening',
+        'allow_html_descriptions' => 'allowHtmlDescriptions',
+        'allow_html_in_metadata' => 'allowHtmlInMetadata',
+        'allow_random_representative' => 'allowRandomRepresentative',
+        'allow_user_customization' => 'allowUserCustomization',
+        'allow_user_registration' => 'allowUserRegistration',
+        'allow_web_services' => 'allowWebServices',
+        'alternative_pem_url' => 'alternativePemUrl',
+        'animated_webp_compression_quality' => 'animatedWebpCompressionQuality',
+        'anti-flood_time' => 'antiFloodTime',
+        'api_key_duration' => 'apiKeyDuration',
+        'api_key_forbidden_methods' => 'apiKeyForbiddenMethods',
+        'auth_key_duration' => 'authKeyDuration',
+        'authorize_remembering' => 'authorizeRemembering',
+        'available_permission_levels' => 'availablePermissionLevels',
+        'batch_manager_images_per_page_global' => 'batchManagerImagesPerPageGlobal',
+        'batch_manager_images_per_page_unit' => 'batchManagerImagesPerPageUnit',
+        'blk_menubar' => 'blkMenubar',
+        'browser_language' => 'browserLanguage',
+        'c13y_ignore' => 'c13yIgnore',
+        'cache.backend' => 'cacheBackend',
+        'cache.default_ttl' => 'cacheDefaultTtl',
+        'cache.namespace' => 'cacheNamespace',
+        'cache.redis_url' => 'cacheRedisUrl',
+        'cache_sizes' => 'cacheSizes',
+        'calendar_datefield' => 'calendarDatefield',
+        'calendar_show_any' => 'calendarShowAny',
+        'calendar_show_empty' => 'calendarShowEmpty',
+        'category_url_style' => 'categoryUrlStyle',
+        'check_upgrade_feed' => 'checkUpgradeFeed',
+        'checksum_compute_blocksize' => 'checksumComputeBlocksize',
+        'chmod_value' => 'chmodValue',
+        'comment_spam_max_links' => 'commentSpamMaxLinks',
+        'comment_spam_reject' => 'commentSpamReject',
+        'comments_author_mandatory' => 'commentsAuthorMandatory',
+        'comments_email_mandatory' => 'commentsEmailMandatory',
+        'comments_enable_website' => 'commentsEnableWebsite',
+        'comments_forall' => 'commentsForall',
+        'comments_order' => 'commentsOrder',
+        'comments_page_nb_comments' => 'commentsPageNbComments',
+        'comments_validation' => 'commentsValidation',
+        'compiled_template_cache_language' => 'compiledTemplateCacheLanguage',
+        'content_tag_cloud_items_number' => 'contentTagCloudItemsNumber',
+        'count_orphans' => 'countOrphans',
+        'dashboard_activity_nb_weeks' => 'dashboardActivityNbWeeks',
+        'dashboard_check_for_updates' => 'dashboardCheckForUpdates',
+        'data_dir_checked' => 'dataDirChecked',
+        'data_location' => 'dataLocation',
+        'debug_l10n' => 'debugL10n',
+        'debug_mail' => 'debugMail',
+        'debug_template' => 'debugTemplate',
+        'default_filters_views' => 'defaultFiltersViews',
+        'default_redirect_method' => 'defaultRedirectMethod',
+        'default_user_id' => 'defaultUserId',
+        'derivative_default_size' => 'derivativeDefaultSize',
+        'derivative_url_style' => 'derivativeUrlStyle',
+        'derivatives' => 'derivatives',
+        'derivatives_strip_metadata_threshold' => 'derivativesStripMetadataThreshold',
+        'die_on_sql_error' => 'dieOnSqlError',
+        'disabled_derivatives' => 'disabledDerivatives',
+        'display_fromto' => 'displayFromto',
+        'double_password_type_in_admin' => 'doublePasswordTypeInAdmin',
+        'email_admin_on_comment' => 'emailAdminOnComment',
+        'email_admin_on_comment_deletion' => 'emailAdminOnCommentDeletion',
+        'email_admin_on_comment_edition' => 'emailAdminOnCommentEdition',
+        'email_admin_on_comment_validation' => 'emailAdminOnCommentValidation',
+        'email_admin_on_new_user' => 'emailAdminOnNewUser',
+        'empty_lounge_running' => 'emptyLoungeRunning',
+        'enable_core_update' => 'enableCoreUpdate',
+        'enable_extensions_install' => 'enableExtensionsInstall',
+        'enable_formats' => 'isFormatsEnabled',
+        'enable_plugins' => 'enablePlugins',
+        'enable_synchronization' => 'enableSynchronization',
+        'ext_imagick_dir' => 'extImagickDir',
+        'extents_for_templates' => 'extentsForTemplates',
+        'ffmpeg_dir' => 'ffmpegDir',
+        'file_ext' => 'fileExtensions',
+        'filter_pages' => 'filterPages',
+        'filters_views' => 'filtersViews',
+        'format_ext' => 'formatExtensions',
+        'fs_quick_check_last_check' => 'fsQuickCheckLastCheck',
+        'fs_quick_check_period' => 'fsQuickCheckPeriod',
+        'full_tag_cloud_items_number' => 'fullTagCloudItemsNumber',
+        'gallery_locked' => 'galleryLocked',
+        'gallery_title' => 'galleryTitle',
+        'gallery_url' => 'galleryUrl',
+        'graphics_library' => 'graphicsLibrary',
+        'guest_access' => 'guestAccess',
+        'guest_id' => 'guestId',
+        'header_notes' => 'headerNotes',
+        'history_admin' => 'historyAdmin',
+        'history_autopurge_blocksize' => 'historyAutopurgeBlocksize',
+        'history_autopurge_every' => 'historyAutopurgeEvery',
+        'history_autopurge_keep_lines' => 'historyAutopurgeKeepLines',
+        'history_guest' => 'historyGuest',
+        'history_sections_cache' => 'historySectionsCache',
+        'index_caddie_icon' => 'indexCaddieIcon',
+        'index_created_date_icon' => 'indexCreatedDateIcon',
+        'index_edit_icon' => 'indexEditIcon',
+        'index_flat_icon' => 'indexFlatIcon',
+        'index_new_icon' => 'indexNewIcon',
+        'index_posted_date_icon' => 'indexPostedDateIcon',
+        'index_search_in_set_action' => 'indexSearchInSetAction',
+        'index_search_in_set_button' => 'indexSearchInSetButton',
+        'index_sizes_icon' => 'indexSizesIcon',
+        'index_slideshow_icon' => 'indexSlideShowIcon',
+        'index_sort_order_input' => 'indexSortOrderInput',
+        'inheritance_by_default' => 'inheritanceByDefault',
+        'insensitive_case_logon' => 'insensitiveCaseLogon',
+        'last_major_update' => 'lastMajorUpdate',
+        'level_separator' => 'levelSeparator',
+        'light_album_manager_threshold' => 'lightAlbumManagerThreshold',
+        'light_slideshow' => 'lightSlideshow',
+        'linked_album_search_limit' => 'linkedAlbumSearchLimit',
+        'links' => 'links',
+        'log' => 'logConf',
+        'log_archive_days' => 'logArchiveDays',
+        'log_dir' => 'logDir',
+        'log_level' => 'logLevel',
+        'lounge_activate_threshold' => 'loungeActivateThreshold',
+        'lounge_active' => 'loungeActive',
+        'lounge_max_duration' => 'loungeMaxDuration',
+        'mail_allow_html' => 'mailAllowHtml',
+        'mail_sender_email' => 'mailSenderEmail',
+        'mail_sender_name' => 'mailSenderName',
+        'mail_theme' => 'mailTheme',
+        'max_requests' => 'maxRequests',
+        'menubar_filter_icon' => 'menubarFilterIcon',
+        'menubar_tag_cloud_content' => 'menubarTagCloudContent',
+        'menubar_tag_cloud_items_number' => 'menubarTagCloudItemsNumber',
+        'meta_ref' => 'metaRef',
+        'metadata_keyword_separator_regex' => 'metadataKeywordSeparatorRegex',
+        'mobile_theme' => 'mobilTheme',
+        'nb_categories_page' => 'nbCategoriesPage',
+        'nb_comment_page' => 'nbCommentPage',
+        'nb_logs_page' => 'nbLogsPage',
+        'nbm_complementary_mail_content' => 'nbmComplementaryMailContent',
+        'nbm_default_value_user_enabled' => 'nbmDefaultValueUserEnabled',
+        'nbm_list_all_enabled_users_to_send' => 'nbmListAllEnabledUsersToSend',
+        'nbm_max_treatment_timeout_percent' => 'nbmMaxTreatmentTimeoutPercent',
+        'nbm_send_detailed_content' => 'nbmSendDetailedContent',
+        'nbm_send_html_mail' => 'nbmSendHtmlMail',
+        'nbm_send_mail_as' => 'nbmSendMailAs',
+        'nbm_send_recent_post_dates' => 'nbmSendRecentPostDates',
+        'nbm_treatment_timeout_default' => 'nbmTreatmentTimeoutDefault',
+        'never_delete_originals' => 'neverDeleteOriginals',
+        'newcat_default_commentable' => 'newcatDefaultCommentable',
+        'newcat_default_position' => 'newcatDefaultPosition',
+        'newcat_default_status' => 'newcatDefaultStatus',
+        'newcat_default_visible' => 'newcatDefaultVisible',
+        'no_photo_yet' => 'noPhotoYet',
+        'no_photo_yet_url' => 'noPhotoYetUrl',
+        'obligatory_user_mail_address' => 'obligatoryUserMailAddress',
+        'order_by' => 'orderBy',
+        'order_by_custom' => 'orderByCustom',
+        'order_by_inside_category' => 'orderByInsideCategory',
+        'order_by_inside_category_custom' => 'orderByInsideCategoryCustom',
+        'original_resize' => 'originalResize',
+        'original_resize_maxheight' => 'originalResizeMaxheight',
+        'original_resize_maxwidth' => 'originalResizeMaxwidth',
+        'original_resize_quality' => 'originalResizeQuality',
+        'original_url_protection' => 'originalUrlProtection',
+        'page_banner' => 'pageBanner',
+        'paginate_pages_around' => 'paginatePagesAround',
+        'password_activation_duration' => 'passwordActivationDuration',
+        'password_reset_code_duration' => 'passwordResetCodeDuration',
+        'password_reset_duration' => 'passwordResetDuration',
+        'pdf_jpg_quality' => 'pdfJpgQuality',
+        'pdf_representative_ext' => 'pdfRepresentativeExt',
+        'pdf_viewer_filesize_threshold' => 'pdfViewerFilesizeThreshold',
+        'pem_languages_category' => 'pemLanguagesCategory',
+        'pem_plugins_category' => 'pemPluginsCategory',
+        'pem_themes_category' => 'pemThemesCategory',
+        'php_extension_in_urls' => 'phpExtensionInUrls',
+        'picture_caddie_icon' => 'pictureCaddieIcon',
+        'picture_download_icon' => 'pictureDownloadIcon',
+        'picture_edit_icon' => 'pictureEditIcon',
+        'picture_ext' => 'pictureExtensions',
+        'picture_favorite_icon' => 'pictureFavoriteIcon',
+        'picture_informations' => 'pictureInformations',
+        'picture_menu' => 'pictureMenu',
+        'picture_metadata_icon' => 'pictureMetadataIcon',
+        'picture_navigation_icons' => 'pictureNavigationIcons',
+        'picture_navigation_thumb' => 'pictureNavigationThumb',
+        'picture_representative_icon' => 'pictureRepresentativeIcon',
+        'picture_sizes_icon' => 'pictureSizesIcon',
+        'picture_slideshow_icon' => 'pictureSlideShowIcon',
+        'picture_url_style' => 'pictureUrlStyle',
+        'piwigo_db_version' => 'piwigoDbVersion',
+        'piwigo_installed_version' => 'piwigoInstalledVersion',
+        'proxy_auth' => 'proxyAuth',
+        'proxy_server' => 'proxyServer',
+        'question_mark_in_urls' => 'questionMarkInUrls',
+        'quick_search_include_sub_albums' => 'quickSearchIncludeSubAlbums',
+        'random_index_redirect' => 'randomIndexRedirect',
+        'rate' => 'rateEnabled',
+        'rate_anonymous' => 'rateAnonymous',
+        'rate_items' => 'rateItems',
+        'recent_post_dates' => 'recentPostDates',
+        'related_albums_display_limit' => 'relatedAlbumsDisplayLimit',
+        'related_albums_maximum_items_to_compute' => 'relatedAlbumsMaximumItemsToCompute',
+        'remember_me_length' => 'rememberMeLength',
+        'remember_me_name' => 'rememberMeName',
+        'representative_cache_on_level' => 'representativeCacheOnLevel',
+        'representative_cache_on_subcats' => 'representativeCacheOnSubcats',
+        'rss_feed_author' => 'rssReedAuthor',
+        'secret_key' => 'secretKey',
+        'send_bcc_mail_webmaster' => 'sendBccMailWebmaster',
+        'send_piwigo_infos' => 'sendPiwigoInfos',
+        'send_piwigo_infos_last_notice' => 'sendPiwigoInfosLastNotice',
+        'send_piwigo_infos_origin_hash' => 'sendPiwigoInfosOriginHash',
+        'send_piwigo_infos_period' => 'sendPiwigoInfosPeriod',
+        'send_piwigo_infos_update_url' => 'sendPiwigoInfosUpdateUrl',
+        'session_gc_probability' => 'sessionGcProbability',
+        'session_length' => 'sessionLength',
+        'session_name' => 'sessionName',
+        'session_save_handler' => 'sessionSaveHandler',
+        'session_use_cookies' => 'sessionUseCookies',
+        'session_use_ip_address' => 'sessionUseIpAddress',
+        'session_use_only_cookies' => 'sessionUseOnlyCookies',
+        'session_use_trans_sid' => 'sessionUseTransSid',
+        'show_exif' => 'showExif',
+        'show_exif_fields' => 'showExifFields',
+        'show_gt' => 'showGt',
+        'show_iptc' => 'showIptc',
+        'show_iptc_mapping' => 'showIptcMapping',
+        'show_mobile_app_banner_in_admin' => 'showMobileAppBannerInAdmin',
+        'show_mobile_app_banner_in_gallery' => 'showMobileAppBannerInGallery',
+        'show_newsletter_subscription' => 'showNewsletterSubscription',
+        'show_piwigo_latest_news' => 'showPiwigoLatestNews',
+        'show_queries' => 'showQueries',
+        'show_template_in_side_menu' => 'showTemplateInSideMenu',
+        'show_thumbnail_caption' => 'showThumbnailCaption',
+        'show_version' => 'showVersion',
+        'slideshow_period' => 'slideshowPeriod',
+        'slideshow_period_max' => 'slideshowPeriodMax',
+        'slideshow_period_min' => 'slideshowPeriodMin',
+        'slideshow_period_step' => 'slideshowPeriodStep',
+        'slideshow_repeat' => 'slideshowRepeat',
+        'smtp_host' => 'smtpHost',
+        'smtp_password' => 'smtpPassword',
+        'smtp_secure' => 'smtpSecure',
+        'smtp_user' => 'smtpUser',
+        'standard_pages_selected_logo' => 'standardPagesSelectedLogo',
+        'standard_pages_selected_logo_path' => 'standardPagesSelectedLogoPath',
+        'standard_pages_selected_skin' => 'standardPagesSelectedSkin',
+        'stat_compare_year_displayed' => 'statCompareYearDisplayed',
+        'sync_chars_regex' => 'syncCharsRegex',
+        'sync_exclude_folders' => 'syncExcludeFolders',
+        'tag_letters_column_number' => 'tagLettersColumnNumber',
+        'tag_url_style' => 'tagUrlStyle',
+        'tags_default_display_mode' => 'tagsDefaultDisplayMode',
+        'tags_levels' => 'tagsLevels',
+        'template_combine_files' => 'templateCombineFiles',
+        'template_compile_check' => 'templateCompileCheck',
+        'template_force_compile' => 'templateForceCompile',
+        'themes_dir' => 'themesDir',
+        'tiff_representative_ext' => 'tiffRepresentativeExt',
+        'top_number' => 'topNumber',
+        'trusted_proxies' => 'trustedProxies',
+        'uniqueness_mode' => 'uniquenessMode',
+        'update_notify_check_period' => 'updateNotifyCheckPeriod',
+        'update_notify_last_check' => 'updateNotifyLastCheck',
+        'update_notify_last_notification' => 'updateNotifyLastNotification',
+        'update_notify_reminder_period' => 'updateNotifyReminderPeriod',
+        'updates_ignored' => 'updatesIgnored',
+        'upload_detect_duplicate' => 'uploadDetectDuplicate',
+        'upload_dir' => 'uploadDir',
+        'upload_form_all_types' => 'uploadFormAllTypes',
+        'upload_form_automatic_rotation' => 'uploadFormAutomaticRotation',
+        'upload_form_chunk_size' => 'uploadFormChunkSize',
+        'upload_form_max_file_size' => 'uploadFormMaxFileSize',
+        'url_port' => 'urlPort',
+        'use_exif' => 'useExif',
+        'use_exif_mapping' => 'useExifMapping',
+        'use_iptc' => 'useIptc',
+        'use_iptc_mapping' => 'useIptcMapping',
+        'use_proxy' => 'useProxy',
+        'use_standard_pages' => 'useStandardPages',
+        'user_can_delete_comment' => 'userCanDeleteComment',
+        'user_can_edit_comment' => 'userCanEditComment',
+        'user_fields' => 'userFields',
+        'webmaster_id' => 'webmasterId',
+        'week_starts_on' => 'weekStartsOn',
+        'ws_max_images_per_page' => 'wsMaxImagesPerPage',
+        'ws_max_users_per_page' => 'wsMaxUsersPerPage',
+    ];
+
+    /**
+     * The single cache item allRowsFromCacheOrDb() stores the whole
+     * param => value map under -- CachePools::config() is a dedicated
+     * namespace with no other consumer, so one well-known key is enough.
+     */
+    private const string CACHE_ITEM_KEY = 'all_rows';
+
     public function __construct(
         private ConfigRepository $repo,
     ) {}
 
     /**
      * Generic dynamic-key reader for conf rows that legitimately lack a
-     * SCHEMA entry. For SCHEMA-backed keys, prefer the typed Config::xxx()
-     * accessors.
+     * CurrentConfig property (not in KEY_TO_PROPERTY -- e.g.
+     * upload_user_access). For property-backed keys, prefer the typed
+     * CurrentConfig::xxx() accessors; calling this with one still works
+     * (reads the live property), just isn't the preferred surface.
      *
      * @param array<mixed>|string|int|float|bool|null $defaultValue
      */
     public function confGetParam(string $param, array|string|int|float|bool|null $defaultValue = null): mixed
     {
-        return Config::all()[$param] ?? $defaultValue;
+        $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
+        if ($propertyName !== null) {
+            $value = new \ReflectionMethod(CurrentConfig::class, $propertyName)->invoke(null);
+
+            return $value ?? $defaultValue;
+        }
+
+        $entry = $this->repo->find($param);
+        if ($entry === null || $entry->value === null) {
+            return $defaultValue;
+        }
+
+        return self::decodeScalar($entry->value) ?? $defaultValue;
     }
 
     /**
-     * Merges config table rows into Config::$data. $param === null loads
-     * every row (the common case -- every real call site except one);
-     * a non-null $param loads just that one row by primary key. Narrower
-     * than the legacy load_conf_from_db()'s arbitrary raw-SQL $condition
-     * string -- grepping every real call site found exactly one
-     * non-trivial usage (a single-param equality filter), so a
-     * parameterized find() covers the real need without a string-
-     * interpolation surface.
+     * Loads config table rows into CurrentConfig's own properties.
+     * $param === null loads every row (the common case -- every real call
+     * site except one); a non-null $param loads just that one row by
+     * primary key. Narrower than the legacy load_conf_from_db()'s
+     * arbitrary raw-SQL $condition string -- grepping every real call
+     * site found exactly one non-trivial usage (a single-param equality
+     * filter), so a parameterized find() covers the real need without a
+     * string-interpolation surface.
      *
-     * Fires the same 'load_conf' plugin hook ConfigDb::loadConfFromDb()
-     * does, payload $param in place of that method's raw SQL $condition
-     * string (the closest equivalent under this method's narrower
-     * by-single-key signature) -- a documented trigger
+     * A row whose param isn't in KEY_TO_PROPERTY is a genuinely dynamic/
+     * unschematized key (confGetParam()'s own real use case) -- silently
+     * skipped here, exactly like the SCHEMA-driven design this replaces
+     * skipped keys with no matching accessor.
+     *
+     * Fires the same 'load_conf' plugin hook the reference's
+     * ConfigDb::loadConfFromDb() does, payload $param in place of that
+     * method's raw SQL $condition string -- a documented trigger
      * (tools/triggers_list.php), so a plugin listening for it must keep
      * being notified regardless of which persistence layer a given
      * caller routes through.
@@ -74,7 +400,9 @@ final readonly class ConfigService
     public function loadConfFromDb(?string $param = null, bool $dieIfNotFound = true): void
     {
         if ($param === null) {
-            $entries = $this->repo->findAll();
+            foreach ($this->allRowsFromCacheOrDb() as $rowParam => $value) {
+                self::hydrate($rowParam, $value);
+            }
         } else {
             $entry = $this->repo->find($param);
             if ($entry === null) {
@@ -83,14 +411,47 @@ final readonly class ConfigService
                 }
                 return;
             }
-            $entries = [$entry];
-        }
-
-        foreach ($entries as $entry) {
-            Config::override($entry->param, self::decodeScalar($entry->value));
+            self::hydrate($entry->param, $entry->value);
         }
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('load_conf', $param);
+    }
+
+    /**
+     * The $param === null branch above is the expensive one -- a full
+     * Doctrine ORM hydration of ~280 ConfigEntry entities on every request
+     * that runs it (every real HTTP request, via RequestBootstrap::connect()).
+     * CachePools::config() (P23 batch 2, reserved with "no real consumer
+     * yet") caches the plain param => value map instead of the ConfigEntry
+     * objects themselves -- hydrate() only ever needs the raw string value,
+     * and a plain array sidesteps any Doctrine-entity-serialization
+     * question entirely. No TTL: config data doesn't go stale on a timer,
+     * only on a write, so confUpdateParam()/confDeleteParam() below
+     * explicitly clear this pool after every real write instead of relying
+     * on expiry.
+     *
+     * @return array<string, ?string>
+     */
+    private function allRowsFromCacheOrDb(): array
+    {
+        $pool = \Piwigo\Cache\CachePools::config();
+        $item = $pool->getItem(self::CACHE_ITEM_KEY);
+        if ($item->isHit()) {
+            /** @var array<string, ?string> $cached */
+            $cached = $item->get();
+
+            return $cached;
+        }
+
+        $rows = [];
+        foreach ($this->repo->findAll() as $entry) {
+            $rows[$entry->param] = $entry->value;
+        }
+
+        $item->set($rows);
+        $pool->save($item);
+
+        return $rows;
     }
 
     /**
@@ -101,9 +462,13 @@ final readonly class ConfigService
     public function confUpdateParam(string $param, array|string|int|float|bool|null $value, bool $updateGlobal = false): void
     {
         $this->repo->upsert($param, self::encode($value));
+        \Piwigo\Cache\CachePools::config()->clear();
 
         if ($updateGlobal) {
-            Config::override($param, $value);
+            $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
+            if ($propertyName !== null) {
+                new \ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($propertyName))->invoke(null, $value);
+            }
         }
     }
 
@@ -115,7 +480,20 @@ final readonly class ConfigService
         $params = is_array($params) ? $params : [$params];
         foreach ($params as $param) {
             $this->repo->deleteByParam($param);
-            Config::delete($param);
+            \Piwigo\Cache\CachePools::config()->clear();
+
+            $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
+            if ($propertyName === null) {
+                continue;
+            }
+            // "Deleted" means back to the property's own declared default
+            // (usually null for the nullable-string presence-marker
+            // cluster, but a real non-null default for e.g.
+            // disabledDerivatives's [] -- resetting those to null would
+            // violate their own non-nullable type).
+            $property = new \ReflectionProperty(CurrentConfig::class, $propertyName);
+            new \ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($propertyName))
+                ->invoke(null, $property->getDefaultValue());
         }
     }
 
@@ -134,6 +512,66 @@ final readonly class ConfigService
         $this->confDeleteParam($param);
 
         return $writeable;
+    }
+
+    /**
+     * Bridges one real config-table row into its matching CurrentConfig
+     * property, via that property's own setter -- reuses each setter's
+     * existing shape validation/normalization (the array-shaped
+     * "custom" properties) rather than duplicating it here. This is the
+     * one place that decodes a raw DB TEXT value into a property's exact
+     * native PHP type; every real setter can otherwise assume it's
+     * always called with an already-correctly-shaped value.
+     */
+    private static function hydrate(string $param, ?string $raw): void
+    {
+        $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
+        if ($propertyName === null) {
+            return;
+        }
+
+        $setter = new \ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($propertyName));
+        $paramType = $setter->getParameters()[0]
+            ->getType();
+        $paramTypeName = $paramType instanceof \ReflectionNamedType ? $paramType->getName() : null;
+
+        if ($raw === null) {
+            if ($paramType?->allowsNull() === true) {
+                $setter->invoke(null, null);
+            }
+
+            return;
+        }
+
+        $decoded = self::decodeScalar($raw);
+
+        $value = match ($paramTypeName) {
+            'bool' => is_bool($decoded) ? $decoded : filter_var($decoded, \FILTER_VALIDATE_BOOLEAN),
+            'int' => is_numeric($decoded) ? (int) $decoded : 0,
+            'float' => is_numeric($decoded) ? (float) $decoded : 0.0,
+            'string' => is_string($decoded) ? $decoded : ($decoded === true ? 'true' : 'false'),
+            'array' => is_string($decoded) ? self::unserializeArray($decoded) : [],
+            // Union/object-typed setters (disabledDerivatives's array|string,
+            // recentPostDates's NotificationConfig by way of its own
+            // array-accepting setter -- getName() above already returned
+            // null for both, since neither is a single ReflectionNamedType)
+            // get the decoded scalar as-is; each such setter already knows
+            // how to handle it (see CurrentConfig's own "custom-shaped
+            // properties" section).
+            default => $decoded,
+        };
+
+        $setter->invoke(null, $value);
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    private static function unserializeArray(string $raw): array
+    {
+        $unserialized = \Piwigo\Core\ArrayHelper::safeUnserialize($raw);
+
+        return is_array($unserialized) ? $unserialized : [];
     }
 
     private static function decodeScalar(?string $raw): string|bool|null

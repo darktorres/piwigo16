@@ -32,9 +32,9 @@ use Doctrine\DBAL\Connection;
  * the former runner-scope-local $mysql_changes array. The former
  * `global` declarations carrying the include-scope contract ($conf/
  * $prefixeTable/$page/$template/$persistent_cache/$last_time) are gone --
- * each site reads Tables::/Config::dbPrefix() directly, or, for the
+ * each site reads Tables::/DbCredentials::current()->prefix directly, or, for the
  * handful of keys genuinely only ever set by a site's own
- * local/config/config.inc.php (never mirrored into Config::),
+ * local/config/config.inc.php (never mirrored into CurrentConfig::),
  * {@see \Piwigo\Admin\Install\DbPatch\LegacyFileConf::read()}/
  * {@see \Piwigo\Admin\Install\DbPatch\LegacyDbLayer::value()} (Legacy
  * Coupling Retirement gap-closure, "fix all" pass).

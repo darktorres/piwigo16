@@ -71,8 +71,8 @@ final readonly class ImageService
     {
 
         return [
-            'period' => \Piwigo\Config\Config::slideshowPeriod(),
-            'repeat' => \Piwigo\Config\Config::slideshowRepeat(),
+            'period' => \Piwigo\Config\CurrentConfig::slideshowPeriod(),
+            'repeat' => \Piwigo\Config\CurrentConfig::slideshowRepeat(),
             'play' => true,
         ];
     }
@@ -85,8 +85,8 @@ final readonly class ImageService
     {
 
         $period = $params['period'] ?? 0;
-        $min = \Piwigo\Config\Config::slideshowPeriodMin();
-        $max = \Piwigo\Config\Config::slideshowPeriodMax();
+        $min = \Piwigo\Config\CurrentConfig::slideshowPeriodMin();
+        $max = \Piwigo\Config\CurrentConfig::slideshowPeriodMax();
 
         if ($period < $min) {
             $params['period'] = $min;
@@ -228,7 +228,7 @@ final readonly class ImageService
             }
 
             $ok = true;
-            if (! \Piwigo\Config\Config::has('never_delete_originals')) {
+            if (! \Piwigo\Config\CurrentConfig::neverDeleteOriginals()) {
                 foreach ($files as $path) {
                     if (is_file($path) and ! unlink($path)) {
                         $ok = false;
@@ -328,9 +328,8 @@ final readonly class ImageService
     {
         $logger = \Piwigo\Core\CurrentLogger::get();
 
-        if (\Piwigo\Config\Config::has('empty_lounge_running')) {
-            $emptyLoungeRunning = \Piwigo\Config\Config::emptyLoungeRunning();
-            $emptyLoungeRunning = is_string($emptyLoungeRunning) ? $emptyLoungeRunning : '';
+        $emptyLoungeRunning = \Piwigo\Config\CurrentConfig::emptyLoungeRunning();
+        if ($emptyLoungeRunning !== null) {
             [$runningExecId, $runningExecStartTime] = explode('-', $emptyLoungeRunning);
             if (time() - (int) $runningExecStartTime > 60) {
                 $logger->debug(__FUNCTION__ . ', exec=' . $runningExecId . ', timeout stopped by another call to the function');
@@ -543,16 +542,16 @@ final readonly class ImageService
         return count($pathForId);
     }
 
-    public function countOrphans(): mixed
+    public function countOrphans(): int
     {
-        if ((\Piwigo\Config\Config::all()['count_orphans'] ?? null) === null) {
+        if (\Piwigo\Config\CurrentConfig::countOrphans() === null) {
             // we don't care about the list of image_ids, we only care about the number
             // of orphans, so let's use a faster method than calling count(getOrphans())
             $counter = $this->repo->countAllImages() - $this->repo->countImagesInCategories();
             \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('count_orphans', $counter, updateGlobal: true);
         }
 
-        return \Piwigo\Config\Config::all()['count_orphans'] ?? null;
+        return \Piwigo\Config\CurrentConfig::countOrphans() ?? 0;
     }
 
     /**

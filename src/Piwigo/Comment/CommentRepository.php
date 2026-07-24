@@ -219,7 +219,7 @@ final class CommentRepository extends AbstractRepository implements CommentCount
      * the column's collation (this schema's `users` table uses a `_ci`
      * collation, so this is effectively case-insensitive), not on
      * anything this query controls. $usernameColumn is the configurable
-     * DB column name (see \Piwigo\Config\Config::userFields()), not user-controlled.
+     * DB column name (see \Piwigo\Config\CurrentConfig::userFields()), not user-controlled.
      */
     public function usernameExists(string $usernameColumn, string $username): bool
     {
@@ -348,7 +348,7 @@ final class CommentRepository extends AbstractRepository implements CommentCount
     /**
      * Paginated comment listing for a single image, joined with the
      * commenting user's email column (looked up by DB primary key --
-     * \Piwigo\Config\Config::userFields() maps the generic 'id'/'email' names to the
+     * \Piwigo\Config\CurrentConfig::userFields() maps the generic 'id'/'email' names to the
      * actual column names, resolved by the caller since that's
      * config-domain knowledge, not persistence-domain).
      *

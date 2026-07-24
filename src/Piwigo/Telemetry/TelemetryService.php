@@ -20,9 +20,9 @@ use Piwigo\Db\Tables;
  * here; this only assembles it (same "build small and real, don't
  * over-engineer a greenfield delta" discipline as P18's AuditService).
  *
- * Goes straight to ConfigRepository rather than ConfigService/Config::,
+ * Goes straight to ConfigRepository rather than ConfigService/CurrentConfig::,
  * since resolveInstallId()'s get-or-create must read/write the real DB
- * row every time, not the request-scoped Config:: snapshot.
+ * row every time, not the request-scoped CurrentConfig:: snapshot.
  */
 final readonly class TelemetryService
 {

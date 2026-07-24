@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Job\GenerateDerivativeJob;
@@ -43,7 +43,7 @@ final class MessengerRoundTripTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
@@ -52,8 +52,8 @@ final class MessengerRoundTripTest extends IntegrationTestCase
         // enough of a safeguard: scope every filesystem side effect to a
         // marker-suffixed subdirectory, verified before any destructive
         // operation.
-        Config::override('data_location', $this->marker() . '/');
-        mkdir(\Piwigo\Core\CurrentPaths::get()->root . Config::derivativeDir(), 0o777, true);
+        CurrentConfig::setDataLocation($this->marker() . '/');
+        mkdir(\Piwigo\Core\CurrentPaths::get()->root . CurrentConfig::derivativeDir(), 0o777, true);
 
         $this->conn = DbConnection::build();
         $this->conn->executeStatement('DROP TABLE IF EXISTS messenger_messages');
@@ -67,7 +67,7 @@ final class MessengerRoundTripTest extends IntegrationTestCase
             $this->rrmdir($dir);
         }
         $this->conn->executeStatement('DROP TABLE IF EXISTS messenger_messages');
-        Config::reset();
+        CurrentConfig::reset();
         parent::tearDown();
     }
 
@@ -97,7 +97,7 @@ final class MessengerRoundTripTest extends IntegrationTestCase
 
     public function test_a_dispatched_job_is_persisted_received_and_handled_via_the_real_doctrine_transport(): void
     {
-        $derivDir = \Piwigo\Core\CurrentPaths::get()->root . Config::derivativeDir() . '2026/07';
+        $derivDir = \Piwigo\Core\CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026/07';
         mkdir($derivDir, 0o777, true);
         file_put_contents($derivDir . '/photo-th.jpg', 'x');
         file_put_contents($derivDir . '/photo-sq.jpg', 'x');

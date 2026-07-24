@@ -31,7 +31,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Activity\ActivityRepository;
     use Piwigo\Activity\ActivityService;
     use Piwigo\Category\CategoryRepository;
-    use Piwigo\Config\Config;
+    use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Group\GroupRepository;
@@ -59,11 +59,11 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
-            Config::reset();
+            CurrentConfig::reset();
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
-            Config::override('tags_levels', 5);
+            CurrentConfig::setTagsLevels(5);
 
             $conn = DbConnection::build();
             $this->service = new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn)), new ActivityService(new ActivityRepository($conn)));

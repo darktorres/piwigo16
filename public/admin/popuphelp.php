@@ -28,7 +28,6 @@ declare(strict_types=1);
 // object (and its own MOUNT_DEPTH_ATTRIBUTE) exists.
 require __DIR__ . '/../../vendor/autoload.php';
 
-use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Bootstrap\RequestPipeline;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\Paths;
@@ -41,8 +40,6 @@ $paths = Paths::fromRoot(dirname(__DIR__, 2));
 RequestMountDepth::set(1);
 AdminContext::mark();
 \Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
-
-CommonBootstrap::run($paths);
 
 $request = RequestFactory::fromGlobals()->withAttribute(Router::MOUNT_DEPTH_ATTRIBUTE, 1);
 $response = RequestPipeline::handle($request);

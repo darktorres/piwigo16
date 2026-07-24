@@ -259,7 +259,7 @@ final class GroupRepository extends AbstractRepository
 
     /**
      * Usernames of a group's members, via the configurable user-id/username
-     * DB column names (see \Piwigo\Config\Config::userFields()).
+     * DB column names (see \Piwigo\Config\CurrentConfig::userFields()).
      *
      * @return list<string>
      */

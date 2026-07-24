@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 
 /**
  * Named-disk configuration for StorageRegistry.
@@ -14,7 +14,7 @@ use Piwigo\Config\Config;
  * matching composer package -- no call-site changes required.
  *
  * Disk roots use runtime Config values so they honour site-level overrides
- * (e.g. Config::uploadDir(), Config::dataLocation()). Required via
+ * (e.g. CurrentConfig::uploadDir(), CurrentConfig::dataLocation()). Required via
  * StorageRegistry::fromConfig(CurrentPaths::get()->root . 'config/storage.php')
  * -- no constructor/parameter seam available for a plain `require`d array
  * file, so $paths is captured once here the same way LegacyFileConf/
@@ -27,12 +27,12 @@ $paths = \Piwigo\Core\CurrentPaths::get();
 return [
     // User photo uploads: upload/YYYY/MM/DD/
     'uploads' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter(rtrim($paths->root . Config::uploadDir(), '/')),
+        new LocalFilesystemAdapter(rtrim($paths->root . CurrentConfig::uploadDir(), '/')),
     ),
 
     // Derivative/thumbnail tree: _data/i/
     'derivatives' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter($paths->root . Config::dataLocation() . 'i'),
+        new LocalFilesystemAdapter($paths->root . CurrentConfig::dataLocation() . 'i'),
     ),
 
     // Watermark PNG files: local/watermarks/
@@ -42,7 +42,7 @@ return [
 
     // Theme files
     'themes' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter($paths->root . Config::themesDir()),
+        new LocalFilesystemAdapter($paths->root . CurrentConfig::themesDir()),
     ),
 
     // Plugin files
@@ -52,7 +52,7 @@ return [
 
     // Data exports
     'exports' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter($paths->root . Config::dataLocation() . 'exports'),
+        new LocalFilesystemAdapter($paths->root . CurrentConfig::dataLocation() . 'exports'),
     ),
 
     // Site-local overrides: local/watermarks/, local/logo/, local/config/, …

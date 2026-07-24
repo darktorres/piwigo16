@@ -109,11 +109,11 @@ final class Lang
     }
 
     /**
-     * Called by CommonBootstrap::run() after include/common.inc.php's
-     * RequestBootstrap::finalize()/load() calls have populated
-     * Translator's own mirror -- HTTP-path only, mirroring
-     * PageState::attachGlobals()'s own placement and reasoning (no $lang
-     * concept on the CLI path).
+     * Called by RequestBootstrap::finalize() (and bootConfigOnly(), its
+     * lighter standalone-callable equivalent) after finalize()'s own
+     * load() calls have populated Translator's own mirror -- HTTP-path
+     * only, mirroring PageState::attachGlobals()'s own placement and
+     * reasoning (no $lang concept on the CLI path).
      */
     public static function attachGlobals(): void
     {

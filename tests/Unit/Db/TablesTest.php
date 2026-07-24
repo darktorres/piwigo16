@@ -2,15 +2,26 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\Config;
+use Piwigo\Db\DbCredentials;
 use Piwigo\Db\Tables;
 
-beforeEach(function (): void {
-    Config::reset();
+// tests/bootstrap.php loads real PIWIGO_DB_* vars for the whole Pest
+// process (see tests/Unit/Db/DbCredentialsTest.php's own comment) --
+// save + restore PIWIGO_DB_PREFIX specifically so the "defaults to
+// piwigo_" assertion below tests DbCredentials's own fallback, not a
+// coincidence of the real test DB's configured prefix.
+$originalPrefix = null;
+
+beforeEach(function () use (&$originalPrefix): void {
+    $value = getenv('PIWIGO_DB_PREFIX');
+    $originalPrefix = $value === false ? null : $value;
+    putenv('PIWIGO_DB_PREFIX');
+    DbCredentials::reset();
 });
 
-afterEach(function (): void {
-    Config::reset();
+afterEach(function () use (&$originalPrefix): void {
+    putenv($originalPrefix === null ? 'PIWIGO_DB_PREFIX' : 'PIWIGO_DB_PREFIX=' . $originalPrefix);
+    DbCredentials::reset();
 });
 
 test('every static method returns the db prefix plus its snake_case table name', function (): void {
@@ -32,7 +43,8 @@ test('every static method returns the db prefix plus its snake_case table name',
 });
 
 test('table names respect a custom db prefix', function (): void {
-    Config::loadArray(['db_prefix' => 'custom_']);
+    putenv('PIWIGO_DB_PREFIX=custom_');
+    DbCredentials::reset();
 
     expect(Tables::images())->toBe('custom_images')
         ->and(Tables::userInfos())->toBe('custom_user_infos');

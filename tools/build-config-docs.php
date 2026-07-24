@@ -2,19 +2,16 @@
 
 declare(strict_types=1);
 
-// Regenerates the generated table in docs/CONFIG.md from Config::SCHEMA
-// (P13; docs/PLAN-REPLAY-AUDIT.md finding #10 -- this file was a genuine gap,
-// SCHEMA existed but nothing documented it). One row per SCHEMA entry, in
-// declaration order.
+// Regenerates the generated table in docs/CONFIG.md from
+// Piwigo\Config\CurrentConfig's own properties, reflectively (Config
+// generic-accessor removal retired the former Config::SCHEMA array this
+// tool used to read). One row per config-value property, declaration
+// order.
 //
-// Idempotent: re-running produces no diff once SCHEMA and the generated
-// region agree. Run after adding/editing any SCHEMA entry:
+// Idempotent: re-running produces no diff once CurrentConfig and the
+// generated region agree. Run after adding/editing any property:
 //
 //   php tools/build-config-docs.php
-//
-// Kept as live tooling, not a one-shot, matching build-config-accessors.php's
-// own reasoning -- this project's SCHEMA keeps growing through P17-23 domain
-// migrations, and a hand-maintained copy would just go stale again.
 
 if (PHP_SAPI !== 'cli') {
     http_response_code(403);
@@ -23,7 +20,9 @@ if (PHP_SAPI !== 'cli') {
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\Required;
+use Piwigo\Config\Sensitive;
 
 $docPath = __DIR__ . '/../docs/CONFIG.md';
 $source = file_get_contents($docPath);
@@ -58,41 +57,64 @@ function formatDefault(mixed $default): string
     if (is_int($default) || is_float($default)) {
         return (string) $default;
     }
+    if (is_object($default)) {
+        return '`' . $default::class . '`';
+    }
 
-    throw new InvalidArgumentException('Unsupported SCHEMA default type: ' . get_debug_type($default));
+    throw new InvalidArgumentException('Unsupported property default type: ' . get_debug_type($default));
 }
 
-$rows = ['| Key | Type | Default | Flags | Description |', '| --- | --- | --- | --- | --- |'];
-foreach (Config::SCHEMA as $key => $entry) {
-    $type = $entry['type'];
-    if (($entry['nullable'] ?? false) === true) {
-        $type .= '?';
+/**
+ * Joins a property's own docblock into a single description line --
+ * strips the /** * ... *\/ wrapper, joins wrapped lines with spaces.
+ */
+function describeProperty(ReflectionProperty $property): string
+{
+    $doc = $property->getDocComment();
+    if ($doc === false) {
+        return '';
+    }
+    $lines = preg_split('/\R/', $doc);
+    $words = [];
+    foreach ($lines !== false ? $lines : [] as $line) {
+        $line = trim($line);
+        $line = preg_replace('#^/\*\*|\*/$|^\*#', '', $line);
+        $line = trim((string) $line);
+        if ($line === '' || str_starts_with($line, '@')) {
+            continue;
+        }
+        $words[] = $line;
     }
 
-    $default = ($entry['nullable'] ?? false) === true && ($entry['default'] ?? null) === null
-        ? 'null'
-        : formatDefault($entry['default'] ?? null);
+    return implode(' ', $words);
+}
+
+$rows = ['| Property | Type | Default | Flags | Description |', '| --- | --- | --- | --- | --- |'];
+$reflection = new ReflectionClass(CurrentConfig::class);
+foreach ($reflection->getProperties(ReflectionProperty::IS_STATIC | ReflectionProperty::IS_PRIVATE) as $property) {
+    $type = $property->getType();
+    $typeName = $type instanceof ReflectionNamedType ? $type->getName() : (string) $type;
+    if ($type !== null && $type->allowsNull() && ! str_starts_with($typeName, '?')) {
+        $typeName = '?' . $typeName;
+    }
+
+    $default = formatDefault($property->getDefaultValue());
 
     $flags = [];
-    if (($entry['required'] ?? false) === true) {
+    if ($property->getAttributes(Required::class) !== []) {
         $flags[] = 'required';
     }
-    if (($entry['sensitive'] ?? false) === true) {
+    if ($property->getAttributes(Sensitive::class) !== []) {
         $flags[] = 'sensitive';
     }
-    if (($entry['custom'] ?? false) === true) {
-        $flags[] = 'custom accessor';
-    }
-
-    $description = $entry['description'];
 
     $rows[] = sprintf(
         '| `%s` | %s | %s | %s | %s |',
-        $key,
-        $type,
+        $property->getName(),
+        $typeName,
         $default,
         $flags === [] ? '' : implode(', ', $flags),
-        str_replace('|', '\|', $description)
+        str_replace('|', '\|', describeProperty($property))
     );
 }
 
@@ -104,4 +126,4 @@ $newSource = $before . $generatedRegion . $after;
 
 file_put_contents($docPath, $newSource);
 
-fwrite(STDERR, 'Generated ' . (count($rows) - 2) . " config key rows.\n");
+fwrite(STDERR, 'Generated ' . (count($rows) - 2) . " config property rows.\n");

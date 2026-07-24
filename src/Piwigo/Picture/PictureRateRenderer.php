@@ -36,7 +36,7 @@ final class PictureRateRenderer
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        if (! \Piwigo\Config\Config::rateEnabled()) {
+        if (! \Piwigo\Config\CurrentConfig::rateEnabled()) {
             return;
         }
 
@@ -58,7 +58,7 @@ final class PictureRateRenderer
         $template->assign('rate_summary', $rate_summary);
 
         $user_rate = null;
-        if (\Piwigo\Config\Config::rateAnonymous() or \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic)) {
+        if (\Piwigo\Config\CurrentConfig::rateAnonymous() or \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic)) {
             if ($rate_summary['count'] > 0) {
                 $rate_image_id = $imageId;
                 $rate_user_id = \Piwigo\Users\CurrentUser::get()->id;
@@ -87,7 +87,7 @@ final class PictureRateRenderer
                         ]
                     ),
                     'USER_RATE' => $user_rate,
-                    'marks' => \Piwigo\Config\Config::rateItems(),
+                    'marks' => \Piwigo\Config\CurrentConfig::rateItems(),
                 ]
             );
         }

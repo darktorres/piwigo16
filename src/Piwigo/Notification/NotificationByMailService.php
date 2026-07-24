@@ -46,7 +46,7 @@ final readonly class NotificationByMailService
             return [];
         }
 
-        $userFields = \Piwigo\Config\Config::userFields();
+        $userFields = \Piwigo\Config\CurrentConfig::userFields();
         $usernameField = $userFields['username'];
         $emailField = $userFields['email'];
         $idField = $userFields['id'];

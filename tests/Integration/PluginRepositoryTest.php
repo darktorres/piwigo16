@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -31,7 +31,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 

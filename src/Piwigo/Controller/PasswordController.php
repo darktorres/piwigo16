@@ -311,7 +311,7 @@ final class PasswordController implements ControllerInterface
         if (is_numeric($user_id_raw)) {
             $user_id = $user_id_raw;
         } else {
-            $guest_id = \Piwigo\Config\Config::guestId();
+            $guest_id = \Piwigo\Config\CurrentConfig::guestId();
             $user_id = $guest_id;
         }
 
@@ -369,7 +369,7 @@ final class PasswordController implements ControllerInterface
             'attempts' => 0,
             'user_id' => $is_user_found ? $user_id : null,
             'created_at' => time(),
-            'ttl' => min(\Piwigo\Config\Config::passwordResetCodeDuration(), 900), // max 15 min
+            'ttl' => min(\Piwigo\Config\CurrentConfig::passwordResetCodeDuration(), 900), // max 15 min
         ];
 
         return true;
@@ -572,7 +572,7 @@ SELECT
 
         // see validate_mail_address() for why this is string=>string
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
         $conn = DbConnection::build();
 

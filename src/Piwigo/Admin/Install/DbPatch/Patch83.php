@@ -16,8 +16,8 @@ use Piwigo\Db\Tables;
 
 /**
  * Former install/db/83-database.php (P23 sub-batch 8g-1). user_fields/
- * guest_id are read via LegacyFileConf::read() -- Config::userFields()/
- * Config::guestId() don't see a site's local/config/config.inc.php
+ * guest_id are read via LegacyFileConf::read() -- CurrentConfig::userFields()/
+ * CurrentConfig::guestId() don't see a site's local/config/config.inc.php
  * override on this path (same reasoning as the rest of this file family).
  */
 final class Patch83 implements DbPatchInterface

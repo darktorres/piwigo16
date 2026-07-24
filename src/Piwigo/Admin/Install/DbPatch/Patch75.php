@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\Config;
 
 /**
  * Former install/db/75-database.php (P23 sub-batch 8g-1). The original
@@ -34,7 +33,7 @@ final class Patch75 implements DbPatchInterface
     #[\Override]
     public function description(): string
     {
-        return 'DROP TABLE IF EXISTS ' . Config::dbPrefix() . 'ws_access';
+        return 'DROP TABLE IF EXISTS ' . \Piwigo\Db\DbCredentials::current()->prefix . 'ws_access';
     }
 
     #[\Override]

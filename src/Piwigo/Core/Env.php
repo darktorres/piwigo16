@@ -18,7 +18,6 @@ use Symfony\Component\Dotenv\Dotenv;
  * - pwg_test_mode_is_active()       -> Env::testModeIsActive()
  * - pwg_test_mode_env_file()        -> Env::testModeEnvFile()
  * - pwg_test_mode_installed_stamp() -> Env::testModeInstalledStamp()
- * - pwg_apply_env_to_conf()         -> Env::applyEnvToConf()
  * - pwg_now()                       -> Env::now()
  * - pwg_load_env_file()             -> Env::loadEnvFile()
  */
@@ -79,33 +78,6 @@ final class Env
     }
 
     /**
-     * Maps PIWIGO_DB_* env vars into $conf and $prefixeTable.
-     * Call after loadEnvFile() to apply the loaded values.
-     * @param array<string, mixed> $conf
-     */
-    public static function applyEnvToConf(array &$conf, string &$prefixeTable): void
-    {
-        if (($v = getenv('PIWIGO_DB_HOST')) !== false && $v !== '') {
-            $conf['db_host'] = $v;
-        }
-
-        if (($v = getenv('PIWIGO_DB_USER')) !== false && $v !== '') {
-            $conf['db_user'] = $v;
-        }
-
-        if (($v = getenv('PIWIGO_DB_PASSWORD')) !== false && $v !== '') {
-            $conf['db_password'] = $v;
-        }
-
-        if (($v = getenv('PIWIGO_DB_BASE')) !== false && $v !== '') {
-            $conf['db_base'] = $v;
-        }
-
-        $conf['dblayer'] = 'mysqli';
-        $prefixeTable = (($v = getenv('PIWIGO_DB_PREFIX')) !== false && $v !== '') ? $v : 'piwigo_';
-    }
-
-    /**
      * Returns "now" — real wall-clock time normally, or a fixed instant from
      * PIWIGO_TEST_NOW when test mode is active and that var is set. Lets
      * time_since()-based relative-time text (and similar "since" widgets) render
@@ -141,5 +113,53 @@ final class Env
         new Dotenv()
             ->usePutenv()
             ->load($file);
+    }
+
+    /**
+     * Atomically writes/updates $values (KEY => value) into $envFile,
+     * preserving every other line already there (a re-installing site's own
+     * unrelated vars -- e.g. PIWIGO_TEST_NOW, see now() above -- must not be
+     * silently dropped by a later merge). A key present in $values replaces
+     * that key's existing line (if any); other lines pass through unchanged.
+     * Values are stripped of line-breaks to prevent .env injection via
+     * untrusted input (e.g. a submitted install form).
+     *
+     * Shared by InstallWizard::performInstall() (writing freshly submitted
+     * credentials) and DbCredentials::migrateFromLegacyFile() (migrating an
+     * existing site's credentials out of the classic database.inc.php) --
+     * both need the identical atomic merge-and-preserve behavior.
+     *
+     * @param array<string, string> $values
+     */
+    public static function mergeIntoEnvFile(string $envFile, array $values): bool
+    {
+        $values = array_map(
+            static fn (string $v): string => str_replace(["\n", "\r", "\0"], '', $v),
+            $values
+        );
+
+        $body = '';
+        foreach ($values as $key => $value) {
+            $body .= $key . '=' . $value . "\n";
+        }
+
+        if (is_file($envFile)) {
+            $existingLines = @file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            foreach ($existingLines !== false ? $existingLines : [] as $existingLine) {
+                $existingKey = strtok($existingLine, '=');
+                if ($existingKey !== false && ! array_key_exists($existingKey, $values)) {
+                    $body .= $existingLine . "\n";
+                }
+            }
+        }
+
+        $tmp = $envFile . '.tmp.' . bin2hex(random_bytes(4));
+        if (file_put_contents($tmp, $body) === false || ! rename($tmp, $envFile)) {
+            @unlink($tmp);
+
+            return false;
+        }
+
+        return true;
     }
 }

@@ -23,7 +23,7 @@ use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Admin\Install\DbPatch\LegacyFileConf;
 use Piwigo\Auth\CookieService;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
@@ -53,7 +53,7 @@ use Piwigo\Users\UserService;
  *
  * The constructor reads data_location via LegacyFileConf::read() -- a
  * site owner's `local/config/config.inc.php` override is only visible
- * through the raw file, not through `Config::`'s accessors, same
+ * through the raw file, not through `CurrentConfig::`'s accessors, same
  * reasoning as the DbPatch/VersionUpgrade file family. render()'s own
  * former `global $user;` was fully retired
  * (Legacy Coupling Retirement Phase 8 gap-closure) once every consumer,
@@ -180,21 +180,21 @@ final class InstallWizard
         $this->dbname = (is_string($dbname_raw) && $dbname_raw !== '') ? $dbname_raw : '';
 
         // Same reasoning as the db_prefix seeding in the install.php entry
-        // shell: InstallBootstrap::boot() (Legacy Coupling Retirement Phase
-        // 8, 8b) only seeds SCHEMA defaults + env overrides before this
-        // point, so any code reached later in this same request that
-        // resolves a DB connection via Piwigo\Db\DbConnection::build()
-        // (which reads Config::dbHost()/dbUser()/dbPassword()/dbName())
-        // would otherwise silently see those instead of the real submitted
-        // credentials. Found live: get_default_user_value() -> UserService ->
-        // UserRepository -> DbConnection::build(), reached from
-        // InstallService::activateCoreThemes() during step-2 theme
+        // shell: any code reached later in this same request that resolves
+        // a DB connection via Piwigo\Db\DbConnection::build() (which reads
+        // DbCredentials::current()) would otherwise silently see whatever
+        // was already in the process environment instead of the real
+        // submitted credentials. Found live: get_default_user_value() ->
+        // UserService -> UserRepository -> DbConnection::build(), reached
+        // from InstallService::activateCoreThemes() during step-2 theme
         // activation, fatals with "Access denied for user ''@'localhost'"
         // without this.
-        Config::override('db_host', $this->dbhost);
-        Config::override('db_user', $this->dbuser);
-        Config::override('db_password', $this->dbpasswd);
-        Config::override('db_base', $this->dbname);
+        \Piwigo\Db\DbCredentials::seed([
+            'PIWIGO_DB_HOST' => $this->dbhost,
+            'PIWIGO_DB_USER' => $this->dbuser,
+            'PIWIGO_DB_PASSWORD' => $this->dbpasswd,
+            'PIWIGO_DB_BASE' => $this->dbname,
+        ]);
 
         // Must run right here, not from install.php after boot() returns:
         // this method's own Template construction at the end of its body
@@ -208,8 +208,9 @@ final class InstallWizard
         \Piwigo\Bootstrap\InstallBootstrap::activateConfigService();
 
         // Same reasoning again, different dependency: this request never
-        // goes through CommonBootstrap::run() (only InstallBootstrap::boot(),
-        // which doesn't touch CurrentUser), so CurrentUser is never guest-
+        // goes through RequestBootstrap::bootEntryPoint()/bootConfigOnly()
+        // (only InstallBootstrap::boot(), which doesn't touch CurrentUser),
+        // so CurrentUser is never guest-
         // initialized either. Found live (real
         // fixture-regen run, not assumed): InstallService::
         // activateCoreThemes() -> ExtensionScanner::scan()'s missing-
@@ -224,18 +225,15 @@ final class InstallWizard
         // step later than CurrentUser (render()'s UserService::buildUser()
         // -> getUserData() -> CurrentLogger::get()). Same construction
         // recipe as RequestBootstrap::connect()'s (the normal request
-        // pipeline's own site) -- no DB access needed, just Config reads
-        // already valid this early (db_password was just overridden
-        // above). Unlike RequestBootstrap's equivalent site, these Config::
-        // calls are direct (no by-ref Env::applyEnvToConf() narrowing loss
-        // in between), so their declared `string` return types are already
-        // certain -- no is_string() re-guard needed.
+        // pipeline's own site) -- no DB access needed, just Config/
+        // DbCredentials reads already valid this early (the DB password was
+        // just seeded above).
         \Piwigo\Core\CurrentLogger::set(new Logger([
-            'directory' => $this->paths->root . Config::dataLocation() . Config::logDir(),
-            'severity' => Config::logLevel(),
-            'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . Config::dbPassword()) . '.txt',
+            'directory' => $this->paths->root . CurrentConfig::dataLocation() . CurrentConfig::logDir(),
+            'severity' => CurrentConfig::logLevel(),
+            'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Db\DbCredentials::current()->password) . '.txt',
             'globPattern' => 'log_*.txt',
-            'archiveDays' => Config::logArchiveDays(),
+            'archiveDays' => CurrentConfig::logArchiveDays(),
         ]));
 
         // dblayer
@@ -400,16 +398,17 @@ final class InstallWizard
 
         $this->step = 2;
 
-        // Write .env (or .env.test in test mode) with DB credentials — atomic rename.
+        // Write .env (or .env.test in test mode) with DB credentials — atomic
+        // rename, preserving any line this block doesn't manage (e.g. a
+        // re-install's PIWIGO_TEST_NOW — see Piwigo\Core\Env::now()).
         $env_file = $this->paths->root . Env::testModeEnvFile();
-        // Strip line-breaks to prevent .env injection via crafted POST values.
-        $env_vals = array_map(
-            fn (string $v): string => str_replace(["\n", "\r", "\0"], '', $v),
-            [$this->dbhost, $this->dbuser, $this->dbpasswd, $this->dbname, $this->prefixeTable]
-        );
-        $env_body = 'PIWIGO_DB_HOST=' . $env_vals[0] . "\n" . 'PIWIGO_DB_USER=' . $env_vals[1] . "\n"
-                  . 'PIWIGO_DB_PASSWORD=' . $env_vals[2] . "\n" . 'PIWIGO_DB_BASE=' . $env_vals[3] . "\n"
-                  . 'PIWIGO_DB_PREFIX=' . $env_vals[4] . "\n";
+        $env_values = [
+            'PIWIGO_DB_HOST' => $this->dbhost,
+            'PIWIGO_DB_USER' => $this->dbuser,
+            'PIWIGO_DB_PASSWORD' => $this->dbpasswd,
+            'PIWIGO_DB_BASE' => $this->dbname,
+            'PIWIGO_DB_PREFIX' => $this->prefixeTable,
+        ];
         // In test mode, also record the base URL so e2e runners know where to connect.
         if (Env::testModeIsActive()) {
             $scheme = (! in_array($_SERVER['HTTPS'] ?? null, [null, false, 0, '0', ''], true) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
@@ -419,30 +418,14 @@ final class InstallWizard
             $script = is_string($script) ? $script : '';
             $base_url = rtrim($scheme . '://' . $host . dirname($script), '/');
             if ($base_url !== '') {
-                $env_body .= 'PIWIGO_BASE_URL=' . $base_url . "\n";
+                $env_values['PIWIGO_BASE_URL'] = $base_url;
             }
         }
 
-        // Re-installing (e.g. tests/Browser/RegenerateFixtureTest.php) must not
-        // silently drop custom vars a previous write left in this same file
-        // (e.g. PIWIGO_TEST_NOW — see Piwigo\Core\Env::now()). Preserve
-        // any line whose key isn't one this block itself manages.
-        $env_managed_keys = ['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_BASE_URL'];
-        if (is_file($env_file)) {
-            $existing_lines = @file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            foreach ($existing_lines !== false ? $existing_lines : [] as $existing_line) {
-                $existing_key = strtok($existing_line, '=');
-                if ($existing_key !== false && ! in_array($existing_key, $env_managed_keys, true)) {
-                    $env_body .= $existing_line . "\n";
-                }
-            }
-        }
-
-        $env_tmp = $env_file . '.tmp.' . bin2hex(random_bytes(4));
-        if (file_put_contents($env_tmp, $env_body) === false || ! rename($env_tmp, $env_file)) {
-            @unlink($env_tmp);
+        if (! Env::mergeIntoEnvFile($env_file, $env_values)) {
             $this->errors[] = 'Could not write ' . $env_file . ' — check filesystem permissions.';
         }
+        \Piwigo\Db\DbCredentials::reset();
 
         // Also write legacy database.inc.php in prod mode so upgrade.php and other
         // not-yet-migrated scripts keep working (see docs/PLAN-REPLAY.md P13).
@@ -533,7 +516,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             $configService,
         )->performAction(ExtensionType::Language, 'activate', $this->language, $this->fsLanguages[$this->language] ?? null);
 
-        // fill Config::$data from the freshly-seeded config table
+        // fill CurrentConfig::$data from the freshly-seeded config table
         $configService->loadConfFromDb();
 
         // PWG_CHARSET (required for building the fs_themes array in the
@@ -667,12 +650,12 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             // session_save_handler === 'db' guard)
             session_set_save_handler(new PwgSession());
             if (function_exists('ini_set')) {
-                ini_set('session.use_cookies', Config::sessionUseCookies());
-                ini_set('session.use_only_cookies', Config::sessionUseOnlyCookies());
-                ini_set('session.use_trans_sid', (int) Config::sessionUseTransSid());
+                ini_set('session.use_cookies', CurrentConfig::sessionUseCookies());
+                ini_set('session.use_only_cookies', CurrentConfig::sessionUseOnlyCookies());
+                ini_set('session.use_trans_sid', (int) CurrentConfig::sessionUseTransSid());
                 ini_set('session.cookie_httponly', 1);
             }
-            session_name(Config::sessionName());
+            session_name(CurrentConfig::sessionName());
             session_set_cookie_params(0, new CookieService()->cookiePath());
             register_shutdown_function(session_write_close(...));
 

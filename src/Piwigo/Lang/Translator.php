@@ -128,7 +128,7 @@ final class Translator
         // check (which only ever looked at the fallback array), and this
         // way every Lang::t() caller gets the diagnostic too, not just
         // former l10n() callers.
-        if (\Piwigo\Config\Config::debugL10n() && $val === $key && $key !== '') {
+        if (\Piwigo\Config\CurrentConfig::debugL10n() && $val === $key && $key !== '') {
             trigger_error('[l10n] language key "' . $key . '" not defined', E_USER_WARNING);
         }
 

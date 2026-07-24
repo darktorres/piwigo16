@@ -14,7 +14,7 @@ namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;
     use Piwigo\Auth\CookieService;
-    use Piwigo\Config\Config;
+    use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
@@ -43,14 +43,14 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
-            Config::reset();
+            CurrentConfig::reset();
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
-            Config::override('rate', true);
-            Config::override('rate_anonymous', true);
-            Config::override('rate_items', [0, 1, 2, 3, 4, 5]);
-            Config::override('guest_access', true);
+            CurrentConfig::setRateEnabled(true);
+            CurrentConfig::setRateAnonymous(true);
+            CurrentConfig::setRateItems([0, 1, 2, 3, 4, 5]);
+            CurrentConfig::setGuestAccess(true);
             CurrentUser::set(User::fromUserArray(['id' => 3, 'status' => 'normal']));
             $_SERVER['REMOTE_ADDR'] = '10.20.30.40';
             unset($_COOKIE['pwg_anonymous_rater']);
@@ -66,7 +66,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_rate_returns_false_when_rating_is_disabled(): void
         {
-            $this->setConf('rate', false);
+            CurrentConfig::setRateEnabled(false);
 
             self::assertFalse($this->service->rate(5, 3));
         }
@@ -83,7 +83,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_rate_returns_false_for_an_anonymous_user_when_rate_anonymous_is_disabled(): void
         {
-            $this->setConf('rate_anonymous', false);
+            CurrentConfig::setRateAnonymous(false);
             CurrentUser::set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
 
             self::assertFalse($this->service->rate(5, 3));
@@ -179,11 +179,6 @@ namespace Piwigo\Tests\Integration {
                 ['score' => null, 'average' => null, 'count' => 0],
                 $this->service->updateRatingScore(5)
             );
-        }
-
-        private function setConf(string $key, mixed $value): void
-        {
-            Config::override($key, $value);
         }
 
         private function fetchRate(int $elementId, int $userId): ?string

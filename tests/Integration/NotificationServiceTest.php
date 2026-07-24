@@ -11,7 +11,7 @@ namespace Piwigo\Tests\Integration {
     use Doctrine\DBAL\Connection;
     use Piwigo\Cache\PersistentFileCache;
     use Piwigo\Category\CategoryRepository;
-    use Piwigo\Config\Config;
+    use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
@@ -52,7 +52,7 @@ final class NotificationServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
@@ -86,7 +86,7 @@ final class NotificationServiceTest extends IntegrationTestCase
             'image_access_type' => 'NOT IN',
             'image_access_list' => '',
         ]));
-        Config::override('data_location', '_data/notification-service-test-cache/');
+        CurrentConfig::setDataLocation('_data/notification-service-test-cache/');
 
         $this->service = new NotificationService(
             new NotificationRepository($this->conn),

@@ -153,7 +153,7 @@ SELECT
             ) {
                 $order_by = $cats[$params['cat_id'][0]]['image_order'];
             }
-            $order_by = $order_by === '' ? (is_string(\Piwigo\Config\Config::all()['order_by']) ? \Piwigo\Config\Config::all()['order_by'] : '') : 'ORDER BY ' . $order_by;
+            $order_by = $order_by === '' ? \Piwigo\Config\CurrentConfig::orderBy() : 'ORDER BY ' . $order_by;
             $favorite_ids = $urlService->getUserFavorites();
 
             $query = '
@@ -354,7 +354,7 @@ SELECT
             $where[] = 'status = "public"';
             $where[] = 'visible = 1';
 
-            $join_user = \Piwigo\Config\Config::guestId();
+            $join_user = \Piwigo\Config\CurrentConfig::guestId();
         } elseif (\Piwigo\Auth\AccessControl::isAdmin()) {
             // in this very specific case, we don't want to hide empty
             // categories. Function calculate_permissions will only return
@@ -383,7 +383,7 @@ SELECT SQL_CALC_FOUND_ROWS
             $query .= '
     AND name LIKE ' . $categoryConn->quote('%' . $params['search'] . '%');
             if (! isset($params['limit'])) {
-                $query .= ' LIMIT ' . \Piwigo\Config\Config::linkedAlbumSearchLimit();
+                $query .= ' LIMIT ' . \Piwigo\Config\CurrentConfig::linkedAlbumSearchLimit();
             }
         }
 
@@ -476,7 +476,7 @@ SELECT SQL_CALC_FOUND_ROWS
                 $image_id = $row['user_representative_picture_id'];
             } elseif (is_numeric($row['representative_picture_id']) && (int) $row['representative_picture_id'] !== 0) { // if a representative picture is set, it has priority
                 $image_id = $row['representative_picture_id'];
-            } elseif (\Piwigo\Config\Config::allowRandomRepresentative()) {
+            } elseif (\Piwigo\Config\CurrentConfig::allowRandomRepresentative()) {
                 // searching a random representant among elements in sub-categories
                 $image_id = $categoryService->getRandomImageInCategory($row);
             } else { // searching a random representant among representant of sub-categories
@@ -509,7 +509,7 @@ SELECT representative_picture_id
             if (isset($image_id) && is_numeric($image_id)) {
                 $image_id = (int) $image_id;
 
-                if (\Piwigo\Config\Config::representativeCacheOnSubcats() and ($row['user_representative_picture_id'] ?? null) !== $image_id) {
+                if (\Piwigo\Config\CurrentConfig::representativeCacheOnSubcats() and ($row['user_representative_picture_id'] ?? null) !== $image_id) {
                     $user_representative_updates_for[$row['id']] = $image_id;
                 }
 
@@ -521,7 +521,7 @@ SELECT representative_picture_id
             // management of the album thumbnail -- stops here
 
             if (! is_string($row['image_order']) || $row['image_order'] === '') {
-                $row['image_order'] = str_replace('ORDER BY ', '', is_string(\Piwigo\Config\Config::all()['order_by']) ? \Piwigo\Config\Config::all()['order_by'] : '');
+                $row['image_order'] = str_replace('ORDER BY ', '', \Piwigo\Config\CurrentConfig::orderBy());
             }
 
             $cats[] = $row;
@@ -559,7 +559,7 @@ SELECT id, path, representative_ext, level
                             if (isset($image_id) and ! in_array($image_id, $image_ids, true)) {
                                 $new_image_ids[] = $image_id;
                             }
-                            if (\Piwigo\Config\Config::representativeCacheOnLevel()) {
+                            if (\Piwigo\Config\CurrentConfig::representativeCacheOnLevel()) {
                                 $category_id = $category['id'];
                                 if (is_int($category_id)) {
                                     $user_representative_updates_for[$category_id] = $image_id;
@@ -691,7 +691,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
         if (isset($params['search']) and $params['search'] !== '') {
             $query .= '
   AND name LIKE ' . $conn->quote('%' . $params['search'] . '%') . '
-  LIMIT ' . \Piwigo\Config\Config::linkedAlbumSearchLimit();
+  LIMIT ' . \Piwigo\Config\CurrentConfig::linkedAlbumSearchLimit();
         }
 
         $query .= '
@@ -740,7 +740,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
             );
 
             if (! is_string($row['image_order']) || $row['image_order'] === '') {
-                $row['image_order'] = str_replace('ORDER BY ', '', is_string(\Piwigo\Config\Config::all()['order_by']) ? \Piwigo\Config\Config::all()['order_by'] : '');
+                $row['image_order'] = str_replace('ORDER BY ', '', \Piwigo\Config\CurrentConfig::orderBy());
             }
 
             if (in_array('full_name_with_admin_links', $params['additional_output'], true)) {
@@ -776,7 +776,7 @@ SELECT
         }
 
         $limit_reached = false;
-        if ($counter > \Piwigo\Config\Config::linkedAlbumSearchLimit()) {
+        if ($counter > \Piwigo\Config\CurrentConfig::linkedAlbumSearchLimit()) {
             $limit_reached = true;
         }
 
@@ -787,7 +787,7 @@ SELECT
                 'category',
                 ['id', 'nb_images', 'name', 'uppercats', 'global_rank', 'status', 'test']
             ),
-            'limit' => \Piwigo\Config\Config::linkedAlbumSearchLimit(),
+            'limit' => \Piwigo\Config\CurrentConfig::linkedAlbumSearchLimit(),
             'limit_reached' => $limit_reached,
         ];
     }
@@ -809,10 +809,11 @@ SELECT
         }
 
         if (! in_array($params['position'], [null, ''], true) and in_array($params['position'], ['first', 'last'], true)) {
-            // In-memory override only (this request's own Config::$data),
-            // not a real persisted preference -- known limitation, same as
-            // AlbumsPageRenderer's own POS_PREF assignment.
-            \Piwigo\Config\Config::override('newcat_default_position', $params['position']);
+            // In-memory override only (this request's own CurrentConfig
+            // property), not a real persisted preference -- known
+            // limitation, same as AlbumsPageRenderer's own POS_PREF
+            // assignment.
+            \Piwigo\Config\CurrentConfig::setNewcatDefaultPosition($params['position']);
         }
 
         // Docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: $params['visible']/
@@ -832,12 +833,12 @@ SELECT
         }
 
         if (! in_array($params['comment'], [null, ''], true)) {
-            $options['comment'] = (! \Piwigo\Config\Config::allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params['comment']) : $params['comment'];
+            $options['comment'] = (! \Piwigo\Config\CurrentConfig::allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params['comment']) : $params['comment'];
         }
 
         $categoryConn = DbConnection::build();
         $creation_output = self::categoryService($categoryConn)->createVirtualCategory(
-            (! \Piwigo\Config\Config::allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params['name']) : $params['name'],
+            (! \Piwigo\Config\CurrentConfig::allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params['name']) : $params['name'],
             new ActivityService(new ActivityRepository($categoryConn)),
             $params['parent'],
             $options
@@ -996,7 +997,7 @@ SELECT id
         foreach ($info_columns as $key) {
             if (isset($params[$key])) {
                 $perform_update = true;
-                $update[$key] = (! \Piwigo\Config\Config::allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params[$key]) : $params[$key];
+                $update[$key] = (! \Piwigo\Config\CurrentConfig::allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params[$key]) : $params[$key];
             }
         }
 
@@ -1090,7 +1091,7 @@ UPDATE ' . Tables::userCacheCategories() . '
      * API method
      *
      * Deletes the album thumbnail. Only possible if
-     * \Piwigo\Config\Config::allowRandomRepresentative() or if the album has no direct photos.
+     * \Piwigo\Config\CurrentConfig::allowRandomRepresentative() or if the album has no direct photos.
      *
      * @param array{category_id: int, ...} $params no 'default' key -- mandatory,
      *   always present, WsParamType::ID guarantees a plain int.
@@ -1117,7 +1118,7 @@ SELECT COUNT(*)
         $nb_images = $conn->fetchOne($query);
         $nb_images = is_numeric($nb_images) ? (int) $nb_images : 0;
 
-        if (! \Piwigo\Config\Config::allowRandomRepresentative() and $nb_images !== 0) {
+        if (! \Piwigo\Config\CurrentConfig::allowRandomRepresentative() and $nb_images !== 0) {
             return new PwgError(401, 'not permitted');
         }
 

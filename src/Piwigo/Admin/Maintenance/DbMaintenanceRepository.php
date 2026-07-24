@@ -6,7 +6,7 @@ namespace Piwigo\Admin\Maintenance;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\Config;
+use Piwigo\Db\DbCredentials;
 use Piwigo\Db\Tables;
 
 /**
@@ -102,7 +102,7 @@ final readonly class DbMaintenanceRepository
      *
      * The original tracked a running boolean across all 3 mutating
      * statements (mysqli_query() returns false on failure when
-     * \Piwigo\Config\Config::dieOnSqlError() is off) to pick a
+     * \Piwigo\Config\CurrentConfig::dieOnSqlError() is off) to pick a
      * success/error message. DBAL has no such "off" mode -- a failed
      * statement throws instead -- so completing this method without an
      * exception already means every step succeeded; no return value
@@ -112,7 +112,7 @@ final readonly class DbMaintenanceRepository
     {
         $allTables = array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            $this->conn->fetchFirstColumn('SHOW TABLES LIKE \'' . Config::dbPrefix() . '%\'')
+            $this->conn->fetchFirstColumn('SHOW TABLES LIKE \'' . DbCredentials::current()->prefix . '%\'')
         );
 
         $this->conn->executeStatement('REPAIR TABLE ' . implode(', ', $allTables));

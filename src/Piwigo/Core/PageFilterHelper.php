@@ -26,7 +26,7 @@ final class PageFilterHelper
                 // that guarantee (confirmed by the Integration test stub
                 // this method's real callers used to route through, before
                 // P23 batch 8d retargeted them here directly).
-                if (\Piwigo\Config\Config::phpExtensionInUrls() && StringHelper::getExtension($filename) !== 'php') {
+                if (\Piwigo\Config\CurrentConfig::phpExtensionInUrls() && StringHelper::getExtension($filename) !== 'php') {
                     continue;
                 }
                 $basename = basename($filename, '.php');
@@ -39,14 +39,14 @@ final class PageFilterHelper
     }
 
     /**
-     * Return \Piwigo\Config\Config::filterPages() value for the current page
+     * Return \Piwigo\Config\CurrentConfig::filterPages() value for the current page
      */
     public static function getFilterPageValue(string $valueName): mixed
     {
 
         $page_name = self::scriptBasename();
 
-        $filter_pages = \Piwigo\Config\Config::filterPages();
+        $filter_pages = \Piwigo\Config\CurrentConfig::filterPages();
 
         $page_filters = $filter_pages[$page_name] ?? null;
         if (is_array($page_filters) && isset($page_filters[$valueName])) {

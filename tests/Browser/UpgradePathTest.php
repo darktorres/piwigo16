@@ -11,12 +11,20 @@ use Piwigo\Tests\Integration\IntegrationTestCase;
  * Legacy Coupling Retirement Phase 8, 8b -- covers the real, already-
  * diagnosed bug this sub-phase fixed: upgrade.php/upgrade_feed.php never
  * bridged database.inc.php's $conf['db_host']/['db_user']/['db_password']/
- * ['db_base'] into Config::'s static state, so DbConnection::build()
- * (which UpgradeService::upgradeDbConnect() and UpgradeFeedRunner::run()
- * both call) always attempted an empty-string-credentials connection
- * regardless of the site's real configuration. No test exercised either
- * path with real credentials before this (RegenerateFixtureTest.php only
- * covers install.php).
+ * ['db_base'] into the DB connection layer's own credential source, so
+ * DbConnection::build() (which UpgradeService::upgradeDbConnect() and
+ * UpgradeFeedRunner::run() both call) always attempted an empty-string-
+ * credentials connection regardless of the site's real configuration. No
+ * test exercised either path with real credentials before this
+ * (RegenerateFixtureTest.php only covers install.php).
+ *
+ * Config generic-accessor removal: the fix is now
+ * Piwigo\Db\DbCredentials::migrateFromLegacyFile(), called by both scripts
+ * right after reading database.inc.php -- it seeds the process environment
+ * (and persists into .env/.env.test) only when PIWIGO_DB_HOST isn't
+ * already set, so DbCredentials::current() (env-only, memoized) resolves
+ * to the real credentials this test writes below rather than the
+ * connection-layer defaults.
  *
  * database.inc.php is never written in test mode
  * (InstallWizard::performInstall() gates that write on
@@ -82,7 +90,7 @@ final class UpgradePathTest extends IntegrationTestCase
         $body = $this->get('upgrade_feed.php');
 
         self::assertStringNotContainsStringIgnoringCase('access denied', $body);
-        // check_upgrade_feed defaults to false (Config::SCHEMA), so reaching
+        // check_upgrade_feed defaults to false (CurrentConfig::checkUpgradeFeed()), so reaching
         // this guard message -- rather than a raw connection exception -- is
         // exactly what a successful connection looks like here.
         self::assertStringContainsString('upgrade feed is not active', $body);

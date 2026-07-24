@@ -46,7 +46,7 @@ SELECT
                 continue;
             }
 
-            $mobile_theme = \Piwigo\Config\Config::mobilTheme();
+            $mobile_theme = \Piwigo\Config\CurrentConfig::mobilTheme();
             if ($id === $mobile_theme) {
                 if (! $showMobile) {
                     continue;
@@ -80,14 +80,14 @@ SELECT
     public static function checkThemeInstalled(string $themeId): bool
     {
 
-        // Config::themesDir() is root-relative (Part II) -- compose with
+        // CurrentConfig::themesDir() is root-relative (Part II) -- compose with
         // CurrentPaths::get()->root for a real filesystem check, don't rely
         // on PHP's CWD (which tracks the executing script's directory, not
         // necessarily the install root -- this "happened" to still resolve
         // correctly pre-fix only because public/themes is itself a symlink
         // back to the real themes/, not because the CWD-relative read was
         // actually safe).
-        $themes_dir = CurrentPaths::get()->root . \Piwigo\Config\Config::themesDir();
+        $themes_dir = CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::themesDir();
 
         return file_exists($themes_dir . '/' . $themeId . '/themeconf.inc.php');
     }

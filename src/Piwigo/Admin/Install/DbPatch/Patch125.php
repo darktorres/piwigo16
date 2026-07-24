@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\Config;
 use Piwigo\Db\BatchWriter;
 
 /**
@@ -57,20 +56,17 @@ final class Patch125 implements DbPatchInterface
         $configService = \Piwigo\Config\CurrentConfigService::get();
         $configService->loadConfFromDb();
 
-        $banner_orig = $configService->confGetParam('page_banner');
-        $banner_orig_normalized = is_string($banner_orig)
-            ? $banner_orig
-            : (is_array($banner_orig) ? array_values(array_filter($banner_orig, is_string(...))) : '');
-        $banner_new = $this->replaceHotlinks($banner_orig_normalized, $dirThumbnail, $prefixThumbnail);
-        if ($banner_orig_normalized !== $banner_new) {
-            $configService->confUpdateParam('page_banner', $banner_new);
+        $banner_orig = \Piwigo\Config\CurrentConfig::pageBanner();
+        $banner_new = $this->replaceHotlinks($banner_orig, $dirThumbnail, $prefixThumbnail);
+        if ($banner_orig !== $banner_new) {
+            $configService->confUpdateParam('page_banner', $banner_new, updateGlobal: true);
         }
 
         //
         // Additional Pages
         //
         $is_plugin_installed = false;
-        $plugin_table = Config::dbPrefix() . 'additionalpages';
+        $plugin_table = \Piwigo\Db\DbCredentials::current()->prefix . 'additionalpages';
 
         $query = 'SHOW TABLES LIKE :pattern;';
 
@@ -113,7 +109,7 @@ SELECT
         // PWG Stuffs
         //
         $is_plugin_installed = false;
-        $plugin_table = Config::dbPrefix() . 'stuffs';
+        $plugin_table = \Piwigo\Db\DbCredentials::current()->prefix . 'stuffs';
 
         $query = 'SHOW TABLES LIKE :pattern;';
 

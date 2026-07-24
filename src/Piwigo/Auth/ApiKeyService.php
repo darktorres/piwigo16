@@ -221,7 +221,7 @@ final readonly class ApiKeyService
         $message .= '<p style="margin: 20px 0">' . Lang::t('To continue using the API, please renew your key before it expires.') . '</p>';
         $message .= '<p style="margin: 20px 0">' . Lang::t('You can manage your API keys in your <a href="%s">account settings.</a>', $this->urlService->getAbsoluteRootUrl() . 'profile.php') . '</p>';
 
-        $gallery_title = \Piwigo\Config\Config::galleryTitle();
+        $gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();
 
         return $this->mailer->mail(
             $email,

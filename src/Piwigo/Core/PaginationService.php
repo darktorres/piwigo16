@@ -45,7 +45,7 @@ final class PaginationService
         $start = (int) $start;
 
         $navbar = [];
-        $pages_around = \Piwigo\Config\Config::paginatePagesAround();
+        $pages_around = \Piwigo\Config\CurrentConfig::paginatePagesAround();
         $start_str = $cleanUrl ? '/' . $paramName . '-' : (! str_contains($url, '?') ? '?' : '&amp;') . $paramName . '=';
 
         if ($start < 0) {

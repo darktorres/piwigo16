@@ -47,7 +47,7 @@ final class CheckIntegrity
     public function check(): void
     {
         // Ignore list
-        $conf_c13y_ignore_raw = \Piwigo\Config\Config::c13yIgnore() ?? null;
+        $conf_c13y_ignore_raw = \Piwigo\Config\CurrentConfig::c13yIgnore() ?? null;
         $conf_c13y_ignore = is_string($conf_c13y_ignore_raw) ? unserialize($conf_c13y_ignore_raw) : false;
         if (
             is_array($conf_c13y_ignore) and

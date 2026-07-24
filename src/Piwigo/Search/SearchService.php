@@ -218,7 +218,7 @@ final readonly class SearchService
         /** @var array<string, list<int>> $imageIdsForFilter */
         $imageIdsForFilter = [];
 
-        $rawFiltersViews = \Piwigo\Config\Config::filtersViews() ?? \Piwigo\Config\Config::defaultFiltersViews();
+        $rawFiltersViews = \Piwigo\Config\CurrentConfig::filtersViews() ?? \Piwigo\Config\CurrentConfig::defaultFiltersViews();
 
         $displayFilters = [];
         foreach ($rawFiltersViews as $filtName => $filtConf) {
@@ -374,7 +374,7 @@ final readonly class SearchService
         // ratings
         $ratingsField = $searchFields['ratings'] ?? null;
         $ratings = is_array($ratingsField) ? array_values(array_filter($ratingsField, is_string(...))) : [];
-        if (\Piwigo\Config\Config::rateEnabled() && $ratings !== [] && (bool) ($displayFilters['rating']['access'] ?? false)) {
+        if (\Piwigo\Config\CurrentConfig::rateEnabled() && $ratings !== [] && (bool) ($displayFilters['rating']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $clauses = [];
             foreach ($ratings as $r) {
@@ -449,14 +449,9 @@ final readonly class SearchService
         }
 
         if (count($items) > 1) {
-            // Config::orderBy() (the typed SCHEMA accessor) models a
+            // CurrentConfig::orderBy() (the typed SCHEMA accessor) models a
             // structured {field,dir}[] shape that no real code writes --
-            // 'order_by' is actually stored as a raw "ORDER BY ..." SQL
-            // fragment (see ConfigDb::loadConfFromDb()'s own docblock), so
-            // read it via the untyped bag like ConfigService::confGetParam()
-            // does for keys without a compatible accessor.
-            $orderByConf = \Piwigo\Config\Config::all()['order_by'] ?? null;
-            $orderBy = is_string($orderByConf) ? $orderByConf : '';
+            $orderBy = \Piwigo\Config\CurrentConfig::orderBy();
             $items = $this->repo->findIdsByClause('id', Tables::images() . ' i', 'id IN (' . implode(',', array_map(strval(...), $items)) . ') ' . $orderBy);
         }
 
@@ -963,7 +958,7 @@ final readonly class SearchService
             $token = $expr->stokens[$i];
 
             if ($catIds !== []) {
-                if (\Piwigo\Config\Config::quickSearchIncludeSubAlbums()) {
+                if (\Piwigo\Config\CurrentConfig::quickSearchIncludeSubAlbums()) {
                     $subcatIds = $this->categoryService->getSubcatIds($catIds);
                     $catIds = $subcatIds !== []
                         ? $this->repo->findIdsByClause(
@@ -1072,7 +1067,7 @@ final readonly class SearchService
 
         $cacheKey = $this->cache->make_key([
             strtolower($q),
-            \Piwigo\Config\Config::all()['order_by'] ?? null,
+            \Piwigo\Config\CurrentConfig::orderBy(),
             $currentUser->id, $currentUser->cacheUpdateTime,
             isset($options['permissions']) ? (bool) $options['permissions'] : true,
             $options['images_where'] ?? '',
@@ -1134,7 +1129,7 @@ final readonly class SearchService
 
         $createdDateAliases = ['taken', 'shot'];
         $postedDateAliases = ['added'];
-        if (\Piwigo\Config\Config::calendarDatefield() === 'date_creation') {
+        if (\Piwigo\Config\CurrentConfig::calendarDatefield() === 'date_creation') {
             $createdDateAliases[] = 'date';
         } else {
             $postedDateAliases[] = 'date';
@@ -1278,8 +1273,7 @@ final readonly class SearchService
         // its own docblock), so `GROUP BY id` (functionally dependent via
         // the primary key) replaces DISTINCT here, same fix as
         // CalendarRepository::findImageIds().
-        $orderByConf = \Piwigo\Config\Config::all()['order_by'] ?? null;
-        $orderBy = is_string($orderByConf) ? $orderByConf : '';
+        $orderBy = \Piwigo\Config\CurrentConfig::orderBy();
         $ids = $this->repo->findIdsByClause('id', $from, implode("\n AND ", $whereClauses) . "\nGROUP BY id\n" . $orderBy, $params);
 
         $debug[] = count($ids) . ' final photo count -->';

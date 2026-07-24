@@ -16,7 +16,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Install\DbPatch\DatabaseConfigChanges;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
-use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
@@ -310,7 +309,7 @@ DELETE FROM phpwebgallery_group_access
         ];
 
         foreach ($queries as $queryTemplate) {
-            $query = str_replace('phpwebgallery_', Config::dbPrefix(), $queryTemplate);
+            $query = str_replace('phpwebgallery_', \Piwigo\Db\DbCredentials::current()->prefix, $queryTemplate);
             $conn->executeStatement($query);
         }
 
@@ -350,14 +349,14 @@ UPDATE ' . Tables::users() . '
 
             $query = '
 SHOW INDEX
-  FROM ' . Config::dbPrefix() . $table . '
+  FROM ' . \Piwigo\Db\DbCredentials::current()->prefix . $table . '
 ;';
             foreach ($conn->fetchAllAssociative($query) as $row) {
                 $key_name = is_scalar($row['Key_name']) ? (string) $row['Key_name'] : '';
                 if ($key_name !== 'PRIMARY') {
                     if (! in_array($key_name, array_keys($indexes_of[$table]), true)) {
                         $query = '
-ALTER TABLE ' . Config::dbPrefix() . $table . '
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . $table . '
   DROP INDEX ' . $key_name . '
 ;';
                         $conn->executeStatement($query);
@@ -370,7 +369,7 @@ ALTER TABLE ' . Config::dbPrefix() . $table . '
             foreach ($indexes_of[$table] as $index_name => $index) {
                 if (! in_array($index_name, $existing_indexes, true)) {
                     $query = '
-ALTER TABLE ' . Config::dbPrefix() . $table . '
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . $table . '
   ADD INDEX '
                       . $index_name . ' (' . implode(',', $index['columns']) . ')
 ;';

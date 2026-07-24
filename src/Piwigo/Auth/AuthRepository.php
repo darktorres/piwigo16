@@ -69,7 +69,7 @@ final class AuthRepository extends AbstractRepository
      * Finds a user by username first, falling back to email -- matches the
      * original's own two-query try-username-then-email order (needed
      * because $usernameColumn/$emailColumn are runtime-configurable via
-     * \Piwigo\Config\Config::userFields(), not always literally 'username'/'email').
+     * \Piwigo\Config\CurrentConfig::userFields(), not always literally 'username'/'email').
      *
      * @return array{id: string, username: string, email: string, password: string, status: string}|null
      */

@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbCredentials;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 
@@ -16,15 +17,31 @@ use Piwigo\Session\SessionService;
 // connection attempt for these specific call paths).
 function makeSessionService(): SessionService
 {
-    Config::reset();
+    CurrentConfig::reset();
     ConfigLoader::applyDefaults();
-    Config::override('db_host', 'unit-test-should-never-connect.invalid');
+    putenv('PIWIGO_DB_HOST=unit-test-should-never-connect.invalid');
+    DbCredentials::reset();
 
     return new SessionService(new SessionRepository(DbConnection::build()));
 }
 
-beforeEach(function (): void {
+// tests/bootstrap.php loads real PIWIGO_DB_* vars for the whole Pest
+// process -- save + restore PIWIGO_DB_HOST specifically, since
+// makeSessionService() above overwrites the real one with a deliberately
+// unreachable host and DbCredentials::current() (unlike the old
+// CurrentConfig::override(), which only touched an in-memory bag) has no other
+// mechanism to un-poison it for tests running later in the same process.
+$originalDbHost = null;
+
+beforeEach(function () use (&$originalDbHost): void {
+    $value = getenv('PIWIGO_DB_HOST');
+    $originalDbHost = $value === false ? null : $value;
     unset($_SESSION);
+});
+
+afterEach(function () use (&$originalDbHost): void {
+    putenv($originalDbHost === null ? 'PIWIGO_DB_HOST' : 'PIWIGO_DB_HOST=' . $originalDbHost);
+    DbCredentials::reset();
 });
 
 test('generateKey returns a string of the requested length', function (): void {
@@ -58,7 +75,7 @@ test('sessionOpen and sessionClose always return true', function (): void {
 
 test('getRemoteAddrSessionHash returns empty string when session_use_ip_address is off', function (): void {
     $service = makeSessionService();
-    Config::override('session_use_ip_address', false);
+    CurrentConfig::setSessionUseIpAddress(false);
 
     expect($service->getRemoteAddrSessionHash())->toBe('');
 });
@@ -69,7 +86,7 @@ test('getRemoteAddrSessionHash hashes only the first two octets of an ipv4 REMOT
     // long-standing behavior (also present unchanged in the reference
     // implementation), not something this migration should silently widen.
     $service = makeSessionService();
-    Config::override('session_use_ip_address', true);
+    CurrentConfig::setSessionUseIpAddress(true);
     $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 
     expect($service->getRemoteAddrSessionHash())->toBe('7F00');
@@ -77,7 +94,7 @@ test('getRemoteAddrSessionHash hashes only the first two octets of an ipv4 REMOT
 
 test('getRemoteAddrSessionHash returns empty string for an ipv6 REMOTE_ADDR', function (): void {
     $service = makeSessionService();
-    Config::override('session_use_ip_address', true);
+    CurrentConfig::setSessionUseIpAddress(true);
     $_SERVER['REMOTE_ADDR'] = '::1';
 
     expect($service->getRemoteAddrSessionHash())->toBe('');

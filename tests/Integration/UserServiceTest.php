@@ -32,8 +32,8 @@ namespace {
     // Piwigo\PluginConfig\EventDispatcher::get() singleton now, a pure
     // passthrough with no handlers registered, so no local stub is needed.
 
-    // No get_browser_language() stub: Config::browserLanguage() is
-    // overridden to false below, and registerUser()'s own `Config::
+    // No get_browser_language() stub: CurrentConfig::browserLanguage() is
+    // overridden to false below, and registerUser()'s own `CurrentConfig::
     // browserLanguage() && (... = get_browser_language()) !== false` check
     // short-circuits on the left operand, so the real
     // (unstubbed) function is never actually called by these tests. A
@@ -49,7 +49,7 @@ namespace Piwigo\Tests\Integration {
     use Doctrine\DBAL\Connection;
     use Piwigo\Activity\ActivityRepository;
     use Piwigo\Activity\ActivityService;
-    use Piwigo\Config\Config;
+    use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
@@ -93,20 +93,20 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
-            Config::reset();
+            CurrentConfig::reset();
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
-            Config::override('user_fields', ['id' => 'id', 'username' => 'username', 'password' => 'password', 'email' => 'mail_address']);
-            Config::override('obligatory_user_mail_address', false);
-            Config::override('insensitive_case_logon', false);
-            Config::override('browser_language', false);
-            Config::override('email_admin_on_new_user', 'none');
-            Config::override('gallery_title', 'Test Gallery');
-            Config::override('webmaster_id', 999999);
-            Config::override('guest_id', 2);
-            Config::override('default_user_id', 2);
-            Config::override('available_permission_levels', [0, 1, 2, 4, 8]);
+            CurrentConfig::setUserFields(['id' => 'id', 'username' => 'username', 'password' => 'password', 'email' => 'mail_address']);
+            CurrentConfig::setObligatoryUserMailAddress(false);
+            CurrentConfig::setInsensitiveCaseLogon(false);
+            CurrentConfig::setBrowserLanguage(false);
+            CurrentConfig::setEmailAdminOnNewUser('none');
+            CurrentConfig::setGalleryTitle('Test Gallery');
+            CurrentConfig::setWebmasterId(999999);
+            CurrentConfig::setGuestId(2);
+            CurrentConfig::setDefaultUserId(2);
+            CurrentConfig::setAvailablePermissionLevels([0, 1, 2, 4, 8]);
 
             $this->conn = DbConnection::build();
             $this->service = new UserService(new UserRepository($this->conn), new GroupRepository($this->conn), new MailService(), new ActivityService(new ActivityRepository($this->conn)), new HtmlService(), $this->conn);

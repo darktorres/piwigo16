@@ -13,20 +13,19 @@ namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\Config;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Db\Tables;
 
 /**
  * Former install/db/94-database.php (P23 sub-batch 8g-1). data_location is
- * read via LegacyFileConf::read() -- Config::dataLocation() doesn't see a
+ * read via LegacyFileConf::read() -- CurrentConfig::dataLocation() doesn't see a
  * site's local/config/config.inc.php override on this path (see
  * InstallWizard's own constructor docblock). The former $conf_orig
  * capture-then-restore around load_conf_from_db() (Legacy Coupling
  * Retirement Phase 8, 8d) is gone: ConfigService::loadConfFromDb() never
- * touches $conf at all (writes Config::$data only), so there is nothing
- * left to restore -- upload_user_access is read straight off Config::
+ * touches $conf at all (writes CurrentConfig::$data only), so there is nothing
+ * left to restore -- upload_user_access is read straight off CurrentConfig::
  * right after the load instead.
  */
 final class Patch94 implements DbPatchInterface
@@ -56,7 +55,7 @@ final class Patch94 implements DbPatchInterface
         // unvalidated photos submitted by users
         $query = '
 SELECT *
-  FROM ' . Config::dbPrefix() . 'waiting
+  FROM ' . \Piwigo\Db\DbCredentials::current()->prefix . 'waiting
 ;';
         $user_upload_conf['waiting_rows'] = $conn->fetchAllAssociative($query);
 
@@ -101,7 +100,7 @@ SELECT id
         $conn->executeStatement('ALTER TABLE ' . Tables::categories() . ' DROP COLUMN uploadable;');
 
         // waiting
-        $conn->executeStatement('DROP TABLE ' . Config::dbPrefix() . 'waiting;');
+        $conn->executeStatement('DROP TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'waiting;');
 
         // config parameter settings : upload_user_access, upload_link_everytime
         $query = '

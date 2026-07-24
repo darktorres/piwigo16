@@ -84,7 +84,7 @@ final class SearchController implements ControllerInterface
         ];
 
         // list of filters in user preferences
-        $filters_views = \Piwigo\Config\Config::filtersViews() ?? \Piwigo\Config\Config::defaultFiltersViews();
+        $filters_views = \Piwigo\Config\CurrentConfig::filtersViews() ?? \Piwigo\Config\CurrentConfig::defaultFiltersViews();
 
         // change the name of the keys so that they can be used with this
         // part of the program

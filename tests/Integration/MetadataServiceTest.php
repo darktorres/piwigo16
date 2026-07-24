@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;
-    use Piwigo\Config\Config;
+    use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Metadata\MetadataRepository;
@@ -41,19 +41,19 @@ final class MetadataServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
         $this->service = new MetadataService(new MetadataRepository($this->conn));
 
-        Config::override('use_iptc', false);
-        Config::override('use_exif', true);
-        Config::override('allow_html_in_metadata', false);
-        Config::override('metadata_keyword_separator_regex', '/[.,;]/');
-        Config::override('use_exif_mapping', ['author' => 'Artist', 'name' => 'ImageDescription']);
-        Config::override('use_iptc_mapping', []);
+        CurrentConfig::setUseIptc(false);
+        CurrentConfig::setUseExif(true);
+        CurrentConfig::setAllowHtmlInMetadata(false);
+        CurrentConfig::setMetadataKeywordSeparatorRegex('/[.,;]/');
+        CurrentConfig::setUseExifMapping(['author' => 'Artist', 'name' => 'ImageDescription']);
+        CurrentConfig::setUseIptcMapping([]);
 
         // Self-contained scratch dir under this project's own _data/ (never
         // a real upload path) -- created here, torn down below.
@@ -139,7 +139,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_sync_metadata_attributes_omits_exif_fields_when_disabled(): void
     {
-        Config::override('use_exif', false);
+        CurrentConfig::setUseExif(false);
 
         $attributes = $this->service->getSyncMetadataAttributes();
 

@@ -150,7 +150,7 @@ final class CatModifyPageRenderer
             ]
         );
 
-        if (\Piwigo\Config\Config::activateComments()) {
+        if (\Piwigo\Config\CurrentConfig::activateComments()) {
             $template->assign('CAT_COMMENTABLE', SqlDialect::booleanToString((bool) $category['commentable']));
         }
 
@@ -302,7 +302,7 @@ SELECT COUNT(*)
             $template->assign('CAT_DIR_NAME', basename((string) $category_full_dir));
             $template->assign('CAT_MIN_DIR', $this->getMinLocalDir($category_full_dir));
 
-            if (\Piwigo\Config\Config::enableSynchronization()) {
+            if (\Piwigo\Config\CurrentConfig::enableSynchronization()) {
                 $category_site_id = $category['site_id'];
                 $category_site_id = (is_int($category_site_id) || is_string($category_site_id)) ? $category_site_id : '';
                 $template->assign(
@@ -340,7 +340,7 @@ SELECT COUNT(*)
             // has_images-or-!empty(...) condition could be true here.
             if (
                 ($category['has_images']
-                 and \Piwigo\Config\Config::allowRandomRepresentative())
+                 and \Piwigo\Config\CurrentConfig::allowRandomRepresentative())
                 or ! $category['has_images']) {
                 $tpl_representant['ALLOW_DELETE'] = true;
             }

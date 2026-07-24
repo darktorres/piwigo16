@@ -17,7 +17,7 @@ namespace Piwigo\Session;
  * SessionService::remoteAddrHash(), the single shared implementation; the
  * "bind sessions to the client IP?" policy bit is a parameter here because
  * the i.php fast-bootstrap path must source it from the legacy global
- * $conf (Config::$data isn't authoritatively populated from local config
+ * $conf (CurrentConfig::$data isn't authoritatively populated from local config
  * overrides on that path, only from ConfigLoader's own defaults/env).
  */
 final readonly class SessionUserResolver

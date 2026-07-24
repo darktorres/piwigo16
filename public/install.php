@@ -23,9 +23,9 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Install\InstallWizard;
 use Piwigo\Bootstrap\InstallBootstrap;
-use Piwigo\Config\Config;
 use Piwigo\Core\Env;
 use Piwigo\Core\Paths;
+use Piwigo\Db\DbCredentials;
 
 // vendor/autoload.php must be required directly here -- Paths::fromRoot()
 // below is a Piwigo\ class, so the autoloader must already be active
@@ -36,11 +36,6 @@ $paths = Paths::fromRoot(dirname(__DIR__));
 
 Env::loadEnvFile($paths->root);
 
-// Legacy Coupling Retirement Phase 8, 8b (the "boot-first" fix, extended
-// from 8a's HTTP-request-path version to install/upgrade): must run
-// before the $_POST-submitted db_prefix override below, so a coincidental
-// PIWIGO_DB_PREFIX env var can never clobber the value the install form
-// actually submitted.
 InstallBootstrap::boot($paths);
 
 // ----------------------------------------------------- variable initialization
@@ -55,14 +50,15 @@ if (isset($_POST['install'])) {
 }
 
 // Piwigo\Db\Tables::*() (used throughout the wizard) reads
-// Config::dbPrefix() -- InstallBootstrap::boot() above only seeds
-// SCHEMA defaults + env overrides, there's no database.inc.php to read a
-// real db_prefix from until this wizard writes one, so the user-chosen
-// $prefixeTable must be seeded into Config's static state directly here,
-// or every Tables::*() call downstream would fall back to whatever
-// InstallBootstrap::boot() left in place instead of the real chosen
-// prefix.
-Config::override('db_prefix', $prefixeTable);
+// DbCredentials::current()->prefix -- there's no database.inc.php/.env to
+// read a real db_prefix from until this wizard writes one, so the
+// user-chosen $prefixeTable must be seeded into the process environment
+// directly here, or every Tables::*() call downstream would fall back to
+// whatever's already there (a coincidental PIWIGO_DB_PREFIX env var, or
+// the 'piwigo_' default) instead of the real chosen prefix.
+DbCredentials::seed([
+    'PIWIGO_DB_PREFIX' => $prefixeTable,
+]);
 
 // P23 sub-batch 8f-5: the former include/functions_session.inc.php include
 // became Piwigo\Bootstrap\SessionBootstrap::register() (same internal

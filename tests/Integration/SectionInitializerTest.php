@@ -10,7 +10,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
 use Piwigo\Bootstrap\RedirectService;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
@@ -46,11 +46,11 @@ final class SectionInitializerTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        Config::override('question_mark_in_urls', false);
+        CurrentConfig::setQuestionMarkInUrls(false);
 
         unset($_SERVER['SCRIPT_NAME'], $_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 

@@ -75,7 +75,7 @@ final class IdentificationController implements ControllerInterface
         $get_redirect = $_GET['redirect'] ?? null;
         if (is_string($get_redirect) && $get_redirect !== '') {
             $redirect_to = urldecode($get_redirect);
-            if (\Piwigo\Config\Config::guestAccess() and ! isset($_GET['hide_redirect_error'])) {
+            if (\Piwigo\Config\CurrentConfig::guestAccess() and ! isset($_GET['hide_redirect_error'])) {
                 $errors['login_page_error'] = Lang::t('You are not authorized to access the requested page');
             }
         }
@@ -98,7 +98,7 @@ final class IdentificationController implements ControllerInterface
                 $password = is_string($password_raw) ? $password_raw : null;
 
                 $conn = \Piwigo\Db\DbConnection::build();
-                if (\Piwigo\Config\Config::insensitiveCaseLogon()) {
+                if (\Piwigo\Config\CurrentConfig::insensitiveCaseLogon()) {
                     $username = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), $conn)
                         ->searchCaseUsername($username);
                 }
@@ -156,22 +156,22 @@ final class IdentificationController implements ControllerInterface
                 'U_REDIRECT' => $redirect_to,
 
                 'F_LOGIN_ACTION' => $urlService->getRootUrl() . 'identification.php',
-                'authorize_remembering' => \Piwigo\Config\Config::authorizeRemembering(),
+                'authorize_remembering' => \Piwigo\Config\CurrentConfig::authorizeRemembering(),
             ]
         );
 
-        if (! \Piwigo\Config\Config::galleryLocked() && \Piwigo\Config\Config::allowUserRegistration()) {
+        if (! \Piwigo\Config\CurrentConfig::galleryLocked() && \Piwigo\Config\CurrentConfig::allowUserRegistration()) {
             $template->assign('U_REGISTER', $urlService->getRootUrl() . 'register.php');
         }
 
-        if (! \Piwigo\Config\Config::galleryLocked()) {
+        if (! \Piwigo\Config\CurrentConfig::galleryLocked()) {
             $template->assign('U_LOST_PASSWORD', $urlService->getRootUrl() . 'password.php');
         }
 
         $themeconf = $template->get_template_vars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
-        if (! \Piwigo\Config\Config::galleryLocked() && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on, true))) {
+        if (! \Piwigo\Config\CurrentConfig::galleryLocked() && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on, true))) {
             new MenubarRenderer()
                 ->render($urlService);
         }

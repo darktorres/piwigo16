@@ -21,7 +21,6 @@ foreach ([
     \Piwigo\Core\Container::class,
     \Piwigo\Core\ServerTiming::class,
     \Piwigo\Core\FeatureFlag::class,
-    \Piwigo\Bootstrap\CommonBootstrap::class,
     \Piwigo\Bootstrap\RequestPipeline::class,
     \Piwigo\Bootstrap\SentryBootstrap::class,
     \Piwigo\Http\RequestFactory::class,

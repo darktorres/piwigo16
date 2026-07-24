@@ -3,15 +3,15 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\EphemeralKeyService;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 
 beforeEach(function (): void {
-    Config::override('secret_key', 'test-secret-key');
+    CurrentConfig::setSecretKey('test-secret-key');
     $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 });
 
 afterEach(function (): void {
-    Config::reset();
+    CurrentConfig::reset();
 });
 
 test('generate then verify round-trips immediately', function (): void {
@@ -89,7 +89,7 @@ test('generate produces a different signature when the secret key changes', func
     $service = new EphemeralKeyService();
     $key = $service->generate(0);
 
-    Config::override('secret_key', 'a-different-secret');
+    CurrentConfig::setSecretKey('a-different-secret');
 
     expect($service->verify($key))->toBeFalse();
 });

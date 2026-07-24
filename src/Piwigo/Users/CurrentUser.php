@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 
 /**
@@ -14,10 +14,10 @@ use Piwigo\Core\AppInfo;
  * bridge only, deleted in P23") -- kept static for now since no
  * UserBootstrap/auth domain exists yet to inject a real instance into.
  *
- * `attachGlobals()` is called by `CommonBootstrap::run()`/
- * `CliBootstrap::buildApplication()` right after `Kernel::boot()` --  NOT
- * from Kernel itself, which is L1Infrastructure and (per deptrac's
- * ruleset) may only depend on L0Data, not upward on `Users`'
+ * `attachGlobals()` is called by `RequestBootstrap::finalize()`/
+ * `bootConfigOnly()`/`CliBootstrap::buildApplication()` -- NOT from
+ * Kernel itself, which is L1Infrastructure and (per deptrac's ruleset)
+ * may only depend on L0Data, not upward on `Users`'
  * L2aCoreDomain.
  */
 final class CurrentUser
@@ -46,7 +46,7 @@ final class CurrentUser
     public static function attachGlobals(): void
     {
         self::$instance ??= new User(
-            id: Config::guestId(),
+            id: CurrentConfig::guestId(),
             username: '',
             email: '',
             language: AppInfo::DEFAULT_LANGUAGE,

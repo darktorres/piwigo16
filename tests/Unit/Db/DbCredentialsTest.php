@@ -10,7 +10,7 @@ use Piwigo\Db\DbCredentials;
 // test's real DB connection (tests/bootstrap.php loads them once via
 // pwg_load_env_file() at process start, nothing else re-populates them).
 // Save + restore the real values instead of just clearing them.
-$envVars = ['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_DB_PORT'];
+$envVars = ['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_DB_PORT', 'PIWIGO_DB_DRIVER'];
 $originalEnvVars = [];
 
 beforeEach(function () use ($envVars, &$originalEnvVars): void {
@@ -31,11 +31,12 @@ test('fromEnv() falls back to defaults when no env vars are set', function (): v
     $credentials = DbCredentials::fromEnv();
 
     expect($credentials->host)->toBe('localhost')
-        ->and($credentials->user)->toBe('root')
+        ->and($credentials->user)->toBe('')
         ->and($credentials->password)->toBe('')
-        ->and($credentials->database)->toBe('piwigo')
+        ->and($credentials->database)->toBe('')
         ->and($credentials->prefix)->toBe('piwigo_')
-        ->and($credentials->port)->toBeNull();
+        ->and($credentials->port)->toBeNull()
+        ->and($credentials->driver)->toBe('mysqli');
 });
 
 test('fromEnv() reads every PIWIGO_DB_* var when set', function (): void {
@@ -45,6 +46,7 @@ test('fromEnv() reads every PIWIGO_DB_* var when set', function (): void {
     putenv('PIWIGO_DB_BASE=piwigo_prod');
     putenv('PIWIGO_DB_PREFIX=pwg_');
     putenv('PIWIGO_DB_PORT=33061');
+    putenv('PIWIGO_DB_DRIVER=pgsql');
 
     $credentials = DbCredentials::fromEnv();
 
@@ -53,7 +55,40 @@ test('fromEnv() reads every PIWIGO_DB_* var when set', function (): void {
         ->and($credentials->password)->toBe('s3cret')
         ->and($credentials->database)->toBe('piwigo_prod')
         ->and($credentials->prefix)->toBe('pwg_')
-        ->and($credentials->port)->toBe(33061);
+        ->and($credentials->port)->toBe(33061)
+        ->and($credentials->driver)->toBe('pgsql');
+});
+
+test('current() memoizes across calls until reset()', function (): void {
+    putenv('PIWIGO_DB_HOST=first.example.test');
+
+    $first = DbCredentials::current();
+    putenv('PIWIGO_DB_HOST=second.example.test');
+    $stillFirst = DbCredentials::current();
+
+    expect($stillFirst)->toBe($first)
+        ->and($stillFirst->host)->toBe('first.example.test');
+
+    DbCredentials::reset();
+
+    expect(DbCredentials::current()->host)->toBe('second.example.test');
+});
+
+test('seed() putenvs each non-null value and resets the memo', function (): void {
+    DbCredentials::current();
+
+    DbCredentials::seed(['PIWIGO_DB_HOST' => 'seeded.example.test', 'PIWIGO_DB_USER' => null]);
+
+    expect(DbCredentials::current()->host)->toBe('seeded.example.test');
+});
+
+test('migrateFromLegacyFile() is a no-op once PIWIGO_DB_HOST is already set', function (): void {
+    putenv('PIWIGO_DB_HOST=already-set.example.test');
+    DbCredentials::reset();
+
+    DbCredentials::migrateFromLegacyFile(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
+
+    expect(DbCredentials::current()->host)->toBe('already-set.example.test');
 });
 
 test('toMysqlArgs() includes -p only when a password is set', function (): void {

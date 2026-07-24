@@ -735,7 +735,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         } else {
             $slideshow = false;
         }
-        if ($slideshow and \Piwigo\Config\Config::lightSlideshow()) {
+        if ($slideshow and \Piwigo\Config\CurrentConfig::lightSlideshow()) {
             $template->set_filenames([
                 'slideshow' => 'slideshow.tpl',
             ]);
@@ -763,7 +763,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         $metadata_showable = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
             'get_element_metadata_available',
             (
-                (\Piwigo\Config\Config::showExif() or \Piwigo\Config\Config::showIptc())
+                (\Piwigo\Config\CurrentConfig::showExif() or \Piwigo\Config\CurrentConfig::showIptc())
                 and ! $picture['current']['src_image']->is_mimetype()
             ),
             $picture['current']
@@ -831,12 +831,12 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         }
         $download_url = $picture['current']['download_url'] ?? null;
         $download_url_present = is_string($download_url) && $download_url !== '' && $download_url !== '0';
-        if (\Piwigo\Config\Config::pictureDownloadIcon() and $download_url_present and \Piwigo\Users\CurrentUser::get()->enabledHigh) {
+        if (\Piwigo\Config\CurrentConfig::pictureDownloadIcon() and $download_url_present and \Piwigo\Users\CurrentUser::get()->enabledHigh) {
             $template->append('current', [
                 'U_DOWNLOAD' => $download_url,
             ], true);
 
-            if (\Piwigo\Config\Config::isFormatsEnabled()) {
+            if (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
                 $picture_id = $picture['current']['id'];
                 $picture_id = is_numeric($picture_id) ? (int) $picture_id : 0;
                 $formats = array_map(
@@ -924,7 +924,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
                 // preg-captured \d+ string).
                 $current_period = $slideshow_params['period'];
                 $current_period = is_numeric($current_period) ? (int) $current_period : 0;
-                $slideshow_period_step = \Piwigo\Config\Config::slideshowPeriodStep();
+                $slideshow_period_step = \Piwigo\Config\CurrentConfig::slideshowPeriodStep();
                 $new_period = $current_period + ((($op === 'dec') ? -1 : 1) * $slideshow_period_step);
                 $new_slideshow_params =
                   self::imageService($conn)
@@ -950,7 +950,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
                 }
             }
             $template->assign('slideshow', $tpl_slideshow);
-        } elseif (\Piwigo\Config\Config::pictureSlideShowIcon()) {
+        } elseif (\Piwigo\Config\CurrentConfig::pictureSlideShowIcon()) {
             $template->assign(
                 [
                     'U_SLIDESHOW_START' => $urlService->addUrlParams(
@@ -969,15 +969,15 @@ SELECT id,uppercats,commentable,visible,status,global_rank
                 'PHOTO' => $title_nb,
                 'IS_HOME' => ($section_context->section === 'categories' and $page_category === null),
 
-                'LEVEL_SEPARATOR' => \Piwigo\Config\Config::levelSeparator(),
+                'LEVEL_SEPARATOR' => \Piwigo\Config\CurrentConfig::levelSeparator(),
 
                 'U_UP' => $url_up,
-                'DISPLAY_NAV_BUTTONS' => \Piwigo\Config\Config::pictureNavigationIcons(),
-                'DISPLAY_NAV_THUMB' => \Piwigo\Config\Config::pictureNavigationThumb(),
+                'DISPLAY_NAV_BUTTONS' => \Piwigo\Config\CurrentConfig::pictureNavigationIcons(),
+                'DISPLAY_NAV_THUMB' => \Piwigo\Config\CurrentConfig::pictureNavigationThumb(),
             ]
         );
 
-        if (\Piwigo\Config\Config::pictureMetadataIcon()) {
+        if (\Piwigo\Config\CurrentConfig::pictureMetadataIcon()) {
             $template->assign('U_METADATA', $url_metadata);
         }
 
@@ -985,7 +985,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
 
         // admin links
         if (\Piwigo\Auth\AccessControl::isAdmin()) {
-            if ($page_category !== null and \Piwigo\Config\Config::pictureRepresentativeIcon()) {
+            if ($page_category !== null and \Piwigo\Config\CurrentConfig::pictureRepresentativeIcon()) {
                 $template->assign(
                     [
                         'U_SET_AS_REPRESENTATIVE' => $urlService->addUrlParams(
@@ -998,11 +998,11 @@ SELECT id,uppercats,commentable,visible,status,global_rank
                 );
             }
 
-            if (\Piwigo\Config\Config::pictureEditIcon()) {
+            if (\Piwigo\Config\CurrentConfig::pictureEditIcon()) {
                 $template->assign('U_PHOTO_ADMIN', $urlService->getRootUrl() . 'admin.php?page=photo-' . $image_id);
             }
 
-            if (\Piwigo\Config\Config::pictureCaddieIcon()) {
+            if (\Piwigo\Config\CurrentConfig::pictureCaddieIcon()) {
                 $template->assign(
                     'U_CADDIE',
                     $urlService->addUrlParams($url_self, [
@@ -1014,7 +1014,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         }
 
         // favorite manipulation
-        if (! \Piwigo\Auth\AccessControl::isAGuest() and \Piwigo\Config\Config::pictureFavoriteIcon()) {
+        if (! \Piwigo\Auth\AccessControl::isAGuest() and \Piwigo\Config\CurrentConfig::pictureFavoriteIcon()) {
             // verify if the picture is already in the favorite of the
             // user
             $query = '
@@ -1119,7 +1119,7 @@ SELECT COUNT(*) AS nb_fav
         $infos['INFO_FILE'] = $picture['current']['file'];
 
         $template->assign($infos);
-        $template->assign('display_info', \Piwigo\Config\Config::pictureInformations());
+        $template->assign('display_info', \Piwigo\Config\CurrentConfig::pictureInformations());
 
         // related tags
         $tags = self::tagService($conn)
@@ -1189,7 +1189,7 @@ SELECT id, name, permalink
         }
 
         if (in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($picture['current']['file'])), ['pdf'], true)) {
-            $pdf_viewer_filesize_threshold = \Piwigo\Config\Config::pdfViewerFilesizeThreshold();
+            $pdf_viewer_filesize_threshold = \Piwigo\Config\CurrentConfig::pdfViewerFilesizeThreshold();
             $template->assign(
                 [
                     'PDF_VIEWER_FILESIZE_THRESHOLD' => $pdf_viewer_filesize_threshold * 1024,
@@ -1214,7 +1214,7 @@ SELECT id, name, permalink
             and $picture['next']['src_image']->is_original()
             and $template->get_template_vars('U_PREFETCH') === null
             and ! str_contains($http_user_agent, 'Chrome/')) {
-            $prefetch_deriv_type = SessionService::get()->getSessionVar('picture_deriv', \Piwigo\Config\Config::derivativeDefaultSize());
+            $prefetch_deriv_type = SessionService::get()->getSessionVar('picture_deriv', \Piwigo\Config\CurrentConfig::derivativeDefaultSize());
             if (! is_string($prefetch_deriv_type)) {
                 $prefetch_deriv_type = ImageStdParams::MEDIUM;
             }
@@ -1240,7 +1240,7 @@ SELECT id, name, permalink
 
         new PictureRateRenderer(new RateRepository($conn))
             ->render($image_id, $urlService, $picture, $url_self);
-        if (\Piwigo\Config\Config::activateComments()) {
+        if (\Piwigo\Config\CurrentConfig::activateComments()) {
             new PictureCommentRenderer()
                 ->render($edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self);
         }
@@ -1252,7 +1252,7 @@ SELECT id, name, permalink
         // include menubar
         $themeconf = $template->get_template_vars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
-        if (\Piwigo\Config\Config::pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
+        if (\Piwigo\Config\CurrentConfig::pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
             new MenubarRenderer()
                 ->render($urlService);
         }
@@ -1267,7 +1267,7 @@ SELECT id, name, permalink
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_picture');
         new HtmlService()
             ->flushPageMessages();
-        if ($slideshow and \Piwigo\Config\Config::lightSlideshow()) {
+        if ($slideshow and \Piwigo\Config\CurrentConfig::lightSlideshow()) {
             $template->parse('slideshow', false);
         } else {
             $template->parse_picture_buttons();
@@ -1320,7 +1320,7 @@ SELECT id, name, permalink
                     ->cookiePath(),
             ]);
         }
-        $deriv_type = SessionService::get()->getSessionVar('picture_deriv', \Piwigo\Config\Config::derivativeDefaultSize());
+        $deriv_type = SessionService::get()->getSessionVar('picture_deriv', \Piwigo\Config\CurrentConfig::derivativeDefaultSize());
         if (! is_string($deriv_type)) {
             $deriv_type = ImageStdParams::MEDIUM;
         }
@@ -1345,7 +1345,7 @@ SELECT id, name, permalink
 
             // in case we do not display the sizes icon, we only add the
             // selected size to unique_derivatives
-            if (\Piwigo\Config\Config::pictureSizesIcon() or $type === $deriv_type) {
+            if (\Piwigo\Config\CurrentConfig::pictureSizesIcon() or $type === $deriv_type) {
                 $unique_derivatives[$type] = $derivative;
             }
         }

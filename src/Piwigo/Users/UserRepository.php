@@ -25,7 +25,7 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
 {
     /**
      * Returns the webmaster's email address (the users row whose id
-     * column matches \Piwigo\Config\Config::webmasterId()).
+     * column matches \Piwigo\Config\CurrentConfig::webmasterId()).
      *
      * P23 batch 8f-4: implements Piwigo\Core\WebmasterMailProviderInterface
      * (MailService's test seam for this exact lookup -- see that
@@ -34,7 +34,7 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
      * P23 batch 8d: relocated from include/functions.inc.php's
      * get_webmaster_mail_address(), unchanged logic (including its
      * trigger_change('get_webmaster_mail_address', ...) filter hook and
-     * its own \Piwigo\Config\Config::userFields() column-name resolution) -- stays
+     * its own \Piwigo\Config\CurrentConfig::userFields() column-name resolution) -- stays
      * zero-arg, matching the original's own signature exactly, so every
      * real call site retargets as a pure rename.
      */
@@ -42,10 +42,10 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
     public function getWebmasterMailAddress(): string
     {
 
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
         $email_field = $user_fields['email'];
         $id_field = $user_fields['id'];
-        $webmaster_id = \Piwigo\Config\Config::webmasterId();
+        $webmaster_id = \Piwigo\Config\CurrentConfig::webmasterId();
 
         $value = $this->conn->createQueryBuilder()
             ->select($email_field)
@@ -183,7 +183,7 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
     /**
      * @param array<string, mixed> $columns generic pwgfield => real DB
      *   column-name-and-value pairs (username/password/email), matching
-     *   the original's \Piwigo\Config\Config::userFields() mapping
+     *   the original's \Piwigo\Config\CurrentConfig::userFields() mapping
      */
     public function insertUser(array $columns): int
     {
@@ -324,7 +324,7 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
                 ->executeStatement();
         }
 
-        $userFields = \Piwigo\Config\Config::userFields();
+        $userFields = \Piwigo\Config\CurrentConfig::userFields();
         $userIdField = $userFields['id'];
         $this->conn->createQueryBuilder()
             ->delete(Tables::users())

@@ -24,9 +24,9 @@ use Doctrine\DBAL\Connection;
  * apply() bodies are otherwise verbatim ports of the original scripts,
  * including their own progress echoes. The former
  * `global $conf, $prefixeTable;` declarations are gone -- each site reads
- * Tables::/Config::dbPrefix() directly, or, for the handful of keys
+ * Tables::/DbCredentials::current()->prefix directly, or, for the handful of keys
  * genuinely only ever set by a site's own local/config/config.inc.php
- * (never mirrored into Config::), LegacyFileConf::read()/LegacyDbLayer::
+ * (never mirrored into CurrentConfig::), LegacyFileConf::read()/LegacyDbLayer::
  * value() (Legacy Coupling Retirement gap-closure, "fix all" pass).
  *
  * The earlier "no DBAL rewrite in this phase" rule (8f-2) has since been

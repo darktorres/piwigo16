@@ -16,12 +16,12 @@ use Piwigo\Core\Env;
  * which stay on the DB-access side of the migration since they do.
  *
  * MySQL-specific today (`DB_RANDOM_FUNCTION`/date-function names), same
- * as the class this was extracted from -- `Config::dbDriver()` already
- * supports `'pgsql'` for the DBAL connection layer itself, but nothing
- * under `src/Piwigo/` ever exercised that beyond `install/schema/pgsql.sql`
- * existing; a real multi-dialect split (a `Piwigo\Db\SqlDialect`
- * interface with MySQL/Postgres implementations, selected by
- * `Config::dbDriver()`) is out of scope for this pass and left as a
+ * as the class this was extracted from -- `DbCredentials::current()->driver`
+ * already supports `'pgsql'` for the DBAL connection layer itself, but
+ * nothing under `src/Piwigo/` ever exercised that beyond
+ * `install/schema/pgsql.sql` existing; a real multi-dialect split (a
+ * `Piwigo\Db\SqlDialect` interface with MySQL/Postgres implementations,
+ * selected by `DbCredentials::current()->driver`) is out of scope for this pass and left as a
  * follow-up once a real pgsql install path is exercised end-to-end.
  */
 final class SqlDialect

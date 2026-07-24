@@ -57,7 +57,7 @@ final readonly class PasswordService
                 return false;
             }
 
-            if ($userId === null || \Piwigo\Config\Config::externalAuthentification()) {
+            if ($userId === null || \Piwigo\Config\DeploymentPolicy::current()->externalAuthentification) {
                 return true;
             }
 

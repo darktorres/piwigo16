@@ -14,7 +14,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * itself) because Kernel::container() is arch-test-restricted to
  * Bootstrap/ + root index.php (tests/Arch/StructuralTest.php) --
  * admin.php is a different root file, so it must reach the container
- * through this class, the same seam CommonBootstrap/RequestPipeline
+ * through this class, the same seam RequestBootstrap/RequestPipeline
  * already use.
  *
  * Every admin page is a config/admin_pages.php sub-controller since P23

@@ -121,13 +121,13 @@ final class HistoryPageRenderer
         }
 
         if ($form_param['user_id'] !== -1) {
-            // \Piwigo\Config\Config::userFields() maps generic field names to table-specific DB
+            // \Piwigo\Config\CurrentConfig::userFields() maps generic field names to table-specific DB
             // column names (see include/config_default.inc.php, used for external
             // auth integrations) -- the previous raw query here hardcoded the
             // literal 'id'/'username' column names, unlike sibling admin pages
             // (e.g. admin/batch_manager_unit.php) that already read this mapping.
             /** @var array<string, string> $user_fields */
-            $user_fields = \Piwigo\Config\Config::userFields();
+            $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
             $form_param['user_name'] = new UserRepository($conn)
                 ->findUsernameById($form_param['user_id'], $user_fields['id'], $user_fields['username']);
@@ -147,7 +147,7 @@ final class HistoryPageRenderer
 
         $template->assign('display_thumbnails', $display_thumbnails);
         $template->assign('display_thumbnail_selected', $form['display_thumbnail'] ?? null);
-        $template->assign('guest_id', \Piwigo\Config\Config::guestId());
+        $template->assign('guest_id', \Piwigo\Config\CurrentConfig::guestId());
         $template->assign('ADMIN_PAGE_TITLE', Lang::t('History'));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'history');

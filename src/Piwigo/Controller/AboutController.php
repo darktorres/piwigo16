@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -68,7 +68,7 @@ final class AboutController implements ControllerInterface
 
         $user_theme = \Piwigo\Users\CurrentUser::get()->theme;
 
-        $theme_about = Lang::load('about.html', Config::themesPath() . $user_theme . '/', [
+        $theme_about = Lang::load('about.html', CurrentConfig::themesPath() . $user_theme . '/', [
             'return' => true,
         ]);
         if ($theme_about !== false) {

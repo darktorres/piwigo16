@@ -6,7 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
 use Psr\Http\Message\ServerRequestInterface;
@@ -45,7 +45,7 @@ final class ThemeSubController implements AdminSubControllerInterface
                 ->fatalError('Invalid theme');
         }
 
-        $filename = Config::themesPath() . $theme . '/admin/admin.inc.php';
+        $filename = CurrentConfig::themesPath() . $theme . '/admin/admin.inc.php';
         if (is_file($filename)) {
             include_once $filename;
         } else {

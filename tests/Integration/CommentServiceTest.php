@@ -50,7 +50,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Auth\EphemeralKeyService;
     use Piwigo\Comment\CommentRepository;
     use Piwigo\Comment\CommentService;
-    use Piwigo\Config\Config;
+    use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
@@ -90,25 +90,25 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
-            Config::reset();
+            CurrentConfig::reset();
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
-            Config::override('secret_key', 'test-secret-key');
-            Config::override('comments_validation', true);
-            Config::override('comments_author_mandatory', false);
-            Config::override('comments_email_mandatory', false);
-            Config::override('comments_enable_website', true);
-            Config::override('comment_spam_reject', true);
-            Config::override('comment_spam_max_links', 3);
-            Config::override('anti-flood_time', 0);
-            Config::override('guest_id', 2);
-            Config::override('guest_access', true);
-            Config::override('user_fields', ['id' => 'id', 'username' => 'username', 'password' => 'password', 'email' => 'mail_address']);
-            Config::override('email_admin_on_comment', false);
-            Config::override('email_admin_on_comment_validation', false);
-            Config::override('email_admin_on_comment_edition', false);
-            Config::override('email_admin_on_comment_deletion', false);
+            CurrentConfig::setSecretKey('test-secret-key');
+            CurrentConfig::setCommentsValidation(true);
+            CurrentConfig::setCommentsAuthorMandatory(false);
+            CurrentConfig::setCommentsEmailMandatory(false);
+            CurrentConfig::setCommentsEnableWebsite(true);
+            CurrentConfig::setCommentSpamReject(true);
+            CurrentConfig::setCommentSpamMaxLinks(3);
+            CurrentConfig::setAntiFloodTime(0);
+            CurrentConfig::setGuestId(2);
+            CurrentConfig::setGuestAccess(true);
+            CurrentConfig::setUserFields(['id' => 'id', 'username' => 'username', 'password' => 'password', 'email' => 'mail_address']);
+            CurrentConfig::setEmailAdminOnComment(false);
+            CurrentConfig::setEmailAdminOnCommentValidation(false);
+            CurrentConfig::setEmailAdminOnCommentEdition(false);
+            CurrentConfig::setEmailAdminOnCommentDeletion(false);
             CurrentUser::set(User::fromUserArray(['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin', 'email' => 'fixture_admin@example.test']));
             \Piwigo\Core\PageState::reset();
             $_POST['cr'] = [];
@@ -151,7 +151,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_insert_comment_validates_immediately_when_validation_disabled(): void
         {
-            $this->setConf('comments_validation', false);
+            CurrentConfig::setCommentsValidation(false);
 
             $comm = $this->baseComm();
             $key = $this->validKey();
@@ -214,7 +214,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_insert_comment_website_url_honeypot_rejected_when_disabled(): void
         {
-            $this->setConf('comments_enable_website', false);
+            CurrentConfig::setCommentsEnableWebsite(false);
 
             $comm = $this->baseComm();
             $comm['website_url'] = 'http://spam.example';
@@ -238,7 +238,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_insert_comment_falls_back_to_the_current_users_email(): void
         {
-            $this->setConf('comments_validation', false);
+            CurrentConfig::setCommentsValidation(false);
 
             $comm = $this->baseComm();
             $comm['email'] = '';
@@ -252,8 +252,8 @@ namespace Piwigo\Tests\Integration {
 
         public function test_insert_comment_anti_flood_rejects_a_second_immediate_post(): void
         {
-            $this->setConf('comments_validation', false);
-            $this->setConf('anti-flood_time', 3600);
+            CurrentConfig::setCommentsValidation(false);
+            CurrentConfig::setAntiFloodTime(3600);
             CurrentUser::set(User::fromUserArray(['id' => 3, 'status' => 'normal', 'username' => 'regular_user']));
 
             $first = $this->baseComm();
@@ -384,11 +384,6 @@ namespace Piwigo\Tests\Integration {
             self::assertNull($value);
         }
 
-        private function setConf(string $key, mixed $value): void
-        {
-            Config::override($key, $value);
-        }
-
         /**
          * @return list<string>
          */
@@ -442,7 +437,7 @@ namespace Piwigo\Tests\Integration {
         {
             $issuedAt = round(microtime(true), 1) - 1.0;
             $remoteAddr = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
-            $secretKey = Config::secretKey();
+            $secretKey = CurrentConfig::secretKey();
             $signature = hash_hmac('sha256', (string) $issuedAt . substr($remoteAddr, 0, 5) . '0' . $imageId, $secretKey);
 
             return (string) $issuedAt . ':0:' . $signature;

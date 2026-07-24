@@ -6,7 +6,6 @@ namespace Piwigo\Db;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
-use Piwigo\Config\Config;
 
 /**
  * Factory for the shared Doctrine DBAL connection.
@@ -51,18 +50,19 @@ final class DbConnection
      */
     public static function params(): array
     {
-        $host = Config::dbHost();
-        $port = Config::dbPort();
+        $credentials = DbCredentials::current();
+        $host = $credentials->host;
+        $port = $credentials->port;
 
-        if (Config::dbDriver() === 'pgsql') {
+        if ($credentials->driver === 'pgsql') {
             // pg_connect() accepts a Unix socket directory directly via
             // 'host' (unlike mysqli, PostgreSQL has no separate
             // unix_socket param) -- no branching needed here.
             $params = [
                 'driver' => 'pgsql',
-                'user' => Config::dbUser(),
-                'password' => Config::dbPassword(),
-                'dbname' => Config::dbName(),
+                'user' => $credentials->user,
+                'password' => $credentials->password,
+                'dbname' => $credentials->database,
                 'host' => $host,
             ];
             if ($port !== null) {
@@ -74,9 +74,9 @@ final class DbConnection
 
         $params = [
             'driver' => 'mysqli',
-            'user' => Config::dbUser(),
-            'password' => Config::dbPassword(),
-            'dbname' => Config::dbName(),
+            'user' => $credentials->user,
+            'password' => $credentials->password,
+            'dbname' => $credentials->database,
             'charset' => 'utf8mb4',
             // Return native int/float types instead of strings for
             // integer and floating-point columns. Without this, mysqli

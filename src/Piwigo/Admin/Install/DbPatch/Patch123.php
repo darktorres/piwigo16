@@ -44,9 +44,29 @@ final class Patch123 implements DbPatchInterface
     {
         $configService = \Piwigo\Config\CurrentConfigService::get();
         $configService->loadConfFromDb();
-        $dbconf = \Piwigo\Config\Config::all();
 
-        // Config::all() is array<string, mixed> -- DB-loaded config values
+        // These are all Piwigo 2.3-era config keys, long gone from
+        // CurrentConfig's own properties (this patch's whole job is
+        // converting them into their 2.4+ replacements) -- genuinely
+        // dynamic reads via confGetParam(), same as ConfigService's own
+        // docblock describes for keys with no typed accessor. $dbconf is
+        // a local mutable scratch copy from here on (see the clamping
+        // logic below), not a live link to any persistence layer.
+        $dbconf = [
+            'upload_form_hd_keep' => $configService->confGetParam('upload_form_hd_keep'),
+            'upload_form_hd_resize' => $configService->confGetParam('upload_form_hd_resize'),
+            'upload_form_hd_maxwidth' => $configService->confGetParam('upload_form_hd_maxwidth'),
+            'upload_form_hd_maxheight' => $configService->confGetParam('upload_form_hd_maxheight'),
+            'upload_form_hd_quality' => $configService->confGetParam('upload_form_hd_quality'),
+            'upload_form_thumb_crop' => $configService->confGetParam('upload_form_thumb_crop'),
+            'upload_form_thumb_maxwidth' => $configService->confGetParam('upload_form_thumb_maxwidth'),
+            'upload_form_thumb_maxheight' => $configService->confGetParam('upload_form_thumb_maxheight'),
+            'upload_form_websize_resize' => $configService->confGetParam('upload_form_websize_resize'),
+            'upload_form_websize_maxwidth' => $configService->confGetParam('upload_form_websize_maxwidth'),
+            'upload_form_websize_maxheight' => $configService->confGetParam('upload_form_websize_maxheight'),
+        ];
+
+        // confGetParam()'s return type is mixed -- DB-loaded config values
         // are always array|scalar|null in practice (ConfigService::decodeScalar()),
         // this just makes that fact visible to confUpdateParam()'s stricter,
         // typed $value parameter.

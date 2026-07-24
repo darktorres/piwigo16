@@ -139,7 +139,7 @@ final readonly class TagService
 
         // tag levels threshold calculation: a tag with an average rate
         // must have the middle level.
-        $tagsLevels = \Piwigo\Config\Config::tagsLevels();
+        $tagsLevels = \Piwigo\Config\CurrentConfig::tagsLevels();
 
         $thresholdOfLevel = [];
         for ($i = 1; $i < $tagsLevels; $i++) {
@@ -316,8 +316,7 @@ final readonly class TagService
   HAVING COUNT(DISTINCT tag_id)=' . count($tagIds);
         }
 
-        $confOrderBy = \Piwigo\Config\Config::all()['order_by'] ?? null;
-        $orderBySql = in_array($orderBy, [null, ''], true) ? (is_string($confOrderBy) ? $confOrderBy : '') : $orderBy;
+        $orderBySql = in_array($orderBy, [null, ''], true) ? \Piwigo\Config\CurrentConfig::orderBy() : $orderBy;
 
         return $this->repo->findImageIdsForTags($joinSql, $whereSql, $groupHavingSql, $orderBySql);
     }

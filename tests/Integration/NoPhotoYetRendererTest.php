@@ -13,7 +13,7 @@ namespace Piwigo\Tests\Integration {
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Bootstrap\RedirectService;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Paths;
@@ -53,7 +53,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 

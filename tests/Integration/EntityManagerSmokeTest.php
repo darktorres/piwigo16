@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\Container;
@@ -36,7 +36,7 @@ final class EntityManagerSmokeTest extends IntegrationTestCase
         }
 
         Kernel::reset();
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
     }

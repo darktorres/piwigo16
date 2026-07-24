@@ -90,15 +90,15 @@ final class MaintenanceActionsPageRenderer
         $row = $conn->fetchNumeric('SELECT now();');
         $db_current_date = $row !== false ? $row[0] : null;
 
-        // \Piwigo\Config\Config::cacheSizes() is a serialized 4-row [name, value] list produced by
+        // \Piwigo\Config\CurrentConfig::cacheSizes() is a serialized 4-row [name, value] list produced by
         // ws_getCacheSize() (cache_size, msizes, tsizes, last_date_calc); row 3's
         // value is the last_date_calc date string used for time_since().
-        // Real bug found via PHPStan: Config::cacheSizes() already unserializes
+        // Real bug found via PHPStan: CurrentConfig::cacheSizes() already unserializes
         // internally and returns array|null, so the is_string()/unserialize()
         // dance that used to live here was permanently dead -- $cache_sizes was
         // always null, meaning $time_elapsed_since_last_calc below never
         // actually populated.
-        $cache_sizes = \Piwigo\Config\Config::cacheSizes();
+        $cache_sizes = \Piwigo\Config\CurrentConfig::cacheSizes();
         $time_elapsed_since_last_calc = null;
         if ($cache_sizes !== null) {
             $last_calc_row = $cache_sizes[3] ?? null;
@@ -149,7 +149,7 @@ final class MaintenanceActionsPageRenderer
         switch (PwgImage::get_library()) {
             case 'ext_imagick':
                 $library = 'External ImageMagick';
-                $ext_imagick_dir = \Piwigo\Config\Config::extImagickDir();
+                $ext_imagick_dir = \Piwigo\Config\CurrentConfig::extImagickDir();
                 $returnarray = [];
                 exec($ext_imagick_dir . PwgImage::get_ext_imagick_command() . ' -version', $returnarray);
                 $returnarray_line0 = $returnarray[0] ?? '';
@@ -176,7 +176,7 @@ final class MaintenanceActionsPageRenderer
                 break;
         }
 
-        if (\Piwigo\Config\Config::galleryLocked()) {
+        if (\Piwigo\Config\CurrentConfig::galleryLocked()) {
             $template->assign(
                 [
                     'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),

@@ -254,7 +254,7 @@ final readonly class GroupService
             return false;
         }
 
-        $emailAdminOnNewUser = \Piwigo\Config\Config::emailAdminOnNewUser();
+        $emailAdminOnNewUser = \Piwigo\Config\CurrentConfig::emailAdminOnNewUser();
         if ((bool) preg_match('/^group:(\d+)$/', $emailAdminOnNewUser, $matches)) {
             foreach ($groupIds as $groupId) {
                 if ($groupId === (int) $matches[1]) {

@@ -88,7 +88,8 @@ final class UpgradeRunner
     public function loadLanguage(): void
     {
         // This request goes through InstallBootstrap::boot() (Legacy
-        // Coupling Retirement Phase 8, 8b) but never CommonBootstrap::run(),
+        // Coupling Retirement Phase 8, 8b) but never RequestBootstrap::
+        // bootEntryPoint()/bootConfigOnly(),
         // so CurrentUser is never guest-initialized either -- same latent
         // crash as InstallWizard::boot()'s own attachGlobals() call (see its
         // docblock): UpgradeService::deactivateNonStandardThemes() can
@@ -104,11 +105,11 @@ final class UpgradeRunner
         // direct calls, so their declared `string` return types are
         // already certain, no is_string() re-guard needed.
         \Piwigo\Core\CurrentLogger::set(new Logger([
-            'directory' => $this->paths->root . \Piwigo\Config\Config::dataLocation() . \Piwigo\Config\Config::logDir(),
-            'severity' => \Piwigo\Config\Config::logLevel(),
-            'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Config\Config::dbPassword()) . '.txt',
+            'directory' => $this->paths->root . \Piwigo\Config\CurrentConfig::dataLocation() . \Piwigo\Config\CurrentConfig::logDir(),
+            'severity' => \Piwigo\Config\CurrentConfig::logLevel(),
+            'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Db\DbCredentials::current()->password) . '.txt',
             'globPattern' => 'log_*.txt',
-            'archiveDays' => \Piwigo\Config\Config::logArchiveDays(),
+            'archiveDays' => \Piwigo\Config\CurrentConfig::logArchiveDays(),
         ]));
 
         $fs_languages = new ExtensionScanner()
@@ -228,9 +229,9 @@ final class UpgradeRunner
         // Legacy Coupling Retirement gap-closure (install/upgrade-flow
         // constants round): PREFIX_TABLE used to be a SEC-60 global the
         // entry shell define()d -- this class is real, already-DI-shaped
-        // src/Piwigo/ code, so it reads Config::dbPrefix() directly like
-        // everything else in the codebase instead.
-        $dbPrefix = \Piwigo\Config\Config::dbPrefix();
+        // src/Piwigo/ code, so it reads DbCredentials::current()->prefix
+        // directly like everything else in the codebase instead.
+        $dbPrefix = \Piwigo\Db\DbCredentials::current()->prefix;
 
         // find the current release
         if (! in_array('param', $columns_of[$dbPrefix . 'config'], true)) {
@@ -347,7 +348,7 @@ SELECT id
             \Piwigo\Core\PageState::current()->resetQueryCounters();
 
             $upgrade_start = \Piwigo\Core\TimingHelper::getMoment();
-            \Piwigo\Config\Config::override('die_on_sql_error', false);
+            \Piwigo\Config\CurrentConfig::setDieOnSqlError(false);
             // P23 sub-batch 8g-4: the former `include install/upgrade_
             // <release>.php` (whose chain of scripts array_push()ed onto a
             // $mysql_changes local in THIS scope, harvested back via

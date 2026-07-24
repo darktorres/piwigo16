@@ -48,7 +48,7 @@ use Piwigo\Url\UrlService;
  * checkUpgradeAccessRights() call and passes it straight into
  * UpgradeRunner::renderIntro() as a parameter instead. `PREFIX_TABLE` is
  * gone too: every method here that used to read it now calls
- * Config::dbPrefix()/Tables::*() directly, same as the rest of this
+ * DbCredentials::current()->prefix/Tables::*() directly, same as the rest of this
  * codebase (neither the frozen install/db/*.php scripts nor
  * install/upgrade_X.Y.Z.php scripts these constants used to serve still
  * exist -- P23 sub-batch 8g already ported them to real DbPatch/
@@ -72,7 +72,7 @@ final class UpgradeService
         $query = '
 SHOW TABLES
 ;';
-        $dbPrefix = \Piwigo\Config\Config::dbPrefix();
+        $dbPrefix = \Piwigo\Db\DbCredentials::current()->prefix;
         foreach ($conn->fetchFirstColumn($query) as $table_name) {
             if (! is_string($table_name)) {
                 continue;
@@ -200,8 +200,8 @@ DELETE
                                 . '<p><i>' . implode(', ', $theme_names) . '</i></p>');
 
             // what is the default theme?
-            // \Piwigo\Config\Config::defaultUserId() is always an int (see include/config_default.inc.php)
-            $default_user_id = \Piwigo\Config\Config::defaultUserId();
+            // \Piwigo\Config\CurrentConfig::defaultUserId() is always an int (see include/config_default.inc.php)
+            $default_user_id = \Piwigo\Config\CurrentConfig::defaultUserId();
             $query = '
 SELECT theme
   FROM ' . Tables::userInfos() . '
@@ -320,10 +320,10 @@ FROM ' . Tables::users() . '
 WHERE username = :username
 ;';
         } else {
-            // \Piwigo\Config\Config::userFields() maps generic field names to table specific
+            // \Piwigo\Config\CurrentConfig::userFields() maps generic field names to table specific
             // field names and is always array<string, string> (see
             // include/config_default.inc.php).
-            $user_fields = \Piwigo\Config\Config::userFields();
+            $user_fields = \Piwigo\Config\CurrentConfig::userFields();
             $id_field = $user_fields['id'];
             $username_field = $user_fields['username'];
             $query = '
@@ -397,10 +397,11 @@ SELECT id
     }
 
     /**
-     * upgrade.php seeds Config's db_* overrides from the same
-     * $config_file include this method itself would have read from, ahead
-     * of this call, so DbConnection::build() (which reads Config::db*())
-     * resolves to the real submitted credentials.
+     * upgrade.php calls DbCredentials::migrateFromLegacyFile() from the
+     * same $config_file include this method itself would have read from,
+     * ahead of this call, so DbConnection::build() (which reads
+     * DbCredentials::current()) resolves to the real submitted
+     * credentials.
      */
     public static function upgradeDbConnect(): Connection
     {

@@ -181,7 +181,7 @@ final class MaintenanceActionDispatcher
 
                 SessionService::get()->sessionGc();
 
-                $user_fields = \Piwigo\Config\Config::userFields();
+                $user_fields = \Piwigo\Config\CurrentConfig::userFields();
                 $id_field = $user_fields['id'];
 
                 $db_maintenance->purgeSessionsForDeletedUsers($id_field);

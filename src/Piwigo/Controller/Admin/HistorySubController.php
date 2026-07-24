@@ -19,7 +19,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * remaining gap was this page's own username-lookup query, fixed by
  * adding Piwigo\Users\UserRepository::findUsernameById() (also closes a
  * real, if narrow, correctness gap: the old raw query hardcoded 'id'/
- * 'username' literally instead of reading \Piwigo\Config\Config::userFields(), unlike
+ * 'username' literally instead of reading \Piwigo\Config\CurrentConfig::userFields(), unlike
  * every sibling admin page that reads that same user table).
  */
 final class HistorySubController implements AdminSubControllerInterface

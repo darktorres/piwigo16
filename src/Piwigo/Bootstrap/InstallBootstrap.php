@@ -13,7 +13,7 @@ use Piwigo\Core\Paths;
 
 /**
  * Legacy Coupling Retirement Phase 8, 8b -- the install.php/upgrade.php/
- * upgrade_feed.php counterpart to CommonBootstrap::run()/
+ * upgrade_feed.php counterpart to RequestBootstrap::bootEntryPoint()/
  * CliBootstrap::buildApplication() for the HTTP request path. Same
  * "ConfigLoader::applyDefaults()/applyEnvOverrides() then Kernel::boot()
  * before anything else" shape as both of those, applied to the one
@@ -26,19 +26,20 @@ use Piwigo\Core\Paths;
  * (matching RequestBootstrap::activityService()'s own precedent), not a
  * container lookup, for exactly this reason: a container-resolved
  * UserService would unsafely cache a Connection built from stale/default
- * Config::dbHost() etc. if resolved before InstallWizard::boot()'s own
- * Config::override('db_host', ...) calls (from the submitted install
- * form) have run.
+ * DbCredentials::current() (Config generic-accessor removal moved DB
+ * credentials off CurrentConfig:: entirely) if resolved before InstallWizard::
+ * boot()'s own DbCredentials::seed(...) call (from the submitted install
+ * form) has run.
  *
  * activateConfigService() (Legacy Coupling Retirement Phase 8, 8d) is the
- * install/upgrade-path counterpart to CommonBootstrap::run()'s/
+ * install/upgrade-path counterpart to RequestBootstrap::connect()'s/
  * CliBootstrap::buildApplication()'s own CurrentConfigService::set() call
  * -- called separately, and later, than boot() for the identical reason:
  * it must run after real DB credentials are seeded (install.php: after
  * InstallWizard::boot(); upgrade.php/upgrade_feed.php: after their own
- * db_host/db_user/db_password/db_base Config::override() seeding), or the
- * ConfigService/Connection resolved and cached here would carry stale
- * ones for the rest of the request. Once called, every Tier-2 class
+ * DbCredentials::seed(...) call), or the ConfigService/Connection
+ * resolved and cached here would carry stale ones for the rest of the
+ * request. Once called, every Tier-2 class
  * reachable from either path (UpgradeRunner.php/UpgradeService.php/
  * Admin/themes.php/plugins.php/updates.php/Cache/UserCacheInvalidator.php/
  * Image/ImageService.php/Page/NoPhotoYetRenderer.php/Template/Template.php/

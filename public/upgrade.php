@@ -17,7 +17,7 @@ declare(strict_types=1);
 // rule SEC-60. Legacy Coupling Retirement gap-closure (install/upgrade-flow
 // constants round): PREFIX_TABLE/CURRENT_DATE/PHPWG_IN_UPGRADE are gone --
 // UpgradeRunner/UpgradeService/AbstractRangeVersionUpgrade are real,
-// already-DI-shaped classes that read Config::/Tables::/UpgradeRunDate::
+// already-DI-shaped classes that read CurrentConfig::/Tables::/UpgradeRunDate::
 // directly now instead of a global those classes' own methods used to
 // read. Only PWG_CHARSET stays: Patch65/85/90 (pre-2.0 database charset
 // migration) still consult it via UpgradeCharset:: on pre-2.0 databases
@@ -27,8 +27,9 @@ use Piwigo\Admin\Install\UpgradeRunDate;
 use Piwigo\Admin\Install\UpgradeRunner;
 use Piwigo\Admin\Install\UpgradeService;
 use Piwigo\Bootstrap\InstallBootstrap;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Paths;
+use Piwigo\Db\DbCredentials;
 
 // right after the overwrite of previous version files by the unzip in the administration,
 // PHP engine might still have old files in cache. We do not want to use the cache and
@@ -44,20 +45,12 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $paths = Paths::fromRoot(dirname(__DIR__));
 
-// Legacy Coupling Retirement Phase 8, 8b (the "boot-first" fix, extended
-// from 8a's HTTP-request-path version to install/upgrade): must run
-// before the database.inc.php-sourced db_* overrides below, so real,
-// site-specific credentials always win over a coincidental PIWIGO_DB_*
-// env var.
 InstallBootstrap::boot($paths);
 
-/**
- * @var array<string, mixed> $conf
- * @var string $prefixeTable
- */
+/** @var array<string, mixed> */
 
 // load config file
-$conf = Config::defaultsArray();
+$conf = CurrentConfig::defaultsArray();
 @include $paths->local . 'config/config.inc.php';
 
 $config_file = $paths->siteLocal . 'config/database.inc.php';
@@ -72,31 +65,20 @@ if ($php_end_tag === false) {
 
 include $config_file;
 
-// Legacy Coupling Retirement Phase 8, 8b -- real, already-diagnosed bug
-// fix: database.inc.php (just included) sets $conf['db_host']/['db_user']/
-// ['db_password']/['db_base'] into the legacy $conf array, but nothing
-// previously bridged them into Config::'s static state.
-// UpgradeService::upgradeDbConnect() below calls DbConnection::build(),
-// which reads Config::dbHost()/dbUser()/dbPassword()/dbBase() exclusively
-// -- so every real invocation of this script silently attempted to
-// connect as an empty-string user with an empty-string password against
-// an empty-string database at 'localhost', regardless of the site's real
-// configuration, which fails for any real MySQL install.
-foreach (['db_host', 'db_user', 'db_password', 'db_base'] as $dbConfKey) {
-    $dbConfValue = $conf[$dbConfKey] ?? null;
-    if (is_string($dbConfValue)) {
-        Config::override($dbConfKey, $dbConfValue);
-    }
-}
-
-// Piwigo\Db\Tables::*() reads Config::dbPrefix() -- InstallBootstrap::boot()
-// above only seeds SCHEMA defaults + env overrides, so $prefixeTable
-// (resolved above from database.inc.php, independent of $conf) must be
-// seeded into Config's static state directly here too, or every
-// Tables::*() call downstream would fall back to whatever
-// InstallBootstrap::boot() left in place instead of the real prefix.
-Config::override('db_prefix', $prefixeTable);
-// Legacy Coupling Retirement Phase 8, 8d: must run after the real db_*
+// A real, pre-existing Piwigo installation being upgraded through this
+// legacy flow has its DB credentials in database.inc.php, not .env --
+// DbConnection::build() reads DbCredentials::current() exclusively (env
+// only), so without this, every real invocation of this script would
+// silently attempt to connect as an empty-string user with an
+// empty-string password against an empty-string database at 'localhost',
+// regardless of the site's real configuration. migrateFromLegacyFile()
+// re-reads database.inc.php independently (isolated scope, same file this
+// shell already included above) and seeds the process environment (and
+// persists into .env) only when .env doesn't already have these -- a
+// no-op for a site that already upgraded once, or one InstallWizard
+// itself installed.
+DbCredentials::migrateFromLegacyFile($paths);
+// Legacy Coupling Retirement Phase 8, 8d: must run after the credential
 // seeding above, not before -- see InstallBootstrap::activateConfigService()'s
 // own docblock.
 InstallBootstrap::activateConfigService();

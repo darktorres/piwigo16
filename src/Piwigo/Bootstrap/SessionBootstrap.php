@@ -32,24 +32,23 @@ final class SessionBootstrap
     public static function register(): void
     {
 
-        if (\Piwigo\Config\Config::has('session_save_handler')
-          and (\Piwigo\Config\Config::sessionSaveHandler() === 'db')
+        if (\Piwigo\Config\CurrentConfig::sessionSaveHandler() === 'db'
           and \Piwigo\Core\InstallationFlag::isActive()) {
             session_set_save_handler(new PwgSession());
 
             if (function_exists('ini_set')) {
-                $session_use_cookies = \Piwigo\Config\Config::sessionUseCookies();
+                $session_use_cookies = \Piwigo\Config\CurrentConfig::sessionUseCookies();
                 ini_set('session.use_cookies', $session_use_cookies);
 
-                $session_use_only_cookies = \Piwigo\Config\Config::sessionUseOnlyCookies();
+                $session_use_only_cookies = \Piwigo\Config\CurrentConfig::sessionUseOnlyCookies();
                 ini_set('session.use_only_cookies', $session_use_only_cookies);
 
-                $session_use_trans_sid = \Piwigo\Config\Config::sessionUseTransSid();
+                $session_use_trans_sid = \Piwigo\Config\CurrentConfig::sessionUseTransSid();
                 ini_set('session.use_trans_sid', intval($session_use_trans_sid));
                 ini_set('session.cookie_httponly', 1);
             }
 
-            $session_name = \Piwigo\Config\Config::sessionName();
+            $session_name = \Piwigo\Config\CurrentConfig::sessionName();
             session_name($session_name);
             session_set_cookie_params(0, new CookieService()->cookiePath());
             register_shutdown_function(session_write_close(...));

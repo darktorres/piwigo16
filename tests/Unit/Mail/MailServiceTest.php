@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Mail\MailService;
 
@@ -29,7 +29,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    Config::reset();
+    CurrentConfig::reset();
 });
 
 test('formatEmail wraps a name and email into "name <email>"', function (): void {
@@ -155,14 +155,14 @@ test('moveCssToBody inlines a <style> block into the element it targets', functi
 });
 
 test('getMailSenderName falls back to gallery_title when mail_sender_name is unset', function (): void {
-    Config::override('gallery_title', 'My Gallery');
+    CurrentConfig::setGalleryTitle('My Gallery');
     $service = new MailService();
 
     expect($service->getMailSenderName())->toBe('My Gallery');
 });
 
 test('getMailSenderName uses mail_sender_name when configured', function (): void {
-    Config::override('mail_sender_name', 'Custom Sender');
+    CurrentConfig::setMailSenderName('Custom Sender');
     $service = new MailService();
 
     expect($service->getMailSenderName())->toBe('Custom Sender');
@@ -175,17 +175,17 @@ test('getMailConfiguration reports use_smtp false when smtp_host is unset', func
 });
 
 test('getMailConfiguration reports use_smtp true when smtp_host is configured', function (): void {
-    Config::override('smtp_host', 'smtp.example.test');
+    CurrentConfig::setSmtpHost('smtp.example.test');
     $service = mail_service_with_fake_webmaster();
 
     expect($service->getMailConfiguration()['use_smtp'])->toBeTrue();
 });
 
-test('getMailConfiguration reads debug_mail-adjacent smtp settings from Config::', function (): void {
-    Config::override('smtp_host', 'smtp.example.test');
-    Config::override('smtp_user', 'mailuser');
-    Config::override('smtp_password', 'secret');
-    Config::override('smtp_secure', 'tls');
+test('getMailConfiguration reads debug_mail-adjacent smtp settings from CurrentConfig::', function (): void {
+    CurrentConfig::setSmtpHost('smtp.example.test');
+    CurrentConfig::setSmtpUser('mailuser');
+    CurrentConfig::setSmtpPassword('secret');
+    CurrentConfig::setSmtpSecure('tls');
     $service = mail_service_with_fake_webmaster();
 
     $config = $service->getMailConfiguration();

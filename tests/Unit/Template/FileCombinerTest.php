@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Paths;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\Combinable;
@@ -28,14 +28,14 @@ use Piwigo\Users\CurrentUser;
 // (src/Piwigo/Url/functions.php, P23 batch 8c), no explicit require needed.
 
 beforeEach(function (): void {
-    Config::override('template_compile_check', false);
-    Config::override('template_combine_files', false);
+    CurrentConfig::setTemplateCompileCheck(false);
+    CurrentConfig::setTemplateCombineFiles(false);
     CurrentUser::attachGlobals();
 });
 
 afterEach(function (): void {
     CurrentUser::reset();
-    Config::reset();
+    CurrentConfig::reset();
 });
 
 test('combine returns an empty array for no combinables', function (): void {

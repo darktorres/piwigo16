@@ -88,7 +88,7 @@ final class HtmlService implements HtmlRenderingInterface
     #[\Override]
     public function getCatDisplayName(array $catInformations, ?string $url = ''): string
     {
-        $level_separator = \Piwigo\Config\Config::levelSeparator();
+        $level_separator = \Piwigo\Config\CurrentConfig::levelSeparator();
 
         $output = '';
         $is_first = true;
@@ -145,7 +145,7 @@ final class HtmlService implements HtmlRenderingInterface
         ?string $linkClass = null,
         ?string $authKey = null,
     ): string {
-        $level_separator = \Piwigo\Config\Config::levelSeparator();
+        $level_separator = \Piwigo\Config\CurrentConfig::levelSeparator();
 
         $add_url_params = [];
         if (isset($authKey)) {
@@ -706,7 +706,7 @@ final class HtmlService implements HtmlRenderingInterface
             $details[] = Lang::t('%d visits', $info['hit']);
         }
 
-        if (\Piwigo\Config\Config::rateEnabled() and isset($info['rating_score']) && is_numeric($info['rating_score']) && (float) $info['rating_score'] !== 0.0) {
+        if (\Piwigo\Config\CurrentConfig::rateEnabled() and isset($info['rating_score']) && is_numeric($info['rating_score']) && (float) $info['rating_score'] !== 0.0) {
             $details[] = Lang::t('rating score %s', $info['rating_score']);
         }
 
@@ -747,10 +747,10 @@ final class HtmlService implements HtmlRenderingInterface
      */
     public function getElementUrlProtectionHandler(string $url, array $infos): string
     {
-        if (\Piwigo\Config\Config::originalUrlProtection() === 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
+        if (\Piwigo\Config\CurrentConfig::originalUrlProtection() === 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
             $path = $infos['path'] ?? null;
             $ext = \Piwigo\Core\StringHelper::getExtension(is_string($path) ? $path : null);
-            $picture_ext = \Piwigo\Config\Config::pictureExtensions();
+            $picture_ext = \Piwigo\Config\CurrentConfig::pictureExtensions();
             if (! in_array($ext, $picture_ext, true)) {
                 return $url;
             }

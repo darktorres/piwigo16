@@ -56,7 +56,7 @@ final class Patch92 implements DbPatchInterface
 
         // If the webmaster_id has been modified, it must be present in
         // local/config/config.inc.php, so read it from there directly --
-        // Config::webmasterId() doesn't see a site's
+        // CurrentConfig::webmasterId() doesn't see a site's
         // local/config/config.inc.php override on this path (same
         // reasoning as Patch171).
         $localConf = LegacyFileConf::read();

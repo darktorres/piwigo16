@@ -72,29 +72,24 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
 
         $startTime = TimingHelper::getMoment();
 
-        if (! \Piwigo\Config\Config::sendPiwigoInfos()) {
+        if (! \Piwigo\Config\CurrentConfig::sendPiwigoInfos()) {
             return;
         }
 
-        // \Piwigo\Config\Config::sendPiwigoInfosLastNotice() has been loaded in include/common, maybe
+        // \Piwigo\Config\CurrentConfig::sendPiwigoInfosLastNotice() has been loaded in include/common, maybe
         // a few seconds earlier, we need a refreshed value from the database. Another
         // concurrent execution might have already performed send_piwigo_infos 3 seconds ago.
         \Piwigo\Config\CurrentConfigService::get()->loadConfFromDb('send_piwigo_infos_last_notice', false);
 
         $doSend = false;
-        $lastNotice = \Piwigo\Config\Config::sendPiwigoInfosLastNotice() ?? null;
+        $lastNotice = \Piwigo\Config\CurrentConfig::sendPiwigoInfosLastNotice() ?? null;
         // conf_get_param()/load_conf_from_db() both feed $conf through a
         // loosely-typed mixed pipeline, but this particular param is always a
         // MySQL datetime string once set; only strtotime()'s argument needs the
         // narrowing since the isset() check above doesn't provide a type.
         $lastNoticeStr = is_string($lastNotice) ? $lastNotice : null;
         if ($lastNoticeStr !== null) {
-            // conf_get_param() reads $conf with a dynamic (non-literal) key, so
-            // its return stays mixed even though this specific param is always
-            // an int of seconds; narrow it before splicing into strtotime()'s
-            // relative-time string.
-            $period = \Piwigo\Config\Config::all()['send_piwigo_infos_period'] ?? 7 * 24 * 60 * 60;
-            $period = is_numeric($period) ? (int) $period : 7 * 24 * 60 * 60;
+            $period = \Piwigo\Config\CurrentConfig::sendPiwigoInfosPeriod();
             if (strtotime($lastNoticeStr) < strtotime($period . ' second ago')) {
                 $doSend = true;
             }
@@ -123,14 +118,14 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         $row = $conn->fetchNumeric('SELECT now();');
         $dbCurrentDate = $row !== false ? $row[0] : null;
 
-        if (! \Piwigo\Config\Config::has('send_piwigo_infos_origin_hash')) {
+        if (\Piwigo\Config\CurrentConfig::sendPiwigoInfosOriginHash() === null) {
             \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
         }
 
         [$containerType, $containerVersion] = ContainerDetector::detect();
 
         $piwigoInfos = [
-            'origin_hash' => \Piwigo\Config\Config::sendPiwigoInfosOriginHash(),
+            'origin_hash' => \Piwigo\Config\CurrentConfig::sendPiwigoInfosOriginHash(),
             'technical' => [
                 'php_version' => PHP_VERSION,
                 'piwigo_version' => AppInfo::VERSION,
@@ -293,7 +288,7 @@ SELECT
 
                 if (in_array($eid, [null, 0, '0', ''], true)) {
                     // let's search in the data fetched from PEM
-                    $pemPluginsCategory = \Piwigo\Config\Config::pemPluginsCategory();
+                    $pemPluginsCategory = \Piwigo\Config\CurrentConfig::pemPluginsCategory();
                     $eid = $officialExts[$pemPluginsCategory][$pluginId] ?? null;
                 }
 
@@ -347,7 +342,7 @@ SELECT
 
             if (in_array($eid, [null, 0, '0', ''], true)) {
                 // let's search in the data fetched from PEM
-                $pemThemesCategory = \Piwigo\Config\Config::pemThemesCategory();
+                $pemThemesCategory = \Piwigo\Config\CurrentConfig::pemThemesCategory();
                 $eid = $officialExts[$pemThemesCategory][$themeId] ?? null;
             }
 
@@ -586,21 +581,18 @@ SELECT
         $piwigoInfos['apps'] = $apps;
 
         $features = [
-            'activate_comments',
-            'rate',
-            'log',
-            'history_guest',
-            'history_admin',
+            'activate_comments' => \Piwigo\Config\CurrentConfig::activateComments(),
+            'rate' => \Piwigo\Config\CurrentConfig::rateEnabled(),
+            'log' => \Piwigo\Config\CurrentConfig::logConf(),
+            'history_guest' => \Piwigo\Config\CurrentConfig::historyGuest(),
+            'history_admin' => \Piwigo\Config\CurrentConfig::historyAdmin(),
         ];
 
-        foreach ($features as $feature) {
-            $piwigoInfos['features'][$feature] = ((bool) (\Piwigo\Config\Config::all()[$feature] ?? null)) ? 'yes' : 'no';
+        foreach ($features as $feature => $enabled) {
+            $piwigoInfos['features'][$feature] = $enabled ? 'yes' : 'no';
         }
 
-        // conf_get_param() reads $conf with a dynamic (non-literal) key, so its
-        // return stays mixed even though this param is always a URL string.
-        $updateUrlBase = \Piwigo\Config\Config::all()['send_piwigo_infos_update_url'] ?? AppInfo::URL;
-        $updateUrlBase = is_string($updateUrlBase) ? $updateUrlBase : AppInfo::URL;
+        $updateUrlBase = \Piwigo\Config\CurrentConfig::sendPiwigoInfosUpdateUrl();
         $url = $updateUrlBase . '/ws.php';
 
         $getData = [
@@ -631,7 +623,7 @@ SELECT
         $logger = \Piwigo\Core\CurrentLogger::get();
 
         // let's fake a last_notice so that we only try 1 day later
-        $existingLastNotice = \Piwigo\Config\Config::sendPiwigoInfosLastNotice() ?? null;
+        $existingLastNotice = \Piwigo\Config\CurrentConfig::sendPiwigoInfosLastNotice() ?? null;
         $lastNotice = is_string($existingLastNotice) ? strtotime($existingLastNotice) : time();
         $lastNotice = ($lastNotice === false ? time() : $lastNotice) + $waitTime;
 

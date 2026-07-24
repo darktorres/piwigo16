@@ -18,8 +18,9 @@ use Piwigo\Core\Kernel;
  * (/about.php) is deliberately *not* exercised here: its controller needs
  * the full legacy include/common.inc.php bootstrap (real $template/$page/
  * $user/$conf globals, check_status()/l10n()/etc. free functions) that
- * only a real HTTP request through Apache -- or CommonBootstrap::run()
- * itself -- provides; live-curl verification against the real instance is
+ * only a real HTTP request through Apache -- or
+ * RequestBootstrap::bootEntryPoint() itself -- provides; live-curl
+ * verification against the real instance is
  * the actual end-to-end proof for that (see docs/plan/manifest.yaml's P22
  * wrap-up memory).
  */

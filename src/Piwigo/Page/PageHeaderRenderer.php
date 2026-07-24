@@ -47,14 +47,14 @@ final class PageHeaderRenderer
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_page_header');
 
-        $show_mobile_app_banner = \Piwigo\Config\Config::all()['show_mobile_app_banner_in_gallery'] ?? false;
+        $show_mobile_app_banner = \Piwigo\Config\CurrentConfig::showMobileAppBannerInGallery();
         if (\Piwigo\Core\AdminContext::isActive()) {
-            $show_mobile_app_banner = \Piwigo\Config\Config::all()['show_mobile_app_banner_in_admin'] ?? true;
+            $show_mobile_app_banner = \Piwigo\Config\CurrentConfig::showMobileAppBannerInAdmin();
         }
 
         /** @var string $conf_gallery_title */
-        $conf_gallery_title = \Piwigo\Config\Config::galleryTitle();
-        $page_banner = \Piwigo\Core\PageState::current()->pageBanner ?? \Piwigo\Config\Config::pageBanner();
+        $conf_gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();
+        $page_banner = \Piwigo\Core\PageState::current()->pageBanner ?? \Piwigo\Config\CurrentConfig::pageBanner();
 
         $template->assign(
             [
@@ -76,7 +76,7 @@ final class PageHeaderRenderer
 
                 'U_HOME' => self::urlService()->getGalleryHomeUrl(),
 
-                'LEVEL_SEPARATOR' => \Piwigo\Config\Config::levelSeparator(),
+                'LEVEL_SEPARATOR' => \Piwigo\Config\CurrentConfig::levelSeparator(),
 
                 'SHOW_MOBILE_APP_BANNER' => $show_mobile_app_banner,
 
@@ -93,7 +93,7 @@ final class PageHeaderRenderer
         }
 
         $pageState = \Piwigo\Core\PageState::current();
-        if (! \Piwigo\Config\Config::metaRef()) {
+        if (! \Piwigo\Config\CurrentConfig::metaRef()) {
             $pageState->setMetaRobotsFlag('noindex');
             $pageState->setMetaRobotsFlag('nofollow');
         }

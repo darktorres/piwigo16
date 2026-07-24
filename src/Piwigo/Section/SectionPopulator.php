@@ -87,15 +87,8 @@ final readonly class SectionPopulator
         // progressively narrowed/overridden by several of this method's
         // section-specific branches below and read back by several others
         // -- a single local variable threaded through the whole method,
-        // seeded from the base config, replaces the former (\Piwigo\Config\Config::all()['order_by'] ?? null)
-        // scratch-global. Config::orderBy() (the typed SCHEMA accessor)
-        // models a structured {field,dir}[] shape that no real code writes
-        // -- 'order_by' is actually stored as a raw "ORDER BY ..." SQL
-        // fragment (see ConfigDb::loadConfFromDb()'s own docblock), so the
-        // seed reads the untyped bag like ConfigService::confGetParam()
-        // does for keys without a compatible accessor.
-        $order_by_conf = \Piwigo\Config\Config::all()['order_by'] ?? null;
-        $order_by = is_string($order_by_conf) ? $order_by_conf : '';
+        // seeded from CurrentConfig::orderBy().
+        $order_by = \Piwigo\Config\CurrentConfig::orderBy();
         if (! $persistent_cache instanceof PersistentCache) {
             $this->htmlRenderer->fatalError('persistent cache not initialized');
         }
@@ -135,14 +128,14 @@ final readonly class SectionPopulator
                     break;
                 case 'index':
                     // No section defined, go to random url
-                    // Config::randomIndexRedirect() is a map of URL => named
+                    // CurrentConfig::randomIndexRedirect() is a map of URL => named
                     // condition string (see include/config_default.inc.php); a
                     // malformed local override shouldn't crash this page.
                     // [SEC-15] RandomIndexRedirectResolver replaces the
                     // original's eval($random_url_condition) -- a config value
                     // with DB write access previously got arbitrary PHP
                     // execution.
-                    $redirect_candidates = \Piwigo\Config\Config::randomIndexRedirect();
+                    $redirect_candidates = \Piwigo\Config\CurrentConfig::randomIndexRedirect();
                     $next_token_value = $tokens[$next_token] ?? '';
                     $next_token_is_empty = $next_token_value === '' || $next_token_value === '0';
                     if ($redirect_candidates !== [] and $next_token_is_empty) {
@@ -188,8 +181,7 @@ final readonly class SectionPopulator
         // and not as a category set because we can't use the #image_category.rank :
         // displayed images are not directly linked to the displayed category
         if ($section === 'categories' and ! isset($page['flat'])) {
-            $order_by_inside_category_conf = \Piwigo\Config\Config::all()['order_by_inside_category'] ?? null;
-            $order_by = is_string($order_by_inside_category_conf) ? $order_by_inside_category_conf : '';
+            $order_by = \Piwigo\Config\CurrentConfig::orderByInsideCategory();
         }
 
         if (SessionService::get()->getSessionVar('image_order', 0) > 0) {
@@ -597,7 +589,7 @@ SELECT id
                 $page['super_order_by'] = true;
                 $order_by = ' ORDER BY hit DESC, id DESC';
 
-                $top_number = \Piwigo\Config\Config::topNumber();
+                $top_number = \Piwigo\Config\CurrentConfig::topNumber();
 
                 // GROUP BY id, same ONLY_FULL_GROUP_BY fix as above --
                 // $order_by orders by hit/id, both images' own columns.
@@ -630,7 +622,7 @@ SELECT id
                 $page['super_order_by'] = true;
                 $order_by = ' ORDER BY rating_score DESC, id DESC';
 
-                $top_number = \Piwigo\Config\Config::topNumber();
+                $top_number = \Piwigo\Config\CurrentConfig::topNumber();
 
                 // GROUP BY id, same ONLY_FULL_GROUP_BY fix as above --
                 // $order_by orders by rating_score/id, both images' own
@@ -740,7 +732,7 @@ SELECT id
             $page['section_title'] = '<a href="' . $gallery_home_url . '">' . Lang::t('Home') . '</a>';
             $title_value = is_string($page['title']) ? $page['title'] : '';
             if ($title_value !== '' && $title_value !== '0') {
-                $level_separator = \Piwigo\Config\Config::levelSeparator();
+                $level_separator = \Piwigo\Config\CurrentConfig::levelSeparator();
                 $page['section_title'] .= $level_separator . $title_value;
             } else {
                 $page['title'] = $page['section_title'];
@@ -762,7 +754,7 @@ SELECT id
             $hit_by_cat_url_name = is_string($hit_by_cat_url_name) ? $hit_by_cat_url_name : null;
             $hit_by_cat_permalink = $hit_by['cat_permalink'] ?? null;
             $hit_by_cat_permalink = is_string($hit_by_cat_permalink) ? $hit_by_cat_permalink : null;
-            $category_url_style = \Piwigo\Config\Config::categoryUrlStyle();
+            $category_url_style = \Piwigo\Config\CurrentConfig::categoryUrlStyle();
             $category_permalink = is_string($page_category['permalink'] ?? null) ? $page_category['permalink'] : null;
             $category_name = $page_category['name'] ?? null;
             $category_name = is_string($category_name) ? $category_name : '';

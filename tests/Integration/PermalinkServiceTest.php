@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
@@ -31,7 +31,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         PageState::reset();

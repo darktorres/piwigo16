@@ -264,8 +264,7 @@ final readonly class CalendarRenderer
         } // end category calling
 
         if ($must_show_list) {
-            $conf_order_by = \Piwigo\Config\Config::all()['order_by'] ?? null;
-            $conf_order_by = is_string($conf_order_by) ? $conf_order_by : '';
+            $conf_order_by = \Piwigo\Config\CurrentConfig::orderBy();
 
             if ($superOrderBy) {
                 $order_by = $conf_order_by;

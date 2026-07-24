@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\UrlServiceInterface;
 
@@ -239,9 +239,9 @@ final class DerivativeImage
         }
         $loc = substr_replace($loc, '-' . implode('_', $tokens), $dot, 0);
 
-        $rel_path = Config::derivativeDir() . $loc;
+        $rel_path = CurrentConfig::derivativeDir() . $loc;
 
-        $url_style = \Piwigo\Config\Config::derivativeUrlStyle();
+        $url_style = \Piwigo\Config\CurrentConfig::derivativeUrlStyle();
         if (! (bool) $url_style) {
             $mtime = @filemtime(CurrentPaths::get()->root . $rel_path);
             if ($mtime === false or $mtime < $params->last_mod_time) {
@@ -254,10 +254,10 @@ final class DerivativeImage
 
         if ($url_style === 2) {
             $rel_url = 'i';
-            if (\Piwigo\Config\Config::phpExtensionInUrls()) {
+            if (\Piwigo\Config\CurrentConfig::phpExtensionInUrls()) {
                 $rel_url .= '.php';
             }
-            if (\Piwigo\Config\Config::questionMarkInUrls()) {
+            if (\Piwigo\Config\CurrentConfig::questionMarkInUrls()) {
                 $rel_url .= '?';
             }
             $rel_url .= '/' . $loc;

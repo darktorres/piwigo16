@@ -6,7 +6,7 @@ namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\PwgImage;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
@@ -30,8 +30,8 @@ use Psr\Http\Message\ServerRequestInterface;
  * The derivative image server -- P23 batch 8f: ported from i.php's ~900
  * top-level lines and 13 free functions; i.php is now a thin entry shell
  * (Paths::fromRoot() + RequestBootstrap::bootEntryPoint() +
- * CommonBootstrap::run() + RequestPipeline::handle() dispatch, matching
- * every other P22/P23 root file's own shape).
+ * RequestPipeline::handle() dispatch, matching every other P22/P23 root
+ * file's own shape).
  *
  * This controller now runs through the same bootstrap as every other
  * frontend controller -- RequestBootstrap::bootEntryPoint()'s configure()/
@@ -59,8 +59,9 @@ use Psr\Http\Message\ServerRequestInterface;
  * $conf; this controller's own logger is Piwigo\Core\CurrentLogger::get(),
  * the same static accessor ImageExtImagick.php and every other shared
  * consumer read from now; and every real $prefixeTable read here was
- * already the same value as Piwigo\Config\Config::dbPrefix() (both trace
- * back to the same PIWIGO_DB_PREFIX env var / 'piwigo_' default) -- now
+ * already the same value as Piwigo\Db\DbCredentials::current()->prefix
+ * (both trace back to the same PIWIGO_DB_PREFIX env var / 'piwigo_'
+ * default) -- now
  * moot anyway, since Tables::config()/Tables::images() resolve the same
  * prefix internally. PageState's request-wide query counters, previously
  * maintained by every MysqliDb::query() call on this path, are not
@@ -385,7 +386,7 @@ final class ImageDerivativeController implements ControllerInterface
             ]);
         }
 
-        if (\Piwigo\Config\Config::derivativesStripMetadataThreshold() > $d_size[0] * $d_size[1]) {// strip metadata for small images
+        if (\Piwigo\Config\CurrentConfig::derivativesStripMetadataThreshold() > $d_size[0] * $d_size[1]) {// strip metadata for small images
             $image->strip();
         }
 
@@ -550,7 +551,7 @@ final class ImageDerivativeController implements ControllerInterface
         // this exact class's own CookieService dependency uses elsewhere in
         // this codebase -- so building $this->srcUrl from it needs no
         // depth computation of any kind, in either URL style below.
-        if (\Piwigo\Config\Config::questionMarkInUrls() === false and
+        if (\Piwigo\Config\CurrentConfig::questionMarkInUrls() === false and
              isset($_SERVER['PATH_INFO']) and ! in_array($_SERVER['PATH_INFO'], [null, false, 0, '0', '', []], true)) {
             $req = $_SERVER['PATH_INFO'];
             // PHPStan types superglobal reads as mixed; PATH_INFO is only ever
@@ -574,12 +575,12 @@ final class ImageDerivativeController implements ControllerInterface
         if ($req_tokens === false) {
             $this->ierror('Invalid request', 400);
         }
-        $sync_chars_regex = \Piwigo\Config\Config::syncCharsRegex();
+        $sync_chars_regex = \Piwigo\Config\CurrentConfig::syncCharsRegex();
         foreach ($req_tokens as $token) {
             ($sync_chars_regex !== '' && (bool) preg_match($sync_chars_regex, $token)) or $this->ierror('Invalid chars in request', 400);
         }
 
-        $this->derivativePath = $this->paths->root . Config::derivativeDir() . $req;
+        $this->derivativePath = $this->paths->root . CurrentConfig::derivativeDir() . $req;
         $this->derivativeUrlSuffix = $req;
 
         $pos = strrpos($req, '.');
@@ -777,7 +778,7 @@ final class ImageDerivativeController implements ControllerInterface
      * substituted from $fromType to $toType -- same i/[.php]/[?]/{loc}
      * shape Image\DerivativeImage::build() already uses for real (non-
      * redirect) derivative URL generation elsewhere in this codebase.
-     * Static and side-effect-free (reads only Config::phpExtensionInUrls()/
+     * Static and side-effect-free (reads only CurrentConfig::phpExtensionInUrls()/
      * questionMarkInUrls()) so trySwitchSource()'s own type-substitution
      * logic -- the one piece of new, security-adjacent URL-construction
      * code this method introduces -- is directly unit-testable without the
@@ -787,10 +788,10 @@ final class ImageDerivativeController implements ControllerInterface
     {
         $suffix = str_replace('-' . DerivativeUrlCodec::derivativeToUrl($fromType), '-' . DerivativeUrlCodec::derivativeToUrl($toType), $urlSuffix);
         $rel_url = 'i';
-        if (\Piwigo\Config\Config::phpExtensionInUrls()) {
+        if (\Piwigo\Config\CurrentConfig::phpExtensionInUrls()) {
             $rel_url .= '.php';
         }
-        if (\Piwigo\Config\Config::questionMarkInUrls()) {
+        if (\Piwigo\Config\CurrentConfig::questionMarkInUrls()) {
             $rel_url .= '?';
         }
 

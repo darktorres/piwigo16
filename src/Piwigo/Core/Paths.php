@@ -29,8 +29,8 @@ namespace Piwigo\Core;
  *
  * The hardcoded subdirectory names intentionally do not consult `Config`
  * -- `Paths` must be constructible before `ConfigLoader::applyDefaults()`
- * runs. Config-driven directories (`Config::dataLocation()`,
- * `Config::themesPath()`, etc.) compose against `data`/`root` at the call
+ * runs. Config-driven directories (`CurrentConfig::dataLocation()`,
+ * `CurrentConfig::themesPath()`, etc.) compose against `data`/`root` at the call
  * site, where Config is already available.
  *
  * `local` always means the fixed `local/` directory every install reads

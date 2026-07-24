@@ -117,20 +117,18 @@ final class AdminShell
         // | Filesystem checks                                                 |
         // +-------------------------------------------------------------------+
 
-        if (\Piwigo\Config\Config::fsQuickCheckPeriod() > 0) {
+        if (\Piwigo\Config\CurrentConfig::fsQuickCheckPeriod() > 0) {
             $perform_fsqc = false;
 
             // Real invariant: fs_quick_check_last_check is only written (as an ISO
             // 8601 string, see fs_quick_check()) once the quick check has run at
-            // least once — on a fresh install the config key genuinely does not
-            // exist yet, so this isset() is a real "has it ever run" guard, not
-            // just type-narrowing boilerplate.
-            $fs_quick_check_last_check = \Piwigo\Config\Config::has('fs_quick_check_last_check') && is_string(\Piwigo\Config\Config::fsQuickCheckLastCheck())
-                ? \Piwigo\Config\Config::fsQuickCheckLastCheck()
-                : null;
+            // least once — on a fresh install it's genuinely still null, so this
+            // is a real "has it ever run" guard, not just type-narrowing
+            // boilerplate.
+            $fs_quick_check_last_check = \Piwigo\Config\CurrentConfig::fsQuickCheckLastCheck();
 
             if ($fs_quick_check_last_check !== null) {
-                $fs_quick_check_period = \Piwigo\Config\Config::fsQuickCheckPeriod();
+                $fs_quick_check_period = \Piwigo\Config\CurrentConfig::fsQuickCheckPeriod();
                 if (strtotime($fs_quick_check_last_check) < strtotime($fs_quick_check_period . ' seconds ago')) {
                     $perform_fsqc = true;
                 }
@@ -157,8 +155,8 @@ final class AdminShell
         if (isset($_GET['change_theme'])) {
             $admin_themes = ['roma', 'clear'];
             $admin_theme_param = new PreferencesService(new UserRepository($conn))
-                ->getParam('admin_theme', \Piwigo\Config\Config::adminTheme());
-            $admin_theme_array = [is_string($admin_theme_param) ? $admin_theme_param : \Piwigo\Config\Config::adminTheme()];
+                ->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
+            $admin_theme_array = [is_string($admin_theme_param) ? $admin_theme_param : \Piwigo\Config\CurrentConfig::adminTheme()];
             $result = array_diff(
                 $admin_themes,
                 $admin_theme_array
@@ -191,7 +189,7 @@ final class AdminShell
         // +-------------------------------------------------------------------+
 
         // sync_user() is only useful when external authentication is activated
-        if (\Piwigo\Config\Config::externalAuthentification()) {
+        if (\Piwigo\Config\DeploymentPolicy::current()->externalAuthentification) {
             new UserService(
                 new UserRepository($conn),
                 new GroupRepository($conn),
@@ -294,7 +292,7 @@ final class AdminShell
         $template->assign(
             [
                 'USERNAME' => \Piwigo\Users\CurrentUser::get()->username,
-                'ENABLE_SYNCHRONIZATION' => \Piwigo\Config\Config::enableSynchronization(),
+                'ENABLE_SYNCHRONIZATION' => \Piwigo\Config\CurrentConfig::enableSynchronization(),
                 'U_SITE_MANAGER' => $link_start . 'site_manager',
                 'U_HISTORY_STAT' => $link_start . 'stats&amp;year=' . date('Y') . '&amp;month=' . date('n'),
                 'U_FAQ' => $link_start . 'help',
@@ -324,16 +322,16 @@ final class AdminShell
                 'U_CHANGE_THEME' => $change_theme_url,
                 'ADMIN_PAGE_TITLE' => 'Piwigo Administration Page',
                 'ADMIN_PAGE_OBJECT_ID' => '',
-                'U_SHOW_TEMPLATE_TAB' => \Piwigo\Config\Config::showTemplateInSideMenu(),
-                'SHOW_RATING' => \Piwigo\Config\Config::rateEnabled(),
+                'U_SHOW_TEMPLATE_TAB' => \Piwigo\Config\CurrentConfig::showTemplateInSideMenu(),
+                'SHOW_RATING' => \Piwigo\Config\CurrentConfig::rateEnabled(),
             ]
         );
 
-        if (\Piwigo\Config\Config::enableCoreUpdate()) {
+        if (\Piwigo\Config\CurrentConfig::enableCoreUpdate()) {
             $template->assign('U_UPDATES', $link_start . 'updates');
         }
 
-        if (\Piwigo\Config\Config::activateComments()) {
+        if (\Piwigo\Config\CurrentConfig::activateComments()) {
             $template->assign('U_COMMENTS', $link_start . 'comments');
 
             // pending comments
@@ -395,9 +393,8 @@ SELECT COUNT(*)
         $nb_photos_total_raw = $row !== false ? $row[0] : 0;
         $nb_photos_total = is_numeric($nb_photos_total_raw) ? (int) $nb_photos_total_raw : 0;
         if ($nb_photos_total < 100000) { // 100k is already a big gallery
-            $nb_orphans_raw = self::imageService($conn)
+            $nb_orphans = self::imageService($conn)
                 ->countOrphans();
-            $nb_orphans = is_numeric($nb_orphans_raw) ? (int) $nb_orphans_raw : 0;
         }
         \Piwigo\Core\PageState::current()->setNbPhotosTotal($nb_photos_total);
         \Piwigo\Core\PageState::current()->setNbOrphans($nb_orphans);
@@ -444,7 +441,7 @@ SELECT COUNT(*)
         $whats_new_major_version = \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION);
 
         if ((bool) new PreferencesService(new UserRepository($conn))->getParam('show_whats_new_' . $whats_new_major_version, true) and $this->configService->pwgIsDbconfWriteable()) {
-            if (\Piwigo\Users\CurrentUser::get()->rawAttributes['registration_date'] > \Piwigo\Config\Config::lastMajorUpdate()) {
+            if (\Piwigo\Users\CurrentUser::get()->rawAttributes['registration_date'] > \Piwigo\Config\CurrentConfig::lastMajorUpdate()) {
                 new PreferencesService(new UserRepository($conn))
                     ->updateParam('show_whats_new_' . $whats_new_major_version, false);
             } else {
@@ -477,10 +474,10 @@ SELECT COUNT(*)
 
         // If last major update conf is less than a month old then display bell for whats new popin
         // Real invariant: include/common.inc.php always writes last_major_update as
-        // a DB NOW() string (see the `! \Piwigo\Config\Config::has('last_major_update')` block
-        // there) before this shell runs.
+        // a DB NOW() string (see the `\Piwigo\Config\CurrentConfig::lastMajorUpdate() === null`
+        // block there) before this shell runs.
         $display_bell = false;
-        $last_major_update = \Piwigo\Config\Config::lastMajorUpdate();
+        $last_major_update = \Piwigo\Config\CurrentConfig::lastMajorUpdate();
         if (is_string($last_major_update) and strtotime($last_major_update) > strtotime('1 month ago')) {
             $display_bell = true;
         }

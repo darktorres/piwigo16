@@ -51,7 +51,7 @@ final class PluginLoader
     public static function loadPlugins(): void
     {
         LoadedPlugins::set([]);
-        if (\Piwigo\Config\Config::enablePlugins()) {
+        if (\Piwigo\Config\CurrentConfig::enablePlugins()) {
             $plugins = new PluginRepository(DbConnection::build())->getDbPlugins('active');
             foreach ($plugins as $plugin) {// include main from a function to avoid using same function context
                 // Unboxed back to array here -- loadPlugin()/autoupdatePlugin()

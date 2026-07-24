@@ -82,7 +82,7 @@ test('dispatch falls back to the raw path when SCRIPT_NAME is absent (e.g. CLI/t
 
 test('dispatch matches a wildcard-tail route pattern for both i.php URL styles', function (): void {
     // i.php (Workstream C3 Part III) supports 2 URL styles depending on
-    // Config::questionMarkInUrls(): query-string ("/i.php?/upload/...",
+    // CurrentConfig::questionMarkInUrls(): query-string ("/i.php?/upload/...",
     // where the query string never becomes part of the URI path Router
     // matches against, so the routable path is bare "/i.php") and
     // PATH_INFO ("/i.php/upload/...", where the routable path has a real

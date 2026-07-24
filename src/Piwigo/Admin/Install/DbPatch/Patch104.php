@@ -23,8 +23,8 @@ use Piwigo\Db\Tables;
  * later retargeted onto CurrentConfigService::get() (Legacy Coupling
  * Retirement Phase 8, 8d). The "is this param already in the config
  * table" check moved off `isset($conf[$param_name])` onto a direct row
- * fetch: Config::$data is pre-populated with every SCHEMA default at
- * boot, so Config::has() can't tell "no DB row" from "SCHEMA default,
+ * fetch: CurrentConfig::$data is pre-populated with every SCHEMA default at
+ * boot, so CurrentConfig::has() can't tell "no DB row" from "SCHEMA default,
  * no DB row" the way the old bare-$conf dual-write could -- this patch's
  * whole point is inserting a DB row for params an old install never got,
  * so the row's real existence is what has to be tested.

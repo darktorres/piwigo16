@@ -17,7 +17,7 @@ final class RandomIndexRedirectResolver
 {
     /**
      * @param array<mixed, mixed> $redirectCandidates url => condition map,
-     *   as stored in \Piwigo\Config\Config::randomIndexRedirect()
+     *   as stored in \Piwigo\Config\CurrentConfig::randomIndexRedirect()
      * @return list<string> urls whose condition matched
      */
     public function resolveCandidates(array $redirectCandidates): array

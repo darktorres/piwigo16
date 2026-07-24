@@ -32,12 +32,13 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *    only caught TableNotFoundException) crashed with an uncaught
  *    Doctrine\DBAL\Exception\ConnectionException instead: on the *first*
  *    GET to install.php, before the form is ever submitted,
- *    InstallWizard::boot()'s own `Config::override('db_user',
- *    $this->dbuser)` (needed so a *submitted* form's real credentials
- *    win over stale ones) runs with `$this->dbuser === ''` (no $_POST
- *    yet), clobbering whatever valid credentials were already loaded.
- *    Widened that catch to the full Doctrine\DBAL\Exception interface --
- *    see that file's own docblock.
+ *    InstallWizard::boot()'s own credential seeding (needed so a
+ *    *submitted* form's real credentials win over stale ones; now
+ *    `Piwigo\Db\DbCredentials::seed(['PIWIGO_DB_USER' => $this->dbuser, ...])`,
+ *    Config generic-accessor removal) runs with `$this->dbuser === ''`
+ *    (no $_POST yet), clobbering whatever valid credentials were already
+ *    loaded. Widened that catch to the full Doctrine\DBAL\Exception
+ *    interface -- see that file's own docblock.
  *
  * 2. STILL OPEN -- with (1) fixed, the install genuinely runs and
  *    succeeds server-side every time (verified repeatedly via direct DB

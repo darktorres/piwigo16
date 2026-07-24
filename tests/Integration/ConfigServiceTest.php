@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 
@@ -26,7 +26,7 @@ final class ConfigServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
@@ -39,23 +39,22 @@ final class ConfigServiceTest extends IntegrationTestCase
 
         // Real fixture row seeded 'true'/'false' string values -- confirm
         // the exact load_conf_from_db() coercion, not JSON decoding.
-        self::assertTrue(Config::all()['activate_comments'] ?? null);
-        self::assertIsString(Config::all()['secret_key'] ?? null);
-        self::assertSame('Fixture Gallery', Config::all()['gallery_title'] ?? null);
+        self::assertTrue(CurrentConfig::activateComments());
+        self::assertNotSame('', CurrentConfig::secretKey());
+        self::assertSame('Fixture Gallery', CurrentConfig::galleryTitle());
     }
 
     public function test_loadConfFromDb_with_a_param_loads_only_that_row(): void
     {
         // setUp() already calls ConfigLoader::applyDefaults(), which seeds
-        // every non-nullable SCHEMA key (including gallery_title) with its
-        // compiled-in default -- Config::has('gallery_title') is true
-        // regardless of loadConfFromDb(). The real assertion is that a
-        // single-param load doesn't overwrite gallery_title with the
+        // every non-nullable property (including gallery_title) with its
+        // own compiled-in default -- the real assertion is that a
+        // single-param load doesn't also overwrite gallery_title with the
         // fixture's actual DB value ('Fixture Gallery').
         $this->service->loadConfFromDb('secret_key');
 
-        self::assertTrue(Config::has('secret_key'));
-        self::assertSame('Piwigo', Config::all()['gallery_title'] ?? null);
+        self::assertNotSame('', CurrentConfig::secretKey());
+        self::assertSame('Piwigo', CurrentConfig::galleryTitle());
     }
 
     public function test_loadConfFromDb_throws_when_param_not_found_and_dieIfNotFound_is_true(): void
@@ -69,7 +68,58 @@ final class ConfigServiceTest extends IntegrationTestCase
         $missingKey = 'this_param_does_not_exist_anywhere';
         $this->service->loadConfFromDb($missingKey, false);
 
-        self::assertFalse(Config::has($missingKey));
+        self::assertNull($this->service->confGetParam($missingKey));
+    }
+
+    public function test_confGetParam_falls_back_to_the_given_default_for_a_genuinely_dynamic_unset_key(): void
+    {
+        $missingKey = 'this_param_does_not_exist_anywhere';
+
+        self::assertSame('fallback', $this->service->confGetParam($missingKey, 'fallback'));
+        self::assertNull($this->service->confGetParam($missingKey));
+    }
+
+    /**
+     * Boot sequence #2 (Config generic-accessor removal follow-up):
+     * ConfigService::allRowsFromCacheOrDb() caches the bulk load's
+     * param => value map in CachePools::config() -- this is the real test
+     * of both halves of that design: a write that bypasses ConfigService
+     * entirely (any of this codebase's real raw-SQL config writers --
+     * MenubarLayoutRepository, frozen DbPatch/VersionUpgrade scripts)
+     * leaves the cache stale until a real ConfigService write clears it.
+     */
+    public function test_loadConfFromDb_caches_the_bulk_load_until_a_write_invalidates_it(): void
+    {
+        $repo = $this->buildConfigRepository();
+
+        // Prime the cache with the fixture's own value.
+        $this->service->loadConfFromDb();
+        self::assertSame('Fixture Gallery', CurrentConfig::galleryTitle());
+
+        // Write directly through the repository, bypassing ConfigService's
+        // own cache-clearing.
+        $repo->upsert('gallery_title', 'Written Around The Cache');
+
+        // A second bulk load still returns the stale cached snapshot --
+        // proves allRowsFromCacheOrDb() is actually caching, not
+        // re-querying every time.
+        CurrentConfig::reset();
+        ConfigLoader::applyDefaults();
+        $this->service->loadConfFromDb();
+        self::assertSame('Fixture Gallery', CurrentConfig::galleryTitle());
+
+        // A real ConfigService write clears the cache; the next bulk load
+        // picks up the fresh value.
+        $this->service->confUpdateParam('gallery_title', 'Fresh After Invalidation');
+        CurrentConfig::reset();
+        ConfigLoader::applyDefaults();
+        $this->service->loadConfFromDb();
+        self::assertSame('Fresh After Invalidation', CurrentConfig::galleryTitle());
+
+        // Restore the fixture's own value -- confUpdateParam() also clears
+        // the cache again, so later tests in this file don't inherit
+        // either the stale write above or this restore itself.
+        $this->service->confUpdateParam('gallery_title', 'Fixture Gallery');
     }
 
     public function test_confUpdateParam_then_confDeleteParam_round_trips(): void
@@ -77,15 +127,10 @@ final class ConfigServiceTest extends IntegrationTestCase
         $param = 'p14_service_test_' . bin2hex(random_bytes(4));
 
         $this->service->confUpdateParam($param, 'a value');
-        $this->service->loadConfFromDb($param);
-        self::assertSame('a value', Config::all()[$param] ?? null);
+        self::assertSame('a value', $this->service->confGetParam($param));
 
         $this->service->confDeleteParam($param);
-        self::assertFalse(Config::has($param));
-
-        $freshService = new ConfigService($this->buildConfigRepository());
-        $freshService->loadConfFromDb($param, false);
-        self::assertFalse(Config::has($param));
+        self::assertNull($this->service->confGetParam($param));
     }
 
     public function test_confUpdateParam_encodes_arrays_via_serialize(): void

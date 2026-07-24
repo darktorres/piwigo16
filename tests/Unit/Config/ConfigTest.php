@@ -2,74 +2,54 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\NotificationConfig;
-use Piwigo\Config\UnknownConfigKeyException;
 
 beforeEach(function (): void {
-    Config::reset();
+    CurrentConfig::reset();
 });
 
 afterEach(function (): void {
-    Config::reset();
+    CurrentConfig::reset();
 });
 
-test('has/override/delete round-trip', function (): void {
-    expect(Config::has('gallery_title'))->toBeFalse();
+test('a bool accessor reads the property and falls back to its default', function (): void {
+    expect(CurrentConfig::activateComments())->toBeTrue(); // property default
 
-    Config::override('gallery_title', 'My Gallery');
-    expect(Config::has('gallery_title'))->toBeTrue()
-        ->and(Config::all()['gallery_title'])->toBe('My Gallery');
-
-    Config::delete('gallery_title');
-    expect(Config::has('gallery_title'))->toBeFalse();
+    CurrentConfig::setActivateComments(false);
+    expect(CurrentConfig::activateComments())->toBeFalse();
 });
 
-test('loadArray replaces the whole data set', function (): void {
-    Config::override('gallery_title', 'before');
-    Config::loadArray(['db_host' => 'localhost']);
+test('an int accessor reads the property and falls back to its default', function (): void {
+    expect(CurrentConfig::webmasterId())->toBe(1);
 
-    expect(Config::has('gallery_title'))->toBeFalse()
-        ->and(Config::all())->toBe(['db_host' => 'localhost']);
+    CurrentConfig::setWebmasterId(42);
+    expect(CurrentConfig::webmasterId())->toBe(42);
 });
 
-test('a bool accessor reads the override and falls back to its default', function (): void {
-    expect(Config::activateComments())->toBeTrue(); // SCHEMA default
+test('a string accessor reads the property and falls back to its default', function (): void {
+    expect(CurrentConfig::galleryTitle())->toBe('Piwigo');
 
-    Config::override('activate_comments', false);
-    expect(Config::activateComments())->toBeFalse();
-});
-
-test('an int accessor reads the override and falls back to its default', function (): void {
-    expect(Config::webmasterId())->toBe(1);
-
-    Config::override('webmaster_id', 42);
-    expect(Config::webmasterId())->toBe(42);
-});
-
-test('a string accessor reads the override and falls back to its default', function (): void {
-    expect(Config::galleryTitle())->toBe('Piwigo');
-
-    Config::override('gallery_title', 'Custom');
-    expect(Config::galleryTitle())->toBe('Custom');
+    CurrentConfig::setGalleryTitle('Custom');
+    expect(CurrentConfig::galleryTitle())->toBe('Custom');
 });
 
 test('a nullable string accessor returns null when unset', function (): void {
-    expect(Config::galleryUrl())->toBeNull();
+    expect(CurrentConfig::galleryUrl())->toBeNull();
 
-    Config::override('gallery_url', 'https://example.test');
-    expect(Config::galleryUrl())->toBe('https://example.test');
+    CurrentConfig::setGalleryUrl('https://example.test');
+    expect(CurrentConfig::galleryUrl())->toBe('https://example.test');
 });
 
 test('a custom array accessor coerces and falls back to its hardcoded default', function (): void {
-    expect(Config::pictureExtensions())->toBe(['jpg', 'jpeg', 'png', 'gif', 'webp']);
+    expect(CurrentConfig::pictureExtensions())->toBe(['jpg', 'jpeg', 'png', 'gif', 'webp']);
 
-    Config::override('picture_ext', ['jpg', 'png']);
-    expect(Config::pictureExtensions())->toBe(['jpg', 'png']);
+    CurrentConfig::setPictureExtensions(['jpg', 'png']);
+    expect(CurrentConfig::pictureExtensions())->toBe(['jpg', 'png']);
 });
 
 test('the recentPostDates custom accessor returns a NotificationConfig VO', function (): void {
-    $config = Config::recentPostDates();
+    $config = CurrentConfig::recentPostDates();
 
     expect($config)->toBeInstanceOf(NotificationConfig::class)
         ->and($config->rss->maxDates)->toBe(5)
@@ -77,7 +57,7 @@ test('the recentPostDates custom accessor returns a NotificationConfig VO', func
 });
 
 test('the userFields custom accessor returns the simplified array shape, not a VO', function (): void {
-    expect(Config::userFields())->toBe([
+    expect(CurrentConfig::userFields())->toBe([
         'id' => 'id',
         'username' => 'username',
         'password' => 'password',
@@ -85,36 +65,22 @@ test('the userFields custom accessor returns the simplified array shape, not a V
     ]);
 });
 
-test('orderBy filters out entries with an invalid direction', function (): void {
-    Config::override('order_by', [
-        ['field' => 'date_available', 'dir' => 'DESC'],
-        ['field' => 'bogus', 'dir' => 'SIDEWAYS'],
-        ['field' => 'id', 'dir' => 'asc'],
-    ]);
+test('orderBy is a plain raw SQL-fragment string, not a structured {field,dir}[] shape', function (): void {
+    expect(CurrentConfig::orderBy())->toBe('ORDER BY date_available DESC, file ASC, id ASC');
 
-    expect(Config::orderBy())->toBe([
-        ['field' => 'date_available', 'dir' => 'DESC'],
-        ['field' => 'id', 'dir' => 'ASC'],
-    ]);
+    CurrentConfig::setOrderBy('ORDER BY id ASC');
+    expect(CurrentConfig::orderBy())->toBe('ORDER BY id ASC');
 });
 
-test('dumpForLog redacts sensitive keys', function (): void {
-    Config::override('db_password', 'super-secret');
-    Config::override('gallery_title', 'Visible');
+test('dumpForLog redacts sensitive properties', function (): void {
+    CurrentConfig::setSmtpPassword('super-secret');
+    CurrentConfig::setGalleryTitle('Visible');
 
-    $dump = Config::dumpForLog();
+    // Keyed by property name (smtpPassword/galleryTitle), not the DB param
+    // name (smtp_password/gallery_title) -- CurrentConfig::all()'s own
+    // docblock: reflection-based, replacing the former SCHEMA-driven all().
+    $dump = CurrentConfig::dumpForLog();
 
-    expect($dump['db_password'])->toBe('********')
-        ->and($dump['gallery_title'])->toBe('Visible');
-});
-
-test('a bad key on a typed getter throws UnknownConfigKeyException', function (): void {
-    // has()/override()/delete() accept any string (dynamic-key escape hatch),
-    // but the private typed getters guard against SCHEMA drift -- exercised
-    // indirectly since they're private; this asserts the exception class
-    // itself carries a useful message shape.
-    $exception = new UnknownConfigKeyException('bogus_key', 'getString');
-
-    expect($exception->getMessage())->toContain('bogus_key')
-        ->and($exception->getMessage())->toContain('getString');
+    expect($dump['smtpPassword'])->toBe('********')
+        ->and($dump['galleryTitle'])->toBe('Visible');
 });

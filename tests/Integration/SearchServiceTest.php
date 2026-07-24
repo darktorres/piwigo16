@@ -43,9 +43,9 @@ namespace {
     // is a classic user).
 
     // conf_get_param() -- P23 batch 8f-4: the function stub is gone.
-    // SearchService/SearchFilterRenderer now read Piwigo\Config\Config::
+    // SearchService/SearchFilterRenderer now read Piwigo\Config\CurrentConfig::
     // accessors directly (Legacy Coupling Retirement Track A batch A4), so
-    // this isolated test seeds Config::override() below instead.
+    // this isolated test seeds real CurrentConfig setters below instead.
 
     if (! function_exists('safe_unserialize')) {
         // Copied verbatim from the legacy include/functions.inc.php
@@ -105,7 +105,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Cache\PersistentFileCache;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\CategoryService;
-    use Piwigo\Config\Config;
+    use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
@@ -150,7 +150,7 @@ final class SearchServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
@@ -164,9 +164,9 @@ final class SearchServiceTest extends IntegrationTestCase
         @mkdir($this->cacheDir . '/cache', 0o777, true);
 
         CurrentUser::set(User::fromUserArray(self::realisticUserGlobal()));
-        Config::override('data_location', '_data/search-service-test-cache/');
-        Config::override('default_filters_views', '');
-        Config::override('filters_views', serialize([
+        CurrentConfig::setDataLocation('_data/search-service-test-cache/');
+        CurrentConfig::setDefaultFiltersViews(null);
+        CurrentConfig::setFiltersViews([
             'expert' => ['access' => 'everybody'],
             'words' => ['access' => 'everybody'],
             'author' => ['access' => 'everybody'],
@@ -181,11 +181,11 @@ final class SearchServiceTest extends IntegrationTestCase
             'height' => ['access' => 'everybody'],
             'width' => ['access' => 'everybody'],
             'tags' => ['access' => 'everybody'],
-        ]));
-        Config::override('order_by', 'ORDER BY id ASC');
-        Config::override('calendar_datefield', 'date_creation');
-        Config::override('quick_search_include_sub_albums', false);
-        Config::override('rate', true);
+        ]);
+        CurrentConfig::setOrderBy('ORDER BY id ASC');
+        CurrentConfig::setCalendarDatefield('date_creation');
+        CurrentConfig::setQuickSearchIncludeSubAlbums(false);
+        CurrentConfig::setRateEnabled(true);
 
         $this->service = new SearchService(
             $this->repo,

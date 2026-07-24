@@ -28,6 +28,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
+use Piwigo\Core\ServerTiming;
 use Piwigo\Core\StringHelper;
 use Piwigo\Db\DbConnection;
 use Piwigo\Filter\FilterService;
@@ -51,10 +52,7 @@ use Piwigo\Users\UserService;
  * file kept on as a thin include seam every entry point targeted. The seam
  * is gone (P23 batch: include/+admin/ deletion) — bootEntryPoint() below is
  * now the real, sole entry point every root `public/*.php` file calls
- * directly, and it does the one thing the seam file's own top-level scope
- * used to be needed for (the bare-variable `local/config/config.inc.php`
- * include) via Piwigo\Config\ConfigLoader::applyLocalFileOverrides()
- * instead, called from inside configure() below.
+ * directly.
  *
  * Why three phases instead of one run(): the legacy bootstrap used to mark
  * Piwigo\Core\InstallationFlag active mid-sequence via a raw
@@ -69,8 +67,9 @@ use Piwigo\Users\UserService;
  * which is what lets bootEntryPoint() now call it directly instead of
  * needing an external seam to slot it in. The phases stay separate methods
  * regardless, preserving the original statement order exactly and the
- * standalone-callable contract `tests/Unit/Bootstrap/
- * CommonBootstrapTest.php` exercises directly. The former PHPWG_DOMAIN/
+ * standalone-callable contract
+ * `tests/Unit/Bootstrap/RequestBootstrapBootConfigOnlyTest.php` exercises
+ * directly. The former PHPWG_DOMAIN/
  * PHPWG_URL/PEM_URL define()s that used to sit here too (after
  * UserBootstrap, before language loading) are gone entirely (Legacy
  * Coupling Retirement gap-closure, entry-shell define()/include round,
@@ -82,21 +81,24 @@ use Piwigo\Users\UserService;
  * configure() now calls Kernel::boot($paths) as its own first statement --
  * genuinely load-bearing, not just tidiness, since connect() below has a
  * real production call site (the "database needs upgrading" redirect)
- * that used to run before CommonBootstrap::run() (index.php/admin.php and
- * the other P22 roots call it right after the common.inc.php include,
- * previously the *only* Kernel::boot() call on this path) ever executed.
- * CommonBootstrap::run()'s own Kernel::boot() call is now a harmless
- * idempotent no-op on this path (Kernel::boot() itself guards on
- * self::$booted) -- kept there for the standalone-callable contract
- * tests/Unit/Bootstrap/CommonBootstrapTest.php exercises directly.
+ * that used to run before the former Piwigo\Bootstrap\CommonBootstrap::run()
+ * (index.php/admin.php and the other P22 roots called it right after the
+ * common.inc.php include, previously the *only* Kernel::boot() call on
+ * this path) ever executed. That class is retired now (see
+ * bootEntryPoint()'s own docblock below); bootConfigOnly()'s own
+ * Kernel::boot() call is the harmless idempotent no-op today (Kernel::boot()
+ * itself guards on self::$booted) -- kept there for the standalone-
+ * callable contract tests/Unit/Bootstrap/RequestBootstrapBootConfigOnlyTest.php exercises
+ * directly.
  *
  * Legacy Coupling Retirement Phase 8, 8d: every real ConfigDb:: call in
  * this file has been retargeted onto a container-resolved ConfigService
  * (connect() resolves it once and reuses the same instance for all 3
  * writes) -- safe only because 8c first retargeted every real
- * `$conf[...]` read out of this file onto Config:: accessors;
- * ConfigService::loadConfFromDb() only ever writes Config::override(),
- * never $conf, unlike ConfigDb::loadConfFromDb()'s dual-write.
+ * `$conf[...]` read out of this file onto CurrentConfig:: accessors;
+ * ConfigService::loadConfFromDb() only ever writes CurrentConfig's own
+ * properties directly, never $conf, unlike ConfigDb::loadConfFromDb()'s
+ * dual-write.
  */
 final class RequestBootstrap
 {
@@ -116,9 +118,30 @@ final class RequestBootstrap
      * bootstrap (`install.php`/`upgrade.php`/`upgrade_feed.php`/
      * `ready.php`, none of which ever depended on this class) do not call
      * this method — see each file's own docblock for why.
+     *
+     * Boot sequence consolidation (Config generic-accessor removal
+     * follow-up): SentryBootstrap::init()/ServerTiming's own 'boot' timer
+     * now bracket this method's entire body -- formerly they only
+     * bracketed the former Piwigo\Bootstrap\CommonBootstrap::run() (a
+     * second call every `public/*.php` root file made right after this
+     * one), which on the real HTTP path only ever repeated
+     * already-idempotent work (see configure()/connect()'s own
+     * docblocks). A real, found-not-assumed bug: that meant Sentry never
+     * saw an error raised anywhere in this method's own body (the bulk of
+     * real per-request boot work -- DB connect, config load, plugin
+     * load, user resolution), and the 'boot' Server-Timing entry measured
+     * almost nothing real. CommonBootstrap is retired; every one of its
+     * real steps (Sentry, timing, the config/ConfigService bootstrap, and
+     * the CurrentUser/PageState/Lang attachGlobals() calls) now lives
+     * directly in this class -- see bootConfigOnly() below for the
+     * lighter, standalone-callable equivalent that used to be that
+     * class's own run().
      */
     public static function bootEntryPoint(Paths $paths): void
     {
+        SentryBootstrap::init();
+        ServerTiming::start('boot');
+
         $t2 = microtime(true);
 
         try {
@@ -127,10 +150,55 @@ final class RequestBootstrap
             self::connect();
             self::finalize();
         } catch (\Piwigo\Http\ResponseReadyException $e) {
+            ServerTiming::stop('boot');
             new \Piwigo\Http\ResponseEmitter()
                 ->emit($e->response());
             exit;
         }
+
+        ServerTiming::stop('boot');
+    }
+
+    /**
+     * The standalone-callable, config+globals-only boot path -- formerly
+     * Piwigo\Bootstrap\CommonBootstrap::run(), moved here verbatim when
+     * that class was retired. Its only real callers were the 23 root
+     * `public/*.php` files (each already calling bootEntryPoint() first,
+     * making this a same-request repeat of already-idempotent work) and
+     * this method's own test -- bootEntryPoint() above now performs every
+     * one of these steps itself in the right place (Sentry/timing bracket
+     * its whole body; the config/ConfigService bootstrap already lived in
+     * configure()/connect(); the attachGlobals() calls now live at the end
+     * of finalize(), after language loading, matching Lang::attachGlobals()'s
+     * own real ordering requirement). No real production route needs this
+     * method anymore -- kept as the lighter path (no install-check/
+     * session/DB-user machinery) tests/Unit/Bootstrap/RequestBootstrapBootConfigOnlyTest.php
+     * exercises directly, and any future route that only needs config, not
+     * the full request machinery, can reach for.
+     */
+    public static function bootConfigOnly(Paths $paths): void
+    {
+        SentryBootstrap::init();
+        ServerTiming::start('boot');
+
+        ConfigLoader::applyDefaults();
+        ConfigLoader::applyEnvOverrides();
+        Kernel::boot($paths);
+        if (\Piwigo\Config\CurrentConfigService::isSet()) {
+            $configService = \Piwigo\Config\CurrentConfigService::get();
+        } else {
+            $configService = Kernel::container()->get(\Piwigo\Config\ConfigService::class);
+            if (! $configService instanceof \Piwigo\Config\ConfigService) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\ConfigService::class);
+            }
+            \Piwigo\Config\CurrentConfigService::set($configService);
+            $configService->loadConfFromDb();
+        }
+        CurrentUser::attachGlobals();
+        \Piwigo\Core\PageState::attachGlobals();
+        Lang::attachGlobals();
+
+        ServerTiming::stop('boot');
     }
 
     /**
@@ -222,12 +290,13 @@ final class RequestBootstrap
 
         // Piwigo\Db\Tables::*()/other Piwigo\Config\Config::* accessors used
         // further down in this bootstrap's own body (not just by code that
-        // runs after full boot) read Config's static state --
-        // CommonBootstrap::run() (index.php, after this whole bootstrap has
-        // already executed) is normally what seeds it via these same two
-        // calls, too late for callers here. Both are idempotent (verified:
-        // re-running never overwrites an already-set key), so calling them
-        // again from CommonBootstrap::run() right after is safe.
+        // runs after full boot) read Config's static state -- these two
+        // calls must seed it before any of that later code runs. Both are
+        // idempotent (verified: re-running never overwrites an already-set
+        // key), so bootConfigOnly()'s own copy of these same two calls
+        // (its standalone-callable path, not chained after this one on any
+        // real request) is a harmless no-op if it ever runs in the same
+        // process.
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
@@ -263,9 +332,9 @@ final class RequestBootstrap
         // ErrorCollector::installIfConfigured()'s own docblock).
         ErrorCollector::installIfConfigured();
 
-        if (\Piwigo\Config\Config::sessionGcProbability() > 0) {
+        if (\Piwigo\Config\CurrentConfig::sessionGcProbability() > 0) {
             @ini_set('session.gc_divisor', 100);
-            $gc_probability = \Piwigo\Config\Config::sessionGcProbability();
+            $gc_probability = \Piwigo\Config\CurrentConfig::sessionGcProbability();
             @ini_set('session.gc_probability', min($gc_probability, 100));
         }
 
@@ -290,7 +359,7 @@ final class RequestBootstrap
         // repository, matching the established pattern from the Search/
         // Section/Category domain migrations.
         $conn = DbConnection::build();
-        $db_password = \Piwigo\Config\Config::dbPassword();
+        $db_password = \Piwigo\Db\DbCredentials::current()->password;
         try {
             $conn->getNativeConnection();
         } catch (\Exception $e) {
@@ -300,11 +369,12 @@ final class RequestBootstrap
 
         // Legacy Coupling Retirement Phase 8, 8d: safe now that 8c retargeted
         // every $conf[...] read out of this file -- ConfigService::loadConfFromDb()
-        // only ever writes Config::override(), never global $conf, unlike
-        // ConfigDb::loadConfFromDb()'s dual-write. CurrentConfigService::set()
-        // here lets CommonBootstrap::run() (which runs later in the same
-        // request) reuse this same instance instead of resolving+loading a
-        // second time -- see its own docblock.
+        // only ever writes CurrentConfig's own properties directly, never
+        // global $conf, unlike ConfigDb::loadConfFromDb()'s dual-write.
+        // CurrentConfigService::set() here makes this resolved instance
+        // reachable via CurrentConfigService::get() for the rest of this
+        // request (finalize() below, and every Tier 2 static-utility
+        // caller) -- see its own docblock.
         $configService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\ConfigService::class);
         if (! $configService instanceof \Piwigo\Config\ConfigService) {
             throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\ConfigService::class);
@@ -312,22 +382,22 @@ final class RequestBootstrap
         \Piwigo\Config\CurrentConfigService::set($configService);
         $configService->loadConfFromDb();
 
-        $log_data_location = \Piwigo\Config\Config::dataLocation();
-        $log_dir = \Piwigo\Config\Config::logDir();
+        $log_data_location = \Piwigo\Config\CurrentConfig::dataLocation();
+        $log_dir = \Piwigo\Config\CurrentConfig::logDir();
 
         \Piwigo\Core\CurrentLogger::set(new Logger([
             'directory' => CurrentPaths::get()->root . $log_data_location . $log_dir,
-            'severity' => \Piwigo\Config\Config::logLevel(),
+            'severity' => \Piwigo\Config\CurrentConfig::logLevel(),
             // we use an hashed filename to prevent direct file access, and we salt with
             // the db_password instead of secret_key because the log must be usable in i.php
             // (secret_key is in the database)
             'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $db_password) . '.txt',
             'globPattern' => 'log_*.txt',
-            'archiveDays' => \Piwigo\Config\Config::logArchiveDays(),
+            'archiveDays' => \Piwigo\Config\CurrentConfig::logArchiveDays(),
         ]));
 
-        if (! \Piwigo\Config\Config::checkUpgradeFeed()) {
-            if (! \Piwigo\Config\Config::has('piwigo_db_version') or \Piwigo\Config\Config::piwigoDbVersion() !== \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)) {
+        if (! \Piwigo\Config\CurrentConfig::checkUpgradeFeed()) {
+            if (\Piwigo\Config\CurrentConfig::piwigoDbVersion() === null or \Piwigo\Config\CurrentConfig::piwigoDbVersion() !== \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)) {
                 new RedirectService()
                     ->redirect(new UrlService(new HtmlService())->getRootUrl() . 'upgrade.php');
             }
@@ -338,36 +408,37 @@ final class RequestBootstrap
         session_start();
         PluginLoader::loadPlugins();
 
-        if (! \Piwigo\Config\Config::has('piwigo_installed_version')) {
+        if (\Piwigo\Config\CurrentConfig::piwigoInstalledVersion() === null) {
             $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
-        } elseif (\Piwigo\Config\Config::piwigoInstalledVersion() !== AppInfo::VERSION) {
+        } elseif (\Piwigo\Config\CurrentConfig::piwigoInstalledVersion() !== AppInfo::VERSION) {
             // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
             self::activityService($conn)->record('system', ActivitySystem::Core, 'autoupdate', [
-                'from_version' => \Piwigo\Config\Config::piwigoInstalledVersion(),
+                'from_version' => \Piwigo\Config\CurrentConfig::piwigoInstalledVersion(),
                 'to_version' => AppInfo::VERSION,
             ]);
             $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         }
 
         // Check if last major update conf is set if not set it
-        if (! \Piwigo\Config\Config::has('last_major_update')) {
+        if (\Piwigo\Config\CurrentConfig::lastMajorUpdate() === null) {
             $dbnow = $conn->fetchOne('SELECT NOW()');
             assert(is_string($dbnow));
             $configService->confUpdateParam('last_major_update', $dbnow, updateGlobal: true);
         }
 
         // users can have defined a custom order pattern, incompatible with GUI form.
-        // Config::orderByCustom()/orderByInsideCategoryCustom() (the typed SCHEMA
-        // accessors) model a structured {field,dir}[] shape that no real code
-        // writes -- these are actually stored as raw "ORDER BY ..." SQL fragments
-        // (see ConfigDb::loadConfFromDb()'s own docblock), so read/write them via
-        // the untyped bag like ConfigService::confGetParam() does for keys
-        // without a compatible accessor.
-        if (\Piwigo\Config\Config::has('order_by_custom')) {
-            \Piwigo\Config\Config::override('order_by', \Piwigo\Config\Config::all()['order_by_custom'] ?? null);
+        // order_by_custom/order_by_inside_category_custom are raw "ORDER BY ..."
+        // SQL-fragment strings, same shape as order_by/order_by_inside_category
+        // themselves (not the structured {field,dir}[] shape the old SCHEMA
+        // entry implied) -- CurrentConfig::orderByCustom()/
+        // orderByInsideCategoryCustom() are real typed (nullable) accessors now.
+        $orderByCustom = \Piwigo\Config\CurrentConfig::orderByCustom();
+        if ($orderByCustom !== null) {
+            \Piwigo\Config\CurrentConfig::setOrderBy($orderByCustom);
         }
-        if (\Piwigo\Config\Config::has('order_by_inside_category_custom')) {
-            \Piwigo\Config\Config::override('order_by_inside_category', \Piwigo\Config\Config::all()['order_by_inside_category_custom'] ?? null);
+        $orderByInsideCategoryCustom = \Piwigo\Config\CurrentConfig::orderByInsideCategoryCustom();
+        if ($orderByInsideCategoryCustom !== null) {
+            \Piwigo\Config\CurrentConfig::setOrderByInsideCategory($orderByInsideCategoryCustom);
         }
 
         if (\Piwigo\Core\LoungeMaintenance::needsEmptying()) {
@@ -399,8 +470,8 @@ final class RequestBootstrap
     public static function pemUrl(): string
     {
 
-        if (\Piwigo\Config\Config::has('alternative_pem_url') and \Piwigo\Config\Config::alternativePemUrl() !== '') {
-            return \Piwigo\Config\Config::alternativePemUrl();
+        if (\Piwigo\Config\CurrentConfig::alternativePemUrl() !== '') {
+            return \Piwigo\Config\CurrentConfig::alternativePemUrl();
         }
 
         return AppInfo::URL . '/ext';
@@ -490,16 +561,16 @@ final class RequestBootstrap
             // getParam() has no return type declaration (its own value
             // comes from CurrentUser::get()->preferences[$param], an
             // untyped array<string, mixed>), so its return is inferred as
-            // mixed; narrow to the same Config::adminTheme() fallback
+            // mixed; narrow to the same CurrentConfig::adminTheme() fallback
             // already passed as the default value.
             $admin_theme = new \Piwigo\Users\PreferencesService(new UserRepository($conn))
-                ->getParam('admin_theme', \Piwigo\Config\Config::adminTheme());
-            $admin_theme = is_string($admin_theme) ? $admin_theme : \Piwigo\Config\Config::adminTheme();
+                ->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
+            $admin_theme = is_string($admin_theme) ? $admin_theme : \Piwigo\Config\CurrentConfig::adminTheme();
             $template = new Template(CurrentPaths::get()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
             $theme = CurrentUser::get()->theme;
             if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws' and \Piwigo\Core\DeviceHelper::mobileTheme()) {
-                $theme = \Piwigo\Config\Config::mobilTheme();
+                $theme = \Piwigo\Config\CurrentConfig::mobilTheme();
             }
             $template = new Template(CurrentPaths::get()->root . 'themes', $theme);
         }
@@ -520,7 +591,7 @@ final class RequestBootstrap
         // function had the exact same availability window).
         \Piwigo\Image\SrcImage::setThemeConfProvider($template);
 
-        if (! \Piwigo\Config\Config::has('no_photo_yet')) {
+        if (\Piwigo\Config\CurrentConfig::noPhotoYet() === null) {
             // Formerly include/no_photo_yet.inc.php, a seam of exactly this
             // one call (deleted, P23 sub-batch 8f-5). render() exits itself
             // when it decides to take over the page. CurrentConfigService::get()
@@ -535,7 +606,7 @@ final class RequestBootstrap
             $pageState->addHeaderMessage(Lang::t('Bad status for user "guest", using default status. Please notify the webmaster.'));
         }
 
-        if (\Piwigo\Config\Config::galleryLocked()) {
+        if (\Piwigo\Config\CurrentConfig::galleryLocked()) {
             $pageState->addHeaderMessage(Lang::t('The gallery is locked for maintenance. Please, come back later.'));
 
             if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'identification' and ! \Piwigo\Auth\AccessControl::isAdmin()) {
@@ -553,7 +624,7 @@ final class RequestBootstrap
             }
         }
 
-        if (\Piwigo\Config\Config::checkUpgradeFeed()) {
+        if (\Piwigo\Config\CurrentConfig::checkUpgradeFeed()) {
             // Formerly `include_once .../functions_upgrade.php` + bare
             // check_upgrade_feed() (migrated to a real class, P23 sub-batch
             // 8f-6; the legacy file now only carries frozen-script
@@ -569,7 +640,7 @@ final class RequestBootstrap
             $pageState->headerMessages = [];
         }
 
-        if (\Piwigo\Config\Config::filterPages() !== [] and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
+        if (\Piwigo\Config\CurrentConfig::filterPages() !== [] and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
             // Formerly a conditional `include PHPWG_ROOT_PATH .
             // 'include/filter.inc.php';` (deleted, P23 sub-batch 8f-5).
             new FilterService($conn)
@@ -578,13 +649,11 @@ final class RequestBootstrap
             \Piwigo\Core\FilterState::set(false);
         }
 
-        if (\Piwigo\Config\Config::has('header_notes')) {
-            $pageState->headerNotes = array_merge($pageState->headerNotes, \Piwigo\Config\Config::headerNotes());
-        }
+        $pageState->headerNotes = array_merge($pageState->headerNotes, \Piwigo\Config\CurrentConfig::headerNotes());
 
         // default event handlers
         \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_category_literal_description', new HtmlService()->renderCategoryLiteralDescription(...));
-        if (! \Piwigo\Config\Config::allowHtmlDescriptions()) {
+        if (! \Piwigo\Config\CurrentConfig::allowHtmlDescriptions()) {
             \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_category_description', new HtmlService()->pwgNl2br(...));
         }
         \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_comment_content', new HtmlService()->renderCommentContent(...));
@@ -642,11 +711,27 @@ final class RequestBootstrap
         \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFileVideo(...));
         \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFilePsd(...));
         \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFileEps(...));
-        if (\Piwigo\Config\Config::originalUrlProtection() !== '') {
+        if (\Piwigo\Config\CurrentConfig::originalUrlProtection() !== '') {
             \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('get_element_url', new HtmlService()->getElementUrlProtectionHandler(...));
             \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('get_src_image_url', new HtmlService()->getSrcImageUrlProtectionHandler(...));
         }
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('init');
+
+        // Formerly the tail of Piwigo\Bootstrap\CommonBootstrap::run(),
+        // called after this whole bootstrap already completed -- moved
+        // here (still last) when that class was retired. CurrentUser's/
+        // PageState's own `??=` guards are already satisfied by this
+        // point on the real HTTP path (UserBootstrap::initialize() in
+        // connect(), PageState::current()'s own lazy-init in configure()),
+        // so both calls are no-ops here in practice; kept for parity with
+        // callers that reach finalize() without having run those earlier
+        // steps. Lang::attachGlobals() is the one with a real ordering
+        // requirement -- it snapshots Translator's already-loaded strings,
+        // so it must run after this method's own Lang::load() calls above,
+        // not before.
+        CurrentUser::attachGlobals();
+        \Piwigo\Core\PageState::attachGlobals();
+        Lang::attachGlobals();
     }
 
     /**

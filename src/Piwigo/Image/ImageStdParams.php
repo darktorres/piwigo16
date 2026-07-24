@@ -130,7 +130,7 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]|string \Piwigo\Config\Config::disabledDerivatives() is
+     * @return DerivativeParams[]|string \Piwigo\Config\CurrentConfig::disabledDerivatives() is
      *   stored serialized in the database — callers must safe_unserialize()
      *   this when it falls through to that fallback
      */
@@ -141,7 +141,7 @@ final class ImageStdParams
             return self::$disabled_type_map;
         }
 
-        $disabled_derivatives = \Piwigo\Config\Config::disabledDerivatives();
+        $disabled_derivatives = \Piwigo\Config\CurrentConfig::disabledDerivatives();
         return is_string($disabled_derivatives) ? $disabled_derivatives : [];
     }
 
@@ -200,13 +200,13 @@ final class ImageStdParams
     public static function load_from_db(): void
     {
 
-        // \Piwigo\Config\Config::derivatives() does not exist at all until save() has been
+        // \Piwigo\Config\CurrentConfig::derivatives() does not exist at all until save() has been
         // called once (a fresh install's config.sql has no 'derivatives'
         // row) -- guard with is_string() rather than unserialize()-ing a
         // possibly-null value directly, which would throw a TypeError
         // under strict_types instead of falling through to the "build
         // defaults" branch below like this function intends.
-        $derivatives_raw = \Piwigo\Config\Config::derivatives() ?? null;
+        $derivatives_raw = \Piwigo\Config\CurrentConfig::derivatives() ?? null;
         $arr = is_string($derivatives_raw) ? @unserialize($derivatives_raw) : false;
         // unserialize() is only typed mixed by PHP itself (the serialized
         // blob could decode to any PHP value, or to a malformed non-array

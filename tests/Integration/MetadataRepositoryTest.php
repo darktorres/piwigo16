@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -38,7 +38,7 @@ final class MetadataRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
@@ -68,7 +68,7 @@ final class MetadataRepositoryTest extends IntegrationTestCase
         // UploadService::addUploadedFile()'s own preg_replace() against
         // Paths::$root) -- this assertion's leading '/' never matched
         // anything, pre-existing and unrelated to the sibling double-slash
-        // bug (Config::uploadDir() already ending in '/') fixed alongside
+        // bug (CurrentConfig::uploadDir() already ending in '/') fixed alongside
         // this same investigation.
         self::assertStringContainsString('upload/2026/08/01/', $rows[0]['path'] . $rows[1]['path']);
     }

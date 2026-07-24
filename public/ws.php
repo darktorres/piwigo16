@@ -16,7 +16,6 @@ declare(strict_types=1);
 // (P23 batch 8e-8).
 require __DIR__ . '/../vendor/autoload.php';
 
-use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Bootstrap\RequestPipeline;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WsContext;
@@ -27,8 +26,6 @@ use Piwigo\Http\ResponseEmitter;
 $paths = Paths::fromRoot(dirname(__DIR__));
 WsContext::mark();
 \Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
-
-CommonBootstrap::run($paths);
 
 $response = RequestPipeline::handle(RequestFactory::fromGlobals());
 new ResponseEmitter()

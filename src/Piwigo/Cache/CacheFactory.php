@@ -13,7 +13,7 @@ use Symfony\Component\Cache\Adapter\RedisAdapter;
  * Creates a PSR-6 cache pool for the requested (or env-configured) backend.
  *
  * Adapter choice via PIWIGO_CACHE_ADAPTER (apcu|redis|filesystem) --
- * Config::cacheAdapter() doesn't exist yet (P13). When unset, auto-detects:
+ * CurrentConfig::cacheAdapter() doesn't exist yet (P13). When unset, auto-detects:
  * APCu if available, else filesystem -- matches the doc's own documented
  * fallback design, not a workaround; ext-apcu isn't installed in every
  * environment (confirmed absent in this one). An *explicit* request for an

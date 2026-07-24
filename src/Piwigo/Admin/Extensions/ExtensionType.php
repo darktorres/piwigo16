@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Db\Tables;
 
@@ -34,20 +34,22 @@ enum ExtensionType: string
     }
 
     /**
-     * The $conf key holding this type's PEM category id
-     * (pem_plugins_category / pem_themes_category / pem_languages_category).
+     * This type's PEM category id (pemPluginsCategory()/pemThemesCategory()/
+     * pemLanguagesCategory()) -- a closed 3-case match onto the 3 real
+     * typed getters, replacing a former dynamic-key lookup through the
+     * generic bag (Config generic-accessor removal, design #6).
      */
-    public function configCategoryKey(): string
+    public function pemCategoryId(): int
     {
         return match ($this) {
-            self::Plugin => 'pem_plugins_category',
-            self::Theme => 'pem_themes_category',
-            self::Language => 'pem_languages_category',
+            self::Plugin => CurrentConfig::pemPluginsCategory(),
+            self::Theme => CurrentConfig::pemThemesCategory(),
+            self::Language => CurrentConfig::pemLanguagesCategory(),
         };
     }
 
     /**
-     * This type's key in Config::updatesIgnored()'s
+     * This type's key in CurrentConfig::updatesIgnored()'s
      * array{plugins: list<string>, themes: list<string>, languages: list<string>}
      * shape -- plural, unlike $this->value (singular). Real bug found via
      * PHPStan: ExtensionUpdateChecker::checkExtensions() used to index that
@@ -68,7 +70,7 @@ enum ExtensionType: string
     {
         return match ($this) {
             self::Plugin => \Piwigo\Admin\PluginLoader::pluginsPath(),
-            self::Theme => Config::themesPath(),
+            self::Theme => CurrentConfig::themesPath(),
             self::Language => \Piwigo\Core\CurrentPaths::get()->root . 'language/',
         };
     }

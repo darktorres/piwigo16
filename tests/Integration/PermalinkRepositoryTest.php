@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Permalink\PermalinkRepository;
@@ -27,7 +27,7 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 

@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\DbPatch;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\Config;
 
 /**
  * Former install/db/132-database.php (P23 sub-batch 8g-2).
@@ -37,7 +36,7 @@ final class Patch132 implements DbPatchInterface
         // we don't use Tables::users() because it might resolve to an
         // external table (USERS_TABLE could be redefined); here we
         // specifically want the real Piwigo-prefixed users table.
-        $query = 'ALTER TABLE ' . Config::dbPrefix() . 'users CHANGE password password varchar(255) default NULL';
+        $query = 'ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'users CHANGE password password varchar(255) default NULL';
         $conn->executeStatement($query);
 
         echo "\n" . $this->description() . "\n";

@@ -82,7 +82,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Admin\Extensions\ExtensionType;
     use Piwigo\Admin\Extensions\PemCatalog;
     use Piwigo\Admin\Extensions\ZipExtractor;
-    use Piwigo\Config\Config;
+    use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\ConfigService;
     use Piwigo\Db\DbConnection;
@@ -126,7 +126,7 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
-            Config::reset();
+            CurrentConfig::reset();
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
@@ -134,13 +134,13 @@ namespace Piwigo\Tests\Integration {
             $this->repo = new ExtensionRepository($this->conn);
             $this->lifecycle = new ExtensionLifecycle($this->repo, new PemCatalog(new ZipExtractor()), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository()));
 
-            Config::override('enable_extensions_install', true);
-            Config::override('php_extension_in_urls', false);
+            CurrentConfig::setEnableExtensionsInstall(true);
+            CurrentConfig::setPhpExtensionInUrls(false);
             // P23 batch 8f-4: ThemeCatalog::checkThemeInstalled() (called
-            // for real here) reads Config::themesDir() -- provide the
+            // for real here) reads CurrentConfig::themesDir() -- provide the
             // production value so the real filesystem check runs against
             // the real themes/ dir.
-            Config::override('themes_dir', \Piwigo\Core\CurrentPaths::get()->root . 'themes');
+            CurrentConfig::setThemesDir(\Piwigo\Core\CurrentPaths::get()->root . 'themes');
             CurrentUser::set(User::fromUserArray(['id' => 1]));
             CurrentUser::markRealUserResolved();
             unset($_REQUEST['method'], $_REQUEST['action']);
@@ -346,7 +346,7 @@ namespace Piwigo\Tests\Integration {
             // same call shape preserved exactly) is deliberately called
             // WITHOUT updateGlobal=true, matching themes.class.php's own
             // original call shape -- it persists to the DB but never
-            // updates Config::$data (and structurally can't touch the
+            // updates CurrentConfig::$data (and structurally can't touch the
             // legacy $conf global at all, unlike ConfigDb). This is a real,
             // faithfully-preserved legacy quirk: the mobile-theme-uniqueness
             // guard only actually takes effect on the NEXT request, once
@@ -361,9 +361,9 @@ namespace Piwigo\Tests\Integration {
                 'name' => 'Mobile One',
                 'mobile' => true,
             ]);
-            Config::override('enable_extensions_install', true);
-            Config::override('php_extension_in_urls', false);
-            Config::override('mobile_theme', $first);
+            CurrentConfig::setEnableExtensionsInstall(true);
+            CurrentConfig::setPhpExtensionInUrls(false);
+            CurrentConfig::setMobilTheme($first);
 
             $second = $this->themeId();
             $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $second, [

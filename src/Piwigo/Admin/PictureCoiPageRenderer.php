@@ -87,10 +87,10 @@ final class PictureCoiPageRenderer
             new DerivativeCacheService()
                 ->deleteElementDerivatives($derivative_infos, ImageStdParams::CUSTOM);
             $uid = '&b=' . time();
-            \Piwigo\Config\Config::override('question_mark_in_urls', true);
-            \Piwigo\Config\Config::override('php_extension_in_urls', true);
-            if (\Piwigo\Config\Config::derivativeUrlStyle() === 1) {
-                \Piwigo\Config\Config::override('derivative_url_style', 0); // auto
+            \Piwigo\Config\CurrentConfig::setQuestionMarkInUrls(true);
+            \Piwigo\Config\CurrentConfig::setPhpExtensionInUrls(true);
+            if (\Piwigo\Config\CurrentConfig::derivativeUrlStyle() === 1) {
+                \Piwigo\Config\CurrentConfig::setDerivativeUrlStyle(0); // auto
             }
         } else {
             $uid = '';

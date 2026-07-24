@@ -44,7 +44,7 @@ final class PwgComments
      *   with no 'default' key -- may be entirely absent; WsParamType::ID
      *   guarantees a plain int when present. page: non-null int default,
      *   WsParamType::INT|WsParamType::POSITIVE -- always present. per_page: same type
-     *   flag, default is \Piwigo\Config\Config::commentsPageNbComments() (a real int,
+     *   flag, default is \Piwigo\Config\CurrentConfig::commentsPageNbComments() (a real int,
      *   confirmed 10 in config_default.inc.php) -- always present, always
      *   int.
      * @return PwgError|array<string, mixed>
@@ -53,7 +53,7 @@ final class PwgComments
     {
         $conn = DbConnection::build();
 
-        if (! \Piwigo\Config\Config::activateComments()) {
+        if (! \Piwigo\Config\CurrentConfig::activateComments()) {
             return new PwgError(403, 'Comments are disabled');
         }
 
@@ -146,7 +146,7 @@ WHERE ' . implode(' AND ', $where_clauses) . '
 
         // comments
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
         $query = '
 SELECT
     c.id,
@@ -193,7 +193,7 @@ SELECT
             $medium = $medium_derivative->get_url();
 
             $row_author = is_string($row['author']) ? $row['author'] : null;
-            if (! is_numeric($row['author_id']) or (int) $row['author_id'] === 0 or (int) $row['author_id'] === \Piwigo\Config\Config::guestId()) {
+            if (! is_numeric($row['author_id']) or (int) $row['author_id'] === 0 or (int) $row['author_id'] === \Piwigo\Config\CurrentConfig::guestId()) {
                 $author_name = $row_author;
             } else {
                 $row_username = $row['username'] ?? null;
@@ -217,7 +217,7 @@ SELECT
                 'file' => $row['file'],
                 'image_date_available' => \Piwigo\Core\DateHelper::formatDate($comment_date_available, ['day_name', 'day', 'month', 'year', 'time']),
                 'author' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_author', $author_name),
-                'author_status' => is_numeric($row['author_id']) && \Piwigo\Config\Config::webmasterId() === (int) $row['author_id'] ? 'main_user' : $row['status'],
+                'author_status' => is_numeric($row['author_id']) && \Piwigo\Config\CurrentConfig::webmasterId() === (int) $row['author_id'] ? 'main_user' : $row['status'],
                 'date' => \Piwigo\Core\DateHelper::formatDate($comment_date, ['day_name', 'day', 'month', 'year', 'time']),
                 'content' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_content', $row['content']),
                 'raw_content' => $row['content'],

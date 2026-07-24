@@ -35,7 +35,7 @@ namespace Piwigo\Tests\Integration {
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Bootstrap\RedirectService;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Db\DbConnection;
@@ -80,7 +80,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 

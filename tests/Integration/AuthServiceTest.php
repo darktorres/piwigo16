@@ -13,7 +13,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Auth\CookieService;
     use Piwigo\Auth\PasswordRepository;
     use Piwigo\Auth\PasswordService;
-    use Piwigo\Config\Config;
+    use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Html\HtmlService;
@@ -49,12 +49,12 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
-            Config::reset();
+            CurrentConfig::reset();
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
-            Config::override('user_fields', ['id' => 'id', 'username' => 'username', 'password' => 'password']);
-            Config::override('secret_key', 'test-secret-key');
+            CurrentConfig::setUserFields(['id' => 'id', 'username' => 'username', 'password' => 'password']);
+            CurrentConfig::setSecretKey('test-secret-key');
 
             $this->service = new AuthService(
                 new AuthRepository(DbConnection::build()),
@@ -101,7 +101,7 @@ namespace Piwigo\Tests\Integration {
         {
             $first = $this->service->calculateAutoLoginKey(1, 1000);
 
-            Config::override('secret_key', 'a-different-secret');
+            CurrentConfig::setSecretKey('a-different-secret');
 
             $second = $this->service->calculateAutoLoginKey(1, 1000);
 

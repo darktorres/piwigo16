@@ -167,8 +167,8 @@ final class SrcImage
         // handling of a missing/non-string key is preserved via `?? null`.
         $representative_ext_raw = $infos['representative_ext'] ?? null;
         $representative_ext = is_string($representative_ext_raw) ? $representative_ext_raw : '';
-        // \Piwigo\Config\Config::pictureExtensions() is always a string[] set by config_default.inc.php.
-        $picture_ext = \Piwigo\Config\Config::pictureExtensions();
+        // \Piwigo\Config\CurrentConfig::pictureExtensions() is always a string[] set by config_default.inc.php.
+        $picture_ext = \Piwigo\Config\CurrentConfig::pictureExtensions();
         if (in_array($ext, $picture_ext, true)) {
             $this->rel_path = $path;
             $this->flags |= self::IS_ORIGINAL;

@@ -105,6 +105,3 @@ parameters:
         -
             identifier: classConstant.internalClass
             path: tests/Unit/SmokeTest.php
-
-rules:
-    - Piwigo\Tools\PhpStan\ConfigKeyExistsRule

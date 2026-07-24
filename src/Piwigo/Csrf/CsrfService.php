@@ -12,17 +12,17 @@ namespace Piwigo\Csrf;
  * Reads Piwigo\Config\Config::secretKey() directly -- safe since Legacy
  * Coupling Retirement Track A batch A4's ConfigDb fix (see
  * EphemeralKeyService's own docblock for the mechanism). Historically
- * (P18) Config::secretKey() was silently inert on a live request: secret_key
+ * (P18) CurrentConfig::secretKey() was silently inert on a live request: secret_key
  * is inserted into the piwigo_config DB table at install time
  * (install/upgrade_1.6.2.php), loaded into the legacy $conf global by
- * load_conf_from_db(), with no sync back into Config::$data at the time.
+ * load_conf_from_db(), with no sync back into CurrentConfig::$data at the time.
  * Every CSRF token issued before that P18 fix was signed with an empty
  * string, not a real secret -- forgeable by anyone who could observe or
  * guess a session id. The P18 fix routed this class through the raw $conf
  * global as an interim workaround (found while building EphemeralKeyService,
- * which copied the same Config::secretKey() pattern before shipping and was
+ * which copied the same CurrentConfig::secretKey() pattern before shipping and was
  * caught first); A4 removed the need for that workaround by fixing
- * Config::$data's own DB-sync timing instead.
+ * CurrentConfig::$data's own DB-sync timing instead.
  *
  * [SEC-11/SEC-12] getToken()/check() use sha256 + hash_equals(), matching
  * EphemeralKeyService/AuthService::calculateAutoLoginKey() (SEC-27/SEC-28) --
@@ -64,7 +64,7 @@ final class CsrfService
             throw new \Exception('CsrfService::getToken(): no active session');
         }
 
-        $secret_key = \Piwigo\Config\Config::secretKey();
+        $secret_key = \Piwigo\Config\CurrentConfig::secretKey();
 
         return hash_hmac('sha256', $session_id, $secret_key);
     }

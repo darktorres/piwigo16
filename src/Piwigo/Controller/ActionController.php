@@ -53,7 +53,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * session_cache_limiter('public') deliberately stays in action.php's own
  * root file, not here: include/common.inc.php calls session_start()
  * directly in the root file's own top-level scope, before
- * CommonBootstrap::run()/RequestPipeline::handle() are even reached, so
+ * RequestPipeline::handle() is even reached, so
  * calling session_cache_limiter() from inside this controller (invoked
  * much later, once the pipeline dispatches) would run after
  * session_start() already fired and have no effect.
@@ -77,7 +77,7 @@ final class ActionController implements ControllerInterface
 
         $conn = DbConnection::build();
 
-        if (\Piwigo\Config\Config::isFormatsEnabled() and isset($_GET['format'])) {
+        if (\Piwigo\Config\CurrentConfig::isFormatsEnabled() and isset($_GET['format'])) {
             new \Piwigo\Validation\InputValidator()
                 ->validate('format', $_GET, false, ValidationPattern::ID);
 

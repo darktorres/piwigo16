@@ -16,12 +16,13 @@ use Piwigo\Core\CurrentPaths;
 /**
  * Raw `dblayer` value read straight from the site's own
  * local/config/database.inc.php, the same way upgrade.php/upgrade_feed.php's
- * own `$dblayer = $conf['dblayer'];` reads it at entry-shell scope. Config::
- * never tracks this key -- it isn't part of config_default.inc.php, only
- * ever set here -- and the nearest modern accessor, Config::dbDriver(),
- * uses a different value space ('mysqli'/'pgsql') than these historical
- * patches check against ('mysql'/'pgsql'/'sqlite'/'pdo-sqlite'), so it can't
- * be substituted without changing behavior. An IIFE with its own
+ * own `$dblayer = $conf['dblayer'];` reads it at entry-shell scope. Neither
+ * CurrentConfig:: nor DbCredentials:: track this key -- it isn't part of
+ * config_default.inc.php, only ever set here -- and the nearest modern
+ * accessor, DbCredentials::current()->driver, uses a different value space
+ * ('mysqli'/'pgsql') than these historical patches check against
+ * ('mysql'/'pgsql'/'sqlite'/'pdo-sqlite'), so it can't be substituted
+ * without changing behavior. An IIFE with its own
  * function-scoped $conf captures the include's side effect in full
  * isolation, same pattern as the data_location/webmaster_id reads
  * elsewhere in this file family (Patch65/94/119/171).

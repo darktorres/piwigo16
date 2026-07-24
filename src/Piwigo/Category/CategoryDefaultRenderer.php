@@ -112,7 +112,7 @@ final readonly class CategoryDefaultRenderer
                   ]
               );
 
-            if (\Piwigo\Config\Config::activateComments() and (bool) \Piwigo\Users\CurrentUser::get()->rawAttributes['show_nb_comments']) {
+            if (\Piwigo\Config\CurrentConfig::activateComments() and (bool) \Piwigo\Users\CurrentUser::get()->rawAttributes['show_nb_comments']) {
                 $nbCommentsOf = $this->commentCounter->countValidatedByImageIds($selection);
             }
         }
@@ -159,7 +159,7 @@ final readonly class CategoryDefaultRenderer
                 'file_ext' => strtolower(\Piwigo\Core\StringHelper::getExtension($rowFile)),
             ]);
 
-            if (\Piwigo\Config\Config::indexNewIcon()) {
+            if (\Piwigo\Config\CurrentConfig::indexNewIcon()) {
                 // '' falls through get_icon()'s own empty($date) guard
                 // exactly like a non-string/null column value would, so
                 // behavior is unchanged.
@@ -204,8 +204,8 @@ final readonly class CategoryDefaultRenderer
 
         $template->assign([
             'derivative_params' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_index_derivative_params', ImageStdParams::get_by_type($indexDeriv)),
-            'maxRequests' => \Piwigo\Config\Config::maxRequests(),
-            'SHOW_THUMBNAIL_CAPTION' => \Piwigo\Config\Config::showThumbnailCaption(),
+            'maxRequests' => \Piwigo\Config\CurrentConfig::maxRequests(),
+            'SHOW_THUMBNAIL_CAPTION' => \Piwigo\Config\CurrentConfig::showThumbnailCaption(),
         ]);
         $tplThumbnailsVar = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('loc_end_index_thumbnails', $tplThumbnailsVar, $pictures);
         $template->assign('thumbnails', $tplThumbnailsVar);

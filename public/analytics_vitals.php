@@ -18,7 +18,6 @@ declare(strict_types=1);
 // index_directory_root route already relies on).
 require __DIR__ . '/../vendor/autoload.php';
 
-use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Bootstrap\RequestPipeline;
 use Piwigo\Core\Paths;
 use Piwigo\Http\RequestFactory;
@@ -27,8 +26,6 @@ use Piwigo\Http\ResponseEmitter;
 // ----------------------------------------------------------- include
 $paths = Paths::fromRoot(dirname(__DIR__));
 \Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
-
-CommonBootstrap::run($paths);
 
 $response = RequestPipeline::handle(RequestFactory::fromGlobals());
 new ResponseEmitter()

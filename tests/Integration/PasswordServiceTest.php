@@ -7,8 +7,9 @@ namespace Piwigo\Tests\Integration;
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
@@ -48,11 +49,14 @@ final class PasswordServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        Config::override('external_authentification', false);
+        // externalAuthentification defaults to false; reset() clears any
+        // memo an earlier test in this process left behind (DeploymentPolicy
+        // generic-accessor removal moved this off CurrentConfig:: entirely).
+        DeploymentPolicy::reset();
 
         $this->conn = DbConnection::build();
         $this->service = new PasswordService(new PasswordRepository($this->conn));

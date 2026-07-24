@@ -28,5 +28,13 @@ final class MenubarLayoutRepository extends AbstractRepository
             'UPDATE ' . Tables::config() . ' SET value = ? WHERE param = ?',
             [serialize($positions), 'blk_' . $menuId]
         );
+
+        // This write bypasses ConfigService::confUpdateParam() entirely (no
+        // DI dependency here, matching this class's own "write half only"
+        // scope), so its own cache-clearing never fires -- without this,
+        // ConfigService::allRowsFromCacheOrDb() would keep serving the
+        // pre-save layout to every request until some unrelated config
+        // write happened to clear the pool.
+        \Piwigo\Cache\CachePools::config()->clear();
     }
 }

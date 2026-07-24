@@ -26,7 +26,7 @@ namespace {
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;
-    use Piwigo\Config\Config;
+    use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Notification\NotificationByMailRepository;
@@ -55,14 +55,14 @@ final class NotificationByMailServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
         $this->service = new NotificationByMailService(new NotificationByMailRepository($this->conn));
 
-        Config::override('user_fields', ['username' => 'username', 'email' => 'mail_address', 'id' => 'id']);
+        CurrentConfig::setUserFields(['username' => 'username', 'email' => 'mail_address', 'id' => 'id']);
     }
 
     public function test_find_available_check_key_matches_the_expected_shape(): void

@@ -21,7 +21,7 @@ use Doctrine\DBAL\Connection;
  * DDL-heavy optimization for large batches. Reimplementing that exact
  * strategy with parameterized DBAL queries (no raw string interpolation)
  * is disproportionate complexity for this pass and doesn't obviously
- * port to the pgsql driver `Config::dbDriver()` already allows. This
+ * port to the pgsql driver `DbCredentials::current()->driver` already allows. This
  * class always issues one parameterized `UPDATE` per row instead, for
  * every batch size, wrapped in a single transaction (which the original
  * never had at all -- every row was its own unguarded query, so a

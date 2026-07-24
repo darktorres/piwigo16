@@ -127,7 +127,6 @@ final class IntroSubController implements AdminSubControllerInterface
         if (\Piwigo\Core\PageState::current()->nbPhotosTotal >= 100000) { // but has not been calculated on a big gallery, so force it now
             $nb_orphans = new ImageService(new ImageRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)))
                 ->countOrphans();
-            $nb_orphans = is_numeric($nb_orphans) ? (int) $nb_orphans : 0;
         }
 
         if ($nb_orphans > 0) {
@@ -167,7 +166,7 @@ SELECT COUNT(*)
             'intro' => 'intro.tpl',
         ]);
 
-        if (\Piwigo\Config\Config::showNewsletterSubscription() and (bool) new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository($conn))->getParam('show_newsletter_subscription', true)) {
+        if (\Piwigo\Config\CurrentConfig::showNewsletterSubscription() and (bool) new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository($conn))->getParam('show_newsletter_subscription', true)) {
             $query = '
   SELECT registration_date
     FROM ' . Tables::userInfos() . '
@@ -240,11 +239,11 @@ SELECT COUNT(*)
                 'NB_PLUGINS' => count(\Piwigo\Admin\LoadedPlugins::get()),
                 'STORAGE_USED' => str_replace(' ', '&nbsp;', Lang::t('%sGB', number_format($du_gb, $du_decimals))),
                 'U_QUICK_SYNC' => $this->urlService->getRootUrl() . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
-                'CHECK_FOR_UPDATES' => \Piwigo\Config\Config::dashboardCheckForUpdates(),
+                'CHECK_FOR_UPDATES' => \Piwigo\Config\CurrentConfig::dashboardCheckForUpdates(),
             ]
         );
 
-        if (\Piwigo\Config\Config::activateComments()) {
+        if (\Piwigo\Config\CurrentConfig::activateComments()) {
             $query = '
 SELECT COUNT(*)
   FROM ' . Tables::comments() . '
@@ -255,7 +254,7 @@ SELECT COUNT(*)
             $template->assign('NB_COMMENTS', 0);
         }
 
-        if (\Piwigo\Config\Config::showPiwigoLatestNews()) {
+        if (\Piwigo\Config\CurrentConfig::showPiwigoLatestNews()) {
             $latest_news = self::getLatestNews();
 
             // getLatestNews() is declared to return mixed (it can come straight
@@ -294,7 +293,7 @@ SELECT COUNT(*)
         // |                           get activity data                           |
         // +-----------------------------------------------------------------------+
 
-        $nb_weeks = \Piwigo\Config\Config::dashboardActivityNbWeeks();
+        $nb_weeks = \Piwigo\Config\CurrentConfig::dashboardActivityNbWeeks();
 
         // Count mondays
         $mondays = 0;
@@ -500,7 +499,7 @@ SELECT COUNT(*)
         /** @var array<string, array<string, array<string, mixed>>> $data_storage */
         $data_storage = [];
 
-        $picture_ext = \Piwigo\Config\Config::pictureExtensions();
+        $picture_ext = \Piwigo\Config\CurrentConfig::pictureExtensions();
 
         // Select files in Image_Table
         $query = '
@@ -583,8 +582,8 @@ SELECT
         }
 
         // Add cache size if requested and known.
-        if (\Piwigo\Config\Config::addCacheToStorageChart() && \Piwigo\Config\Config::has('cache_sizes')) {
-            $cache_sizes = \Piwigo\Config\Config::cacheSizes();
+        if (\Piwigo\Config\CurrentConfig::addCacheToStorageChart()) {
+            $cache_sizes = \Piwigo\Config\CurrentConfig::cacheSizes();
 
             if (is_array($cache_sizes)) {
                 $cache_size_zero = $cache_sizes[0] ?? null;
@@ -645,7 +644,7 @@ SELECT
     {
         $news = null;
 
-        $data_location = \Piwigo\Config\Config::dataLocation();
+        $data_location = \Piwigo\Config\CurrentConfig::dataLocation();
         $lang_code = \Piwigo\Core\Lang::langInfo()['code'] ?? null;
         $lang_code = is_string($lang_code) ? $lang_code : '';
         $cache_path = \Piwigo\Core\CurrentPaths::get()->root . $data_location . 'cache/piwigo_latest_news-' . $lang_code . '.cache.php';

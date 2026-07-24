@@ -10,8 +10,8 @@ namespace Piwigo\Auth;
  * secret-key config. Reads Piwigo\Config\Config::secretKey() directly --
  * safe since Legacy Coupling Retirement Track A batch A4's ConfigDb fix:
  * ConfigDb::loadConfFromDb()/confUpdateParam() now sync every DB-persisted
- * config row into Config::$data at the same point they update the legacy
- * $conf global, so Config::secretKey() reflects the real, admin/install-set
+ * config row into CurrentConfig::$data at the same point they update the legacy
+ * $conf global, so CurrentConfig::secretKey() reflects the real, admin/install-set
  * secret_key on every live request (previously it did not -- see
  * Piwigo\Csrf\CsrfService's own docblock for the historical P18 incident
  * this same gap caused there).
@@ -34,7 +34,7 @@ final class EphemeralKeyService
         $time = round(microtime(true), 1);
         $remote_addr = $_SERVER['REMOTE_ADDR'] ?? '';
         $remote_addr = is_string($remote_addr) ? $remote_addr : '';
-        $secret_key = \Piwigo\Config\Config::secretKey();
+        $secret_key = \Piwigo\Config\CurrentConfig::secretKey();
 
         return (string) $time . ':' . $validAfterSeconds . ':'
             . hash_hmac(
@@ -72,7 +72,7 @@ final class EphemeralKeyService
 
         $remote_addr = $_SERVER['REMOTE_ADDR'] ?? '';
         $remote_addr = is_string($remote_addr) ? $remote_addr : '';
-        $secret_key = \Piwigo\Config\Config::secretKey();
+        $secret_key = \Piwigo\Config\CurrentConfig::secretKey();
 
         $expected = hash_hmac(
             'sha256',

@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Html\HtmlService;
 use Piwigo\Section\SectionContextRegistry;
@@ -19,14 +20,15 @@ beforeEach(function (): void {
     // runner's ambient $_SERVER happens to contain.
     unset($_SERVER['REDIRECT_SCRIPT_NAME'], $_SERVER['REDIRECT_URL'], $_SERVER['PATH_INFO']);
     $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
-    Config::override('url_port', 'none');
+    CurrentConfig::setUrlPort('none');
     RootPathOverride::reset();
     SectionContextRegistry::reset();
     RequestMountDepth::reset();
 });
 
 afterEach(function (): void {
-    Config::reset();
+    CurrentConfig::reset();
+    DeploymentPolicy::reset();
     RootPathOverride::reset();
     SectionContextRegistry::reset();
     RequestMountDepth::reset();
@@ -195,8 +197,8 @@ test('getAbsoluteRootUrl trusts the Host header when allowed_hosts is unconfigur
 });
 
 test('getAbsoluteRootUrl uses gallery_url\'s host, ignoring the Host header entirely', function (): void {
-    Config::override('url_port', 'none');
-    Config::override('gallery_url', 'https://canonical.example.test/gallery/');
+    CurrentConfig::setUrlPort('none');
+    CurrentConfig::setGalleryUrl('https://canonical.example.test/gallery/');
     $_SERVER['HTTP_HOST'] = 'evil.test';
     $service = new UrlService(new HtmlService());
 
@@ -204,16 +206,16 @@ test('getAbsoluteRootUrl uses gallery_url\'s host, ignoring the Host header enti
 });
 
 test('getAbsoluteRootUrl keeps gallery_url\'s configured port', function (): void {
-    Config::override('url_port', 'none');
-    Config::override('gallery_url', 'https://canonical.example.test:8080/gallery/');
+    CurrentConfig::setUrlPort('none');
+    CurrentConfig::setGalleryUrl('https://canonical.example.test:8080/gallery/');
     $service = new UrlService(new HtmlService());
 
     expect($service->getAbsoluteRootUrl())->toBe('http://canonical.example.test:8080/piwigo/');
 });
 
 test('getAbsoluteRootUrl accepts a Host that matches the allowed_hosts list', function (): void {
-    Config::override('url_port', 'none');
-    Config::override('allowed_hosts', ['gallery.example.test']);
+    CurrentConfig::setUrlPort('none');
+    DeploymentPolicy::set(new DeploymentPolicy(allowedHosts: ['gallery.example.test']));
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $service = new UrlService(new HtmlService());
 
@@ -221,8 +223,8 @@ test('getAbsoluteRootUrl accepts a Host that matches the allowed_hosts list', fu
 });
 
 test('getAbsoluteRootUrl [SEC-29] falls back to the first allowed host when Host is forged', function (): void {
-    Config::override('url_port', 'none');
-    Config::override('allowed_hosts', ['gallery.example.test', 'gallery-alt.example.test']);
+    CurrentConfig::setUrlPort('none');
+    DeploymentPolicy::set(new DeploymentPolicy(allowedHosts: ['gallery.example.test', 'gallery-alt.example.test']));
     $_SERVER['HTTP_HOST'] = 'evil.test';
     $service = new UrlService(new HtmlService());
 
@@ -230,8 +232,8 @@ test('getAbsoluteRootUrl [SEC-29] falls back to the first allowed host when Host
 });
 
 test('getAbsoluteRootUrl [SEC-29] falls back for a forged X-Forwarded-Host too', function (): void {
-    Config::override('url_port', 'none');
-    Config::override('allowed_hosts', ['gallery.example.test']);
+    CurrentConfig::setUrlPort('none');
+    DeploymentPolicy::set(new DeploymentPolicy(allowedHosts: ['gallery.example.test']));
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $_SERVER['HTTP_X_FORWARDED_HOST'] = 'evil.test';
     $service = new UrlService(new HtmlService());
@@ -240,13 +242,14 @@ test('getAbsoluteRootUrl [SEC-29] falls back for a forged X-Forwarded-Host too',
 });
 
 test('getAbsoluteRootUrl [SEC-29] reflects a real DB-persisted gallery_url the way load_conf_from_db() would set it', function (): void {
-    // Regression test for the historical Config::-accessor bug this file's
+    // Regression test for the historical CurrentConfig::-accessor bug this file's
     // own history records (see EphemeralKeyService's docblock for the
     // mechanism and fix): a real DB-persisted gallery_url, simulated here
-    // via Config::override() the same way ConfigDb::loadConfFromDb() now
-    // populates Config::$data, must be reflected by getAbsoluteRootUrl().
-    Config::override('url_port', 'none');
-    Config::override('gallery_url', 'https://real-admin-configured.example.test/');
+    // via CurrentConfig::setGalleryUrl() the same way
+    // ConfigService::loadConfFromDb() now populates CurrentConfig's own
+    // properties, must be reflected by getAbsoluteRootUrl().
+    CurrentConfig::setUrlPort('none');
+    CurrentConfig::setGalleryUrl('https://real-admin-configured.example.test/');
     $_SERVER['HTTP_HOST'] = 'evil.test';
     $service = new UrlService(new HtmlService());
 

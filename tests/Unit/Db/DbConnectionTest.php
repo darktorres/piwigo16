@@ -3,36 +3,54 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\Config;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbCredentials;
 
 // DBAL connections are lazy -- no socket opens until a query runs, so this
 // stays Unit-tier even though it exercises DbConnection::build() for real.
 // params() (not build()'s Connection::getParams()) is used for assertions
 // since Doctrine itself marks that getter as implementation-detail-only.
+//
+// DbConnection::params() reads DbCredentials::current() (env-only, memoized)
+// rather than CurrentConfig:: (Config generic-accessor removal moved DB
+// credentials off CurrentConfig:: entirely) -- putenv() + DbCredentials::reset()
+// seeds each scenario the same way tests/Unit/Db/DbCredentialsTest.php does.
 
-beforeEach(function (): void {
-    Config::reset();
+$envVars = ['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_DB_PORT', 'PIWIGO_DB_DRIVER'];
+$originalEnvVars = [];
+
+beforeEach(function () use ($envVars, &$originalEnvVars): void {
+    foreach ($envVars as $var) {
+        $value = getenv($var);
+        $originalEnvVars[$var] = $value === false ? null : $value;
+        putenv($var);
+    }
+    DbCredentials::reset();
 });
 
-afterEach(function (): void {
-    Config::reset();
+afterEach(function () use ($envVars, &$originalEnvVars): void {
+    foreach ($envVars as $var) {
+        putenv($originalEnvVars[$var] === null ? $var : $var . '=' . $originalEnvVars[$var]);
+    }
+    DbCredentials::reset();
 });
 
 test('build() returns a real Connection', function (): void {
-    Config::override('db_host', 'db.example.test');
-    Config::override('db_user', 'piwigo_app');
-    Config::override('db_password', 'secret');
-    Config::override('db_base', 'piwigo_prod');
+    putenv('PIWIGO_DB_HOST=db.example.test');
+    putenv('PIWIGO_DB_USER=piwigo_app');
+    putenv('PIWIGO_DB_PASSWORD=secret');
+    putenv('PIWIGO_DB_BASE=piwigo_prod');
+    DbCredentials::reset();
 
     expect(DbConnection::build())->toBeInstanceOf(Connection::class);
 });
 
-test('params() reads host/user/password/dbname from Config', function (): void {
-    Config::override('db_host', 'db.example.test');
-    Config::override('db_user', 'piwigo_app');
-    Config::override('db_password', 'secret');
-    Config::override('db_base', 'piwigo_prod');
+test('params() reads host/user/password/dbname from DbCredentials', function (): void {
+    putenv('PIWIGO_DB_HOST=db.example.test');
+    putenv('PIWIGO_DB_USER=piwigo_app');
+    putenv('PIWIGO_DB_PASSWORD=secret');
+    putenv('PIWIGO_DB_BASE=piwigo_prod');
+    DbCredentials::reset();
 
     $params = DbConnection::params();
 
@@ -44,10 +62,11 @@ test('params() reads host/user/password/dbname from Config', function (): void {
 });
 
 test('params() treats a host starting with / as a unix socket path', function (): void {
-    Config::override('db_host', '/var/run/mysqld/mysqld.sock');
-    Config::override('db_user', 'root');
-    Config::override('db_password', '');
-    Config::override('db_base', 'piwigo');
+    putenv('PIWIGO_DB_HOST=/var/run/mysqld/mysqld.sock');
+    putenv('PIWIGO_DB_USER=root');
+    putenv('PIWIGO_DB_PASSWORD=');
+    putenv('PIWIGO_DB_BASE=piwigo');
+    DbCredentials::reset();
 
     $params = DbConnection::params();
 
@@ -56,11 +75,12 @@ test('params() treats a host starting with / as a unix socket path', function ()
 });
 
 test('params() switches to the native pgsql driver when db_driver is pgsql', function (): void {
-    Config::override('db_driver', 'pgsql');
-    Config::override('db_host', 'pg.example.test');
-    Config::override('db_user', 'piwigo_app');
-    Config::override('db_password', 'secret');
-    Config::override('db_base', 'piwigo_prod');
+    putenv('PIWIGO_DB_DRIVER=pgsql');
+    putenv('PIWIGO_DB_HOST=pg.example.test');
+    putenv('PIWIGO_DB_USER=piwigo_app');
+    putenv('PIWIGO_DB_PASSWORD=secret');
+    putenv('PIWIGO_DB_BASE=piwigo_prod');
+    DbCredentials::reset();
 
     $params = DbConnection::params();
 
@@ -72,10 +92,11 @@ test('params() switches to the native pgsql driver when db_driver is pgsql', fun
 });
 
 test('params() defaults to mysqli when db_driver is unset', function (): void {
-    Config::override('db_host', 'db.example.test');
-    Config::override('db_user', 'piwigo_app');
-    Config::override('db_password', 'secret');
-    Config::override('db_base', 'piwigo_prod');
+    putenv('PIWIGO_DB_HOST=db.example.test');
+    putenv('PIWIGO_DB_USER=piwigo_app');
+    putenv('PIWIGO_DB_PASSWORD=secret');
+    putenv('PIWIGO_DB_BASE=piwigo_prod');
+    DbCredentials::reset();
 
     expect(DbConnection::params()['driver'])->toBe('mysqli');
 });

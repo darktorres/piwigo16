@@ -14,15 +14,15 @@ declare(strict_types=1);
 // bootstrap + dispatch, matching every other P22 controller's root file.
 require __DIR__ . '/../vendor/autoload.php';
 
-use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Bootstrap\RequestPipeline;
 use Piwigo\Core\Paths;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 
 // ----------------------------------------------------------- include
-// P16 mints a real Paths for src/Piwigo/ code, passed to CommonBootstrap::
-// run() below. Legacy Coupling Retirement gap-closure (entry-shell
+// P16 mints a real Paths for src/Piwigo/ code, passed to
+// RequestBootstrap::bootEntryPoint() below. Legacy Coupling Retirement
+// gap-closure (entry-shell
 // define()/include round): PHPWG_ROOT_PATH (the former './', CWD-relative
 // legacy constant every raw include and several URL-generation call sites
 // used to read) is gone entirely -- filesystem paths go through $paths,
@@ -40,8 +40,6 @@ use Piwigo\Http\ResponseEmitter;
 // Router's own docblock).
 $paths = Paths::fromRoot(dirname(__DIR__));
 \Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
-
-CommonBootstrap::run($paths);
 
 $response = RequestPipeline::handle(RequestFactory::fromGlobals());
 new ResponseEmitter()

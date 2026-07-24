@@ -49,7 +49,7 @@ final class UpdatesPwgPageRenderer
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        if (! \Piwigo\Config\Config::enableCoreUpdate()) {
+        if (! \Piwigo\Config\CurrentConfig::enableCoreUpdate()) {
             new \Piwigo\Html\HtmlService()
                 ->fatalError('Piwigo core update system is disabled');
         }

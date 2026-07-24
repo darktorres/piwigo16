@@ -68,11 +68,11 @@ final class PageTail
     private static function checkForUpdates(): void
     {
         // ----------------------------------------------- update notification
-        $update_notify_check_period = \Piwigo\Config\Config::updateNotifyCheckPeriod();
+        $update_notify_check_period = \Piwigo\Config\CurrentConfig::updateNotifyCheckPeriod();
         if ($update_notify_check_period > 0) {
             $check_for_updates = false;
 
-            $update_notify_last_check = \Piwigo\Config\Config::updateNotifyLastCheck() ?? null;
+            $update_notify_last_check = \Piwigo\Config\CurrentConfig::updateNotifyLastCheck() ?? null;
             $update_notify_last_check = is_string($update_notify_last_check) ? $update_notify_last_check : null;
 
             if ($update_notify_last_check !== null) {

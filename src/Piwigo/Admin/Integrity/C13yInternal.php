@@ -103,8 +103,12 @@ final class C13yInternal
      */
     public function c13y_exif($c13y): void
     {
-        foreach (['show_exif', 'use_exif'] as $value) {
-            if (((bool) (\Piwigo\Config\Config::all()[$value] ?? null)) and (! function_exists('exif_read_data'))) {
+        $checks = [
+            'show_exif' => \Piwigo\Config\CurrentConfig::showExif(),
+            'use_exif' => \Piwigo\Config\CurrentConfig::useExif(),
+        ];
+        foreach ($checks as $value => $enabled) {
+            if ($enabled and (! function_exists('exif_read_data'))) {
                 $c13y->add_anomaly(
                     sprintf(Lang::t('%s value is not correct file because exif are not supported'), '$conf[\'' . $value . '\']'),
                     null,
@@ -126,11 +130,11 @@ final class C13yInternal
     {
         // guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // primary keys or config defaults, see include/config_default.inc.php).
-        $guest_id = \Piwigo\Config\Config::guestId();
+        $guest_id = \Piwigo\Config\CurrentConfig::guestId();
 
-        $default_user_id = \Piwigo\Config\Config::defaultUserId();
+        $default_user_id = \Piwigo\Config\CurrentConfig::defaultUserId();
 
-        $webmaster_id = \Piwigo\Config\Config::webmasterId();
+        $webmaster_id = \Piwigo\Config\CurrentConfig::webmasterId();
 
         $c13y_users = [];
         $c13y_users[$guest_id] = [
@@ -152,11 +156,11 @@ final class C13yInternal
             'l10n_bad_status' => 'Main "webmaster" user status is incorrect',
         ];
 
-        // \Piwigo\Config\Config::userFields() maps generic field names to table-specific DB
+        // \Piwigo\Config\CurrentConfig::userFields() maps generic field names to table-specific DB
         // column names (see include/config_default.inc.php); always a
         // string=>string map at runtime.
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
         $user_id_field = $user_fields['id'];
 
         $query = '
@@ -212,11 +216,11 @@ final class C13yInternal
     {
         // guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // primary keys or config defaults, see include/config_default.inc.php).
-        $guest_id = \Piwigo\Config\Config::guestId();
+        $guest_id = \Piwigo\Config\CurrentConfig::guestId();
 
-        $default_user_id = \Piwigo\Config\Config::defaultUserId();
+        $default_user_id = \Piwigo\Config\CurrentConfig::defaultUserId();
 
-        $webmaster_id = \Piwigo\Config\Config::webmasterId();
+        $webmaster_id = \Piwigo\Config\CurrentConfig::webmasterId();
 
         $result = false;
         $conn = DbConnection::build();

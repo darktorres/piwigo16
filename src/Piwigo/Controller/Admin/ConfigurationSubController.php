@@ -236,11 +236,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             'rating_score',
         ];
 
-        if (! \Piwigo\Config\Config::has('filters_views')) {
-            $this->configService->confUpdateParam('filters_views', \Piwigo\Config\Config::defaultFiltersViews(), true);
+        if (\Piwigo\Config\CurrentConfig::filtersViews() === null) {
+            $this->configService->confUpdateParam('filters_views', \Piwigo\Config\CurrentConfig::defaultFiltersViews(), true);
         }
 
-        $filters_views_default = \Piwigo\Config\Config::filtersViews() ?? \Piwigo\Config\Config::defaultFiltersViews();
+        $filters_views_default = \Piwigo\Config\CurrentConfig::filtersViews() ?? \Piwigo\Config\CurrentConfig::defaultFiltersViews();
         $filters_names_checkboxes = array_values(array_diff(array_keys($filters_views_default), ['last_filters_conf']));
 
         // image order management
@@ -282,7 +282,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             switch ($page['section']) {
                 case 'main':
 
-                    if (! \Piwigo\Config\Config::has('order_by_custom') and ! \Piwigo\Config\Config::has('order_by_inside_category_custom')) {
+                    if (\Piwigo\Config\CurrentConfig::orderByCustom() === null and \Piwigo\Config\CurrentConfig::orderByInsideCategoryCustom() === null) {
                         if (! self::emptyValue($_POST['order_by'] ?? null)) {
                             new \Piwigo\Validation\InputValidator()
                                 ->validate('order_by', $_POST, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
@@ -405,7 +405,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     // DB. The parameterized ConfigService write stores
                     // these bytes verbatim, so a plain serialize() is the
                     // correct byte-for-byte match to what
-                    // Config::pictureInformations() unserializes back.
+                    // CurrentConfig::pictureInformations() unserializes back.
                     $_POST['picture_informations'] = serialize($picture_informations);
                     break;
 
@@ -453,7 +453,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         $value = is_string($post_value) ? $post_value : '';
 
                         if ($row['param'] === 'gallery_title') {
-                            if (! \Piwigo\Config\Config::allowHtmlDescriptions()) {
+                            if (! \Piwigo\Config\CurrentConfig::allowHtmlDescriptions()) {
                                 $value = strip_tags($value);
                             }
                         }
@@ -541,20 +541,19 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     \Piwigo\Core\PageState::current()->addWarning(Lang::t('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !'));
                 }
 
-                if (\Piwigo\Config\Config::has('order_by_custom') or \Piwigo\Config\Config::has('order_by_inside_category_custom')) {
+                if (\Piwigo\Config\CurrentConfig::orderByCustom() !== null or \Piwigo\Config\CurrentConfig::orderByInsideCategoryCustom() !== null) {
                     $order_by = [''];
                     $template->assign('ORDER_BY_IS_CUSTOM', true);
                 } else {
                     $out = [];
-                    $conf_order_by_inside_category = \Piwigo\Config\Config::all()['order_by_inside_category'] ?? null;
-                    $order_by = trim(is_string($conf_order_by_inside_category) ? $conf_order_by_inside_category : '');
+                    $order_by = trim(\Piwigo\Config\CurrentConfig::orderByInsideCategory());
                     $order_by = str_replace('ORDER BY ', '', $order_by);
                     $order_by = explode(', ', $order_by);
                 }
 
-                $conf_gallery_title = \Piwigo\Config\Config::galleryTitle();
-                $conf_page_banner = \Piwigo\Config\Config::pageBanner();
-                $conf_email_admin_on_new_user = \Piwigo\Config\Config::emailAdminOnNewUser();
+                $conf_gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();
+                $conf_page_banner = \Piwigo\Config\CurrentConfig::pageBanner();
+                $conf_email_admin_on_new_user = \Piwigo\Config\CurrentConfig::emailAdminOnNewUser();
                 $lang_day = \Piwigo\Core\Lang::days();
 
                 $template->assign(
@@ -566,8 +565,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                             'sunday' => $lang_day[0] ?? '',
                             'monday' => $lang_day[1] ?? '',
                         ],
-                        'week_starts_on_options_selected' => \Piwigo\Config\Config::weekStartsOn(),
-                        'mail_theme' => \Piwigo\Config\Config::mailTheme(),
+                        'week_starts_on_options_selected' => \Piwigo\Config\CurrentConfig::weekStartsOn(),
+                        'mail_theme' => \Piwigo\Config\CurrentConfig::mailTheme(),
                         'mail_theme_options' => $mail_themes,
                         'order_by' => $order_by,
                         'order_by_options' => $sort_fields,
@@ -600,7 +599,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $template->append(
                         'main',
                         [
-                            $checkbox => \Piwigo\Config\Config::all()[$checkbox] ?? null,
+                            $checkbox => $this->checkboxValue($checkbox),
                         ],
                         true
                     );
@@ -612,8 +611,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 $template->assign(
                     'comments',
                     [
-                        'NB_COMMENTS_PAGE' => \Piwigo\Config\Config::nbCommentPage(),
-                        'comments_order' => \Piwigo\Config\Config::commentsOrder(),
+                        'NB_COMMENTS_PAGE' => \Piwigo\Config\CurrentConfig::nbCommentPage(),
+                        'comments_order' => \Piwigo\Config\CurrentConfig::commentsOrder(),
                         'comments_order_options' => $comments_order,
                     ]
                 );
@@ -622,7 +621,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $template->append(
                         'comments',
                         [
-                            $checkbox => \Piwigo\Config\Config::all()[$checkbox] ?? null,
+                            $checkbox => $this->checkboxValue($checkbox),
                         ],
                         true
                     );
@@ -631,7 +630,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
             case 'default':
 
-                $guest_id = \Piwigo\Config\Config::guestId();
+                $guest_id = \Piwigo\Config\CurrentConfig::guestId();
 
                 $edit_user = self::userService($conn)->buildUser($guest_id, false);
                 // P22: profile.php's own save_profile_from_post()/
@@ -662,7 +661,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $template->append(
                         'display',
                         [
-                            $checkbox => \Piwigo\Config\Config::all()[$checkbox] ?? null,
+                            $checkbox => $this->checkboxValue($checkbox),
                         ],
                         true
                     );
@@ -670,8 +669,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 $template->append(
                     'display',
                     [
-                        'picture_informations' => \Piwigo\Config\Config::pictureInformations(),
-                        'NB_CATEGORIES_PAGE' => \Piwigo\Config\Config::nbCategoriesPage(),
+                        'picture_informations' => \Piwigo\Config\CurrentConfig::pictureInformations(),
+                        'NB_CATEGORIES_PAGE' => \Piwigo\Config\CurrentConfig::nbCategoriesPage(),
                     ],
                     true
                 );
@@ -687,9 +686,9 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $template->assign(
                         'sizes',
                         [
-                            'original_resize_maxwidth' => \Piwigo\Config\Config::originalResizeMaxwidth(),
-                            'original_resize_maxheight' => \Piwigo\Config\Config::originalResizeMaxheight(),
-                            'original_resize_quality' => \Piwigo\Config\Config::originalResizeQuality(),
+                            'original_resize_maxwidth' => \Piwigo\Config\CurrentConfig::originalResizeMaxwidth(),
+                            'original_resize_maxheight' => \Piwigo\Config\CurrentConfig::originalResizeMaxheight(),
+                            'original_resize_quality' => \Piwigo\Config\CurrentConfig::originalResizeQuality(),
                         ]
                     );
 
@@ -697,7 +696,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         $template->append(
                             'sizes',
                             [
-                                $checkbox => \Piwigo\Config\Config::all()[$checkbox] ?? null,
+                                $checkbox => $this->checkboxValue($checkbox),
                             ],
                             true
                         );
@@ -713,7 +712,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         $tpl_var = [];
 
                         $tpl_var['must_square'] = ($type === ImageStdParams::SQUARE ? true : false);
-                        $tpl_var['must_enable'] = ($type === ImageStdParams::SQUARE || $type === ImageStdParams::THUMB || $type === \Piwigo\Config\Config::derivativeDefaultSize()) ? true : false;
+                        $tpl_var['must_enable'] = ($type === ImageStdParams::SQUARE || $type === ImageStdParams::THUMB || $type === \Piwigo\Config\CurrentConfig::derivativeDefaultSize()) ? true : false;
 
                         if ((bool) ($params = $enabled[$type] ?? null)) {
                             $tpl_var['enabled'] = true;
@@ -817,11 +816,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 $template->assign(
                     'search',
                     [
-                        'filters_views' => \Piwigo\Config\Config::filtersViews() ?? [],
+                        'filters_views' => \Piwigo\Config\CurrentConfig::filtersViews() ?? [],
                         'filters_names' => $filters_names_checkboxes,
                     ],
                 );
-                $template->assign('SHOW_FILTER_RATINGS', \Piwigo\Config\Config::rateEnabled());
+                $template->assign('SHOW_FILTER_RATINGS', \Piwigo\Config\CurrentConfig::rateEnabled());
 
         }
 
@@ -842,12 +841,12 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      * here (unlike before "nothing is frozen" gap-closure, 2026-07-22,
      * retired config_default.inc.php: PHPStan previously treated the whole
      * $conf array as unverifiable mixed from the raw include, which
-     * produced different, now-stale error identifiers; Config::
+     * produced different, now-stale error identifiers; CurrentConfig::
      * defaultsArray() gives $conf a real, checkable type instead).
      */
     private static function orderByIsLocal(): bool
     {
-        // Config::defaultsArray() never sets local_dir_site/order_by/
+        // CurrentConfig::defaultsArray() never sets local_dir_site/order_by/
         // order_by_inside_category -- local_dir_site has no SCHEMA entry
         // at all, and order_by/order_by_inside_category are both
         // 'custom' => true (computed accessors, no plain literal default),
@@ -858,13 +857,81 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // these keys genuinely depends on a file that may not exist and
         // isn't part of this codebase.
         $paths = CurrentPaths::get();
-        $conf = \Piwigo\Config\Config::defaultsArray();
+        $conf = \Piwigo\Config\CurrentConfig::defaultsArray();
         @include $paths->local . 'config/config.inc.php';
         if (isset($conf['local_dir_site'])) {
             @include $paths->siteLocal . 'config/config.inc.php';
         }
 
         return isset($conf['order_by']) or isset($conf['order_by_inside_category']);
+    }
+
+    /**
+     * Local dispatcher for this page's own $main_checkboxes/
+     * $comments_checkboxes/$display_checkboxes/$sizes_checkboxes loops --
+     * each iterates a hardcoded literal array of key names declared right
+     * here in handle(), so the key set is fully enumerable and already
+     * visible in this exact file. Kept as a local match() rather than a
+     * generic CurrentConfig::all()-style accessor (Config generic-
+     * accessor removal, design #6): 40+ individually-named calls to
+     * replace a template-building loop would be strictly worse for
+     * maintainability with no real safety gain, and this keeps the
+     * string-keyed surface contained to the one file that actually needs
+     * it.
+     */
+    private function checkboxValue(string $checkbox): mixed
+    {
+        return match ($checkbox) {
+            'allow_user_registration' => \Piwigo\Config\CurrentConfig::allowUserRegistration(),
+            'obligatory_user_mail_address' => \Piwigo\Config\CurrentConfig::obligatoryUserMailAddress(),
+            'rate' => \Piwigo\Config\CurrentConfig::rateEnabled(),
+            'rate_anonymous' => \Piwigo\Config\CurrentConfig::rateAnonymous(),
+            'allow_user_customization' => \Piwigo\Config\CurrentConfig::allowUserCustomization(),
+            'log' => \Piwigo\Config\CurrentConfig::logConf(),
+            'history_admin' => \Piwigo\Config\CurrentConfig::historyAdmin(),
+            'history_guest' => \Piwigo\Config\CurrentConfig::historyGuest(),
+            'upload_detect_duplicate' => \Piwigo\Config\CurrentConfig::uploadDetectDuplicate(),
+            'original_resize' => \Piwigo\Config\CurrentConfig::originalResize(),
+            'activate_comments' => \Piwigo\Config\CurrentConfig::activateComments(),
+            'comments_forall' => \Piwigo\Config\CurrentConfig::commentsForall(),
+            'comments_validation' => \Piwigo\Config\CurrentConfig::commentsValidation(),
+            'email_admin_on_comment' => \Piwigo\Config\CurrentConfig::emailAdminOnComment(),
+            'email_admin_on_comment_validation' => \Piwigo\Config\CurrentConfig::emailAdminOnCommentValidation(),
+            'user_can_delete_comment' => \Piwigo\Config\CurrentConfig::userCanDeleteComment(),
+            'user_can_edit_comment' => \Piwigo\Config\CurrentConfig::userCanEditComment(),
+            'email_admin_on_comment_edition' => \Piwigo\Config\CurrentConfig::emailAdminOnCommentEdition(),
+            'email_admin_on_comment_deletion' => \Piwigo\Config\CurrentConfig::emailAdminOnCommentDeletion(),
+            'comments_author_mandatory' => \Piwigo\Config\CurrentConfig::commentsAuthorMandatory(),
+            'comments_email_mandatory' => \Piwigo\Config\CurrentConfig::commentsEmailMandatory(),
+            'comments_enable_website' => \Piwigo\Config\CurrentConfig::commentsEnableWebsite(),
+            'menubar_filter_icon' => \Piwigo\Config\CurrentConfig::menubarFilterIcon(),
+            'index_search_in_set_button' => \Piwigo\Config\CurrentConfig::indexSearchInSetButton(),
+            'index_search_in_set_action' => \Piwigo\Config\CurrentConfig::indexSearchInSetAction(),
+            'index_sort_order_input' => \Piwigo\Config\CurrentConfig::indexSortOrderInput(),
+            'index_flat_icon' => \Piwigo\Config\CurrentConfig::indexFlatIcon(),
+            'index_posted_date_icon' => \Piwigo\Config\CurrentConfig::indexPostedDateIcon(),
+            'index_created_date_icon' => \Piwigo\Config\CurrentConfig::indexCreatedDateIcon(),
+            'index_slideshow_icon' => \Piwigo\Config\CurrentConfig::indexSlideShowIcon(),
+            'index_sizes_icon' => \Piwigo\Config\CurrentConfig::indexSizesIcon(),
+            'index_new_icon' => \Piwigo\Config\CurrentConfig::indexNewIcon(),
+            'index_edit_icon' => \Piwigo\Config\CurrentConfig::indexEditIcon(),
+            'index_caddie_icon' => \Piwigo\Config\CurrentConfig::indexCaddieIcon(),
+            'display_fromto' => \Piwigo\Config\CurrentConfig::displayFromto(),
+            'picture_metadata_icon' => \Piwigo\Config\CurrentConfig::pictureMetadataIcon(),
+            'picture_slideshow_icon' => \Piwigo\Config\CurrentConfig::pictureSlideShowIcon(),
+            'picture_favorite_icon' => \Piwigo\Config\CurrentConfig::pictureFavoriteIcon(),
+            'picture_sizes_icon' => \Piwigo\Config\CurrentConfig::pictureSizesIcon(),
+            'picture_download_icon' => \Piwigo\Config\CurrentConfig::pictureDownloadIcon(),
+            'picture_edit_icon' => \Piwigo\Config\CurrentConfig::pictureEditIcon(),
+            'picture_caddie_icon' => \Piwigo\Config\CurrentConfig::pictureCaddieIcon(),
+            'picture_representative_icon' => \Piwigo\Config\CurrentConfig::pictureRepresentativeIcon(),
+            'picture_navigation_icons' => \Piwigo\Config\CurrentConfig::pictureNavigationIcons(),
+            'picture_navigation_thumb' => \Piwigo\Config\CurrentConfig::pictureNavigationThumb(),
+            'picture_menu' => \Piwigo\Config\CurrentConfig::pictureMenu(),
+            'show_mobile_app_banner_in_gallery' => \Piwigo\Config\CurrentConfig::showMobileAppBannerInGallery(),
+            'show_mobile_app_banner_in_admin' => \Piwigo\Config\CurrentConfig::showMobileAppBannerInAdmin(),
+            default => throw new \LogicException("checkboxValue(): unknown checkbox key '{$checkbox}'."),
+        };
     }
 
     /**
@@ -947,7 +1014,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 $pderivative['minh'] = $pderivative['minw'] = $pderivative['w'];
                 $pderivative['crop'] = 100;
             }
-            $pderivative['must_enable'] = ($type === ImageStdParams::SQUARE || $type === ImageStdParams::THUMB || $type === \Piwigo\Config\Config::derivativeDefaultSize()) ? true : false;
+            $pderivative['must_enable'] = ($type === ImageStdParams::SQUARE || $type === ImageStdParams::THUMB || $type === \Piwigo\Config\CurrentConfig::derivativeDefaultSize()) ? true : false;
             $pderivative['enabled'] = isset($pderivative['enabled']) || $pderivative['must_enable'] ? true : false;
 
             if (isset($pderivative['crop'])) {

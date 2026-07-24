@@ -205,7 +205,7 @@ final class ThemesStandardPagesPageRenderer
         // path stored in config. null (not the raw config value) is what
         // gates the template's own "existing logo preview" vs. "upload a
         // logo" UI toggle, so an unset/empty config value must stay null here.
-        $configured_logo_path = \Piwigo\Config\Config::all()['standard_pages_selected_logo_path'] ?? null;
+        $configured_logo_path = \Piwigo\Config\CurrentConfig::standardPagesSelectedLogoPath();
         $std_pgs_selected_logo_path = is_string($configured_logo_path) && $configured_logo_path !== ''
             ? $this->urlService->getRootUrl() . 'logo.php'
             : null;
@@ -213,10 +213,10 @@ final class ThemesStandardPagesPageRenderer
         // Send all info to template
         $template->assign(
             [
-                'use_standard_pages' => \Piwigo\Config\Config::all()['use_standard_pages'] ?? true,
-                'std_pgs_selected_logo' => \Piwigo\Config\Config::all()['standard_pages_selected_logo'] ?? 'piwigo_logo',
+                'use_standard_pages' => \Piwigo\Config\CurrentConfig::useStandardPages(),
+                'std_pgs_selected_logo' => \Piwigo\Config\CurrentConfig::standardPagesSelectedLogo(),
                 'std_pgs_logo_options' => $std_pgs_logo_options,
-                'std_pgs_selected_skin' => \Piwigo\Config\Config::all()['standard_pages_selected_skin'] ?? 'default',
+                'std_pgs_selected_skin' => \Piwigo\Config\CurrentConfig::standardPagesSelectedSkin(),
                 'std_pgs_skin_options' => $std_pgs_skin_options,
                 'is_standard_pages_used' => $is_standard_pages_used,
                 'standard_pages_used_by' => $standard_pages_used_by,

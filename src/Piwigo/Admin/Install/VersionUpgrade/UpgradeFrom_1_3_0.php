@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install\VersionUpgrade;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\Config;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
@@ -67,7 +66,7 @@ ALTER TABLE phpwebgallery_image_category
         ];
 
         foreach ($queries as $query) {
-            $query = str_replace('phpwebgallery_', Config::dbPrefix(), $query);
+            $query = str_replace('phpwebgallery_', \Piwigo\Db\DbCredentials::current()->prefix, $query);
             $conn->executeStatement($query);
         }
         // filling the new column categories.uppercats

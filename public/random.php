@@ -13,7 +13,7 @@ declare(strict_types=1);
 // |                          define and include                           |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
@@ -42,7 +42,7 @@ $paths = Paths::fromRoot(dirname(__DIR__));
 // nb_image_page has exactly this one reader repo-wide, under User's own
 // documented promotion bar for a named property -- read via
 // rawAttributes, same as every other low-frequency legacy $user key.
-$top_number = Config::topNumber();
+$top_number = CurrentConfig::topNumber();
 $rawNbImagePage = CurrentUser::get()->rawAttributes['nb_image_page'] ?? null;
 $nb_image_page = is_numeric($rawNbImagePage) ? (int) $rawNbImagePage : 15;
 

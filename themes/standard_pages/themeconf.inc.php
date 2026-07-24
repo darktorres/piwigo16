@@ -13,10 +13,11 @@ $themeconf = [
 // $theme_template_vars is set by Template::load_themeconf(), which assigns
 // it to the calling theme's Template instance after this include.
 $theme_template_vars = [
-    'STD_PGS_SELECTED_SKIN' => \Piwigo\Config\Config::all()['standard_pages_selected_skin'] ?? 'default',
-    'STD_PGS_SELECTED_LOGO' => \Piwigo\Config\Config::all()['standard_pages_selected_logo'] ?? 'piwigo_logo',
-    // Former `$page['gallery_title'] ?? Config::galleryTitle()` -- nothing
-    // writes $page['gallery_title'] anywhere anymore (confirmed via a
-    // repo-wide grep), so the fallback always won in practice already.
-    'GALLERY_TITLE' => \Piwigo\Config\Config::galleryTitle(),
+    'STD_PGS_SELECTED_SKIN' => \Piwigo\Config\CurrentConfig::standardPagesSelectedSkin(),
+    'STD_PGS_SELECTED_LOGO' => \Piwigo\Config\CurrentConfig::standardPagesSelectedLogo(),
+    // Former `$page['gallery_title'] ?? CurrentConfig::galleryTitle()` --
+    // nothing writes $page['gallery_title'] anywhere anymore (confirmed
+    // via a repo-wide grep), so the fallback always won in practice
+    // already.
+    'GALLERY_TITLE' => \Piwigo\Config\CurrentConfig::galleryTitle(),
 ];

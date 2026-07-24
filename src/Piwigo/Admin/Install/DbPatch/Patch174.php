@@ -16,10 +16,11 @@ use Doctrine\DBAL\Connection;
 /**
  * Former install/db/174-database.php (P23 sub-batch 8g-3). The third
  * argument (updateGlobal=true) is original -- the fresh secret_key must
- * stay visible via Config:: for the remainder of the upgrade request
+ * stay visible via CurrentConfig:: for the remainder of the upgrade request
  * (Legacy Coupling Retirement Phase 8, 8d: ConfigService::confUpdateParam()'s
- * own $updateGlobal branch calls Config::override(), the same sync target
- * ConfigDb::confUpdateParam()'s dual-write used).
+ * own $updateGlobal branch calls CurrentConfig's own setter (via
+ * reflection), the same sync target ConfigDb::confUpdateParam()'s
+ * dual-write used).
  */
 final class Patch174 implements DbPatchInterface
 {

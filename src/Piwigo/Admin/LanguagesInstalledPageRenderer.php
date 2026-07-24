@@ -184,7 +184,7 @@ final class LanguagesInstalledPageRenderer
 
         $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
         $template->assign('ADMIN_PAGE_TITLE', Lang::t('Languages'));
-        $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', \Piwigo\Config\Config::enableExtensionsInstall());
+        $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', \Piwigo\Config\CurrentConfig::enableExtensionsInstall());
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');
     }

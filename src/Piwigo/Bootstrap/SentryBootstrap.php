@@ -11,9 +11,10 @@ namespace Piwigo\Bootstrap;
  * network I/O; verified directly in the installed vendor/sentry/sentry
  * source, not assumed). Reads env vars via plain getenv() -- P2's
  * pwg_load_env_file() (include/env.inc.php, called from common.inc.php)
- * already populates them via symfony/dotenv's usePutenv() before
- * CommonBootstrap::run() executes on every real request; no new
- * env-loading mechanism needed here.
+ * already populates them via symfony/dotenv's usePutenv() before this
+ * class's own init() runs (as RequestBootstrap::bootEntryPoint()'s first
+ * statement) on every real request; no new env-loading mechanism needed
+ * here.
  */
 final class SentryBootstrap
 {

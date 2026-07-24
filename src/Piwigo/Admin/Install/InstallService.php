@@ -107,10 +107,10 @@ final class InstallService
 
     /**
      * Connect to database during installation. Uses $_POST indirectly --
-     * InstallWizard::boot() already calls Config::override('db_host', ...)
-     * etc. with the submitted credentials before this runs, so
-     * DbConnection::build() (which reads Config::db*()) resolves to them
-     * directly; no local $_POST parsing needed here.
+     * InstallWizard::boot() already calls DbCredentials::seed(...) with the
+     * submitted credentials before this runs, so DbConnection::build()
+     * (which reads DbCredentials::current()) resolves to them directly; no
+     * local $_POST parsing needed here.
      *
      * @param array<int, string> $infos - populated with infos
      * @param array<int, string> $errors - populated with errors

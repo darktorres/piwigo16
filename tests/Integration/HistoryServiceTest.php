@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Logger;
@@ -34,12 +34,12 @@ final class HistoryServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        Config::override('history_autopurge_keep_lines', 0);
-        Config::override('history_autopurge_blocksize', 50);
+        CurrentConfig::setHistoryAutopurgeKeepLines(0);
+        CurrentConfig::setHistoryAutopurgeBlocksize(50);
         $GLOBALS['logger'] = new Logger(['severity' => Logger::OFF]);
 
         $this->conn = DbConnection::build();
@@ -149,7 +149,7 @@ final class HistoryServiceTest extends IntegrationTestCase
 
     public function test_autopurge_is_a_no_op_when_under_the_keep_lines_threshold(): void
     {
-        $this->setConf('history_autopurge_keep_lines', 10);
+        CurrentConfig::setHistoryAutopurgeKeepLines(10);
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
 
         $this->service->autopurge();
@@ -159,7 +159,7 @@ final class HistoryServiceTest extends IntegrationTestCase
 
     public function test_autopurge_is_a_no_op_when_nothing_is_summarized_yet(): void
     {
-        $this->setConf('history_autopurge_keep_lines', 1);
+        CurrentConfig::setHistoryAutopurgeKeepLines(1);
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
         $this->insertHistoryLine(1, '2026-07-12', '04:00:00');
 
@@ -170,8 +170,8 @@ final class HistoryServiceTest extends IntegrationTestCase
 
     public function test_autopurge_deletes_old_summarized_lines(): void
     {
-        $this->setConf('history_autopurge_keep_lines', 1);
-        $this->setConf('history_autopurge_blocksize', 1);
+        CurrentConfig::setHistoryAutopurgeKeepLines(1);
+        CurrentConfig::setHistoryAutopurgeBlocksize(1);
         $id1 = $this->insertHistoryLine(1, '2026-07-10', '03:00:00');
         $id2 = $this->insertHistoryLine(1, '2026-07-11', '03:00:00');
         $id3 = $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
@@ -183,11 +183,6 @@ final class HistoryServiceTest extends IntegrationTestCase
         // latestId-keepLines=$id3-1=$id2, oldestId+blocksize=$id1+1=$id2)
         // = $id2, so only $id1 (id < $id2) is purged.
         self::assertSame([$id2, $id3], $this->allHistoryIds());
-    }
-
-    private function setConf(string $key, mixed $value): void
-    {
-        Config::override($key, $value);
     }
 
     private function insertHistoryLine(int $userId, string $date, string $time): int

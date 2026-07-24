@@ -58,7 +58,7 @@ final class TagsController implements ControllerInterface
             'tags' => 'tags.tpl',
         ]);
 
-        $default_display_mode = \Piwigo\Config\Config::tagsDefaultDisplayMode();
+        $default_display_mode = \Piwigo\Config\CurrentConfig::tagsDefaultDisplayMode();
 
         $display_mode = $default_display_mode;
         if (is_string($displayModeParam) && in_array($displayModeParam, ['cloud', 'letters'], true)) {
@@ -84,7 +84,7 @@ final class TagsController implements ControllerInterface
             // we want tags diplayed in alphabetic order
             usort($tags, new HtmlService()->tagAlphaCompare(...));
 
-            $tag_letters_column_number = \Piwigo\Config\Config::tagLettersColumnNumber();
+            $tag_letters_column_number = \Piwigo\Config\CurrentConfig::tagLettersColumnNumber();
 
             $current_letter = null;
             $nb_tags = count($tags);
@@ -158,7 +158,7 @@ final class TagsController implements ControllerInterface
             // we want only the first most represented tags, so we sort
             // them by counter and take the first tags
             usort($tags, $tagService->tagsCounterCompare(...));
-            $full_tag_cloud_items_number = \Piwigo\Config\Config::fullTagCloudItemsNumber();
+            $full_tag_cloud_items_number = \Piwigo\Config\CurrentConfig::fullTagCloudItemsNumber();
             $tags = array_slice($tags, 0, $full_tag_cloud_items_number);
 
             // depending on its counter and the other tags counter,

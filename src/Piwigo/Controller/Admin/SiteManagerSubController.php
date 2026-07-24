@@ -65,7 +65,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        if (! \Piwigo\Config\Config::enableSynchronization()) {
+        if (! \Piwigo\Config\CurrentConfig::enableSynchronization()) {
             new HtmlService()
                 ->fatalError('synchronization is disabled');
         }

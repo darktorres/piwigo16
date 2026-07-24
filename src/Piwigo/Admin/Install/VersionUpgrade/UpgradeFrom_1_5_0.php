@@ -13,7 +13,7 @@ namespace Piwigo\Admin\Install\VersionUpgrade;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Install\DbPatch\LegacyFileConf;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\StringHelper;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
@@ -26,7 +26,7 @@ use Piwigo\Db\Tables;
  * `global $conf` meant unset()/re-include/restore only ever touched a
  * local alias, never the true global) is gone -- guest_id/webmaster_id/
  * gallery_url/rate/rate_anonymous are read via LegacyFileConf::read(),
- * same reasoning as the rest of this file family (Config:: doesn't see a
+ * same reasoning as the rest of this file family (CurrentConfig:: doesn't see a
  * site's local/config/config.inc.php override on this path).
  */
 final class UpgradeFrom_1_5_0 implements VersionUpgradeInterface
@@ -43,12 +43,12 @@ final class UpgradeFrom_1_5_0 implements VersionUpgradeInterface
         $this->tagReplaceKeywords($conn);
 
         $localConf = LegacyFileConf::read();
-        $guest_id = is_scalar($localConf['guest_id'] ?? null) ? (string) $localConf['guest_id'] : (string) Config::guestId();
-        $webmaster_id = is_scalar($localConf['webmaster_id'] ?? null) ? (string) $localConf['webmaster_id'] : (string) Config::webmasterId();
+        $guest_id = is_scalar($localConf['guest_id'] ?? null) ? (string) $localConf['guest_id'] : (string) CurrentConfig::guestId();
+        $webmaster_id = is_scalar($localConf['webmaster_id'] ?? null) ? (string) $localConf['webmaster_id'] : (string) CurrentConfig::webmasterId();
 
         $ddlQueries = [
             '
-CREATE TABLE ' . Config::dbPrefix() . 'search (
+CREATE TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'search (
   id int UNSIGNED NOT NULL AUTO_INCREMENT,
   last_seen date DEFAULT NULL,
   rules text,
@@ -56,7 +56,7 @@ CREATE TABLE ' . Config::dbPrefix() . 'search (
 );',
 
             '
-CREATE TABLE ' . Config::dbPrefix() . "user_mail_notification (
+CREATE TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . "user_mail_notification (
   user_id smallint(5) NOT NULL default '0',
   check_key varchar(16) binary NOT NULL default '',
   enabled enum('true','false') NOT NULL default 'false',
@@ -66,7 +66,7 @@ CREATE TABLE ' . Config::dbPrefix() . "user_mail_notification (
 );",
 
             '
-CREATE TABLE ' . Config::dbPrefix() . "upgrade (
+CREATE TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . "upgrade (
   id varchar(20) NOT NULL default '',
   applied datetime NOT NULL default '0000-00-00 00:00:00',
   description varchar(255) default NULL,
@@ -74,76 +74,76 @@ CREATE TABLE ' . Config::dbPrefix() . "upgrade (
 );",
 
             '
-ALTER TABLE ' . Config::dbPrefix() . 'config
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'config
   MODIFY COLUMN value TEXT
 ;',
 
             '
-ALTER TABLE ' . Config::dbPrefix() . "images
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . "images
   ADD COLUMN has_high enum('true') default NULL
 ;",
 
             '
-ALTER TABLE ' . Config::dbPrefix() . "rate
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . "rate
   ADD COLUMN anonymous_id varchar(45) NOT NULL default ''
 ;",
             '
-ALTER TABLE ' . Config::dbPrefix() . "rate
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . "rate
   ADD COLUMN date date NOT NULL default '0000-00-00'
 ;",
             '
-ALTER TABLE ' . Config::dbPrefix() . 'rate
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'rate
   DROP PRIMARY KEY
 ;',
             '
-ALTER TABLE ' . Config::dbPrefix() . 'rate
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'rate
   ADD PRIMARY KEY (element_id,user_id,anonymous_id)
 ;',
             '
-UPDATE ' . Config::dbPrefix() . 'rate
+UPDATE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'rate
   SET date = CURDATE()
 ;',
 
             '
 DELETE
-  FROM ' . Config::dbPrefix() . 'sessions
+  FROM ' . \Piwigo\Db\DbCredentials::current()->prefix . 'sessions
 ;',
             '
-ALTER TABLE ' . Config::dbPrefix() . 'sessions
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'sessions
   DROP COLUMN user_id
 ;',
             '
-ALTER TABLE ' . Config::dbPrefix() . 'sessions
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'sessions
   ADD COLUMN data text NOT NULL
 ;',
 
             '
-ALTER TABLE ' . Config::dbPrefix() . 'user_cache
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'user_cache
   ADD COLUMN nb_total_images mediumint(8) unsigned default NULL
 ;',
 
             '
-ALTER TABLE ' . Config::dbPrefix() . "user_infos
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . "user_infos
   CHANGE COLUMN status
      status enum('webmaster','admin','normal','generic','guest')
      NOT NULL default 'guest'
 ;",
 
             '
-ALTER TABLE ' . Config::dbPrefix() . "user_infos
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . "user_infos
    CHANGE COLUMN template template varchar(255) NOT NULL default 'yoga/clear'
 ;",
 
             '
-ALTER TABLE ' . Config::dbPrefix() . "user_infos
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . "user_infos
   ADD COLUMN adviser enum('true','false') NOT NULL default 'false'
 ;",
             '
-ALTER TABLE ' . Config::dbPrefix() . "user_infos
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . "user_infos
   ADD COLUMN enabled_high enum('true','false') NOT NULL default 'true'
 ;",
             '
-ALTER TABLE ' . Config::dbPrefix() . 'categories
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'categories
   CHANGE COLUMN rank rank SMALLINT(5) UNSIGNED DEFAULT NULL
 ;',
         ];
@@ -153,7 +153,7 @@ ALTER TABLE ' . Config::dbPrefix() . 'categories
         }
 
         $conn->executeStatement('
-UPDATE ' . Config::dbPrefix() . 'user_infos
+UPDATE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'user_infos
   SET status = :status
   WHERE status = :oldStatus
 ;', [
@@ -161,7 +161,7 @@ UPDATE ' . Config::dbPrefix() . 'user_infos
             'oldStatus' => 'guest',
         ]);
         $conn->executeStatement('
-UPDATE ' . Config::dbPrefix() . 'user_infos
+UPDATE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'user_infos
   SET status = :status
   WHERE user_id = :userId
 ;', [
@@ -169,7 +169,7 @@ UPDATE ' . Config::dbPrefix() . 'user_infos
             'userId' => $guest_id,
         ]);
         $conn->executeStatement('
-UPDATE ' . Config::dbPrefix() . 'user_infos
+UPDATE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'user_infos
   SET status = :status
   WHERE user_id = :userId
 ;', [
@@ -177,7 +177,7 @@ UPDATE ' . Config::dbPrefix() . 'user_infos
             'userId' => $webmaster_id,
         ]);
         $conn->executeStatement('
-UPDATE ' . Config::dbPrefix() . 'user_infos
+UPDATE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'user_infos
   SET template = :template
   WHERE template = :oldTemplate
 ;', [
@@ -185,7 +185,7 @@ UPDATE ' . Config::dbPrefix() . 'user_infos
             'oldTemplate' => 'yoga-dark',
         ]);
         $conn->executeStatement('
-UPDATE ' . Config::dbPrefix() . 'user_infos
+UPDATE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'user_infos
   SET template = :template
   WHERE template != :excludedTemplate
 ;', [
@@ -194,7 +194,7 @@ UPDATE ' . Config::dbPrefix() . 'user_infos
         ]);
         // configuration table
         $conn->executeStatement('
-UPDATE ' . Config::dbPrefix() . 'config
+UPDATE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'config
   SET value = :value
   WHERE param = :param
 ;', [
@@ -236,7 +236,7 @@ UPDATE ' . Config::dbPrefix() . 'config
         }
 
         // Do I already have them in DB ?
-        $query = 'SELECT param FROM ' . Config::dbPrefix() . 'config';
+        $query = 'SELECT param FROM ' . \Piwigo\Db\DbCredentials::current()->prefix . 'config';
         foreach ($conn->fetchAllAssociative($query) as $row) {
             $param_name = is_scalar($row['param']) ? (string) $row['param'] : '';
             unset($params[$param_name]);
@@ -244,12 +244,12 @@ UPDATE ' . Config::dbPrefix() . 'config
 
         // Perform the insert query -- bound directly (not via
         // BatchWriter::singleInsert()) because gallery_url's own accessor
-        // (Config::galleryUrl()) treats a stored NULL and a stored '' as
+        // (CurrentConfig::galleryUrl()) treats a stored NULL and a stored '' as
         // genuinely different ("no override" vs "override to empty"), so
         // singleInsert()'s empty-string-to-NULL coercion isn't safe here.
         foreach ($params as $param_key => $param_values) {
             $query = '
-INSERT INTO ' . Config::dbPrefix() . 'config
+INSERT INTO ' . \Piwigo\Db\DbCredentials::current()->prefix . 'config
   (param, value, comment)
   VALUES
  (:param, :value, :comment)
@@ -262,7 +262,7 @@ INSERT INTO ' . Config::dbPrefix() . 'config
         }
 
         $query = '
-ALTER TABLE ' . Config::dbPrefix() . 'config MODIFY COLUMN `value` TEXT;';
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'config MODIFY COLUMN `value` TEXT;';
         $conn->executeStatement($query);
 
         //
@@ -270,7 +270,7 @@ ALTER TABLE ' . Config::dbPrefix() . 'config MODIFY COLUMN `value` TEXT;';
         //
         $query = '
 SELECT value
-  FROM ' . Config::dbPrefix() . 'config
+  FROM ' . \Piwigo\Db\DbCredentials::current()->prefix . 'config
   WHERE param = :param
 ;';
         $t = array_map(
@@ -282,7 +282,7 @@ SELECT value
 
         $query = '
 SELECT value
-  FROM ' . Config::dbPrefix() . 'config
+  FROM ' . \Piwigo\Db\DbCredentials::current()->prefix . 'config
   WHERE param = :param
 ;';
         $d = array_map(
@@ -299,7 +299,7 @@ SELECT value
         // escape the stored value.
         $page_banner = '<h1>' . $t . '</h1><p>' . $d . '</p>';
         $query = '
-INSERT INTO ' . Config::dbPrefix() . 'config
+INSERT INTO ' . \Piwigo\Db\DbCredentials::current()->prefix . 'config
   (param, value, comment)
   VALUES
   (:param, :value, :comment)
@@ -311,7 +311,7 @@ INSERT INTO ' . Config::dbPrefix() . 'config
         ]);
 
         $query = '
-DELETE FROM ' . Config::dbPrefix() . 'config
+DELETE FROM ' . \Piwigo\Db\DbCredentials::current()->prefix . 'config
   WHERE param = :param
 ;';
         $conn->executeStatement($query, [
@@ -323,7 +323,7 @@ DELETE FROM ' . Config::dbPrefix() . 'config
         //
         // nbm_send_mail_as/nbm_complementary_mail_content's '' values are
         // safe under BatchWriter's empty-string-to-NULL coercion here --
-        // both are read back via Config::getString(key, '') (see
+        // both are read back via CurrentConfig::getString(key, '') (see
         // Config.php), which falls back to the same '' default whether
         // the stored value is NULL or ''.
         $nbmBatchWriter = new BatchWriter($conn);
@@ -349,7 +349,7 @@ DELETE FROM ' . Config::dbPrefix() . 'config
         // the database structure has small differences that should be corrected.
 
         $query = '
-ALTER TABLE ' . Config::dbPrefix() . 'users
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'users
   CHANGE COLUMN password password varchar(32) default NULL
 ;';
         $conn->executeStatement($query);
@@ -357,14 +357,14 @@ ALTER TABLE ' . Config::dbPrefix() . 'users
         $to_keep = ['id', 'username', 'password', 'mail_address'];
 
         $query = '
-DESC ' . Config::dbPrefix() . 'users
+DESC ' . \Piwigo\Db\DbCredentials::current()->prefix . 'users
 ;';
 
         foreach ($conn->fetchAllAssociative($query) as $row) {
             $field = is_scalar($row['Field']) ? (string) $row['Field'] : '';
             if (! in_array($field, $to_keep, true)) {
                 $query = '
-ALTER TABLE ' . Config::dbPrefix() . 'users
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'users
   DROP COLUMN ' . $field . '
 ;';
                 $conn->executeStatement($query);
@@ -385,7 +385,7 @@ ALTER TABLE ' . Config::dbPrefix() . 'users
         // code taken from upgrades 19 and 22
 
         $query = '
-CREATE TABLE ' . Config::dbPrefix() . 'tags (
+CREATE TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'tags (
   id smallint(5) UNSIGNED NOT NULL auto_increment,
   name varchar(255) BINARY NOT NULL,
   url_name varchar(255) BINARY NOT NULL,
@@ -395,7 +395,7 @@ CREATE TABLE ' . Config::dbPrefix() . 'tags (
         $conn->executeStatement($query);
 
         $query = '
-CREATE TABLE ' . Config::dbPrefix() . 'image_tag (
+CREATE TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'image_tag (
   image_id mediumint(8) UNSIGNED NOT NULL,
   tag_id smallint(5) UNSIGNED NOT NULL,
   PRIMARY KEY (image_id,tag_id)
@@ -416,7 +416,7 @@ CREATE TABLE ' . Config::dbPrefix() . 'image_tag (
 
         $query = '
 SELECT id, keywords
-  FROM ' . Config::dbPrefix() . 'images
+  FROM ' . \Piwigo\Db\DbCredentials::current()->prefix . 'images
   WHERE keywords IS NOT NULL
 ;';
         foreach ($conn->fetchAllAssociative($query) as $row) {
@@ -454,7 +454,7 @@ SELECT id, keywords
         if ($datas !== []) {
             new BatchWriter($conn)
                 ->massInsert(
-                    Config::dbPrefix() . 'tags',
+                    \Piwigo\Db\DbCredentials::current()->prefix . 'tags',
                     array_keys($datas[0]),
                     $datas
                 );
@@ -476,7 +476,7 @@ SELECT id, keywords
         if ($datas !== []) {
             new BatchWriter($conn)
                 ->massInsert(
-                    Config::dbPrefix() . 'image_tag',
+                    \Piwigo\Db\DbCredentials::current()->prefix . 'image_tag',
                     array_keys($datas[0]),
                     $datas
                 );
@@ -486,7 +486,7 @@ SELECT id, keywords
         // Delete images.keywords
         //
         $query = '
-ALTER TABLE ' . Config::dbPrefix() . 'images DROP COLUMN keywords
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'images DROP COLUMN keywords
 ;';
         $conn->executeStatement($query);
 
@@ -494,13 +494,13 @@ ALTER TABLE ' . Config::dbPrefix() . 'images DROP COLUMN keywords
         // Add useful indexes
         //
         $query = '
-ALTER TABLE ' . Config::dbPrefix() . 'tags
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'tags
   ADD INDEX tags_i1(url_name)
 ;';
         $conn->executeStatement($query);
 
         $query = '
-ALTER TABLE ' . Config::dbPrefix() . 'image_tag
+ALTER TABLE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'image_tag
   ADD INDEX image_tag_i1(tag_id)
 ;';
         $conn->executeStatement($query);

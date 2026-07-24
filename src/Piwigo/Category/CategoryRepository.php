@@ -302,7 +302,14 @@ final class CategoryRepository extends AbstractRepository
         }
 
         if ($orderBySql !== '') {
-            $qb->orderBy($orderBySql);
+            // $orderBySql is CurrentConfig::orderBy()'s own raw "ORDER BY
+            // ..." SQL-fragment string (or a caller-supplied equivalent) --
+            // every other real consumer concatenates it directly into a raw
+            // SQL string, but QueryBuilder::orderBy() prepends its own
+            // "ORDER BY " keyword, so the prefix must be stripped here or
+            // the query becomes "ORDER BY ORDER BY ..." (a real syntax
+            // error, caught live via CategoryServiceTest).
+            $qb->orderBy(str_replace('ORDER BY ', '', $orderBySql));
         }
 
         $ids = $qb->executeQuery()
@@ -1278,7 +1285,7 @@ SELECT representative_picture_id
 
     /**
      * First/last photo creation date per category (`CategoryCatsRenderer`'s
-     * "from/to" date-range display, gated by `Config::displayFromto()`).
+     * "from/to" date-range display, gated by `CurrentConfig::displayFromto()`).
      * $permissionCondition is an already-built SQL fragment, same shape as
      * {@see findRandomRepresentativeIdAmongSubcategories()}.
      *

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -98,7 +98,7 @@ final class RedirectService implements RedirectServiceInterface
 
         if (! Lang::isLangInfoInitialized() || ! isset($template)) {
             $paths = CurrentPaths::get();
-            $guest_id = Config::guestId();
+            $guest_id = CurrentConfig::guestId();
             $user = self::userService()->buildUser($guest_id, true);
             CurrentUser::set(User::fromUserArray($user));
             Lang::load('common.lang');
@@ -153,7 +153,7 @@ final class RedirectService implements RedirectServiceInterface
     public function redirect(string $url, string $msg = '', int $refresh_time = 0): never
     {
         // with RefeshTime <> 0, only html must be used
-        if (Config::defaultRedirectMethod() === 'http'
+        if (CurrentConfig::defaultRedirectMethod() === 'http'
             and $refresh_time === 0
             and ! headers_sent()
         ) {

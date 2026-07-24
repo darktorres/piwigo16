@@ -33,14 +33,14 @@ final class RatingUserPageRenderer
             $filter_min_rates = (int) $_GET['f_min_rates'];
         }
 
-        $consensus_top_number = \Piwigo\Config\Config::topNumber();
+        $consensus_top_number = \Piwigo\Config\CurrentConfig::topNumber();
         if (isset($_GET['consensus_top_number']) && is_numeric($_GET['consensus_top_number'])) {
             $consensus_top_number = (int) $_GET['consensus_top_number'];
         }
 
         // build users
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
         $rate_repository = new RateRepository(DbConnection::build());
 
         $users_by_id = [];
@@ -51,7 +51,7 @@ final class RatingUserPageRenderer
             ];
         }
 
-        $rate_items = \Piwigo\Config\Config::rateItems();
+        $rate_items = \Piwigo\Config\CurrentConfig::rateItems();
 
         $by_user_rating_model = [
             'rates' => [],
@@ -197,7 +197,7 @@ final class RatingUserPageRenderer
             'F_ACTION' => $urlService->getRootUrl() . 'admin.php',
             'F_MIN_RATES' => $filter_min_rates,
             'CONSENSUS_TOP_NUMBER' => $consensus_top_number,
-            'available_rates' => \Piwigo\Config\Config::rateItems(),
+            'available_rates' => \Piwigo\Config\CurrentConfig::rateItems(),
             'ratings' => $by_user_ratings,
             'image_urls' => $image_urls,
             'TN_WIDTH' => ImageStdParams::get_by_type(ImageStdParams::SQUARE)->sizing->ideal_size[0],

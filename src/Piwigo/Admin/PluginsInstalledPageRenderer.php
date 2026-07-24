@@ -256,7 +256,7 @@ final class PluginsInstalledPageRenderer
                 'ADMIN_PAGE_TITLE' => Lang::t('Plugins'),
                 'view_selector' => new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository($conn))
                     ->getParam('plugin-manager-view', 'classic'),
-                'CONF_ENABLE_EXTENSIONS_INSTALL' => \Piwigo\Config\Config::enableExtensionsInstall(),
+                'CONF_ENABLE_EXTENSIONS_INSTALL' => \Piwigo\Config\CurrentConfig::enableExtensionsInstall(),
             ]
         );
 

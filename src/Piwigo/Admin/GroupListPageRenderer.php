@@ -69,7 +69,7 @@ final class GroupListPageRenderer
         $group_counter = 0;
 
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
         foreach ($groups as $row) {
             $members = $group_repo->findMemberUsernames($row['id'], $user_fields['username'], $user_fields['id']);

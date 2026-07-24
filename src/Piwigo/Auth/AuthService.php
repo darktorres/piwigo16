@@ -27,8 +27,8 @@ use Piwigo\Session\SessionService;
  * carry forward since this class doesn't exist yet on this branch.
  *
  * calculate_auto_login_key()'s own secret_key read was already correct in
- * the original (global \Piwigo\Config\Config::secretKey(), never Piwigo\Config\Config)
- * -- preserved as-is, not the Config::secretKey() bug found and fixed
+ * the original (global \Piwigo\Config\CurrentConfig::secretKey(), never Piwigo\Config\Config)
+ * -- preserved as-is, not the CurrentConfig::secretKey() bug found and fixed
  * elsewhere this phase (CsrfService/EphemeralKeyService).
  */
 final readonly class AuthService
@@ -58,7 +58,7 @@ final readonly class AuthService
 
         // see validate_mail_address() for why this is string=>string
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
         $found = $this->repo->findUsernameAndPassword(
             $userId,
@@ -78,7 +78,7 @@ final readonly class AuthService
         $data = $time . $userId . $username;
         // secret_key is a random string generated at install time (see
         // install/index.php), always a string in a working install
-        $secret_key = \Piwigo\Config\Config::secretKey();
+        $secret_key = \Piwigo\Config\CurrentConfig::secretKey();
         $key = base64_encode(hash_hmac('sha256', $data, $secret_key . $found['password'], true));
 
         return [
@@ -108,8 +108,8 @@ final readonly class AuthService
         // include/config_default.inc.php, but once persisted to the config
         // DB table both come back as raw strings (see load_conf_from_db())
         // -- accept either.
-        $remember_me_name = \Piwigo\Config\Config::rememberMeName();
-        $remember_me_length = \Piwigo\Config\Config::rememberMeLength();
+        $remember_me_name = \Piwigo\Config\CurrentConfig::rememberMeName();
+        $remember_me_length = \Piwigo\Config\CurrentConfig::rememberMeLength();
 
         // New default login and register pages, if users changes languages
         // and succesfully logs in we want to update the userpref language
@@ -133,7 +133,7 @@ final readonly class AuthService
             ]);
         }
 
-        if ($rememberMe && \Piwigo\Config\Config::authorizeRemembering()) {
+        if ($rememberMe && \Piwigo\Config\CurrentConfig::authorizeRemembering()) {
             $now = time();
             $calculated = $this->calculateAutoLoginKey($userId, $now);
             if ($calculated['key'] !== false) {
@@ -178,8 +178,8 @@ final readonly class AuthService
 
         // see logUser() for why these accept both the config-default
         // scalar type and the DB-persisted string form
-        $remember_me_name = \Piwigo\Config\Config::rememberMeName();
-        $remember_me_length = \Piwigo\Config\Config::rememberMeLength();
+        $remember_me_name = \Piwigo\Config\CurrentConfig::rememberMeName();
+        $remember_me_length = \Piwigo\Config\CurrentConfig::rememberMeLength();
 
         if (isset($_COOKIE[$remember_me_name])) {
             $remember_me_cookie = $_COOKIE[$remember_me_name];
@@ -265,7 +265,7 @@ final readonly class AuthService
         }
         // see logUser() for why this accepts both the config-default
         // scalar type and the DB-persisted string form
-        $remember_me_name = \Piwigo\Config\Config::rememberMeName();
+        $remember_me_name = \Piwigo\Config\CurrentConfig::rememberMeName();
         setcookie($remember_me_name, '', [
             'expires' => 0,
             'path' => $this->cookieService->cookiePath(),
@@ -384,7 +384,7 @@ final readonly class AuthService
 
         // see UserService::validateMailAddress() for why this is string=>string
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
         return $this->repo->findByUsernameOrEmail(
             $usernameOrEmail,
@@ -452,7 +452,7 @@ final readonly class AuthService
     {
         // see UserService::validateMailAddress() for why this is string=>string
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
         $authKey = is_string($authKey) ? $authKey : '';
 
@@ -566,7 +566,7 @@ final readonly class AuthService
         // auth_key_duration defaults to 3*24*60*60 (int) in
         // include/config_default.inc.php, but once persisted to the config DB
         // table it comes back as a raw string (see load_conf_from_db())
-        $auth_key_duration = \Piwigo\Config\Config::authKeyDuration();
+        $auth_key_duration = \Piwigo\Config\CurrentConfig::authKeyDuration();
 
         if ($auth_key_duration === 0) {
             return false;
@@ -638,8 +638,8 @@ final readonly class AuthService
         $activation_key = SessionService::get()->generateKey(20);
 
         $duration = $firstLogin
-        ? \Piwigo\Config\Config::passwordActivationDuration()
-        : \Piwigo\Config\Config::passwordResetDuration();
+        ? \Piwigo\Config\CurrentConfig::passwordActivationDuration()
+        : \Piwigo\Config\CurrentConfig::passwordResetDuration();
         $expire = (clone Env::now())->modify('+' . $duration . ' seconds');
 
         $this->repo->setActivationKey($userId, $this->passwordService->hash($activation_key), $expire);
@@ -703,7 +703,7 @@ final readonly class AuthService
         // password_reset_code_duration defaults to 5*60 (int) in
         // include/config_default.inc.php, but once persisted to the config DB
         // table it comes back as a raw string (see load_conf_from_db())
-        $password_reset_code_duration = \Piwigo\Config\Config::passwordResetCodeDuration();
+        $password_reset_code_duration = \Piwigo\Config\CurrentConfig::passwordResetCodeDuration();
         $code = PwgTOTP::generateCode($secret, min($password_reset_code_duration, 900)); // max 15 minutes
 
         return [
@@ -719,7 +719,7 @@ final readonly class AuthService
     {
 
         // see generateUserCode() for why this needs numeric narrowing
-        $password_reset_code_duration = \Piwigo\Config\Config::passwordResetCodeDuration();
+        $password_reset_code_duration = \Piwigo\Config\CurrentConfig::passwordResetCodeDuration();
         return PwgTOTP::verifyCode($code, $secret, min($password_reset_code_duration, 900), 1);
     }
 }

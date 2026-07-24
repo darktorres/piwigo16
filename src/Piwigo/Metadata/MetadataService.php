@@ -67,7 +67,7 @@ final readonly class MetadataService
                     foreach (array_keys($map, $iptcKey, true) as $pwgKey) {
                         $result[$pwgKey] = $value;
 
-                        if (! \Piwigo\Config\Config::allowHtmlInMetadata()) {
+                        if (! \Piwigo\Config\CurrentConfig::allowHtmlInMetadata()) {
                             // photo origin is unsecured (user upload) --
                             // strip HTML to avoid XSS.
                             $result[$pwgKey] = strip_tags($result[$pwgKey]);
@@ -204,7 +204,7 @@ final readonly class MetadataService
             }
         }
 
-        if (! \Piwigo\Config\Config::allowHtmlInMetadata()) {
+        if (! \Piwigo\Config\CurrentConfig::allowHtmlInMetadata()) {
             foreach ($result as $key => $value) {
                 // photo origin is unsecured (user upload) -- strip HTML to
                 // avoid XSS.
@@ -254,7 +254,7 @@ final readonly class MetadataService
     public function getSyncIptcData(string $file): array
     {
 
-        $map = $this->stringMap(\Piwigo\Config\Config::useIptcMapping());
+        $map = $this->stringMap(\Piwigo\Config\CurrentConfig::useIptcMapping());
 
         $iptc = $this->getIptcData($file, $map);
 
@@ -293,7 +293,7 @@ final readonly class MetadataService
     public function getSyncExifData(string $file): array
     {
 
-        $map = $this->stringMap(\Piwigo\Config\Config::useExifMapping());
+        $map = $this->stringMap(\Piwigo\Config\CurrentConfig::useExifMapping());
 
         $exif = $this->getExifData($file, $map);
 
@@ -341,18 +341,18 @@ final readonly class MetadataService
 
         $updateFields = ['filesize', 'width', 'height'];
 
-        if (\Piwigo\Config\Config::useExif()) {
+        if (\Piwigo\Config\CurrentConfig::useExif()) {
             $updateFields = array_merge(
                 $updateFields,
-                array_map(strval(...), array_keys($this->stringMap(\Piwigo\Config\Config::useExifMapping()))),
+                array_map(strval(...), array_keys($this->stringMap(\Piwigo\Config\CurrentConfig::useExifMapping()))),
                 ['latitude', 'longitude']
             );
         }
 
-        if (\Piwigo\Config\Config::useIptc()) {
+        if (\Piwigo\Config\CurrentConfig::useIptc()) {
             $updateFields = array_merge(
                 $updateFields,
-                array_map(strval(...), array_keys($this->stringMap(\Piwigo\Config\Config::useIptcMapping())))
+                array_map(strval(...), array_keys($this->stringMap(\Piwigo\Config\CurrentConfig::useIptcMapping())))
             );
         }
 
@@ -424,11 +424,11 @@ final readonly class MetadataService
             $file = CurrentPaths::get()->root . $path;
         }
 
-        if (\Piwigo\Config\Config::useExif()) {
+        if (\Piwigo\Config\CurrentConfig::useExif()) {
             $infos = array_merge($infos, $this->getSyncExifData($file));
         }
 
-        if (\Piwigo\Config\Config::useIptc()) {
+        if (\Piwigo\Config\CurrentConfig::useIptc()) {
             $infos = array_merge($infos, $this->getSyncIptcData($file));
         }
 
@@ -598,7 +598,7 @@ final readonly class MetadataService
     public function metadataNormalizeKeywordsString(string $keywordsString): string
     {
 
-        $separatorRegex = \Piwigo\Config\Config::metadataKeywordSeparatorRegex();
+        $separatorRegex = \Piwigo\Config\CurrentConfig::metadataKeywordSeparatorRegex();
 
         $keywordsString = $separatorRegex === '' ? $keywordsString : preg_replace($separatorRegex, ',', $keywordsString);
         assert($keywordsString !== null);

@@ -208,12 +208,12 @@ SELECT id, name, id_uppercat
             ]
         );
 
-        $template->assign('delay_before_autoOpen', \Piwigo\Config\Config::albumMoveDelayBeforeAutoOpening());
+        $template->assign('delay_before_autoOpen', \Piwigo\Config\CurrentConfig::albumMoveDelayBeforeAutoOpening());
 
         // Known limitation: site-wide only -- Users\PreferencesService
         // could support a real per-user override of the default new-album
         // position, but none exists today.
-        $template->assign('POS_PREF', \Piwigo\Config\Config::newcatDefaultPosition());
+        $template->assign('POS_PREF', \Piwigo\Config\CurrentConfig::newcatDefaultPosition());
 
         // +-------------------------------------------------------------------+
         // |                          Album display                            |
@@ -323,7 +323,7 @@ SELECT
                     ->getToken(),
                 'nb_albums' => count($allAlbum),
                 'ADMIN_PAGE_TITLE' => Lang::t('Albums'),
-                'light_album_manager' => ($albums_counter > \Piwigo\Config\Config::lightAlbumManagerThreshold()) ? 1 : 0,
+                'light_album_manager' => ($albums_counter > \Piwigo\Config\CurrentConfig::lightAlbumManagerThreshold()) ? 1 : 0,
             ]
         );
 

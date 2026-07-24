@@ -614,8 +614,8 @@ DELETE
             } else {
                 $nb_images = is_numeric($_GET['display']) ? intval($_GET['display']) : 0;
             }
-        } elseif (in_array(\Piwigo\Config\Config::batchManagerImagesPerPageGlobal(), [20, 50, 100], true)) {
-            $nb_images = \Piwigo\Config\Config::batchManagerImagesPerPageGlobal();
+        } elseif (in_array(\Piwigo\Config\CurrentConfig::batchManagerImagesPerPageGlobal(), [20, 50, 100], true)) {
+            $nb_images = \Piwigo\Config\CurrentConfig::batchManagerImagesPerPageGlobal();
         } else {
             $nb_images = 20;
         }
@@ -643,14 +643,9 @@ DELETE
                 $order_by_fields = array_merge($duplicatesOnFields, ['id']);
                 $order_by = ' ORDER BY ' . join(', ', $order_by_fields);
             } else {
-                // Config::orderBy() (the typed SCHEMA accessor) models a
-                // structured {field,dir}[] shape that no real code writes --
-                // 'order_by' is actually stored as a raw "ORDER BY ..." SQL
-                // fragment (see ConfigDb::loadConfFromDb()'s own docblock),
-                // so read it via the untyped bag like ConfigService::
-                // confGetParam() does for keys without a compatible accessor.
-                $order_by_conf = \Piwigo\Config\Config::all()['order_by'] ?? null;
-                $order_by = is_string($order_by_conf) ? $order_by_conf : '';
+                // order_by is a raw "ORDER BY ..." SQL fragment string --
+                // see CurrentConfig::orderBy()'s own docblock.
+                $order_by = \Piwigo\Config\CurrentConfig::orderBy();
             }
 
             $query = '
@@ -660,8 +655,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
             if ($is_category) {
                 $category_info = self::categoryService($conn)->getCategoryInfo($filter_category_id);
 
-                $order_by_inside_category_conf = \Piwigo\Config\Config::all()['order_by_inside_category'] ?? null;
-                $order_by = is_string($order_by_inside_category_conf) ? $order_by_inside_category_conf : '';
+                $order_by = \Piwigo\Config\CurrentConfig::orderByInsideCategory();
                 $category_image_order = $category_info !== null ? ($category_info['image_order'] ?? null) : null;
                 if (is_string($category_image_order) && $category_image_order !== '') {
                     $order_by = ' ORDER BY ' . $category_image_order;

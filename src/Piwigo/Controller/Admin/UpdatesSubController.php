@@ -68,7 +68,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        if (! \Piwigo\Config\Config::enableExtensionsInstall() and ! \Piwigo\Config\Config::enableCoreUpdate()) {
+        if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall() and ! \Piwigo\Config\CurrentConfig::enableCoreUpdate()) {
             new HtmlService()
                 ->fatalError('update system is disabled');
         }

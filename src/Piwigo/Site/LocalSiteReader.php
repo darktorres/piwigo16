@@ -37,8 +37,8 @@ final class LocalSiteReader
         // $conf global (flip_file_ext/flip_picture_ext never DB-persist --
         // pure per-instance derived state), now a private property computed
         // once per instance instead.
-        $this->flip_file_ext = array_flip(\Piwigo\Config\Config::fileExtensions());
-        $this->flip_picture_ext = array_flip(\Piwigo\Config\Config::pictureExtensions());
+        $this->flip_file_ext = array_flip(\Piwigo\Config\CurrentConfig::fileExtensions());
+        $this->flip_picture_ext = array_flip(\Piwigo\Config\CurrentConfig::pictureExtensions());
     }
 
     /**
@@ -78,7 +78,7 @@ final class LocalSiteReader
 
     /**
      * Returns an array with all file system files according to
-     * Config::fileExtensions() and Config::pictureExtensions()
+     * CurrentConfig::fileExtensions() and CurrentConfig::pictureExtensions()
      * @param string $path recurse in this directory
      * @return array<string, array<string, mixed>> like "pic.jpg"=>array('representative_ext'=>'jpg' ... )
      */
@@ -109,7 +109,7 @@ final class LocalSiteReader
                             'representative_ext' => $representative_ext,
                         ];
 
-                        if (\Piwigo\Config\Config::isFormatsEnabled()) {
+                        if (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
                             $fs[$path . '/' . $node]['formats'] = $this->get_formats($path, $filename_wo_ext);
                         }
                     }
@@ -189,7 +189,7 @@ final class LocalSiteReader
     public function get_representative_ext(string $path, string $filename_wo_ext): ?string
     {
         $base_test = $path . '/pwg_representative/' . $filename_wo_ext . '.';
-        foreach (\Piwigo\Config\Config::pictureExtensions() as $ext) {
+        foreach (\Piwigo\Config\CurrentConfig::pictureExtensions() as $ext) {
             $test = $base_test . $ext;
             if (is_file($test)) {
                 return $ext;
@@ -207,7 +207,7 @@ final class LocalSiteReader
 
         $base_test = $path . '/pwg_format/' . $filename_wo_ext . '.';
 
-        foreach (\Piwigo\Config\Config::formatExtensions() as $ext) {
+        foreach (\Piwigo\Config\CurrentConfig::formatExtensions() as $ext) {
             $test = $base_test . $ext;
 
             if (is_file($test)) {

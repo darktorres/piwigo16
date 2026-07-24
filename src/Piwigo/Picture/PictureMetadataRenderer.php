@@ -32,8 +32,8 @@ final class PictureMetadataRenderer
 
         $metadataService = new MetadataService(new MetadataRepository(DbConnection::build()));
 
-        if ((\Piwigo\Config\Config::showExif()) and function_exists('exif_read_data')) {
-            $showExifFields = \Piwigo\Config\Config::showExifFields();
+        if ((\Piwigo\Config\CurrentConfig::showExif()) and function_exists('exif_read_data')) {
+            $showExifFields = \Piwigo\Config\CurrentConfig::showExifFields();
 
             $exifMapping = [];
             foreach ($showExifFields as $field) {
@@ -72,8 +72,8 @@ final class PictureMetadataRenderer
             }
         }
 
-        if (\Piwigo\Config\Config::showIptc()) {
-            $showIptcMapping = \Piwigo\Config\Config::showIptcMapping();
+        if (\Piwigo\Config\CurrentConfig::showIptc()) {
+            $showIptcMapping = \Piwigo\Config\CurrentConfig::showIptcMapping();
 
             $iptc = $metadataService->getIptcData($picture['current']['src_image']->get_path(), $showIptcMapping, ', ');
 

@@ -50,10 +50,12 @@ final class MenubarPageRenderer
         $menu->load_registered_blocks();
         $reg_blocks = $menu->get_registered_blocks();
 
-        $mb_conf = \Piwigo\Config\Config::all()['blk_' . $menu->get_id()] ?? null;
-        if (is_string($mb_conf)) {
-            $mb_conf = unserialize($mb_conf);
-        }
+        // blk_menubar is the only real BlockManager id anywhere in this
+        // codebase (confirmed by grepping every `new BlockManager(...)`
+        // call site) -- a real CurrentConfig property instead of the
+        // former dynamic 'blk_' . $id bag key.
+        $mb_conf_raw = \Piwigo\Config\CurrentConfig::blkMenubar();
+        $mb_conf = $mb_conf_raw !== '' ? unserialize($mb_conf_raw) : [];
         if (! is_array($mb_conf)) {
             $mb_conf = [];
         }

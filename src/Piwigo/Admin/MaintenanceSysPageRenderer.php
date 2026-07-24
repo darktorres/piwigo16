@@ -42,7 +42,7 @@ final class MaintenanceSysPageRenderer
             if (isset($_GET['method']) && $_GET['method'] === 'pwg.activity_sys.getList') {
                 $data = [];
 
-                $user_fields = \Piwigo\Config\Config::userFields();
+                $user_fields = \Piwigo\Config\CurrentConfig::userFields();
                 $username_field = $user_fields['username'];
                 $id_field = $user_fields['id'];
 

@@ -11,7 +11,7 @@ namespace Piwigo\Tests\Integration {
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -38,11 +38,11 @@ final class ActivityServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        Config::override('php_extension_in_urls', false);
+        CurrentConfig::setPhpExtensionInUrls(false);
         CurrentUser::set(User::fromUserArray(['id' => 1]));
         CurrentUser::markRealUserResolved();
         unset($_REQUEST['method'], $_REQUEST['action'], $_GET['page'], $_POST['destination_tag'], $_SESSION['connected_with']);

@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
@@ -39,13 +39,13 @@ final class FileCombiner
     public static function clear_combined_files(): void
     {
         $root = CurrentPaths::get()->root;
-        $dir = opendir($root . Config::combinedDir());
+        $dir = opendir($root . CurrentConfig::combinedDir());
         if ($dir === false) {
             return;
         }
         while ((bool) ($file = readdir($dir))) {
             if (\Piwigo\Core\StringHelper::getExtension($file) === 'js' || \Piwigo\Core\StringHelper::getExtension($file) === 'css') {
-                unlink($root . Config::combinedDir() . $file);
+                unlink($root . CurrentConfig::combinedDir() . $file);
             }
         }
         closedir($dir);
@@ -69,7 +69,7 @@ final class FileCombiner
     public function combine(): array
     {
         $force = false;
-        if (\Piwigo\Auth\AccessControl::isAdmin() && ($this->is_css || ! \Piwigo\Config\Config::templateCompileCheck())) {
+        if (\Piwigo\Auth\AccessControl::isAdmin() && ($this->is_css || ! \Piwigo\Config\CurrentConfig::templateCompileCheck())) {
             $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && is_string($_SERVER['HTTP_CACHE_CONTROL']) && str_contains($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
               || (isset($_SERVER['HTTP_PRAGMA']) && is_string($_SERVER['HTTP_PRAGMA']) && (bool) strpos($_SERVER['HTTP_PRAGMA'], 'no-cache'));
         }
@@ -86,14 +86,14 @@ final class FileCombiner
                 $result[] = $combinable;
                 continue;
             }
-            if (! \Piwigo\Config\Config::templateCombineFiles()) {
+            if (! \Piwigo\Config\CurrentConfig::templateCombineFiles()) {
                 $this->flush_pending($result, $pending, $key, $force);
                 $key = $ini_key;
             }
 
             $key[] = $combinable->path;
             $key[] = (string) $combinable->version;
-            if (\Piwigo\Config\Config::templateCompileCheck()) {
+            if (\Piwigo\Config\CurrentConfig::templateCompileCheck()) {
                 $key[] = (string) filemtime($this->paths->root . $combinable->path);
             }
             $pending[] = $combinable;
@@ -113,7 +113,7 @@ final class FileCombiner
     {
         if (count($pending) > 1) {
             $key = join('>', $key);
-            $file = Config::combinedDir() . base_convert(hash('crc32b', $key), 16, 36) . '.' . $this->type;
+            $file = CurrentConfig::combinedDir() . base_convert(hash('crc32b', $key), 16, 36) . '.' . $this->type;
             if ($force || ! file_exists($this->paths->root . $file)) {
                 $output = '';
                 $header = '';
@@ -155,10 +155,10 @@ final class FileCombiner
             $file = null;
             if (! $return_content) {
                 $key = [$combinable->path, $combinable->version];
-                if (\Piwigo\Config\Config::templateCompileCheck()) {
+                if (\Piwigo\Config\CurrentConfig::templateCompileCheck()) {
                     $key[] = filemtime($this->paths->root . $combinable->path);
                 }
-                $file = Config::combinedDir() . 't' . base_convert(hash('crc32b', implode(',', $key)), 16, 36) . '.' . $this->type;
+                $file = CurrentConfig::combinedDir() . 't' . base_convert(hash('crc32b', implode(',', $key)), 16, 36) . '.' . $this->type;
                 if (! $force && file_exists($this->paths->root . $file)) {
                     $combinable->path = $file;
                     $combinable->version = false;

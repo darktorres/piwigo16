@@ -10,6 +10,7 @@ use Pest\Browser\Api\Webpage;
 use Pest\Browser\Playwright\Page;
 use Pest\Browser\Support\GuessLocator;
 use PHPUnit\Framework\ExpectationFailedException;
+use Piwigo\Cache\CachePools;
 use ReflectionMethod;
 use ReflectionProperty;
 
@@ -589,7 +590,7 @@ final class BrowserTestHelpers
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
         $status = $private ? 'private' : 'public';
         $db->query(sprintf("UPDATE %scategories SET status = '%s' WHERE id = %d", $prefix, $status, $categoryId));
-        // guest_id defaults to 2 (Config::guestId()) -- this fixture never
+        // guest_id defaults to 2 (CurrentConfig::guestId()) -- this fixture never
         // overrides it.
         $forbidden = $private ? (string) $categoryId : '0';
         $db->query(sprintf("UPDATE %suser_cache SET forbidden_categories = '%s' WHERE user_id = 2", $prefix, $forbidden));
@@ -709,6 +710,16 @@ final class BrowserTestHelpers
             ));
         }
         $db->close();
+
+        // This DB write bypasses ConfigService entirely, so the live
+        // Apache-served app's own CachePools::config() (filesystem-backed
+        // in this environment, real cross-process storage, not a
+        // per-process optimization) would otherwise keep serving whatever
+        // config it cached before this write -- same gap
+        // IntegrationTestCase::loadFixture()/setUp() close for the
+        // PHPUnit/Pest process, but that class isn't in play for Browser
+        // tests, which hit the real server over HTTP.
+        CachePools::config()->clear();
     }
 
     /** Reverts setCustomLogo() -- deletes the file and the 2 config keys it set (leaves use_standard_pages, already true by default). */
@@ -730,6 +741,8 @@ final class BrowserTestHelpers
             $prefix
         ));
         $db->close();
+
+        CachePools::config()->clear();
     }
 
     /** Generates a tiny solid-color PNG (via GD), returned as raw binary content -- for CustomLogoController tests. */

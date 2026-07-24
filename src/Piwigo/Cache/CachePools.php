@@ -32,11 +32,15 @@ use Psr\Cache\CacheItemPoolInterface;
 final class CachePools
 {
     /**
-     * Config::$data is already an in-process static (ConfigLoader/
-     * ConfigService, P13/P23 batch 1) -- this pool is for cross-*process*
-     * reuse (APCu/Redis persist between requests; a plain PHP static
-     * doesn't), for whichever future config read is expensive enough to
-     * need it. No real consumer yet.
+     * CurrentConfig's own properties are already an in-process static
+     * (ConfigLoader/ConfigService, P13/P23 batch 1) -- this pool is for
+     * cross-*process* reuse (APCu/Redis/filesystem persist between
+     * requests; a plain PHP static doesn't). Real consumer: ConfigService::
+     * allRowsFromCacheOrDb(), caching the ~280-row param => value map that
+     * loadConfFromDb() would otherwise re-hydrate via Doctrine ORM on every
+     * request. No TTL -- ConfigService's own confUpdateParam()/
+     * confDeleteParam() clear this pool after every real write instead of
+     * relying on expiry.
      */
     public static function config(): CacheItemPoolInterface
     {

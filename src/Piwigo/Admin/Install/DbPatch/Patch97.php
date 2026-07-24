@@ -17,7 +17,7 @@ use Piwigo\Db\Tables;
 
 /**
  * Former install/db/97-database.php (P23 sub-batch 8g-1). default_user_id
- * is read via LegacyFileConf::read() -- Config::defaultUserId() doesn't
+ * is read via LegacyFileConf::read() -- CurrentConfig::defaultUserId() doesn't
  * see a site's local/config/config.inc.php override on this path (same
  * reasoning as the rest of this file family).
  */

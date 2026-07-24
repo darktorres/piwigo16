@@ -20,7 +20,6 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Admin\AdminShell;
-use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AdminContext;
@@ -32,15 +31,6 @@ $paths = Paths::fromRoot(dirname(__DIR__));
 AdminContext::mark();
 
 \Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
-
-// P21 boots the Kernel/DI container on the admin.php path too -- needed by
-// AdminDispatcher (inside AdminShell) to resolve AdminSubControllerInterface
-// services. Safe to run after RequestBootstrap::bootEntryPoint()'s own
-// legacy config/db/session/user bootstrap: every attachGlobals() this
-// calls is additive/idempotent (CurrentUser/PageState/Lang all bridge onto
-// or read from the *existing* $GLOBALS state rather than overwriting it --
-// see their own docblocks), same ordering index.php already uses.
-CommonBootstrap::run($paths);
 
 new AdminShell(new RedirectService(), new UrlService(new HtmlService()), CurrentConfigService::get(), $paths)
     ->run();

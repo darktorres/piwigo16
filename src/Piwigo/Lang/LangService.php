@@ -31,7 +31,7 @@ use Piwigo\Db\DbConnection;
  * directories under the core `language/` tree before it's composed into
  * any path, blocking path traversal (`../../etc/passwd`) or reads of
  * arbitrary files outside a plugin's language directory. There is no
- * `Config::availableLanguages()` accessor to validate against (checked:
+ * `CurrentConfig::availableLanguages()` accessor to validate against (checked:
  * not in the 277-key SCHEMA) -- the filesystem check is both simpler and
  * authoritative (a "locale" with no matching core directory isn't a real,
  * loadable locale regardless of what a DB row claims).

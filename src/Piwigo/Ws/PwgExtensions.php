@@ -100,7 +100,7 @@ final class PwgExtensions
             return new PwgError(403, Lang::t('Webmaster status is required.'));
         }
 
-        if (! \Piwigo\Config\Config::enableExtensionsInstall() and $params['action'] === 'delete') {
+        if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall() and $params['action'] === 'delete') {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -151,7 +151,7 @@ final class PwgExtensions
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (! \Piwigo\Config\Config::enableExtensionsInstall() and $params['action'] === 'delete') {
+        if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall() and $params['action'] === 'delete') {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -193,7 +193,7 @@ final class PwgExtensions
      */
     public static function update(array $params, PwgServer &$service): PwgError|string
     {
-        if (! \Piwigo\Config\Config::enableExtensionsInstall()) {
+        if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
             return new PwgError(401, 'Piwigo extensions install/update system is disabled');
         }
 
@@ -334,7 +334,7 @@ final class PwgExtensions
             return new PwgError(403, 'Invalid security token');
         }
 
-        $updates_ignored = \Piwigo\Config\Config::updatesIgnored();
+        $updates_ignored = \Piwigo\Config\CurrentConfig::updatesIgnored();
 
         // Reset ignored extension
         if ($params['reset']) {
@@ -347,7 +347,7 @@ final class PwgExtensions
                     'languages' => [],
                 ];
             }
-            \Piwigo\Config\Config::override('updates_ignored', $updates_ignored);
+            \Piwigo\Config\CurrentConfig::setUpdatesIgnored($updates_ignored);
 
             \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('updates_ignored', serialize($updates_ignored));
             unset($_SESSION['extensions_need_update']);
@@ -363,7 +363,7 @@ final class PwgExtensions
             $updates_ignored[$params['type']][] = $params['id'];
         }
 
-        \Piwigo\Config\Config::override('updates_ignored', $updates_ignored);
+        \Piwigo\Config\CurrentConfig::setUpdatesIgnored($updates_ignored);
         \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('updates_ignored', serialize($updates_ignored));
         unset($_SESSION['extensions_need_update']);
         return true;

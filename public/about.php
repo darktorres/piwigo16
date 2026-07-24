@@ -16,7 +16,6 @@ declare(strict_types=1);
 // P22 controller's own root-file shape.
 require __DIR__ . '/../vendor/autoload.php';
 
-use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Bootstrap\RequestPipeline;
 use Piwigo\Core\Paths;
 use Piwigo\Http\RequestFactory;
@@ -25,8 +24,6 @@ use Piwigo\Http\ResponseEmitter;
 // ----------------------------------------------------------- include
 $paths = Paths::fromRoot(dirname(__DIR__));
 \Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
-
-CommonBootstrap::run($paths);
 
 $response = RequestPipeline::handle(RequestFactory::fromGlobals());
 new ResponseEmitter()

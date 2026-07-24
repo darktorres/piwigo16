@@ -17,8 +17,8 @@ use Piwigo\Db\Tables;
 /**
  * Former install/db/106-database.php (P23 sub-batch 8g-2). Reads the
  * file-config order_by/order_by_inside_category values via
- * LegacyFileConf::read() to seed the DB rows -- Config::orderBy()/
- * Config::orderByInsideCategory() don't see a site's
+ * LegacyFileConf::read() to seed the DB rows -- CurrentConfig::orderBy()/
+ * CurrentConfig::orderByInsideCategory() don't see a site's
  * local/config/config.inc.php override on this path (same reasoning as
  * ConfigurationSubController::orderByIsLocal()).
  *
@@ -26,8 +26,8 @@ use Piwigo\Db\Tables;
  * sibling patches): its empty-string-to-NULL coercion isn't confirmed
  * safe for this specific pair -- $orderBy/$orderByInsideCategory can be
  * genuinely `''` (no site override configured), and this legacy DB row's
- * exact relationship to the modern array-shaped Config::orderBy()/
- * Config::orderByInsideCategory() wasn't traced far enough to rule out
+ * exact relationship to the modern array-shaped CurrentConfig::orderBy()/
+ * CurrentConfig::orderByInsideCategory() wasn't traced far enough to rule out
  * a NULL-vs-'' distinction mattering. Bound directly instead, preserving
  * the original raw SQL's literal empty-string behavior exactly.
  */

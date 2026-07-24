@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Session;
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Db\DbConnection;
 
@@ -80,7 +80,7 @@ final class SessionService
      */
     public function getRemoteAddrSessionHash(): string
     {
-        return self::remoteAddrHash(Config::sessionUseIpAddress());
+        return self::remoteAddrHash(CurrentConfig::sessionUseIpAddress());
     }
 
     /**
@@ -90,9 +90,9 @@ final class SessionService
      * P23 batch 8f (i.php): extracted so SessionUserResolver (the i.php
      * fast path) can share the exact composite-key hash logic while
      * sourcing the policy bit from the legacy global $conf instead of
-     * Config:: -- on that fast-bootstrap path Config::$data is populated
+     * CurrentConfig:: -- on that fast-bootstrap path CurrentConfig::$data is populated
      * from ConfigLoader defaults/env only, never from local/config
-     * overrides, so Config::sessionUseIpAddress() would not be
+     * overrides, so CurrentConfig::sessionUseIpAddress() would not be
      * authoritative there.
      */
     public static function remoteAddrHash(bool $useIpAddress): string
@@ -153,7 +153,7 @@ final class SessionService
      */
     public function sessionGc(): int
     {
-        return $this->repo->gc(Config::sessionLength());
+        return $this->repo->gc(CurrentConfig::sessionLength());
     }
 
     /**

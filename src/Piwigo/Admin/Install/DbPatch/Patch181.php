@@ -21,10 +21,10 @@ use Piwigo\Db\Tables;
  * ArrayHelper::safeUnserialize() (real fix for the broken-at-HEAD
  * coupling, same as Patch177). The former `isset($conf['filters_views'])`
  * existence check (Legacy Coupling Retirement Phase 8, 8d) moved onto a
- * direct row fetch for the same reason as Patch104's: Config::has() can't
- * distinguish "no DB row" from "SCHEMA default only" now that Config::$data
+ * direct row fetch for the same reason as Patch104's: CurrentConfig::has() can't
+ * distinguish "no DB row" from "SCHEMA default only" now that CurrentConfig::$data
  * is pre-populated with every SCHEMA default at boot. default_filters_views
- * is read via LegacyFileConf::read() -- Config::defaultFiltersViews()
+ * is read via LegacyFileConf::read() -- CurrentConfig::defaultFiltersViews()
  * doesn't see a site's local/config/config.inc.php override on this path
  * (same reasoning as the rest of this file family).
  */

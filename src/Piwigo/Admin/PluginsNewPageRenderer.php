@@ -50,7 +50,7 @@ final class PluginsNewPageRenderer
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        if (! \Piwigo\Config\Config::enableExtensionsInstall()) {
+        if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
             new \Piwigo\Html\HtmlService()
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }

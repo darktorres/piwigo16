@@ -91,7 +91,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $isEmpty = $mailAddress === null || $mailAddress === '';
         if (
             $isEmpty
-            && ! (\Piwigo\Config\Config::obligatoryUserMailAddress() && in_array(\Piwigo\Core\PageFilterHelper::scriptBasename(), ['register', 'profile'], true))
+            && ! (\Piwigo\Config\CurrentConfig::obligatoryUserMailAddress() && in_array(\Piwigo\Core\PageFilterHelper::scriptBasename(), ['register', 'profile'], true))
         ) {
             return '';
         }
@@ -102,7 +102,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         if (\Piwigo\Core\InstallationFlag::isActive() && ! $isEmpty) {
             /** @var array<string, string> $user_fields */
-            $user_fields = \Piwigo\Config\Config::userFields();
+            $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
             if ($this->repo->emailExists($mailAddress, $user_fields['email'], $user_fields['id'], $userId)) {
                 return Lang::t('this email address is already in use');
@@ -121,7 +121,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         if (\Piwigo\Core\InstallationFlag::isActive()) {
             /** @var array<string, string> $user_fields */
-            $user_fields = \Piwigo\Config\Config::userFields();
+            $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
             if ($this->repo->usernameExistsCaseInsensitive($login, $user_fields['username'])) {
                 return Lang::t('this login is already used');
@@ -138,7 +138,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     {
 
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
         $usernameLower = strtolower($username);
         $byLower = [];
@@ -160,7 +160,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     {
 
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
         return $this->repo->findIdByUsername($username, $user_fields['id'], $user_fields['username']);
     }
@@ -169,7 +169,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     {
 
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
         return $this->repo->findIdByEmail($email, $user_fields['id'], $user_fields['email']);
     }
@@ -183,7 +183,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     {
 
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
         $username = $this->repo->findUsernameById($userId, $user_fields['id'], $user_fields['username']);
 
@@ -254,7 +254,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $errors[] = $mailError;
         }
 
-        if (\Piwigo\Config\Config::insensitiveCaseLogon() && ! $duplicateUsername) {
+        if (\Piwigo\Config\CurrentConfig::insensitiveCaseLogon() && ! $duplicateUsername) {
             if ($this->validateLoginCase($login) !== '') {
                 $duplicateUsername = true;
             }
@@ -284,7 +284,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
         $userId = $this->repo->insertUser([
             $user_fields['username'] => $login,
             $user_fields['password'] => new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($this->conn))->hash($password),
@@ -297,13 +297,13 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         $override = [];
-        if (\Piwigo\Config\Config::browserLanguage() && ($language = $this->getBrowserLanguage()) !== false) {
+        if (\Piwigo\Config\CurrentConfig::browserLanguage() && ($language = $this->getBrowserLanguage()) !== false) {
             $override['language'] = $language;
         }
 
         $this->createUserInfos([$userId], $override);
 
-        $emailAdminOnNewUserSetting = \Piwigo\Config\Config::emailAdminOnNewUser();
+        $emailAdminOnNewUserSetting = \Piwigo\Config\CurrentConfig::emailAdminOnNewUser();
         if ($notifyAdmin && $emailAdminOnNewUserSetting !== 'none') {
             $this->notifyAdminsOfNewRegistration($userId, $login, $mailAddress, $urlService);
         }
@@ -351,20 +351,20 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $defaultUser = array_merge($defaultUser, $overrideValues);
         }
 
-        $availablePermissionLevels = \Piwigo\Config\Config::availablePermissionLevels();
-        // Config::webmasterId()/guestId()/defaultUserId() are declared
+        $availablePermissionLevels = \Piwigo\Config\CurrentConfig::availablePermissionLevels();
+        // CurrentConfig::webmasterId()/guestId()/defaultUserId() are declared
         // non-nullable `int` with their own safe hardcoded fallback
         // defaults (2/1/guest_id respectively, matching config_default.
-        // inc.php) -- gating on Config::has() first was wrong: on any
+        // inc.php) -- gating on CurrentConfig::has() first was wrong: on any
         // no-boot request path (e.g. install.php, which never runs
         // Kernel::boot()/ConfigLoader) these keys are never explicitly
         // loaded into Config's backing store, so has() is false and every
         // user silently fell through to 'normal' status, including the
         // webmaster and guest accounts install.php itself just created.
         // Found live via a real fixture-regen run, not assumed.
-        $webmasterId = (string) \Piwigo\Config\Config::webmasterId();
-        $guestId = (string) \Piwigo\Config\Config::guestId();
-        $defaultUserId = (string) \Piwigo\Config\Config::defaultUserId();
+        $webmasterId = (string) \Piwigo\Config\CurrentConfig::webmasterId();
+        $guestId = (string) \Piwigo\Config\CurrentConfig::guestId();
+        $defaultUserId = (string) \Piwigo\Config\CurrentConfig::defaultUserId();
 
         foreach ($userIds as $userId) {
             $level = $defaultUser['level'] ?? 0;
@@ -410,7 +410,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     public function getDefaultUserInfo(): array|false
     {
         if (! \Piwigo\Core\ProcessCache::has('default_user')) {
-            $defaultUserId = \Piwigo\Config\Config::defaultUserId();
+            $defaultUserId = \Piwigo\Config\CurrentConfig::defaultUserId();
 
             $row = $this->repo->findDefaultUserInfoRow($defaultUserId);
             if ($row !== null) {
@@ -452,14 +452,14 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     {
 
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
         $existing = $this->repo->findByUsernameCaseInsensitive($login, $user_fields['id'], $user_fields['username'], $user_fields['email']);
         if ($existing === null || $existing['email'] === '' || ! \Piwigo\Validation\InputValidator::checkEmailFormat($existing['email'])) {
             return;
         }
 
-        $gallery_title = \Piwigo\Config\Config::galleryTitle();
+        $gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();
 
         $this->mailer->mail(
             $existing['email'],
@@ -489,7 +489,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         ];
 
         $groupId = null;
-        $emailAdminOnNewUser = \Piwigo\Config\Config::emailAdminOnNewUser();
+        $emailAdminOnNewUser = \Piwigo\Config\CurrentConfig::emailAdminOnNewUser();
         if (preg_match('/^group:(\d+)$/', $emailAdminOnNewUser, $matches) === 1) {
             $groupId = $matches[1];
         }
@@ -508,7 +508,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $length = mt_rand(10, 15);
         $keyargsContent = [
             Lang::buildArgs('Hello %s,', stripslashes($login)),
-            Lang::buildArgs('Thank you for registering at %s!', \Piwigo\Config\Config::galleryTitle()),
+            Lang::buildArgs('Thank you for registering at %s!', \Piwigo\Config\CurrentConfig::galleryTitle()),
             Lang::buildArgs('', ''),
             Lang::buildArgs('Here are your connection settings', ''),
             Lang::buildArgs('', ''),
@@ -520,7 +520,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             Lang::buildArgs('If you think you\'ve received this email in error, please contact us at %s', new \Piwigo\Users\UserRepository($this->conn)->getWebmasterMailAddress()),
         ];
 
-        $gallery_title = \Piwigo\Config\Config::galleryTitle();
+        $gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();
 
         $this->mailer->mail(
             $mailAddress,
@@ -555,7 +555,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $user = array_merge($user, $this->getUserData($userId, $useCache));
 
         $userStatusValue = $user['status'] ?? null;
-        if (is_numeric($user['id']) and (int) $user['id'] === \Piwigo\Config\Config::guestId()
+        if (is_numeric($user['id']) and (int) $user['id'] === \Piwigo\Config\CurrentConfig::guestId()
             and (! is_string($userStatusValue) or $userStatusValue !== 'guest')) {
             $user['status'] = 'guest';
             $internal_status = $user['internal_status'] ?? [];
@@ -589,7 +589,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         // see validateMailAddress() for why this is string=>string
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
         // retrieve basic user data
         $query = '
@@ -614,7 +614,7 @@ SELECT ';
         }
 
         // retrieve additional user data ?
-        if (\Piwigo\Config\Config::externalAuthentification()) {
+        if (\Piwigo\Config\DeploymentPolicy::current()->externalAuthentification) {
             $query = '
 SELECT
     COUNT(1) AS counter
@@ -1187,7 +1187,7 @@ DELETE FROM ' . Tables::favorites() . '
 
         // see validateMailAddress() for why this is string=>string
         /** @var array<string, string> $user_fields */
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
         $updates = $updates_infos = [];
         $update_status = null;
@@ -1253,7 +1253,7 @@ DELETE FROM ' . Tables::favorites() . '
 
             if (! self::emptyValue($params['password'] ?? null)) {
                 if (! AccessControl::isWebmaster()) {
-                    $password_protected_users = [\Piwigo\Config\Config::guestId()];
+                    $password_protected_users = [\Piwigo\Config\CurrentConfig::guestId()];
 
                     $query = '
 SELECT
@@ -1313,8 +1313,8 @@ SELECT
             $protected_users = array_filter(
                 [
                     CurrentUser::get()->id,
-                    \Piwigo\Config\Config::guestId(),
-                    \Piwigo\Config\Config::webmasterId(),
+                    \Piwigo\Config\CurrentConfig::guestId(),
+                    \Piwigo\Config\CurrentConfig::webmasterId(),
                 ],
                 is_scalar(...)
             );
@@ -1339,9 +1339,9 @@ SELECT
 
         if (! self::emptyValue($params['level'] ?? null) or @($params['level'] ?? null) === 0) {
             $level_param = $params['level'] ?? null;
-            // \Piwigo\Config\Config::availablePermissionLevels() defaults to [0, 1, 2, 4, 8]
+            // \Piwigo\Config\CurrentConfig::availablePermissionLevels() defaults to [0, 1, 2, 4, 8]
             // (see include/config_default.inc.php), always an array
-            $available_permission_levels = \Piwigo\Config\Config::availablePermissionLevels();
+            $available_permission_levels = \Piwigo\Config\CurrentConfig::availablePermissionLevels();
             if (! in_array(is_numeric($level_param) ? (int) $level_param : null, $available_permission_levels, true)) {
                 return [
                     'error' => [
@@ -1542,7 +1542,7 @@ SELECT
     public function syncUsers(): void
     {
 
-        $userFields = \Piwigo\Config\Config::userFields();
+        $userFields = \Piwigo\Config\CurrentConfig::userFields();
         $userIdField = $userFields['id'];
 
         $baseUsers = $this->repo->findAllUserIds($userIdField);

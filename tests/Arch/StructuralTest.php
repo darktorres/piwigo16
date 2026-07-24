@@ -205,9 +205,10 @@ function describeCallSites(array $hits): array
 test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (): void {
     // The root index.php clause this allowlist used to carry is gone:
     // index.php has been pure bootstrap + dispatch through
-    // CommonBootstrap::run() since P22, and never called Kernel::container()
-    // directly itself -- every real container access already goes through
-    // a Bootstrap/ class (Legacy Coupling Retirement Phase 8, 8e).
+    // RequestBootstrap::bootEntryPoint() since P22, and never called
+    // Kernel::container() directly itself -- every real container access
+    // already goes through a Bootstrap/ class (Legacy Coupling Retirement
+    // Phase 8, 8e).
     $repoRoot = __DIR__ . '/../..';
 
     $hits = [
@@ -276,35 +277,22 @@ test('ShutdownHandler::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('Config::reset() is only called from tests/', function (): void {
+test('CurrentConfig::reset() is only called from tests/', function (): void {
     // Mirrors the Kernel::reset() rule above -- reset() exists purely for
     // test isolation between cases; production code must never touch it.
     $repoRoot = __DIR__ . '/../..';
 
     $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'Config::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'Config::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'Config::reset('),
-    ];
-
-    expect(describeCallSites($hits))->toBe([]);
-});
-
-test('Config::loadArray() is only called from tests/', function (): void {
-    // Same test-isolation rationale as Config::reset() above.
-    $repoRoot = __DIR__ . '/../..';
-
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'Config::loadArray('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'Config::loadArray('),
-        ...findCallSitesInBinFiles($repoRoot, 'Config::loadArray('),
+        ...findCallSites($repoRoot . '/src/Piwigo', 'CurrentConfig::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'CurrentConfig::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'CurrentConfig::reset('),
     ];
 
     expect(describeCallSites($hits))->toBe([]);
 });
 
 test('SessionService::reset() is only called from tests/', function (): void {
-    // Same test-isolation rationale as Config::reset() above.
+    // Same test-isolation rationale as CurrentConfig::reset() above.
     $repoRoot = __DIR__ . '/../..';
 
     $hits = [
@@ -317,7 +305,7 @@ test('SessionService::reset() is only called from tests/', function (): void {
 });
 
 test('StorageRegistry::reset() is only called from tests/', function (): void {
-    // Same test-isolation rationale as Config::reset() above.
+    // Same test-isolation rationale as CurrentConfig::reset() above.
     $repoRoot = __DIR__ . '/../..';
 
     $hits = [
@@ -330,13 +318,31 @@ test('StorageRegistry::reset() is only called from tests/', function (): void {
 });
 
 test('CurrentConfigService::reset() is only called from tests/', function (): void {
-    // Same test-isolation rationale as Config::reset() above.
+    // Same test-isolation rationale as CurrentConfig::reset() above.
     $repoRoot = __DIR__ . '/../..';
 
     $hits = [
         ...findCallSites($repoRoot . '/src/Piwigo', 'CurrentConfigService::reset('),
         ...findCallSitesInRootPhpFiles($repoRoot, 'CurrentConfigService::reset('),
         ...findCallSitesInBinFiles($repoRoot, 'CurrentConfigService::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('DeploymentPolicy::set()/reset() are only called from tests/', function (): void {
+    // Same test-isolation rationale as CurrentConfig::reset() above -- unlike
+    // current()/load() (real production APIs), both exist purely so a test
+    // can inject a specific policy or force re-resolution between cases.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'DeploymentPolicy::set('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'DeploymentPolicy::set('),
+        ...findCallSitesInBinFiles($repoRoot, 'DeploymentPolicy::set('),
+        ...findCallSites($repoRoot . '/src/Piwigo', 'DeploymentPolicy::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'DeploymentPolicy::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'DeploymentPolicy::reset('),
     ];
 
     expect(describeCallSites($hits))->toBe([]);
@@ -522,9 +528,9 @@ test('src/Piwigo/ contains no global $conf/$prefixeTable/$last_time/$t2 declarat
     // 36 remaining global statements across the 151 frozen DbPatch/
     // VersionUpgrade migration files (plus InstallWizard's constructor and
     // RequestBootstrap::configure()'s $t2) are retired -- Tables::/
-    // Config::dbPrefix() for the table-prefix reads, and, for the handful
+    // DbCredentials::current()->prefix for the table-prefix reads, and, for the handful
     // of keys genuinely only ever set by a site's own
-    // local/config/config.inc.php (never mirrored into Config:: mid-
+    // local/config/config.inc.php (never mirrored into CurrentConfig:: mid-
     // migration), Piwigo\Admin\Install\DbPatch\LegacyFileConf::read()/
     // LegacyDbLayer::value(). $t2 (RequestBootstrap::configure()) is now
     // an explicit parameter instead, passed straight through from
@@ -1026,9 +1032,9 @@ test('src/Piwigo/ does not repeat the same multi-dependency service construction
     // in 8b, via a plain private $this->userService(?Connection $conn = null)
     // DRY-extraction helper instead -- not container-routed, since
     // PHP-DI's request-shared instance would unsafely cache a Connection
-    // built from stale Config::dbHost() etc. if resolved before
-    // InstallWizard::boot()'s own Config::override('db_host', ...) calls
-    // (from the submitted install form) have run. Matches
+    // built from stale DbCredentials::current() if resolved before
+    // InstallWizard::boot()'s own DbCredentials::seed(...) call (from the
+    // submitted install form) has run. Matches
     // RequestBootstrap::activityService()'s own established
     // "private helper takes the already-available Connection as a
     // parameter" precedent.
@@ -1045,7 +1051,7 @@ test('src/Piwigo/ does not repeat the same multi-dependency service construction
     expect($actual)->toBe($allowlist);
 });
 
-test('RequestFactory, ResponseEmitter, CommonBootstrap, and the P9 middleware/pipeline/routing classes declare only readonly state', function (): void {
+test('RequestFactory, ResponseEmitter, and the P9 middleware/pipeline/routing classes declare only readonly state', function (): void {
     // SEC-60 (worker-isolation, partial verification): these classes must stay
     // free of MUTABLE state so a future FrankenPHP worker loop can reuse them
     // across requests without cross-request state bleed. readonly properties
@@ -1069,7 +1075,6 @@ test('RequestFactory, ResponseEmitter, CommonBootstrap, and the P9 middleware/pi
         Piwigo\Http\Middleware\ControllerInvokerMiddleware::class,
         Piwigo\Routing\Router::class,
         Piwigo\Routing\RouteResult::class,
-        Piwigo\Bootstrap\CommonBootstrap::class,
         Piwigo\Bootstrap\RequestPipeline::class,
     ] as $fqcn) {
         $mutableProperties = array_filter(

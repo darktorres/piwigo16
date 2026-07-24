@@ -28,7 +28,7 @@ use Piwigo\Template\Template;
  * Legacy Coupling Retirement Phase 8, 8d: its no_photo_yet write takes a
  * real constructor-injected ConfigService -- only 2 real construction
  * sites (Bootstrap\RequestBootstrap.php's own `new NoPhotoYetRenderer(...)
- * ->render()` inline call, gated on !Config::has('no_photo_yet'), plus
+ * ->render()` inline call, gated on CurrentConfig::noPhotoYet() === null, plus
  * this class's own test), low enough to thread properly rather than reach
  * for CurrentConfigService::get().
  */
@@ -83,7 +83,7 @@ final readonly class NoPhotoYetRenderer
                 ]);
 
                 if (\Piwigo\Auth\AccessControl::isAdmin()) {
-                    $url = \Piwigo\Config\Config::noPhotoYetUrl();
+                    $url = \Piwigo\Config\CurrentConfig::noPhotoYetUrl();
                     if (! str_starts_with($url, 'http')) {
                         $url = $this->urlService->getRootUrl() . $url;
                     }

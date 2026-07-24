@@ -20,7 +20,7 @@ use Piwigo\Db\Tables;
  * both pushed onto PageState (safe even when this patch runs outside an
  * HTTP request -- PageState::current() always returns a usable instance)
  * and echoed, as before. local_dir_site is read via LegacyFileConf::read()
- * -- there's no Config:: equivalent at all (include/config_default.inc.php
+ * -- there's no CurrentConfig:: equivalent at all (include/config_default.inc.php
  * never sets this key, same reasoning as
  * UserListPageRenderer::webmasterIdIsLocal()).
  */

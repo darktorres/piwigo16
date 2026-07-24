@@ -113,8 +113,8 @@ ORDER BY registration_year, registration_month
         $template->assign(
             [
                 'ADMIN_PAGE_TITLE' => Lang::t('Users'),
-                'ACTIVATE_COMMENTS' => \Piwigo\Config\Config::activateComments(),
-                'Double_Password' => \Piwigo\Config\Config::doublePasswordTypeInAdmin(),
+                'ACTIVATE_COMMENTS' => \Piwigo\Config\CurrentConfig::activateComments(),
+                'Double_Password' => \Piwigo\Config\CurrentConfig::doublePasswordTypeInAdmin(),
             ]
         );
 
@@ -131,9 +131,9 @@ ORDER BY registration_year, registration_month
         // conf's guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // fetch value or int config default -- same normalization already used by
         // functions.inc.php's get_webmaster_mail_address() and build_user()).
-        $guest_id = \Piwigo\Config\Config::guestId();
-        $default_user_id = \Piwigo\Config\Config::defaultUserId();
-        $webmaster_id = \Piwigo\Config\Config::webmasterId();
+        $guest_id = \Piwigo\Config\CurrentConfig::guestId();
+        $default_user_id = \Piwigo\Config\CurrentConfig::defaultUserId();
+        $webmaster_id = \Piwigo\Config\CurrentConfig::webmasterId();
 
         $protected_users = [
             \Piwigo\Users\CurrentUser::get()->id,
@@ -165,7 +165,7 @@ SELECT
             $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$current_user_id]));
         }
 
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
         $query = '
 SELECT
@@ -254,7 +254,7 @@ SELECT
         $template->assign('nb_users_by_status', $nb_users_by_status);
 
         // user level options
-        $available_permission_levels = \Piwigo\Config\Config::availablePermissionLevels();
+        $available_permission_levels = \Piwigo\Config\CurrentConfig::availablePermissionLevels();
 
         $level_options = [];
         foreach ($available_permission_levels as $level) {
@@ -329,7 +329,7 @@ SELECT id, name, is_default
     {
         // A presence check ("did the site owner override webmaster_id in
         // their OWN local/config/config.inc.php"), not a value read --
-        // deliberately does NOT start from Config::defaultsArray() the way
+        // deliberately does NOT start from CurrentConfig::defaultsArray() the way
         // LegacyFileConf::read()'s value-reading callers do. webmaster_id
         // has a real SCHEMA default (1) now; merging that in first would
         // make isset($conf['webmaster_id']) true on every request even
@@ -339,7 +339,7 @@ SELECT id, name, is_default
         // local_dir_site/webmaster_id either, so this always was, and
         // stays, a bare local-file-only read -- "nothing is frozen"
         // gap-closure (2026-07-22) caught this as a real near-miss bug
-        // while retiring config_default.inc.php (a naive Config::
+        // while retiring config_default.inc.php (a naive CurrentConfig::
         // defaultsArray()-first rewrite would have made this warning fire
         // unconditionally, since webmaster_id does have a real SCHEMA
         // default now). Note the deliberate absence of `global $conf;`

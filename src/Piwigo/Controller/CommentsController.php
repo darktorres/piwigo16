@@ -72,7 +72,7 @@ final class CommentsController implements ControllerInterface
         // in earlier construction-chain debt (Phase 1d finding).
         $conn = DbConnection::build();
 
-        if (! \Piwigo\Config\Config::activateComments()) {
+        if (! \Piwigo\Config\CurrentConfig::activateComments()) {
             new HtmlService()
                 ->pageNotFound($this->redirectService, null);
         }
@@ -96,11 +96,11 @@ final class CommentsController implements ControllerInterface
         // items_number : list of number of items to display per page
         $items_number = [5, 10, 20, 50, 'all'];
 
-        // \Piwigo\Config\Config::commentsPageNbComments() is a plain int setting (see
+        // \Piwigo\Config\CurrentConfig::commentsPageNbComments() is a plain int setting (see
         // include/config_default.inc.php); $conf itself is only known as
         // array<string, mixed>, so narrow with a fallback matching the
         // shipped default rather than trust the shape blindly.
-        $comments_page_nb_comments = \Piwigo\Config\Config::commentsPageNbComments();
+        $comments_page_nb_comments = \Piwigo\Config\CurrentConfig::commentsPageNbComments();
 
         // if the default value is not in the expected values, we add it in
         // the $items_number array (only compare against the numeric options
@@ -207,7 +207,7 @@ final class CommentsController implements ControllerInterface
               'category_id IN (' . implode(',', $category_ids) . ')';
         }
 
-        $user_fields = \Piwigo\Config\Config::userFields();
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
         $username_field = $user_fields['username'];
         $email_field = $user_fields['email'];
         $id_field = $user_fields['id'];

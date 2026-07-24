@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Menu;
 
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Template\Template;
 
 /**
@@ -80,11 +81,11 @@ final class BlockManager
      */
     public function prepare_display(): void
     {
-        $conf_id = 'blk_' . $this->id;
-        $mb_conf = \Piwigo\Config\Config::all()[$conf_id] ?? [];
-        if (! is_array($mb_conf)) {
-            $mb_conf = is_string($mb_conf) ? @unserialize($mb_conf) : false;
-        }
+        // blk_menubar is the only real BlockManager id anywhere in this
+        // codebase (confirmed by grepping every `new BlockManager(...)`
+        // call site) -- a real CurrentConfig property instead of the
+        // former dynamic 'blk_' . $id bag key.
+        $mb_conf = @unserialize(CurrentConfig::blkMenubar());
         if (! is_array($mb_conf)) {
             $mb_conf = [];
         }

@@ -11,18 +11,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\DbPatch;
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 
 /**
- * Real-defaults-plus-raw-site-override $conf array for keys that Config::
- * can't be trusted for mid-migration -- Config::$data at DbPatch/
+ * Real-defaults-plus-raw-site-override $conf array for keys that CurrentConfig::
+ * can't be trusted for mid-migration -- CurrentConfig::$data at DbPatch/
  * VersionUpgrade apply() time holds only SCHEMA defaults + env overrides
  * (see UpgradeRunner), never a site's local/config/config.inc.php
  * customization nor the DB-persisted config (that loads later, in
  * finish()). Same 2-step layering as the already-reviewed live precedent,
  * UserListPageRenderer::webmasterIdIsLocal() / ConfigurationSubController::
- * orderByIsLocal(): Config::defaultsArray(), then local/config/config.inc.php,
+ * orderByIsLocal(): CurrentConfig::defaultsArray(), then local/config/config.inc.php,
  * then -- only if that revealed a local_dir_site override -- the site's
  * real dir-site config file too. Each caller pulls its own key straight
  * off the returned array with its own fallback, matching those two
@@ -30,7 +30,7 @@ use Piwigo\Core\CurrentPaths;
  *
  * "Nothing is frozen" gap-closure (2026-07-22): used to `include
  * include/config_default.inc.php` for the defaults half -- that file is
- * gone (see Config::defaultsArray()'s own docblock for why it was
+ * gone (see CurrentConfig::defaultsArray()'s own docblock for why it was
  * redundant, and 3 real values it had silently drifted from SCHEMA on).
  * The site-local override read stays a raw, always-fresh include on
  * purpose: verified real DbPatch classes (Patch108/110/134) WRITE to
@@ -55,7 +55,7 @@ final class LegacyFileConf
     {
         $paths = CurrentPaths::get();
 
-        $conf = Config::defaultsArray();
+        $conf = CurrentConfig::defaultsArray();
         @include $paths->local . 'config/config.inc.php';
         if (isset($conf['local_dir_site'])) {
             @include $paths->siteLocal . 'config/config.inc.php';

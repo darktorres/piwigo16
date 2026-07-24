@@ -74,7 +74,7 @@ final class MenubarRenderer
         $menu = new BlockManager('menubar');
 
         // if guest_access is disabled, we only display the menus if the user is identified
-        if (\Piwigo\Config\Config::guestAccess() or ! \Piwigo\Auth\AccessControl::isAGuest()) {
+        if (\Piwigo\Config\CurrentConfig::guestAccess() or ! \Piwigo\Auth\AccessControl::isAGuest()) {
             $menu->load_registered_blocks();
         }
         $menu->prepare_display();
@@ -86,9 +86,9 @@ final class MenubarRenderer
         }
 
         // --------------------------------------------------------------- external links
-        if ((bool) ($block = $menu->get_block('mbLinks')) and ! self::emptyValue(\Piwigo\Config\Config::links())) {
+        if ((bool) ($block = $menu->get_block('mbLinks')) and ! self::emptyValue(\Piwigo\Config\CurrentConfig::links())) {
             $block->data = [];
-            foreach (\Piwigo\Config\Config::links() as $url => $url_data) {
+            foreach (\Piwigo\Config\CurrentConfig::links() as $url => $url_data) {
                 if (! is_array($url_data)) {
                     $url_data = [
                         'label' => $url_data,
@@ -123,7 +123,7 @@ final class MenubarRenderer
         // -------------------------------------------------------------- categories
         $block = $menu->get_block('mbCategories');
         // ------------------------------------------------------------------------ filter
-        if (\Piwigo\Config\Config::menubarFilterIcon() and ! self::emptyValue(\Piwigo\Config\Config::filterPages()) and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
+        if (\Piwigo\Config\CurrentConfig::menubarFilterIcon() and ! self::emptyValue(\Piwigo\Config\CurrentConfig::filterPages()) and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
             if (\Piwigo\Core\FilterState::isEnabled()) {
                 $template->assign(
                     'U_STOP_FILTER',
@@ -165,7 +165,7 @@ final class MenubarRenderer
         if (
             $section_context !== null
             and is_array($page_items)
-            and count($page_items) < \Piwigo\Config\Config::relatedAlbumsMaximumItemsToCompute()
+            and count($page_items) < \Piwigo\Config\CurrentConfig::relatedAlbumsMaximumItemsToCompute()
             and $block !== null
             and $page_items !== []
         ) {
@@ -202,7 +202,7 @@ final class MenubarRenderer
             $block->data = [];
             $tags = $tagService->getAvailableTags();
             usort($tags, $tagService->tagsCounterCompare(...));
-            $tag_cloud_items_number = \Piwigo\Config\Config::menubarTagCloudItemsNumber();
+            $tag_cloud_items_number = \Piwigo\Config\CurrentConfig::menubarTagCloudItemsNumber();
             $tags = array_slice($tags, 0, $tag_cloud_items_number);
             foreach ($tags as $tag) {
                 $block->data[] = array_merge(
@@ -243,7 +243,7 @@ final class MenubarRenderer
                   'NAME' => Lang::t('Most visited'),
               ];
 
-            if (\Piwigo\Config\Config::rateEnabled()) {
+            if (\Piwigo\Config\CurrentConfig::rateEnabled()) {
                 $block->data['best_rated'] =
                  [
                      'URL' => $urlService->makeIndexUrl([
@@ -284,7 +284,7 @@ final class MenubarRenderer
               [
                   'URL' => $urlService->makeIndexUrl(
                       [
-                          'chronology_field' => (\Piwigo\Config\Config::calendarDatefield() === 'date_available'
+                          'chronology_field' => (\Piwigo\Config\CurrentConfig::calendarDatefield() === 'date_available'
                                                   ? 'posted' : 'created'),
                           'chronology_style' => 'monthly',
                           'chronology_view' => 'calendar',
@@ -322,7 +322,7 @@ final class MenubarRenderer
                   'REL' => 'rel="search"',
               ];
 
-            if (\Piwigo\Config\Config::activateComments()) {
+            if (\Piwigo\Config\CurrentConfig::activateComments()) {
                 // comments link
                 $block->data['comments'] =
                   [
@@ -358,10 +358,10 @@ final class MenubarRenderer
                 [
                     'U_LOGIN' => $urlService->getRootUrl() . 'identification.php',
                     'U_LOST_PASSWORD' => $urlService->getRootUrl() . 'password.php',
-                    'AUTHORIZE_REMEMBERING' => \Piwigo\Config\Config::authorizeRemembering(),
+                    'AUTHORIZE_REMEMBERING' => \Piwigo\Config\CurrentConfig::authorizeRemembering(),
                 ]
             );
-            if (\Piwigo\Config\Config::allowUserRegistration()) {
+            if (\Piwigo\Config\CurrentConfig::allowUserRegistration()) {
                 $template->assign('U_REGISTER', $urlService->getRootUrl() . 'register.php');
             }
         } else {
@@ -373,7 +373,7 @@ final class MenubarRenderer
 
             // the logout link has no meaning with Apache authentication : it is not
             // possible to logout with this kind of authentication.
-            if (! \Piwigo\Config\Config::apacheAuthentication()) {
+            if (! \Piwigo\Config\DeploymentPolicy::current()->apacheAuthentication) {
                 $template->assign('U_LOGOUT', $urlService->getRootUrl() . '?act=logout');
             }
             if (\Piwigo\Auth\AccessControl::isAdmin()) {

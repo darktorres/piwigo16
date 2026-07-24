@@ -134,7 +134,7 @@ final class PageState
     /**
      * Accumulated debug-mode query/timing HTML, shown in the page footer
      * -- former `global $debug`, only ever populated when
-     * Config::showQueries() is on.
+     * CurrentConfig::showQueries() is on.
      */
     public string $debugOutput = '';
 
@@ -148,7 +148,7 @@ final class PageState
     public string $bodyId = '';
 
     /**
-     * Nullable (not '') so PageHeaderRenderer's `?? Config::pageBanner()`
+     * Nullable (not '') so PageHeaderRenderer's `?? CurrentConfig::pageBanner()`
      * fallback still works: AdminShell/AdminPopuphelpController set a real
      * banner string, but PopuphelpController deliberately sets '' to mean
      * "no banner", which must NOT fall back to the configured default.
@@ -175,14 +175,14 @@ final class PageState
     private function __construct() {}
 
     /**
-     * Called by CommonBootstrap::run() -- HTTP-path only (index.php),
-     * matching CurrentUser::attachGlobals()/Lang::attachGlobals()'s own
-     * per-request seeding point; CliBootstrap never calls this. Idempotent:
-     * a second call is a no-op once the singleton exists (matches
-     * current()'s own semantics -- this method exists as a distinct name
-     * only to mark the intentional per-request seeding point in
-     * CommonBootstrap::run(), not because it does anything current()
-     * doesn't).
+     * Called by RequestBootstrap::finalize() (and bootConfigOnly(), its
+     * lighter standalone-callable equivalent) -- HTTP-path only
+     * (index.php), matching CurrentUser::attachGlobals()/
+     * Lang::attachGlobals()'s own per-request seeding point; CliBootstrap
+     * never calls this. Idempotent: a second call is a no-op once the
+     * singleton exists (matches current()'s own semantics -- this method
+     * exists as a distinct name only to mark the intentional per-request
+     * seeding point, not because it does anything current() doesn't).
      */
     public static function attachGlobals(): void
     {
@@ -254,7 +254,7 @@ final class PageState
     /**
      * Adds a single meta-robots flag without disturbing any already set --
      * GalleryController's own `?display=` override and
-     * PageHeaderRenderer's own `Config::metaRef()` gate both need this
+     * PageHeaderRenderer's own `CurrentConfig::metaRef()` gate both need this
      * incremental shape rather than a full replace.
      */
     public function setMetaRobotsFlag(string $name): void

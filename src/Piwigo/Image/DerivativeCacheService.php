@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 
 /**
@@ -56,7 +56,7 @@ final class DerivativeCacheService
         }
         $pattern .= '\.[a-zA-Z0-9]{3,4}$#';
 
-        $root = CurrentPaths::get()->root . Config::derivativeDir();
+        $root = CurrentPaths::get()->root . CurrentConfig::derivativeDir();
         $contents = @opendir($root);
         if ($contents !== false) {
             while (($node = readdir($contents)) !== false) {
@@ -95,7 +95,7 @@ final class DerivativeCacheService
         }
         $path = substr_replace($path, $pattern, $dot, 0);
 
-        $glob = glob(CurrentPaths::get()->root . Config::derivativeDir() . $path);
+        $glob = glob(CurrentPaths::get()->root . CurrentConfig::derivativeDir() . $path);
         if ($glob !== false) {
             foreach ($glob as $file) {
                 @unlink($file);

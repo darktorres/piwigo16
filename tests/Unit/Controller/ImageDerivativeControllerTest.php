@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\ImageDerivativeController;
 use Piwigo\Image\ImageStdParams;
 
@@ -18,11 +18,11 @@ use Piwigo\Image\ImageStdParams;
 // _data/i/ tree) -- this locks in the fix.
 
 beforeEach(function (): void {
-    Config::reset();
+    CurrentConfig::reset();
 });
 
 afterEach(function (): void {
-    Config::reset();
+    CurrentConfig::reset();
 });
 
 function callDerivativeUrlPath(string $urlSuffix, string $fromType, string $toType): string
@@ -34,10 +34,8 @@ function callDerivativeUrlPath(string $urlSuffix, string $fromType, string $toTy
 }
 
 test('derivativeUrlPath substitutes the type token and keeps the rest of the suffix unchanged', function (): void {
-    Config::loadArray([
-        'php_extension_in_urls' => true,
-        'question_mark_in_urls' => true,
-    ]);
+    CurrentConfig::setPhpExtensionInUrls(true);
+    CurrentConfig::setQuestionMarkInUrls(true);
 
     $result = callDerivativeUrlPath(
         'upload/2026/08/01/20260801000000-2e7ed83c-th.jpg',
@@ -49,10 +47,8 @@ test('derivativeUrlPath substitutes the type token and keeps the rest of the suf
 });
 
 test('derivativeUrlPath omits .php when php_extension_in_urls is disabled', function (): void {
-    Config::loadArray([
-        'php_extension_in_urls' => false,
-        'question_mark_in_urls' => true,
-    ]);
+    CurrentConfig::setPhpExtensionInUrls(false);
+    CurrentConfig::setQuestionMarkInUrls(true);
 
     $result = callDerivativeUrlPath('foo-sq.jpg', ImageStdParams::SQUARE, ImageStdParams::THUMB);
 
@@ -60,10 +56,8 @@ test('derivativeUrlPath omits .php when php_extension_in_urls is disabled', func
 });
 
 test('derivativeUrlPath omits the leading ? when question_mark_in_urls is disabled', function (): void {
-    Config::loadArray([
-        'php_extension_in_urls' => true,
-        'question_mark_in_urls' => false,
-    ]);
+    CurrentConfig::setPhpExtensionInUrls(true);
+    CurrentConfig::setQuestionMarkInUrls(false);
 
     $result = callDerivativeUrlPath('foo-sq.jpg', ImageStdParams::SQUARE, ImageStdParams::THUMB);
 
@@ -71,10 +65,8 @@ test('derivativeUrlPath omits the leading ? when question_mark_in_urls is disabl
 });
 
 test('derivativeUrlPath prefixes the app-mount-relative i.php URL, unaware of the app root itself', function (): void {
-    Config::loadArray([
-        'php_extension_in_urls' => true,
-        'question_mark_in_urls' => true,
-    ]);
+    CurrentConfig::setPhpExtensionInUrls(true);
+    CurrentConfig::setQuestionMarkInUrls(true);
 
     // derivativeUrlPath() itself is deliberately root-agnostic -- the real
     // caller (trySwitchSource()) prefixes its return value with

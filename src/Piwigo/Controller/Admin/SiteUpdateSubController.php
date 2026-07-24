@@ -10,7 +10,7 @@ use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -151,7 +151,7 @@ SELECT IF(MAX(' . $column . ')+1 IS NULL, 1, MAX(' . $column . ')+1)
         // | Check Access and exit when user status is not ok                      |
         // +-----------------------------------------------------------------------+
 
-        if (! \Piwigo\Config\Config::enableSynchronization()) {
+        if (! \Piwigo\Config\CurrentConfig::enableSynchronization()) {
             new HtmlService()
                 ->fatalError('synchronization is disabled');
         }
@@ -396,16 +396,16 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             // new categories are the directories not present yet in the database
             foreach (array_diff($fs_fulldirs, array_keys($db_fulldirs)) as $fulldir) {
                 $dir = basename($fulldir);
-                $sync_chars_regex = \Piwigo\Config\Config::syncCharsRegex();
+                $sync_chars_regex = \Piwigo\Config\CurrentConfig::syncCharsRegex();
                 if ($sync_chars_regex !== '' && (bool) preg_match($sync_chars_regex, $dir)) {
                     $insert = [
                         'id' => $next_id++,
                         'dir' => $dir,
                         'name' => str_replace('_', ' ', $dir),
                         'site_id' => $site_id,
-                        'commentable' => \Piwigo\Config\Config::newcatDefaultCommentable(),
-                        'status' => \Piwigo\Config\Config::newcatDefaultStatus(),
-                        'visible' => \Piwigo\Config\Config::newcatDefaultVisible(),
+                        'commentable' => \Piwigo\Config\CurrentConfig::newcatDefaultCommentable(),
+                        'status' => \Piwigo\Config\CurrentConfig::newcatDefaultStatus(),
+                        'visible' => \Piwigo\Config\CurrentConfig::newcatDefaultVisible(),
                     ];
 
                     if (isset($db_fulldirs[dirname($fulldir)])) {
@@ -491,7 +491,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                     ]);
 
                     $category_up = array_values(array_unique($category_up));
-                    if (\Piwigo\Config\Config::inheritanceByDefault() and $category_up !== []) {
+                    if (\Piwigo\Config\CurrentConfig::inheritanceByDefault() and $category_up !== []) {
                         $granted_grps = new PermissionRepository($conn)
                             ->findGrantedGroupIdsByCategory($category_up);
                         $granted_users = new PermissionRepository($conn)
@@ -557,7 +557,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                 if (substr_compare($fulldir, '../', 0, 3) === 0) {
                     $fulldir = substr($fulldir, 3);
                 }
-                $to_delete_derivative_dirs[] = \Piwigo\Core\CurrentPaths::get()->root . Config::derivativeDir() . $fulldir;
+                $to_delete_derivative_dirs[] = \Piwigo\Core\CurrentPaths::get()->root . CurrentConfig::derivativeDir() . $fulldir;
             }
 
             if (count($to_delete) > 0) {
@@ -629,7 +629,7 @@ SELECT id, path
                     continue;
                 }
                 $filename = basename($path);
-                $sync_chars_regex = \Piwigo\Config\Config::syncCharsRegex();
+                $sync_chars_regex = \Piwigo\Config\CurrentConfig::syncCharsRegex();
                 if ($sync_chars_regex === '' || ! (bool) preg_match($sync_chars_regex, $filename)) {
                     $errors[] = [
                         'path' => $path,
@@ -666,7 +666,7 @@ SELECT id, path
                     'info' => Lang::t('added'),
                 ];
 
-                if (\Piwigo\Config\Config::isFormatsEnabled()) {
+                if (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
                     // 'formats' is only known as mixed here (get_elements()'s
                     // declared value type is array<string, mixed>), but it's always
                     // the get_formats() float[] result when set.
@@ -691,7 +691,7 @@ SELECT id, path
             }
 
             // search new/removed formats on photos already registered in database
-            if (\Piwigo\Config\Config::isFormatsEnabled()) {
+            if (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
                 $db_elements_flip = array_flip($db_elements);
 
                 $existing_ids = [];

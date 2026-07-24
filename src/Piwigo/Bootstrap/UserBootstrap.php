@@ -24,7 +24,7 @@ use Piwigo\Ws\PwgError;
  * auth/API-key orchestration deciding who the current request's user is,
  * finishing with a call to build_user() to fully populate $user.
  *
- * A sibling to CommonBootstrap, not a method on Piwigo\Auth\AuthService:
+ * A sibling to RequestBootstrap, not a method on Piwigo\Auth\AuthService:
  * AuthService is L2aCoreDomain, and this orchestration's WS API-key branch
  * instantiates Piwigo\Ws\PwgError (L4Integration) -- Bootstrap and Ws are
  * matched by the same deptrac collector (same layer), so this is the only
@@ -67,11 +67,11 @@ final class UserBootstrap
             $conn,
         );
 
-        $guest_id_int = \Piwigo\Config\Config::guestId();
+        $guest_id_int = \Piwigo\Config\CurrentConfig::guestId();
 
         // by default we start with guest
         $user = [];
-        $user['id'] = \Piwigo\Config\Config::guestId();
+        $user['id'] = \Piwigo\Config\CurrentConfig::guestId();
 
         $session_cookie_name = session_name();
         $session_cookie_name = is_string($session_cookie_name) ? $session_cookie_name : '';
@@ -100,7 +100,7 @@ final class UserBootstrap
         }
 
         // using Apache authentication override the above user search
-        if (\Piwigo\Config\Config::apacheAuthentication()) {
+        if (\Piwigo\Config\DeploymentPolicy::current()->apacheAuthentication) {
             $remote_user = self::resolveApacheRemoteUser($_SERVER);
 
             if ($remote_user !== null) {
@@ -189,7 +189,7 @@ final class UserBootstrap
             is_string($http_referer) ? $http_referer : null,
         );
 
-        // $user['id'] is always numeric here (either \Piwigo\Config\Config::guestId(), a
+        // $user['id'] is always numeric here (either \Piwigo\Config\CurrentConfig::guestId(), a
         // $_SESSION['pwg_uid'] set by a prior login, or the int|false result of
         // get_userid()/register_user() coerced above); the is_numeric() check is a
         // defensive narrowing to satisfy build_user()'s int $user_id, matching the
@@ -200,9 +200,10 @@ final class UserBootstrap
         // Legacy Coupling Retirement Track A batch A3: sync CurrentUser here,
         // not only in RequestBootstrap::connect() after this method returns
         // -- AccessControl::isAGuest()/isGeneric() right below already read
-        // CurrentUser, and common.inc.php (every classic HTTP entry point)
-        // never calls CommonBootstrap::run()/CurrentUser::attachGlobals(),
-        // so without this sync CurrentUser::get() throws "not initialised"
+        // CurrentUser, and this method runs (from RequestBootstrap::connect())
+        // well before RequestBootstrap::finalize()'s own
+        // CurrentUser::attachGlobals() call, so without this sync
+        // CurrentUser::get() throws "not initialised"
         // the first time any retargeted consumer runs within this same
         // request (caught via a live Contract-test HTTP 500, not a unit
         // test -- the Integration/Unit harnesses independently seed
@@ -215,7 +216,7 @@ final class UserBootstrap
         // docblock for why isInitialized() can't substitute.
         \Piwigo\Users\CurrentUser::markRealUserResolved();
 
-        if (\Piwigo\Config\Config::browserLanguage() and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric()) and (bool) ($language = $userService->getBrowserLanguage())) {
+        if (\Piwigo\Config\CurrentConfig::browserLanguage() and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric()) and (bool) ($language = $userService->getBrowserLanguage())) {
             $user['language'] = $language;
             if (is_string($language)) {
                 \Piwigo\Users\CurrentUser::updateLanguage($language);

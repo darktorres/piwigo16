@@ -25,7 +25,7 @@ use Piwigo\Db\Tables;
  * onto CurrentConfigService::get() (Legacy Coupling Retirement Phase 8,
  * 8d) -- ConfigService::loadConfFromDb() never dual-writes $conf, so the
  * bulk of DB-persisted keys this step reads straight afterward are
- * captured once via Config::all() into a local $dbconf instead, same
+ * captured once via CurrentConfig::all() into a local $dbconf instead, same
  * shape as the dbconf capture already used by Patch123/Patch125. The
  * commented-out ws_access CREATE (dropped upstream before the Butterfly
  * release) is preserved as history.
@@ -43,31 +43,31 @@ final class UpgradeFrom_1_6_2 implements VersionUpgradeInterface
     {
         $queries = [
             '
-ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'categories`
+ALTER TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . 'categories`
   ADD COLUMN `permalink` varchar(64) default NULL
 ;',
 
             '
-ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'categories`
+ALTER TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . 'categories`
   ADD COLUMN `image_order` varchar(128) default NULL
 ;',
 
             '
-ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'categories`
+ALTER TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . 'categories`
   ADD UNIQUE `categories_i3` (`permalink`)
 ;',
 
             '
-ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . "groups`
+ALTER TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . "groups`
   ADD COLUMN `is_default` enum('true','false') NOT NULL default 'false'
 ;",
 
             '
-RENAME TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'history` TO `' . \Piwigo\Config\Config::dbPrefix() . 'history_backup`
+RENAME TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . 'history` TO `' . \Piwigo\Db\DbCredentials::current()->prefix . 'history_backup`
 ;',
 
             '
-CREATE TABLE `' . \Piwigo\Config\Config::dbPrefix() . "history` (
+CREATE TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . "history` (
   `id` int(10) unsigned NOT NULL auto_increment,
   `date` date NOT NULL default '0000-00-00',
   `time` time NOT NULL default '00:00:00',
@@ -89,53 +89,53 @@ CREATE TABLE `' . \Piwigo\Config\Config::dbPrefix() . "history` (
 ;",
 
             '
-ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'image_category`
+ALTER TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . 'image_category`
   DROP INDEX `image_category_i1`
 ;',
 
             '
-ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'image_category`
+ALTER TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . 'image_category`
   ADD INDEX `image_category_i1` (`category_id`)
 ;',
 
             '
-ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'image_category`
+ALTER TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . 'image_category`
   DROP INDEX `image_category_i2`
 ;',
 
             '
-ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'images`
+ALTER TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . 'images`
   ADD COLUMN `high_filesize` mediumint(9) unsigned default NULL
 ;',
 
             '
-ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . "user_infos`
+ALTER TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . "user_infos`
   CHANGE COLUMN `language`
     `language` varchar(50) NOT NULL default 'en_UK.iso-8859-1'
 ;",
 
             '
-ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'user_infos`
+ALTER TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . 'user_infos`
   DROP COLUMN `auto_login_key`
 ;',
 
             '
-ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . "user_infos`
+ALTER TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . "user_infos`
   ADD COLUMN `show_nb_hits` enum('true','false') NOT NULL default 'false'
 ;",
 
             '
-ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'user_mail_notification`
+ALTER TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . 'user_mail_notification`
   DROP INDEX `uidx_check_key`
 ;',
 
             '
-ALTER TABLE `' . \Piwigo\Config\Config::dbPrefix() . 'user_mail_notification`
+ALTER TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . 'user_mail_notification`
   ADD UNIQUE `user_mail_notification_ui1` (`check_key`)
 ;',
 
             '
-CREATE TABLE `' . \Piwigo\Config\Config::dbPrefix() . "history_summary` (
+CREATE TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . "history_summary` (
   `id` varchar(13) NOT NULL default '',
   `year` smallint(4) NOT NULL default '0',
   `month` tinyint(2) default NULL,
@@ -147,7 +147,7 @@ CREATE TABLE `' . \Piwigo\Config\Config::dbPrefix() . "history_summary` (
 ;",
 
             '
-CREATE TABLE `' . \Piwigo\Config\Config::dbPrefix() . "old_permalinks` (
+CREATE TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . "old_permalinks` (
   `cat_id` smallint(5) unsigned NOT NULL default '0',
   `permalink` varchar(64) NOT NULL default '',
   `date_deleted` datetime NOT NULL default '0000-00-00 00:00:00',
@@ -158,7 +158,7 @@ CREATE TABLE `' . \Piwigo\Config\Config::dbPrefix() . "old_permalinks` (
 ;",
 
             '
-CREATE TABLE `' . \Piwigo\Config\Config::dbPrefix() . "plugins` (
+CREATE TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . "plugins` (
   `id` varchar(64) binary NOT NULL default '',
   `state` enum('inactive','active') NOT NULL default 'inactive',
   `version` varchar(64) NOT NULL default '0',
@@ -167,7 +167,7 @@ CREATE TABLE `' . \Piwigo\Config\Config::dbPrefix() . "plugins` (
 ;",
 
             '
-CREATE TABLE `' . \Piwigo\Config\Config::dbPrefix() . "user_cache_categories` (
+CREATE TABLE `' . \Piwigo\Db\DbCredentials::current()->prefix . "user_cache_categories` (
   `user_id` smallint(5) NOT NULL default '0',
   `cat_id` smallint(5) unsigned NOT NULL default '0',
   `max_date_last` datetime default NULL,
@@ -257,7 +257,7 @@ CREATE TABLE `' . \Piwigo\Config\Config::dbPrefix() . "user_cache_categories` (
         // (MD5(RAND())) -- not a PHP value, so it can't be a bound
         // parameter; :param/:comment are still bound normally.
         $conn->executeStatement('
-INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . 'config
+INSERT INTO ' . \Piwigo\Db\DbCredentials::current()->prefix . 'config
   (param, value, comment)
   VALUES
   (:param, MD5(RAND()), :comment)
@@ -267,7 +267,7 @@ INSERT INTO ' . \Piwigo\Config\Config::dbPrefix() . 'config
         ]);
 
         $conn->executeStatement('
-UPDATE ' . \Piwigo\Config\Config::dbPrefix() . 'user_cache
+UPDATE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'user_cache
   SET need_update = :needUpdate
 ;', [
             'needUpdate' => 'true',
@@ -289,7 +289,7 @@ UPDATE ' . \Piwigo\Config\Config::dbPrefix() . 'user_cache
         // entries, whose replacement values contain a literal quote).
         foreach ($replacements as $replacement) {
             $query = '
-UPDATE ' . \Piwigo\Config\Config::dbPrefix() . 'comments
+UPDATE ' . \Piwigo\Db\DbCredentials::current()->prefix . 'comments
   SET content = REPLACE(content, :search, :replace)
 ;';
             $conn->executeStatement($query, [
@@ -298,8 +298,28 @@ UPDATE ' . \Piwigo\Config\Config::dbPrefix() . 'comments
             ]);
         }
 
-        \Piwigo\Config\CurrentConfigService::get()->loadConfFromDb();
-        $dbconf = \Piwigo\Config\Config::all();
+        $configService = \Piwigo\Config\CurrentConfigService::get();
+        $configService->loadConfFromDb();
+        // These are all long-retired per-user-default config keys (this
+        // migration's whole job is moving them into user_infos columns,
+        // then deleting the rows below) -- genuinely dynamic reads via
+        // confGetParam(), no CurrentConfig property was ever kept for
+        // them. default_user_id is the one real exception (not among the
+        // keys deleted below), read via its own typed getter.
+        $dbconf = [
+            'default_template' => $configService->confGetParam('default_template'),
+            'nb_image_line' => $configService->confGetParam('nb_image_line'),
+            'nb_line_page' => $configService->confGetParam('nb_line_page'),
+            'default_language' => $configService->confGetParam('default_language'),
+            'default_maxwidth' => $configService->confGetParam('default_maxwidth'),
+            'default_maxheight' => $configService->confGetParam('default_maxheight'),
+            'recent_period' => $configService->confGetParam('recent_period'),
+            'auto_expand' => $configService->confGetParam('auto_expand'),
+            'show_nb_comments' => $configService->confGetParam('show_nb_comments'),
+            'show_nb_hits' => $configService->confGetParam('show_nb_hits'),
+            'newuser_default_enabled_high' => $configService->confGetParam('newuser_default_enabled_high'),
+            'default_user_id' => \Piwigo\Config\CurrentConfig::defaultUserId(),
+        ];
 
         $query = '
 UPDATE ' . Tables::userInfos() . '

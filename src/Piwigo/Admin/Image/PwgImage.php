@@ -59,7 +59,7 @@ final class PwgImage
 
         $extension = strtolower(\Piwigo\Core\StringHelper::getExtension($this->source_filepath));
 
-        $picture_ext = \Piwigo\Config\Config::pictureExtensions();
+        $picture_ext = \Piwigo\Config\CurrentConfig::pictureExtensions();
         if (! in_array($extension, $picture_ext, true)) {
             die('[Image] unsupported file extension');
         }
@@ -413,7 +413,7 @@ final class PwgImage
         if (! is_string($command)) {
             $retval = null;
             $cmd_out = null;
-            $imagick_dir = \Piwigo\Config\Config::extImagickDir();
+            $imagick_dir = \Piwigo\Config\CurrentConfig::extImagickDir();
             // check if magick is in path
             // [SEC-16] escapeshellarg() quotes the dir prefix; the adjacent
             // quoted+unquoted shell tokens still concatenate into one word
@@ -432,7 +432,7 @@ final class PwgImage
             return false;
         }
 
-        $imagick_dir = \Piwigo\Config\Config::extImagickDir();
+        $imagick_dir = \Piwigo\Config\CurrentConfig::extImagickDir();
         // [SEC-16] see the escapeshellarg() note above.
         $returnarray = [];
         @exec(escapeshellarg($imagick_dir) . self::get_ext_imagick_command() . ' -version', $returnarray);
@@ -454,7 +454,7 @@ final class PwgImage
     {
 
         if ($library === null) {
-            $conf_library = \Piwigo\Config\Config::graphicsLibrary();
+            $conf_library = \Piwigo\Config\CurrentConfig::graphicsLibrary();
             $library = $conf_library;
         }
 
@@ -499,7 +499,7 @@ final class PwgImage
 
         switch ($library) {
             case 'ext_imagick':
-                $ext_imagick_dir = \Piwigo\Config\Config::extImagickDir();
+                $ext_imagick_dir = \Piwigo\Config\CurrentConfig::extImagickDir();
                 $returnarray = [];
                 exec($ext_imagick_dir . self::get_ext_imagick_command() . ' -version', $returnarray);
                 if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0] ?? '', $match)) {

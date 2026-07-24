@@ -30,7 +30,7 @@ final class LoungeMaintenance
     public static function needsEmptying(): bool
     {
 
-        if (! \Piwigo\Config\Config::has('lounge_active') || ! \Piwigo\Config\Config::loungeActive()) {
+        if (! \Piwigo\Config\CurrentConfig::loungeActive()) {
             return false;
         }
 
@@ -65,7 +65,7 @@ SELECT
         // defensive no-op, not an expected real path.
         $age = ($dbnow !== false ? $dbnow : 0) - ($date_available !== false ? $date_available : 0);
 
-        $lounge_max_duration = \Piwigo\Config\Config::loungeMaxDuration();
+        $lounge_max_duration = \Piwigo\Config\CurrentConfig::loungeMaxDuration();
 
         return $age > $lounge_max_duration;
     }

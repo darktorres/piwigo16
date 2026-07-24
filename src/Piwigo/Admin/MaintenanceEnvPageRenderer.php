@@ -85,7 +85,7 @@ final class MaintenanceEnvPageRenderer
             $container_name = '(unofficial) ' . $container_name;
         }
 
-        $cache_sizes = \Piwigo\Config\Config::has('cache_sizes') ? \Piwigo\Config\Config::cacheSizes() : null;
+        $cache_sizes = \Piwigo\Config\CurrentConfig::cacheSizes();
 
         $time_elapsed_since_last_calc = null;
         if ($cache_sizes !== null && is_array($cache_sizes[3] ?? null) && (is_string($cache_sizes[3]['value'] ?? null) || is_int($cache_sizes[3]['value'] ?? null))) {
@@ -132,7 +132,7 @@ final class MaintenanceEnvPageRenderer
             $template->assign('GRAPHICS_LIBRARY', $graphics_library);
         }
 
-        if (\Piwigo\Config\Config::galleryLocked()) {
+        if (\Piwigo\Config\CurrentConfig::galleryLocked()) {
             $template->assign(
                 [
                     'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),

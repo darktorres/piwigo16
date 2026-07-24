@@ -17,7 +17,8 @@ use Symfony\Component\Console\Input\ArgvInput;
 
 /**
  * P12 CLI entry orchestrator -- the bin/piwigo counterpart to
- * CommonBootstrap::run() for the HTTP path. Kept in Bootstrap/ (not
+ * RequestBootstrap::bootEntryPoint() for the HTTP path. Kept in
+ * Bootstrap/ (not
  * bin/piwigo itself) so Kernel::container() access stays inside the
  * existing arch-test-allowed boundary rather than widening it; bin/piwigo
  * stays a thin delegator, mirroring index.php's own minimalism.
@@ -30,17 +31,19 @@ use Symfony\Component\Console\Input\ArgvInput;
  *
  * P14 adds ConfigLoader::applyDefaults()/applyEnvOverrides() before
  * Kernel::boot() -- a real gap found while testing a CLI command against a
- * freshly-installed DB: config/container.php's Connection/
- * EntityManagerInterface factories read Config::dbHost()/etc (static,
- * P13), and until now nothing seeded
- * Config::$data on the CLI path (P12's own commands read DB creds
- * directly via DbCredentials::fromEnv(), never through Config, so this
- * never surfaced before). Mirrors CommonBootstrap::run()'s equivalent
- * P13 addition on the HTTP path exactly.
+ * freshly-installed DB, back when config/container.php's Connection/
+ * EntityManagerInterface factories read CurrentConfig::dbHost()/etc (static, P13)
+ * and nothing seeded CurrentConfig::$data on the CLI path. Mirrors
+ * RequestBootstrap::configure()'s equivalent P13 addition on the HTTP path
+ * exactly. DB credentials moved off Config entirely (Config generic-
+ * accessor removal) onto Piwigo\Db\DbCredentials -- a pure env read, no
+ * Config dependency -- so this ordering no longer matters for the DB
+ * connection specifically; kept for whatever other Config-backed values a
+ * CLI command's own constructor-injected dependencies still read.
  *
  * Phase 5 adds CurrentConfigService::set($configService) -- resolve-and-
  * set only, deliberately not followed by ConfigService::loadConfFromDb()
- * the way CommonBootstrap::run() also calls it: that call is HTTP-only,
+ * the way RequestBootstrap::connect() also calls it: that call is HTTP-only,
  * since CLI commands can run before the `config` table exists (e.g. a
  * command run before install.php has ever been executed), where an
  * unconditional loadConfFromDb() would throw. Merely resolving/injecting
@@ -66,8 +69,8 @@ final class CliBootstrap
      * one -- ContainerDefinitionsTest.php's "every entry resolves" shape,
      * applied to config/commands.php instead of config/container.php.
      *
-     * `$paths` defaults to null (unlike `CommonBootstrap::run()`, which
-     * requires it) so existing tests calling `buildApplication()` with no
+     * `$paths` defaults to null (unlike `RequestBootstrap::bootEntryPoint()`,
+     * which requires it) so existing tests calling `buildApplication()` with no
      * arguments keep working -- passing a null Paths to the container
      * builder simply skips registering `Paths::class`.
      */

@@ -45,7 +45,7 @@ use Psr\Cache\CacheItemPoolInterface;
  *   the tree cache's own `tree_*` keys, replacing the former
  *   `MysqliDb::massUpdates()` write onto `user_cache_categories`.
  * - The representative-image fallback chain, privacy-level re-pick,
- *   `\Piwigo\Config\Config::displayFromto()` query, and all template-variable building are
+ *   `\Piwigo\Config\CurrentConfig::displayFromto()` query, and all template-variable building are
  *   unaffected and port unchanged.
  */
 final readonly class CategoryCatsRenderer
@@ -131,7 +131,7 @@ final readonly class CategoryCatsRenderer
 
         $totalCategories = count($filtered);
 
-        $nbCategoriesPage = \Piwigo\Config\Config::nbCategoriesPage();
+        $nbCategoriesPage = \Piwigo\Config\CurrentConfig::nbCategoriesPage();
 
         $pageRows = array_slice($filtered, $startcat, $nbCategoriesPage);
 
@@ -190,7 +190,7 @@ final readonly class CategoryCatsRenderer
                 $imageId = $cachedRepresentative;
             } elseif ($representativePictureIdSet) { // if a representative picture is set, it has priority
                 $imageId = $representativePictureId;
-            } elseif (\Piwigo\Config\Config::allowRandomRepresentative()) { // searching a random representant among elements in sub-categories
+            } elseif (\Piwigo\Config\CurrentConfig::allowRandomRepresentative()) { // searching a random representant among elements in sub-categories
                 $imageId = $categoryService->getRandomImageInCategory($merged);
             } elseif ($merged['count_categories'] > 0 and $merged['count_images'] > 0) { // at this point, count_images should always be >0 (used as condition above)
                 // searching a random representant among representant of sub-categories
@@ -213,7 +213,7 @@ final readonly class CategoryCatsRenderer
             }
 
             if (isset($imageId)) {
-                if (\Piwigo\Config\Config::representativeCacheOnSubcats() and $cachedRepresentative !== $imageId) {
+                if (\Piwigo\Config\CurrentConfig::representativeCacheOnSubcats() and $cachedRepresentative !== $imageId) {
                     $userRepresentativeUpdatesFor[$catId] = $imageId;
                 }
 
@@ -233,7 +233,7 @@ final readonly class CategoryCatsRenderer
             unset($imageId);
         }
 
-        if (\Piwigo\Config\Config::displayFromto()) {
+        if (\Piwigo\Config\CurrentConfig::displayFromto()) {
             if (count($categoryIds) > 0) {
                 $permissionCondition = $this->permissionService->getSqlConditionFandF([
                     'visible_categories' => 'category_id',
@@ -288,7 +288,7 @@ final readonly class CategoryCatsRenderer
                                 $newImageIds[] = $newImageId;
                             }
 
-                            if (\Piwigo\Config\Config::representativeCacheOnLevel()) {
+                            if (\Piwigo\Config\CurrentConfig::representativeCacheOnLevel()) {
                                 $userRepresentativeUpdatesFor[$category['id']] = $newImageId;
                             }
 
@@ -391,7 +391,7 @@ final readonly class CategoryCatsRenderer
                     ),
                     'NAME' => $name,
                 ]);
-                if (\Piwigo\Config\Config::indexNewIcon()) {
+                if (\Piwigo\Config\CurrentConfig::indexNewIcon()) {
                     $categoryMaxDateLast = $category['max_date_last'];
                     $categoryMaxDateLast = is_string($categoryMaxDateLast) ? $categoryMaxDateLast : '';
                     $categoryIsChildDateLast = $category['is_child_date_last'];
@@ -400,7 +400,7 @@ final readonly class CategoryCatsRenderer
                     $tplVar['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon($categoryMaxDateLast, $recentPeriodForIcon, $categoryIsChildDateLast);
                 }
 
-                if (\Piwigo\Config\Config::displayFromto()) {
+                if (\Piwigo\Config\CurrentConfig::displayFromto()) {
                     $categoryIdKey = $category['id'];
                     $categoryIdKey = (is_string($categoryIdKey) or is_int($categoryIdKey)) ? $categoryIdKey : 0;
                     if (isset($datesOfCategory[$categoryIdKey])) {
@@ -423,7 +423,7 @@ final readonly class CategoryCatsRenderer
             $derivativeParams = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_index_album_derivative_params', ImageStdParams::get_by_type(ImageStdParams::THUMB));
             $tplThumbnailsVarSelection = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('loc_end_index_category_thumbnails', $tplThumbnailsVarSelection);
             $template->assign([
-                'maxRequests' => \Piwigo\Config\Config::maxRequests(),
+                'maxRequests' => \Piwigo\Config\CurrentConfig::maxRequests(),
                 'category_thumbnails' => $tplThumbnailsVarSelection,
                 'derivative_params' => $derivativeParams,
             ]);

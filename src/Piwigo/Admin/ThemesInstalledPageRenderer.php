@@ -194,7 +194,7 @@ final class ThemesInstalledPageRenderer
 
         $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
         $template->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
-        $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', \Piwigo\Config\Config::enableExtensionsInstall());
+        $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', \Piwigo\Config\CurrentConfig::enableExtensionsInstall());
 
         $template->set_filenames([
             'themes' => 'themes_installed.tpl',

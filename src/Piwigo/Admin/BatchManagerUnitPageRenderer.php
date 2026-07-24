@@ -141,7 +141,7 @@ SELECT id, date_creation
                 $data['author'] = $_POST['author-' . $row_id_str];
                 $data['level'] = $_POST['level-' . $row_id_str];
 
-                if (\Piwigo\Config\Config::allowHtmlDescriptions()) {
+                if (\Piwigo\Config\CurrentConfig::allowHtmlDescriptions()) {
                     $data['comment'] = @$_POST['description-' . $row_id_str];
                 } else {
                     $description_post = $_POST['description-' . $row_id_str] ?? null;
@@ -257,10 +257,10 @@ SELECT id, date_creation
         // how many items to display on this page
         if (isset($_GET['display']) && $_GET['display'] !== '' && $_GET['display'] !== '0') {
             // \Piwigo\Config\ConfigDb::confUpdateParam('batch_manager_images_per_page_unit' , intval($_GET['display']));
-            // $nb_images = \Piwigo\Config\Config::batchManagerImagesPerPageUnit();
+            // $nb_images = \Piwigo\Config\CurrentConfig::batchManagerImagesPerPageUnit();
             $nb_images = is_numeric($_GET['display']) ? intval($_GET['display']) : 0;
-        } elseif (in_array(\Piwigo\Config\Config::batchManagerImagesPerPageUnit(), [5, 10, 50], true)) {
-            $nb_images = \Piwigo\Config\Config::batchManagerImagesPerPageUnit();
+        } elseif (in_array(\Piwigo\Config\CurrentConfig::batchManagerImagesPerPageUnit(), [5, 10, 50], true)) {
+            $nb_images = \Piwigo\Config\CurrentConfig::batchManagerImagesPerPageUnit();
         } else {
             $nb_images = 5;
         }
@@ -298,14 +298,9 @@ SELECT id, date_creation
                 and $bulk_manager_filter['prefilter'] === 'duplicates') {
                 $order_by = ' ORDER BY file, id';
             } else {
-                // Config::orderBy() (the typed SCHEMA accessor) models a
-                // structured {field,dir}[] shape that no real code writes --
-                // 'order_by' is actually stored as a raw "ORDER BY ..." SQL
-                // fragment (see ConfigDb::loadConfFromDb()'s own docblock),
-                // so read it via the untyped bag like ConfigService::
-                // confGetParam() does for keys without a compatible accessor.
-                $order_by_conf = \Piwigo\Config\Config::all()['order_by'] ?? null;
-                $order_by = is_string($order_by_conf) ? $order_by_conf : '';
+                // order_by is a raw "ORDER BY ..." SQL fragment string --
+                // see CurrentConfig::orderBy()'s own docblock.
+                $order_by = \Piwigo\Config\CurrentConfig::orderBy();
             }
 
             $query = '
@@ -315,8 +310,7 @@ SELECT *
             if ($is_category) {
                 $category_info = self::categoryService($conn)->getCategoryInfo($filter_category_id);
 
-                $order_by_inside_category_conf = \Piwigo\Config\Config::all()['order_by_inside_category'] ?? null;
-                $order_by = is_string($order_by_inside_category_conf) ? $order_by_inside_category_conf : '';
+                $order_by = \Piwigo\Config\CurrentConfig::orderByInsideCategory();
                 $category_image_order = $category_info !== null ? ($category_info['image_order'] ?? null) : null;
                 if (is_string($category_image_order) && $category_image_order !== '') {
                     $order_by = ' ORDER BY ' . $category_image_order;
@@ -350,7 +344,7 @@ SELECT *
             // that cross-block invariant).
             $added_by_username_of = [];
             if (count($added_by_ids) > 0) {
-                $user_fields = \Piwigo\Config\Config::userFields();
+                $user_fields = \Piwigo\Config\CurrentConfig::userFields();
                 $query = '
 SELECT
     ' . $user_fields['username'] . ' AS username,

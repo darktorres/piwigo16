@@ -109,15 +109,8 @@ final class BatchManagerSubController implements AdminSubControllerInterface
 
         $user_id = \Piwigo\Users\CurrentUser::get()->id;
 
-        $available_permission_levels = \Piwigo\Config\Config::availablePermissionLevels();
-        // Config::orderBy() (the typed SCHEMA accessor) models a structured
-        // {field,dir}[] shape that no real code writes -- 'order_by' is
-        // actually stored as a raw "ORDER BY ..." SQL fragment (see
-        // ConfigDb::loadConfFromDb()'s own docblock), so read it via the
-        // untyped bag like ConfigService::confGetParam() does for keys
-        // without a compatible accessor.
-        $conf_order_by_raw = \Piwigo\Config\Config::all()['order_by'] ?? null;
-        $conf_order_by = is_string($conf_order_by_raw) ? $conf_order_by_raw : '';
+        $available_permission_levels = \Piwigo\Config\CurrentConfig::availablePermissionLevels();
+        $conf_order_by = \Piwigo\Config\CurrentConfig::orderBy();
 
         // used both for the action-specific redirects below and for the
         // "category no longer exists" redirect further down

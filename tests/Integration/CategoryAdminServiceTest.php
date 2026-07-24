@@ -9,7 +9,7 @@ use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Db\DbConnection;
@@ -89,7 +89,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 

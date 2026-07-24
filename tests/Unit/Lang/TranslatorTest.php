@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Lang\Translator;
 
 beforeEach(function (): void {
@@ -12,7 +12,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     Translator::reset();
-    Config::reset();
+    CurrentConfig::reset();
     if (file_exists((is_string($this->poFile) ? $this->poFile : ''))) {
         unlink((is_string($this->poFile) ? $this->poFile : ''));
     }
@@ -126,7 +126,7 @@ test('load on an unreadable file is a silent no-op', function (): void {
 });
 
 test('translate warns about a missing key when debug_l10n is enabled', function (): void {
-    Config::override('debug_l10n', true);
+    CurrentConfig::setDebugL10n(true);
 
     $triggered = null;
     set_error_handler(function (int $errno, string $errstr) use (&$triggered): bool {
@@ -142,7 +142,7 @@ test('translate warns about a missing key when debug_l10n is enabled', function 
 });
 
 test('translate does not warn about a missing key when debug_l10n is disabled', function (): void {
-    Config::override('debug_l10n', false);
+    CurrentConfig::setDebugL10n(false);
 
     $triggered = false;
     set_error_handler(function () use (&$triggered): bool {
@@ -158,7 +158,7 @@ test('translate does not warn about a missing key when debug_l10n is disabled', 
 });
 
 test('translate does not warn about a resolved key even when debug_l10n is enabled', function (): void {
-    Config::override('debug_l10n', true);
+    CurrentConfig::setDebugL10n(true);
     Translator::get()->loadArray(['known_key' => 'known value']);
 
     $triggered = false;

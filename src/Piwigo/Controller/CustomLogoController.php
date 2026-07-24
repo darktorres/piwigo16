@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -46,7 +46,7 @@ final class CustomLogoController implements ControllerInterface
     {
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        $path = Config::all()['standard_pages_selected_logo_path'] ?? null;
+        $path = CurrentConfig::standardPagesSelectedLogoPath();
         if (! is_string($path) || $path === '') {
             return ResponseFactory::text('Not found', 404);
         }

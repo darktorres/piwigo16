@@ -97,7 +97,7 @@ final class FeedController implements ControllerInterface
         } else {
             $image_only = true;
             if (! \Piwigo\Auth\AccessControl::isAGuest()) {// auto session was created - so switch to guest
-                $guest_id = \Piwigo\Config\Config::guestId();
+                $guest_id = \Piwigo\Config\CurrentConfig::guestId();
                 $guest_user = self::userService($conn)->buildUser($guest_id, true);
                 \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($guest_user));
             }
@@ -115,8 +115,8 @@ final class FeedController implements ControllerInterface
 
         $rss_encoding = \Piwigo\Core\CharsetHelper::getPwgCharset();
 
-        $conf_gallery_title = \Piwigo\Config\Config::galleryTitle();
-        $conf_rss_feed_author = \Piwigo\Config\Config::rssReedAuthor();
+        $conf_gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();
+        $conf_rss_feed_author = \Piwigo\Config\CurrentConfig::rssReedAuthor();
         $user_username = \Piwigo\Users\CurrentUser::get()->username;
 
         $rss_title = $conf_gallery_title . ' (as ' . stripslashes($user_username) . ')';
@@ -171,12 +171,12 @@ final class FeedController implements ControllerInterface
             }
         }
 
-        // Real bug found via PHPStan: Config::recentPostDates() was retyped
+        // Real bug found via PHPStan: CurrentConfig::recentPostDates() was retyped
         // to return a NotificationConfig object, but this caller still
         // checked is_array() against it -- always false, so RSS recent-post-
         // date limits always fell back to getRecentPostDatesArray()'s own
         // hardcoded 3/3/3 defaults, ignoring any configured values.
-        $rss_config = \Piwigo\Config\Config::recentPostDates()->rss;
+        $rss_config = \Piwigo\Config\CurrentConfig::recentPostDates()->rss;
         $rss_recent_post_dates_args = [
             'max_dates' => $rss_config->maxDates,
             'max_elements' => $rss_config->maxElements,
@@ -228,7 +228,7 @@ final class FeedController implements ControllerInterface
             $rss_items
         );
 
-        $data_location = \Piwigo\Config\Config::dataLocation();
+        $data_location = \Piwigo\Config\CurrentConfig::dataLocation();
 
         $fileName = \Piwigo\Core\CurrentPaths::get()->root . $data_location . 'tmp';
         \Piwigo\Core\FilesystemHelper::mkgetdir($fileName); // just in case

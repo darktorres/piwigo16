@@ -3,19 +3,19 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Extensions\ExtensionType;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
 
 beforeEach(function (): void {
-    Config::reset();
+    CurrentConfig::reset();
     CurrentPaths::set(Paths::fromRoot('/tmp/piwigo-extension-type-test'));
 });
 
 afterEach(function (): void {
-    Config::reset();
+    CurrentConfig::reset();
     CurrentPaths::reset();
 });
 
@@ -25,13 +25,13 @@ test('table returns each type\'s own table', function (): void {
         ->and(ExtensionType::Language->table())->toBe(Tables::languages());
 });
 
-test('configCategoryKey returns each type\'s own pem category conf key', function (): void {
-    expect(ExtensionType::Plugin->configCategoryKey())->toBe('pem_plugins_category')
-        ->and(ExtensionType::Theme->configCategoryKey())->toBe('pem_themes_category')
-        ->and(ExtensionType::Language->configCategoryKey())->toBe('pem_languages_category');
+test('pemCategoryId returns each type\'s own pem category id', function (): void {
+    expect(ExtensionType::Plugin->pemCategoryId())->toBe(CurrentConfig::pemPluginsCategory())
+        ->and(ExtensionType::Theme->pemCategoryId())->toBe(CurrentConfig::pemThemesCategory())
+        ->and(ExtensionType::Language->pemCategoryId())->toBe(CurrentConfig::pemLanguagesCategory());
 });
 
-test('updatesIgnoredKey returns each type\'s plural Config::updatesIgnored() key', function (): void {
+test('updatesIgnoredKey returns each type\'s plural CurrentConfig::updatesIgnored() key', function (): void {
     expect(ExtensionType::Plugin->updatesIgnoredKey())->toBe('plugins')
         ->and(ExtensionType::Theme->updatesIgnoredKey())->toBe('themes')
         ->and(ExtensionType::Language->updatesIgnoredKey())->toBe('languages');
@@ -41,7 +41,7 @@ test('scanDirectory returns each type\'s own filesystem root', function (): void
     // P23 batch 8f-4: the PHPWG_PLUGINS_PATH define is gone --
     // Piwigo\Admin\PluginLoader::pluginsPath() is the canonical value now.
     expect(ExtensionType::Plugin->scanDirectory())->toBe(\Piwigo\Admin\PluginLoader::pluginsPath())
-        ->and(ExtensionType::Theme->scanDirectory())->toBe(Config::themesPath())
+        ->and(ExtensionType::Theme->scanDirectory())->toBe(CurrentConfig::themesPath())
         ->and(ExtensionType::Language->scanDirectory())->toBe(CurrentPaths::get()->root . 'language/');
 });
 

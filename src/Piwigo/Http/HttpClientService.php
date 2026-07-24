@@ -209,11 +209,11 @@ final readonly class HttpClientService implements ClientInterface
             'timeout' => 10,
         ];
 
-        if (\Piwigo\Config\Config::useProxy() && \Piwigo\Config\Config::proxyServer() !== '') {
-            $proxyServer = \Piwigo\Config\Config::proxyServer();
+        if (\Piwigo\Config\CurrentConfig::useProxy() && \Piwigo\Config\CurrentConfig::proxyServer() !== '') {
+            $proxyServer = \Piwigo\Config\CurrentConfig::proxyServer();
             $proxyUrl = $proxyServer;
-            if (\Piwigo\Config\Config::proxyAuth() !== '') {
-                $proxyAuth = \Piwigo\Config\Config::proxyAuth();
+            if (\Piwigo\Config\CurrentConfig::proxyAuth() !== '') {
+                $proxyAuth = \Piwigo\Config\CurrentConfig::proxyAuth();
                 $proxyUrl = preg_replace('#^(https?://)#', '$1' . $proxyAuth . '@', $proxyUrl);
             }
             $extraOptions['proxy'] = $proxyUrl;

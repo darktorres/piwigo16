@@ -25,7 +25,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
-use Piwigo\Config\Config;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ValidationPattern;
@@ -302,7 +302,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
             }
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\Config::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::uploadDir();
         $upload_dir = $upload_dir_conf . '/buffer';
         $pattern = '/' . $original_sum . '-' . $type . '/';
         $chunks = [];
@@ -361,7 +361,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
     private static function removeChunks($original_sum, string $type): void
     {
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\Config::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::uploadDir();
         $upload_dir = $upload_dir_conf . '/buffer';
         $pattern = '/' . $original_sum . '-' . $type . '/';
         $chunks = [];
@@ -394,7 +394,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
     public static function addComment(array $params, PwgServer $service): PwgError|array
     {
 
-        if (! \Piwigo\Config\Config::activateComments()) {
+        if (! \Piwigo\Config\CurrentConfig::activateComments()) {
             return new PwgError(403, 'Comments are disabled');
         }
 
@@ -634,10 +634,10 @@ SELECT id, date, author, content
         }
 
         $comment_post_data = null;
-        if (\Piwigo\Config\Config::activateComments() and
+        if (\Piwigo\Config\CurrentConfig::activateComments() and
             $is_commentable and
             (! \Piwigo\Auth\AccessControl::isAGuest()
-              or \Piwigo\Config\Config::commentsForall()
+              or \Piwigo\Config\CurrentConfig::commentsForall()
             )
         ) {
             $username = \Piwigo\Users\CurrentUser::get()->username;
@@ -726,7 +726,7 @@ SELECT DISTINCT id
             ->rate($params['image_id'], (int) $params['rate']);
 
         if ($res === false) {
-            $rate_items = \Piwigo\Config\Config::rateItems();
+            $rate_items = \Piwigo\Config\CurrentConfig::rateItems();
             return new PwgError(403, 'Forbidden or rate not in ' . implode(',', $rate_items));
         }
         return $res;
@@ -751,10 +751,10 @@ SELECT DISTINCT id
         if ($order_by !== '') {
             // Communicates the effective order_by to SearchService::
             // getQuickSearchResults()/getRegularSearchResults() etc, which
-            // read it back from Config:: for the rest of this request --
-            // Config::override() is a transient runtime override (matches
-            // its own docblock), not a DB write.
-            \Piwigo\Config\Config::override('order_by', 'ORDER BY ' . $order_by);
+            // read it back from CurrentConfig:: for the rest of this request --
+            // an in-memory-only override (CurrentConfig::setOrderBy()), not a
+            // DB write.
+            \Piwigo\Config\CurrentConfig::setOrderBy('ORDER BY ' . $order_by);
             $super_order_by = true; // quick_search_result might be faster
         }
 
@@ -1087,7 +1087,7 @@ SELECT DISTINCT id
             ];
         }
 
-        if (\Piwigo\Config\Config::rateEnabled() and isset($params['ratings'])) {
+        if (\Piwigo\Config\CurrentConfig::rateEnabled() and isset($params['ratings'])) {
             $search['fields']['ratings'] = $params['ratings'];
         }
 
@@ -1136,7 +1136,7 @@ SELECT DISTINCT id
     public static function setPrivacyLevel(array $params, PwgServer $service): PwgError|int|string
     {
 
-        $available_permission_levels = \Piwigo\Config\Config::availablePermissionLevels();
+        $available_permission_levels = \Piwigo\Config\CurrentConfig::availablePermissionLevels();
 
         if (! in_array($params['level'], $available_permission_levels, true)) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
@@ -1301,7 +1301,7 @@ UPDATE ' . Tables::imageCategory() . '
             ), 'WS');
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\Config::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::uploadDir();
         $upload_dir = $upload_dir_conf . '/buffer';
 
         // create the upload directory tree if not exists
@@ -1378,7 +1378,7 @@ SELECT
             $original_type = 'high';
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\Config::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::uploadDir();
         $file_path = $upload_dir_conf . '/buffer/' . $image['md5sum'] . '-original';
 
         self::mergeChunks($file_path, $image['md5sum'], $original_type);
@@ -1461,10 +1461,10 @@ SELECT COUNT(*)
         // does the image already exists ?
         if ($params['check_uniqueness']) {
             $where_clause = '0'; // no known uniqueness_mode: skip the uniqueness check
-            if (\Piwigo\Config\Config::uniquenessMode() === 'md5sum') {
+            if (\Piwigo\Config\CurrentConfig::uniquenessMode() === 'md5sum') {
                 $where_clause = "md5sum = '" . $params['original_sum'] . "'";
             }
-            if (\Piwigo\Config\Config::uniquenessMode() === 'filename') {
+            if (\Piwigo\Config\CurrentConfig::uniquenessMode() === 'filename') {
                 $where_clause = "file = '" . $params['original_filename'] . "'";
             }
 
@@ -1493,7 +1493,7 @@ SELECT COUNT(*)
             $original_type = 'file';
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\Config::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::uploadDir();
         $file_path = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-original';
 
         self::mergeChunks($file_path, $params['original_sum'], $original_type);
@@ -1753,11 +1753,11 @@ SELECT id, name, permalink
 
         if (isset($params['format_of'])) {
             // are formats enabled?
-            if (! \Piwigo\Config\Config::isFormatsEnabled()) {
+            if (! \Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
                 return new PwgError(401, 'formats are disabled');
             }
 
-            $format_ext_list = \Piwigo\Config\Config::formatExtensions();
+            $format_ext_list = \Piwigo\Config\CurrentConfig::formatExtensions();
 
             // We must check if the extension is in the authorized list.
             if ((bool) preg_match('/\.(' . implode('|', $format_ext_list) . ')$/', (string) $params['name'], $matches)) {
@@ -1769,7 +1769,7 @@ SELECT id, name, permalink
             }
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\Config::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::uploadDir();
         $upload_dir = $upload_dir_conf . '/buffer';
 
         // create the upload directory tree if not exists
@@ -1991,7 +1991,7 @@ SELECT COUNT(*)
             }
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\Config::uploadDir();
+        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::uploadDir();
         $output_filepath_prefix = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-u' . \Piwigo\Users\CurrentUser::get()->id;
         $chunkfile_path_pattern = $output_filepath_prefix . '-%03uof%03u.chunk';
 
@@ -2016,7 +2016,7 @@ SELECT COUNT(*)
         // keeps using the original absolute $chunkfile_path unchanged, since
         // the 'uploads' disk is rooted at the same real filesystem location.
         $paths = CurrentPaths::get();
-        $chunk_root = $paths->root . Config::uploadDir();
+        $chunk_root = $paths->root . CurrentConfig::uploadDir();
         $chunk_abs_path = str_replace(['\\', '/./'], ['/', '/'], $chunkfile_path);
         $chunk_rel_path = StorageRegistry::stripRoot($chunk_root, $chunk_abs_path);
         $chunk_stream = fopen($uploaded_chunk_tmp_name, 'rb');
@@ -2254,7 +2254,7 @@ SELECT COUNT(*)
         $split_pattern = '/[\s,;\|]/';
         $result = [];
 
-        if (\Piwigo\Config\Config::uniquenessMode() === 'md5sum') {
+        if (\Piwigo\Config\CurrentConfig::uniquenessMode() === 'md5sum') {
             // search among photos the list of photos already added, based on md5sum list
             $md5sums = preg_split(
                 $split_pattern,
@@ -2279,7 +2279,7 @@ SELECT id, md5sum
                     $result[$md5sum] = $id_of_md5[$md5sum];
                 }
             }
-        } elseif (\Piwigo\Config\Config::uniquenessMode() === 'filename') {
+        } elseif (\Piwigo\Config\CurrentConfig::uniquenessMode() === 'filename') {
             // search among photos the list of photos already added, based on
             // filename list
             $filenames = preg_split(
@@ -2347,10 +2347,10 @@ SELECT
 
         // we want "long" format extensions first to match "cmyk.jpg" before "jpg" for example
         // (kept as a local variable, not written back to $conf: the original
-        // in-place usort() by reference on \Piwigo\Config\Config::formatExtensions() only ever
+        // in-place usort() by reference on \Piwigo\Config\CurrentConfig::formatExtensions() only ever
         // mutated the request-local config copy anyway, since $conf is reloaded
         // from scratch on every request)
-        $format_ext_list = \Piwigo\Config\Config::formatExtensions();
+        $format_ext_list = \Piwigo\Config\CurrentConfig::formatExtensions();
         usort($format_ext_list, static fn (string $a, string $b): int => strlen($b) - strlen($a));
 
         $query = '
@@ -2635,7 +2635,7 @@ SELECT path
 
         foreach ($info_columns as $key) {
             if (isset($params[$key])) {
-                if (! \Piwigo\Config\Config::allowHtmlDescriptions() or ! isset($params['pwg_token'])) {
+                if (! \Piwigo\Config\CurrentConfig::allowHtmlDescriptions() or ! isset($params['pwg_token'])) {
                     $params[$key] = strip_tags((string) $params[$key], '<b><strong><em><i>');
                 }
 

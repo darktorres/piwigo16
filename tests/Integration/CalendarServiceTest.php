@@ -8,7 +8,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\CategoryService;
     use Piwigo\Calendar\CalendarService;
-    use Piwigo\Config\Config;
+    use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Group\GroupRepository;
@@ -42,7 +42,7 @@ final class CalendarServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        Config::reset();
+        CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 

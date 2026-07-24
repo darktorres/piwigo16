@@ -13,7 +13,7 @@ use Psr\Container\ContainerInterface;
  * (also L1) must call this before boot, and deptrac.yaml only allows
  * L1Infrastructure to depend on L0Data. Container is genuinely
  * infrastructure (the raw DI-wiring mechanism), not integration/
- * orchestration like CommonBootstrap. (See deptrac.yaml's own comment for
+ * orchestration like RequestBootstrap. (See deptrac.yaml's own comment for
  * why the layer names have no hyphens -- a real deptrac 4.6.2 parsing bug,
  * found while verifying this placement.)
  *

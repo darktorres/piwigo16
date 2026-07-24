@@ -69,7 +69,7 @@ final class ProfileController implements ControllerInterface
         ];
 
         // Get the Guest custom settings
-        $default_user_id = \Piwigo\Config\Config::defaultUserId();
+        $default_user_id = \Piwigo\Config\CurrentConfig::defaultUserId();
         $query = '
 SELECT ' . implode(',', $fields) . '
   FROM ' . Tables::userInfos() . '

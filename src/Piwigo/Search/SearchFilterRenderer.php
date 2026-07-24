@@ -76,7 +76,7 @@ final readonly class SearchFilterRenderer
 
         $tagService = $this->tagService;
 
-        $filtersViewsRaw = \Piwigo\Config\Config::filtersViews() ?? \Piwigo\Config\Config::defaultFiltersViews();
+        $filtersViewsRaw = \Piwigo\Config\CurrentConfig::filtersViews() ?? \Piwigo\Config\CurrentConfig::defaultFiltersViews();
 
         // 'last_filters_conf' is a lone boolean flag stored alongside the
         // per-filter settings in this config value (see
@@ -418,7 +418,7 @@ SELECT
                     }
                 }
 
-                $confUserFields = \Piwigo\Config\Config::userFields();
+                $confUserFields = \Piwigo\Config\CurrentConfig::userFields();
                 $userFieldId = $confUserFields['id'];
                 $userFieldUsername = $confUserFields['username'];
 
@@ -577,7 +577,7 @@ SELECT
         }
 
         // For rating
-        if (\Piwigo\Config\Config::rateEnabled()) {
+        if (\Piwigo\Config\CurrentConfig::rateEnabled()) {
             $template->assign('SHOW_FILTER_RATINGS', true);
 
             if (isset($searchFields['ratings']) and (bool) $displayFilters['rating']['access']) {

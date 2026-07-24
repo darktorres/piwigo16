@@ -15,7 +15,7 @@ final class PasswordRepository extends AbstractRepository
 {
     /**
      * Uses the literal 'password'/'id' column names, not
-     * \Piwigo\Config\Config::userFields()'s mapping -- matches the original
+     * \Piwigo\Config\CurrentConfig::userFields()'s mapping -- matches the original
      * pwg_password_verify()'s own \Piwigo\Db\MysqliDb::singleUpdate() call exactly.
      */
     public function updatePasswordHash(int $userId, string $newHash): void

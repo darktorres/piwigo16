@@ -15,11 +15,9 @@ declare(strict_types=1);
 // session_cache_limiter('public') stays here (not in the controller) --
 // it must run before session_start(), which RequestBootstrap::
 // bootEntryPoint() triggers directly below, well before
-// CommonBootstrap::run()/RequestPipeline::handle() dispatch to the
-// controller.
+// RequestPipeline::handle() dispatches to the controller.
 require __DIR__ . '/../vendor/autoload.php';
 
-use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Bootstrap\RequestPipeline;
 use Piwigo\Core\Paths;
 use Piwigo\Http\RequestFactory;
@@ -29,8 +27,6 @@ use Piwigo\Http\ResponseEmitter;
 $paths = Paths::fromRoot(dirname(__DIR__));
 session_cache_limiter('public');
 \Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
-
-CommonBootstrap::run($paths);
 
 $response = RequestPipeline::handle(RequestFactory::fromGlobals());
 new ResponseEmitter()

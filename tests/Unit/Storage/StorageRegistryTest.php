@@ -95,7 +95,7 @@ test('stripRoot normalizes backslashes', function (): void {
 
 test('stripRoot collapses a single /./ redundancy from root+path concatenation', function (): void {
     // The realistic case this exists for: Paths::$root concatenated
-    // with a Config value that already starts with './' (e.g. Config::
+    // with a Config value that already starts with './' (e.g. CurrentConfig::
     // uploadDir()'s './upload') produces exactly one '/./' redundancy in the
     // middle of the string -- normalize() does a single str_replace() pass,
     // not a repeated/recursive collapse, but that's sufficient for the one

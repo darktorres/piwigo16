@@ -101,7 +101,7 @@ final readonly class ExtensionUpdateChecker
     {
         $_SESSION['extensions_need_update'] = [];
 
-        $updatesIgnored = \Piwigo\Config\Config::updatesIgnored();
+        $updatesIgnored = \Piwigo\Config\CurrentConfig::updatesIgnored();
 
         foreach (ExtensionType::cases() as $type) {
             $pending = $this->getPendingUpdates($type);
@@ -125,7 +125,7 @@ final readonly class ExtensionUpdateChecker
             $updatesIgnored[$type->updatesIgnoredKey()] = $ignoreList;
         }
 
-        \Piwigo\Config\Config::override('updates_ignored', $updatesIgnored);
+        \Piwigo\Config\CurrentConfig::setUpdatesIgnored($updatesIgnored);
         $this->configService->confUpdateParam('updates_ignored', serialize($updatesIgnored));
     }
 

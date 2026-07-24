@@ -22,7 +22,7 @@ use Piwigo\Db\Tables;
  * stream on real 2010-era upgrades, so dropping it would change output)
  * and the null $replacement args to preg_replace/str_ireplace (PHP 8
  * deprecation-warns but behaves as ''). order_by_inside_category is read
- * via LegacyFileConf::read() -- Config::orderByInsideCategory() doesn't
+ * via LegacyFileConf::read() -- CurrentConfig::orderByInsideCategory() doesn't
  * see a site's local/config/config.inc.php override on this path (same
  * reasoning as Patch106).
  */

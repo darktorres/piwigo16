@@ -20,7 +20,7 @@ use Piwigo\Image\DerivativeCacheService;
  * clear_derivative_cache() call became
  * DerivativeCacheService::clearDerivativeCache() (same target its
  * frozen-script delegate forwarded to). data_location is read via
- * LegacyFileConf::read() -- Config::dataLocation() doesn't see a site's
+ * LegacyFileConf::read() -- CurrentConfig::dataLocation() doesn't see a site's
  * local/config/config.inc.php override on this path (see InstallWizard's
  * own constructor docblock).
  */

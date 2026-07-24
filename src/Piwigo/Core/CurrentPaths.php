@@ -45,6 +45,17 @@ final class CurrentPaths
     }
 
     /**
+     * Lets a caller that can tolerate "not booted yet" (e.g.
+     * DeploymentPolicy::current(), reached from a pure-Unit test that
+     * never bootstraps a real Paths) check before get() would throw --
+     * mirrors CurrentConfigService's own isSet().
+     */
+    public static function isSet(): bool
+    {
+        return self::$instance instanceof Paths;
+    }
+
+    /**
      * Test-only, for test-isolation between requests -- mirrors
      * CurrentConfigService's/CurrentLogger's/CurrentTemplate's own
      * reset() methods.

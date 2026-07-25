@@ -41,7 +41,7 @@ deptrac:
     # bridge (add_event_handler()/trigger_change()/trigger_notify()) onto
     # EventDispatcher::get() directly surfaced real L1->L2b and L2a->L2b
     # callers (Config\ConfigDb, Core\ThemeCatalog, Cache\
-    # UserCacheInvalidator; Auth\AuthService, Users\*, Category\*, Image\*,
+    # PermissionCacheInvalidator; Auth\AuthService, Users\*, Category\*, Image\*,
     # Group\GroupService, Tag\TagService) that the untracked free-function
     # form had been hiding. EventDispatcher.php itself injects nothing (no
     # `use` statements) and is a generic pub/sub bus reachable from every

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
-use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
@@ -383,7 +383,7 @@ final readonly class ImageService
         $this->repo->deleteLoungeUpTo($maxImageId);
 
         if ($invalidateUserCache) {
-            UserCacheInvalidator::invalidate();
+            PermissionCacheInvalidator::invalidate();
         }
 
         \Piwigo\Config\CurrentConfigService::get()->confDeleteParam('empty_lounge_running');

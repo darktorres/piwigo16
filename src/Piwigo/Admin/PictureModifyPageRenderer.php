@@ -7,7 +7,7 @@ namespace Piwigo\Admin;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
@@ -146,7 +146,7 @@ SELECT id
                 ->checkOrFail(new HtmlService(), $this->redirectService);
 
             $imageService->deleteElements([$image_id], $this->urlService, true);
-            UserCacheInvalidator::invalidate();
+            PermissionCacheInvalidator::invalidate();
 
             // where to redirect the user now?
             //
@@ -260,7 +260,7 @@ SELECT id
             }
             $imageService->moveImagesToCategories([$image_id], $associate_categories);
 
-            UserCacheInvalidator::invalidate();
+            PermissionCacheInvalidator::invalidate();
 
             // thumbnail for albums
             if (! isset($_POST['represent'])) {

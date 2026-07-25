@@ -21,7 +21,7 @@ namespace Piwigo\Core;
  * method has no instance state to inject a Connection into, and every
  * real caller invokes it statically (`RecentIconResolver::getIcon(...)`),
  * matching the established "static method constructs its own dependency
- * inline" precedent (same as `Cache\UserCacheInvalidator`).
+ * inline" precedent (same as `Cache\PermissionCacheInvalidator`).
  */
 final class RecentIconResolver
 {

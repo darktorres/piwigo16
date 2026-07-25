@@ -310,8 +310,6 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
             Tables::userAccess(),
             Tables::userMailNotification(),
             Tables::userFeed(),
-            Tables::userCache(),
-            Tables::userCacheCategories(),
             Tables::userGroup(),
             Tables::favorites(),
             Tables::caddie(),

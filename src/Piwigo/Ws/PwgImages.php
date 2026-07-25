@@ -19,7 +19,7 @@ use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Bootstrap\RedirectService;
-use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
@@ -1155,7 +1155,7 @@ UPDATE ' . Tables::images() . '
         self::activityService($conn)->record('photo', $params['image_id'], 'edit');
 
         if ($affected_rows > 0) {
-            UserCacheInvalidator::invalidate();
+            PermissionCacheInvalidator::invalidate();
         }
         return $affected_rows;
     }
@@ -1566,7 +1566,7 @@ SELECT id, name, permalink
                 );
         }
 
-        UserCacheInvalidator::invalidate();
+        PermissionCacheInvalidator::invalidate();
 
         return [
             'image_id' => $image_id,
@@ -2184,7 +2184,7 @@ SELECT COUNT(*)
         }
 
         // final step, reset user cache
-        UserCacheInvalidator::invalidate();
+        PermissionCacheInvalidator::invalidate();
 
         // trick to bypass get_sql_condition_FandF
         if ($params['level'] !== 0 and $params['level'] > \Piwigo\Users\CurrentUser::get()->level) {
@@ -2528,7 +2528,7 @@ DELETE FROM ' . Tables::imageFormat() . '
 ;';
         $conn->executeStatement($query);
 
-        UserCacheInvalidator::invalidate();
+        PermissionCacheInvalidator::invalidate();
 
         return $ok;
     }
@@ -2751,7 +2751,7 @@ SELECT path
             $tagService->setTags($tag_list, $params['image_id']);
         }
 
-        UserCacheInvalidator::invalidate();
+        PermissionCacheInvalidator::invalidate();
 
         return null;
     }
@@ -2794,7 +2794,7 @@ SELECT path
         $imageConn = DbConnection::build();
         $ret = self::imageService($imageConn)
             ->deleteElements($image_ids, new UrlService(new HtmlService()), true);
-        UserCacheInvalidator::invalidate();
+        PermissionCacheInvalidator::invalidate();
 
         return $ret;
     }
@@ -3030,7 +3030,7 @@ SELECT id
 
         $orphan_ids_to_delete = array_slice($imageService->getOrphans(), 0, $params['block_size']);
         $deleted_count = $imageService->deleteElements($orphan_ids_to_delete, new UrlService(new HtmlService()), true);
-        UserCacheInvalidator::invalidate();
+        PermissionCacheInvalidator::invalidate();
 
         return [
             'nb_deleted' => $deleted_count,
@@ -3078,7 +3078,7 @@ SELECT
             $imageService->moveImagesToCategories($params['image_id'], [$params['category_id']]);
         }
 
-        UserCacheInvalidator::invalidate();
+        PermissionCacheInvalidator::invalidate();
 
         return null;
     }

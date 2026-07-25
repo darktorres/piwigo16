@@ -8,7 +8,7 @@ use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
-use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
@@ -607,7 +607,7 @@ SELECT
         }
 
         if (! \Piwigo\Config\CurrentConfig::loungeActive()) {
-            UserCacheInvalidator::invalidate();
+            PermissionCacheInvalidator::invalidate();
         }
     }
 

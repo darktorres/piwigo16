@@ -11,7 +11,7 @@ use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
-use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
@@ -1372,7 +1372,7 @@ SELECT
             }
         }
 
-        UserCacheInvalidator::invalidate();
+        PermissionCacheInvalidator::invalidate();
 
         $this->activityLogger->record('user', $user_ids, 'edit');
 
@@ -1421,8 +1421,6 @@ SELECT
             Tables::userFeed(),
             Tables::userInfos(),
             Tables::userAccess(),
-            Tables::userCache(),
-            Tables::userCacheCategories(),
             Tables::userGroup(),
         ];
 

@@ -7,7 +7,7 @@ namespace Piwigo\Controller;
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
-use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
@@ -415,7 +415,7 @@ UPDATE ' . Tables::categories() . '
                             'image_id' => $image_id,
                         ]);
 
-                        UserCacheInvalidator::invalidate();
+                        PermissionCacheInvalidator::invalidate();
                     }
 
                     $this->redirectService->redirect($url_self);

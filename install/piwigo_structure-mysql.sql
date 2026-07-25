@@ -427,43 +427,6 @@ CREATE TABLE `piwigo_user_auth_keys` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Table structure for table `piwigo_user_cache`
---
-
-DROP TABLE IF EXISTS `piwigo_user_cache`;
-CREATE TABLE `piwigo_user_cache` (
-  `user_id` mediumint(8) unsigned NOT NULL default '0',
-  `need_update` tinyint(1) NOT NULL default '1',
-  `cache_update_time` integer unsigned NOT NULL default 0,
-  `forbidden_categories` mediumtext,
-  `nb_total_images` mediumint(8) unsigned default NULL,
-  `last_photo_date` datetime DEFAULT NULL,
-  `nb_available_tags` INT(5) DEFAULT NULL,
-  `nb_available_comments` INT(5) DEFAULT NULL,
-  `image_access_type` enum('NOT IN','IN') NOT NULL default 'NOT IN',
-  `image_access_list` mediumtext default NULL,
-  PRIMARY KEY  (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Table structure for table `piwigo_user_cache_categories`
---
-
-DROP TABLE IF EXISTS `piwigo_user_cache_categories`;
-CREATE TABLE `piwigo_user_cache_categories` (
-  `user_id` mediumint(8) unsigned NOT NULL default '0',
-  `cat_id` smallint(5) unsigned NOT NULL default '0',
-  `date_last` datetime default NULL,
-  `max_date_last` datetime default NULL,
-  `nb_images` mediumint(8) unsigned NOT NULL default '0',
-  `count_images` mediumint(8) unsigned default '0',
-  `nb_categories` mediumint(8) unsigned default '0',
-  `count_categories` mediumint(8) unsigned default '0',
-  `user_representative_picture_id` mediumint(8) unsigned default NULL,
-  PRIMARY KEY  (`user_id`,`cat_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
 -- Table structure for table `piwigo_user_feed`
 --
 
@@ -654,9 +617,6 @@ ALTER TABLE `piwigo_user_group` ADD CONSTRAINT `fk_user_group_user_id` FOREIGN K
 ALTER TABLE `piwigo_user_group` ADD CONSTRAINT `fk_user_group_group_id` FOREIGN KEY (`group_id`) REFERENCES `piwigo_groups` (`id`) ON DELETE CASCADE;
 ALTER TABLE `piwigo_group_access` ADD CONSTRAINT `fk_group_access_group_id` FOREIGN KEY (`group_id`) REFERENCES `piwigo_groups` (`id`) ON DELETE CASCADE;
 ALTER TABLE `piwigo_group_access` ADD CONSTRAINT `fk_group_access_cat_id` FOREIGN KEY (`cat_id`) REFERENCES `piwigo_categories` (`id`) ON DELETE CASCADE;
-ALTER TABLE `piwigo_user_cache` ADD CONSTRAINT `fk_user_cache_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users` (`id`) ON DELETE CASCADE;
-ALTER TABLE `piwigo_user_cache_categories` ADD CONSTRAINT `fk_user_cache_categories_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users` (`id`) ON DELETE CASCADE;
-ALTER TABLE `piwigo_user_cache_categories` ADD CONSTRAINT `fk_user_cache_categories_cat_id` FOREIGN KEY (`cat_id`) REFERENCES `piwigo_categories` (`id`) ON DELETE CASCADE;
 ALTER TABLE `piwigo_user_infos` ADD CONSTRAINT `fk_user_infos_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users` (`id`) ON DELETE CASCADE;
 ALTER TABLE `piwigo_user_feed` ADD CONSTRAINT `fk_user_feed_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users` (`id`) ON DELETE CASCADE;
 ALTER TABLE `piwigo_user_mail_notification` ADD CONSTRAINT `fk_user_mail_notification_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users` (`id`) ON DELETE CASCADE;

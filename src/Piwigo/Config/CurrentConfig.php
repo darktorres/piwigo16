@@ -686,7 +686,7 @@ final class CurrentConfig
     /**
      * Cached count of images belonging to no album; null means "not computed
      * yet" (recomputed lazily by ImageService::countOrphans(), invalidated by
-     * UserCacheInvalidator).
+     * PermissionCacheInvalidator).
      */
     private static ?int $countOrphans = null;
 

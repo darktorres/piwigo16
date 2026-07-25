@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Group;
 
 use Piwigo\Audit\AuditService;
-use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivityLoggerInterface;
 
@@ -17,7 +17,7 @@ use Piwigo\Core\ActivityLoggerInterface;
  * Piwigo\Activity\ActivityService, is L2bExtendedDomain; this class is
  * L2aCoreDomain, so it depends on the L1Infrastructure interface instead,
  * same shape as MailerInterface -- see ActivityLoggerInterface's own
- * docblock), and calls Piwigo\Cache\UserCacheInvalidator (L1Infrastructure,
+ * docblock), and calls Piwigo\Cache\PermissionCacheInvalidator (L1Infrastructure,
  * P23 batch 8d) directly for cache invalidation -- a real class dependency,
  * always allowed (L2a may depend on L1). Also constructor-injects
  * ConfigService (L1Infrastructure, Phase 5 Legacy Coupling Retirement) for
@@ -106,7 +106,7 @@ final readonly class GroupService
 
         $memberIds = $this->repo->findMemberUserIds($groupId);
         $this->repo->addMembers($newId, $memberIds);
-        UserCacheInvalidator::invalidate();
+        PermissionCacheInvalidator::invalidate();
 
         // Matches the original ws_groups_duplicate()'s own (likely
         // accidental, but faithfully preserved) choice of 'associated' id:
@@ -161,7 +161,7 @@ final readonly class GroupService
         }
 
         $this->repo->addMembers($groupId, $userIds);
-        UserCacheInvalidator::invalidate();
+        PermissionCacheInvalidator::invalidate();
 
         $this->activityLogger->record('group', $groupId, 'edit');
         $this->activityLogger->record('user', $userIds, 'edit');
@@ -181,7 +181,7 @@ final readonly class GroupService
         }
 
         $this->repo->removeMembers($groupId, $userIds);
-        UserCacheInvalidator::invalidate();
+        PermissionCacheInvalidator::invalidate();
 
         $this->activityLogger->record('group', $groupId, 'edit');
         $this->activityLogger->record('user', $userIds, 'edit');
@@ -219,7 +219,7 @@ final readonly class GroupService
         // Unconditional, matching the original ws_groups_merge(): the
         // cache invalidation and the destination group's own 'edit'
         // activity fire even when no members actually moved.
-        UserCacheInvalidator::invalidate();
+        PermissionCacheInvalidator::invalidate();
         $this->activityLogger->record('group', $destinationGroupId, 'edit');
 
         foreach ($membersToAdd as $userId) {
@@ -241,7 +241,7 @@ final readonly class GroupService
      * email_admin_on_new_user config-consistency check and the [SEC-57]
      * per-group audit trail. Does not itself invalidate the user cache --
      * callers that need it (ws_groups_delete()) call
-     * Piwigo\Cache\UserCacheInvalidator::invalidate() themselves
+     * Piwigo\Cache\PermissionCacheInvalidator::invalidate() themselves
      * afterward, same as before.
      *
      * @param array<int, int> $groupIds
@@ -322,6 +322,6 @@ final readonly class GroupService
         }
 
         $this->repo->addAccess($groupId, $toAuthorize);
-        UserCacheInvalidator::invalidate();
+        PermissionCacheInvalidator::invalidate();
     }
 }

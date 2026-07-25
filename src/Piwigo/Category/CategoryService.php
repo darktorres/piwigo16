@@ -970,7 +970,6 @@ final readonly class CategoryService
         $this->repo->deleteCategoriesByIds($ids);
 
         $this->repo->deleteOldPermalinksForCategories($ids);
-        $this->repo->deleteUserCacheCategoriesForCategories($ids);
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('delete_categories', $ids);
         $activityLogger->record('album', $ids, 'delete', [
@@ -1034,7 +1033,6 @@ final readonly class CategoryService
             [Tables::userAccess(), 'cat_id'],
             [Tables::groupAccess(), 'cat_id'],
             [Tables::oldPermalinks(), 'cat_id'],
-            [Tables::userCacheCategories(), 'cat_id'],
         ];
 
         foreach ($relatedColumns as [$table, $column]) {

@@ -8,7 +8,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
-use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
@@ -523,7 +523,7 @@ DELETE
             }
 
             if (! in_array($action, ['remove_from_caddie', 'add_to_caddie', 'delete_derivatives', 'generate_derivatives'], true)) {
-                UserCacheInvalidator::invalidate();
+                PermissionCacheInvalidator::invalidate();
             }
 
             \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('element_set_global_action', $action, $collection);

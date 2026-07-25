@@ -40,7 +40,7 @@ use Piwigo\Core\Paths;
  * Connection resolved and cached here would carry stale ones for the rest
  * of the request. Once called, every Tier-2 class reachable from the
  * install path (Admin/themes.php/plugins.php/updates.php/
- * Cache/UserCacheInvalidator.php/Image/ImageService.php/
+ * Cache/PermissionCacheInvalidator.php/Image/ImageService.php/
  * Page/NoPhotoYetRenderer.php/Template/Template.php/Image/ImageStdParams.php/
  * Core/UniqueExecLock.php) can safely call CurrentConfigService::get() the
  * same way they already do when reached from the HTTP path

@@ -16,7 +16,7 @@ use Piwigo\Db\Tables;
  * home; every real caller is under the Piwigo\Admin or
  * Piwigo\Controller\Admin namespace (L4Integration) or a legacy top-level
  * entry point (admin.php, install.php), so unlike this batch's
- * FilesystemHelper/PermissionService/UserCacheInvalidator, no deptrac
+ * FilesystemHelper/PermissionService/PermissionCacheInvalidator, no deptrac
  * layer constraint forced a specific placement -- matches the
  * "administrative machinery" precedent already set by
  * PiwigoInfosSender/InstallationStats.

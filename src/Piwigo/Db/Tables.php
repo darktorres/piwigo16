@@ -185,16 +185,6 @@ final class Tables
         return DbCredentials::current()->prefix . 'user_auth_keys';
     }
 
-    public static function userCache(): string
-    {
-        return DbCredentials::current()->prefix . 'user_cache';
-    }
-
-    public static function userCacheCategories(): string
-    {
-        return DbCredentials::current()->prefix . 'user_cache_categories';
-    }
-
     public static function userFailedLogins(): string
     {
         return DbCredentials::current()->prefix . 'user_failed_logins';

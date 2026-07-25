@@ -1589,6 +1589,68 @@ an explicit "mark dirty" signal any more), **except** `invalidate()`'s other 2 r
 site whether *those* still have independent value beyond the `user_cache` concern before
 deleting the whole call, not just assumed dead by association.
 
+> **2026-07-25 note:** the plan's own "except these 2 real effects" caveat was itself
+> stale — written before Stage 4g's fix to the very same `invalidate()` method, which
+> added 2 *more* real effects (`CachePools::permissions()->clear()`/
+> `effectivePermissions()->clear()`) that are now the entire remaining *point* of the
+> method (they're what fixed the [SEC-33] regression). Verified each of the 4 candidate
+> "keep or drop" effects directly rather than trusting the plan's frozen list:
+> - `$persistent_cache->purge(true)` — dropped. Grep confirms zero remaining real
+>   `CurrentPersistentCache`/`PersistentFileCache` consumers beyond `RequestBootstrap.php`
+>   (initializes it) and `MaintenanceActionDispatcher.php`'s own unrelated
+>   `'compiled-templates'` maintenance action (which already purges it itself) — Stage 4a
+>   already moved every permission/category-related consumer onto `CachePools`. Nothing
+>   left in the persistent file cache for this call to protect.
+> - the `invalidate_user_cache` `EventDispatcher::triggerNotify()` hook — dropped. Grep
+>   confirms zero real in-tree handlers, same "grep confirms zero real handlers" standard
+>   this stage already applied elsewhere.
+> - `CachePools::permissions()->clear()`/`effectivePermissions()->clear()` — kept, now the
+>   method's real purpose.
+> - `confDeleteParam('count_orphans')` — kept: a real, independently-computed cached config
+>   value (`Image\ImageService::emptyLounge()`'s own write), genuinely affected by the same
+>   category/group/image mutations that call this method, not `user_cache`-specific but
+>   correctly bundled here regardless.
+>
+> Also found while auditing all ~31 real call sites: zero of them ever passed
+> `invalidate(false)` — the `$full`/`markNeedUpdate()` distinction was dead code, dropped
+> along with the parameter.
+>
+> Renamed the class to `Cache\PermissionCacheInvalidator` rather than keeping
+> `UserCacheInvalidator`'s name on a class with no more `user_cache` table to invalidate —
+> matching this stage's own "don't ship a lying name" standard (`Permission\
+> EffectiveForbiddenCategoriesCache` et al.). All ~31 call sites + both explicit
+> `invalidate(true)` sites retargeted to the bare `invalidate()`. `Cache/
+> UserCacheRepository.php` deleted outright (dead once the truncate/`markNeedUpdate` calls
+> it backed are gone). 3 generic "delete/verify orphaned rows across every user/category
+> table" maintenance lists (`UserRepository::deleteUser()`, `UserService`'s
+> create/orphan-sync pass, `CategoryService::checkCategoriesIntegrity()`) had both table
+> helpers removed from their lists, exactly as this stage's own original text anticipated.
+> One further real site the original text didn't name:
+> `CategoryRepository::deleteUserCacheCategoriesForCategories()` (called from
+> `CategoryService::deleteCategories()`'s own cascade) — a real write, not generic
+> bookkeeping, deleted along with its call site once its target table no longer exists.
+>
+> Dropped both tables from `install/piwigo_structure-mysql.sql` (structure + the 3 FK
+> constraints referencing them) and `tests/Fixtures/piwigo-17.0.sql` (structure + the 2
+> stale data rows) — confirmed via `git log` that this project replaced Doctrine Migrations
+> with one hand-maintained static-shape schema file (`212628d46`), so direct edits here are
+> the established mechanism, not a workaround. Verified the edited install schema still
+> imports cleanly via a direct `mysql < install/piwigo_structure-mysql.sql` against a
+> scratch database (0 exit code, 40 tables created, zero `%user_cache%` matches, no FK
+> errors) rather than fighting `Tests\Browser\InstallTest`'s own already-documented,
+> unrelated Playwright click-never-resolves hang (dated 2026-07-24, predates this stage).
+>
+> Deliberately left unchanged: the admin Maintenance page's `'user_cache'` action key and
+> "Purge user cache" label (`MaintenanceActionDispatcher.php`, `MaintenanceEnvPageRenderer.php`,
+> `MaintenanceActionsPageRenderer.php`, `MaintenanceSubController.php`) — the button's
+> purpose from an admin's perspective (force a refresh of stale permission-derived state)
+> is unchanged even though the mechanism no longer literally involves a "cache" table;
+> renaming user-facing, translated strings is a separate i18n-churn decision this stage's
+> own scope never called for.
+>
+> Full cadence (PHPStan/ECS/deptrac 0 violations, `composer dump-autoload`, Unit/Arch 711,
+> Integration 685, Contract 96, Browser 68) green.
+
 ### 4j. `history_summary` (flagged, not designed this pass — genuinely different kind of open question)
 
 3c's own deferral reason ("two real, substantial `admin/*.php` files... unlike 3a/3b")

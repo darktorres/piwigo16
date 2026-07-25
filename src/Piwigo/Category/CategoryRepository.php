@@ -604,16 +604,6 @@ DELETE FROM ' . Tables::oldPermalinks() . '
     }
 
     /**
-     * @param  list<int>  $ids
-     */
-    public function deleteUserCacheCategoriesForCategories(array $ids): void
-    {
-        $this->conn->executeStatement('
-DELETE FROM ' . Tables::userCacheCategories() . '
-  WHERE cat_id IN (' . implode(',', $ids) . ')');
-    }
-
-    /**
      * $whereCatsSql is a pre-built SQL fragment from the caller (e.g. `1=1`,
      * `c.id=5`, `c.id IN (1,2,3)`) -- same "repository takes a pre-built SQL
      * fragment" shape this class already uses for permission conditions.

@@ -16,7 +16,7 @@ use Exception;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\CachePools;
-use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\CategoryTreeCache;
@@ -1006,7 +1006,7 @@ SELECT
             return new PwgError(500, $creation_output['error']);
         }
 
-        UserCacheInvalidator::invalidate();
+        PermissionCacheInvalidator::invalidate();
 
         return $creation_output;
     }
@@ -1430,7 +1430,7 @@ SELECT id
             $params['photo_deletion_mode']
         );
         $categoryService->updateGlobalRank();
-        UserCacheInvalidator::invalidate();
+        PermissionCacheInvalidator::invalidate();
 
         return null;
     }
@@ -1547,7 +1547,7 @@ SELECT id, name, dir, uppercats
             new ActivityService(new ActivityRepository($categoryConn)),
             $params['parent']
         );
-        UserCacheInvalidator::invalidate();
+        PermissionCacheInvalidator::invalidate();
 
         // moveCategories() writes onto PageState::current() directly (Legacy
         // Coupling Retirement Track A batch A5) -- reading it back through

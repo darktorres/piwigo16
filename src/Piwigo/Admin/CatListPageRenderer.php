@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
-use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
@@ -136,7 +136,7 @@ SELECT COUNT(*)
 
             $_SESSION['page_infos'] = [Lang::t('Virtual album deleted')];
             $categoryService->updateGlobalRank();
-            UserCacheInvalidator::invalidate();
+            PermissionCacheInvalidator::invalidate();
 
             $redirect_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_list';
             if ($parent_id !== null) {
@@ -155,7 +155,7 @@ SELECT COUNT(*)
                     $parent_id
                 );
 
-            UserCacheInvalidator::invalidate();
+            PermissionCacheInvalidator::invalidate();
             $output_create_message = is_string($output_create->message) ? $output_create->message : '';
             if (! $output_create->success) {
                 \Piwigo\Core\PageState::current()->addError($output_create_message);

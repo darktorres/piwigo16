@@ -16,7 +16,7 @@ use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
-use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
@@ -120,7 +120,7 @@ final class PwgGroups
         }
         $groupnames = array_values($deleted_groups);
 
-        UserCacheInvalidator::invalidate();
+        PermissionCacheInvalidator::invalidate();
 
         return new PwgNamedArray($groupnames, 'group_deleted');
     }

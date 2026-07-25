@@ -9,7 +9,7 @@ use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Auth\CookieService;
-use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
@@ -137,7 +137,7 @@ final class MaintenanceActionDispatcher
                 $categoriesService->updateUppercats();
                 $categoriesService->updateCategory('all');
                 $categoriesService->updateGlobalRank();
-                UserCacheInvalidator::invalidate(true);
+                PermissionCacheInvalidator::invalidate();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Update albums informations'), Lang::t('action successfully performed.')));
                 break;
 
@@ -148,7 +148,7 @@ final class MaintenanceActionDispatcher
                     ->updatePath();
                 new RateService(new RateRepository($conn), new CookieService())
                     ->updateRatingScore();
-                UserCacheInvalidator::invalidate();
+                PermissionCacheInvalidator::invalidate();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Update photos information'), Lang::t('action successfully performed.')));
                 break;
 
@@ -161,7 +161,7 @@ final class MaintenanceActionDispatcher
 
             case 'user_cache':
 
-                UserCacheInvalidator::invalidate();
+                PermissionCacheInvalidator::invalidate();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge user cache'), Lang::t('action successfully performed.')));
                 break;
 

@@ -571,7 +571,7 @@ final class BrowserTestHelpers
      * Flips a category's status and clears the effective-permission cache
      * pools accordingly -- the same 2-step real permission recomputation a
      * real "make this album private" admin action performs (via
-     * Cache\UserCacheInvalidator::invalidate(), gap-closure Stage 4g),
+     * Cache\PermissionCacheInvalidator::invalidate(), gap-closure Stage 4g),
      * not just the categories.status flag alone.
      *
      * Gap-closure Stage 4g gap-closure (2026-07-25): previously wrote

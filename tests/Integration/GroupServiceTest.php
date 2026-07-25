@@ -17,7 +17,7 @@ use Piwigo\Group\GroupService;
 
 /**
  * Covers only the validation paths that fail before GroupService reaches
- * pwg_activity()/trigger_notify()/Piwigo\Cache\UserCacheInvalidator --
+ * pwg_activity()/trigger_notify()/Piwigo\Cache\PermissionCacheInvalidator --
  * those need the full legacy request bootstrap (global $mysqli,
  * $persistent_cache, $logger from common.inc.php), which this lightweight
  * DBAL-only Integration harness deliberately doesn't load (same limitation

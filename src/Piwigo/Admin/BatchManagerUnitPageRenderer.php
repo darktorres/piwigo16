@@ -8,7 +8,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
-use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
@@ -193,7 +193,7 @@ SELECT id, date_creation
                 );
 
             \Piwigo\Core\PageState::current()->addInfo(Lang::t('Photo informations updated'));
-            UserCacheInvalidator::invalidate();
+            PermissionCacheInvalidator::invalidate();
         }
 
         // collection

@@ -17,7 +17,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Bootstrap\AdminDispatcher;
 use Piwigo\Bootstrap\PageTail;
-use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
@@ -433,7 +433,7 @@ SELECT COUNT(*)
             )
             )
         ) {
-            UserCacheInvalidator::invalidate();
+            PermissionCacheInvalidator::invalidate();
         }
 
         $show_whats_new = false;

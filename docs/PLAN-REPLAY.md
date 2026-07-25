@@ -2948,7 +2948,7 @@ their browser language automatically — no manual selection needed.
 > path](#migration-path) for the current mechanism.
 ### P15 — Schema migration + multi-provider
 
-> **Tier** T1–T2 · **Depends on** P14 · **Greenfield delta:** FK constraints + orphan cleanup, JSON CHECK constraints, multi-provider (MariaDB/PG), `audit_log` (SEC-57). Cache tables (`user_cache`, `user_cache_categories`, `history_summary`) get engine/charset only — type-norm skipped (dropped in P23). **Replay:** InnoDB+utf8mb4, 7 new tables. *(Schema half of the DB-layer work.)*
+> **Tier** T1–T2 · **Depends on** P14 · **Greenfield delta:** FK constraints + orphan cleanup, JSON CHECK constraints, multi-provider (MariaDB/PG), `audit_log` (SEC-57). Cache tables (`user_cache`, `user_cache_categories`, `history_summary`) get engine/charset only — type-norm skipped at the time (`user_cache`/`user_cache_categories` were dropped in P23 gap-closure Stage 4; `history_summary` was kept, not dropped, and got its own type fix, `summary_id` AUTO_INCREMENT PK, in a later P23 commit). **Replay:** InnoDB+utf8mb4, 7 new tables. *(Schema half of the DB-layer work.)*
 
 - Schema migration: **engine + charset + FKs + type normalization** on
   all 34 origin tables. The 7 new tables also land here.
@@ -4140,11 +4140,19 @@ handler (legacy `action.php`); it enforces the served-path check ([SEC-33]) here
   - `user_cache_categories` — **deleted**; per-user per-album counts → SQL view or
     cached query using `COUNT(*) ... WHERE category_id NOT IN (forbidden)
     GROUP BY category_id`, cached in `category_tree` pool (300s TTL).
-  - `history_summary` — **deleted**; precomputed rollups → `WITH ROLLUP` queries (S10) in the
-    `general` cache pool, or a materialized summary refreshed by a maintenance job built via
-    `INSERT ... SELECT ... WITH ROLLUP`.
-  Gate: no direct reads of `user_cache.forbidden_categories` in `src/`; the three cache tables
-  do not exist after P23. (These tables also skip P15 type-normalization — see P15.)
+  - `history_summary` — **kept** (resolved 2026-07-25, gap-closure
+    `docs/plan/gap-closure-p0-p23.md` Stage 4j, superseding this bullet's original "deleted"
+    call). `History\HistoryRepository`/`HistoryService::summarize()`/`autopurge()` already
+    *are* the "materialized summary refreshed by a maintenance job" alternative this bullet
+    proposed — an incremental cursor, not the `INSERT ... SELECT ... WITH ROLLUP` full
+    rebuild imagined here, but cheaper and pre-existing. A live `WITH ROLLUP`-over-`history`
+    replacement (this bullet's other alternative) would have been a regression: `autopurge()`
+    bounds the raw `history` table's growth by deleting rows already captured in
+    `history_summary`, which a live-query approach can't do without keeping every row
+    forever.
+  Gate: no direct reads of `user_cache.forbidden_categories` in `src/`; `user_cache`/
+  `user_cache_categories` do not exist after P23 (`history_summary` does — see above).
+  (These tables also skip P15 type-normalization — see P15.)
 
 > **Batch 3 progress note (2026-07-14):** implementation-time verification split this batch
 > into three sub-batches, each independently gated on its own real read surface rather than
@@ -4165,19 +4173,17 @@ handler (legacy `action.php`); it enforces the served-path check ([SEC-33]) here
 >   predicates over the cached rollup; `findMenuCategories()` deleted. The `300s` TTL is a real,
 >   user-visible staleness tradeoff vs. the current immediate-on-next-request cache-rebuild
 >   behavior — accepted, matches this doc's original design.
-> - **3c — `history_summary`**: **deferred**, not built in batch 3. Full consumer trace found
->   two real, substantial, still-unabsorbed `admin/*.php` files reading the table directly
->   (`admin/stats.php`'s 4 chart queries, `admin/include/functions.php`'s
->   `get_pwg_general_statitics()` feeding `admin/intro.php`'s dashboard) — unlike 3a/3b, whose
->   only real callers were already in `src/`. `StatsSubController`/`IntroSubController` are
->   deliberately thin delegates around these files (P21's own documented decision), so
->   replacing the table now means either preempting batch 6's ("admin absorption") own per-page
->   audit or leaving those two pages' raw SQL broken. `HistoryService::summarize()`/
->   `autopurge()` (the write side and the purge safety gate) and
->   `DbMaintenanceRepository::purgeHistorySummary()` are all already typed and unaffected either
->   way. Its actual replacement (`WITH ROLLUP` live queries vs. a materialized summary, per this
->   section's own text above) and the Doctrine Migration dropping the table now land
->   interleaved with batch 6 instead.
+> - **3c — `history_summary`**: **deferred**, not built in batch 3, then **resolved: kept**
+>   (gap-closure `docs/plan/gap-closure-p0-p23.md` Stage 4j, 2026-07-25 — see that note for
+>   the full resolution). This deferral's own original blocker (two real, substantial,
+>   still-unabsorbed `admin/*.php` files reading the table directly — `admin/stats.php`'s 4
+>   chart queries, `admin/include/functions.php`'s `get_pwg_general_statitics()` feeding
+>   `admin/intro.php`'s dashboard) was resolved as a side effect of unrelated later work:
+>   both are now `Admin/StatsPageRenderer.php`/`Admin/InstallationStats.php` in `src/`. But
+>   by the time that blocker cleared, `HistoryService::summarize()`/`autopurge()` (the write
+>   side and the purge safety gate) — cited in this very note as "already typed and
+>   unaffected either way" — turned out to *already be* the real, complete replacement this
+>   note was deferring: no Doctrine Migration drops this table after all.
 - Arch tests: no `ServiceLocator`, no `$GLOBALS`, no `include/`, no `admin/`,
   no `Tables::`, no static bridge methods (`Config::instance()`, etc.)
 
@@ -7739,7 +7745,7 @@ Fibers concurrent I/O.
 | Batch updates        | Temp table create→insert→join→drop (MyISAM)      | `INSERT ... ON DUPLICATE KEY UPDATE` inside transactions |
 | Column naming        | `cat_id` vs `category_id`, `element_id` vs `image_id`, 26 reserved keywords as columns | 30 renames (29 column + 1 table): FK consistency + reserved keyword elimination + clarity. Zero quoting needed. |
 | Column types         | Mixed smallint/mediumint/int, signed/unsigned     | All PKs `INT UNSIGNED`, all FKs `INT UNSIGNED`, no sized ints for IDs |
-| Cache tables         | 3 denormalized tables (MyISAM perf workaround)   | APCu/Redis cache + CTEs/views replace `user_cache`, `user_cache_categories`, `history_summary` |
+| Cache tables         | 3 denormalized tables (MyISAM perf workaround)   | APCu/Redis cache replaces `user_cache`/`user_cache_categories`; `history_summary` kept as-is (a real analytics rollup, not a staleness-prone permission cache — see gap-closure Stage 4j) |
 | Uploads              | Multipart (fails on large files)                 | tus protocol (resumable, chunked) via Uppy + tus-php |
 | Source formats       | JPEG/PNG/GIF only                                | + HEIC/HEIF transcoding on ingest (Imagick + libheif) |
 | Containerization     | Manual install (PHP+MySQL+Apache)                | Dockerfile + docker-compose + devcontainer |

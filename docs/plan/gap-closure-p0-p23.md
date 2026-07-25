@@ -1651,7 +1651,7 @@ deleting the whole call, not just assumed dead by association.
 > Full cadence (PHPStan/ECS/deptrac 0 violations, `composer dump-autoload`, Unit/Arch 711,
 > Integration 685, Contract 96, Browser 68) green.
 
-### 4j. `history_summary` (flagged, not designed this pass — genuinely different kind of open question)
+### 4j. `history_summary` — resolved: kept, not migrated
 
 3c's own deferral reason ("two real, substantial `admin/*.php` files... unlike 3a/3b")
 appears resolved as a side effect of unrelated work: `admin/stats.php`/
@@ -1659,15 +1659,54 @@ appears resolved as a side effect of unrelated work: `admin/stats.php`/
 `Admin/InstallationStats.php` inside `src/Piwigo/`, confirmed by direct grep — so 3c's
 specific blocker (reading a table directly from code batch 6 hadn't absorbed yet) no longer
 applies as stated. Stage 1b's own `History\Projection\HistorySummaryCursor`/
-`HistorySummaryCount` typed projections would anchor a real migration. **Not designed
-here**: P23's own text leaves the actual replacement mechanism as an open choice (`WITH
-ROLLUP` live queries vs. a materialized summary refreshed by a maintenance job) that
-depends on real data-volume/query-frequency characteristics no amount of code-reading
-resolves — a materialized summary refreshed via the already-existing
-`DbMaintenanceRepository`/`HistoryService::summarize()`/`autopurge()` maintenance-job
-pattern is the recommended direction (reuses an established mechanism rather than
-introducing a new live-query dependency), but this is its own follow-on investigation, not
-bundled into 4a-4i's already-fully-resolved scope.
+`HistorySummaryCount` typed projections would anchor a real migration.
+
+> **2026-07-25 note:** re-investigated as its own follow-on planning pass, per this note's
+> own original framing. The real question was never "how do we build the replacement" — it
+> was "does the plan's own 2026-07-14-era assumption that this table *must* be deleted
+> still hold." It doesn't. `History\HistoryRepository`/`HistoryService::summarize()`/
+> `autopurge()` — already typed, DBAL-backed, and real-value-tested
+> (`tests/Integration/HistoryServiceTest.php`, covering `summarize()`'s from-scratch/merge/
+> max-lines behavior and all 4 of `autopurge()`'s guard conditions) — already *is* the
+> "materialized summary refreshed by a maintenance job" alternative this note's own
+> original text speculated about, just via an incremental cursor
+> (`findGroupedCountsSince($minId)`, never rescanning the whole `history` table) rather
+> than a bulk `INSERT ... SELECT ... WITH ROLLUP` rebuild — cheaper, and it already existed
+> before this gap-closure effort even started (ported from legacy Piwigo's own
+> `history_autopurge()`/summarization logic).
+>
+> The other alternative this note named — live `WITH ROLLUP` queries over `history`
+> directly, no persisted rollup table — would be a **regression**, not a modernization:
+> `autopurge()` deletes old `history` rows once they're captured in `history_summary`,
+> bounded by `history_autopurge_keep_lines`/`_blocksize`. A live-query replacement would
+> need every raw row kept forever to stay reconstructable, defeating the one real reason
+> `autopurge()` exists (bounding raw-log growth on high-traffic installs).
+>
+> `piwigo_history_summary`'s schema is already `ENGINE=InnoDB ... utf8mb4` (an earlier P23
+> commit, confirmed via `git log`), and both real consumers
+> (`StatsPageRenderer`/`InstallationStats`) are already typed `src/Piwigo/` classes using
+> DBAL — `StatsPageRenderer`'s own class docblock already documents why its 4 chart queries
+> stay inline rather than becoming repository methods (single-purpose view-shaping no
+> repository method shape covers, the established "page/template glue stays inline"
+> convention). Zero remaining legacy/raw-SQL touchpoints found.
+>
+> **Decision: `user_cache`/`user_cache_categories` and `history_summary` were never really
+> the same kind of problem**, despite P23's original text bundling all three under one
+> "cache table rationalization" heading. The first two were per-request permission
+> snapshots with a real staleness/locking problem (Stage 4a-4i's whole reason for being).
+> `history_summary` is a global, monotonically-growing analytics rollup with no staleness
+> concern of that kind at all — kept as-is, no migration. `docs/PLAN-REPLAY.md`'s 3 stale
+> "history_summary will be deleted" references corrected to match (P23's own "Cache table
+> rationalization" bullet, the batch-3-progress-note's 3c status, and the "old vs new"
+> comparison table's "Cache tables" row).
+>
+> One small, directly-justified fix found during this investigation, unrelated to the
+> keep/delete question itself: `StatsPageRenderer::render()`'s own `summarize()` call had
+> no `$maxLines` bound, unlike `HistoryService::logVisit()`'s own self-trigger (always
+> bounded to 50000). Right after an admin uses the Maintenance page's "Purge history
+> summary" action (deletes every summary row), the next Stats page load would call
+> `summarize()` unbounded — rescanning the entire remaining `history` table in one request.
+> Bound it to the same `50000` `logVisit()` already uses.
 
 **Verify Stage 4:** standard per-sub-stage cadence (4a-4i, each its own commit,
 `(p23)` scope tag) — `composer lint:php` + `vendor/bin/phpstan analyse` +

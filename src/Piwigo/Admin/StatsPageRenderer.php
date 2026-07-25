@@ -47,8 +47,13 @@ final class StatsPageRenderer
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         $conn = DbConnection::build();
+        // Gap-closure Stage 4j (docs/plan/gap-closure-p0-p23.md): bounded to
+        // match HistoryService::logVisit()'s own self-triggered summarize()
+        // call -- an unbounded call here would rescan the entire remaining
+        // `history` table in one request right after an admin uses the
+        // Maintenance page's "Purge history summary" action.
         new HistoryService(new HistoryRepository($conn), $configService)
-            ->summarize();
+            ->summarize(50000);
 
         $template->set_filename('stats', 'stats.tpl');
 

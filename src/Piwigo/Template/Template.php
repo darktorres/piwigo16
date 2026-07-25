@@ -187,7 +187,12 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             // must tolerate for the exact same reason it already tolerates
             // a missing table.
             try {
-                \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('data_dir_checked', 1);
+                // dataDirChecked() is ?string-typed (a presence marker, not
+                // a real int) -- passing the real string here so
+                // json_encode() produces the JSON-quoted text
+                // hydrate()'s 'string' branch expects back, not a bare
+                // JSON number that decodes to an int instead.
+                \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('data_dir_checked', '1');
             } catch (\Doctrine\DBAL\Exception) {
             }
         }

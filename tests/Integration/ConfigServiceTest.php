@@ -180,6 +180,45 @@ final class ConfigServiceTest extends IntegrationTestCase
         $repo->deleteByParam($param);
     }
 
+    public function test_gallery_locked_round_trips_as_a_real_bool_through_load_conf_from_db(): void
+    {
+        // Real, adversarially-found bug: MaintenanceActionDispatcher used
+        // to write the *string* 'true'/'false' to this bool-typed property
+        // (harmless under the old per-type-cast convention, but silently
+        // hydrates to false either way under json_decode() -- a real
+        // string doesn't satisfy the 'bool' match arm's is_bool() check).
+        // This exercises the actual fixed call shape (a real PHP bool),
+        // not just ConfigService's own generic bool-encoding mechanism
+        // (already covered above).
+        try {
+            $this->service->confUpdateParam('gallery_locked', true);
+            $this->service->loadConfFromDb('gallery_locked');
+            self::assertTrue(CurrentConfig::galleryLocked());
+
+            $this->service->confUpdateParam('gallery_locked', false);
+            $this->service->loadConfFromDb('gallery_locked');
+            self::assertFalse(CurrentConfig::galleryLocked());
+        } finally {
+            $this->service->confUpdateParam('gallery_locked', false);
+        }
+    }
+
+    public function test_data_dir_checked_round_trips_as_a_real_string_through_load_conf_from_db(): void
+    {
+        // Real, adversarially-found bug: Template.php used to write the
+        // real int 1 to this ?string-typed property. json_encode(1)
+        // produces a bare JSON number, and hydrate()'s 'string' match arm
+        // only accepts a real is_string() decode -- an int decode falls
+        // through to '' instead.
+        try {
+            $this->service->confUpdateParam('data_dir_checked', '1');
+            $this->service->loadConfFromDb('data_dir_checked');
+            self::assertSame('1', CurrentConfig::dataDirChecked());
+        } finally {
+            $this->service->confDeleteParam('data_dir_checked');
+        }
+    }
+
     public function test_confUpdateParam_leaves_disabled_derivatives_as_a_serialize_blob(): void
     {
         // ConfigService::OBJECT_SERIALIZED_PARAMS: this key holds real

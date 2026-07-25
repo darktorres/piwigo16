@@ -24,9 +24,17 @@ final class MenubarLayoutRepository extends AbstractRepository
      */
     public function saveLayout(string $menuId, array $positions): void
     {
+        // A real upsert, not a plain UPDATE -- `blk_<menuId>` has no seed
+        // row in install/config.sql (gap-closure Stage 1a-bis item 1
+        // dropped blk_menubar's own empty-string seed row, relying on its
+        // ?array PHP default instead), so a fresh install has no existing
+        // row for a plain UPDATE to match; a real, adversarially-found
+        // regression confirmed this silently no-ops the very first save on
+        // any fresh install.
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::config() . ' SET value = ? WHERE param = ?',
-            [json_encode($positions), 'blk_' . $menuId]
+            'INSERT INTO ' . Tables::config() . ' (param, value) VALUES (?, ?)
+             ON DUPLICATE KEY UPDATE value = VALUES(value)',
+            ['blk_' . $menuId, json_encode($positions)]
         );
 
         // This write bypasses ConfigService::confUpdateParam() entirely (no

@@ -639,6 +639,61 @@ hand-writing per-property assertions. Once every sub-item lands: `composer test`
 commit per logical sub-item (chain deletion; Config-keys retarget; search.rules;
 user_infos.preferences; activity.details; config.value redesign), `(p23)` scope tag.
 
+**Full verification pass — DONE.** `tests/Unit/Config/SchemaIntegrityTest.php` gained a
+5th reflection-based sweep: for every scalar/array-typed `CurrentConfig` property (skipping
+`OBJECT_SERIALIZED_PARAMS` and union/object-typed setters), it calls
+`ConfigService::encode()`/`hydrate()` directly via `ReflectionMethod` (both are pure
+functions, no DB needed) on the property's own compiled-in default and asserts the
+round-tripped value is unchanged, restoring every touched property afterward. Adversarially
+verified the sweep itself: deliberately broke `hydrate()`'s `'int'` branch to always return
+`0`, confirmed the test fails with a real per-property diff, reverted, confirmed it passes
+again (1417 assertions).
+
+Running the real `composer test:fixture-regen` (not just re-encoding the existing fixture
+by hand, as the earlier items' throwaway scripts did) surfaced 3 more real bugs the
+per-column work above didn't catch, because they're in **runtime write call sites**, not
+seed data or fixture snapshots:
+- **`MaintenanceActionDispatcher.php`**'s `lock_gallery`/`unlock_gallery` actions passed the
+  *strings* `'true'`/`'false'` to `gallery_locked`, a `bool`-typed property. Harmless under
+  the old convention (both `decodeScalar()` and the final string-cast collapsed to the same
+  bytes either way) but a real, severe regression under JSON typing: `json_encode('true')`
+  produces the JSON *string* `"true"`, which `hydrate()`'s `'bool'` branch's `is_bool()`
+  check rejects, silently hydrating to `false` regardless of which action ran --
+  `RequestBootstrap.php` gates the entire non-admin gallery lock on this value, so the
+  actual "Lock gallery" admin feature would have silently stopped working. Fixed to pass
+  real `true`/`false`.
+- **`Template.php`**'s first-request directory-permission check wrote the real int `1` to
+  `data_dir_checked`, a `?string`-typed presence marker -- same class of bug (a bare JSON
+  number decodes to an int, not the string `hydrate()`'s `'string'` branch requires), lower
+  severity here since the only consumer only ever checks `=== null`, which happens to
+  behave identically whether the hydrated value is `''` or `'1'`. Fixed for correctness
+  anyway.
+- **`MenubarLayoutRepository::saveLayout()`**'s raw SQL was a plain `UPDATE ... WHERE param
+  = ?`, not an upsert -- it only ever worked because `blk_menubar` always had a seed row
+  (even if just an empty string) to match against. Item 1 above dropped that seed row
+  (relying on the property's own `?array` default instead, matching how most properties
+  have no seed row at all) without checking this dependency, so a fresh install's very
+  first "save menubar layout" silently affected zero rows. Found via the regenerated
+  fixture's own `MenubarLayoutRepositoryTest` failing (`SELECT` after `saveLayout()` found
+  no row at all, not a decode problem). Fixed to a real `INSERT ... ON DUPLICATE KEY
+  UPDATE` upsert -- the correct fix, not restoring the seed row, since a plain `UPDATE`
+  depending on unrelated seed data existing was always fragile.
+
+Also found and fixed one pre-existing, unrelated-to-config-value fragile test
+(`DbMaintenanceRepositoryTest::test_purge_sessions_for_deleted_users_keeps_sessions_for_real_users()`)
+that asserted the *entire* `piwigo_sessions` table's exact row count instead of the
+specific invariant `purgeSessionsForDeletedUsers()` actually guarantees -- it happened to
+pass against every previous fixture snapshot (which coincidentally had exactly 1 session
+row) and broke the moment a regen produced more incidental anonymous sessions. Rewritten to
+assert the real invariant (no session is purged; the real user's session specifically
+survives) regardless of how many incidental sessions exist.
+
+Verified: full-repo PHPStan clean, ECS/deptrac clean, and — after all the fixes above —
+one final clean pass of the complete suite: Unit 616/616 (2586 assertions, +1 test file
++1 test), Arch clean, Integration 668/668, Contract 94/94, Browser 68/68, Visual 34/34.
+Stage 1a-bis (Stage 0 + Stage 1 items 1-5 + this full verification pass) is now
+**completely done**.
+
 ### 1b. Typed DTO/Projection pattern (finding #1 — the biggest unmet claim)
 
 33 of the 34 repositories (`find src/Piwigo -iname '*Repository.php'`) extend

@@ -216,10 +216,30 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
 
     public function test_purge_sessions_for_deleted_users_keeps_sessions_for_real_users(): void
     {
-        // Fixture already has a real session for user 1.
+        // Fixture already has a real session for user 1, plus however
+        // many incidental anonymous/guest sessions (empty `data`, no
+        // pwg_uid at all) the fixture-regen browser flow created along
+        // the way -- purgeSessionsForDeletedUsers() only ever matches a
+        // real `pwg_uid|i:N;` payload, so anonymous sessions always
+        // survive too. Assert the invariant this method actually
+        // guarantees (nothing is purged, since no session here references
+        // a deleted user) rather than a specific total row count, which
+        // varies with how many anonymous sessions a given regen run
+        // happens to create.
+        $before = $this->countRows(Tables::sessions());
+
         $this->repo->purgeSessionsForDeletedUsers('id');
 
-        self::assertSame(1, $this->countRows(Tables::sessions()));
+        self::assertSame($before, $this->countRows(Tables::sessions()), 'no session here references a deleted user, so nothing should be purged');
+
+        $realUserSession = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from(Tables::sessions())
+            ->where('data LIKE :pattern')
+            ->setParameter('pattern', '%pwg\_uid|i:1;%')
+            ->executeQuery()
+            ->fetchOne();
+        self::assertIsString($realUserSession, 'the real session for user 1 must survive the purge');
     }
 
     public function test_purge_sessions_for_deleted_users_removes_a_session_for_a_nonexistent_user(): void

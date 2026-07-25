@@ -110,7 +110,7 @@ final class MaintenanceActionDispatcher
 
             case 'lock_gallery':
 
-                $this->configService->confUpdateParam('gallery_locked', 'true');
+                $this->configService->confUpdateParam('gallery_locked', true);
                 new ActivityService(new ActivityRepository($conn))
                     ->record('system', ActivitySystem::Core, 'maintenance', [
                         'maintenance_action' => $action,
@@ -120,7 +120,7 @@ final class MaintenanceActionDispatcher
                 // no break
             case 'unlock_gallery':
 
-                $this->configService->confUpdateParam('gallery_locked', 'false');
+                $this->configService->confUpdateParam('gallery_locked', false);
                 $_SESSION['page_infos'] = [Lang::t('Gallery unlocked')];
                 new ActivityService(new ActivityRepository($conn))
                     ->record('system', ActivitySystem::Core, 'maintenance', [

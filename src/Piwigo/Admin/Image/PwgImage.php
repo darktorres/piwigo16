@@ -38,9 +38,9 @@ final class PwgImage
 
     /**
      * @var string|false false is only ever transient: get_library() can
-     *   return false, but __construct() dies() immediately when that
-     *   happens, so a successfully constructed instance always holds a
-     *   non-empty string here
+     *   return false, but __construct() throws ImageProcessingException
+     *   immediately when that happens, so a successfully constructed
+     *   instance always holds a non-empty string here
      */
     public string|false $library = '';
 
@@ -61,11 +61,11 @@ final class PwgImage
 
         $picture_ext = \Piwigo\Config\CurrentConfig::pictureExtensions();
         if (! in_array($extension, $picture_ext, true)) {
-            die('[Image] unsupported file extension');
+            throw new ImageProcessingException('[Image] unsupported file extension');
         }
 
         if (! (bool) ($this->library = self::get_library($library, $extension))) {
-            die('No image library available on your server.');
+            throw new ImageProcessingException('No image library available on your server.');
         }
 
         $this->image = match ($this->library) {
@@ -91,7 +91,8 @@ final class PwgImage
      * Narrows $image from ImageInterface|null to ImageInterface. By the
      * time any method other than __construct() runs, $image is always
      * set — either by a 'load_image_library' listener or by
-     * __construct() itself (which die()s if no library is available).
+     * __construct() itself (which throws ImageProcessingException if no
+     * library is available).
      */
     private function getImage(): ImageInterface
     {

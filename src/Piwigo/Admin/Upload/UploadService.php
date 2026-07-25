@@ -6,6 +6,7 @@ namespace Piwigo\Admin\Upload;
 
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Config\CurrentConfig;
@@ -286,7 +287,7 @@ SELECT
             }
 
             if (! isset($file_path)) {
-                die('[' . __METHOD__ . '] this photo does not exist in the database');
+                throw new ImageProcessingException('[' . __METHOD__ . '] this photo does not exist in the database');
             }
 
             // delete all physical files related to the photo (thumbnail, web site, HD)
@@ -369,7 +370,7 @@ SELECT
                         exit;
                     }
 
-                    die($error_msg);
+                    throw new ImageProcessingException($error_msg);
                 }
 
                 // [SEC-21] strip <script>/event-handler content from a
@@ -381,11 +382,11 @@ SELECT
                     $file_path .= $original_extension;
                 } else {
                     unlink($source_filepath);
-                    die('unexpected file type');
+                    throw new ImageProcessingException('unexpected file type');
                 }
             } else {
                 unlink($source_filepath);
-                die('forbidden file type');
+                throw new ImageProcessingException('forbidden file type');
             }
 
             $this->prepareDirectory($upload_dir);
@@ -681,13 +682,13 @@ SELECT
     public function addFormat(string $source_filepath, string $format_ext, int|string $format_of): string
     {
         if (! \Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
-            die('[' . __METHOD__ . '] formats are disabled');
+            throw new ImageProcessingException('[' . __METHOD__ . '] formats are disabled');
         }
 
         $authorized_format_exts = \Piwigo\Config\CurrentConfig::formatExtensions();
 
         if (! in_array($format_ext, $authorized_format_exts, true)) {
-            die('[' . __METHOD__ . '] unexpected format extension "' . $format_ext . '" (authorized extensions: ' . implode(', ', $authorized_format_exts) . ')');
+            throw new ImageProcessingException('[' . __METHOD__ . '] unexpected format extension "' . $format_ext . '" (authorized extensions: ' . implode(', ', $authorized_format_exts) . ')');
         }
 
         $conn = DbConnection::build();
@@ -700,7 +701,7 @@ SELECT
         $images = $conn->fetchAllAssociative($query);
 
         if (! isset($images[0])) {
-            die('[' . __METHOD__ . '] this photo does not exist in the database');
+            throw new ImageProcessingException('[' . __METHOD__ . '] this photo does not exist in the database');
         }
 
         $image_0_path = is_scalar($images[0]['path']) ? (string) $images[0]['path'] : '';
@@ -1142,7 +1143,7 @@ SELECT
             umask(0000);
             $recursive = true;
             if (! @mkdir($directory, 0777, $recursive)) {
-                die('[prepare_directory] cannot create directory "' . $directory . '"');
+                throw new ImageProcessingException('[prepare_directory] cannot create directory "' . $directory . '"');
             }
         }
 
@@ -1157,7 +1158,7 @@ SELECT
             // this recheck genuinely can and does observe the chmod() above).
             // @phpstan-ignore booleanNot.alwaysTrue
             if (! is_writable($directory)) {
-                die('[prepare_directory] directory "' . $directory . '" has no write access');
+                throw new ImageProcessingException('[prepare_directory] directory "' . $directory . '" has no write access');
             }
         }
 

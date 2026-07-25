@@ -854,16 +854,24 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // itself can't be called yet) return a Response directly, not
         // die()/exit(). Gone from this allowlist.
 
-        // Image-library internals (Admin/Image/*.php): low-level decode/
-        // library-availability guards inside ImageGd/ImageExtImagick/
-        // PwgImage, reached from both Ws/PwgImages.php (needs a JSON
-        // error response, already covered above) and Job/BatchUploadJob.php
-        // (a background job with no HTTP response to build) -- a hard
-        // die() is correct in both real callers.
-        'Admin/Image/ImageGd.php' => 5,
-        'Admin/Image/ImageExtImagick.php' => 1,
-        'Admin/Image/PwgImage.php' => 2,
-        'Admin/Upload/UploadService.php' => 10,
+        // P23 Stage 1e (gap-closure finding #17): the low-level decode/
+        // library-availability/upload-validation die() calls formerly here
+        // (Admin/Image/ImageGd.php x5, Admin/Image/ImageExtImagick.php x1,
+        // Admin/Image/PwgImage.php x2, Admin/Upload/UploadService.php x9)
+        // all now throw Piwigo\Admin\Image\ImageProcessingException
+        // instead -- the "a hard die() is correct in both real callers"
+        // rationale that used to justify them here was the audit's own
+        // "materially wrong" finding: Http\Middleware\
+        // ExceptionHandlerMiddleware already catches/logs/Sentry-reports
+        // any \Throwable for the real HTTP callers (Ws/PwgImages.php,
+        // Controller/ImageDerivativeController.php), and Symfony
+        // Messenger's own consumer loop does the same for the
+        // Job/BatchUploadJob.php background-job caller -- both strict
+        // improvements over a silent, unlogged die(). Gone from this
+        // allowlist (ImageGd.php/ImageExtImagick.php/PwgImage.php); only
+        // UploadService.php still has 1 real site, its own IN_WS branch's
+        // exit() (see the Ws/* raw-response mechanism comment above).
+        'Admin/Upload/UploadService.php' => 1,
 
         // Core/ShutdownHandler.php: exit(143), a deliberate, documented
         // signal-termination exit code (128 + SIGTERM), not an error path.

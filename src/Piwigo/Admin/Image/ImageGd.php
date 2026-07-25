@@ -30,11 +30,11 @@ final class ImageGd implements ImageInterface
         } elseif ($extension === 'gif' and $gd_info['GIF Read Support'] and $gd_info['GIF Create Support']) {
             $image = imagecreatefromgif($source_filepath);
         } else {
-            die('[Image GD] unsupported file extension');
+            throw new ImageProcessingException('[Image GD] unsupported file extension');
         }
 
         if ($image === false) {
-            die('[Image GD] unable to decode image');
+            throw new ImageProcessingException('[Image GD] unable to decode image');
         }
 
         $this->image = $image;
@@ -76,7 +76,7 @@ final class ImageGd implements ImageInterface
 
         $dest = imagecreatetruecolor($width, $height);
         if ($dest === false) {
-            die('[Image GD] imagecreatetruecolor() failed');
+            throw new ImageProcessingException('[Image GD] imagecreatetruecolor() failed');
         }
 
         imagealphablending($dest, false);
@@ -127,7 +127,7 @@ final class ImageGd implements ImageInterface
 
         $dest = imagecreatetruecolor($width, $height);
         if ($dest === false) {
-            die('[Image GD] imagecreatetruecolor() failed');
+            throw new ImageProcessingException('[Image GD] imagecreatetruecolor() failed');
         }
 
         imagealphablending($dest, false);
@@ -176,7 +176,7 @@ final class ImageGd implements ImageInterface
         // Create a new blank image the site of our source image
         $cut = imagecreatetruecolor($ow, $oh);
         if ($cut === false) {
-            die('[Image GD] imagecreatetruecolor() failed');
+            throw new ImageProcessingException('[Image GD] imagecreatetruecolor() failed');
         }
 
         // Copy the blank image into the destination image where the source goes

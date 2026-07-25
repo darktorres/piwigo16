@@ -59,8 +59,8 @@ final class HistoryRepositoryTest extends IntegrationTestCase
             $found = $this->repo->findLastSummaryWithHistoryIdTo();
 
             self::assertNotNull($found);
-            self::assertSame(200, $found['historyIdTo']);
-            self::assertSame(4, $found['hour']);
+            self::assertSame(200, $found->historyIdTo);
+            self::assertSame(4, $found->hour);
         } finally {
             $this->clearSummary();
         }
@@ -128,7 +128,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
             $rows = $this->repo->findSummaryRowsForHierarchy(2026, 7, 12, 3);
 
             $keys = array_map(
-                static fn (array $r): string => $r['year'] . '-' . ($r['month'] ?? 'x') . '-' . ($r['day'] ?? 'x') . '-' . ($r['hour'] ?? 'x'),
+                static fn (\Piwigo\History\Projection\HistorySummaryCount $r): string => $r->year . '-' . ($r->month ?? 'x') . '-' . ($r->day ?? 'x') . '-' . ($r->hour ?? 'x'),
                 $rows
             );
             sort($keys);

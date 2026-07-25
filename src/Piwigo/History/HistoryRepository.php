@@ -8,6 +8,8 @@ use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Core\Env;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
+use Piwigo\History\Projection\HistorySummaryCount;
+use Piwigo\History\Projection\HistorySummaryCursor;
 
 /**
  * Persistence layer for the history domain: `history` (one row per public
@@ -19,10 +21,7 @@ use Piwigo\Db\Tables;
  */
 final class HistoryRepository extends AbstractRepository
 {
-    /**
-     * @return array{year: int, month: ?int, day: ?int, hour: ?int, historyIdTo: int}|null
-     */
-    public function findLastSummaryWithHistoryIdTo(): ?array
+    public function findLastSummaryWithHistoryIdTo(): ?HistorySummaryCursor
     {
         $row = $this->conn->createQueryBuilder()
             ->select('year', 'month', 'day', 'hour', 'history_id_to')
@@ -33,17 +32,7 @@ final class HistoryRepository extends AbstractRepository
             ->executeQuery()
             ->fetchAssociative();
 
-        if ($row === false) {
-            return null;
-        }
-
-        return [
-            'year' => is_numeric($row['year']) ? (int) $row['year'] : 0,
-            'month' => is_numeric($row['month']) ? (int) $row['month'] : null,
-            'day' => is_numeric($row['day']) ? (int) $row['day'] : null,
-            'hour' => is_numeric($row['hour']) ? (int) $row['hour'] : null,
-            'historyIdTo' => is_numeric($row['history_id_to']) ? (int) $row['history_id_to'] : 0,
-        ];
+        return $row === false ? null : HistorySummaryCursor::fromRow($row);
     }
 
     public function findMinHistoryId(): ?int
@@ -100,7 +89,7 @@ final class HistoryRepository extends AbstractRepository
      * year+month row, the year+month+day row, and the year+month+day+hour
      * row, whichever of those 4 already exist.
      *
-     * @return list<array{year: int, month: ?int, day: ?int, hour: ?int, nbPages: int}>
+     * @return list<HistorySummaryCount>
      */
     public function findSummaryRowsForHierarchy(int $year, ?int $month, ?int $day, ?int $hour): array
     {
@@ -132,16 +121,7 @@ final class HistoryRepository extends AbstractRepository
             ->executeQuery()
             ->fetchAllAssociative();
 
-        return array_map(
-            static fn (array $row): array => [
-                'year' => is_numeric($row['year']) ? (int) $row['year'] : 0,
-                'month' => is_numeric($row['month']) ? (int) $row['month'] : null,
-                'day' => is_numeric($row['day']) ? (int) $row['day'] : null,
-                'hour' => is_numeric($row['hour']) ? (int) $row['hour'] : null,
-                'nbPages' => is_numeric($row['nb_pages']) ? (int) $row['nb_pages'] : 0,
-            ],
-            $rows
-        );
+        return array_map(HistorySummaryCount::fromRow(...), $rows);
     }
 
     /**

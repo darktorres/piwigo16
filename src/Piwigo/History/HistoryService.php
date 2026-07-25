@@ -293,7 +293,7 @@ final readonly class HistoryService
     {
         $lastSummary = $this->repo->findLastSummaryWithHistoryIdTo();
         if ($lastSummary !== null) {
-            $historyMinId = $lastSummary['historyIdTo'];
+            $historyMinId = $lastSummary->historyIdTo;
         } else {
             // if we have no "reference" starting point, "0" is not the
             // right answer, because the history table may have been
@@ -359,24 +359,24 @@ final readonly class HistoryService
             );
 
             foreach ($existingRows as $row) {
-                $key = sprintf('%4u', $row['year']);
-                if ($row['month'] !== null) {
-                    $key .= sprintf('-%02u', $row['month']);
-                    if ($row['day'] !== null) {
-                        $key .= sprintf('-%02u', $row['day']);
-                        if ($row['hour'] !== null) {
-                            $key .= sprintf('-%02u', $row['hour']);
+                $key = sprintf('%4u', $row->year);
+                if ($row->month !== null) {
+                    $key .= sprintf('-%02u', $row->month);
+                    if ($row->day !== null) {
+                        $key .= sprintf('-%02u', $row->day);
+                        if ($row->hour !== null) {
+                            $key .= sprintf('-%02u', $row->hour);
                         }
                     }
                 }
 
                 if (isset($needUpdate[$key])) {
                     $updates[] = [
-                        'year' => $row['year'],
-                        'month' => $row['month'],
-                        'day' => $row['day'],
-                        'hour' => $row['hour'],
-                        'nbPages' => $row['nbPages'] + $needUpdate[$key]['nbPages'],
+                        'year' => $row->year,
+                        'month' => $row->month,
+                        'day' => $row->day,
+                        'hour' => $row->hour,
+                        'nbPages' => $row->nbPages + $needUpdate[$key]['nbPages'],
                         'historyIdTo' => $needUpdate[$key]['historyIdTo'],
                     ];
                     unset($needUpdate[$key]);
@@ -444,7 +444,7 @@ final readonly class HistoryService
         $blocksize = \Piwigo\Config\CurrentConfig::historyAutopurgeBlocksize();
 
         $searchMin = [
-            $lastSummary['historyIdTo'],
+            $lastSummary->historyIdTo,
             $latestId - $keepLines,
             $oldestId + $blocksize,
         ];

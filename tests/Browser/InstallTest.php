@@ -40,31 +40,43 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *    loaded. Widened that catch to the full Doctrine\DBAL\Exception
  *    interface -- see that file's own docblock.
  *
- * 2. STILL OPEN -- with (1) fixed, the install genuinely runs and
- *    succeeds server-side every time (verified repeatedly via direct DB
- *    inspection: schema + config + admin user all correct; also via a
- *    saved screenshot showing "Congratulations"). But a real Chromium
- *    browser's click('install') never resolves. Root-caused via the
- *    Playwright MCP tools (bypassing pest-plugin-browser entirely) to a
- *    specific, narrow place: the click itself succeeds immediately
- *    ("click action done"), then Playwright explicitly "waits for
- *    scheduled navigations to finish" -- and that wait never completes,
- *    even with an explicit 30s+ timeout. `curl` reproduces the identical
- *    request (same headers, cookies, Accept-Language, method) in a
- *    consistent 3.5-4.5s every time. This means the HTML response itself
- *    is fine and fast; something the resulting success page loads
- *    client-side (a script/stylesheet/image) most likely never resolves,
- *    so the browser's own `load` event never fires. Ruled out with
- *    direct evidence, not guesses: the browser's default Accept-Language
- *    (Portuguese) -- reproduced identically via curl, completes fine;
- *    IPv4 vs IPv6 (forced 127.0.0.1, no change); HTTP/2 (Apache doesn't
- *    negotiate it here at all); keep-alive connection reuse (tested
- *    directly, no hang); Apache worker exhaustion (11 of 150 workers in
- *    use). Next step for whoever picks this up: inspect exactly what the
- *    install-success page (install.tpl's post-submit render) loads
- *    client-side, with real browser devtools open (the MCP browser
- *    session itself got wedged mid-investigation and couldn't be used to
- *    finish the job -- even browser_close() timed out).
+ * 2. FIXED 2026-07-25 -- with (1) fixed, the install genuinely runs and
+ *    succeeds server-side every time, but a real Chromium browser's
+ *    click('install') never resolved even past a 30s+ timeout, while
+ *    `curl` against a hand-crafted equivalent POST consistently returned
+ *    in 3.5-4.5s. That curl comparison was the misleading part: it's
+ *    *not* an equivalent request. The previous investigation (correctly)
+ *    ruled out Accept-Language, IPv4/v6, HTTP/2, keep-alive reuse, and
+ *    Apache worker exhaustion, and concluded the document response itself
+ *    must be fine and something client-side must be hanging instead --
+ *    reasonable given curl's timing, but wrong. Re-root-caused via the
+ *    Playwright MCP tools with real network-event timestamps: the POST's
+ *    own `framenavigated` event landed ~123s after the request was sent,
+ *    with *zero* subresources still pending once it did -- the document
+ *    response itself was what took 123s, not anything it went on to load.
+ *    The actual difference from curl: install.tpl's `send_credentials_by_mail`
+ *    checkbox is `checked="checked"` by default, so a real browser submits
+ *    it and a hand-crafted curl POST (which only sends fields you name
+ *    explicitly) silently didn't. That field makes
+ *    `InstallWizard::boot()` call `MailService::mail()` -> Symfony
+ *    Mailer's native transport (no `smtp_host` configured on a fresh
+ *    install) -> PHP's `mail()` -> a real synchronous `/usr/sbin/sendmail`
+ *    invocation -- which blocks for 60-120+s in this sandbox (no outbound
+ *    SMTP egress; confirmed directly, independent of this app entirely:
+ *    `printf ... | sendmail -t -i` to `admin@example.test` took 60.1s
+ *    wall-clock to give up). Fixed here by unchecking that box before
+ *    submit, the same way `newsletter_subscribe` already is -- this test
+ *    has no reason to depend on real mail delivery succeeding or even
+ *    being fast. `tests/Browser/RegenerateFixtureTest.php` was never
+ *    affected: it POSTs an explicit field array (like curl), not a real
+ *    filled-in browser form, so it never sent this field either.
+ *    NOT fixed here, deliberately out of scope: the same hang is a real
+ *    risk for an actual first-time admin too, on any install where mail
+ *    delivery is slow or the checkbox is left checked (the default) --
+ *    that's an application-level synchronous-mail-on-request-thread
+ *    problem, not a test problem, and needs its own decision (e.g. an
+ *    async transport once Messenger exists -- see docs/DEVELOPMENT.md's
+ *    own note that Messenger isn't built yet).
  */
 it('completes a fresh install end-to-end', function (): void {
     $page = H::visitPwg($this, '/install.php');
@@ -89,7 +101,11 @@ it('completes a fresh install end-to-end', function (): void {
         ->fill('admin_pass1', 'p4ssword!')
         ->fill('admin_pass2', 'p4ssword!')
         ->fill('admin_mail', 'admin@example.test')
-        ->uncheck('newsletter_subscribe');
+        ->uncheck('newsletter_subscribe')
+        // checked="checked" by default in install.tpl -- triggers a real
+        // MailService::mail() send otherwise. See item 2 of this file's
+        // own top docblock for why that's what was actually hanging.
+        ->uncheck('send_credentials_by_mail');
 
     // Submitting the install form runs the real schema creation + config
     // seeding + admin user creation (~4-5s server-side, confirmed via a

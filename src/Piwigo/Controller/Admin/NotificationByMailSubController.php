@@ -329,19 +329,15 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 $opt_false = [];
                 $opt_false_selected = [];
                 foreach ($data_users as $nbm_user) {
-                    if (! is_string($nbm_user['check_key'])) {
-                        // check_key is the table's unique key, never null in practice.
-                        continue;
-                    }
-                    if (SqlDialect::getBoolean($nbm_user['enabled'])) {
-                        $opt_true[$nbm_user['check_key']] = stripslashes((string) $nbm_user['username']) . '[' . $nbm_user['mail_address'] . ']';
-                        if (isset($_POST['falsify']) and isset($_POST['cat_true']) and is_array($_POST['cat_true']) and in_array($nbm_user['check_key'], $_POST['cat_true'], true)) {
-                            $opt_true_selected[] = $nbm_user['check_key'];
+                    if (SqlDialect::getBoolean($nbm_user->enabled)) {
+                        $opt_true[$nbm_user->checkKey] = stripslashes($nbm_user->username) . '[' . $nbm_user->mailAddress . ']';
+                        if (isset($_POST['falsify']) and isset($_POST['cat_true']) and is_array($_POST['cat_true']) and in_array($nbm_user->checkKey, $_POST['cat_true'], true)) {
+                            $opt_true_selected[] = $nbm_user->checkKey;
                         }
                     } else {
-                        $opt_false[$nbm_user['check_key']] = stripslashes((string) $nbm_user['username']) . '[' . $nbm_user['mail_address'] . ']';
-                        if (isset($_POST['trueify']) and isset($_POST['cat_false']) and is_array($_POST['cat_false']) and in_array($nbm_user['check_key'], $_POST['cat_false'], true)) {
-                            $opt_false_selected[] = $nbm_user['check_key'];
+                        $opt_false[$nbm_user->checkKey] = stripslashes($nbm_user->username) . '[' . $nbm_user->mailAddress . ']';
+                        if (isset($_POST['trueify']) and isset($_POST['cat_false']) and is_array($_POST['cat_false']) and in_array($nbm_user->checkKey, $_POST['cat_false'], true)) {
+                            $opt_false_selected[] = $nbm_user->checkKey;
                         }
                     }
                 }
@@ -377,22 +373,21 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                     foreach ($data_users as $nbm_user) {
                         // sendMailNotifications('list_to_send') returns
                         // getUserNotifications() rows unchanged.
-                        assert(is_array($nbm_user));
-                        /** @var array<string, string|null> $nbm_user */
+                        assert($nbm_user instanceof \Piwigo\Notification\Projection\UserMailNotification);
                         if (
                             (! $must_repost) or // Not timeout, normal treatment
-                            in_array($nbm_user['check_key'], $post_send_selection, true)  // Must be repost, show only user to send
+                            in_array($nbm_user->checkKey, $post_send_selection, true)  // Must be repost, show only user to send
                         ) {
                             $tpl_var['users'][] =
                               [
-                                  'ID' => $nbm_user['check_key'],
+                                  'ID' => $nbm_user->checkKey,
                                   'CHECKED' => ( // not check if not selected,  on init select<all
                                       isset($_POST['send_selection']) and // not init
-                                      ! in_array($nbm_user['check_key'], $post_send_selection, true) // not selected
+                                      ! in_array($nbm_user->checkKey, $post_send_selection, true) // not selected
                                   ) ? '' : 'checked="checked"',
-                                  'USERNAME' => stripslashes((string) $nbm_user['username']),
-                                  'EMAIL' => $nbm_user['mail_address'],
-                                  'LAST_SEND' => $nbm_user['last_send'],
+                                  'USERNAME' => stripslashes($nbm_user->username),
+                                  'EMAIL' => $nbm_user->mailAddress,
+                                  'LAST_SEND' => $nbm_user->lastSend,
                               ];
                         }
                     }

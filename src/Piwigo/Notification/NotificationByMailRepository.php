@@ -6,6 +6,7 @@ namespace Piwigo\Notification;
 
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
+use Piwigo\Notification\Projection\UserMailNotification;
 
 /**
  * Persistence layer for the 2 genuinely data-touching functions in
@@ -37,13 +38,8 @@ final class NotificationByMailRepository extends AbstractRepository
      * unchanged by admin/notification_by_mail.php's own out-of-scope raw
      * query, kept untouched here).
      *
-     * Every column is normalized to string|null, matching the legacy
-     * \Piwigo\Db\MysqliDb::fetchAssoc()'s own contract -- downstream callers
-     * (set_user_on_env_nbm()/inc_mail_sent_success()/etc., untouched by
-     * this port) are all typed against that exact shape.
-     *
      * @param  list<string>  $checkKeyList
-     * @return list<array<string, string|null>>
+     * @return list<UserMailNotification>
      */
     public function findUserNotifications(
         string $action,
@@ -81,12 +77,6 @@ final class NotificationByMailRepository extends AbstractRepository
         $rows = $this->conn->executeQuery($sql, $params)
             ->fetchAllAssociative();
 
-        return array_map(
-            static fn (array $row): array => array_map(
-                static fn (mixed $value): string|null => is_scalar($value) ? (string) $value : null,
-                $row
-            ),
-            $rows
-        );
+        return array_map(UserMailNotification::fromRow(...), $rows);
     }
 }

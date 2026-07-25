@@ -10,6 +10,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
 use Piwigo\Notification\NotificationByMailService;
 use Piwigo\Notification\NotificationService;
+use Piwigo\Notification\Projection\UserMailNotification;
 use Piwigo\Template\Template;
 
 /**
@@ -108,7 +109,7 @@ final class NotificationByMailSender
 
     /**
      * @param array<array-key, mixed> $checkKeyList
-     * @return list<array<string, string|null>>
+     * @return list<UserMailNotification>
      */
     public function getUserNotifications(string $action, array $checkKeyList = [], bool|string $enabledFilterValue = ''): array
     {
@@ -197,17 +198,9 @@ final class NotificationByMailSender
         $this->isToSendMail = false;
     }
 
-    /**
-     * @param array<string, string|null> $nbmUser a getUserNotifications() row
-     */
-    public function setUserOnEnv(array &$nbmUser, bool $isActionSend): void
+    public function setUserOnEnv(UserMailNotification $nbmUser, bool $isActionSend): void
     {
-        // user_id is Tables::userMailNotification()'s primary key (NOT NULL
-        // per install/piwigo_structure-mysql.sql), always a non-null
-        // numeric value.
-        $nbmUserIdRaw = $nbmUser['user_id'];
-        assert(is_string($nbmUserIdRaw) && is_numeric($nbmUserIdRaw));
-        $user = $this->userService->buildUser((int) $nbmUserIdRaw, true);
+        $user = $this->userService->buildUser($nbmUser->userId, true);
         \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
 
         $currentUserLanguage = \Piwigo\Users\CurrentUser::get()->language;
@@ -231,26 +224,20 @@ final class NotificationByMailSender
         $this->mailTemplate = null;
     }
 
-    /**
-     * @param array<string, string|null> $nbmUser a getUserNotifications() row
-     */
-    public function incMailSentSuccess(array $nbmUser): void
+    public function incMailSentSuccess(UserMailNotification $nbmUser): void
     {
         $this->sentMailCount++;
 
         $msgInfo = $this->msgInfo ?? 'Mail sent to %s [%s].';
-        \Piwigo\Core\PageState::current()->addInfo(sprintf($msgInfo, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address'] ?? ''));
+        \Piwigo\Core\PageState::current()->addInfo(sprintf($msgInfo, stripslashes($nbmUser->username), $nbmUser->mailAddress));
     }
 
-    /**
-     * @param array<string, string|null> $nbmUser a getUserNotifications() row
-     */
-    public function incMailSentFailed(array $nbmUser): void
+    public function incMailSentFailed(UserMailNotification $nbmUser): void
     {
         $this->errorOnMailCount++;
 
         $msgError = $this->msgError ?? 'Error when sending email to %s [%s].';
-        \Piwigo\Core\PageState::current()->addError(sprintf($msgError, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address'] ?? ''));
+        \Piwigo\Core\PageState::current()->addError(sprintf($msgError, stripslashes($nbmUser->username), $nbmUser->mailAddress));
     }
 
     public function displayCounterInfo(): void
@@ -282,10 +269,7 @@ final class NotificationByMailSender
         }
     }
 
-    /**
-     * @param array<string, string|null> $nbmUser a getUserNotifications() row
-     */
-    public function assignVarsNbmMailContent(array $nbmUser): void
+    public function assignVarsNbmMailContent(UserMailNotification $nbmUser): void
     {
         $this->urlService->setMakeFullUrl();
 
@@ -302,15 +286,15 @@ final class NotificationByMailSender
 
         $mailTemplate->assign(
             [
-                'USERNAME' => stripslashes((string) $nbmUser['username']),
+                'USERNAME' => stripslashes($nbmUser->username),
 
                 'SEND_AS_NAME' => $this->sendAsName,
 
                 'UNSUBSCRIBE_LINK' => $this->urlService->addUrlParams($galleryHomeUrlStr . '/nbm.php', [
-                    'unsubscribe' => $nbmUser['check_key'],
+                    'unsubscribe' => $nbmUser->checkKey,
                 ]),
                 'SUBSCRIBE_LINK' => $this->urlService->addUrlParams($galleryHomeUrlStr . '/nbm.php', [
-                    'subscribe' => $nbmUser['check_key'],
+                    'subscribe' => $nbmUser->checkKey,
                 ]),
                 'CONTACT_EMAIL' => $this->sendAsMailAddress,
             ]
@@ -362,10 +346,10 @@ final class NotificationByMailSender
                     break;
                 }
 
-                $checkKeyTreated[] = $nbmUser['check_key'];
+                $checkKeyTreated[] = $nbmUser->checkKey;
 
                 $doUpdate = true;
-                if (($nbmUser['mail_address'] ?? '') !== '') {
+                if ($nbmUser->mailAddress !== '') {
                     $this->setUserOnEnv($nbmUser, true);
 
                     $subject = '[' . $galleryTitle . '] ' . ($isSubscribe ? Lang::t('Subscribe to notification by mail') : Lang::t('Unsubscribe from notification by mail'));
@@ -393,8 +377,8 @@ final class NotificationByMailSender
                     $ret = new MailService()
                         ->mail(
                             [
-                                'name' => stripslashes((string) $nbmUser['username']),
-                                'email' => $nbmUser['mail_address'],
+                                'name' => stripslashes($nbmUser->username),
+                                'email' => $nbmUser->mailAddress,
                             ],
                             [
                                 'from' => $sendAsMailFormatted,
@@ -417,14 +401,14 @@ final class NotificationByMailSender
 
                 if ($doUpdate) {
                     $updates[] = [
-                        'check_key' => $nbmUser['check_key'],
+                        'check_key' => $nbmUser->checkKey,
                         'enabled' => $enabledValue,
                     ];
                     ++$updatedDataCount;
-                    \Piwigo\Core\PageState::current()->addInfo(sprintf($msgInfo, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address'] ?? ''));
+                    \Piwigo\Core\PageState::current()->addInfo(sprintf($msgInfo, stripslashes($nbmUser->username), $nbmUser->mailAddress));
                 } else {
                     ++$errorOnUpdatedDataCount;
-                    \Piwigo\Core\PageState::current()->addError(sprintf($msgError, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address'] ?? ''));
+                    \Piwigo\Core\PageState::current()->addError(sprintf($msgError, stripslashes($nbmUser->username), $nbmUser->mailAddress));
                 }
             }
 
@@ -523,19 +507,11 @@ final class NotificationByMailSender
                         }
 
                         $this->setUserOnEnv($nbmUser, $isActionSend);
-                        // setUserOnEnv()'s by-ref $nbmUser param is only typed
-                        // array<string, mixed>, so the narrowing above is lost
-                        // across the call -- restate it.
-                        /** @var array<string, string|null> $nbmUser */
                         if ($isActionSend) {
                             $auth = null;
                             $addUrlParams = [];
 
-                            // user_id is the joined users.id column, always a
-                            // non-null numeric DB value.
-                            $nbmUserIdRaw = $nbmUser['user_id'];
-                            assert(is_string($nbmUserIdRaw) && is_numeric($nbmUserIdRaw));
-                            $authKey = $this->authService->createUserAuthKey((int) $nbmUserIdRaw, $nbmUser['status']);
+                            $authKey = $this->authService->createUserAuthKey($nbmUser->userId, $nbmUser->status);
 
                             if ($authKey !== false and is_string($authKey['auth_key'])) {
                                 $auth = $authKey['auth_key'];
@@ -544,7 +520,7 @@ final class NotificationByMailSender
 
                             $this->urlService->setMakeFullUrl();
                             // Fill return list of "treated" check_key for 'send'
-                            $returnList[] = $nbmUser['check_key'];
+                            $returnList[] = $nbmUser->checkKey;
 
                             // These nbm_* flags are plain booleans in
                             // include/config_default.inc.php; (bool) is always a
@@ -558,10 +534,10 @@ final class NotificationByMailSender
                             // it's always defined by the time it's used.
                             $news = [];
                             if ($nbmSendDetailedContent) {
-                                $news = $this->notificationService->news($nbmUser['last_send'], $dbnow, false, $nbmSendHtmlMail, $auth);
+                                $news = $this->notificationService->news($nbmUser->lastSend, $dbnow, false, $nbmSendHtmlMail, $auth);
                                 $existData = count($news) > 0;
                             } else {
-                                $existData = $this->notificationService->newsExists($nbmUser['last_send'], $dbnow);
+                                $existData = $this->notificationService->newsExists($nbmUser->lastSend, $dbnow);
                             }
 
                             if ($existData) {
@@ -578,11 +554,11 @@ final class NotificationByMailSender
                                 // Assign current var for nbm mail
                                 $this->assignVarsNbmMailContent($nbmUser);
 
-                                if ($nbmUser['last_send'] !== null) {
+                                if ($nbmUser->lastSend !== null) {
                                     $mailTemplate->assign(
                                         'content_new_elements_between',
                                         [
-                                            'DATE_BETWEEN_1' => $nbmUser['last_send'],
+                                            'DATE_BETWEEN_1' => $nbmUser->lastSend,
                                             'DATE_BETWEEN_2' => $dbnow,
                                         ]
                                     );
@@ -670,8 +646,8 @@ final class NotificationByMailSender
                                 $ret = new MailService()
                                     ->mail(
                                         [
-                                            'name' => stripslashes((string) $nbmUser['username']),
-                                            'email' => $nbmUser['mail_address'],
+                                            'name' => stripslashes($nbmUser->username),
+                                            'email' => $nbmUser->mailAddress,
                                         ],
                                         $mailArgs
                                     );
@@ -680,7 +656,7 @@ final class NotificationByMailSender
                                     $this->incMailSentSuccess($nbmUser);
 
                                     $datas[] = [
-                                        'user_id' => $nbmUser['user_id'],
+                                        'user_id' => $nbmUser->userId,
                                         'last_send' => $dbnow,
                                     ];
                                 } else {
@@ -690,7 +666,7 @@ final class NotificationByMailSender
                                 $this->urlService->unsetMakeFullUrl();
                             }
                         } else {
-                            if ($this->notificationService->newsExists($nbmUser['last_send'], $dbnow)) {
+                            if ($this->notificationService->newsExists($nbmUser->lastSend, $dbnow)) {
                                 // Fill return list of "selected" users for 'list_to_send'
                                 $returnList[] = $nbmUser;
                             }

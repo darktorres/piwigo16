@@ -38,7 +38,7 @@ final readonly class NotificationByMailService
      * @param  array<array-key, mixed>  $checkKeyList  filtered to string
      *   elements here -- may come straight from $_POST
      *   (admin/notification_by_mail.php)
-     * @return list<array<string, string|null>>
+     * @return list<\Piwigo\Notification\Projection\UserMailNotification>
      */
     public function getUserNotifications(string $action, array $checkKeyList, bool|string $enabledFilterValue): array
     {

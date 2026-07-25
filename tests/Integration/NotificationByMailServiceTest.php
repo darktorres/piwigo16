@@ -99,7 +99,7 @@ final class NotificationByMailServiceTest extends IntegrationTestCase
         $rows = $this->service->getUserNotifications('subscribe', [], true);
 
         self::assertCount(1, $rows);
-        self::assertSame('fixture_admin', $rows[0]['username']);
+        self::assertSame('fixture_admin', $rows[0]->username);
     }
 
     public function test_get_user_notifications_send_action_excludes_users_with_no_email(): void
@@ -107,7 +107,7 @@ final class NotificationByMailServiceTest extends IntegrationTestCase
         $rows = $this->service->getUserNotifications('send', [], '');
 
         self::assertCount(1, $rows);
-        self::assertSame('fixture_admin', $rows[0]['username']);
+        self::assertSame('fixture_admin', $rows[0]->username);
     }
 
     public function test_get_user_notifications_filters_non_string_check_keys(): void
@@ -118,7 +118,7 @@ final class NotificationByMailServiceTest extends IntegrationTestCase
         $rows = $this->service->getUserNotifications('subscribe', ['abcdef1234567890', 123, null, ['nested']], '');
 
         self::assertCount(1, $rows);
-        self::assertSame('fixture_admin', $rows[0]['username']);
+        self::assertSame('fixture_admin', $rows[0]->username);
     }
 }
 }

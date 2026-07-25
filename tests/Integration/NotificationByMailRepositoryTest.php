@@ -68,7 +68,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findUserNotifications('send', [], '', 'username', 'mail_address', 'id');
 
         self::assertCount(1, $rows);
-        self::assertSame('fixture_admin', $rows[0]['username']);
+        self::assertSame('fixture_admin', $rows[0]->username);
     }
 
     public function test_find_user_notifications_filters_by_check_key_list(): void
@@ -76,7 +76,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findUserNotifications('subscribe', ['abcdef1234567890'], '', 'username', 'mail_address', 'id');
 
         self::assertCount(1, $rows);
-        self::assertSame('fixture_admin', $rows[0]['username']);
+        self::assertSame('fixture_admin', $rows[0]->username);
     }
 
     public function test_find_user_notifications_filters_by_enabled_value(): void
@@ -84,19 +84,17 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findUserNotifications('subscribe', [], '0', 'username', 'mail_address', 'id');
 
         self::assertCount(1, $rows);
-        self::assertSame('regular_user', $rows[0]['username']);
+        self::assertSame('regular_user', $rows[0]->username);
     }
 
-    public function test_find_user_notifications_normalizes_numeric_columns_to_string(): void
+    public function test_find_user_notifications_narrows_user_id_to_a_real_int(): void
     {
         $rows = $this->repo->findUserNotifications('subscribe', [], '', 'username', 'mail_address', 'id');
 
-        // user_id is a native int under this project's DBAL/mysqli driver
-        // config, but must come back as a string here, matching the legacy
-        // \Piwigo\Db\MysqliDb::fetchAssoc() contract downstream callers
-        // (set_user_on_env_nbm() etc., untouched by this port) still rely
-        // on -- proven at runtime, not just declared via the return type.
-        self::assertIsString($rows[0]['user_id']);
-        self::assertSame('1', $rows[0]['user_id']);
+        // UserMailNotification::fromRow() narrows user_id to a real int
+        // (P17-23 Stage 1b), replacing the legacy \Piwigo\Db\MysqliDb::fetchAssoc()-style
+        // "everything comes back as string|null" convention every other
+        // domain's own Projection has already moved away from.
+        self::assertSame(1, $rows[0]->userId);
     }
 }

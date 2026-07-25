@@ -261,6 +261,22 @@ that domain's DTO/repository pass, not as one separate 43-column mega-migration.
 
 ### 1a-bis. Delete the legacy upgrade chain; fix the config/search/user/activity serialize leak (2026-07-24)
 
+**Stage 0 (delete the legacy upgrade chain) — DONE, commit `8224f23a3`.** Deleted
+`DbPatch/` (127 files) and `VersionUpgrade/` (26 files) in full, plus `UpgradeRunner.php`/
+`UpgradeService.php`/`UpgradeFeedRunner.php`/`public/upgrade.php`/`public/upgrade_feed.php`.
+Found and fixed several real dead-code consequences along the way: `RequestBootstrap.php`
+had an every-request check redirecting to the now-deleted `upgrade.php` on any
+`piwigo_db_version` mismatch (removed); the `piwigo_upgrade` ledger table had zero readers
+left, only `InstallWizard`'s write (table + write + `Tables::upgrade()` all dropped);
+`checkUpgradeFeed`/`piwigo_db_version` `CurrentConfig` properties, `UpgradeFlow.php`,
+`UpgradeRunDate.php`, and `ActivityRepository::findIdsByObjectAndAction()`/
+`PageState::resetQueryCounters()` were all fully dead once their sole callers were gone.
+`LegacyFileConf.php` was almost lost in the bulk deletion — rescued and relocated to
+`Piwigo\Admin\Install\` since `InstallWizard`'s constructor genuinely still needs it.
+Verified: full-repo PHPStan/ECS/deptrac clean; Unit 585/585, Arch 30/30, Integration
+657/657, Contract 94/94, Browser 68/68, Visual 34/34. Stage 1 (the serialize leak fixes
+below) starts next.
+
 While closing out 1a's "5 text→JSON" item, investigation of every `serialize(`/
 `unserialize(` call site in `src/Piwigo` found the real shape of the problem is bigger
 than 5 columns, and includes one large, unrelated discovery. Two separable pieces of work:

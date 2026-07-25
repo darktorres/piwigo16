@@ -27,6 +27,7 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\EffectiveForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Session\SessionService;
@@ -70,6 +71,17 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     private function permissionService(): PermissionService
     {
         return new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn));
+    }
+
+    /**
+     * Same reasoning as permissionService() above -- gap-closure Stage 4b
+     * (docs/plan/gap-closure-p0-p23.md) added a 2nd `new CategoryService(new
+     * CategoryRepository($this->conn), $this->permissionService())` call to
+     * this file's own getUserData(), repeating the existing one verbatim.
+     */
+    private function categoryService(): CategoryService
+    {
+        return new CategoryService(new CategoryRepository($this->conn), $this->permissionService());
     }
 
     /**
@@ -797,10 +809,8 @@ SELECT COUNT(DISTINCT(image_id)) as total
                 $userdata['nb_total_images'] = $nb_total_images;
 
                 // now we update user cache categories
-                $computed_categories = new CategoryService(
-                    new CategoryRepository($this->conn),
-                    $this->permissionService()
-                )->getComputedCategories($userdata, null);
+                $computed_categories = $this->categoryService()
+                    ->getComputedCategories($userdata, null);
                 $user_cache_cats = $computed_categories['categories'];
                 if (! AccessControl::isAdmin($status)) { // for non admins we forbid categories with no image (feature 1053)
                     $forbidden_ids = [];
@@ -886,6 +896,34 @@ INSERT IGNORE INTO ' . Tables::userCache() . '
                 $logger->info($logger_msg_prefix . 'user_cache generated, executed in ' . \Piwigo\Core\TimingHelper::getElapsedTime($user_cache_generation_start_time, \Piwigo\Core\TimingHelper::getMoment()));
             }
         }
+
+        // Gap-closure Stage 4b/4c/4d (docs/plan/gap-closure-p0-p23.md):
+        // overwrite the (possibly stale, $useCache-gated) values read from
+        // `user_cache` above with a fresh cache-pool-backed computation,
+        // unconditionally -- the real cutover for these 4 columns. The
+        // `$useCache` block above still runs and still writes to
+        // `user_cache` until Stage 4g removes it outright; nothing
+        // meaningfully reads that write's own output anymore after this.
+        $effective_status = $userdata['status'];
+        assert(is_string($effective_status));
+        $effective_level_raw = $userdata['level'] ?? '0';
+        // DBAL returns user_infos.level (a tinyint column) as a native
+        // int, not the mysqli-style string this file's own older $level
+        // reads elsewhere assumed -- EffectiveForbiddenCategoriesCache
+        // accepts either.
+        $effective_level = is_int($effective_level_raw) || is_string($effective_level_raw) ? $effective_level_raw : '0';
+
+        $effective = new EffectiveForbiddenCategoriesCache(
+            $this->permissionService(),
+            $this->categoryService(),
+            $this->conn,
+            \Piwigo\Cache\CachePools::effectivePermissions()
+        )->getForUser($userId, $effective_status, $effective_level);
+
+        $userdata['forbidden_categories'] = $effective['forbiddenCategories'];
+        $userdata['image_access_type'] = $effective['imageAccessType'];
+        $userdata['image_access_list'] = $effective['imageAccessList'];
+        $userdata['nb_total_images'] = $effective['nbTotalImages'];
 
         $userdata['preferences'] = $preferences;
 

@@ -205,5 +205,37 @@ namespace Piwigo\Tests\Integration {
 
             self::assertSame($countBefore, $countAfter);
         }
+
+        /**
+         * Real gap this closes: neither this class nor UserRepositoryTest
+         * called getUserData()/buildUser() at all before gap-closure Stage
+         * 4b -- a real TypeError (user_infos.level arrives as a native int
+         * via DBAL, not the mysqli-style string
+         * EffectiveForbiddenCategoriesCache::getForUser() first assumed)
+         * shipped through PHPStan/Unit/Arch/Integration and was only
+         * caught by the Browser suite hitting a real dev-server process.
+         * Covers both useCache branches -- true additionally exercises the
+         * still-present (until Stage 4g) legacy `user_cache`-regenerating
+         * block with the same real DBAL-typed row.
+         */
+        public function test_build_user_populates_effective_permission_fields_without_use_cache(): void
+        {
+            $user = $this->service->buildUser(1, false);
+
+            self::assertIsString($user['forbidden_categories']);
+            self::assertSame('NOT IN', $user['image_access_type']);
+            self::assertIsString($user['image_access_list']);
+            self::assertIsString($user['nb_total_images']);
+        }
+
+        public function test_build_user_populates_effective_permission_fields_with_use_cache(): void
+        {
+            $user = $this->service->buildUser(1, true);
+
+            self::assertIsString($user['forbidden_categories']);
+            self::assertSame('NOT IN', $user['image_access_type']);
+            self::assertIsString($user['image_access_list']);
+            self::assertIsString($user['nb_total_images']);
+        }
     }
 }

@@ -61,6 +61,19 @@ final class CachePools
     }
 
     /**
+     * 30s TTL -- same reasoning as permissions() above. Gap-closure Stage
+     * 4b/4c/4d (docs/plan/gap-closure-p0-p23.md): replaces
+     * `user_cache.forbidden_categories`/`image_access_type`/
+     * `image_access_list`/`nb_total_images` -- the *effective* (feature-
+     * 1053-widened) permission snapshot, distinct from permissions()
+     * above, which only ever holds the narrower structural value.
+     */
+    public static function effectivePermissions(): CacheItemPoolInterface
+    {
+        return CacheFactory::create(namespace: 'piwigo.effective_permissions', defaultLifetime: 30);
+    }
+
+    /**
      * 300s TTL -- matches docs/PLAN-REPLAY.md P23's stated design for the
      * `user_cache_categories` replacement (batch 3): per-user per-album
      * counts, cheaper to hold slightly stale than to recompute the

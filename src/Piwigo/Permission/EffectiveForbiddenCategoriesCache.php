@@ -1,0 +1,158 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Permission;
+
+use Doctrine\DBAL\Connection;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Category\CategoryService;
+use Piwigo\Db\Tables;
+use Psr\Cache\CacheItemPoolInterface;
+
+/**
+ * Per-user cached wrapper around the *effective* permission snapshot --
+ * gap-closure Stage 4b/4c/4d (docs/plan/gap-closure-p0-p23.md), replacing
+ * `user_cache.forbidden_categories`/`image_access_type`/`image_access_list`/
+ * `nb_total_images`. Computed together, matching
+ * `UserService::getUserData()`'s own dependency chain: `imageAccessType`/
+ * `imageAccessList`/`nbTotalImages` are all derived from the *structural*
+ * forbidden-categories value (before the feature-1053 widening below), not
+ * the effective one -- preserving that exact distinction is why this isn't
+ * simply {@see ForbiddenCategoriesCache} plus 3 more fields.
+ *
+ * "Effective" forbidden categories = the structural value from
+ * {@see PermissionService::getForbiddenCategories()} (same as
+ * {@see ForbiddenCategoriesCache}), PLUS -- for non-admins only -- every
+ * category with zero visible images (feature 1053), found via
+ * {@see CategoryService::getComputedCategories()}.
+ *
+ * 30s TTL ({@see \Piwigo\Cache\CachePools::effectivePermissions()}) means a
+ * permission change becomes visible well within one user session, long
+ * enough to avoid recomputing this multi-query calculation on every request
+ * for the same user.
+ *
+ * A separate class rather than a PermissionService/UserService method, same
+ * reasoning as {@see ForbiddenCategoriesCache}: both are constructed
+ * directly (`new X(...)`, no DI container) at many call sites -- adding a
+ * cache dependency to either constructor would break every one of them.
+ *
+ * Deliberately NOT used by `UserService::getUserData()`'s own legacy
+ * `user_cache`-regenerating block (still gated by `$useCache` until
+ * gap-closure Stage 4g removes it) -- that block is the authoritative
+ * *writer* these cached values exist to avoid recomputing elsewhere, so it
+ * must always read fresh values, never a stale one from this pool.
+ */
+final readonly class EffectiveForbiddenCategoriesCache
+{
+    public function __construct(
+        private PermissionService $permissionService,
+        private CategoryService $categoryService,
+        private Connection $conn,
+        private CacheItemPoolInterface $pool,
+    ) {}
+
+    /**
+     * @param  int|string  $level  `user_infos.level` -- DBAL returns this
+     *   tinyint column as a native int, not the mysqli-style string every
+     *   other caller of this class's SQL fragments historically assumed.
+     * @return array{forbiddenCategories: string, imageAccessType: string, imageAccessList: string, nbTotalImages: string}
+     */
+    public function getForUser(int $userId, string $userStatus, int|string $level): array
+    {
+        $item = $this->pool->getItem('effective_' . $userId);
+        if ($item->isHit()) {
+            $cached = $item->get();
+            if (
+                is_array($cached)
+                && isset($cached['forbiddenCategories'], $cached['imageAccessType'], $cached['imageAccessList'], $cached['nbTotalImages'])
+                && is_string($cached['forbiddenCategories'])
+                && is_string($cached['imageAccessType'])
+                && is_string($cached['imageAccessList'])
+                && is_string($cached['nbTotalImages'])
+            ) {
+                return [
+                    'forbiddenCategories' => $cached['forbiddenCategories'],
+                    'imageAccessType' => $cached['imageAccessType'],
+                    'imageAccessList' => $cached['imageAccessList'],
+                    'nbTotalImages' => $cached['nbTotalImages'],
+                ];
+            }
+        }
+
+        $result = $this->compute($userId, $userStatus, $level);
+
+        $item->set($result);
+        $this->pool->save($item);
+
+        return $result;
+    }
+
+    /**
+     * @return array{forbiddenCategories: string, imageAccessType: string, imageAccessList: string, nbTotalImages: string}
+     */
+    private function compute(int $userId, string $userStatus, int|string $level): array
+    {
+        $structuralForbidden = $this->permissionService->getForbiddenCategories($userId, $userStatus);
+
+        // this list does not contain images that are not in at least an
+        // authorized category -- same query UserService::getUserData()'s
+        // own regeneration block runs, based on the structural value.
+        $query = '
+SELECT DISTINCT(id)
+  FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
+  WHERE category_id NOT IN (' . $structuralForbidden . ')
+    AND level>' . $level;
+        $forbiddenIds = array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            array_column($this->conn->fetchAllAssociative($query), 'id')
+        );
+        if ($forbiddenIds === []) {
+            $forbiddenIds[] = '0';
+        }
+        $imageAccessType = 'NOT IN';
+        $imageAccessList = implode(',', $forbiddenIds);
+
+        $query = '
+SELECT COUNT(DISTINCT(image_id)) as total
+  FROM ' . Tables::imageCategory() . '
+  WHERE category_id NOT IN (' . $structuralForbidden . ')
+    AND image_id ' . $imageAccessType . ' (' . $imageAccessList . ')';
+        $row = $this->conn->fetchNumeric($query);
+        $totalRaw = $row !== false ? ($row[0] ?? null) : null;
+        $nbTotalImages = is_scalar($totalRaw) ? (string) $totalRaw : '0';
+
+        $effectiveForbidden = $structuralForbidden;
+        if (! AccessControl::isAdmin($userStatus)) { // for non admins we forbid categories with no image (feature 1053)
+            $computedCategories = $this->categoryService->getComputedCategories([
+                'id' => $userId,
+                'level' => $level,
+                'forbidden_categories' => $structuralForbidden,
+            ], null);
+
+            $zeroImageIds = [];
+            foreach ($computedCategories['categories'] as $cat) {
+                $countImages = $cat['count_images'] ?? null;
+                if ((is_numeric($countImages) ? (int) $countImages : 0) === 0) {
+                    $catId = $cat['cat_id'] ?? null;
+                    if (is_scalar($catId)) {
+                        $zeroImageIds[] = (string) $catId;
+                    }
+                }
+            }
+
+            if ($zeroImageIds !== []) {
+                $effectiveForbidden = $structuralForbidden === ''
+                    ? implode(',', $zeroImageIds)
+                    : $structuralForbidden . ',' . implode(',', $zeroImageIds);
+            }
+        }
+
+        return [
+            'forbiddenCategories' => $effectiveForbidden,
+            'imageAccessType' => $imageAccessType,
+            'imageAccessList' => $imageAccessList,
+            'nbTotalImages' => $nbTotalImages,
+        ];
+    }
+}

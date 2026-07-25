@@ -1298,6 +1298,35 @@ real consumer: `Menu/MenubarRenderer.php:151`. Computed together with 4b/4c in t
 `EffectiveForbiddenCategoriesCache`/pool entry, since they already share the same underlying
 query dependency chain in `getUserData()` today.
 
+> **2026-07-25 note: 4b/4c/4d done, implemented and verified together** (one class,
+> `Permission\EffectiveForbiddenCategoriesCache`, one pool,
+> `CachePools::effectivePermissions()`) — confirmed via direct read that `Users\User::
+> fromUserArray()` puts the *entire* raw `$userdata` array into `rawAttributes`, so
+> `image_access_type`/`image_access_list`/`nb_total_images` (read via
+> `CurrentUser::rawAttributes[...]`, e.g. `MenubarRenderer.php:151`) are already populated
+> by `getUserData()`'s new unconditional overwrite with zero further consumer-side changes
+> needed; `forbidden_categories` is separately promoted to `User::$forbiddenCategories`, also
+> already correct. `getUserData()` now calls the new class *unconditionally*, after the
+> still-present (until 4g) `$useCache`-gated legacy block, overwriting whatever that block
+> (or the stale `uc.*` JOIN) produced — the real behavioral cutover for these 4 columns,
+> ahead of 4g's own removal of the mechanism that used to write them.
+>
+> **Real regression caught by the Browser suite, not by PHPStan/Unit/Arch/Integration**:
+> `EffectiveForbiddenCategoriesCache::getForUser()`'s first version typed `$level` as a bare
+> `string`, matching the old code's own `assert(is_string($level))` — but `assert()` is a
+> total no-op in this environment (zend.assertions=-1) and PHPStan only checked the class in
+> isolation, never against `getUserData()`'s real call with a real DBAL row, where
+> `user_infos.level` (a tinyint column) comes back as a native `int`. Every real request hit
+> an uncaught `TypeError` (identification.php, qsearch.php, ...), only surfaced when the
+> Browser suite's real dev-server process failed 61 of 68 tests at the login step. Fixed by
+> widening the parameter to `int|string`. **The deeper gap this exposed and also fixed**:
+> `UserServiceTest`/`UserRepositoryTest` had zero direct coverage of `getUserData()`/
+> `buildUser()` at all — the single most-called per-request method in the app — so
+> Integration testing never exercised this real DBAL-typed row shape either. Added 2 new
+> `UserServiceTest` cases (`buildUser(1, false)`/`buildUser(1, true)`, the latter also
+> exercising the still-present legacy regeneration block against the same real row) to close
+> that gap, not just to regression-guard this one bug.
+
 ### 4e. `last_photo_date`: consolidate two independent implementations into one
 
 Two things compute this today, independently: `getUserData()`'s own eager computation (via

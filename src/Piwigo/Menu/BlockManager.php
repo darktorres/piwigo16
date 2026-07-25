@@ -84,11 +84,9 @@ final class BlockManager
         // blk_menubar is the only real BlockManager id anywhere in this
         // codebase (confirmed by grepping every `new BlockManager(...)`
         // call site) -- a real CurrentConfig property instead of the
-        // former dynamic 'blk_' . $id bag key.
-        $mb_conf = @unserialize(CurrentConfig::blkMenubar());
-        if (! is_array($mb_conf)) {
-            $mb_conf = [];
-        }
+        // former dynamic 'blk_' . $id bag key. Already decoded -- no
+        // manual unserialize() needed (gap-closure Stage 1a-bis item 1).
+        $mb_conf = CurrentConfig::blkMenubar() ?? [];
 
         $idx = 1;
         foreach ($this->registered_blocks as $id => $block) {

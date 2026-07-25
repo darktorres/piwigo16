@@ -46,11 +46,11 @@ afterEach(function (): void {
 });
 
 test('confGetParam reads a property-backed key via its own typed getter', function (): void {
-    CurrentConfig::setBlkMenubar('some-layout-blob');
+    CurrentConfig::setBlkMenubar(['menu' => 50]);
 
     $service = unconnectedConfigService();
 
-    expect($service->confGetParam('blk_menubar'))->toBe('some-layout-blob');
+    expect($service->confGetParam('blk_menubar'))->toBe(['menu' => 50]);
 });
 
 // confGetParam()'s fallback behavior for a genuinely dynamic (no-property)

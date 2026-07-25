@@ -53,15 +53,12 @@ final class MenubarPageRenderer
         // blk_menubar is the only real BlockManager id anywhere in this
         // codebase (confirmed by grepping every `new BlockManager(...)`
         // call site) -- a real CurrentConfig property instead of the
-        // former dynamic 'blk_' . $id bag key.
-        $mb_conf_raw = \Piwigo\Config\CurrentConfig::blkMenubar();
-        $mb_conf = $mb_conf_raw !== '' ? unserialize($mb_conf_raw) : [];
-        if (! is_array($mb_conf)) {
-            $mb_conf = [];
-        }
+        // former dynamic 'blk_' . $id bag key. Already decoded -- no
+        // manual unserialize() needed (gap-closure Stage 1a-bis item 1).
+        $mb_conf = \Piwigo\Config\CurrentConfig::blkMenubar() ?? [];
 
-        // $mb_conf comes from an unserialize() of DB-stored config, so its element
-        // types are not statically known; normalize every position to a real int.
+        // $mb_conf comes from DB-stored config, so its element types are
+        // not statically known; normalize every position to a real int.
         $mb_conf_normalized = [];
         foreach ($mb_conf as $id => $pos) {
             $mb_conf_normalized[$id] = is_numeric($pos) ? (int) $pos : 0;

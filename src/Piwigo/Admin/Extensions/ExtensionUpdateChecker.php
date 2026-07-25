@@ -126,7 +126,7 @@ final readonly class ExtensionUpdateChecker
         }
 
         \Piwigo\Config\CurrentConfig::setUpdatesIgnored($updatesIgnored);
-        $this->configService->confUpdateParam('updates_ignored', serialize($updatesIgnored));
+        $this->configService->confUpdateParam('updates_ignored', $updatesIgnored);
     }
 
     /**

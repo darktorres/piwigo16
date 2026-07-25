@@ -47,8 +47,7 @@ final class CheckIntegrity
     public function check(): void
     {
         // Ignore list
-        $conf_c13y_ignore_raw = \Piwigo\Config\CurrentConfig::c13yIgnore() ?? null;
-        $conf_c13y_ignore = is_string($conf_c13y_ignore_raw) ? unserialize($conf_c13y_ignore_raw) : false;
+        $conf_c13y_ignore = \Piwigo\Config\CurrentConfig::c13yIgnore() ?? false;
         if (
             is_array($conf_c13y_ignore) and
             isset($conf_c13y_ignore['version']) and
@@ -273,7 +272,7 @@ final class CheckIntegrity
         $conf_c13y_ignore = [];
         $conf_c13y_ignore['version'] = AppInfo::VERSION;
         $conf_c13y_ignore['list'] = $conf_ignore_list;
-        CurrentConfigService::get()->confUpdateParam('c13y_ignore', serialize($conf_c13y_ignore));
+        CurrentConfigService::get()->confUpdateParam('c13y_ignore', $conf_c13y_ignore);
     }
 
     /**

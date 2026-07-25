@@ -349,7 +349,7 @@ final class PwgExtensions
             }
             \Piwigo\Config\CurrentConfig::setUpdatesIgnored($updates_ignored);
 
-            \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('updates_ignored', serialize($updates_ignored));
+            \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('updates_ignored', $updates_ignored);
             unset($_SESSION['extensions_need_update']);
             return true;
         }
@@ -364,7 +364,7 @@ final class PwgExtensions
         }
 
         \Piwigo\Config\CurrentConfig::setUpdatesIgnored($updates_ignored);
-        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('updates_ignored', serialize($updates_ignored));
+        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('updates_ignored', $updates_ignored);
         unset($_SESSION['extensions_need_update']);
         return true;
     }

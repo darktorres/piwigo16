@@ -156,11 +156,10 @@ SELECT permalink
                 }
                 $i++;
             }
-            $serialized_extents = serialize($replacements);
             \Piwigo\Config\CurrentConfig::setExtentsForTemplates($replacements);
             $tpl_extension = $replacements;
             /* ecrire la nouvelle conf */
-            $configService->confUpdateParam('extents_for_templates', $serialized_extents);
+            $configService->confUpdateParam('extents_for_templates', $replacements);
             \Piwigo\Core\PageState::current()->addInfo(Lang::t('Templates configuration has been recorded.'));
         }
 

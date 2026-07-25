@@ -391,6 +391,25 @@ Visual — a deletion this size needs the full suite, not a scoped check.
   (write), `Admin/UpdatesExtPageRenderer.php` (read — verify current state at execution
   time), `Admin/Integrity/CheckIntegrity.php:51,276` (`c13y_ignore` read/write).
 
+**Item 1 — DONE.** Execution found the plan text wrong about `c13yIgnore`: it was typed
+`?string` (the raw serialized blob), the identical leak `blkMenubar` had — not "no property
+changes needed" as assumed during planning. Retyped it to `?array` the same way, and fixed
+both its read (`CheckIntegrity.php:50`) and write (`CheckIntegrity.php:275`) sites. Also
+found a second `blkMenubar` leak site the plan missed — `MenubarPageRenderer.php` had its
+own separate `unserialize(CurrentConfig::blkMenubar())` (the plan's file list only named
+`BlockManager.php`) — fixed the same way. `updatesIgnored`/`extentsForTemplates` writes
+retargeted onto `confUpdateParam($key, $arrayValue)` directly (dropping the manual
+`serialize()` — `confUpdateParam()`'s own `encode()` already serializes array values).
+Deliberately did **not** touch `MenubarLayoutRepository::saveLayout()`'s `serialize()` call
+despite this item's own text above saying to switch it to `json_encode()` — doing so now,
+before item 5's `ConfigService::encode()`/`hydrate()` rewrite lands, would desync that
+write from the still-`serialize()`-based read/decode path and break every `blk_menubar`
+read. Deferred to item 5, to land in the same commit. Verified: scoped PHPStan/ECS/deptrac
+clean; full Unit 615/615, Arch clean, Integration 657/657, Contract 94/94, Browser 68/68,
+Visual 34/34 (one Integration run hit a transient `piwigo_images` table-missing failure
+from an unrelated concurrent-heavy-tools mistake mid-session, not a real regression —
+confirmed clean on immediate re-run alone). Item 2 (`search.rules`) starts next.
+
 **2. `search.rules`**
 
 - Schema: `piwigo_search.rules` TEXT → JSON (`install/piwigo_structure-mysql.sql` +

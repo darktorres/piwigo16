@@ -4151,32 +4151,56 @@ final class CurrentConfig
      * BlockManager/MenubarPageRenderer. Given a real property here instead of
      * staying dynamic, since the "id" was never actually variable in
      * practice.
+     *
+     * `?array`, not the raw encoded blob -- matches every other array-shaped
+     * property (gap-closure Stage 1a-bis item 1). `MenubarLayoutRepository::
+     * saveLayout()` still writes this via raw SQL (deliberate, no DI
+     * dependency), so the read side here is what benefits: no more manual
+     * unserialize() in BlockManager.php.
+     * @var array<mixed>|null
      */
-    private static string $blkMenubar = '';
+    private static ?array $blkMenubar = null;
 
-    public static function blkMenubar(): string
+    /**
+     * @return array<mixed>|null
+     */
+    public static function blkMenubar(): ?array
     {
         return self::$blkMenubar;
     }
 
-    public static function setBlkMenubar(string $value): void
+    /**
+     * @param array<mixed>|null $value
+     */
+    public static function setBlkMenubar(?array $value): void
     {
         self::$blkMenubar = $value;
     }
 
     // === c13y_ignore ===
     /**
-     * Serialized {version, list} of integrity-check anomalies the admin has
-     * acknowledged/ignored (Admin/Integrity CheckIntegrity.php).
+     * {version, list} of integrity-check anomalies the admin has
+     * acknowledged/ignored (Admin/Integrity CheckIntegrity.php). Typed
+     * ?array (not ?string) so ConfigService::hydrate()/encode() handle the
+     * serialize()/unserialize() round-trip -- was raw ?string until
+     * gap-closure Stage 1a-bis item 1 found CheckIntegrity.php doing that
+     * conversion by hand at both call sites.
+     * @var array<mixed>|null
      */
-    private static ?string $c13yIgnore = null;
+    private static ?array $c13yIgnore = null;
 
-    public static function c13yIgnore(): ?string
+    /**
+     * @return array<mixed>|null
+     */
+    public static function c13yIgnore(): ?array
     {
         return self::$c13yIgnore;
     }
 
-    public static function setC13yIgnore(?string $value): void
+    /**
+     * @param array<mixed>|null $value
+     */
+    public static function setC13yIgnore(?array $value): void
     {
         self::$c13yIgnore = $value;
     }

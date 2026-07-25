@@ -1510,6 +1510,69 @@ per-category count rollup — a mechanical per-site fit, not open design).
 every user-related table" maintenance bookkeeping — remove the table from those lists,
 nothing to migrate.
 
+> **2026-07-25 note:** the fix landed in 2 rounds, the second correcting a real gap the
+> first pass introduced (adversarial validation catching my own mistake, not just the
+> plan's).
+>
+> Round 1: `CategoryRepository::findRandomRepresentativeIdAmongSubcategories()` and
+> `SearchFilterRenderer.php`'s album-search visibility filter both had the `INNER JOIN
+> user_cache_categories` dropped, replaced by `PermissionService::getSqlConditionFandF()`
+> conditions **already present at both sites** — the JOIN was pure redundant dead weight,
+> not the real filter. `Ws/PwgCategories.php::getList()` got a bigger fix: its `public`
+> (guest identity) and "normal" (non-admin authenticated) branches never had an explicit
+> forbidden-categories WHERE condition at all — they relied entirely on the JOIN, which
+> Stage 4g had already made permanently empty (only 2 stale rows survive in the whole
+> table, confirmed live). This was a real, live regression already in production between
+> 4g and this fix: every non-admin `pwg.categories.getList` call was silently returning
+> zero categories. Fixed by adding `id NOT IN (forbidden)` to both branches (guest's via
+> `UserService::getUserData()`, normal via `CurrentUser::forbiddenCategories`, both the
+> same "effective"/feature-1053-widened value Stage 4b/4g already established). Also found
+> `user_cache_categories.user_representative_picture_id` is a second, unrelated concept the
+> table held — a per-user "remembered random representative" override, not a visibility
+> cache — resolved by replicating `CategoryCatsRenderer`'s own pre-existing
+> `CachePools::categoryTree()`-keyed `getCachedRepresentative()`/`setCachedRepresentative()`
+> pattern into `PwgCategories.php`, and `setRepresentative()`'s admin-driven invalidation
+> UPDATE with a blanket `CachePools::categoryTree()->clear()` (PSR-6 has no per-key-prefix
+> bulk delete; a rare admin action, not a hot path).
+>
+> Round 2 (caught by PHPStan, then confirmed by a live 500 on every `getList()` call once
+> tested against a real HTTP request): round 1 only replaced the *visibility* JOIN and
+> missed that `nb_images`/`count_images`/`count_categories`/`date_last`/`max_date_last` in
+> `getList()`'s own SELECT list were **never real `piwigo_categories` columns at all** —
+> verified against `install/piwigo_structure-mysql.sql`, they only ever existed via the
+> same JOIN onto `user_cache_categories`, which actually stores them. Dropping the JOIN
+> without replacing them left the query referencing columns that don't exist on the base
+> table — `Unknown column 'nb_images' in field list`, a hard SQL error, not a silent
+> staleness issue. Original plan text ("convert onto `CategoryTreeCache`") had already
+> named the right mechanism for the *visibility* JOINs, but Stage 4h's own scope write-up
+> never flagged that `getList()`'s rollup columns needed the exact same treatment — a real
+> gap in the plan's own upfront analysis, not just an implementation slip. Fixed by
+> computing the rollup per-branch: `public`/"normal" reuse `Category\CategoryTreeCache`
+> (`CategoryService::getComputedCategories()` + `findNamesByIds()`, the real batch-3b
+> mechanism, cached 300s) with the same forbidden-categories value those branches already
+> established in round 1 — safe to share the pool because it's the *same* canonical
+> "effective" value any other `CategoryTreeCache` consumer already computes/caches for that
+> user id. Admin deliberately bypasses the cache and calls `getComputedCategories()`
+> directly: admin's own forbidden-categories value is narrower (structural only, "don't
+> hide empty categories" per the pre-existing comment) than the wide "effective" value
+> other consumers cache under that same admin's user id elsewhere — sharing the pool would
+> let whichever computation ran first silently poison the other's entry for up to 300s.
+> Also fixed a second real bug PHPStan caught in the same pass: the representative-image
+> change-detection comparison at line ~600 (`$row['user_representative_picture_id'] !==
+> $image_id`) went from a real int/int comparison (old JOIN column) to an always-true
+> string/int comparison (new cache-string source) — silently turning "write back only if
+> changed" into "always write back." Fixed by explicitly normalizing the cached value to
+> int before comparing.
+>
+> Added 2 Contract tests (`WsCategoriesTest`) closing the zero-coverage gap on
+> `getList()`'s `public`/normal branches specifically — the two code paths round 1's own
+> fix touched with no prior test exercising them at all, matching the pattern already found
+> twice this stage (Stage 4b/4g,
+> [[feedback_verify_new_class_against_real_callsite_not_isolation]]): a private album
+> created via `pwg.categories.add`, asserted absent from `getList(public: true)` and from
+> `getList()` as `regular_user` (no explicit grant). Full cadence (PHPStan/ECS/deptrac,
+> Unit/Arch 711, Integration 685, Browser 68, Contract 96) green after both rounds.
+
 ### 4i. Drop both tables
 
 Once 4a-4h land and zero real readers remain: drop `piwigo_user_cache` and

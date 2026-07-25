@@ -1263,20 +1263,33 @@ SELECT id, uppercats, global_rank, visible, status
      * is an already-built SQL fragment (leading "\n  AND"), same
      * pre-built-permission-string shape as every other repository method
      * here.
+     *
+     * Gap-closure Stage 4h (docs/plan/gap-closure-p0-p23.md): dropped the
+     * `user_cache_categories` `INNER JOIN` -- a real, live regression this
+     * fix closes, not just a modernization: gap-closure Stage 4g deleted
+     * the only remaining writer of that table, so the JOIN's own
+     * visibility filter had silently gone permanently empty for every user
+     * (confirmed live: only 2 stale rows survived in the whole table).
+     * The caller's own `$permissionCondition` (built via
+     * `PermissionService::getSqlConditionFandF(['visible_categories' =>
+     * 'id'], ...)`) was *already* a live, correctly-scoped duplicate of
+     * the exact same "is this category visible" check the JOIN provided
+     * via a now-dead precomputed table -- removing the JOIN is not a
+     * behavior change, the real filtering was already happening twice.
+     * `$userId` is dropped too -- its only use was the JOIN's own
+     * `user_id = :userId` condition.
      */
-    public function findRandomRepresentativeIdAmongSubcategories(string $uppercats, int $userId, string $permissionCondition): ?string
+    public function findRandomRepresentativeIdAmongSubcategories(string $uppercats, string $permissionCondition): ?string
     {
         $value = $this->conn->executeQuery('
 SELECT representative_picture_id
-  FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . '
-  ON id = cat_id and user_id = :userId
+  FROM ' . Tables::categories() . '
   WHERE uppercats LIKE :uppercatsLike
     AND representative_picture_id IS NOT NULL'
   . $permissionCondition . '
   ORDER BY ' . SqlDialect::DB_RANDOM_FUNCTION . '()
   LIMIT 1
 ;', [
-      'userId' => $userId,
       'uppercatsLike' => $uppercats . ',%',
   ])->fetchOne();
 

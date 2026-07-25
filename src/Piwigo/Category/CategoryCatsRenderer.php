@@ -198,7 +198,7 @@ final readonly class CategoryCatsRenderer
                 $permissionCondition = $this->permissionService->getSqlConditionFandF([
                     'visible_categories' => 'id',
                 ], "\n  AND");
-                $found = $this->categoryRepo->findRandomRepresentativeIdAmongSubcategories($uppercats, $userId, $permissionCondition);
+                $found = $this->categoryRepo->findRandomRepresentativeIdAmongSubcategories($uppercats, $permissionCondition);
                 if ($found !== null) {
                     $imageId = $found;
                 }

@@ -15,9 +15,11 @@ use Doctrine\DBAL\Connection;
 use Exception;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Cache\CachePools;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\CategoryTreeCache;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\BatchWriter;
@@ -28,9 +30,12 @@ use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 /**
  * P23 batch 8e-5: relocated from include/ws_functions/pwg.categories.php.
@@ -45,6 +50,25 @@ final class PwgCategories
             new CategoryRepository($conn),
             self::permissionService($conn)
         );
+    }
+
+    /**
+     * Gap-closure Stage 4h: getList()'s rollup columns
+     * (nb_images/count_images/count_categories/date_last/max_date_last)
+     * were never real `categories` columns -- they only ever existed via
+     * the now-dead user_cache_categories JOIN (verified against
+     * install/piwigo_structure-mysql.sql). CategoryTreeCache is the real
+     * P23 batch 3b replacement, already relied on by
+     * CategoryCatsRenderer/CategoryService::getCategoriesMenu() for the
+     * exact same computation -- reused here for the public/normal
+     * branches, whose forbidden_categories value matches what those other
+     * consumers already cache under the same user id (see getList()'s own
+     * call site for why the admin branch deliberately bypasses this
+     * instead).
+     */
+    private static function categoryTreeCache(Connection $conn): CategoryTreeCache
+    {
+        return new CategoryTreeCache(self::categoryService($conn), new CategoryRepository($conn), CachePools::categoryTree());
     }
 
     /**
@@ -68,6 +92,52 @@ final class PwgCategories
     private static function activityService(): ActivityService
     {
         return new ActivityService(new ActivityRepository(DbConnection::build()));
+    }
+
+    /**
+     * Gap-closure Stage 4h (docs/plan/gap-closure-p0-p23.md): getList()'s
+     * own "which categories are forbidden for the guest identity" branch
+     * needs a real effective-permission computation for a user that isn't
+     * CurrentUser -- UserService::getUserData() already does exactly this
+     * unconditionally for any given user id (Stage 4b/4g), so this reuses
+     * it rather than re-deriving forbidden_categories by hand.
+     */
+    private static function userService(Connection $conn): UserService
+    {
+        return new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), self::activityService(), new HtmlService(), $conn);
+    }
+
+    /**
+     * Gap-closure Stage 4h: replaces `user_cache_categories.
+     * user_representative_picture_id` -- a per-user "remembered random
+     * representative" override, not just a permission-visibility cache
+     * (confirmed by reading getList()'s own write-back logic below before
+     * assuming this table was only ever a visibility cache). Same
+     * CachePools::categoryTree() pool and `'repr_' . $userId . '_' . $catId'`
+     * key format as Category\CategoryCatsRenderer's own
+     * getCachedRepresentative()/setCachedRepresentative() -- deliberately
+     * shared, not a separate pool, so a user sees the same remembered
+     * representative whether browsing the website or calling this WS
+     * method.
+     */
+    private static function getCachedRepresentative(int $userId, int $catId): ?string
+    {
+        $item = CachePools::categoryTree()->getItem('repr_' . $userId . '_' . $catId);
+        if (! $item->isHit()) {
+            return null;
+        }
+
+        $value = $item->get();
+
+        return is_string($value) ? $value : null;
+    }
+
+    private static function setCachedRepresentative(int $userId, int $catId, ?string $imageId): void
+    {
+        $pool = CachePools::categoryTree();
+        $item = $pool->getItem('repr_' . $userId . '_' . $catId);
+        $item->set($imageId);
+        $pool->save($item);
     }
 
     /**
@@ -332,9 +402,13 @@ SELECT
 
         $output = [];
         $where = ['1=1'];
-        $join_type = 'INNER';
         $user_id = $currentUser->id;
-        $join_user = $user_id;
+        // Which user's own "remembered random representative" cache entry
+        // (CachePools::categoryTree(), see below) each row's
+        // user_representative_picture_id is read from/written to --
+        // overridden to the guest identity in the public branch, same
+        // identity the old user_cache_categories JOIN used to key on.
+        $repr_user_id = $user_id;
 
         if (! $params['recursive']) {
             if ($params['cat_id'] > 0) {
@@ -350,11 +424,45 @@ SELECT
               $params['cat_id'] . '(,|$)\'';
         }
 
+        // Gap-closure Stage 4h (docs/plan/gap-closure-p0-p23.md): all 3
+        // branches below now add their own explicit `id NOT IN (forbidden)`
+        // condition -- a real, live regression fix, not just cleanup. The
+        // user_cache_categories INNER/LEFT JOIN this used to run through
+        // had gone permanently empty (Stage 4g deleted the table's only
+        // remaining writer), so the "normal" and "public" branches were
+        // silently returning zero categories to every non-admin caller.
+        // The admin branch already had its own explicit condition (not
+        // gated on the JOIN, whose LEFT type never filtered rows anyway --
+        // it stays unchanged).
+        // Gap-closure Stage 4h: nb_images/count_images/count_categories/
+        // date_last/max_date_last are NOT real `categories` columns
+        // (verified against install/piwigo_structure-mysql.sql) -- they
+        // only ever existed via the JOIN removed above. $rollupByCatId
+        // supplies them per-row below, computed per-branch since each
+        // identity's forbidden-categories value differs (see each
+        // branch's own comment).
+        $rollupByCatId = [];
+
         if ($params['public']) {
             $where[] = 'status = "public"';
             $where[] = 'visible = 1';
 
-            $join_user = \Piwigo\Config\CurrentConfig::guestId();
+            $repr_user_id = \Piwigo\Config\CurrentConfig::guestId();
+            // UserService::getUserData() computes the same effective
+            // (feature-1053-widened) forbidden-categories value for any
+            // given user id that CurrentUser::forbiddenCategories already
+            // holds for the current request's own user (Stage 4b/4g) --
+            // reused here since the guest identity isn't CurrentUser. Also
+            // reused (unmodified) below for the rollup: it's the same
+            // canonical value any other guest-facing consumer of
+            // CategoryTreeCache already computes/caches for this same
+            // user id, so feeding it back into that same cache pool here
+            // cannot desync it.
+            $guest_userdata = self::userService($categoryConn)->getUserData($repr_user_id);
+            $guest_forbidden_categories = $guest_userdata['forbidden_categories'] ?? '0';
+            $guest_forbidden_categories = is_string($guest_forbidden_categories) ? $guest_forbidden_categories : '0';
+            $where[] = 'id NOT IN (' . $guest_forbidden_categories . ')';
+            $rollupByCatId = self::categoryTreeCache($categoryConn)->getForUser($guest_userdata);
         } elseif (\Piwigo\Auth\AccessControl::isAdmin()) {
             // in this very specific case, we don't want to hide empty
             // categories. Function calculate_permissions will only return
@@ -364,20 +472,36 @@ SELECT
             $forbidden_categories = new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService($categoryConn), \Piwigo\Cache\CachePools::permissions())
                 ->getForUser($user_id, $currentUser->status->value);
             $where[] = 'id NOT IN (' . $forbidden_categories . ')';
-            $join_type = 'LEFT';
+            // Deliberately NOT CategoryTreeCache: that pool is keyed only
+            // by user id, and this branch's forbidden_categories is the
+            // narrower structural value above, not the wider "effective"
+            // one CurrentUser::forbiddenCategories/EffectiveForbiddenCategoriesCache
+            // compute for this same admin's user id elsewhere (e.g. while
+            // browsing the site normally) -- sharing the pool would let
+            // whichever computation runs first silently poison the other's
+            // cache entry for up to 300s. Computed directly (uncached);
+            // getComputedCategories()'s own LEFT JOIN never drops an empty
+            // category, so this also satisfies the comment above without
+            // the old JOIN's special-casing.
+            $admin_userdata = $currentUser->toUserArray();
+            $admin_userdata['forbidden_categories'] = $forbidden_categories;
+            $rollupByCatId = $categoryService->getComputedCategories($admin_userdata, null)['categories'];
+        } else {
+            $where[] = 'id NOT IN (' . $currentUser->forbiddenCategories . ')';
+            // $currentUser->forbiddenCategories IS the same effective value
+            // EffectiveForbiddenCategoriesCache computes for this user id
+            // (Stage 4b/4g) -- the same value any other CategoryTreeCache
+            // consumer for this user already relies on, safe to share.
+            $rollupByCatId = self::categoryTreeCache($categoryConn)->getForUser($currentUser->toUserArray());
         }
 
         $query = '
 SELECT SQL_CALC_FOUND_ROWS
     id, name, comment, permalink, status,
     uppercats, global_rank, id_uppercat,
-    nb_images, count_images AS total_nb_images,
-    representative_picture_id, user_representative_picture_id, count_images, count_categories,
-    date_last, max_date_last, count_categories AS nb_categories,
+    representative_picture_id,
     image_order
   FROM ' . Tables::categories() . '
-    ' . $join_type . ' JOIN ' . Tables::userCacheCategories() . '
-    ON id=cat_id AND user_id=' . $join_user . '
   WHERE ' . implode("\n    AND ", $where);
 
         if (isset($params['search']) and $params['search'] !== '') {
@@ -423,6 +547,25 @@ SELECT SQL_CALC_FOUND_ROWS
         $cats = [];
         $urlService = new UrlService(new HtmlService());
         foreach ($rows as $row) {
+            // Gap-closure Stage 4h: the rollup columns (nb_images/
+            // count_images/count_categories/date_last/max_date_last)
+            // aren't real `categories` columns -- merge them in from the
+            // per-branch rollup computed above, keyed by cat_id, before
+            // any of the row shaping below reads them. A row absent from
+            // the rollup can't happen here: $rollupByCatId is computed
+            // with the same forbidden_categories value that built $where
+            // above, so every row that survived the WHERE clause also has
+            // a rollup entry -- ?? 0/null below is defensive, not expected.
+            $catId = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
+            $rollup = $rollupByCatId[$catId] ?? [];
+            $row['nb_images'] = $rollup['nb_images'] ?? 0;
+            $row['total_nb_images'] = $rollup['count_images'] ?? 0;
+            $row['count_images'] = $rollup['count_images'] ?? 0;
+            $row['count_categories'] = $rollup['count_categories'] ?? 0;
+            $row['nb_categories'] = $rollup['count_categories'] ?? 0;
+            $row['date_last'] = $rollup['date_last'] ?? null;
+            $row['max_date_last'] = $rollup['max_date_last'] ?? null;
+
             $row['url'] = $urlService->makeIndexUrl(
                 [
                     'category' => $row,
@@ -431,6 +574,11 @@ SELECT SQL_CALC_FOUND_ROWS
             foreach (['id', 'nb_images', 'total_nb_images', 'nb_categories'] as $key) {
                 $row[$key] = is_numeric($row[$key] ?? null) ? (int) ($row[$key] ?? 0) : 0;
             }
+
+            // Gap-closure Stage 4h: was the user_cache_categories JOIN's own
+            // user_representative_picture_id column -- see
+            // getCachedRepresentative()'s own docblock.
+            $row['user_representative_picture_id'] = self::getCachedRepresentative($repr_user_id, $row['id']);
 
             // uppercats is a NOT NULL column of the categories table --
             // verified against install/piwigo_structure-mysql.sql. Asserted
@@ -482,11 +630,17 @@ SELECT SQL_CALC_FOUND_ROWS
                 $image_id = $categoryService->getRandomImageInCategory($row);
             } else { // searching a random representant among representant of sub-categories
                 if ($row['count_categories'] > 0 and $row['count_images'] > 0) {
+                    // Gap-closure Stage 4h (docs/plan/gap-closure-p0-p23.md):
+                    // dropped the user_cache_categories INNER JOIN -- a real,
+                    // live regression fix (Stage 4g deleted the table's only
+                    // remaining writer), not just cleanup. The
+                    // getSqlConditionFandF() condition already appended below
+                    // was *already* a live, correctly-scoped duplicate of the
+                    // same "is this category visible" check, same as
+                    // CategoryRepository::findRandomRepresentativeIdAmongSubcategories().
                     $query = '
 SELECT representative_picture_id
   FROM ' . Tables::categories() . '
-    INNER JOIN ' . Tables::userCacheCategories() . '
-    ON id=cat_id AND user_id=' . $user_id . '
   WHERE uppercats LIKE \'' . $row['uppercats'] . ',%\'
     AND representative_picture_id IS NOT NULL
         ' . self::permissionService($categoryConn)->getSqlConditionFandF([
@@ -510,7 +664,16 @@ SELECT representative_picture_id
             if (isset($image_id) && is_numeric($image_id)) {
                 $image_id = (int) $image_id;
 
-                if (\Piwigo\Config\CurrentConfig::representativeCacheOnSubcats() and ($row['user_representative_picture_id'] ?? null) !== $image_id) {
+                // Gap-closure Stage 4h: user_representative_picture_id is
+                // now a cache string (getCachedRepresentative()'s own
+                // return type), not the old DB column's value -- compare as
+                // int against $image_id rather than the (always-mismatched)
+                // string, or every row would be flagged "changed" here.
+                $cached_representative_id = is_numeric($row['user_representative_picture_id'] ?? null)
+                    ? (int) $row['user_representative_picture_id']
+                    : null;
+
+                if (\Piwigo\Config\CurrentConfig::representativeCacheOnSubcats() and $cached_representative_id !== $image_id) {
                     $user_representative_updates_for[$row['id']] = $image_id;
                 }
 
@@ -590,25 +753,19 @@ SELECT id, path, representative_ext
         // user_representative if we have used $user['id'] and not the guest id,
         // or else the real guest may see thumbnail that he should not
         if (! $params['public'] and (bool) count($user_representative_updates_for)) {
-            $updates = [];
-
+            // Gap-closure Stage 4h: was a single massUpdate() against
+            // user_cache_categories -- see getCachedRepresentative()'s own
+            // docblock. $repr_user_id === $user_id here unconditionally
+            // (the enclosing `! $params['public']` guard above is the same
+            // one the original code used to justify persisting against
+            // $user_id specifically, never the guest id).
             foreach ($user_representative_updates_for as $cat_id => $image_id) {
-                $updates[] = [
-                    'user_id' => $user_id,
-                    'cat_id' => $cat_id,
-                    'user_representative_picture_id' => $image_id,
-                ];
-            }
-
-            new BatchWriter($categoryConn)
-                ->massUpdate(
-                    Tables::userCacheCategories(),
-                    [
-                        'primary' => ['user_id', 'cat_id'],
-                        'update' => ['user_representative_picture_id'],
-                    ],
-                    $updates
+                self::setCachedRepresentative(
+                    $repr_user_id,
+                    $cat_id,
+                    is_scalar($image_id) ? (string) $image_id : null
                 );
+            }
         }
 
         foreach ($cats as &$cat) {
@@ -1074,12 +1231,16 @@ UPDATE ' . Tables::categories() . '
 ;';
         $conn->executeStatement($query);
 
-        $query = '
-UPDATE ' . Tables::userCacheCategories() . '
-  SET user_representative_picture_id = NULL
-  WHERE cat_id = ' . $params['category_id'] . '
-;';
-        $conn->executeStatement($query);
+        // Gap-closure Stage 4h: was `UPDATE user_cache_categories SET
+        // user_representative_picture_id = NULL WHERE cat_id = ...` --
+        // invalidates every user's own remembered-representative cache
+        // entry (CachePools::categoryTree(), see getCachedRepresentative()'s
+        // own docblock) so the admin's explicit choice above takes
+        // priority on the next read. PSR-6 has no per-key-prefix bulk
+        // delete, so this clears the whole pool -- a rare admin action,
+        // not a hot path, and the pool's own 300s TTL already treats
+        // broader staleness as tolerable.
+        CachePools::categoryTree()->clear();
 
         self::activityService()->record('album', $params['category_id'], 'edit', [
             'image_id' => $params['image_id'],

@@ -462,13 +462,24 @@ SELECT
             if (count($catWords) > 0) {
                 $fullnameOf = [];
 
+                // Gap-closure Stage 4h (docs/plan/gap-closure-p0-p23.md):
+                // the user_cache_categories INNER JOIN this visibility
+                // filter used to run through had gone permanently empty
+                // (Stage 4g deleted the table's only remaining writer) --
+                // a live regression this fix closes, replaced with the
+                // same live PermissionService condition every other
+                // visibility check in this class already uses.
+                $permissionCondition = $this->permissionService->getSqlConditionFandF([
+                    'visible_categories' => 'id',
+                ], "\n  AND");
+
                 $query = '
 SELECT
     id,
     uppercats
   FROM ' . Tables::categories() . '
-    INNER JOIN ' . Tables::userCacheCategories() . ' ON id = cat_id AND user_id = ' . $userId . '
-  WHERE id IN (' . implode(',', $catWords) . ')
+  WHERE id IN (' . implode(',', $catWords) . ')'
+  . $permissionCondition . '
 ;';
                 foreach ($this->repo->queryRows($query) as $row) {
                     if ($row['id'] === null || $row['uppercats'] === null) {

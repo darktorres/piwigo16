@@ -164,6 +164,7 @@ CREATE TABLE `piwigo_history` (
 
 DROP TABLE IF EXISTS `piwigo_history_summary`;
 CREATE TABLE `piwigo_history_summary` (
+  `summary_id` int(10) unsigned NOT NULL auto_increment,
   `year` smallint(4) NOT NULL default '0',
   `month` tinyint(2) default NULL,
   `day` tinyint(2) default NULL,
@@ -171,6 +172,7 @@ CREATE TABLE `piwigo_history_summary` (
   `nb_pages` int(11) default NULL,
   `history_id_from` int(10) unsigned default NULL,
   `history_id_to` int(10) unsigned default NULL,
+  PRIMARY KEY (`summary_id`),
   UNIQUE KEY history_summary_ymdh (`year`,`month`,`day`,`hour`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -352,7 +354,7 @@ CREATE TABLE `piwigo_sessions` (
 
 DROP TABLE IF EXISTS `piwigo_sites`;
 CREATE TABLE `piwigo_sites` (
-  `id` tinyint(4) NOT NULL auto_increment,
+  `id` tinyint(4) unsigned NOT NULL auto_increment,
   `galleries_url` varchar(255) NOT NULL default '',
   PRIMARY KEY  (`id`),
   UNIQUE KEY `sites_ui1` (`galleries_url`)

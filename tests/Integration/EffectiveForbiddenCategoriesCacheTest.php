@@ -20,10 +20,11 @@ use Symfony\Component\Cache\Adapter\ArrayAdapter;
 /**
  * Same fixture shape as ForbiddenCategoriesCacheTest's own coverage: 2
  * categories (1 "Sample Album", 2 "Nested Sub Album" under it), 5 images
- * (3 in cat 1, 2 in cat 2), all at level 0 -- so `imageAccessType`/
- * `imageAccessList` are always the '0' fallback ("nothing above this
- * user's level 0") for every scenario below; `nbTotalImages` counts all 5
- * unless a category is structurally forbidden.
+ * (3 in cat 1, 2 in cat 2), all at level 0 and all dated '2026-08-01
+ * 00:00:00' -- so `imageAccessType`/`imageAccessList` are always the '0'
+ * fallback ("nothing above this user's level 0") for every scenario below;
+ * `nbTotalImages` counts all 5 unless a category is structurally forbidden;
+ * `lastPhotoDate` is that one shared date unless every image is excluded.
  */
 final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
 {
@@ -82,6 +83,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
         self::assertSame('NOT IN', $result['imageAccessType']);
         self::assertSame('0', $result['imageAccessList']);
         self::assertSame('5', $result['nbTotalImages']);
+        self::assertSame('2026-08-01 00:00:00', $result['lastPhotoDate']);
     }
 
     public function test_get_for_user_reflects_a_structurally_forbidden_category(): void
@@ -94,6 +96,42 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
         // category 1's own 3 images are excluded from the total, leaving
         // only category 2's 2.
         self::assertSame('2', $result['nbTotalImages']);
+    }
+
+    /**
+     * Proves the forbidden-category exclusion genuinely reaches
+     * lastPhotoDate too, not just nbTotalImages -- every fixture image
+     * shares one date, so this backdates category 1's own images first to
+     * make an exclusion actually observable.
+     */
+    public function test_get_for_user_last_photo_date_reflects_only_visible_categories(): void
+    {
+        $this->conn->executeStatement(
+            "UPDATE " . Tables::images() . " SET date_available = '2020-01-01 00:00:00' WHERE id IN (1, 2, 3)"
+        );
+
+        try {
+            $before = $this->cache->getForUser(2, 'normal', '0');
+            self::assertSame('2026-08-01 00:00:00', $before['lastPhotoDate'], 'category 2 (unmutated) should still be the most recent');
+
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 2");
+
+            // A fresh pool (not $this->cache's), same user -- the point
+            // here is a genuinely fresh computation reflecting the new
+            // forbidden category, not a per-user cache-entry distinction.
+            $afterCache = new EffectiveForbiddenCategoriesCache(
+                new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn)),
+                new CategoryService(new CategoryRepository($this->conn), new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn))),
+                $this->conn,
+                new ArrayAdapter(),
+            );
+            $after = $afterCache->getForUser(2, 'normal', '0');
+            self::assertSame('2020-01-01 00:00:00', $after['lastPhotoDate'], "once category 2 is forbidden, only category 1's backdated images remain visible");
+        } finally {
+            $this->conn->executeStatement(
+                "UPDATE " . Tables::images() . " SET date_available = '2026-08-01 00:00:00' WHERE id IN (1, 2, 3)"
+            );
+        }
     }
 
     /**
@@ -127,9 +165,14 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
 
             // Admins never get the feature-1053 widening -- a fresh pool
             // entry (different user id) proves this is the status gate,
-            // not a stale cache hit from the assertion above.
+            // not a stale cache hit from the assertion above. Gap-closure
+            // Stage 4e: getComputedCategories() -- and therefore
+            // lastPhotoDate -- is called unconditionally now, matching the
+            // legacy code's own real behavior, so admins still get a real
+            // value even though the widening loop itself never runs for them.
             $adminResult = $this->cache->getForUser(999, 'admin', '0');
             self::assertSame('0', $adminResult['forbiddenCategories']);
+            self::assertSame('2026-08-01 00:00:00', $adminResult['lastPhotoDate']);
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $emptyId);
         }

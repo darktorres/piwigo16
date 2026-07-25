@@ -62,11 +62,12 @@ final class CachePools
 
     /**
      * 30s TTL -- same reasoning as permissions() above. Gap-closure Stage
-     * 4b/4c/4d (docs/plan/gap-closure-p0-p23.md): replaces
+     * 4b/4c/4d/4e (docs/plan/gap-closure-p0-p23.md): replaces
      * `user_cache.forbidden_categories`/`image_access_type`/
-     * `image_access_list`/`nb_total_images` -- the *effective* (feature-
-     * 1053-widened) permission snapshot, distinct from permissions()
-     * above, which only ever holds the narrower structural value.
+     * `image_access_list`/`nb_total_images`/`last_photo_date` -- the
+     * *effective* (feature-1053-widened) permission snapshot, distinct
+     * from permissions() above, which only ever holds the narrower
+     * structural value.
      */
     public static function effectivePermissions(): CacheItemPoolInterface
     {

@@ -1327,24 +1327,48 @@ query dependency chain in `getUserData()` today.
 > exercising the still-present legacy regeneration block against the same real row) to close
 > that gap, not just to regression-guard this one bug.
 
-### 4e. `last_photo_date`: consolidate two independent implementations into one
+### 4e. `last_photo_date`: fold into 4b's class, don't build a separate one
 
-Two things compute this today, independently: `getUserData()`'s own eager computation (via
-`CategoryService::getComputedCategories()`), and `Filter/FilterService.php:143-148`'s own
-separate, conditional computation (only inside its own "recent period filter" feature,
-caching onto `CurrentUser::rawAttributes['last_photo_date']` when it runs). Real consumers:
-`Category/CategoryCatsRenderer.php:94`, `Users/UserService.php:1070-1084`. Since
-`FilterService`'s own branch doesn't run on every request, a consumer hit outside that
-branch depends on `getUserData()`'s own eager write having already happened — the two
-implementations aren't redundant, they're both real and currently uncoordinated.
+Two things compute this today: `getUserData()`'s own eager computation (via
+`CategoryService::getComputedCategories()`), and `Filter/FilterService.php`'s own separate,
+conditional computation (only inside its own "recent period filter" feature). Real
+consumers: `Category/CategoryCatsRenderer.php:94`, `Users/UserService.php:1070-1084`
+(`getRecentPhotosSql()`), both reading `CurrentUser::rawAttributes['last_photo_date']`
+defensively (null-safe) — neither needs to change.
 
-Proper fix (matching the already-established `nb_available_tags`/`nb_available_comments`
-pattern, see 4f): one new lazy method, `Category\LastPhotoDateCache::getForUser(User
-$user): ?string` (compute via `CategoryService::getComputedCategories()` if
-`CurrentUser::rawAttributes['last_photo_date']` isn't already set, cache onto
-`rawAttributes` for the rest of the request — no cross-request pool needed, this is cheap
-to recompute per-request). `FilterService`'s own inline computation and `getUserData()`'s
-eager one both retarget onto this single method instead of each doing their own thing.
+> **Execution-time correction: the original "consolidate into one lazy method" design above
+> was wrong, caught before writing it, not after.** Direct read of
+> `CategoryRepository::findComputedCategoriesRollup()`'s own `$imagesJoinCondition` docblock
+> found `FilterService`'s call passes a non-null `$filterDays` (the "recent period" filter
+> setting) into `getComputedCategories()`, which scopes the underlying rollup query's image
+> JOIN to recent images only — its own `lastPhotoDate` is genuinely the *most recent photo
+> within the filtered period*, not the same value as `getUserData()`'s unfiltered
+> (`$filterDays = null`) "most recent photo ever." A shared lazy cache keyed only by user
+> would have silently made whichever computation runs second return the other's
+> semantically different value — exactly the class of bug a "looks redundant, must be one
+> value" assumption misses without reading the real SQL. `FilterService`'s own branch is
+> untouched.
+>
+> The real fix, once `getUserData()`'s own gap is understood precisely: its eager
+> computation of `lastPhotoDate` already happens (`$computed_categories['lastPhotoDate']`)
+> but only *inside* the `$useCache`-gated legacy block — on an admin page ($useCache=false)
+> it's silently skipped, matching the exact "sometimes neither writer runs" gap this
+> sub-stage exists to close. Since Stage 4b's `Permission\EffectiveForbiddenCategoriesCache`
+> already calls `CategoryService::getComputedCategories($userdata, null)` — the *same*
+> unfiltered call — to find feature-1053's zero-image categories, `lastPhotoDate` is a free
+> byproduct of a call that class was, on closer read, incorrectly gating behind
+> `! AccessControl::isAdmin($userStatus)` entirely (the legacy code calls
+> `getComputedCategories()` unconditionally; only the *widening loop* after it is
+> admin-gated) — fixed as part of this sub-stage: the call moved outside the admin check,
+> `lastPhotoDate` added as the class's 5th return field, admins now get a real value too
+> (previously silently `null` for admins even before this sub-stage, an undocumented gap in
+> 4b's own first cut). `getUserData()` writes `$userdata['last_photo_date']` from this same
+> unconditional call, alongside `forbidden_categories`/`image_access_type`/
+> `image_access_list`/`nb_total_images`. No new class, no new cache pool — done, verified
+> (PHPStan/ECS/deptrac clean; Unit/Arch 717, Integration 683 including a new test proving
+> the forbidden-category exclusion genuinely reaches `lastPhotoDate` — not just
+> `nbTotalImages` — by backdating one category's images and confirming exclusion changes
+> the result; Browser 68, Visual 34, all unchanged from baseline).
 
 ### 4f. Delete dead `nb_available_tags`/`nb_available_comments` DB write-back
 

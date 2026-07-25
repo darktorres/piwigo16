@@ -924,6 +924,11 @@ INSERT IGNORE INTO ' . Tables::userCache() . '
         $userdata['image_access_type'] = $effective['imageAccessType'];
         $userdata['image_access_list'] = $effective['imageAccessList'];
         $userdata['nb_total_images'] = $effective['nbTotalImages'];
+        // Gap-closure Stage 4e: Filter\FilterService's own separate,
+        // differently-scoped (recent-period-filtered) last_photo_date
+        // computation is untouched -- see EffectiveForbiddenCategoriesCache's
+        // own docblock for why these aren't the same value.
+        $userdata['last_photo_date'] = $effective['lastPhotoDate'];
 
         $userdata['preferences'] = $preferences;
 

@@ -361,7 +361,8 @@ SELECT
             // categories that are either locked or private and not permitted
             //
             // calculate_permissions does not consider empty categories as forbidden
-            $forbidden_categories = self::permissionService($categoryConn)->getForbiddenCategories($user_id, $currentUser->status->value);
+            $forbidden_categories = new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService($categoryConn), \Piwigo\Cache\CachePools::permissions())
+                ->getForUser($user_id, $currentUser->status->value);
             $where[] = 'id NOT IN (' . $forbidden_categories . ')';
             $join_type = 'LEFT';
         }

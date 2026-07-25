@@ -483,8 +483,8 @@ SELECT
                     ),
                     explode(
                         ',',
-                        self::permissionService($conn)
-                            ->getForbiddenCategories($currentUser->id, $currentUser->status->value)
+                        new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService($conn), \Piwigo\Cache\CachePools::permissions())
+                            ->getForUser($currentUser->id, $currentUser->status->value)
                     )
                 );
 

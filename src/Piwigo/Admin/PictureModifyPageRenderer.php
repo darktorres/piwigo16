@@ -559,8 +559,8 @@ SELECT category_id
                 $authorized_category_ids,
                 explode(
                     ',',
-                    self::permissionService($conn)
-                        ->getForbiddenCategories(\Piwigo\Users\CurrentUser::get()->id, \Piwigo\Users\CurrentUser::get()->status->value)
+                    new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService($conn), \Piwigo\Cache\CachePools::permissions())
+                        ->getForUser(\Piwigo\Users\CurrentUser::get()->id, \Piwigo\Users\CurrentUser::get()->status->value)
                 )
             );
 

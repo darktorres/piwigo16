@@ -190,16 +190,65 @@ it until this pass).
     Browser 68/68, Visual 34/34 (every suite but Unit+Arch unchanged, confirming no
     regressions from the new tests themselves).
 
-**Stage 1c — Per-namespace Unit test coverage: 5 of 11 caught up, 2026-07-25.** `Caddie`,
-`Calendar`, `Permission`, `Picture`, `Site`, `Tag` still have zero files under
-`tests/Unit/`. `Comment`, `Audit`, `Group`, `History`, and `Metadata` no longer do —
-each got a `tests/Unit/<Domain>/Projection/*Test.php` (fromRow/toArray round-trip) in the
-same pass as its own Stage 1b Projection work, per the plan's own instruction. `Site` and
-`Tag` are still the documented deviation (Projection classes exist, no companion Unit
-tests yet — from an earlier pass, scoped to Comment + Activity only, that never caught
-them up). `Picture` (the flagged priority — `PictureCommentRenderer`'s documented prior
-bug) still has zero tests in any suite; only `tests/Arch/StructuralTest.php` references
-its renderer class names, and only for a structural check, not behavior.
+**Stage 1c — Per-namespace Unit test coverage: 11 of 11 caught up, 2026-07-25.**
+`Comment`, `Audit`, `Group`, `History`, and `Metadata` closed out in the earlier Stage 1b
+passes (`tests/Unit/<Domain>/Projection/*Test.php`, fromRow/toArray round-trip). The
+remaining 6 (`Site`, `Tag`, `Caddie`, `Calendar`, `Permission`, `Picture`) closed out in
+this pass:
+
+- **`Site`/`Tag`** — real `Projection` classes already existed from Stage 1b's own "Done
+  via a real Projection" list, just missing their own round-trip test (an earlier pass,
+  scoped to Comment + Activity only, never caught them up). Added
+  `tests/Unit/Site/Projection/SiteTest.php`/`Tag/Projection/TagTest.php`, matching the
+  established `ImageTest.php` 3-test pattern (`Tag` gets a 4th, for `fromRow()`'s own
+  "tolerates an extra `counter` key" contract documented in its class docblock).
+- **`Caddie`** — genuinely nothing pure to extract: `CaddieRepository::addElements()` is a
+  DB-loop with no branching logic of its own, `CaddieService::fillCurrentUserCaddie()` is
+  a 2-line resolve-and-delegate wrapper; both are already thoroughly covered at Integration
+  level (`tests/Integration/CaddieRepositoryTest.php`, 5 tests). Documented as this stage's
+  own version of Stage 1b's "write-only/scalar-only, no row shape" exception — forcing a
+  DBAL-mock Unit test here would assert against the mock, not real behavior.
+- **`Calendar`** — `CalendarService::buildInnerSql()` (the FROM/JOIN/WHERE fragment
+  builder) has 2 branches that are pure string builders (no-category-context "browse
+  everything visible," and the non-`categories`-section `WHERE id IN (...)` builder); the
+  3rd (`hasCategoryContext=true` with a real category id) calls
+  `CategoryService::getSubcatIds()`, a real DB read, and stays at Integration level
+  (`CalendarServiceTest.php` there). Added
+  `tests/Unit/Calendar/CalendarServiceTest.php` (5 tests), constructing real
+  `PermissionService`/`CategoryService`/repositories (DBAL's `DriverManager::getConnection()`
+  connects lazily, so building one without ever querying is safe — same shape as
+  `tests/Unit/Image/ImageServiceTest.php`'s own precedent).
+- **`Permission`** — `PermissionService::getSqlConditionFandF()` is the actual
+  "permission-check logic" both Calendar and Picture's own gates depend on: a pure string
+  builder reading `CurrentUser`/`FilterState`, zero DB access (per its own docblock).
+  Added `tests/Unit/Permission/PermissionServiceTest.php` (11 tests), including its
+  documented `visible_images`→`forbidden_images` switch fallthrough ("visible include
+  forbidden") and `getPrivacyLevelOptions()`'s label-accumulation order.
+- **`Picture`** — the flagged priority (`PictureCommentRenderer`'s documented prior
+  `$edit_comment` scope-sharing bug). Two layers:
+  - `Piwigo\Auth\AccessControl` (zero coverage anywhere despite backing every
+    `U_EDIT`/`U_DELETE`/`U_VALIDATE` gate in the renderer) got its own thorough
+    `tests/Unit/Auth/AccessControlTest.php` (13 tests) — the real "permission-check
+    logic" the plan text calls out, pure reads of `CurrentUser`/`CurrentConfig`.
+  - `tests/Unit/Picture/PictureCommentRendererTest.php` (4 tests) exercises `render()`
+    itself (not an extracted helper) for its 3 DB-free branches: the no-commentable-
+    category early return, and the "ugly spammer"/"Session expired" reject throws — real
+    "comment add" rejection behavior, not a pixel diff. `PictureRateRendererTest.php`/
+    `PictureMetadataRendererTest.php` (1 test each) cover those renderers' own
+    config-disabled guard paths the same way. Every other branch needs a real
+    `CommentRepository` row (`findForImage()`), so
+    `tests/Integration/PictureCommentRendererTest.php` (3 tests, new — Picture had zero
+    tests in *any* suite before this pass) directly re-verifies the historical bug fix:
+    with 2 real comments on the same image, only the one matching the given
+    `$editCommentId` ever gets `IN_EDIT`, plus the owner/non-owner/admin `U_EDIT`/
+    `U_DELETE` wiring end-to-end against real rows.
+
+Full verification: PHPStan/ECS/deptrac clean repo-wide; Unit+Arch 690/690 (648 + 42 new),
+Integration 671/671 (668 + 3 new), Contract 94/94, Browser 68/68, Visual 34/34 (every
+suite but Unit+Arch/Integration unchanged, confirming no regressions). The first
+Integration run hit a MySQL deadlock (52 failures) from a concurrency mistake made while
+verifying this stage (briefly running two Integration suites against the same DB at
+once, not a real regression) — confirmed transient on an immediate clean re-run.
 
 **Stage 1d — CachePools wiring: 1 of 3 done.** `CachePools::config()` is now real (wired
 into `ConfigService::loadConfFromDb()` this session, `feede75c9`). `CachePools::permissions()`

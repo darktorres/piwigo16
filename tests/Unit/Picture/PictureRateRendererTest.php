@@ -1,0 +1,63 @@
+<?php
+
+declare(strict_types=1);
+
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Paths;
+use Piwigo\Db\DbConnection;
+use Piwigo\Html\HtmlService;
+use Piwigo\Picture\PictureRateRenderer;
+use Piwigo\Rate\RateRepository;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Template;
+use Piwigo\Url\UrlService;
+
+/**
+ * Same "point CurrentPaths at a fresh temp root" Template setup as
+ * PictureCommentRendererTest.php -- see that file's own docblock.
+ * render()'s only DB-free branch is rate_enabled=false, checked before
+ * $picture/the repository are ever touched; every other branch needs a
+ * real RateRepository row and stays at Integration level.
+ */
+function picture_rate_test_rrmdir(string $dir): void
+{
+    if (! is_dir($dir)) {
+        return;
+    }
+    $nodes = scandir($dir);
+    foreach ($nodes !== false ? $nodes : [] as $node) {
+        if ($node === '.' || $node === '..') {
+            continue;
+        }
+        $path = $dir . '/' . $node;
+        is_dir($path) ? picture_rate_test_rrmdir($path) : unlink($path);
+    }
+    rmdir($dir);
+}
+
+beforeEach(function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-picture-rate-test-' . bin2hex(random_bytes(8));
+    mkdir($root, 0o777, true);
+    CurrentPaths::set(Paths::fromRoot($root));
+    CurrentConfig::setDataLocation('data/');
+    CurrentConfig::setDataDirChecked('1');
+    CurrentTemplate::set(new Template());
+});
+
+afterEach(function (): void {
+    picture_rate_test_rrmdir(CurrentPaths::get()->root);
+    CurrentTemplate::reset();
+    CurrentPaths::reset();
+    CurrentConfig::reset();
+});
+
+test('render does nothing when rating is disabled', function (): void {
+    CurrentConfig::setRateEnabled(false);
+    $renderer = new PictureRateRenderer(new RateRepository(DbConnection::build()));
+
+    $renderer->render(42, new UrlService(new HtmlService()), [], '/picture.php');
+
+    expect(CurrentTemplate::get()->get_template_vars('rate_summary'))->toBeNull()
+        ->and(CurrentTemplate::get()->get_template_vars('rating'))->toBeNull();
+});

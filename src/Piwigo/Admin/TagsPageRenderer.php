@@ -12,7 +12,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\TagRepository;
@@ -50,7 +49,7 @@ final class TagsPageRenderer
 
         if (($_GET['action'] ?? null) === 'delete_orphans') {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
             $tagService->deleteOrphanTags();
             $_SESSION['message_tags'] = Lang::t('Orphan tags deleted');
@@ -159,7 +158,7 @@ SELECT name, id, url_name
             }
             $all_tags[] = $tag;
         }
-        usort($all_tags, new HtmlService()->tagAlphaCompare(...));
+        usort($all_tags, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->tagAlphaCompare(...));
 
         $template->assign(
             [

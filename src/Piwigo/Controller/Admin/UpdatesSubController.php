@@ -12,7 +12,6 @@ use Piwigo\Admin\UpdatesPwgPageRenderer;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Html\HtmlService;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -69,7 +68,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall() and ! \Piwigo\Config\CurrentConfig::enableCoreUpdate()) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('update system is disabled');
         }
 

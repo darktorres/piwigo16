@@ -19,7 +19,6 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
@@ -99,7 +98,7 @@ final class BatchManagerGlobalPageRenderer
 
         if (count($_POST) > 0) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
         }
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_element_set_global');
@@ -140,7 +139,7 @@ final class BatchManagerGlobalPageRenderer
 
             foreach (explode(',', $whole_set) as $id) {
                 if (! (bool) preg_match('/^\d+$/', $id)) {
-                    new HtmlService()
+                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                         ->fatalError('[Hacking attempt] the input parameter "whole_set" is not valid');
                 }
                 $collection[] = (int) $id;
@@ -562,7 +561,7 @@ DELETE
         if (count($cat_elements_id) > 0) {
             // remove tags
             $template->assign('associated_tags', self::tagService($conn)
-                ->getCommonTags($cat_elements_id, -1, new HtmlService()));
+                ->getCommonTags($cat_elements_id, -1, \Piwigo\Bootstrap\PresentationAccessor::htmlService()));
         }
 
         // creation date
@@ -683,7 +682,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
                 $nb_thumbs_page++;
                 $src_image = new SrcImage($row);
 
-                $ttitle = new HtmlService()
+                $ttitle = \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->renderElementName($row);
                 $row_file = is_string($row['file']) ? $row['file'] : '';
                 if ($ttitle !== \Piwigo\Core\StringHelper::getNameFromFile($row_file)) {

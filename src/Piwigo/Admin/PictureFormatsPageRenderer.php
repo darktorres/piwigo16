@@ -8,7 +8,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -37,7 +36,7 @@ final class PictureFormatsPageRenderer
         $imageRow = new ImageRepository($conn)
             ->findById($image_id);
         if ($imageRow === null) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('image_id #' . $image_id . ' does not exist');
         }
         $image = $imageRow->toArray();

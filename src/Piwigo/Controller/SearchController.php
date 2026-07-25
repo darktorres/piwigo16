@@ -15,9 +15,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
-use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Search\SearchRepository;
@@ -63,8 +61,8 @@ final class SearchController implements ControllerInterface
             new SearchRepository($conn),
             self::permissionService($conn),
             self::categoryService($conn),
-            new MailService(),
-            new HtmlService(),
+            \Piwigo\Bootstrap\PresentationAccessor::mailService(),
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             $this->redirectService,
         );
 
@@ -148,7 +146,7 @@ final class SearchController implements ControllerInterface
 
             $cat_id_value = $_GET['cat_id'];
             if (! is_string($cat_id_value)) {
-                new HtmlService()
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('[Hacking attempt] the input parameter "cat_id" is not valid');
             }
 
@@ -172,7 +170,7 @@ SELECT
 ;';
             $found_categories = $conn->fetchAllAssociative($query);
             if ($found_categories === []) {
-                new HtmlService()
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->pageNotFound($this->redirectService, Lang::t('Requested album does not exist'));
             }
 
@@ -196,7 +194,7 @@ SELECT
 
                 $tag_id_value = $_GET['tag_id'];
                 if (! is_string($tag_id_value)) {
-                    new HtmlService()
+                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                         ->fatalError('[Hacking attempt] the input parameter "tag_id" is not valid');
                 }
 

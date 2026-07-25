@@ -13,7 +13,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
@@ -62,7 +61,7 @@ final class CatPermPageRenderer
 
         if ($_POST !== []) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
             // the status <select> always submits this field; fall back to an empty
             // string (never matches 'public'/'private') on malformed input
@@ -111,7 +110,7 @@ final class CatPermPageRenderer
 
         $template->assign(
             [
-                'CATEGORIES_NAV' => new HtmlService()
+                'CATEGORIES_NAV' => \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->getCatDisplayNameFromId(
                         $page['cat'],
                         'admin.php?page=album-'

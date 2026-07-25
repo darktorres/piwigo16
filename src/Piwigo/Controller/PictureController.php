@@ -23,7 +23,6 @@ use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
@@ -31,7 +30,6 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Mail\MailService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -121,7 +119,7 @@ final class PictureController implements ControllerInterface
 
     private static function userService(Connection $conn): UserService
     {
-        return new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), self::activityService($conn), new HtmlService(), $conn);
+        return new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), self::activityService($conn), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
     }
 
     private static function imageService(Connection $conn): ImageService
@@ -131,7 +129,7 @@ final class PictureController implements ControllerInterface
 
     private static function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
     {
-        return new CommentService(new CommentRepository($conn), new EphemeralKeyService(), new MailService(), new HtmlService(), $urlService);
+        return new CommentService(new CommentRepository($conn), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $urlService);
     }
 
     #[\Override]
@@ -143,13 +141,13 @@ final class PictureController implements ControllerInterface
         // in earlier construction-chain debt (Phase 1d finding).
         $conn = DbConnection::build();
         new SectionPopulator(
-            new HtmlService(),
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             \Piwigo\Template\CurrentTemplate::get(),
             new SectionRepository($conn),
             self::categoryService($conn),
             self::permissionService($conn),
             self::tagService($conn),
-            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new MailService(), new HtmlService(), $this->redirectService),
+            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService),
             self::userService($conn),
             $this->redirectService,
             $this->urlService,
@@ -176,7 +174,7 @@ final class PictureController implements ControllerInterface
         // access authorization check
         if ($page_category !== null) {
             $category_id = $page_category['id'] ?? null;
-            self::categoryService($conn)->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0, new HtmlService(), $this->redirectService);
+            self::categoryService($conn)->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
         }
 
         // $section_context->items is mutated in place below (best_rated
@@ -212,7 +210,7 @@ SELECT id, file, level
             }
             $row = $conn->fetchAssociative($query);
             if ($row === false) {// element does not exist
-                new HtmlService()
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->pageNotFound(
                         $this->redirectService,
                         'The requested image does not exist',
@@ -222,7 +220,7 @@ SELECT id, file, level
             $row_level = $row['level'];
             $user_level = $currentUser->level;
             if ((is_numeric($row_level) ? (int) $row_level : 0) > $user_level) {
-                new HtmlService()
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->accessDenied($this->redirectService);
             }
 
@@ -247,7 +245,7 @@ SELECT id, file, level
                 $visible_images = \Piwigo\Core\FilterState::isInitialized() ? \Piwigo\Core\FilterState::visibleImages() : '';
                 if ($visible_images !== '' && $visible_images !== '-1' &&
                   ! in_array((string) $image_id, explode(',', $visible_images), true)) {
-                    new HtmlService()
+                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                         ->pageNotFound(
                             $this->redirectService,
                             'The requested image is filtered',
@@ -256,7 +254,7 @@ SELECT id, file, level
                 }
                 $page_section = $section_context->section;
                 if ($page_section === 'categories' and $page_category === null) {// flat view - all items
-                    new HtmlService()
+                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                         ->accessDenied($this->redirectService);
                 } else {// try to see if we can access it differently
                     $query = '
@@ -268,7 +266,7 @@ SELECT id
                       ], ' AND') . '
   LIMIT 1';
                     if ($conn->fetchOne($query) === false) {
-                        new HtmlService()
+                        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                             ->accessDenied($this->redirectService);
                     } else {
                         if ($page_section === 'best_rated') {
@@ -285,7 +283,7 @@ SELECT id
                                     'flat' => true,
                                 ]
                             );
-                            new HtmlService()
+                            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                                 ->setStatusHeader($page_section === 'recent_pics' ? 301 : 302);
                             $this->redirectService->redirectHttp($url);
                         }
@@ -306,7 +304,7 @@ SELECT id
         // add default event handler for rendering element content
         \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_element_content', $this->defaultPictureContent(...));
         // add default event handler for rendering element description
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_element_description', new HtmlService()->pwgNl2br(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_element_description', \Piwigo\Bootstrap\PresentationAccessor::htmlService()->pwgNl2br(...));
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_picture');
 
@@ -460,7 +458,7 @@ UPDATE ' . Tables::categories() . '
                         // never a real PHP int/float/bool.
                         if (is_string($edit_content_raw) && $edit_content_raw !== '' && $edit_content_raw !== '0') {
                             new \Piwigo\Csrf\CsrfService()
-                                ->checkOrFail(new HtmlService(), $this->redirectService);
+                                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
                             $post_key = $_POST['key'] ?? null;
                             if (! is_string($post_key)) {
                                 $post_key = '';
@@ -515,7 +513,7 @@ UPDATE ' . Tables::categories() . '
                 case 'delete_comment':
 
                     new \Piwigo\Csrf\CsrfService()
-                        ->checkOrFail(new HtmlService(), $this->redirectService);
+                        ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
                     $commentService = self::commentService($conn, $this->urlService);
 
@@ -541,7 +539,7 @@ UPDATE ' . Tables::categories() . '
                 case 'validate_comment':
 
                     new \Piwigo\Csrf\CsrfService()
-                        ->checkOrFail(new HtmlService(), $this->redirectService);
+                        ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
                     $commentService = self::commentService($conn, $this->urlService);
 
@@ -680,7 +678,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             );
 
             $picture[$i] = $row;
-            $picture[$i]['TITLE'] = new HtmlService()->renderElementName($row);
+            $picture[$i]['TITLE'] = \Piwigo\Bootstrap\PresentationAccessor::htmlService()->renderElementName($row);
             $picture[$i]['TITLE_ESC'] = str_replace('"', '&quot;', $picture[$i]['TITLE']);
 
             if ($i === 'previous' and (string) $previous_item === (string) $first_item) {
@@ -1122,7 +1120,7 @@ SELECT COUNT(*) AS nb_fav
 
         // related tags
         $tags = self::tagService($conn)
-            ->getCommonTags([$image_id], -1, new HtmlService());
+            ->getCommonTags([$image_id], -1, \Piwigo\Bootstrap\PresentationAccessor::htmlService());
         if ($tags !== []) {
             foreach ($tags as $tag) {
                 $template->append(
@@ -1161,7 +1159,7 @@ SELECT COUNT(*) AS nb_fav
             /** @var array<int, array<string, mixed>> $upper_names */
             $template->append(
                 'related_categories',
-                new HtmlService()
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->getCatDisplayName($upper_names)
             );
         } else { // use only 1 sql query to get names for all related categories
@@ -1183,7 +1181,7 @@ SELECT id, name, permalink
                 foreach (explode(',', is_scalar($categoryUppercats) ? (string) $categoryUppercats : '') as $id) {
                     $cats[] = $cat_map[$id];
                 }
-                $template->append('related_categories', new HtmlService()->getCatDisplayName($cats));
+                $template->append('related_categories', \Piwigo\Bootstrap\PresentationAccessor::htmlService()->getCatDisplayName($cats));
             }
         }
 
@@ -1264,7 +1262,7 @@ SELECT id, name, permalink
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title, $refresh_str, $url_link ?? null);
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_picture');
-        new HtmlService()
+        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         if ($slideshow and \Piwigo\Config\CurrentConfig::lightSlideshow()) {
             $template->parse('slideshow', false);

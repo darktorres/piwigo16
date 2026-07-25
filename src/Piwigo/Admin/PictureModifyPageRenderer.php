@@ -19,13 +19,11 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Mail\MailService;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionRepository;
@@ -60,9 +58,9 @@ final class PictureModifyPageRenderer
         return new UserService(
             new UserRepository($conn),
             new GroupRepository($conn),
-            new MailService(),
+            \Piwigo\Bootstrap\PresentationAccessor::mailService(),
             new ActivityService(new ActivityRepository($conn)),
-            new HtmlService(),
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             $conn
         );
     }
@@ -97,7 +95,7 @@ final class PictureModifyPageRenderer
 
         $conn = DbConnection::build();
         $imageService = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)));
-        $htmlRenderer = new HtmlService();
+        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -143,7 +141,7 @@ SELECT id
 
         if (isset($_GET['delete'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
             $imageService->deleteElements([$image_id], $this->urlService, true);
             PermissionCacheInvalidator::invalidate();
@@ -171,7 +169,7 @@ SELECT id
 
         if (isset($_GET['sync_metadata'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
             new MetadataService(new MetadataRepository($conn))
                 ->syncMetadata([$image_id]);
@@ -183,7 +181,7 @@ SELECT id
         $data = [];
         if (isset($_POST['submit'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
             $data = [];
             $data['id'] = $image_id;

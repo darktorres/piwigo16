@@ -6,7 +6,6 @@ namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Ws\WsInitializer;
 use Psr\Http\Message\ResponseInterface;
@@ -51,7 +50,7 @@ final class WsController implements ControllerInterface
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
         if (! \Piwigo\Config\CurrentConfig::allowWebServices()) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->pageForbidden($this->redirectService, 'Web services are disabled');
         }
 

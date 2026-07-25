@@ -15,7 +15,6 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
@@ -60,7 +59,7 @@ final class CatListPageRenderer
 
         if ($_POST !== [] or isset($_GET['delete'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
         }
 
         $sort_orders = [
@@ -175,7 +174,7 @@ SELECT COUNT(*)
             $level_separator = \Piwigo\Config\CurrentConfig::levelSeparator();
             $navigation .= $level_separator;
 
-            $navigation .= new HtmlService()
+            $navigation .= \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->getCatDisplayNameFromId(
                     $parent_id,
                     $base_url . '&amp;parent_id='

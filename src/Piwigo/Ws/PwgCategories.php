@@ -27,13 +27,10 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Url\UrlService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
@@ -104,7 +101,7 @@ final class PwgCategories
      */
     private static function userService(Connection $conn): UserService
     {
-        return new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), self::activityService(), new HtmlService(), $conn);
+        return new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), self::activityService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
     }
 
     /**
@@ -154,7 +151,7 @@ final class PwgCategories
     public static function getImages(array $params, PwgServer &$service): PwgError|array
     {
         $conn = DbConnection::build();
-        $urlService = new UrlService(new HtmlService());
+        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
 
         $params['cat_id'] = array_unique($params['cat_id']);
 
@@ -545,7 +542,7 @@ SELECT SQL_CALC_FOUND_ROWS
         // management of the album thumbnail -- stops here
 
         $cats = [];
-        $urlService = new UrlService(new HtmlService());
+        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         foreach ($rows as $row) {
             // Gap-closure Stage 4h: the rollup columns (nb_images/
             // count_images/count_categories/date_last/max_date_last)
@@ -589,7 +586,7 @@ SELECT SQL_CALC_FOUND_ROWS
             assert(is_string($row['uppercats']));
 
             if ($params['fullname']) {
-                $row['name'] = strip_tags(new HtmlService()->getCatDisplayNameCache($row['uppercats'], null));
+                $row['name'] = strip_tags(\Piwigo\Bootstrap\PresentationAccessor::htmlService()->getCatDisplayNameCache($row['uppercats'], null));
             } else {
                 $row['name_raw'] = $row['name'];
 
@@ -874,7 +871,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
             $row['nb_images'] = $nb_images_of[$id] ?? 0;
 
             assert(is_string($row['uppercats']));
-            $cat_display_name = new HtmlService()
+            $cat_display_name = \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->getCatDisplayNameCache(
                     $row['uppercats'],
                     'admin.php?page=album-'
@@ -1353,7 +1350,7 @@ SELECT
             return new PwgError(500, 'unable to determine a new representative picture for this category');
         }
 
-        return $categoryService->getCategoryRepresentantProperties($representative_picture_id, new UrlService(new HtmlService()), ImageStdParams::SMALL);
+        return $categoryService->getCategoryRepresentantProperties($representative_picture_id, \Piwigo\Bootstrap\PresentationAccessor::urlService(), ImageStdParams::SMALL);
     }
 
     /**
@@ -1426,7 +1423,7 @@ SELECT id
         $categoryService->deleteCategories(
             $category_ids,
             new ActivityService(new ActivityRepository($categoryConn)),
-            new UrlService(new HtmlService()),
+            \Piwigo\Bootstrap\PresentationAccessor::urlService(),
             $params['photo_deletion_mode']
         );
         $categoryService->updateGlobalRank();
@@ -1570,7 +1567,7 @@ SELECT id, name, dir, uppercats
             // uppercats is a NOT NULL column of the categories table --
             // verified against install/piwigo_structure-mysql.sql.
             assert(is_string($uppercats_row['uppercats']));
-            $cat_display_name = new HtmlService()
+            $cat_display_name = \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->getCatDisplayNameCache(
                     $uppercats_row['uppercats'],
                     'admin.php?page=album-'

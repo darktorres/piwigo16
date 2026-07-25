@@ -85,6 +85,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\ConfigService;
+    use Piwigo\Core\Kernel;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
     use Piwigo\Html\HtmlService;
@@ -130,6 +131,13 @@ namespace Piwigo\Tests\Integration {
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
+            // DI-phase follow-on to gap-closure Stage 4: ExtensionLifecycle
+            // now resolves MailService/HtmlService via
+            // Bootstrap\PresentationAccessor -> Kernel::container(), which
+            // this isolated Integration test (no full RequestBootstrap)
+            // wouldn't otherwise boot.
+            Kernel::boot();
+
             $this->conn = DbConnection::build();
             $this->repo = new ExtensionRepository($this->conn);
             $this->lifecycle = new ExtensionLifecycle($this->repo, new PemCatalog(new ZipExtractor()), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository()));
@@ -155,6 +163,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn->executeStatement('DELETE FROM ' . Tables::languages() . " WHERE id != 'en_UK'");
             $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET theme = 'modus' WHERE user_id IN (1, 2)");
             $this->conn->executeStatement('DELETE FROM ' . Tables::activity());
+            Kernel::reset();
             parent::tearDown();
         }
 

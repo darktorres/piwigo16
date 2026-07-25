@@ -19,7 +19,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeUrlCodec;
@@ -126,7 +125,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
     private static function userService(Connection $conn): \Piwigo\Users\UserService
     {
-        return new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), self::activityService($conn), new HtmlService(), $conn);
+        return new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), self::activityService($conn), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
     }
 
     #[\Override]
@@ -276,7 +275,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // ------------------------------ verification and registration of modifications
         if (isset($_POST['submit'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
             $int_pattern = '/^\d+$/';
 
             switch ($page['section']) {
@@ -477,7 +476,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // restore default derivatives settings
         if ($page['section'] === 'sizes' and isset($_GET['action']) and $_GET['action'] === 'restore_settings' and \Piwigo\Auth\AccessControl::isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
             ImageStdParams::restore_default();
             new DerivativeCacheService()

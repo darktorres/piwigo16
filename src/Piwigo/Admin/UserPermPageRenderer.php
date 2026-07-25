@@ -16,8 +16,6 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
-use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Users\UserRepository;
@@ -42,7 +40,7 @@ final class UserPermPageRenderer
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $htmlRenderer = new HtmlService();
+        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
         $conn = DbConnection::build();
         // Built once, reused below -- was the same PermissionService recipe
@@ -115,7 +113,7 @@ final class UserPermPageRenderer
             [
                 'TITLE' => Lang::t(
                     'Manage permissions for user "%s"',
-                    new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), $htmlRenderer, $conn)
+                    new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(new ActivityRepository($conn)), $htmlRenderer, $conn)
                         ->getUsername($user_id)
                 ),
                 'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),

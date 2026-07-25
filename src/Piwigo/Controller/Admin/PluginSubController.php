@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Piwigo\Html\HtmlService;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -58,25 +57,25 @@ final class PluginSubController implements AdminSubControllerInterface
 
         foreach ($sections as $section) {
             if ($section === '..' or ! (bool) preg_match('/^[a-zA-Z0-9_\.-]+$/', $section)) {
-                new HtmlService()
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('invalid section token [' . htmlentities($section) . ']');
             }
         }
 
         if (count($sections) < 2) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('Invalid plugin URL');
         }
 
         $plugin_id = $sections[0];
 
         if (! (bool) preg_match('/^[\w-]+$/', $plugin_id)) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('Invalid plugin identifier');
         }
 
         if (! isset(\Piwigo\Admin\LoadedPlugins::get()[$plugin_id])) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('Invalid URL - plugin ' . $plugin_id . ' not active');
         }
 
@@ -84,7 +83,7 @@ final class PluginSubController implements AdminSubControllerInterface
         if (is_file($filename)) {
             include_once $filename;
         } else {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('Missing file ' . htmlentities($filename));
         }
     }

@@ -16,7 +16,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Html\HtmlService;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -60,7 +59,7 @@ final class AlbumSubController implements AdminSubControllerInterface
         $categoryRow = new CategoryRepository(DbConnection::build())
             ->findById($cat_id);
         if ($categoryRow === null) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('unknown album');
         }
         $category = $categoryRow->toArray();

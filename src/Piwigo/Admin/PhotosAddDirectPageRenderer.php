@@ -18,7 +18,6 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
@@ -68,7 +67,7 @@ final class PhotosAddDirectPageRenderer
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $htmlRenderer = new HtmlService();
+        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
         $conn = DbConnection::build();
 
         $user_id = \Piwigo\Users\CurrentUser::get()->id;
@@ -79,7 +78,7 @@ final class PhotosAddDirectPageRenderer
 
         if (isset($_GET['batch'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
             new \Piwigo\Validation\InputValidator()
                 ->validate('batch', $_GET, false, '/^\d+(,\d+)*$/');
 
@@ -246,7 +245,7 @@ SELECT COUNT(*)
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $htmlRenderer = new HtmlService();
+        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
         $uploadService = new UploadService();
 

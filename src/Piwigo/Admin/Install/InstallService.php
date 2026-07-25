@@ -22,8 +22,6 @@ use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
-use Piwigo\Html\HtmlService;
-use Piwigo\Url\UrlService;
 use RuntimeException;
 
 /**
@@ -78,7 +76,7 @@ final class InstallService
      */
     public static function activateCoreThemes(): void
     {
-        $urlService = new UrlService(new HtmlService());
+        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         $lifecycle = new ExtensionLifecycle(
             new ExtensionRepository(DbConnection::build()),
             new PemCatalog(new ZipExtractor()),
@@ -102,7 +100,7 @@ final class InstallService
         // No core plugins are auto-activated at install time (empty list,
         // matching the original's own empty in_array() haystack).
         new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, new UrlService(new HtmlService()));
+            ->scan(ExtensionType::Plugin, \Piwigo\Bootstrap\PresentationAccessor::urlService());
     }
 
     /**

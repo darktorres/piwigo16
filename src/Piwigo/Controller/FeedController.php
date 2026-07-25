@@ -15,7 +15,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Feed\FeedHelper;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Notification\NotificationRepository;
@@ -46,13 +45,13 @@ final class FeedController implements ControllerInterface
 
     private static function userService(Connection $conn): \Piwigo\Users\UserService
     {
-        return new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), $conn);
+        return new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
     }
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        $htmlRenderer = new HtmlService();
+        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
         $feed_helper = new FeedHelper();
         $conn = DbConnection::build();

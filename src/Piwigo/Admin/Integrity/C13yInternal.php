@@ -22,8 +22,6 @@ use Piwigo\Db\DbInfo;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
-use Piwigo\Mail\MailService;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -53,9 +51,9 @@ final class C13yInternal
         return new UserService(
             new UserRepository($conn),
             new GroupRepository($conn),
-            new MailService(),
+            \Piwigo\Bootstrap\PresentationAccessor::mailService(),
             new ActivityService(new ActivityRepository($conn)),
-            new HtmlService(),
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             $conn
         );
     }

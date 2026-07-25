@@ -20,11 +20,9 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
-use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Search\SearchRepository;
@@ -208,7 +206,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
 
         if ($_GET['action'] === 'empty_caddie') {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
             $query = '
 DELETE FROM ' . Tables::caddie() . '
@@ -663,8 +661,8 @@ DELETE FROM ' . Tables::caddie() . '
                 new SearchRepository($searchConn),
                 self::permissionService($searchConn),
                 self::categoryService($searchConn),
-                new MailService(),
-                new HtmlService(),
+                \Piwigo\Bootstrap\PresentationAccessor::mailService(),
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
                 $this->redirectService,
             )->getQuickSearchResultsNoCache($bulkFilter['search']['q'], [
                 'permissions' => false,

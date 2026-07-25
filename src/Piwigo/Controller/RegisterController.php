@@ -12,10 +12,8 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
-use Piwigo\Mail\MailService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -49,7 +47,7 @@ final class RegisterController implements ControllerInterface
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
         if (! \Piwigo\Config\CurrentConfig::allowUserRegistration()) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->pageForbidden($this->redirectService, 'User registration closed');
         }
 
@@ -61,7 +59,7 @@ final class RegisterController implements ControllerInterface
                 $post_key = '';
             }
             if (! new \Piwigo\Auth\EphemeralKeyService()->verify($post_key)) {
-                new HtmlService()
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->setStatusHeader(403);
                 $errors['register_page_error'] = Lang::t('Invalid/expired form key');
             }
@@ -104,7 +102,7 @@ final class RegisterController implements ControllerInterface
             // "someone tried to register your username" email instead of
             // the requester ever seeing an error here).
             $conn = DbConnection::build();
-            $userService = new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), $conn);
+            $userService = new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
             $registration_result = $userService
                 ->registerUser(
                     $post_login,
@@ -165,7 +163,7 @@ final class RegisterController implements ControllerInterface
                         $userService->buildUser($new_user_id)
                     ));
                     \Piwigo\Users\CurrentUser::markRealUserResolved();
-                    new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())
+                    new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())
                         ->logUser($new_user_id, false);
                 }
                 $this->redirectService->redirect($this->urlService->makeIndexUrl());
@@ -217,11 +215,11 @@ final class RegisterController implements ControllerInterface
         $lang_cookie = $_COOKIE['lang'] ?? null;
         if ($lang_cookie !== null and (! is_string($lang_cookie) or \Piwigo\Users\CurrentUser::get()->language !== $lang_cookie)) {
             if (! is_string($lang_cookie)) {
-                new HtmlService()
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
             }
             if (! array_key_exists($lang_cookie, \Piwigo\Lang\LangService::getLanguages())) {
-                new HtmlService()
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
             }
 
@@ -252,9 +250,9 @@ final class RegisterController implements ControllerInterface
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title);
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_register');
-        new HtmlService()
+        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
-        new HtmlService()
+        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushKeyedErrors($errors);
         $template->parse('register');
         $body = \Piwigo\Bootstrap\PageTail::renderToString();

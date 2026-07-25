@@ -21,8 +21,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
-use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -53,7 +51,7 @@ final class ProfileFormHandler
 
     private static function userService(Connection $conn): UserService
     {
-        return new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), self::activityService($conn), new HtmlService(), $conn);
+        return new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), self::activityService($conn), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
     }
 
     private static function passwordService(Connection $conn): PasswordService
@@ -63,7 +61,7 @@ final class ProfileFormHandler
 
     private static function authService(Connection $conn): AuthService
     {
-        return new AuthService(new AuthRepository($conn), self::activityService($conn), new HtmlService(), self::passwordService($conn), new CookieService());
+        return new AuthService(new AuthRepository($conn), self::activityService($conn), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), self::passwordService($conn), new CookieService());
     }
 
     // ------------------------------------------------------ update & customization
@@ -136,12 +134,12 @@ final class ProfileFormHandler
             }
 
             if (! in_array($_POST['language'] ?? null, array_keys(\Piwigo\Lang\LangService::getLanguages()), true)) {
-                new HtmlService()
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('Hacking attempt, incorrect language value');
             }
 
             if (! in_array($_POST['theme'] ?? null, array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes()), true)) {
-                new HtmlService()
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('Hacking attempt, incorrect theme value');
             }
         }
@@ -227,7 +225,7 @@ final class ProfileFormHandler
                         // send email to the user
                         if ($username !== $userdata['username']) {
                             $notification_language = is_string($userdata['language']) ? $userdata['language'] : self::userService($conn)->getDefaultLanguage();
-                            new MailService()
+                            \Piwigo\Bootstrap\PresentationAccessor::mailService()
                                 ->switchLangTo($notification_language);
 
                             $keyargs_content = [
@@ -236,7 +234,7 @@ final class ProfileFormHandler
                             ];
 
                             $gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();
-                            new MailService()
+                            \Piwigo\Bootstrap\PresentationAccessor::mailService()
                                 ->mail(
                                     $mail_address,
                                     [
@@ -246,7 +244,7 @@ final class ProfileFormHandler
                                     ]
                                 );
 
-                            new MailService()
+                            \Piwigo\Bootstrap\PresentationAccessor::mailService()
                                 ->switchLangBack();
                         }
                     }

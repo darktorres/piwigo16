@@ -22,13 +22,11 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
-use Piwigo\Url\UrlService;
 
 /**
  * P23 batch 8e-3: relocated from include/ws_functions/pwg.tags.php.
@@ -73,10 +71,10 @@ final class PwgTags
                 return $b_counter <=> $a_counter;
             });
         } else {
-            usort($tags, new HtmlService()->tagAlphaCompare(...));
+            usort($tags, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->tagAlphaCompare(...));
         }
 
-        $urlService = new UrlService(new HtmlService());
+        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         for ($i = 0; $i < count($tags); $i++) {
             $tags[$i]['id'] = is_numeric($tags[$i]['id']) ? (int) $tags[$i]['id'] : 0;
             $tags[$i]['counter'] = is_numeric($tags[$i]['counter']) ? (int) $tags[$i]['counter'] : 0;
@@ -113,7 +111,7 @@ final class PwgTags
     {
         return [
             'tags' => new PwgNamedArray(
-                self::tagService()->getAllTags(new HtmlService()),
+                self::tagService()->getAllTags(\Piwigo\Bootstrap\PresentationAccessor::htmlService()),
                 'tag',
                 WsHelper::stdGetTagXmlAttributes()
             ),
@@ -190,7 +188,7 @@ SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
         }
 
         $images = [];
-        $urlService = new UrlService(new HtmlService());
+        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         if ($image_ids !== []) {
             $rank_of = array_flip($image_ids);
             $favorite_ids = $urlService->getUserFavorites();

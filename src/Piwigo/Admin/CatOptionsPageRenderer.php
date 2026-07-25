@@ -18,7 +18,6 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 
@@ -59,7 +58,7 @@ final class CatOptionsPageRenderer
 
         if ($_POST !== []) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
             new \Piwigo\Validation\InputValidator()
                 ->validate('cat_true', $_POST, true, ValidationPattern::ID);
             new \Piwigo\Validation\InputValidator()
@@ -211,8 +210,8 @@ SELECT DISTINCT id,name,uppercats,global_rank
             ]
         );
         $categoryService = self::categoryService($conn);
-        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', new HtmlService(), $template);
-        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', new HtmlService(), $template);
+        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template);
+        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template);
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
         $template->assign('ADMIN_PAGE_TITLE', Lang::t('Properties of abums'));
 

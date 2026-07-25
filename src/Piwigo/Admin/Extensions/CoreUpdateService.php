@@ -13,9 +13,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
-use Piwigo\Mail\MailService;
 
 /**
  * Piwigo-core (not extension) self-update: checking piwigo.org for a newer
@@ -203,8 +201,8 @@ final readonly class CoreUpdateService
         }
 
         $notifyConn = \Piwigo\Db\DbConnection::build();
-        new MailService()
-            ->switchLangTo(new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($notifyConn), new \Piwigo\Group\GroupRepository($notifyConn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($notifyConn)), new HtmlService(), $notifyConn)->getDefaultLanguage());
+        \Piwigo\Bootstrap\PresentationAccessor::mailService()
+            ->switchLangTo(new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($notifyConn), new \Piwigo\Group\GroupRepository($notifyConn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($notifyConn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $notifyConn)->getDefaultLanguage());
 
         $content = Lang::t('Hello,');
         $content .= "\n\n" . Lang::t(
@@ -215,7 +213,7 @@ final readonly class CoreUpdateService
         $content .= "\n\n" . Lang::t('It only takes a few clicks.');
         $content .= "\n\n" . Lang::t('Running on an up-to-date Piwigo is important for security.');
 
-        new MailService()
+        \Piwigo\Bootstrap\PresentationAccessor::mailService()
             ->mailAdmins(
                 [
                     'subject' => Lang::t('Piwigo %s is available, please update', $newVersionsString),
@@ -229,7 +227,7 @@ final readonly class CoreUpdateService
                 true
             );
 
-        new MailService()
+        \Piwigo\Bootstrap\PresentationAccessor::mailService()
             ->switchLangBack();
 
         $this->configService->confUpdateParam(

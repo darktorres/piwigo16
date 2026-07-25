@@ -14,7 +14,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
@@ -108,7 +107,7 @@ SELECT COUNT(*)
 
             $post_order = $_POST['order'] ?? null;
             if (! is_string($post_order) || ! in_array($post_order, $sort_orders, true)) {
-                new HtmlService()
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('Invalid sort order');
             }
             new \Piwigo\Validation\InputValidator()

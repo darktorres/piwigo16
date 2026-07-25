@@ -15,7 +15,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
 
 /**
@@ -75,7 +74,7 @@ final class ThemesInstalledPageRenderer
 
         if (isset($_GET['action']) and is_string($_GET['action']) and isset($_GET['theme']) and is_string($_GET['theme']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
             $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme, $this->urlService)[$_GET['theme']] ?? null;
             $action_errors = $extension_lifecycle->performAction(ExtensionType::Theme, $_GET['action'], $_GET['theme'], $fs_theme_entry);
@@ -94,9 +93,9 @@ final class ThemesInstalledPageRenderer
         // +-----------------------------------------------------------------------+
 
         $fs_themes = $extension_scanner->scan(ExtensionType::Theme, $this->urlService);
-        uasort($fs_themes, new HtmlService()->nameCompare(...));
+        uasort($fs_themes, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->nameCompare(...));
 
-        $default_theme = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), $conn)
+        $default_theme = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn)
             ->getDefaultTheme();
 
         $db_theme_ids = array_keys($extension_repository->findAll(ExtensionType::Theme));

@@ -12,7 +12,6 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
@@ -56,7 +55,7 @@ final class ProfileController implements ControllerInterface
 
         if ($_POST !== []) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
         }
 
         $userdata = \Piwigo\Users\CurrentUser::get()->toUserArray();
@@ -164,11 +163,11 @@ SELECT ' . implode(',', $fields) . '
         $cookie_lang = $_COOKIE['lang'] ?? null;
         if ($cookie_lang !== null and (! is_string($cookie_lang) or \Piwigo\Users\CurrentUser::get()->language !== $cookie_lang)) {
             if (! is_string($cookie_lang)) {
-                new HtmlService()
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
             }
             if (! array_key_exists($cookie_lang, \Piwigo\Lang\LangService::getLanguages())) {
-                new HtmlService()
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
 
@@ -209,7 +208,7 @@ SELECT ' . implode(',', $fields) . '
         $template->assign('HELP_LINK', $help_link);
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_profile');
-        new HtmlService()
+        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         $template->parse('profile', false);
         $body = \Piwigo\Bootstrap\PageTail::renderToString();

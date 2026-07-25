@@ -16,7 +16,6 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
 use Piwigo\Permission\PermissionRepository;
@@ -68,7 +67,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $htmlRenderer = new HtmlService();
+        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
         $conn = DbConnection::build();
 
         new \Piwigo\Validation\InputValidator()
@@ -239,7 +238,7 @@ SELECT id, permalink, uppercats, global_rank
                 $is_first = false;
 
                 if (! in_array((string) $key, ['page', 'psf', 'dpsf', 'pwg_token'], true)) {
-                    new HtmlService()
+                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                         ->fatalError('unexpected URL get key');
                 }
 

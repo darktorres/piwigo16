@@ -15,7 +15,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Site\SiteRepository;
@@ -66,13 +65,13 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Config\CurrentConfig::enableSynchronization()) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('synchronization is disabled');
         }
 
         if ($_POST !== [] or isset($_GET['action'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
         }
 
         $conn = DbConnection::build();
@@ -97,7 +96,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             $galleries_url_input = $_POST['galleries_url'];
             $is_remote = $this->urlService->urlIsRemote($galleries_url_input);
             if ($is_remote) {
-                new HtmlService()
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('remote sites not supported');
             }
             $url = preg_replace('/[\/]*$/', '', $galleries_url_input);

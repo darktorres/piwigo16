@@ -20,13 +20,11 @@ use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupRepository;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Mail\MailService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -112,14 +110,14 @@ final class GalleryController implements ControllerInterface
         // in earlier construction-chain debt (Phase 1d finding).
         $conn = DbConnection::build();
         new SectionPopulator(
-            new HtmlService(),
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             $template,
             new SectionRepository($conn),
             self::categoryService($conn),
             self::permissionService($conn),
             self::tagService($conn),
-            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new MailService(), new HtmlService(), $this->redirectService),
-            new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), self::activityService($conn), new HtmlService(), $conn),
+            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService),
+            new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), self::activityService($conn), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn),
             $this->redirectService,
             $this->urlService,
         )->populate();
@@ -146,10 +144,10 @@ final class GalleryController implements ControllerInterface
 
         // access authorization check
         if ($section_context->category !== null && is_numeric($section_context->category['id'] ?? null)) {
-            self::categoryService($conn)->checkRestrictions((int) $section_context->category['id'], new HtmlService(), $this->redirectService);
+            self::categoryService($conn)->checkRestrictions((int) $section_context->category['id'], \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
         }
         if ($page_start > 0 && $page_start >= count($page_items)) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->pageNotFound($this->redirectService, '', $this->urlService->duplicateIndexUrl([
                     'start' => 0,
                 ]));
@@ -307,10 +305,10 @@ final class GalleryController implements ControllerInterface
         }
 
         $resolved_search_id = new SearchFilterRenderer(
-            new HtmlService(),
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             $template,
             new SearchRepository($conn),
-            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new MailService(), new HtmlService(), $redirectService, $tagService),
+            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $redirectService, $tagService),
             $tagService,
             new CategoryRepository($conn),
             self::permissionService($conn),
@@ -343,7 +341,7 @@ final class GalleryController implements ControllerInterface
             $tags = $tagService->getCommonTags(
                 $page_items,
                 \Piwigo\Config\CurrentConfig::menubarTagCloudItemsNumber(),
-                new HtmlService(),
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
                 $excluded_tag_ids
             );
 
@@ -456,10 +454,10 @@ final class GalleryController implements ControllerInterface
              */
             $cats = array_merge($matching_cats_no_images, $matching_cats);
             if ($cats !== []) {
-                usort($cats, new HtmlService()->nameCompare(...));
+                usort($cats, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->nameCompare(...));
                 $hints = [];
                 foreach ($cats as $cat) {
-                    $hints[] = new HtmlService()->getCatDisplayName([$cat], '');
+                    $hints[] = \Piwigo\Bootstrap\PresentationAccessor::htmlService()->getCatDisplayName([$cat], '');
                 }
                 $template->assign('category_search_results', $hints);
             }
@@ -552,7 +550,7 @@ final class GalleryController implements ControllerInterface
         ) {
             new CategoryCatsRenderer(
                 new FilterService(),
-                new HtmlService(),
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
                 $template,
                 new CategoryRepository($conn),
                 $categoryService,
@@ -565,7 +563,7 @@ final class GalleryController implements ControllerInterface
         $slideshow_url = null;
         if ($page_items !== []) {
             $slideshow_url = new CategoryDefaultRenderer(
-                new HtmlService(),
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
                 $template,
                 new ImageRepository($conn),
                 new CommentRepository($conn),
@@ -617,7 +615,7 @@ final class GalleryController implements ControllerInterface
         $body_data_section = \Piwigo\Core\PageState::current()->bodyData['section'] ?? null;
         if ($page_items !== [] and $body_data_section !== 'tags') {
             $selection = array_slice($page_items, $page_start, $page_nb_image_page);
-            $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, \Piwigo\Config\CurrentConfig::contentTagCloudItemsNumber(), new HtmlService()));
+            $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, \Piwigo\Config\CurrentConfig::contentTagCloudItemsNumber(), \Piwigo\Bootstrap\PresentationAccessor::htmlService()));
             $related_tags = [];
             foreach ($tags as $tag) {
                 $related_tags[] =
@@ -643,7 +641,7 @@ final class GalleryController implements ControllerInterface
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title);
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_index');
-        new HtmlService()
+        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         $template->parse_index_buttons();
         $template->parse('index', false);

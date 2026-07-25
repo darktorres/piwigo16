@@ -8,7 +8,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeUrlCodec;
@@ -29,7 +28,7 @@ final class PictureCoiPageRenderer
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $htmlRenderer = new HtmlService();
+        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
         $conn = DbConnection::build();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);

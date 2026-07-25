@@ -19,8 +19,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
-use Piwigo\Mail\MailService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
@@ -65,9 +63,9 @@ final readonly class ExtensionLifecycle
         return new UserService(
             new UserRepository($conn),
             new GroupRepository($conn),
-            new MailService(),
+            \Piwigo\Bootstrap\PresentationAccessor::mailService(),
             self::activityService($conn),
-            new HtmlService(),
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             $conn
         );
     }
@@ -96,7 +94,7 @@ final readonly class ExtensionLifecycle
     ): array {
 
         if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall() and $action === 'delete') {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('Piwigo extensions install/update/delete system is disabled');
         }
 

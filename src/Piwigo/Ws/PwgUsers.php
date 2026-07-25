@@ -34,13 +34,10 @@ use Piwigo\Db\DbInfo;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
-use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Session\SessionService;
-use Piwigo\Url\UrlService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -54,7 +51,7 @@ final class PwgUsers
 {
     private static function userService(): UserService
     {
-        return new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new MailService(), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService(), DbConnection::build());
+        return new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(new ActivityRepository(DbConnection::build())), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), DbConnection::build());
     }
 
     /**
@@ -67,7 +64,7 @@ final class PwgUsers
      */
     private static function authService(Connection $conn): AuthService
     {
-        return new AuthService(new AuthRepository($conn), new ActivityService(new ActivityRepository($conn)), new HtmlService(), new PasswordService(new PasswordRepository($conn)), new CookieService());
+        return new AuthService(new AuthRepository($conn), new ActivityService(new ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), new PasswordService(new PasswordRepository($conn)), new CookieService());
     }
 
     /**
@@ -79,7 +76,7 @@ final class PwgUsers
      */
     private static function apiKeyService(): ApiKeyService
     {
-        return new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())), new UrlService(new HtmlService()));
+        return new ApiKeyService(\Piwigo\Bootstrap\PresentationAccessor::mailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())), \Piwigo\Bootstrap\PresentationAccessor::urlService());
     }
 
     /**
@@ -483,7 +480,7 @@ SELECT DISTINCT ';
                 $params['username'],
                 $params['password'],
                 $params['email'],
-                new UrlService(new HtmlService()),
+                \Piwigo\Bootstrap\PresentationAccessor::urlService(),
                 false, // notify admin
                 false // $params['send_password_by_mail']
             );
@@ -894,7 +891,7 @@ SELECT
                 $image[$k] = $row[$k] ?? null;
             }
 
-            $images[] = array_merge($image, WsHelper::stdGetUrls($row, new UrlService(new HtmlService())));
+            $images[] = array_merge($image, WsHelper::stdGetUrls($row, \Piwigo\Bootstrap\PresentationAccessor::urlService()));
         }
 
         $count = count($images);
@@ -960,9 +957,9 @@ SELECT
         $user_lost_language = is_string($user_lost['language']) ? $user_lost['language'] : self::userService()->getDefaultLanguage();
         $lang_to_use = $first_login ? self::userService()->getDefaultLanguage() : $user_lost_language;
 
-        new MailService()
+        \Piwigo\Bootstrap\PresentationAccessor::mailService()
             ->switchLangTo($lang_to_use);
-        $generate_link = self::authService($conn)->generatePasswordLink($params['user_id'], new UrlService(new HtmlService()), $first_login);
+        $generate_link = self::authService($conn)->generatePasswordLink($params['user_id'], \Piwigo\Bootstrap\PresentationAccessor::urlService(), $first_login);
 
         $user_lost_email = is_string($user_lost['email']) ? $user_lost['email'] : null;
 
@@ -974,20 +971,20 @@ SELECT
         if ($params['send_by_mail'] and ! in_array($user_lost_email, [null, ''], true)) {
             $user_lost_username = is_string($user_lost['username']) ? $user_lost['username'] : '';
             if ($first_login) {
-                $email_params = new MailService()
+                $email_params = \Piwigo\Bootstrap\PresentationAccessor::mailService()
                     ->generateSetPasswordMail($user_lost_username, $generate_link['password_link'], $gallery_title, $generate_link['time_validation']);
             } else {
-                $email_params = new MailService()
+                $email_params = \Piwigo\Bootstrap\PresentationAccessor::mailService()
                     ->generateResetPasswordMail($user_lost_username, $generate_link['password_link'], $gallery_title, $generate_link['time_validation']);
             }
             // Here we remove the display of errors because they prevent the response from being parsed
-            if (@new MailService()->mail($user_lost_email, $email_params)) {
+            if (@\Piwigo\Bootstrap\PresentationAccessor::mailService()->mail($user_lost_email, $email_params)) {
                 $send_by_mail_response = 'Mail sent at : ' . $user_lost_email;
             } else {
                 $send_by_mail_response = false;
             }
         }
-        new MailService()
+        \Piwigo\Bootstrap\PresentationAccessor::mailService()
             ->switchLangBack();
 
         return [

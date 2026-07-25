@@ -15,8 +15,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
-use Piwigo\Mail\MailService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -34,9 +32,9 @@ final class UserListPageRenderer
         return new UserService(
             new UserRepository($conn),
             new GroupRepository($conn),
-            new MailService(),
+            \Piwigo\Bootstrap\PresentationAccessor::mailService(),
             new ActivityService(new ActivityRepository($conn)),
-            new HtmlService(),
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             $conn
         );
     }
@@ -124,7 +122,7 @@ ORDER BY registration_year, registration_month
 
         $default_user = self::userService($conn)->getDefaultUserInfo();
         if (! is_array($default_user)) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('Default user not found');
         }
 

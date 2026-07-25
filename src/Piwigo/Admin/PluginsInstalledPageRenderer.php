@@ -12,7 +12,6 @@ use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Html\HtmlService;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 
@@ -78,7 +77,7 @@ final class PluginsInstalledPageRenderer
         $pem_catalog = new PemCatalog(new ZipExtractor());
         $fs_plugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService);
-        uasort($fs_plugins, new HtmlService()->nameCompare(...));
+        uasort($fs_plugins, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->nameCompare(...));
         $db_plugins_by_id = $extension_repository->findAll(ExtensionType::Plugin);
 
         // --------------------------------------------------------Incompatible Plugins

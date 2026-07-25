@@ -12,7 +12,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
 
 /**
@@ -167,7 +166,7 @@ SELECT COUNT(*)
             if (isset($_GET[$filter_key])) {
                 $filter_value = $_GET[$filter_key];
                 if (! is_string($filter_value)) {
-                    new HtmlService()
+                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                         ->fatalError('[Hacking attempt] the input parameter "' . $filter_key . '" is not valid');
                 }
 
@@ -180,7 +179,7 @@ SELECT
                 $rows = $conn->fetchAllAssociative($query);
 
                 if (count($rows) === 0) {
-                    new HtmlService()
+                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                         ->fatalError($filter_key . ' #' . $filter_value . ' does not exist');
                 }
 

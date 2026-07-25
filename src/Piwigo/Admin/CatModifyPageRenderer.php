@@ -13,7 +13,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -43,7 +42,7 @@ final class CatModifyPageRenderer
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $htmlRenderer = new HtmlService();
+        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
         $categoryConn = DbConnection::build();
         $categoryService = new CategoryService(

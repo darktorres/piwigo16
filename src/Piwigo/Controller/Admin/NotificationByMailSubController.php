@@ -18,7 +18,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\NotificationByMailSender;
 use Piwigo\Notification\NotificationByMailRepository;
@@ -103,7 +102,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $htmlRenderer = new HtmlService();
+        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
         $conn = DbConnection::build();
         $nbmSender = new NotificationByMailSender(

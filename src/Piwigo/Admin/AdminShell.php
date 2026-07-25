@@ -27,11 +27,9 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
-use Piwigo\Mail\MailService;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Users\PreferencesService;
@@ -193,9 +191,9 @@ final class AdminShell
             new UserService(
                 new UserRepository($conn),
                 new GroupRepository($conn),
-                new MailService(),
+                \Piwigo\Bootstrap\PresentationAccessor::mailService(),
                 new ActivityService(new ActivityRepository($conn)),
-                new HtmlService(),
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
                 $conn
             )->syncUsers();
         }
@@ -516,7 +514,7 @@ SELECT COUNT(*)
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_admin');
 
-        new HtmlService()
+        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
 
         $template->pparse('admin');

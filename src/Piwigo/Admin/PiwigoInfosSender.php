@@ -21,11 +21,8 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Mail\MailService;
-use Piwigo\Url\UrlService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
@@ -62,7 +59,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
      */
     private static function userService(Connection $conn): UserService
     {
-        return new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), new HtmlService(), $conn);
+        return new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(new ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
     }
 
     #[\Override]
@@ -257,7 +254,7 @@ SELECT
             }
         }
 
-        $urlService = new UrlService(new HtmlService());
+        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         $fsPlugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService);
         $dbPluginsById = new ExtensionRepository($conn)

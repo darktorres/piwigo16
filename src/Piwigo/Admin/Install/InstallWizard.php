@@ -38,7 +38,6 @@ use Piwigo\Http\HttpClientService;
 use Piwigo\Mail\MailService;
 use Piwigo\Session\PwgSession;
 use Piwigo\Template\Template;
-use Piwigo\Url\UrlService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
@@ -242,7 +241,7 @@ final class InstallWizard
 
         // dblayer
         if (! extension_loaded('mysqli')) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('PHP extension "mysqli" is not loaded');
         }
         $this->dblayer = 'mysqli';
@@ -262,12 +261,12 @@ final class InstallWizard
 
         // Is Piwigo already installed ?
         if (file_exists($this->paths->siteLocal . Env::testModeInstalledStamp())) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('Piwigo is already installed');
         }
 
         $this->fsLanguages = new ExtensionScanner()
-            ->scan(ExtensionType::Language, new UrlService(new HtmlService()), 'utf-8');
+            ->scan(ExtensionType::Language, \Piwigo\Bootstrap\PresentationAccessor::urlService(), 'utf-8');
 
         if (isset($_GET['language']) && is_string($_GET['language'])) {
             $language = strip_tags($_GET['language']);
@@ -317,8 +316,8 @@ final class InstallWizard
     /**
      * DRY-extracted (Legacy Coupling Retirement Phase 8, 8b) -- was 3
      * identical `new UserService(new UserRepository($c), new
-     * GroupRepository($c), new MailService(), new ActivityService(new
-     * ActivityRepository($c)), new HtmlService(), $c)` chains inline
+     * GroupRepository($c), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(new
+     * ActivityRepository($c)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $c)` chains inline
      * below, matching the same "private helper takes the already-available
      * Connection as a parameter" shape as
      * Bootstrap\RequestBootstrap::activityService(). $conn defaults to a
@@ -333,7 +332,7 @@ final class InstallWizard
     private function userService(?Connection $conn = null): UserService
     {
         $conn ??= DbConnection::build();
-        return new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), new HtmlService(), $conn);
+        return new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(new ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
     }
 
     /**
@@ -518,7 +517,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
         );
 
         // fill languages table, only activate the current language
-        $urlService = new UrlService(new HtmlService());
+        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         new ExtensionLifecycle(
             new ExtensionRepository(DbConnection::build()),
             new PemCatalog(new ZipExtractor()),
@@ -671,7 +670,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             // data; this mirrors that method's own two calls verbatim.
             \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
             \Piwigo\Users\CurrentUser::markRealUserResolved();
-            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())
+            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())
                 ->logUser($login_user_id, false);
             $_SESSION['connected_with'] = 'pwg_ui';
 
@@ -718,7 +717,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
                     Lang::buildArgs('', ''),
                     Lang::buildArgs('Here are your connection settings', ''),
                     Lang::buildArgs('', ''),
-                    Lang::buildArgs('Link: %s', new UrlService(new HtmlService())->getAbsoluteRootUrl()),
+                    Lang::buildArgs('Link: %s', \Piwigo\Bootstrap\PresentationAccessor::urlService()->getAbsoluteRootUrl()),
                     Lang::buildArgs('Username: %s', $this->adminName),
                     Lang::buildArgs('Password: ********** (no copy by email)', ''),
                     Lang::buildArgs('Email: %s', $this->adminMail),
@@ -726,7 +725,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
                     Lang::buildArgs('Don\'t hesitate to consult our forums for any help: %s', AppInfo::URL),
                 ];
 
-                new MailService()
+                \Piwigo\Bootstrap\PresentationAccessor::mailService()
                     ->mail(
                         $this->adminMail,
                         [

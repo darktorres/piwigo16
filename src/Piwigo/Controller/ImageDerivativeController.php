@@ -376,7 +376,7 @@ final class ImageDerivativeController implements ControllerInterface
             // *different* already-cached derivative type (trySwitchSource()'s
             // own permission-checked redirect, see its own comment).
             if ($image_id !== null) {
-                $this->ierror(new UrlService(new HtmlService())->getActionUrl($image_id, 'e', false), 301, [
+                $this->ierror(\Piwigo\Bootstrap\PresentationAccessor::urlService()->getActionUrl($image_id, 'e', false), 301, [
                     'X-i' => 'No change',
                 ]);
             }
@@ -658,7 +658,7 @@ final class ImageDerivativeController implements ControllerInterface
 
         $this->srcLocation = $req . $ext;
         $this->srcPath = $this->paths->root . $this->srcLocation;
-        $this->srcUrl = new UrlService(new HtmlService())
+        $this->srcUrl = \Piwigo\Bootstrap\PresentationAccessor::urlService()
             ->getAbsoluteRootUrl(false) . '/' . $this->srcLocation;
 
         // Every non-erroring path above sets $this->derivativeParams itself
@@ -763,7 +763,7 @@ final class ImageDerivativeController implements ControllerInterface
             // filesystem path -- still routes through this same
             // permission-checked controller, at a different derivative type.
             $rel_url = self::derivativeUrlPath($this->derivativeUrlSuffix, $params->type, $candidate->type);
-            $this->srcUrl = new UrlService(new HtmlService())
+            $this->srcUrl = \Piwigo\Bootstrap\PresentationAccessor::urlService()
                 ->getAbsoluteRootUrl(false) . '/' . $rel_url;
             $this->rotationAngle = 0;
             return true;
@@ -813,7 +813,7 @@ final class ImageDerivativeController implements ControllerInterface
         $derivative_path = $this->derivativePath;
 
         if (isset($_GET['ajaxload']) and $_GET['ajaxload'] === 'true') {
-            $urlService = new UrlService(new HtmlService());
+            $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
 
             return ResponseFactory::json([
                 'url' => $urlService->embellishUrl($urlService->getAbsoluteRootUrl() . $derivative_path),

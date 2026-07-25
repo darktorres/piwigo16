@@ -19,13 +19,11 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Mail\MailService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -73,7 +71,7 @@ final class CommentsController implements ControllerInterface
         $conn = DbConnection::build();
 
         if (! \Piwigo\Config\CurrentConfig::activateComments()) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->pageNotFound($this->redirectService, null);
         }
 
@@ -293,7 +291,7 @@ final class CommentsController implements ControllerInterface
         $action = null;
         $edit_comment = null;
 
-        $commentService = new CommentService(new CommentRepository($conn), new EphemeralKeyService(), new MailService(), new HtmlService(), $this->urlService);
+        $commentService = new CommentService(new CommentRepository($conn), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->urlService);
 
         $actions = ['delete', 'validate', 'edit'];
         foreach ($actions as $loop_action) {
@@ -321,14 +319,14 @@ final class CommentsController implements ControllerInterface
 
                 if ($action === 'delete') {
                     new \Piwigo\Csrf\CsrfService()
-                        ->checkOrFail(new HtmlService(), $this->redirectService);
+                        ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
                     $commentService->deleteComment($comment_id);
                     $perform_redirect = true;
                 }
 
                 if ($action === 'validate') {
                     new \Piwigo\Csrf\CsrfService()
-                        ->checkOrFail(new HtmlService(), $this->redirectService);
+                        ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
                     $commentService->validateComment($comment_id);
                     $perform_redirect = true;
                 }
@@ -339,7 +337,7 @@ final class CommentsController implements ControllerInterface
                     // $since_present's own comment above.
                     if (is_string($content_raw) && $content_raw !== '' && $content_raw !== '0') {
                         new \Piwigo\Csrf\CsrfService()
-                            ->checkOrFail(new HtmlService(), $this->redirectService);
+                            ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
                         $post_key = $_POST['key'] ?? null;
                         if (! is_string($post_key)) {
                             $post_key = '';
@@ -434,7 +432,7 @@ SELECT id, name, uppercats, global_rank
         ], 'WHERE') . '
 ;';
         self::categoryService($conn)
-            ->displaySelectCatWrapper($query, [@$_GET['cat']], $blockname, new HtmlService(), $template, true);
+            ->displaySelectCatWrapper($query, [@$_GET['cat']], $blockname, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template, true);
 
         // Filter on recent comments...
         $tpl_var = [];
@@ -702,7 +700,7 @@ AND ', $where_clauses) . '
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title);
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_comments');
-        new HtmlService()
+        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         if (count($comments) > 0) {
             $template->assign_var_from_handle('COMMENT_LIST', 'comment_list');

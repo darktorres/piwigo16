@@ -9,7 +9,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Feed\FeedRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
@@ -93,7 +92,7 @@ final class NotificationController implements ControllerInterface
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title);
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_notification');
-        new HtmlService()
+        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         $template->parse('notification', false);
         $body = \Piwigo\Bootstrap\PageTail::renderToString();

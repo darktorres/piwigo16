@@ -8,7 +8,6 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Html\HtmlService;
 
 /**
  * Filesystem scan for installable extensions, replacing get_fs_plugins()/
@@ -56,7 +55,12 @@ final class ExtensionScanner
         closedir($dir);
 
         if ($type === ExtensionType::Language) {
-            @uasort($found, new HtmlService()->nameCompare(...));
+            // Deliberately not \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            // -- this class is designed to be Unit-testable without a full
+            // app bootstrap (see ExtensionScannerTest's own docblock), and
+            // HtmlService has no mandatory dependencies worth centralizing
+            // via the container.
+            @uasort($found, new \Piwigo\Html\HtmlService()->nameCompare(...));
         }
 
         return $found;

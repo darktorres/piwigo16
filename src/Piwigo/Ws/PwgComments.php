@@ -19,11 +19,8 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Mail\MailService;
-use Piwigo\Url\UrlService;
 
 /**
  * P23 batch 8e-2: relocated from include/ws_functions/pwg.comments.php.
@@ -211,7 +208,7 @@ SELECT
 
             $list[] = [
                 'id' => $row['id'],
-                'admin_link' => new UrlService(new HtmlService())
+                'admin_link' => \Piwigo\Bootstrap\PresentationAccessor::urlService()
                     ->getRootUrl() . 'admin.php?page=photo-' . (is_scalar($row_image_id) ? (string) $row_image_id : ''),
                 'medium_url' => $medium,
                 'file' => $row['file'],
@@ -325,6 +322,6 @@ GROUP BY author_id
      */
     private static function commentService(): CommentService
     {
-        return new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()));
+        return new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService());
     }
 }

@@ -9,7 +9,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
@@ -99,7 +98,7 @@ final class IdentificationController implements ControllerInterface
 
                 $conn = \Piwigo\Db\DbConnection::build();
                 if (\Piwigo\Config\CurrentConfig::insensitiveCaseLogon()) {
-                    $username = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), $conn)
+                    $username = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn)
                         ->searchCaseUsername($username);
                 }
 
@@ -108,7 +107,7 @@ final class IdentificationController implements ControllerInterface
                 $remember_me_raw = $_POST['remember_me'] ?? null;
                 $remember_me = isset($_POST['remember_me']) && is_string($remember_me_raw) && $remember_me_raw === '1';
 
-                if (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())->tryLogUser($username, $password, $remember_me)) {
+                if (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())->tryLogUser($username, $password, $remember_me)) {
                     // security (level 2): force redirect within Piwigo. We
                     // redirect to absolute root url, including http(s)://,
                     // without the cookie path, concatenated with
@@ -181,11 +180,11 @@ final class IdentificationController implements ControllerInterface
         $lang_cookie = $_COOKIE['lang'] ?? null;
         if ($lang_cookie !== null and (! is_string($lang_cookie) or \Piwigo\Users\CurrentUser::get()->language !== $lang_cookie)) {
             if (! is_string($lang_cookie)) {
-                new HtmlService()
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
             }
             if (! array_key_exists($lang_cookie, \Piwigo\Lang\LangService::getLanguages())) {
-                new HtmlService()
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
             }
 
@@ -216,9 +215,9 @@ final class IdentificationController implements ControllerInterface
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title);
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_identification');
-        new HtmlService()
+        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
-        new HtmlService()
+        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushKeyedErrors($errors);
         $template->parse('identification', false);
         $body = \Piwigo\Bootstrap\PageTail::renderToString();

@@ -10,7 +10,6 @@ use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 
@@ -268,7 +267,7 @@ final class CategoryAdminService
 
         $catInfo = $this->categoryService->getCategoryInfo($catId);
         if (! is_array($catInfo) || ! is_string($catInfo['uppercats'] ?? null)) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->pageNotFound($redirectService, 'Requested album does not exist');
         }
 

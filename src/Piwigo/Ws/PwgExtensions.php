@@ -30,9 +30,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
-use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
-use Piwigo\Url\UrlService;
 
 /**
  * P23 batch 8e-2: relocated from include/ws_functions/pwg.extensions.php.
@@ -53,10 +51,10 @@ final class PwgExtensions
      */
     public static function pluginsGetList(array $params, PwgServer &$service): array
     {
-        $urlService = new UrlService(new HtmlService());
+        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         $fs_plugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService);
-        uasort($fs_plugins, new HtmlService()->nameCompare(...));
+        uasort($fs_plugins, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->nameCompare(...));
         $db_plugins_by_id = new ExtensionRepository(DbConnection::build())->findAll(ExtensionType::Plugin);
         $plugin_list = [];
 
@@ -113,7 +111,7 @@ final class PwgExtensions
         // grep). Dropping it also avoids a real SEC-60 (no define() under
         // src/Piwigo/) arch-test violation.
 
-        $urlService = new UrlService(new HtmlService());
+        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         $lifecycle = new ExtensionLifecycle(
             new ExtensionRepository(DbConnection::build()),
             new PemCatalog(new ZipExtractor()),
@@ -159,7 +157,7 @@ final class PwgExtensions
         // original define('IN_ADMIN', true) here is equally a no-op for
         // this request.
 
-        $urlService = new UrlService(new HtmlService());
+        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         $lifecycle = new ExtensionLifecycle(
             new ExtensionRepository(DbConnection::build()),
             new PemCatalog(new ZipExtractor()),
@@ -221,7 +219,7 @@ final class PwgExtensions
             default => ExtensionType::Language,
         };
 
-        $urlService = new UrlService(new HtmlService());
+        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         $scanner = new ExtensionScanner();
         $repo = new ExtensionRepository(DbConnection::build());
         $pemCatalog = new PemCatalog(new ZipExtractor());
@@ -380,7 +378,7 @@ final class PwgExtensions
      */
     public static function checkUpdates(array $params, PwgServer &$service): array
     {
-        $urlService = new UrlService(new HtmlService());
+        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         $coreUpdateService = new CoreUpdateService(new ZipExtractor(), new RedirectService(), $urlService, CurrentConfigService::get(), \Piwigo\Core\CurrentPaths::get());
         $updateChecker = new ExtensionUpdateChecker(new ExtensionScanner(), new PemCatalog(new ZipExtractor()), $urlService, CurrentConfigService::get());
         $result = [];

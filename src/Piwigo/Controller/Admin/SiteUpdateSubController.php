@@ -20,7 +20,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
@@ -152,12 +151,12 @@ SELECT IF(MAX(' . $column . ')+1 IS NULL, 1, MAX(' . $column . ')+1)
         // +-----------------------------------------------------------------------+
 
         if (! \Piwigo\Config\CurrentConfig::enableSynchronization()) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('synchronization is disabled');
         }
 
         if (! is_numeric($_GET['site'])) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('site param missing or invalid');
         }
         $site_id = (int) $_GET['site'];
@@ -174,7 +173,7 @@ SELECT galleries_url
   WHERE id = ' . $site_id;
         $site_url = $conn->fetchOne($query);
         if (! is_string($site_url)) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('site ' . $site_id . ' does not exist');
         }
         $site_is_remote = $this->urlService->urlIsRemote($site_url);
@@ -213,7 +212,7 @@ SELECT galleries_url
         $simulate = false;
 
         if ($site_is_remote) {
-            new HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('remote sites not supported');
         } else {
             $site_reader = new LocalSiteReader($site_url);
@@ -249,7 +248,7 @@ SELECT galleries_url
 
         if (isset($_GET['quick_sync'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
             $_POST['sync'] = 'files';
             $_POST['display_info'] = '1';
@@ -264,7 +263,7 @@ SELECT galleries_url
         $general_failure = true;
         if (isset($_POST['submit'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
             if ($site_reader->open()) {
                 $general_failure = false;
@@ -1125,7 +1124,7 @@ SELECT id,name,uppercats,global_rank
             $query,
             $cat_selected,
             'category_options',
-            new HtmlService(),
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             $template,
             false
         );

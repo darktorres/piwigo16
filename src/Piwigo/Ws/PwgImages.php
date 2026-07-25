@@ -33,12 +33,10 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Mail\MailService;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionRepository;
@@ -50,7 +48,6 @@ use Piwigo\Search\SearchService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
-use Piwigo\Url\UrlService;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 
 /**
@@ -85,8 +82,8 @@ final class PwgImages
             new SearchRepository($conn),
             self::permissionService($conn),
             self::categoryService($conn),
-            new MailService(),
-            new HtmlService(),
+            \Piwigo\Bootstrap\PresentationAccessor::mailService(),
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             new RedirectService(),
         );
     }
@@ -421,7 +418,7 @@ SELECT DISTINCT image_id
         ];
 
         $infos = [];
-        $comment_action = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()))
+        $comment_action = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService())
             ->insertComment($comm, $params['key'], $infos);
 
         switch ($comment_action) {
@@ -484,7 +481,7 @@ LIMIT 1
         // open tail for the rest of the row and the page_url/element_url/
         // download_url/derivatives keys WsHelper::stdGetUrls() injects.
         /** @var array{id: int, file: string, name: string|null, comment: string|null, rating_score: string|null, ...} $image_row */
-        $image_row = array_merge($image_row, WsHelper::stdGetUrls($image_row, new UrlService(new HtmlService())));
+        $image_row = array_merge($image_row, WsHelper::stdGetUrls($image_row, \Piwigo\Bootstrap\PresentationAccessor::urlService()));
 
         $image_row['name_raw'] = $image_row['name'];
         $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
@@ -520,13 +517,13 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
             }
             unset($row['commentable']);
 
-            $row['url'] = new UrlService(new HtmlService())->makeIndexUrl(
+            $row['url'] = \Piwigo\Bootstrap\PresentationAccessor::urlService()->makeIndexUrl(
                 [
                     'category' => $row,
                 ]
             );
 
-            $row['page_url'] = new UrlService(new HtmlService())->makePictureUrl(
+            $row['page_url'] = \Piwigo\Bootstrap\PresentationAccessor::urlService()->makePictureUrl(
                 [
                     'image_id' => $image_row['id'],
                     'image_file' => $image_row['file'],
@@ -555,14 +552,14 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
 
         // -------------------------------------------------------------- related tags
         $related_tags = self::tagService($conn)
-            ->getCommonTags([$image_id], -1, new HtmlService());
+            ->getCommonTags([$image_id], -1, \Piwigo\Bootstrap\PresentationAccessor::htmlService());
         foreach ($related_tags as $i => $tag) {
-            $tag['url'] = new UrlService(new HtmlService())->makeIndexUrl(
+            $tag['url'] = \Piwigo\Bootstrap\PresentationAccessor::urlService()->makeIndexUrl(
                 [
                     'tags' => [$tag],
                 ]
             );
-            $tag['page_url'] = new UrlService(new HtmlService())->makePictureUrl(
+            $tag['page_url'] = \Piwigo\Bootstrap\PresentationAccessor::urlService()->makePictureUrl(
                 [
                     'image_id' => $image_row['id'],
                     'image_file' => $image_row['file'],
@@ -785,7 +782,7 @@ SELECT DISTINCT id
 
         if ((bool) count($image_ids)) {
             $image_ids = array_flip($image_ids);
-            $favorite_ids = new UrlService(new HtmlService())
+            $favorite_ids = \Piwigo\Bootstrap\PresentationAccessor::urlService()
                 ->getUserFavorites();
 
             foreach (new ImageRepository($searchConn)->findByIds(array_keys($image_ids)) as $imageRow) {
@@ -810,7 +807,7 @@ SELECT DISTINCT id
                 $image['name'] = strip_tags(is_string($rendered_image_name) ? $rendered_image_name : '');
                 $image['comment'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_description', $image['comment'], __FUNCTION__);
 
-                $image = array_merge($image, WsHelper::stdGetUrls($row, new UrlService(new HtmlService())));
+                $image = array_merge($image, WsHelper::stdGetUrls($row, \Piwigo\Bootstrap\PresentationAccessor::urlService()));
                 assert(is_int($image['id'] ?? null));
                 $images[$image_ids[$image['id']]] = $image;
             }
@@ -1114,7 +1111,7 @@ SELECT DISTINCT id
         }
 
         $forked_from = $search_info?->id;
-        [$search_uuid, $search_url] = $searchService->saveSearch($search, new UrlService(new HtmlService()), $forked_from);
+        [$search_uuid, $search_url] = $searchService->saveSearch($search, \Piwigo\Bootstrap\PresentationAccessor::urlService(), $forked_from);
 
         return [
             'search_id' => $search_uuid,
@@ -1405,7 +1402,7 @@ SELECT
         $image_id = new UploadService()
             ->addUploadedFile(
                 $file_path,
-                new UrlService(new HtmlService()),
+                \Piwigo\Bootstrap\PresentationAccessor::urlService(),
                 is_string($image['file']) ? $image['file'] : null,
                 null,
                 null,
@@ -1500,7 +1497,7 @@ SELECT COUNT(*)
         $image_id = new UploadService()
             ->addUploadedFile(
                 $file_path,
-                new UrlService(new HtmlService()),
+                \Piwigo\Bootstrap\PresentationAccessor::urlService(),
                 $params['original_filename'],
                 null, // categories
                 $params['level'],
@@ -1570,7 +1567,7 @@ SELECT id, name, permalink
 
         return [
             'image_id' => $image_id,
-            'url' => new UrlService(new HtmlService())
+            'url' => \Piwigo\Bootstrap\PresentationAccessor::urlService()
                 ->makePictureUrl($url_params),
         ];
     }
@@ -1641,7 +1638,7 @@ SELECT COUNT(*)
         $image_id = new UploadService()
             ->addUploadedFile(
                 $uploaded_tmp_name,
-                new UrlService(new HtmlService()),
+                \Piwigo\Bootstrap\PresentationAccessor::urlService(),
                 is_string($uploaded_name) ? $uploaded_name : null,
                 $params['category'],
                 8,
@@ -1720,7 +1717,7 @@ SELECT id, name, permalink
 
         return [
             'image_id' => $image_id,
-            'url' => new UrlService(new HtmlService())
+            'url' => \Piwigo\Bootstrap\PresentationAccessor::urlService()
                 ->makePictureUrl($url_params),
         ];
     }
@@ -1881,7 +1878,7 @@ SELECT
             $image_id = new UploadService()
                 ->addUploadedFile(
                     $filePath,
-                    new UrlService(new HtmlService()),
+                    \Piwigo\Bootstrap\PresentationAccessor::urlService(),
                     $name, // function add_uploaded_file will secure before insert
                     $params['category'],
                     $params['level'],
@@ -1924,7 +1921,7 @@ SELECT
 ;';
             $nb_photos_lounge = $conn->fetchOne($query);
 
-            $category_name = new HtmlService()
+            $category_name = \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->getCatDisplayNameFromId($params['category'][0], null);
 
             $nb_photos_in_category = is_numeric($category_infos['nb_photos']) ? (int) $category_infos['nb_photos'] : 0;
@@ -2137,7 +2134,7 @@ SELECT COUNT(*)
         $image_id = new UploadService()
             ->addUploadedFile(
                 $output_filepath,
-                new UrlService(new HtmlService()),
+                \Piwigo\Bootstrap\PresentationAccessor::urlService(),
                 $params['filename'],
                 $params['category'],
                 $params['level'],
@@ -2494,7 +2491,7 @@ SELECT
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $image_ids) . ')
 ;';
-        $urlService = new UrlService(new HtmlService());
+        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         foreach ($conn->fetchAllAssociative($query) as $image_row) {
             assert(is_string($image_row['path']));
             if ($urlService->urlIsRemote($image_row['path'])) {
@@ -2793,7 +2790,7 @@ SELECT path
 
         $imageConn = DbConnection::build();
         $ret = self::imageService($imageConn)
-            ->deleteElements($image_ids, new UrlService(new HtmlService()), true);
+            ->deleteElements($image_ids, \Piwigo\Bootstrap\PresentationAccessor::urlService(), true);
         PermissionCacheInvalidator::invalidate();
 
         return $ret;
@@ -2894,7 +2891,7 @@ SELECT
         if ($category_infos === false) {
             throw new Exception(__FUNCTION__ . '(): category-count aggregate query returned no row');
         }
-        $category_name = new HtmlService()
+        $category_name = \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->getCatDisplayNameFromId($params['category_id'], null);
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify(
@@ -3029,7 +3026,7 @@ SELECT id
         $imageService = self::imageService($imageConn);
 
         $orphan_ids_to_delete = array_slice($imageService->getOrphans(), 0, $params['block_size']);
-        $deleted_count = $imageService->deleteElements($orphan_ids_to_delete, new UrlService(new HtmlService()), true);
+        $deleted_count = $imageService->deleteElements($orphan_ids_to_delete, \Piwigo\Bootstrap\PresentationAccessor::urlService(), true);
         PermissionCacheInvalidator::invalidate();
 
         return [

@@ -10,7 +10,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
@@ -82,7 +81,7 @@ final class TagsController implements ControllerInterface
 
         if ($display_mode === 'letters') {
             // we want tags diplayed in alphabetic order
-            usort($tags, new HtmlService()->tagAlphaCompare(...));
+            usort($tags, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->tagAlphaCompare(...));
 
             $tag_letters_column_number = \Piwigo\Config\CurrentConfig::tagLettersColumnNumber();
 
@@ -166,7 +165,7 @@ final class TagsController implements ControllerInterface
             $tags = $tagService->addLevelToTags($tags);
 
             // we want tags diplayed in alphabetic order
-            usort($tags, new HtmlService()->tagAlphaCompare(...));
+            usort($tags, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->tagAlphaCompare(...));
 
             foreach ($tags as $tag) {
                 $template->append(
@@ -195,7 +194,7 @@ final class TagsController implements ControllerInterface
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title);
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_tags');
-        new HtmlService()
+        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         $template->parse('tags', false);
         $body = \Piwigo\Bootstrap\PageTail::renderToString();

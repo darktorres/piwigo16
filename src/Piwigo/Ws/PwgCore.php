@@ -30,7 +30,6 @@ use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\ImageRepository;
@@ -40,7 +39,6 @@ use Piwigo\Lang\Translator;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchRepository;
-use Piwigo\Url\UrlService;
 
 /**
  * P23 batch 8e-4: relocated from include/ws_functions/pwg.php.
@@ -61,7 +59,7 @@ final class PwgCore
      */
     private static function authService(): AuthService
     {
-        return new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService(), new PasswordService(new PasswordRepository(DbConnection::build())), new CookieService());
+        return new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), new PasswordService(new PasswordRepository(DbConnection::build())), new CookieService());
     }
 
     /**
@@ -1127,13 +1125,13 @@ SELECT id, uppercats
                     continue;
                 }
 
-                $full_cat_path[$category_id] = new HtmlService()->getCatDisplayNameCache(
+                $full_cat_path[$category_id] = \Piwigo\Bootstrap\PresentationAccessor::htmlService()->getCatDisplayNameCache(
                     $uppercats,
                     'admin.php?page=album-'
                 );
 
                 $uppercats = explode(',', $uppercats);
-                $name_of_category[$category_id] = new HtmlService()->getCatDisplayNameCache(
+                $name_of_category[$category_id] = \Piwigo\Bootstrap\PresentationAccessor::htmlService()->getCatDisplayNameCache(
                     end($uppercats),
                     'admin.php?page=album-'
                 );
@@ -1259,7 +1257,7 @@ SELECT
                 $user_string .= $user_id_key;
             }
             $user_string .= '&nbsp;<a href="';
-            $user_string .= new UrlService(new HtmlService())
+            $user_string .= \Piwigo\Bootstrap\PresentationAccessor::urlService()
                 ->getRootUrl() . 'admin.php?page=history';
             $user_string .= '&amp;search_id=' . $search_id;
             $user_string .= '&amp;user_id=' . $user_id_key;
@@ -1289,9 +1287,9 @@ SELECT
             $image_id = '';
             $cat_name = '';
             if ($line_image_id !== null) {
-                $image_edit_string = new UrlService(new HtmlService())
+                $image_edit_string = \Piwigo\Bootstrap\PresentationAccessor::urlService()
                     ->getRootUrl() . 'admin.php?page=photo-' . $line_image_id;
-                $picture_url = new UrlService(new HtmlService())
+                $picture_url = \Piwigo\Bootstrap\PresentationAccessor::urlService()
                     ->makePictureUrl(
                         [
                             'image_id' => $line_image_id,

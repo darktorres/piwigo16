@@ -19,8 +19,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
-use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -57,9 +55,9 @@ final class LanguagesInstalledPageRenderer
         return new UserService(
             new UserRepository($conn),
             new GroupRepository($conn),
-            new MailService(),
+            \Piwigo\Bootstrap\PresentationAccessor::mailService(),
             new ActivityService(new ActivityRepository($conn)),
-            new HtmlService(),
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             $conn
         );
     }
@@ -104,7 +102,7 @@ final class LanguagesInstalledPageRenderer
 
         if (isset($_GET['action']) and isset($_GET['language']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
             // check_input_parameter() above already fatal_error()s if either value
             // is non-scalar or doesn't match the expected pattern; query string

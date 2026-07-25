@@ -10,7 +10,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\TagRepository;
@@ -175,7 +174,7 @@ SELECT
 ;';
 
             $filter_tags = new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)))
-                ->getTagList($query, new HtmlService());
+                ->getTagList($query, \Piwigo\Bootstrap\PresentationAccessor::htmlService());
         }
 
         $template->assign('filter_tags', $filter_tags);
@@ -186,7 +185,7 @@ SELECT
 
         if (isset($bulk_manager_filter['category']) && is_numeric($bulk_manager_filter['category'])) {
             $selected_category = intval($bulk_manager_filter['category']);
-            $selected_category_name = new HtmlService()
+            $selected_category_name = \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->getCatDisplayNameFromId($selected_category);
         }
 

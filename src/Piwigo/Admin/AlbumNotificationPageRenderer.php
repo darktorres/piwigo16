@@ -18,11 +18,9 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
-use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -82,7 +80,7 @@ final class AlbumNotificationPageRenderer
         // info by email to an access granted group of category informations
         if (isset($_POST['submitEmail'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
             $this->urlService->setMakeFullUrl();
 
             $img = [];
@@ -188,7 +186,7 @@ SELECT
                     $usernames[] = $u_username;
 
                     $u_status = is_string($u['status']) ? $u['status'] : null;
-                    $authkey = new AuthService(new AuthRepository($conn), new ActivityService(new ActivityRepository($conn)), new HtmlService(), new PasswordService(new PasswordRepository($conn)), new CookieService())
+                    $authkey = new AuthService(new AuthRepository($conn), new ActivityService(new ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), new PasswordService(new PasswordRepository($conn)), new CookieService())
                         ->createUserAuthKey((int) $u['user_id'], $u_status);
 
                     $user_tpl = $tpl;
@@ -213,14 +211,14 @@ SELECT
                         $user_args['auth_key'] = $authkey['auth_key'];
                     }
 
-                    $user_language = is_string($u['language']) ? $u['language'] : new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), new ActivityService(new ActivityRepository($conn)), new HtmlService(), $conn)->getDefaultLanguage();
+                    $user_language = is_string($u['language']) ? $u['language'] : new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(new ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn)->getDefaultLanguage();
                     $user_email = is_string($u['email']) ? $u['email'] : '';
 
-                    new MailService()
+                    \Piwigo\Bootstrap\PresentationAccessor::mailService()
                         ->switchLangTo($user_language);
-                    new MailService()
+                    \Piwigo\Bootstrap\PresentationAccessor::mailService()
                         ->mail($user_email, $user_args, $user_tpl);
-                    new MailService()
+                    \Piwigo\Bootstrap\PresentationAccessor::mailService()
                         ->switchLangBack();
                 }
 
@@ -241,7 +239,7 @@ SELECT
                 // check here only narrows the type for what follows.
                 $group_id = is_numeric($_POST['group']) ? (int) $_POST['group'] : 0;
 
-                new MailService()
+                \Piwigo\Bootstrap\PresentationAccessor::mailService()
                     ->mailGroup($group_id, $args, $tpl);
 
                 $query = '
@@ -277,7 +275,7 @@ SELECT
         $template->assign(
             [
                 'CATEGORIES_NAV' => trim(
-                    new HtmlService()
+                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                         ->getCatDisplayNameFromId(
                             $page_cat,
                             'admin.php?page=album-'

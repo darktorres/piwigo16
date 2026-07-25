@@ -1,0 +1,49 @@
+<?php
+
+declare(strict_types=1);
+
+use Piwigo\Mail\Projection\MailRecipient;
+
+/**
+ * @return array<string, mixed>
+ */
+function fullMailRecipientRow(): array
+{
+    return [
+        'user_id' => '3',
+        'name' => 'regular_user',
+        'email' => 'regular@example.test',
+        'status' => 'normal',
+    ];
+}
+
+test('fromRow narrows every column to its real type', function (): void {
+    $recipient = MailRecipient::fromRow(fullMailRecipientRow());
+
+    expect($recipient->userId)->toBe(3)
+        ->and($recipient->name)->toBe('regular_user')
+        ->and($recipient->email)->toBe('regular@example.test')
+        ->and($recipient->status)->toBe('normal');
+});
+
+test('fromRow defaults status to null when absent, matching findAdminsAndWebmasters()\'s own shape', function (): void {
+    $row = fullMailRecipientRow();
+    $row['status'] = null;
+
+    $recipient = MailRecipient::fromRow($row);
+
+    expect($recipient->status)->toBeNull();
+    // The NOT NULL columns (user_id/name/email) fall back to their type's
+    // zero value instead -- never actually null for a real fetched row.
+});
+
+test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
+    $roundTripped = MailRecipient::fromRow(fullMailRecipientRow())->toArray();
+
+    expect($roundTripped)->toBe([
+        'user_id' => 3,
+        'name' => 'regular_user',
+        'email' => 'regular@example.test',
+        'status' => 'normal',
+    ]);
+});

@@ -128,7 +128,11 @@ it until this pass).
   even with the correct row. Both sides now normalize to a real `int` before comparing.
 - **2026-07-25, batch 2 (the remaining 20, closing Stage 1b out): 8 new Projections,
   12 documented exceptions** — user-directed "work through all of them, leave tests to
-  the end" (no new `tests/Unit/` coverage added this batch; Stage 1c stays at 1/11).
+  the end." ("the end" turned out to mean *running* the suite, not *writing* the tests —
+  clarified after the fact; 9 fromRow/toArray round-trip Unit tests, one per new
+  Projection class, added in a follow-up pass and folded in below. 4 of the 8 domains
+  (`Audit`, `Group`, `History`, `Metadata`) were on Stage 1c's own zero-coverage list —
+  Stage 1c moves from 1/11 to 5/11 as a direct side effect.)
   - `Audit\Projection\AuditLogEntry` — `AuditRepository::findAllInOrder()`'s own inline
     `array_map()` narrowing (11 fields), single consumer (`AuditService::verifyChain()`).
   - `Mail\Projection\MailRecipient` — shared by `MailRecipientRepository`'s
@@ -174,20 +178,28 @@ it until this pass).
   - `Group\Projection\Group` — `GroupRepository::findAllBasic()` (3 fields), consumed by
     `GroupListPageRenderer.php`. `findWithMemberCounts()` stays raw (see exceptions
     above).
-  - Full verification: PHPStan/ECS/deptrac clean repo-wide; Unit+Arch 619/619 (unchanged
-    from batch 1 — no new tests), Integration 668/668, Contract 94/94, Browser 68/68,
-    Visual 34/34 (all unchanged counts, confirming no regressions).
+  - **Follow-up: 9 fromRow/toArray round-trip Unit tests** (one per new Projection class,
+    `HistorySummaryCursor`/`HistorySummaryCount` each getting their own — `Audit`, `Mail`,
+    `Metadata`, `Notification`, `Auth` ×2, `History` ×2, `Group`), matching
+    `tests/Unit/Image/Projection/ImageTest.php`'s established precedent. `AuthUser`'s own
+    test also covers its one real behavioral deviation from a plain narrowing default:
+    `status` falls back to `'normal'`, not `''`, matching the original's own
+    `$user['status'] ??= 'normal';`.
+  - Full verification: PHPStan/ECS/deptrac clean repo-wide; Unit+Arch 648/648 (619 + 29
+    new test assertions' worth of test cases), Integration 668/668, Contract 94/94,
+    Browser 68/68, Visual 34/34 (every suite but Unit+Arch unchanged, confirming no
+    regressions from the new tests themselves).
 
-**Stage 1c — Per-namespace Unit test coverage: 1 of 11 caught up, 2026-07-25.** `Audit`,
-`Caddie`, `Calendar`, `Group`, `History`, `Metadata`, `Permission`, `Picture`, `Site`,
-`Tag` still have zero files under `tests/Unit/`. `Comment` no longer does —
-`tests/Unit/Comment/Projection/CommentTest.php` landed in the same pass as its own
-Stage 1b Projection work, per the plan's own instruction. `Site` and `Tag` are still the
-documented deviation (Projection classes exist, no companion Unit tests yet — not caught
-up by this pass, which was scoped to Comment + Activity only). `Picture` (the flagged
-priority — `PictureCommentRenderer`'s documented prior bug) still has zero tests in any
-suite; only `tests/Arch/StructuralTest.php` references its renderer class names, and
-only for a structural check, not behavior.
+**Stage 1c — Per-namespace Unit test coverage: 5 of 11 caught up, 2026-07-25.** `Caddie`,
+`Calendar`, `Permission`, `Picture`, `Site`, `Tag` still have zero files under
+`tests/Unit/`. `Comment`, `Audit`, `Group`, `History`, and `Metadata` no longer do —
+each got a `tests/Unit/<Domain>/Projection/*Test.php` (fromRow/toArray round-trip) in the
+same pass as its own Stage 1b Projection work, per the plan's own instruction. `Site` and
+`Tag` are still the documented deviation (Projection classes exist, no companion Unit
+tests yet — from an earlier pass, scoped to Comment + Activity only, that never caught
+them up). `Picture` (the flagged priority — `PictureCommentRenderer`'s documented prior
+bug) still has zero tests in any suite; only `tests/Arch/StructuralTest.php` references
+its renderer class names, and only for a structural check, not behavior.
 
 **Stage 1d — CachePools wiring: 1 of 3 done.** `CachePools::config()` is now real (wired
 into `ConfigService::loadConfFromDb()` this session, `feede75c9`). `CachePools::permissions()`

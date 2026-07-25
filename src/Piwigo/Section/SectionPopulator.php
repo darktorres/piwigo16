@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Section;
 
-use Piwigo\Cache\PersistentCache;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -69,7 +68,6 @@ final readonly class SectionPopulator
     public function populate(): void
     {
         $logger = \Piwigo\Core\CurrentLogger::get();
-        $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
         $template = $this->template;
 
         // Legacy Coupling Retirement Track A batch A5.2e: $page is a local
@@ -89,9 +87,6 @@ final readonly class SectionPopulator
         // -- a single local variable threaded through the whole method,
         // seeded from CurrentConfig::orderBy().
         $order_by = \Piwigo\Config\CurrentConfig::orderBy();
-        if (! $persistent_cache instanceof PersistentCache) {
-            $this->htmlRenderer->fatalError('persistent cache not initialized');
-        }
 
         $page['items'] = [];
         $page['start'] = $page['startcat'] = 0;
@@ -334,8 +329,8 @@ SELECT id
                     } else {
                         $currentUser = \Piwigo\Users\CurrentUser::get();
                         $user_id_for_cache = $currentUser->id;
-                        $cache_update_time = $currentUser->cacheUpdateTime;
-                        $cache_key = $persistent_cache->make_key('all_iids' . $user_id_for_cache . $cache_update_time . $order_by);
+                        $cache_item = \Piwigo\Cache\CachePools::sectionImageIds()
+                            ->getItem('all_iids_' . $user_id_for_cache . '_' . md5($order_by));
                         unset($page['is_homepage']);
                         $where_sql = '1=1';
                     }
@@ -351,12 +346,16 @@ SELECT id
                     $where_sql = 'category_id = ' . (is_scalar($normal_mode_cat_id) ? (string) $normal_mode_cat_id : '0');
                 }
 
-                // $cache_key is only ever assigned via
-                // $persistent_cache->make_key(), which is declared to
-                // return string -- once set, it's never anything else.
-                $cache_key_str = $cache_key ?? null;
+                // $cache_item is only ever assigned in the flat-mode/no-
+                // page_category branch above -- may be legitimately unset
+                // in every other branch.
+                $cache_item ??= null;
+                $cached_items = $cache_item?->isHit() === true ? $cache_item->get() : null;
 
-                if ($cache_key_str === null || ! $persistent_cache->get($cache_key_str, $page['items'])) {
+                if (is_array($cached_items)) {
+                    /** @var list<string|null> $cached_items */
+                    $page['items'] = $cached_items;
+                } else {
                     // main query
                     // `SELECT DISTINCT(image_id) ... ORDER BY <col not in
                     // select>` is invalid under ONLY_FULL_GROUP_BY --
@@ -380,8 +379,9 @@ SELECT id
 
                     $page['items'] = $this->repo->queryColumn($query);
 
-                    if ($cache_key_str !== null) {
-                        $persistent_cache->set($cache_key_str, $page['items']);
+                    if ($cache_item instanceof \Psr\Cache\CacheItemInterface) {
+                        $cache_item->set($page['items']);
+                        \Piwigo\Cache\CachePools::sectionImageIds()->save($cache_item);
                     }
                 }
             }

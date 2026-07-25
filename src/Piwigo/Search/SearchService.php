@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
-use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\MailerInterface;
@@ -57,7 +56,6 @@ final readonly class SearchService
         private SearchRepository $repo,
         private PermissionService $permissionService,
         private CategoryService $categoryService,
-        private PersistentFileCache $cache,
         private MailerInterface $mailer,
         private HtmlRenderingInterface $htmlRenderer,
         private RedirectServiceInterface $redirectService,
@@ -1043,24 +1041,29 @@ final readonly class SearchService
     {
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
-        $cacheKey = $this->cache->make_key([
+        $pool = \Piwigo\Cache\CachePools::searchResults();
+        $cacheKey = md5(serialize([
             strtolower($q),
             \Piwigo\Config\CurrentConfig::orderBy(),
-            $currentUser->id, $currentUser->cacheUpdateTime,
+            $currentUser->id,
             isset($options['permissions']) ? (bool) $options['permissions'] : true,
             $options['images_where'] ?? '',
-        ]);
-        $cached = null;
-        if ($this->cache->get($cacheKey, $cached) && is_array($cached)) {
-            /** @var array<string, mixed> $cached */
-            return $cached;
+        ]));
+        $cacheItem = $pool->getItem('quick_search_' . $cacheKey);
+        if ($cacheItem->isHit()) {
+            $cached = $cacheItem->get();
+            if (is_array($cached)) {
+                /** @var array<string, mixed> $cached */
+                return $cached;
+            }
         }
 
         $res = $this->getQuickSearchResultsNoCache($q, $options);
         unset($res['debug']);
 
         if ((bool) count($res['items'])) {
-            $this->cache->set($cacheKey, $res, 300);
+            $cacheItem->set($res);
+            $pool->save($cacheItem);
         }
 
         return $res;

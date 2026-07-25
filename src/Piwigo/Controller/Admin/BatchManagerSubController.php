@@ -11,7 +11,6 @@ use Piwigo\Admin\BatchManagerUnitPageRenderer;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
-use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
@@ -664,7 +663,6 @@ DELETE FROM ' . Tables::caddie() . '
                 new SearchRepository($searchConn),
                 self::permissionService($searchConn),
                 self::categoryService($searchConn),
-                new PersistentFileCache(),
                 new MailService(),
                 new HtmlService(),
                 $this->redirectService,

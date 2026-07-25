@@ -90,7 +90,6 @@ namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;
     use Piwigo\Bootstrap\RedirectService;
-    use Piwigo\Cache\PersistentFileCache;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\CategoryService;
     use Piwigo\Config\CurrentConfig;
@@ -124,8 +123,6 @@ final class SearchServiceTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    private string $cacheDir;
-
     #[\Override]
     protected function setUp(): void
     {
@@ -145,14 +142,7 @@ final class SearchServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $this->repo = new SearchRepository($this->conn);
 
-        // Self-contained scratch cache dir under this project's own _data/
-        // (never the real _data/cache/ the dev app uses) -- created here,
-        // torn down below, so this test never leaves cache files behind.
-        $this->cacheDir = dirname(__DIR__, 2) . '/_data/search-service-test-cache';
-        @mkdir($this->cacheDir . '/cache', 0o777, true);
-
         CurrentUser::set(User::fromUserArray(self::realisticUserGlobal()));
-        CurrentConfig::setDataLocation('_data/search-service-test-cache/');
         CurrentConfig::setDefaultFiltersViews(null);
         CurrentConfig::setFiltersViews([
             'expert' => ['access' => 'everybody'],
@@ -182,7 +172,6 @@ final class SearchServiceTest extends IntegrationTestCase
                 new CategoryRepository($this->conn),
                 new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn))
             ),
-            new PersistentFileCache(),
             new MailService(),
             new HtmlService(),
             new RedirectService()
@@ -192,14 +181,7 @@ final class SearchServiceTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        $found = glob($this->cacheDir . '/cache/*.cache');
-        $files = $found !== false ? $found : [];
-        foreach ($files as $file) {
-            @unlink($file);
-        }
-
-        @rmdir($this->cacheDir . '/cache');
-        @rmdir($this->cacheDir);
+        \Piwigo\Cache\CachePools::searchResults()->clear();
 
         parent::tearDown();
     }
@@ -446,17 +428,33 @@ final class SearchServiceTest extends IntegrationTestCase
         self::assertSame([], $results['items']);
     }
 
+    /**
+     * CachePools::searchResults() (gap-closure Stage 4a) replaces the
+     * older PersistentFileCache/cacheUpdateTime mechanism -- proven the
+     * same way TagServiceTest/ForbiddenCategoriesCacheTest prove their own
+     * pool wiring: mutate the underlying data (tag image 2 "family", which
+     * the fixture doesn't already do -- only image 1 is) after the first
+     * (caching) call, then show a 2nd call with the same query still
+     * returns the stale (pre-mutation) result.
+     */
     public function test_get_quick_search_results_caches_across_calls(): void
     {
         $first = $this->service->getQuickSearchResults('family', []);
         self::assertSame([1], $first['items']);
 
-        $cachedFound = glob($this->cacheDir . '/cache/*.cache');
-        self::assertNotSame([], $cachedFound !== false ? $cachedFound : []);
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::imageTag() . ' (image_id, tag_id) VALUES (2, 3)'
+        );
 
-        $second = $this->service->getQuickSearchResults('family', []);
-        self::assertSame($first['items'], $second['items']);
-        self::assertArrayNotHasKey('debug', $second);
+        try {
+            $second = $this->service->getQuickSearchResults('family', []);
+            self::assertSame($first['items'], $second['items'], 'a cache hit must not re-query the DB');
+            self::assertArrayNotHasKey('debug', $second);
+        } finally {
+            $this->conn->executeStatement(
+                'DELETE FROM ' . Tables::imageTag() . ' WHERE image_id = 2 AND tag_id = 3'
+            );
+        }
     }
 }
 }

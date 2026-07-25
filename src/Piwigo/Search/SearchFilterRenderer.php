@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
-use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -24,9 +23,11 @@ use Piwigo\Tag\TagService;
  * confirm none reads an undeclared outer scope), except for one real fix:
  * see the ALBUMS_FOUND block below.
  *
- * `PersistentCache` (not batch 2's named CachePools) is kept deliberately --
- * it's used identically throughout many other already-shipped files in this
- * codebase, unrelated to this phase's actual goal (deleting `include/`).
+ * Gap-closure Stage 4a (docs/plan/gap-closure-p0-p23.md): the several
+ * per-filter row/count caches below now go through
+ * {@see \Piwigo\Cache\CachePools::searchResults()} (30s TTL) instead of the
+ * older `PersistentCache`/`cacheUpdateTime`-keyed mechanism this class's
+ * docblock previously kept deliberately out of scope.
  */
 final readonly class SearchFilterRenderer
 {
@@ -40,6 +41,21 @@ final readonly class SearchFilterRenderer
         private PermissionService $permissionService,
         private UrlServiceInterface $urlService,
     ) {}
+
+    private function cacheGet(string $key): mixed
+    {
+        $item = \Piwigo\Cache\CachePools::searchResults()->getItem($key);
+
+        return $item->isHit() ? $item->get() : null;
+    }
+
+    private function cacheSet(string $key, mixed $value): void
+    {
+        $pool = \Piwigo\Cache\CachePools::searchResults();
+        $item = $pool->getItem($key);
+        $item->set($value);
+        $pool->save($item);
+    }
 
     /**
      * Legacy Coupling Retirement Track A batch A5.2e: $sectionContext is an
@@ -68,11 +84,7 @@ final readonly class SearchFilterRenderer
             'start' => $sectionContext->start,
             'chronology_field' => $sectionContext->chronologyField,
         ];
-        $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
         $template = $this->template;
-        if (! $persistent_cache instanceof PersistentCache) {
-            $this->htmlRenderer->fatalError('persistent cache not initialized');
-        }
 
         $tagService = $this->tagService;
 
@@ -113,7 +125,6 @@ final readonly class SearchFilterRenderer
 
         $currentUser = \Piwigo\Users\CurrentUser::get();
         $userId = (string) $currentUser->id;
-        $userCacheUpdateTime = $currentUser->cacheUpdateTime;
 
         $langMonth = \Piwigo\Core\Lang::months();
 
@@ -258,28 +269,20 @@ SELECT
 ;';
 
             if (! (bool) preg_match('/^image_id IN/', $filterClause)) {
-                // we use persistent_cache only for fetching lines filtered
+                // we use the cache pool only for fetching lines filtered
                 // only by permissions
-                $cacheKey = $persistent_cache->make_key('filter_author_rows' . $userId . $userCacheUpdateTime);
-                $filterRows = null;
-                if (! $persistent_cache->get($cacheKey, $filterRows)) {
+                $cacheKey = 'author_rows_' . $userId;
+                $filterRows = $this->cacheGet($cacheKey);
+                if (! is_array($filterRows)) {
                     $filterRows = $this->repo->queryRows($query);
-                    $persistent_cache->set($cacheKey, $filterRows);
+                    $this->cacheSet($cacheKey, $filterRows);
                 }
             } else {
                 $filterRows = $this->repo->queryRows($query);
             }
 
-            if (! is_array($filterRows)) {
-                // the persistent cache should only ever hold what
-                // SearchRepository::queryRows() just produced above; re-run
-                // the query if a corrupted entry slipped through.
-                $filterRows = $this->repo->queryRows($query);
-            }
-
-            // the persistent cache stores this row set as plain mixed data,
-            // so validate each row's shape defensively rather than
-            // trusting it.
+            // the cache pool stores this row set as plain mixed data, so
+            // validate each row's shape defensively rather than trusting it.
             $authorNames = [];
             $authors = [];
             foreach ($filterRows as $authorRow) {
@@ -317,10 +320,8 @@ SELECT
 
         if (isset($searchFields['date_posted']) and (bool) $displayFilters['post_date']['access']) {
             $this->renderDateFilter(
-                $persistent_cache,
                 $langMonth,
                 $userId,
-                $userCacheUpdateTime,
                 'date_posted',
                 'date_available',
                 [
@@ -341,10 +342,8 @@ SELECT
 
         if (isset($searchFields['date_created']) and (bool) $displayFilters['creation_date']['access']) {
             $this->renderDateFilter(
-                $persistent_cache,
                 $langMonth,
                 $userId,
-                $userCacheUpdateTime,
                 'date_created',
                 'date_creation',
                 [
@@ -378,28 +377,20 @@ SELECT
 ;';
 
             if (! (bool) preg_match('/^image_id IN/', $filterClause)) {
-                // we use persistent_cache only for fetching lines filtered
+                // we use the cache pool only for fetching lines filtered
                 // only by permissions
-                $cacheKey = $persistent_cache->make_key('filter_added_by_rows' . $userId . $userCacheUpdateTime);
-                $filterRows = null;
-                if (! $persistent_cache->get($cacheKey, $filterRows)) {
+                $cacheKey = 'added_by_rows_' . $userId;
+                $filterRows = $this->cacheGet($cacheKey);
+                if (! is_array($filterRows)) {
                     $filterRows = $this->repo->queryRows($query);
-                    $persistent_cache->set($cacheKey, $filterRows);
+                    $this->cacheSet($cacheKey, $filterRows);
                 }
             } else {
                 $filterRows = $this->repo->queryRows($query);
             }
 
-            if (! is_array($filterRows)) {
-                // the persistent cache should only ever hold what
-                // SearchRepository::queryRows() just produced above; re-run
-                // the query if a corrupted entry slipped through.
-                $filterRows = $this->repo->queryRows($query);
-            }
-
-            // the persistent cache stores this row set as plain mixed data,
-            // so validate each row's shape defensively rather than
-            // trusting it.
+            // the cache pool stores this row set as plain mixed data, so
+            // validate each row's shape defensively rather than trusting it.
             $addedBy = [];
             foreach ($filterRows as $addedByRow) {
                 if (is_array($addedByRow)) {
@@ -518,7 +509,7 @@ SELECT
 
             // get all file extensions for this user in the gallery,
             // whatever the current filters
-            $cacheKey = $persistent_cache->make_key('file_exts' . $userId . $userCacheUpdateTime);
+            $cacheKey = 'file_exts_' . $userId;
             // Always a string here -- unconditionally set earlier in this
             // method, before any branching; re-narrowed because the
             // getClauseForFilter() by-ref call above widens $page's own
@@ -537,17 +528,10 @@ SELECT
   GROUP BY ext
   ORDER BY counter DESC
 ;';
-            $allExts = null;
-            if (! $persistent_cache->get($cacheKey, $allExts)) {
-                $allExts = $this->repo->queryKeyedColumn($allExtsQuery, 'ext', 'counter');
-                $persistent_cache->set($cacheKey, $allExts);
-            }
-
+            $allExts = $this->cacheGet($cacheKey);
             if (! is_array($allExts)) {
-                // the persistent cache should only ever hold what
-                // SearchRepository::queryKeyedColumn() just produced above;
-                // re-run the query if a corrupted entry slipped through.
                 $allExts = $this->repo->queryKeyedColumn($allExtsQuery, 'ext', 'counter');
+                $this->cacheSet($cacheKey, $allExts);
             }
 
             if ((bool) preg_match('/^image_id IN/', $filterClause)) {
@@ -583,12 +567,11 @@ SELECT
             if (isset($searchFields['ratings']) and (bool) $displayFilters['rating']['access']) {
                 $filterClause = $this->getClauseForFilter('ratings', $page);
 
-                $cacheKey = $persistent_cache->make_key('filter_ratings' . $userId . $userCacheUpdateTime);
+                $cacheKey = 'ratings_' . $userId;
+                $cacheApplicable = ! (bool) preg_match('/^image_id IN/', $filterClause);
+                $ratings = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
 
-                $ratings = null;
-                $setPersistentCache = ! (bool) preg_match('/^image_id IN/', $filterClause) and ! $persistent_cache->get($cacheKey, $ratings);
-
-                if (! isset($ratings)) {
+                if (! is_array($ratings)) {
                     $query = '
 SELECT
     DISTINCT id,
@@ -618,13 +601,13 @@ SELECT
                         $ratings[$r]++;
                     }
 
-                    if ($setPersistentCache) {
+                    if ($cacheApplicable) {
                         // for this filter, we do not store in cache the
                         // $filterRows: for a big gallery it may take more
                         // than 10MB. It is smarter to store in cache the
                         // result of the computation, which is just around
                         // 100 bytes.
-                        $persistent_cache->set($cacheKey, $ratings);
+                        $this->cacheSet($cacheKey, $ratings);
                     }
                 }
                 $template->assign('RATING', $ratings);
@@ -702,12 +685,11 @@ SELECT
         if (isset($searchFields['ratios']) and (bool) $displayFilters['ratio']['access']) {
             $filterClause = $this->getClauseForFilter('ratios', $page);
 
-            $cacheKey = $persistent_cache->make_key('filter_ratios' . $userId . $userCacheUpdateTime);
+            $cacheKey = 'ratios_' . $userId;
+            $cacheApplicable = ! (bool) preg_match('/^image_id IN/', $filterClause);
+            $ratios = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
 
-            $ratios = null;
-            $setPersistentCache = ! (bool) preg_match('/^image_id IN/', $filterClause) and ! $persistent_cache->get($cacheKey, $ratios);
-
-            if (! isset($ratios)) {
+            if (! is_array($ratios)) {
                 $query = '
 SELECT
     DISTINCT id,
@@ -753,12 +735,12 @@ SELECT
                     }
                 }
 
-                if ($setPersistentCache) {
+                if ($cacheApplicable) {
                     // for this filter, we do not store in cache the
                     // $filterRows: for a big gallery it may take more than
                     // 10MB. It is smarter to store in cache the result of
                     // the computation, which is just around 100 bytes.
-                    $persistent_cache->set($cacheKey, $ratios);
+                    $this->cacheSet($cacheKey, $ratios);
                 }
             }
             $template->assign('RATIOS', $ratios);
@@ -781,27 +763,20 @@ SELECT
 ;';
 
             if (! (bool) preg_match('/^image_id IN/', $filterClause)) {
-                // we use persistent_cache only for fetching lines filtered
+                // we use the cache pool only for fetching lines filtered
                 // only by permissions
-                $cacheKey = $persistent_cache->make_key('filter_height_rows' . $userId . $userCacheUpdateTime);
-                $filterRows = null;
-                if (! $persistent_cache->get($cacheKey, $filterRows)) {
+                $cacheKey = 'height_rows_' . $userId;
+                $filterRows = $this->cacheGet($cacheKey);
+                if (! is_array($filterRows)) {
                     $filterRows = $this->repo->queryColumn($query, 'height');
-                    $persistent_cache->set($cacheKey, $filterRows);
+                    $this->cacheSet($cacheKey, $filterRows);
                 }
             } else {
                 $filterRows = $this->repo->queryColumn($query, 'height');
             }
 
-            if (! is_array($filterRows)) {
-                // the persistent cache should only ever hold what
-                // SearchRepository::queryColumn() just produced above;
-                // re-run the query if a corrupted entry slipped through.
-                $filterRows = $this->repo->queryColumn($query, 'height');
-            }
-
-            // the persistent cache stores this row set as plain mixed data,
-            // so validate each value defensively rather than trusting it.
+            // the cache pool stores this row set as plain mixed data, so
+            // validate each value defensively rather than trusting it.
             $heights = [];
             foreach ($filterRows as $heightValue) {
                 if (is_string($heightValue)) {
@@ -845,27 +820,20 @@ SELECT
 ;';
 
             if (! (bool) preg_match('/^image_id IN/', $filterClause)) {
-                // we use persistent_cache only for fetching lines filtered
+                // we use the cache pool only for fetching lines filtered
                 // only by permissions
-                $cacheKey = $persistent_cache->make_key('filter_width_rows' . $userId . $userCacheUpdateTime);
-                $filterRows = null;
-                if (! $persistent_cache->get($cacheKey, $filterRows)) {
+                $cacheKey = 'width_rows_' . $userId;
+                $filterRows = $this->cacheGet($cacheKey);
+                if (! is_array($filterRows)) {
                     $filterRows = $this->repo->queryColumn($query, 'width');
-                    $persistent_cache->set($cacheKey, $filterRows);
+                    $this->cacheSet($cacheKey, $filterRows);
                 }
             } else {
                 $filterRows = $this->repo->queryColumn($query, 'width');
             }
 
-            if (! is_array($filterRows)) {
-                // the persistent cache should only ever hold what
-                // SearchRepository::queryColumn() just produced above;
-                // re-run the query if a corrupted entry slipped through.
-                $filterRows = $this->repo->queryColumn($query, 'width');
-            }
-
-            // the persistent cache stores this row set as plain mixed data,
-            // so validate each value defensively rather than trusting it.
+            // the cache pool stores this row set as plain mixed data, so
+            // validate each value defensively rather than trusting it.
             $widths = [];
             foreach ($filterRows as $widthValue) {
                 if (is_string($widthValue)) {
@@ -1064,10 +1032,8 @@ SELECT
      * @param array<string, mixed> $page see render()'s own docblock
      */
     private function renderDateFilter(
-        PersistentCache $persistentCache,
         array $langMonth,
         string $userId,
-        string $userCacheUpdateTime,
         string $filterName,
         string $dbField,
         array $labelForThreshold,
@@ -1077,15 +1043,13 @@ SELECT
         array $page
     ): void {
         $filterClause = $this->getClauseForFilter($filterName, $page);
-        $cacheKey = $persistentCache->make_key('filter_' . $filterName . $userId . $userCacheUpdateTime);
-        // we use persistent_cache only for fetching lines filtered only by
+        $cacheKey = 'filter_' . $filterName . '_' . $userId;
+        // we use the cache pool only for fetching lines filtered only by
         // permissions
         $cacheApplicable = ! (bool) preg_match('/^image_id IN/', $filterClause);
-        $cached = null;
-        $hasCached = $cacheApplicable and $persistentCache->get($cacheKey, $cached);
+        $cached = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
 
-        if ($hasCached
-            and is_array($cached)
+        if (is_array($cached)
             and is_array($cached['pre_counters'] ?? null)
             and is_array($cached['list_of_dates'] ?? null)
         ) {
@@ -1141,7 +1105,7 @@ SELECT
                 // $filterRows: for a big gallery it may take more than
                 // 10MB. It is smarter to store in cache the result of the
                 // computation, which is just around 100 bytes.
-                $persistentCache->set(
+                $this->cacheSet(
                     $cacheKey,
                     [
                         'pre_counters' => $preCounters,

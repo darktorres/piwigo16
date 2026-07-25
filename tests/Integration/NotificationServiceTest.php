@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;
-    use Piwigo\Cache\PersistentFileCache;
+    use Piwigo\Cache\CachePools;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
@@ -36,8 +36,6 @@ final class NotificationServiceTest extends IntegrationTestCase
     private NotificationService $service;
 
     private Connection $conn;
-
-    private string $cacheDir;
 
     #[\Override]
     protected function setUp(): void
@@ -72,11 +70,6 @@ final class NotificationServiceTest extends IntegrationTestCase
             $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET registration_date = '2026-07-07 05:02:38' WHERE user_id IN (3, 4)");
         }
 
-        // Same self-contained scratch cache dir pattern as
-        // SearchServiceTest -- never the real _data/cache/.
-        $this->cacheDir = dirname(__DIR__, 2) . '/_data/notification-service-test-cache';
-        @mkdir($this->cacheDir . '/cache', 0o777, true);
-
         CurrentUser::set(User::fromUserArray([
             'id' => 1,
             'status' => 'normal',
@@ -86,12 +79,10 @@ final class NotificationServiceTest extends IntegrationTestCase
             'image_access_type' => 'NOT IN',
             'image_access_list' => '',
         ]));
-        CurrentConfig::setDataLocation('_data/notification-service-test-cache/');
 
         $this->service = new NotificationService(
             new NotificationRepository($this->conn),
             new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn)),
-            new PersistentFileCache(),
             new HtmlService(),
             new UrlService(new HtmlService())
         );
@@ -100,13 +91,7 @@ final class NotificationServiceTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        $files = glob($this->cacheDir . '/cache/*.cache');
-        foreach ($files !== false ? $files : [] as $file) {
-            @unlink($file);
-        }
-
-        @rmdir($this->cacheDir . '/cache');
-        @rmdir($this->cacheDir);
+        CachePools::notifications()->clear();
 
         parent::tearDown();
     }
@@ -190,16 +175,32 @@ final class NotificationServiceTest extends IntegrationTestCase
         $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE author = 'test author'");
     }
 
+    /**
+     * CachePools::notifications() (gap-closure Stage 4a) replaces the
+     * older PersistentCache/cacheUpdateTime mechanism -- proven the same
+     * way TagServiceTest/ForbiddenCategoriesCacheTest prove their own pool
+     * wiring: mutate the underlying data after the first (caching) call,
+     * then show a 2nd call with the same params still returns the stale
+     * (pre-mutation) result.
+     */
     public function test_get_recent_post_dates_groups_and_caches(): void
     {
         $result = $this->service->getRecentPostDates(10, 2, 2);
 
         self::assertNotSame([], $result);
-        $found = glob($this->cacheDir . '/cache/*.cache');
-        self::assertNotSame([], $found !== false ? $found : []);
 
-        $cached = $this->service->getRecentPostDates(10, 2, 2);
-        self::assertSame($result, $cached);
+        $this->conn->executeStatement(
+            "UPDATE " . Tables::images() . " SET date_available = '2099-01-01 00:00:00' WHERE id = 5"
+        );
+
+        try {
+            $cached = $this->service->getRecentPostDates(10, 2, 2);
+            self::assertSame($result, $cached, 'a cache hit must not re-query the DB');
+        } finally {
+            $this->conn->executeStatement(
+                "UPDATE " . Tables::images() . " SET date_available = '2026-07-07 05:02:38' WHERE id = 5"
+            );
+        }
     }
 
     public function test_get_recent_post_dates_array_applies_defaults(): void

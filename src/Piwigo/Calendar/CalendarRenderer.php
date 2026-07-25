@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
-use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -71,11 +70,7 @@ final readonly class CalendarRenderer
         array $chronologyDate,
         bool $superOrderBy,
     ): CalendarRenderResult {
-        $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
         $template = $this->template;
-        if (! $persistent_cache instanceof PersistentCache) {
-            $this->htmlRenderer->fatalError('persistent cache not initialized');
-        }
 
         // ------------------ initialize the condition on items to take into account ---
         $conn = DbConnection::build();
@@ -287,31 +282,30 @@ final readonly class CalendarRenderer
                     or ($page_chronology_date[0] === 'any' && count($page_chronology_date) === 1))
             ) {
                 $currentUser = \Piwigo\Users\CurrentUser::get();
-                $cache_key = $persistent_cache->make_key($currentUser->id . $currentUser->cacheUpdateTime
-                  . $calendar->date_field . $order_by);
+                $cache_item = \Piwigo\Cache\CachePools::calendarNav()
+                    ->getItem('nav_' . $currentUser->id . '_' . md5($calendar->date_field . $order_by));
             }
 
-            $cache_key_str = $cache_key ?? null;
+            $cache_item ??= null;
+            $cached_items = $cache_item?->isHit() === true ? $cache_item->get() : null;
 
-            if ($cache_key_str === null || ! $persistent_cache->get($cache_key_str, $items)) {
+            if (is_array($cached_items)) {
+                /** @var list<int> $cached_items */
+                $items = $cached_items;
+            } else {
                 $items = new CalendarRepository($conn)
                     ->findImageIds(
                         $calendar->inner_sql,
                         $calendar->get_date_where(),
                         $order_by
                     );
-                if ($cache_key_str !== null) {
-                    $persistent_cache->set($cache_key_str, $items);
+                if ($cache_item instanceof \Psr\Cache\CacheItemInterface) {
+                    $cache_item->set($items);
+                    \Piwigo\Cache\CachePools::calendarNav()->save($cache_item);
                 }
             }
         }
         \Piwigo\Core\TimingHelper::debug('end initialize_calendar');
-
-        // $items may have been widened back to mixed by PersistentCache::get()'s
-        // by-ref $value out-param above (a cache hit populates it from
-        // arbitrary stored data); re-narrow before handing it to the
-        // strictly-typed result object.
-        $items = is_array($items) ? array_values(array_filter($items, static fn (mixed $v): bool => is_int($v) || is_string($v))) : [];
 
         return new CalendarRenderResult($items, $comment, $page_chronology_date, $chronology_style, $chronology_view);
     }

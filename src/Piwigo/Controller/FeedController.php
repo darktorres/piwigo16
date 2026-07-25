@@ -6,7 +6,6 @@ namespace Piwigo\Controller;
 
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
-use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -53,13 +52,7 @@ final class FeedController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
-
         $htmlRenderer = new HtmlService();
-
-        if (! $persistent_cache instanceof PersistentCache) {
-            $htmlRenderer->fatalError('persistent cache not initialized');
-        }
 
         $feed_helper = new FeedHelper();
         $conn = DbConnection::build();
@@ -67,7 +60,6 @@ final class FeedController implements ControllerInterface
         $notificationService = new NotificationService(
             new NotificationRepository($conn),
             new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn)),
-            $persistent_cache,
             $htmlRenderer,
             $this->urlService
         );

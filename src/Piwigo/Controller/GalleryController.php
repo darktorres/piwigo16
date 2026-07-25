@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Category\CategoryRepository;
@@ -119,7 +118,7 @@ final class GalleryController implements ControllerInterface
             self::categoryService($conn),
             self::permissionService($conn),
             self::tagService($conn),
-            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new PersistentFileCache(), new MailService(), new HtmlService(), $this->redirectService),
+            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new MailService(), new HtmlService(), $this->redirectService),
             new UserService(new UserRepository($conn), new GroupRepository($conn), new MailService(), self::activityService($conn), new HtmlService(), $conn),
             $this->redirectService,
             $this->urlService,
@@ -311,7 +310,7 @@ final class GalleryController implements ControllerInterface
             new HtmlService(),
             $template,
             new SearchRepository($conn),
-            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new PersistentFileCache(), new MailService(), new HtmlService(), $redirectService, $tagService),
+            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new MailService(), new HtmlService(), $redirectService, $tagService),
             $tagService,
             new CategoryRepository($conn),
             self::permissionService($conn),

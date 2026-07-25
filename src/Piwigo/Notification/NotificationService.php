@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Notification;
 
-use Piwigo\Cache\PersistentCache;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -27,7 +26,6 @@ final readonly class NotificationService
     public function __construct(
         private NotificationRepository $repo,
         private PermissionService $permissionService,
-        private PersistentCache $cache,
         private HtmlRenderingInterface $htmlRenderer,
         private UrlServiceInterface $urlService,
     ) {}
@@ -146,13 +144,15 @@ final readonly class NotificationService
     {
         $currentUser = \Piwigo\Users\CurrentUser::get();
         $userId = (string) $currentUser->id;
-        $userCacheUpdateTime = $currentUser->cacheUpdateTime;
 
-        $cacheKey = $this->cache->make_key('recent_posts' . $userId . $userCacheUpdateTime . $maxDates . $maxElements . $maxCats);
-        $cached = null;
-        if ($this->cache->get($cacheKey, $cached) && is_array($cached)) {
-            /** @var array<int|string, mixed> $cached */
-            return $cached;
+        $pool = \Piwigo\Cache\CachePools::notifications();
+        $cacheItem = $pool->getItem('recent_posts_' . $userId . '_' . $maxDates . '_' . $maxElements . '_' . $maxCats);
+        if ($cacheItem->isHit()) {
+            $cached = $cacheItem->get();
+            if (is_array($cached)) {
+                /** @var array<int|string, mixed> $cached */
+                return $cached;
+            }
         }
 
         $whereSql = $this->getSqlWhereRestrictFilter('WHERE', 'i.id', true);
@@ -175,7 +175,8 @@ final readonly class NotificationService
             $result[] = $date;
         }
 
-        $this->cache->set($cacheKey, $result);
+        $cacheItem->set($result);
+        $pool->save($cacheItem);
 
         return $result;
     }

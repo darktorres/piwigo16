@@ -1177,12 +1177,13 @@ real count is higher in one file:
 - `Section/SectionPopulator.php:337-338` — one `all_iids` key (per-user visible image-id
   list for a section). `$persistent_cache` (`CurrentPersistentCache::get()`) has no other
   use anywhere else in this file.
-- `Search/SearchFilterRenderer.php` — **7 distinct cache-key sites**, not 1: `filter_author_rows`
+- `Search/SearchFilterRenderer.php` — **8 distinct cache-key sites**, not 1: `filter_author_rows`
   (263), `filter_added_by_rows` (383), `file_exts` (521), `filter_ratings` (586),
-  `filter_ratios` (705), plus `renderDateFilter()`'s shared key (1080, used by the
-  date_posted/date_created call sites at 320/344) — all built off the single
-  `$userCacheUpdateTime` captured once at line 116, all through the same
-  `CurrentPersistentCache::get()` instance with no other use in the file.
+  `filter_ratios` (705), `filter_height_rows` (786), `filter_width_rows` (850), plus
+  `renderDateFilter()`'s shared key (1080, used by the date_posted/date_created call sites
+  at 320/344) — all built off the single `$userCacheUpdateTime` captured once at line 116,
+  all through the same `CurrentPersistentCache::get()` instance with no other use in the
+  file.
 - `Search/SearchService.php:1049` (`getQuickSearchResults()`) — uses a constructor-injected
   `PersistentFileCache $cache` (not the static locator), with its own explicit 300s
   `set()` TTL. `$this->cache` has no other use in this class.
@@ -1191,10 +1192,30 @@ real count is higher in one file:
 - `Notification/NotificationService.php:149` (`getRecentPostDates()`) — constructor-injected
   `PersistentCache $cache`, no other use in the class.
 
-All 5 files are permission-filtered content, same reasoning `CachePools::permissions()`'s
+> **Execution-time correction:** a post-implementation full-repo grep for `cacheUpdateTime`
+> (done to confirm zero remaining readers before this stage's own doc claimed it) found a
+> 6th, differently-shaped site the investigation above missed: `Filter/FilterService.php:120`
+> (`initializeFromRequest()`) uses `$filter_key['time'] <= $currentUser->cacheUpdateTime` as
+> one of several OR'd staleness checks gating a *session*-cached (not CachePools-backed)
+> "recent period" filter computation — an unrelated caching mechanism (`SessionService`), not
+> one of the 5 `CurrentPersistentCache`/constructor-injected-cache files above. Fixed the
+> same session: replaced the cacheUpdateTime comparison with `time() - $filter_key_time >=
+> 30`, the same 30s staleness budget as every CachePools-backed check here, without
+> introducing a CachePools dependency (this mechanism never used one).
+>
+> Also found, same grep pass: `Controller/FeedController.php:67` still built a
+> `NotificationService` with the old 4-arg shape — an *execution* slip, not a plan gap (this
+> section's own file list above already named `FeedController` correctly); the
+> implementation step re-grepped 3 known files by name instead of cross-checking against
+> that list, missing it until a repo-wide `CurrentPersistentCache` sweep surfaced it. Fixed
+> in the same commit; repo-wide `grep -rn "new NotificationService("` / `"new
+> SearchService("` re-run afterward to confirm the real total (4 and 6 respectively) before
+> considering this sub-stage closed.
+
+All 6 files are permission-filtered content, same reasoning `CachePools::permissions()`'s
 own docblock already gives (30s TTL: "a permission change... becomes visible well within
 one user session"). Add 4 new `CachePools::` methods — `sectionImageIds()`,
-`searchResults()` (covers both `SearchFilterRenderer`'s 7 keys and
+`searchResults()` (covers both `SearchFilterRenderer`'s 8 keys and
 `SearchService::getQuickSearchResults()` — one "search" concept, several key prefixes,
 same one-pool-many-prefixes shape `permissions()` already uses per-user), `calendarNav()`,
 `notifications()` — each its own pool at 30s TTL. **Deliberate accepted behavior change**:
@@ -1223,6 +1244,16 @@ entirely (no constructor param to remove there — it was never injected).
 Once all 5 are converted, `cacheUpdateTime` has zero remaining real readers — delete
 `User::$cacheUpdateTime`, `user_cache.cache_update_time`, and `getUserData()`'s own write of
 it (folded into 4g below, same commit).
+
+> **2026-07-25 note: 4a done.** Full verification: PHPStan/ECS/deptrac clean; Unit/Arch
+> 717/717, Integration 675/675 (including the 2 rewritten mutation-based cache-hit tests —
+> `NotificationServiceTest`/`SearchServiceTest` no longer assert against
+> `PersistentFileCache`'s on-disk `*.cache` files, which this sub-stage's conversion made
+> moot), Browser 68/68, Visual 34/34 — all unchanged from baseline. `CalendarRenderer.php`'s
+> own defensive `is_array($items) ? array_filter(...) : []` re-narrowing (pre-dating this
+> stage) turned out to be genuinely dead code once the by-ref `PersistentCache::get()` call
+> masking it was removed — PHPStan proved every reachable path already produces `list<int>`;
+> deleted rather than suppressed.
 
 ### 4b. `forbidden_categories`: two distinct concepts, don't conflate them
 

@@ -7,7 +7,6 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
-use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
@@ -104,13 +103,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
-
         $htmlRenderer = new HtmlService();
-
-        if (! $persistent_cache instanceof PersistentCache) {
-            $htmlRenderer->fatalError('persistent cache not initialized');
-        }
 
         $conn = DbConnection::build();
         $nbmSender = new NotificationByMailSender(
@@ -118,7 +111,6 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
             new NotificationService(
                 new NotificationRepository($conn),
                 new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn)),
-                $persistent_cache,
                 $htmlRenderer,
                 $this->urlService
             ),

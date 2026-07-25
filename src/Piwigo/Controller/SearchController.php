@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
@@ -64,7 +63,6 @@ final class SearchController implements ControllerInterface
             new SearchRepository($conn),
             self::permissionService($conn),
             self::categoryService($conn),
-            new PersistentFileCache(),
             new MailService(),
             new HtmlService(),
             $this->redirectService,

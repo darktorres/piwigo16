@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -55,13 +54,7 @@ final class NbmController implements ControllerInterface
             'local' => true,
         ]);
 
-        $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
-
         $htmlRenderer = new HtmlService();
-
-        if (! $persistent_cache instanceof PersistentCache) {
-            $htmlRenderer->fatalError('persistent cache not initialized');
-        }
 
         $conn = DbConnection::build();
         $nbmSender = new NotificationByMailSender(
@@ -69,7 +62,6 @@ final class NbmController implements ControllerInterface
             new NotificationService(
                 new NotificationRepository($conn),
                 new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn)),
-                $persistent_cache,
                 $htmlRenderer,
                 $this->urlService
             ),

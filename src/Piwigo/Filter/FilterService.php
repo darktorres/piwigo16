@@ -113,11 +113,19 @@ final class FilterService implements FilterUpdaterInterface
             // origin -- narrow once to a definite int for every numeric use below.
             $filter_recent_period = is_numeric($filter['recent_period']) ? (int) $filter['recent_period'] : 0;
 
+            $filter_key_time = is_numeric($filter_key['time']) ? (int) $filter_key['time'] : 0;
+
             if (
                 // New filter
                 ! (bool) SessionService::get()->getSessionVar('filter_enabled', false) or
-                // Cache data updated
-                $filter_key['time'] <= $currentUser->cacheUpdateTime or
+                // Gap-closure Stage 4a (docs/plan/gap-closure-p0-p23.md):
+                // replaces the deleted `user_cache.cache_update_time`-keyed
+                // immediate-invalidation check with the same 30s staleness
+                // budget every other CachePools-backed permission check
+                // uses -- long enough to avoid recomputing on every
+                // request, short enough that a permission change becomes
+                // visible well within one user session.
+                time() - $filter_key_time >= 30 or
                 // Date, period, user are changed
                 $filter_key['user'] !== $currentUser->id or
                 (is_numeric($filter_key['recent_period']) ? (int) $filter_key['recent_period'] : 0) !== $filter_recent_period or

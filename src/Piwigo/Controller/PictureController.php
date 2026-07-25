@@ -7,7 +7,6 @@ namespace Piwigo\Controller;
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
-use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -150,7 +149,7 @@ final class PictureController implements ControllerInterface
             self::categoryService($conn),
             self::permissionService($conn),
             self::tagService($conn),
-            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new PersistentFileCache(), new MailService(), new HtmlService(), $this->redirectService),
+            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), new MailService(), new HtmlService(), $this->redirectService),
             self::userService($conn),
             $this->redirectService,
             $this->urlService,

@@ -97,4 +97,51 @@ final class CachePools
     {
         return CacheFactory::create(namespace: 'piwigo.general');
     }
+
+    /**
+     * 30s TTL -- same reasoning as permissions() above. Gap-closure Stage
+     * 4a (docs/plan/gap-closure-p0-p23.md): replaces the
+     * `user_cache.cache_update_time`-keyed immediate-invalidation pattern
+     * previously used by Section\SectionPopulator's per-user visible
+     * image-id list for a section.
+     */
+    public static function sectionImageIds(): CacheItemPoolInterface
+    {
+        return CacheFactory::create(namespace: 'piwigo.section_image_ids', defaultLifetime: 30);
+    }
+
+    /**
+     * 30s TTL -- same reasoning as permissions() above. Gap-closure Stage
+     * 4a: replaces the `cache_update_time`-keyed pattern previously used by
+     * Search\SearchFilterRenderer's several filter-row/count caches and
+     * Search\SearchService::getQuickSearchResults() (whose own explicit
+     * 300s TTL is deliberately dropped to this pool's uniform 30s -- the
+     * 300s was never a considered "search content changes slowly" choice
+     * on its own, it was bundled with the permission-invalidation concern
+     * cacheUpdateTime provided).
+     */
+    public static function searchResults(): CacheItemPoolInterface
+    {
+        return CacheFactory::create(namespace: 'piwigo.search_results', defaultLifetime: 30);
+    }
+
+    /**
+     * 30s TTL -- same reasoning as permissions() above. Gap-closure Stage
+     * 4a: replaces the `cache_update_time`-keyed pattern previously used by
+     * Calendar\CalendarRenderer's calendar navigation-bar cache.
+     */
+    public static function calendarNav(): CacheItemPoolInterface
+    {
+        return CacheFactory::create(namespace: 'piwigo.calendar_nav', defaultLifetime: 30);
+    }
+
+    /**
+     * 30s TTL -- same reasoning as permissions() above. Gap-closure Stage
+     * 4a: replaces the `cache_update_time`-keyed pattern previously used by
+     * Notification\NotificationService::getRecentPostDates().
+     */
+    public static function notifications(): CacheItemPoolInterface
+    {
+        return CacheFactory::create(namespace: 'piwigo.notifications', defaultLifetime: 30);
+    }
 }

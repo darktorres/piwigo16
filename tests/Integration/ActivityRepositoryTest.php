@@ -63,7 +63,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
                     'sessionIdx' => 'sess-1',
                     'ipAddress' => '10.0.0.1',
                     'occuredOn' => '2026-07-12 00:00:00',
-                    'details' => 'a:0:{}',
+                    'details' => [],
                     'userAgent' => 'test-agent',
                 ],
                 [
@@ -74,7 +74,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
                     'sessionIdx' => 'sess-1',
                     'ipAddress' => null,
                     'occuredOn' => '2026-07-12 00:00:01',
-                    'details' => 'a:0:{}',
+                    'details' => [],
                     'userAgent' => null,
                 ],
             ]);
@@ -114,7 +114,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             'sessionIdx' => 'sess-1',
             'ipAddress' => null,
             'occuredOn' => '2026-07-12 00:00:00',
-            'details' => 'a:0:{}',
+            'details' => [],
             'userAgent' => null,
         ]]);
 
@@ -193,7 +193,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             'sessionIdx' => 'sess-1',
             'ipAddress' => null,
             'occuredOn' => '2026-07-12 00:00:00',
-            'details' => 'a:0:{}',
+            'details' => [],
             'userAgent' => null,
         ]]);
 
@@ -232,7 +232,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             'sessionIdx' => 'sess-1',
             'ipAddress' => null,
             'occuredOn' => '2026-07-12 00:00:00',
-            'details' => 'a:0:{}',
+            'details' => [],
             'userAgent' => null,
         ]]);
 

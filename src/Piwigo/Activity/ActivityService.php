@@ -106,7 +106,6 @@ final readonly class ActivityService implements ActivityLoggerInterface
             $details['destination_tag'] = $_POST['destination_tag'];
         }
 
-        $detailsInsert = serialize($details);
         $ipAddress = isset($_SERVER['REMOTE_ADDR']) && is_string($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null;
         $sessionId = session_id();
         $sessionIdx = $sessionId !== false && $sessionId !== '' ? $sessionId : 'none';
@@ -152,7 +151,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
                 'sessionIdx' => $sessionIdx,
                 'ipAddress' => $ipAddress,
                 'occuredOn' => $occuredOn,
-                'details' => $detailsInsert,
+                'details' => $details,
                 'userAgent' => $userAgent,
             ];
         }

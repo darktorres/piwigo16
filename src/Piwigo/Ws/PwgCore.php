@@ -675,12 +675,7 @@ SELECT
                         $prev_object_ids[] = $row_object_id;
                         $output_lines[$last_idx]['object_id'] = $prev_object_ids;
                     } else {
-                        $row_details = str_replace('`groups`', 'groups', $row_details);
-                        $row_details = str_replace('`rank`', 'rank', $row_details);
-                        $details = @unserialize($row_details);
-                        if (! is_array($details)) {
-                            $details = [];
-                        }
+                        $details = \Piwigo\Core\ArrayHelper::safeJsonDecode($row_details);
                         $detailsType = null;
 
                         if (isset($row['user_agent'])) {

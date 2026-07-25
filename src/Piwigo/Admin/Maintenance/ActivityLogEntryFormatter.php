@@ -34,8 +34,7 @@ final class ActivityLogEntryFormatter
         $action_icon = '';
         $action_color = '';
         $action = $row['action'];
-        $details = is_string($row['details']) ? unserialize($row['details']) : false;
-        $details = is_array($details) ? $details : [];
+        $details = is_array($row['details']) ? $row['details'] : [];
         $detail = [
             'type' => 'empty',
         ];

@@ -18,7 +18,7 @@ CREATE TABLE `piwigo_activity` (
   `session_idx` varchar(255) NOT NULL,
   `ip_address` varchar(50) DEFAULT NULL,
   `occured_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `details` varchar(255) DEFAULT NULL,
+  `details` JSON DEFAULT NULL,
   `user_agent` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`activity_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

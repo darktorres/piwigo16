@@ -86,7 +86,7 @@ test('core maintenance action looks up its icon/label from maint_actions', funct
     $entry = new ActivityLogEntryFormatter()->format(
         makeActivityRow([
             'action' => 'maintenance',
-            'details' => serialize(['maintenance_action' => 'user_cache']),
+            'details' => ['maintenance_action' => 'user_cache'],
         ]),
         $maintActions
     );
@@ -101,7 +101,7 @@ test('core maintenance action falls back to the raw action name when unknown to 
     $entry = new ActivityLogEntryFormatter()->format(
         makeActivityRow([
             'action' => 'maintenance',
-            'details' => serialize(['maintenance_action' => 'some_future_action']),
+            'details' => ['maintenance_action' => 'some_future_action'],
         ]),
         [] // empty_lounge's own drift bug fix: this action must resolve even
            // when $maintActions doesn't have the entry (e.g. a plugin-added
@@ -117,7 +117,7 @@ test('core config action with a known section', function (): void {
     $entry = new ActivityLogEntryFormatter()->format(
         makeActivityRow([
             'action' => 'config',
-            'details' => serialize(['config_section' => 'watermark']),
+            'details' => ['config_section' => 'watermark'],
         ]),
         []
     );
@@ -132,7 +132,7 @@ test('plugin delete action reports db and filesystem version details', function 
         makeActivityRow([
             'object_id' => ActivitySystem::Plugin,
             'action' => 'delete',
-            'details' => serialize(['plugin_id' => 'my_plugin', 'db_version' => '1.2.3', 'fs_version' => '1.2.4']),
+            'details' => ['plugin_id' => 'my_plugin', 'db_version' => '1.2.3', 'fs_version' => '1.2.4'],
         ]),
         []
     );
@@ -154,7 +154,7 @@ test('theme set_default action', function (): void {
         makeActivityRow([
             'object_id' => ActivitySystem::Theme,
             'action' => 'set_default',
-            'details' => serialize(['theme_id' => 'my-theme']),
+            'details' => ['theme_id' => 'my-theme'],
         ]),
         []
     );
@@ -180,7 +180,7 @@ test('from_version detail overrides the object/action-specific detail', function
         makeActivityRow([
             'object_id' => ActivitySystem::Plugin,
             'action' => 'update',
-            'details' => serialize(['plugin_id' => 'x', 'from_version' => '1.0', 'to_version' => '2.0']),
+            'details' => ['plugin_id' => 'x', 'from_version' => '1.0', 'to_version' => '2.0'],
         ]),
         []
     );
@@ -193,7 +193,7 @@ test('from_version detail overrides the object/action-specific detail', function
 
 test('version-only detail is formatted as a version badge', function (): void {
     $entry = new ActivityLogEntryFormatter()->format(
-        makeActivityRow(['details' => serialize(['version' => '3.1.4'])]),
+        makeActivityRow(['details' => ['version' => '3.1.4']]),
         []
     );
 
@@ -202,7 +202,7 @@ test('version-only detail is formatted as a version badge', function (): void {
 
 test('result-only detail is formatted as an error badge', function (): void {
     $entry = new ActivityLogEntryFormatter()->format(
-        makeActivityRow(['details' => serialize(['result' => 'failed'])]),
+        makeActivityRow(['details' => ['result' => 'failed']]),
         []
     );
 

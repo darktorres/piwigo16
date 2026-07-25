@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Activity;
 
+use Piwigo\Core\ArrayHelper;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 
@@ -25,7 +26,7 @@ final class ActivityRepository extends AbstractRepository
      *   sessionIdx: string,
      *   ipAddress: ?string,
      *   occuredOn: string,
-     *   details: string,
+     *   details: array<string, mixed>,
      *   userAgent: ?string,
      * }> $rows
      */
@@ -52,7 +53,7 @@ final class ActivityRepository extends AbstractRepository
                 ->setParameter('sessionIdx', $row['sessionIdx'])
                 ->setParameter('ipAddress', $row['ipAddress'])
                 ->setParameter('occuredOn', $row['occuredOn'])
-                ->setParameter('details', $row['details'])
+                ->setParameter('details', json_encode($row['details']))
                 ->setParameter('userAgent', $row['userAgent'])
                 ->executeStatement();
         }
@@ -151,6 +152,11 @@ final class ActivityRepository extends AbstractRepository
      * $idColumn are the configurable DB column names (see
      * \Piwigo\Config\CurrentConfig::userFields()), not user-controlled.
      *
+     * `details` stays the raw JSON text here, not decoded to `?array` --
+     * the CSV export writes it out as one opaque column value, unlike
+     * {@see findSystemObjectLogWithUsernames()}'s own consumer, which does
+     * structured `$details['key']` access and needs the real array.
+     *
      * @return list<array{
      *   activity_id: int,
      *   performed_by: ?int,
@@ -207,13 +213,19 @@ final class ActivityRepository extends AbstractRepository
      * user id specifically is impossible under this FK (deletion always
      * nulls it), so that's not a distinct case to preserve.
      *
+     * `details` is decoded to `?array` here (unlike
+     * {@see findUserObjectLogWithUsernames()}'s own raw string) -- its one
+     * real consumer, {@see \Piwigo\Admin\Maintenance\ActivityLogEntryFormatter},
+     * does structured `$details['key']` access and used to `unserialize()`
+     * it itself.
+     *
      * @return list<array{
      *   activity_id: int,
      *   performed_by: ?int,
      *   object_id: int,
      *   action: string,
      *   occured_on: string,
-     *   details: ?string,
+     *   details: array<string, mixed>|null,
      *   username: ?string,
      * }>
      */
@@ -235,7 +247,9 @@ final class ActivityRepository extends AbstractRepository
                 'object_id' => is_numeric($row['object_id']) ? (int) $row['object_id'] : 0,
                 'action' => is_string($row['action']) ? $row['action'] : '',
                 'occured_on' => is_string($row['occured_on']) ? $row['occured_on'] : '',
-                'details' => is_string($row['details']) ? $row['details'] : null,
+                'details' => is_string($row['details'])
+                    ? array_filter(ArrayHelper::safeJsonDecode($row['details']), is_string(...), ARRAY_FILTER_USE_KEY)
+                    : null,
                 'username' => is_string($row['username']) ? $row['username'] : null,
             ],
             $rows

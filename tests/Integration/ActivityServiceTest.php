@@ -317,7 +317,7 @@ final class ActivityServiceTest extends IntegrationTestCase
             return null;
         }
 
-        $details = unserialize($value);
+        $details = json_decode($value, true);
         if (! is_array($details)) {
             return null;
         }

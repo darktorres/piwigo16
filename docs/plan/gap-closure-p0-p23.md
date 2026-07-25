@@ -485,6 +485,28 @@ Visual 34/34 (including the `admin-dashboard` baseline the fixture fix protected
   `str_replace()` pre-cleanup, if still needed under real JSON) with a repository-level
   read.
 
+**Item 4 — DONE.** `findUserObjectLogWithUsernames()` (feeds the CSV export, dumps `details`
+as one opaque column) deliberately kept `details: ?string` -- only `findSystemObjectLogWithUsernames()`
+(feeds `ActivityLogEntryFormatter`, does structured `$details['key']` access) decodes to
+`?array` now; `insertMany()` takes a real array and `json_encode()`s internally.
+`Ws/PwgCore.php`'s bypass (`getActivityList()`/`pwg.activity.list`, a dynamic multi-filter
+paginated query with no fixed WHERE clause matching either named repository method) kept
+its own raw SQL -- narrowly scoped to swapping just the decode call
+(`ArrayHelper::safeJsonDecode()` for `@unserialize()`), dropping the now-vestigial
+`str_replace('`groups`'/'`rank`', ...)` pre-cleanup (a legacy-data workaround for
+backtick-corrupted old serialize() blobs that JSON encoding can't produce). Found via this
+sweep, not called out in the plan: this same `getActivityList()` query reads details across
+*every* object type (no `object=` filter by default), not just `system` rows as first
+assumed -- the fixture actually had 18 pre-existing `serialize()`-blob `piwigo_activity`
+rows (not just the 1 `object='system'` row), all of which would have silently decoded to
+`[]` under naive `json_decode()`. Re-encoded all 18 to their JSON equivalent via a throwaway
+script (parses the fixture's mysqldump-style `INSERT ... VALUES (...),(...)` tuples
+respecting quote-escaping, `unserialize()`s + `json_encode()`s each `details` field,
+verified byte-identical elsewhere via diff and a scratch-DB reimport). Verified: scoped
+PHPStan/ECS/deptrac clean; full Unit 615/615, Arch clean, Integration 660/660, Contract
+94/94, Browser 68/68, Visual 34/34 (`admin-history`/`admin-maintenance` baselines, which
+render `ActivityLogEntryFormatter` output, held). Item 5 (`config.value`) starts next.
+
 **5. `config.value`'s EAV storage — real fix, not deferred**
 
 Replace `ConfigService`'s per-PHP-type encoding convention (`'true'`/`'false'` strings,

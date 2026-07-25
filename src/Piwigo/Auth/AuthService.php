@@ -303,9 +303,8 @@ final readonly class AuthService
         $fake_user = $this->generateFakeUser();
 
         // Verify password with fallback to fake user
-        $hash = $user_found['password'] ?? $fake_user['password'];
-        assert(is_string($hash));
-        $verify_user_id = $user_found['id'] ?? $fake_user['id'];
+        $hash = $user_found->password ?? $fake_user['password'];
+        $verify_user_id = $user_found->id ?? $fake_user['id'];
         if ($verify_user_id !== null) {
             assert(is_numeric($verify_user_id));
             $verify_user_id = (int) $verify_user_id;
@@ -313,11 +312,9 @@ final readonly class AuthService
         $password_verify = $this->passwordService->verify($password ?? '', $hash, $verify_user_id);
 
         // If the user was not found, is a guest, or the password is incorrect
-        if ($user_found === null || $user_found === [] || $user_found['status'] === 'guest' || ! $password_verify) {
-            if ($user_found !== null && $user_found !== [] && ! $password_verify) {
-                $found_user_id = $user_found['id'];
-                assert(is_string($found_user_id));
-                $this->activityLogger->record('user', $found_user_id, 'login_failure_wrong_password');
+        if ($user_found === null || $user_found->status === 'guest' || ! $password_verify) {
+            if ($user_found !== null && ! $password_verify) {
+                $this->activityLogger->record('user', $user_found->id, 'login_failure_wrong_password');
             }
             \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('login_failure', stripslashes($username));
             return false;
@@ -354,18 +351,15 @@ final readonly class AuthService
         $authenticated = is_array($state) && (bool) ($state['authenticated'] ?? null);
 
         if (! $can_login) {
-            $found_user_id = $user_found['id'];
-            assert(is_string($found_user_id));
-            $this->activityLogger->record('user', $found_user_id, is_string($reason) ? $reason : 'login_failure_before_log_user');
+            $this->activityLogger->record('user', $user_found->id, is_string($reason) ? $reason : 'login_failure_before_log_user');
             \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('login_failure_before_log_user', stripslashes($username));
             return false;
         }
 
         // If plugin handled authentication, skip log_user()
         if (! $authenticated) {
-            $found_user_id = $user_found['id'];
-            assert(is_string($found_user_id) && is_numeric($found_user_id));
-            $this->logUser($found_user_id, $rememberMe);
+            assert(is_numeric($user_found->id));
+            $this->logUser($user_found->id, $rememberMe);
         }
 
         $this->clearFakeUserCache();
@@ -377,9 +371,8 @@ final readonly class AuthService
      * Find user by username or email search by username first then email.
      *
      * @since 16
-     * @return array<string, mixed>|null
      */
-    public function findUserByUsernameOrEmail(string $usernameOrEmail): ?array
+    public function findUserByUsernameOrEmail(string $usernameOrEmail): ?\Piwigo\Auth\Projection\AuthUser
     {
 
         // see UserService::validateMailAddress() for why this is string=>string
@@ -480,26 +473,26 @@ final readonly class AuthService
         $now = Env::now();
 
         // is the key still valid?
-        if (strtotime($key['expired_on']) < $now->getTimestamp()) {
+        if (strtotime($key->expiredOn) < $now->getTimestamp()) {
             \Piwigo\Core\PageState::current()->markAuthKeyInvalid();
             return false;
         }
 
         // admin/webmaster/guest can't get connected with authentication keys
-        if ($valid_key === 'auth_key' and ! in_array($key['status'], ['normal', 'generic'], true)) {
+        if ($valid_key === 'auth_key' and ! in_array($key->status, ['normal', 'generic'], true)) {
             return false;
         }
 
         // the key is an api_key
         if ($valid_key === 'api_key') {
             // check secret
-            $apikey_secret = $key['apikey_secret'];
+            $apikey_secret = $key->apikeySecret;
             if ($apikey_secret === null || ! $this->passwordService->verify($secret_key, $apikey_secret)) {
                 return false;
             }
 
             // is the key is revoked?
-            if ($key['revoked_on'] !== null) {
+            if ($key->revokedOn !== null) {
                 return false;
             }
 
@@ -507,34 +500,34 @@ final readonly class AuthService
             // calendar-day (not 24h-period) difference, sign-aware; matched
             // here via two date-only DateTimeImmutable instances rather
             // than a raw timestamp subtraction.
-            $expiredOnDateOnly = new \DateTimeImmutable(substr($key['expired_on'], 0, 10));
+            $expiredOnDateOnly = new \DateTimeImmutable(substr($key->expiredOn, 0, 10));
             $nowDateOnly = new \DateTimeImmutable($now->format('Y-m-d'));
             $days_left = (int) $nowDateOnly->diff($expiredOnDateOnly)
                 ->format('%r%a');
             $fortyEightHoursAgo = (clone $now)->modify('-48 hours');
             if (
                 $days_left <= 7 // the key expire in max 7 days
-                and $key['email'] !== '' // the user have an email
+                and $key->email !== '' // the user have an email
                 and (
-                    $key['last_notified_on'] === null // we never send an email for this key
-                    or strtotime($key['last_notified_on']) < $fortyEightHoursAgo->getTimestamp() // OR when the last email was sent more than 48 hours ago
+                    $key->lastNotifiedOn === null // we never send an email for this key
+                    or strtotime($key->lastNotifiedOn) < $fortyEightHoursAgo->getTimestamp() // OR when the last email was sent more than 48 hours ago
                 )
             ) {
                 \Piwigo\Core\PageState::current()->setNotifyApiKeyExpiration([
                     'days_left' => $days_left,
                     'dbnow' => $now->format('Y-m-d H:i:s'),
-                    'auth_key' => $key['auth_key'],
+                    'auth_key' => $key->authKey,
                 ]);
             }
         }
 
-        $key_user_id = $key['user_id'];
+        $key_user_id = $key->userId;
         // user_id is a NOT NULL FK column, always a numeric string --
         // narrows for logUser()'s own numeric-string docblock type.
         assert(is_numeric($key_user_id));
 
         // update last used key
-        $this->repo->touchAuthKeyLastUsed($key_user_id, $key['auth_key'], $now);
+        $this->repo->touchAuthKeyLastUsed($key_user_id, $key->authKey, $now);
 
         // set the type of connection
         $_SESSION['connected_with'] = $valid_key;
@@ -547,10 +540,10 @@ final readonly class AuthService
         }
 
         $this->logUser($key_user_id, false);
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('login_success', $key['username']);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('login_success', $key->username);
 
         // to be registered in history table by HistoryService::logVisit()
-        \Piwigo\Core\PageState::current()->setAuthKeyId((int) $key['auth_key_id']);
+        \Piwigo\Core\PageState::current()->setAuthKeyId((int) $key->authKeyId);
 
         return true;
     }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use Piwigo\Auth\Projection\AuthKeyDetails;
+use Piwigo\Auth\Projection\AuthUser;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 
@@ -70,8 +72,6 @@ final class AuthRepository extends AbstractRepository
      * original's own two-query try-username-then-email order (needed
      * because $usernameColumn/$emailColumn are runtime-configurable via
      * \Piwigo\Config\CurrentConfig::userFields(), not always literally 'username'/'email').
-     *
-     * @return array{id: string, username: string, email: string, password: string, status: string}|null
      */
     public function findByUsernameOrEmail(
         string $usernameOrEmail,
@@ -79,7 +79,7 @@ final class AuthRepository extends AbstractRepository
         string $usernameColumn,
         string $emailColumn,
         string $passwordColumn
-    ): ?array {
+    ): ?AuthUser {
         $qb = $this->conn->createQueryBuilder()
             ->select(
                 'u.' . $idColumn . ' AS id',
@@ -102,19 +102,7 @@ final class AuthRepository extends AbstractRepository
                 ->fetchAssociative();
         }
 
-        if ($row === false) {
-            return null;
-        }
-
-        return [
-            'id' => is_scalar($row['id']) ? (string) $row['id'] : '',
-            'username' => is_string($row['username']) ? $row['username'] : '',
-            'email' => is_string($row['email']) ? $row['email'] : '',
-            'password' => is_string($row['password']) ? $row['password'] : '',
-            // the user may not exist in user_infos, so default to 'normal'
-            // -- matches the original's `$user['status'] ??= 'normal';`
-            'status' => is_string($row['status']) ? $row['status'] : 'normal',
-        ];
+        return $row === false ? null : AuthUser::fromRow($row);
     }
 
     /**
@@ -122,15 +110,8 @@ final class AuthRepository extends AbstractRepository
      * or null when no such key exists. Every value that was a SQL-computed
      * pseudo-column in the original (NOW(), DATEDIFF, SUBDATE) is left to
      * the caller to compute from \Piwigo\Core\Env::now() instead.
-     *
-     * @return array{
-     *   auth_key_id: string, user_id: string, auth_key: string,
-     *   expired_on: string, revoked_on: ?string, last_used_on: ?string,
-     *   last_notified_on: ?string, apikey_secret: ?string, status: string,
-     *   username: string, email: string,
-     * }|null
      */
-    public function findAuthKeyDetails(string $authKey, string $idColumn, string $usernameColumn, string $emailColumn): ?array
+    public function findAuthKeyDetails(string $authKey, string $idColumn, string $usernameColumn, string $emailColumn): ?AuthKeyDetails
     {
         $row = $this->conn->createQueryBuilder()
             ->select(
@@ -154,23 +135,7 @@ final class AuthRepository extends AbstractRepository
             ->executeQuery()
             ->fetchAssociative();
 
-        if ($row === false) {
-            return null;
-        }
-
-        return [
-            'auth_key_id' => is_scalar($row['auth_key_id']) ? (string) $row['auth_key_id'] : '',
-            'user_id' => is_scalar($row['user_id']) ? (string) $row['user_id'] : '',
-            'auth_key' => is_scalar($row['auth_key']) ? (string) $row['auth_key'] : '',
-            'expired_on' => is_scalar($row['expired_on']) ? (string) $row['expired_on'] : '',
-            'revoked_on' => is_scalar($row['revoked_on']) ? (string) $row['revoked_on'] : null,
-            'last_used_on' => is_scalar($row['last_used_on']) ? (string) $row['last_used_on'] : null,
-            'last_notified_on' => is_scalar($row['last_notified_on']) ? (string) $row['last_notified_on'] : null,
-            'apikey_secret' => is_scalar($row['apikey_secret']) ? (string) $row['apikey_secret'] : null,
-            'status' => is_string($row['status']) ? $row['status'] : '',
-            'username' => is_string($row['username']) ? $row['username'] : '',
-            'email' => is_string($row['email']) ? $row['email'] : '',
-        ];
+        return $row === false ? null : AuthKeyDetails::fromRow($row);
     }
 
     public function touchAuthKeyLastUsed(int|string $userId, string $authKey, \DateTimeInterface $lastUsedOn): void

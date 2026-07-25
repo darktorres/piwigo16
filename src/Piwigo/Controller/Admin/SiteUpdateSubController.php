@@ -887,12 +887,7 @@ DELETE
 
                 $datas = [];
                 foreach ($files as $id => $file) {
-                    // get_filelist() returns each row keyed by id: always the
-                    // full fetchAssociative() row array (string keys =
-                    // id/path/representative_ext column names, string|null values).
-                    assert(is_array($file));
-                    /** @var array<string, string|null> $file */
-                    $path = $file['path'] ?? '';
+                    $path = is_string($file['path'] ?? null) ? $file['path'] : '';
                     $data = $site_reader->get_element_update_attributes($path);
                     $data['id'] = $id;
                     $datas[] = $data;
@@ -975,11 +970,6 @@ DELETE
             $tagService = new TagService(new TagRepository($conn), self::permissionService($conn), self::activityService($conn));
 
             foreach ($files as $id => $element_infos) {
-                // get_filelist() returns each row keyed by id: always the
-                // full fetchAssociative() row array (string keys = column
-                // names, string|null values).
-                assert(is_array($element_infos));
-                /** @var array<string, string|null> $element_infos */
                 $data = $site_reader->get_element_metadata($element_infos);
 
                 if (is_array($data)) {

@@ -70,7 +70,7 @@ final class MetadataRepositoryTest extends IntegrationTestCase
         // anything, pre-existing and unrelated to the sibling double-slash
         // bug (CurrentConfig::uploadDir() already ending in '/') fixed alongside
         // this same investigation.
-        self::assertStringContainsString('upload/2026/08/01/', $rows[0]['path'] . $rows[1]['path']);
+        self::assertStringContainsString('upload/2026/08/01/', $rows[0]->path . $rows[1]->path);
     }
 
     public function test_find_images_by_ids_returns_empty_for_no_ids(): void
@@ -113,7 +113,7 @@ final class MetadataRepositoryTest extends IntegrationTestCase
         $result = $this->repo->findImagesByStorageCategoryIds([1], false);
 
         self::assertSame([1, 2, 3], array_keys($result));
-        self::assertSame(1, $result[1]['id']);
+        self::assertSame(1, $result[1]->id);
     }
 
     public function test_find_images_by_storage_category_ids_filters_only_new(): void

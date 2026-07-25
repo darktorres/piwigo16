@@ -7,6 +7,7 @@ namespace Piwigo\Metadata;
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
+use Piwigo\Metadata\Projection\MetadataImage;
 
 /**
  * Persistence layer for the 2 genuinely data-touching functions formerly
@@ -22,7 +23,7 @@ final class MetadataRepository extends AbstractRepository
 {
     /**
      * @param  list<int>  $ids
-     * @return list<array{id: int, path: string, representative_ext: string|null}>
+     * @return list<MetadataImage>
      */
     public function findImagesByIds(array $ids): array
     {
@@ -38,14 +39,7 @@ final class MetadataRepository extends AbstractRepository
             ->executeQuery()
             ->fetchAllAssociative();
 
-        return array_map(
-            static fn (array $row): array => [
-                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
-                'path' => is_string($row['path']) ? $row['path'] : '',
-                'representative_ext' => is_string($row['representative_ext']) ? $row['representative_ext'] : null,
-            ],
-            $rows
-        );
+        return array_map(MetadataImage::fromRow(...), $rows);
     }
 
     /**
@@ -81,7 +75,7 @@ final class MetadataRepository extends AbstractRepository
      * `hash_from_query($query, 'id')` shape.
      *
      * @param  list<int>  $categoryIds
-     * @return array<int, array{id: int, path: string, representative_ext: string|null}>
+     * @return array<int, MetadataImage>
      */
     public function findImagesByStorageCategoryIds(array $categoryIds, bool $onlyNew): array
     {
@@ -104,16 +98,8 @@ final class MetadataRepository extends AbstractRepository
 
         $result = [];
         foreach ($rows as $row) {
-            $id = is_numeric($row['id']) ? (int) $row['id'] : null;
-            if ($id === null) {
-                continue;
-            }
-
-            $result[$id] = [
-                'id' => $id,
-                'path' => is_string($row['path']) ? $row['path'] : '',
-                'representative_ext' => is_string($row['representative_ext']) ? $row['representative_ext'] : null,
-            ];
+            $image = MetadataImage::fromRow($row);
+            $result[$image->id] = $image;
         }
 
         return $result;

@@ -531,7 +531,7 @@ final readonly class MetadataService
         $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn), new CategoryRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
 
         foreach ($this->repo->findImagesByIds($ids) as $row) {
-            $data = $this->getSyncMetadata($row);
+            $data = $this->getSyncMetadata($row->toArray());
             if ($data === false) {
                 continue;
             }
@@ -578,7 +578,7 @@ final readonly class MetadataService
      * Returns an array associating element id (images.id) with its
      * complete path in the filesystem.
      *
-     * @return array<int, mixed>
+     * @return array<int, array<string, mixed>>
      */
     public function getFilelist(int|string $categoryId = '', int $siteId = 1, bool $recursive = false, bool $onlyNew = false): array
     {
@@ -588,7 +588,15 @@ final readonly class MetadataService
             return [];
         }
 
-        return $this->repo->findImagesByStorageCategoryIds($catIds, $onlyNew);
+        // Both real callers (SiteUpdateSubController) treat each row as a
+        // growable data bag, merging in more fields before it feeds their
+        // own batch update -- converted back to array form here, at this
+        // boundary, rather than widening their own dynamic shape to also
+        // understand a real MetadataImage object.
+        return array_map(
+            static fn (\Piwigo\Metadata\Projection\MetadataImage $image): array => $image->toArray(),
+            $this->repo->findImagesByStorageCategoryIds($catIds, $onlyNew)
+        );
     }
 
     /**

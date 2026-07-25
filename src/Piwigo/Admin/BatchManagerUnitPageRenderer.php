@@ -53,13 +53,20 @@ use Piwigo\Template\Template;
  * rendering a filesystem path instead of a URL) is a real, if minor, side
  * effect of that constant's removal being a strict improvement, not scope
  * creep -- it had no other fix available once the constant was gone.
- *  - the "$storage_category_id" block below the images query reads
- *    whatever $row the earlier "unit mode form submission" while-loop left
- *    behind (or undefined, if that block didn't run) rather than the
- *    current image's own row -- so STORAGE_CATEGORY highlighting never
- *    triggers for the correct album in practice. Documented in the
- *    original file as a known, not-fixed-here bug; carried forward
- *    verbatim.
+ *
+ * Real bug fixed during gap-closure Stage 1b (the original file documented
+ * it as a known, not-fixed-here issue, carried forward verbatim until now):
+ * `$storage_category_id` used to be computed once, before the per-image
+ * `foreach ($images as $row)` loop, from whatever `$row` the earlier "unit
+ * mode form submission" loop above happened to leave behind (or undefined,
+ * if that block didn't run) -- never the current image's own row, so the
+ * STORAGE_CATEGORY highlighting below never triggered for the correct
+ * album. It's now computed fresh inside the per-image loop, from that
+ * image's own `storage_category_id` column, and compared as a real `int`
+ * against `$item_category_id` (also `int|string` depending on the driver)
+ * instead of the original's own `is_string()`-only check, which would
+ * have failed the `===` comparison outright under Doctrine DBAL's native
+ * int return for this column even with the correct row.
  */
 final class BatchManagerUnitPageRenderer
 {
@@ -355,24 +362,6 @@ SELECT
                 $added_by_username_of = array_column($conn->fetchAllAssociative($query), 'username', 'id');
             }
 
-            // NOTE (pre-existing bug, not fixed here): $row is not defined by a
-            // per-image loop at this point -- it is whatever the earlier
-            // "unit mode form submission" foreach (above) left behind (or
-            // undefined, if that block didn't run), not the current image's
-            // row. $storage_category_id is therefore effectively always null in
-            // practice, and the STORAGE_CATEGORY highlighting below never
-            // triggers for the correct album. The isset() guard here only
-            // preserves the current (buggy) runtime behavior for PHPStan
-            // (is_array($row) is now provably redundant: the only assignment
-            // site is a foreach over fetchAllAssociative() rows, always arrays).
-            $storage_category_id = null;
-            if (isset($row)
-                && is_string($row['storage_category_id'] ?? null)
-                && $row['storage_category_id'] !== ''
-                && $row['storage_category_id'] !== '0') {
-                $storage_category_id = $row['storage_category_id'];
-            }
-
             $tagService = self::tagService($conn);
             $imageService = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)));
 
@@ -387,6 +376,11 @@ SELECT
                 $row_id_str = (string) $row_id;
 
                 $element_ids[] = $row_id;
+
+                // This image's own storage category (the album it's physically
+                // stored under), used below to highlight STORAGE_CATEGORY among
+                // its linked categories.
+                $storage_category_id = is_numeric($row['storage_category_id'] ?? null) ? (int) $row['storage_category_id'] : null;
 
                 $src_image = new SrcImage($row);
 
@@ -442,6 +436,12 @@ SELECT
                         continue;
                     }
                     $item_category_id = $item['category_id'];
+                    // Real category ids are always numeric, whether the driver
+                    // handed back this int|string column as a native int or a
+                    // numeric string -- normalized once here so the comparison
+                    // against $storage_category_id (a real int) below is a
+                    // reliable ===, not a driver-dependent type mismatch.
+                    $item_category_id_int = (int) $item_category_id;
 
                     $name =
                       $htmlRenderer->getCatDisplayNameCache(
@@ -449,13 +449,13 @@ SELECT
                           $this->urlService->getRootUrl() . 'admin.php?page=album-'
                       );
 
-                    if ($item_category_id === $storage_category_id) {
+                    if ($item_category_id_int === $storage_category_id) {
                         $template->assign('STORAGE_CATEGORY', $name);
                     }
 
                     $related_categories[$item_category_id] = [
                         'name' => $name,
-                        'unlinkable' => $item_category_id !== $storage_category_id,
+                        'unlinkable' => $item_category_id_int !== $storage_category_id,
                     ];
                     $related_category_ids[] = $item_category_id;
                 }

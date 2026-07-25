@@ -87,13 +87,19 @@ happens to contain a `Projection/` folder (e.g. `Auth/Projection/ApiKey.php` exi
   landed before Comment/Activity, which landed before the plan's own "remaining 26"
   step. Fine per the plan's own "detail worked out at implementation time" allowance.
 - `BatchManagerUnitPageRenderer.php`'s stale-`$row` bug (lines ~364–374, called out as
-  "fix along the way") is **still open, and misattributed in this plan's own text** — on
-  inspection it's entirely `Tables::images()`/`ImageRepository` code (the file's own
-  docblock documents it as a known, deliberately-not-fixed-here carry-forward from the
-  original P23 port), not Comment or Activity. `ImageRepository`'s own Stage 1b pass
-  already happened (see "Done" above) and missed it — a real, verified gap, not this
-  session's to fix; flagged for a future Image-domain follow-up rather than bundled in
-  here on a false premise.
+  "fix along the way") was **misattributed in this plan's own text** — on inspection it's
+  entirely `Tables::images()`/`ImageRepository` code (the file's own docblock documented
+  it as a known, deliberately-not-fixed-here carry-forward from the original P23 port),
+  not Comment or Activity; `ImageRepository`'s own Stage 1b pass (see "Done" above) had
+  already happened and missed it. **Fixed 2026-07-25, as its own follow-up** (not bundled
+  into Comment/Activity on the false premise): `$storage_category_id` is now computed
+  fresh inside the per-image `foreach ($images as $row)` loop from that image's own row,
+  instead of once beforehand from whatever `$row` an unrelated earlier loop happened to
+  leave behind. A second, independent bug in the same 2 lines was found and fixed in the
+  same pass: the comparison itself used `is_string($row['storage_category_id'] ?? null)`
+  and a bare `===` against `$item_category_id` (`int|string` depending on the driver) —
+  under Doctrine DBAL's native `int` return for this column, that `===` would have failed
+  even with the correct row. Both sides now normalize to a real `int` before comparing.
 
 **Stage 1c — Per-namespace Unit test coverage: 1 of 11 caught up, 2026-07-25.** `Audit`,
 `Caddie`, `Calendar`, `Group`, `History`, `Metadata`, `Permission`, `Picture`, `Site`,

@@ -14,12 +14,10 @@ namespace Piwigo\Ws;
 use LogicException;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ExtensionLifecycle;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
-use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Auth\AccessControl;
@@ -379,8 +377,8 @@ final class PwgExtensions
     public static function checkUpdates(array $params, PwgServer &$service): array
     {
         $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
-        $coreUpdateService = new CoreUpdateService(new ZipExtractor(), new RedirectService(), $urlService, CurrentConfigService::get(), \Piwigo\Core\CurrentPaths::get());
-        $updateChecker = new ExtensionUpdateChecker(new ExtensionScanner(), new PemCatalog(new ZipExtractor()), $urlService, CurrentConfigService::get());
+        $coreUpdateService = \Piwigo\Bootstrap\AdminAccessor::coreUpdateService();
+        $updateChecker = \Piwigo\Bootstrap\AdminAccessor::extensionUpdateChecker();
         $result = [];
 
         if (! isset($_SESSION['need_update' . AppInfo::VERSION])) {

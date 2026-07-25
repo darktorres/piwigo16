@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -146,7 +145,7 @@ SELECT id
             if (str_starts_with($order_by_field, 'date_')) {
                 $order_by_date = true;
 
-                $ref_dates = new CategoryAdminService($categoryService)
+                $ref_dates = \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()
                     ->getCategoriesRefDate($category_ids, $order_by_field, $order_by_asc === 'ASC' ? 'min' : 'max');
             }
 

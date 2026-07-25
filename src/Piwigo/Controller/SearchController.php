@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -15,7 +14,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
@@ -41,11 +39,6 @@ final class SearchController implements ControllerInterface
         return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
     }
 
-    private static function categoryService(): CategoryService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
-    }
-
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
@@ -54,14 +47,7 @@ final class SearchController implements ControllerInterface
         // restores, and avoids the needless-reconnection pattern found
         // in earlier construction-chain debt (Phase 1d finding).
         $conn = DbConnection::build();
-        $searchService = new SearchService(
-            new SearchRepository($conn),
-            self::permissionService(),
-            self::categoryService(),
-            \Piwigo\Bootstrap\PresentationAccessor::mailService(),
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-            $this->redirectService,
-        );
+        $searchService = \Piwigo\Bootstrap\ExtendedDomainAccessor::searchService();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
@@ -117,7 +103,7 @@ final class SearchController implements ControllerInterface
         if (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric() or ! (bool) $last_filters_conf) {
             $fields = $default_fields;
         } else {
-            $raw_fields = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository($conn))
+            $raw_fields = \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
                 ->getParam('gallery_search_filters', $default_fields);
             $fields = is_array($raw_fields) ? $raw_fields : $default_fields;
         }

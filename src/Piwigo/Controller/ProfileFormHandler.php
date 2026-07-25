@@ -9,10 +9,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
-use Piwigo\Auth\CookieService;
-use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -52,14 +49,14 @@ final class ProfileFormHandler
         return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
     }
 
-    private static function passwordService(Connection $conn): PasswordService
+    private static function passwordService(): PasswordService
     {
-        return new PasswordService(new PasswordRepository($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::passwordService();
     }
 
-    private static function authService(Connection $conn): AuthService
+    private static function authService(): AuthService
     {
-        return new AuthService(new AuthRepository($conn), self::activityService($conn), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), self::passwordService($conn), new CookieService());
+        return \Piwigo\Bootstrap\CoreDomainAccessor::authService();
     }
 
     // ------------------------------------------------------ update & customization
@@ -182,7 +179,7 @@ final class ProfileFormHandler
                 $password_input = $_POST['password'] ?? null;
                 if (! is_string($current_password)
                     or ! is_string($password_input)
-                    or ! self::passwordService($conn)->verify($password_input, $current_password)) {
+                    or ! self::passwordService()->verify($password_input, $current_password)) {
                     $errors[] = Lang::t('Current password is wrong');
                 }
             }
@@ -204,9 +201,9 @@ final class ProfileFormHandler
                 $new_pwd_for_update = $_POST['use_new_pwd'] ?? null;
                 if (is_string($new_pwd_for_update) and $new_pwd_for_update !== '' and $new_pwd_for_update !== '0') {
                     $fields[] = $user_fields['password'];
-                    $data[$user_fields['password']] = self::passwordService($conn)->hash($new_pwd_for_update);
+                    $data[$user_fields['password']] = self::passwordService()->hash($new_pwd_for_update);
 
-                    self::authService($conn)->deactivateUserAuthKeys($user_id);
+                    self::authService()->deactivateUserAuthKeys($user_id);
                 }
 
                 // username is updated only if allowed
@@ -259,7 +256,7 @@ final class ProfileFormHandler
                     );
 
                 if ($mail_address !== $userdata['email']) {
-                    self::authService($conn)->deactivatePasswordResetKey($user_id);
+                    self::authService()->deactivatePasswordResetKey($user_id);
                 }
 
                 $activity_details_tables[] = 'users';

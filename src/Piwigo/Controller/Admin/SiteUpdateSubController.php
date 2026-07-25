@@ -21,8 +21,6 @@ use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
-use Piwigo\Metadata\MetadataRepository;
-use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Site\LocalSiteReader;
@@ -870,7 +868,7 @@ DELETE
                         $opts['recursive'] = false;
                     }
                 }
-                $files = new MetadataService(new MetadataRepository($conn))
+                $files = \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService()
                     ->getFilelist(
                         $opts['category_id'],
                         $site_id,
@@ -948,7 +946,7 @@ DELETE
                 }
             }
             $start = \Piwigo\Core\TimingHelper::getMoment();
-            $files = new MetadataService(new MetadataRepository($conn))
+            $files = \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService()
                 ->getFilelist(
                     $opts['category_id'],
                     $site_id,

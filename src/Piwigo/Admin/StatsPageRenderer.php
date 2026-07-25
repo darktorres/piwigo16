@@ -52,7 +52,7 @@ final class StatsPageRenderer
         // call -- an unbounded call here would rescan the entire remaining
         // `history` table in one request right after an admin uses the
         // Maintenance page's "Purge history summary" action.
-        new HistoryService(new HistoryRepository($conn), $configService)
+        \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService()
             ->summarize(50000);
 
         $template->set_filename('stats', 'stats.tpl');

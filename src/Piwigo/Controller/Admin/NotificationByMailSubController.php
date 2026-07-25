@@ -16,13 +16,8 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\NotificationByMailSender;
-use Piwigo\Notification\NotificationByMailRepository;
-use Piwigo\Notification\NotificationByMailService;
-use Piwigo\Notification\NotificationRepository;
-use Piwigo\Notification\NotificationService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -102,19 +97,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
         $conn = DbConnection::build();
-        $nbmSender = new NotificationByMailSender(
-            new NotificationByMailService(new NotificationByMailRepository($conn)),
-            new NotificationService(
-                new NotificationRepository($conn),
-                \Piwigo\Bootstrap\CoreDomainAccessor::permissionService(),
-                $htmlRenderer,
-                $this->urlService
-            ),
-            new \Piwigo\Db\BatchWriter($conn),
-            new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), $htmlRenderer, $conn),
-            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), $htmlRenderer, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService()),
-            $this->urlService
-        );
+        $nbmSender = \Piwigo\Bootstrap\PresentationAccessor::notificationByMailSender();
 
         new \Piwigo\Validation\InputValidator()
             ->validate('mode', $_GET, false, '/^(param|subscribe|send)$/');

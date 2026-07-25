@@ -4,15 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Doctrine\DBAL\Connection;
-use Piwigo\Category\CategoryRepository;
-use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -62,12 +58,11 @@ final class ActionController implements ControllerInterface
 {
     public function __construct(
         private readonly UrlServiceInterface $urlService,
-        private readonly ConfigService $configService,
     ) {}
 
-    private function historyService(Connection $conn): HistoryService
+    private function historyService(): HistoryService
     {
-        return new HistoryService(new HistoryRepository($conn), $this->configService);
+        return \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService();
     }
 
     #[\Override]
@@ -132,7 +127,7 @@ SELECT id
   FROM ' . Tables::categories() . '
     INNER JOIN ' . Tables::imageCategory() . ' ON category_id = id
   WHERE image_id = ' . $_GET['id'] . '
-' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository($conn), new \Piwigo\Group\GroupRepository($conn), new CategoryRepository($conn))->getSqlConditionFandF([
+' . \Piwigo\Bootstrap\CoreDomainAccessor::permissionService()->getSqlConditionFandF([
             'forbidden_categories' => 'category_id',
             'forbidden_images' => 'image_id',
         ], '    AND') . '
@@ -185,16 +180,16 @@ SELECT id
 
         $image_id_val = $_GET['id'];
         if ($get_part === 'e') {
-            $this->historyService($conn)
+            $this->historyService()
                 ->logVisit($image_id_val, 'high');
         } elseif ($get_part === 'r') {
-            $this->historyService($conn)
+            $this->historyService()
                 ->logVisit($image_id_val, 'other');
         } elseif ($get_part === 'f') {
             if ($format_row === null) {
                 return $this->doError(400, 'Invalid request - format');
             }
-            $this->historyService($conn)
+            $this->historyService()
                 ->logVisit($image_id_val, 'high', $format_row->formatId);
         }
 

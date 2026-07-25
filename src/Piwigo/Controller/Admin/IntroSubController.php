@@ -95,7 +95,7 @@ final class IntroSubController implements AdminSubControllerInterface
         // +-----------------------------------------------------------------------+
 
         if (isset($_GET['action']) and $_GET['action'] === 'hide_newsletter_subscription') {
-            new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository($conn))
+            \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
                 ->updateParam('show_newsletter_subscription', 'false');
             exit();
         }
@@ -164,7 +164,7 @@ SELECT COUNT(*)
             'intro' => 'intro.tpl',
         ]);
 
-        if (\Piwigo\Config\CurrentConfig::showNewsletterSubscription() and (bool) new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository($conn))->getParam('show_newsletter_subscription', true)) {
+        if (\Piwigo\Config\CurrentConfig::showNewsletterSubscription() and (bool) \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()->getParam('show_newsletter_subscription', true)) {
             $query = '
   SELECT registration_date
     FROM ' . Tables::userInfos() . '

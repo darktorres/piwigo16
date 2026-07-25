@@ -4,13 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Activity\ActivityService;
-use Piwigo\Auth\AuthRepository;
-use Piwigo\Auth\AuthService;
-use Piwigo\Auth\CookieService;
-use Piwigo\Auth\PasswordRepository;
-use Piwigo\Auth\PasswordService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -183,7 +176,7 @@ SELECT
                     $usernames[] = $u_username;
 
                     $u_status = is_string($u['status']) ? $u['status'] : null;
-                    $authkey = new AuthService(new AuthRepository($conn), new ActivityService(new ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), new PasswordService(new PasswordRepository($conn)), new CookieService())
+                    $authkey = \Piwigo\Bootstrap\CoreDomainAccessor::authService()
                         ->createUserAuthKey((int) $u['user_id'], $u_status);
 
                     $user_tpl = $tpl;

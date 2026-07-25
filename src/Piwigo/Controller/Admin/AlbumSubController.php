@@ -13,7 +13,6 @@ use Piwigo\Admin\ElementSetRanksPageRenderer;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\Lang;
-use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Psr\Http\Message\ServerRequestInterface;
@@ -40,7 +39,6 @@ final class AlbumSubController implements AdminSubControllerInterface
     private const array KNOWN_TABS = ['properties', 'sort_order', 'permissions', 'notification'];
 
     public function __construct(
-        private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
     ) {}
 
@@ -86,14 +84,14 @@ final class AlbumSubController implements AdminSubControllerInterface
             new CatModifyPageRenderer()
                 ->render($this->urlService, $category);
         } elseif ($tab === 'sort_order') {
-            new ElementSetRanksPageRenderer($this->redirectService, $this->urlService)
+            \Piwigo\Bootstrap\AdminAccessor::elementSetRanksPageRenderer()
                 ->render();
         } elseif ($tab === 'permissions') {
             $_GET['cat'] = $cat_id;
-            new CatPermPageRenderer($this->redirectService, $this->urlService)
+            \Piwigo\Bootstrap\AdminAccessor::catPermPageRenderer()
                 ->render($adminAlbumBaseUrl, $category);
         } else {
-            new AlbumNotificationPageRenderer($this->redirectService, $this->urlService)
+            \Piwigo\Bootstrap\AdminAccessor::albumNotificationPageRenderer()
                 ->render($adminAlbumBaseUrl, $category);
         }
     }

@@ -10,7 +10,6 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Admin\UpdatesPwgPageRenderer;
 use Piwigo\Config\ConfigService;
-use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -59,7 +58,6 @@ use Psr\Http\Message\ServerRequestInterface;
 final class UpdatesSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
     ) {}
@@ -95,7 +93,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
             new UpdatesExtPageRenderer()
                 ->render('updates', $this->urlService, $this->configService);
         } else {
-            new UpdatesPwgPageRenderer($this->redirectService, $this->urlService, $this->configService)
+            \Piwigo\Bootstrap\AdminAccessor::updatesPwgPageRenderer()
                 ->render();
         }
     }

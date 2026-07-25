@@ -6,7 +6,6 @@ namespace Piwigo\Admin;
 
 use Imagick;
 use Piwigo\Admin\Image\PwgImage;
-use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Config\ConfigService;
@@ -190,7 +189,7 @@ final class MaintenanceActionsPageRenderer
             );
         }
 
-        $db_maintenance = new DbMaintenanceRepository($conn);
+        $db_maintenance = \Piwigo\Bootstrap\AdminAccessor::dbMaintenanceRepository();
         $nb_lounge = $db_maintenance->countLoungeItems();
 
         if ($nb_lounge > 0) {

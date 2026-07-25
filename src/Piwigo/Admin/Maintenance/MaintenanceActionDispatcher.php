@@ -7,7 +7,6 @@ namespace Piwigo\Admin\Maintenance;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Integrity\CheckIntegrity;
-use Piwigo\Auth\CookieService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
@@ -22,8 +21,6 @@ use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Rate\RateRepository;
-use Piwigo\Rate\RateService;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
@@ -93,7 +90,7 @@ final class MaintenanceActionDispatcher
 
         $register_activity = true;
         $conn = DbConnection::build();
-        $db_maintenance = new DbMaintenanceRepository($conn);
+        $db_maintenance = \Piwigo\Bootstrap\AdminAccessor::dbMaintenanceRepository();
 
         switch ($action) {
             case 'phpinfo':
@@ -142,7 +139,7 @@ final class MaintenanceActionDispatcher
                 FilesystemIntegrityChecker::imagesIntegrity();
                 self::categoryService()
                     ->updatePath();
-                new RateService(new RateRepository($conn), new CookieService())
+                \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()
                     ->updateRatingScore();
                 PermissionCacheInvalidator::invalidate();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Update photos information'), Lang::t('action successfully performed.')));
@@ -221,7 +218,7 @@ final class MaintenanceActionDispatcher
                 \Piwigo\Template\CurrentTemplate::get()->delete_compiled_templates();
                 FileCombiner::clear_combined_files();
                 if (! $persistent_cache instanceof \Piwigo\Cache\PersistentCache) {
-                    new \Piwigo\Html\HtmlService()
+                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                         ->fatalError('persistent cache not initialized');
                 }
                 $persistent_cache->purge(true);

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use DateTimeImmutable;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -13,13 +12,8 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Feed\FeedHelper;
 use Piwigo\Feed\FeedRepository;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
-use Piwigo\Notification\NotificationRepository;
-use Piwigo\Notification\NotificationService;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -55,12 +49,7 @@ final class FeedController implements ControllerInterface
         $feed_helper = new FeedHelper();
         $conn = DbConnection::build();
         $feed_repo = new FeedRepository($conn);
-        $notificationService = new NotificationService(
-            new NotificationRepository($conn),
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn)),
-            $htmlRenderer,
-            $this->urlService
-        );
+        $notificationService = \Piwigo\Bootstrap\ExtendedDomainAccessor::notificationService();
 
         new \Piwigo\Validation\InputValidator()
             ->validate('feed', $_GET, false, '/^[0-9a-z]{50}$/i');

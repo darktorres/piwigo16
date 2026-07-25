@@ -11,13 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Activity\ActivityService;
-use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
-use Piwigo\Auth\PasswordRepository;
-use Piwigo\Auth\PasswordService;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\ApiKeyRequestFlag;
@@ -36,8 +31,6 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
-use Piwigo\Rate\RateRepository;
-use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchRepository;
 
 /**
@@ -59,7 +52,7 @@ final class PwgCore
      */
     private static function authService(): AuthService
     {
-        return new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), new PasswordService(new PasswordRepository(DbConnection::build())), new CookieService());
+        return \Piwigo\Bootstrap\CoreDomainAccessor::authService();
     }
 
     /**
@@ -69,7 +62,7 @@ final class PwgCore
      */
     private static function historyService(): HistoryService
     {
-        return new HistoryService(new HistoryRepository(DbConnection::build()), CurrentConfigService::get());
+        return \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService();
     }
 
     /**
@@ -396,7 +389,7 @@ DELETE FROM ' . Tables::rate() . '
         // actual affected-row count.
         $changes = DbConnection::build()->executeStatement($query);
         if ($changes > 0) {
-            new RateService(new RateRepository(DbConnection::build()), new CookieService())
+            \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()
                 ->updateRatingScore();
         }
         return $changes;

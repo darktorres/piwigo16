@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\Extensions\PemCatalog;
-use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -48,7 +46,7 @@ final class UpdatesExtPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
-            new \Piwigo\Html\HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }
 
@@ -72,7 +70,7 @@ final class UpdatesExtPageRenderer
             ? array_filter(ExtensionType::cases(), static fn (ExtensionType $type): bool => $plural_by_type[$type->value] === $pageSlug)
             : ExtensionType::cases();
 
-        $extension_update_checker = new ExtensionUpdateChecker(new ExtensionScanner(), new PemCatalog(new ZipExtractor()), $urlService, $configService);
+        $extension_update_checker = \Piwigo\Bootstrap\AdminAccessor::extensionUpdateChecker();
 
         // Investigated, not reproduced exactly: updates.class.php::get_server_extensions()
         // makes ONE combined, uncategorized (no pem_*_category get_data key) PEM

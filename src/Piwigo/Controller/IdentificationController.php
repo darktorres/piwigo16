@@ -98,7 +98,7 @@ final class IdentificationController implements ControllerInterface
 
                 $conn = \Piwigo\Db\DbConnection::build();
                 if (\Piwigo\Config\CurrentConfig::insensitiveCaseLogon()) {
-                    $username = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn)
+                    $username = \Piwigo\Bootstrap\CoreDomainAccessor::userService()
                         ->searchCaseUsername($username);
                 }
 
@@ -107,7 +107,7 @@ final class IdentificationController implements ControllerInterface
                 $remember_me_raw = $_POST['remember_me'] ?? null;
                 $remember_me = isset($_POST['remember_me']) && is_string($remember_me_raw) && $remember_me_raw === '1';
 
-                if (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())->tryLogUser($username, $password, $remember_me)) {
+                if (\Piwigo\Bootstrap\CoreDomainAccessor::authService()->tryLogUser($username, $password, $remember_me)) {
                     // security (level 2): force redirect within Piwigo. We
                     // redirect to absolute root url, including http(s)://,
                     // without the cookie path, concatenated with

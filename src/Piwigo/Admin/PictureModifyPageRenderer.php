@@ -22,8 +22,6 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Metadata\MetadataRepository;
-use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
@@ -156,7 +154,7 @@ SELECT id
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
-            new MetadataService(new MetadataRepository($conn))
+            \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService()
                 ->syncMetadata([$image_id]);
             \Piwigo\Core\PageState::current()->addInfo(Lang::t('Metadata synchronized from file'));
         }

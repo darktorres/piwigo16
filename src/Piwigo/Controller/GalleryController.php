@@ -5,31 +5,20 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Category\CategoryCatsRenderer;
-use Piwigo\Category\CategoryDefaultRenderer;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
-use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupRepository;
-use Piwigo\History\HistoryRepository;
-use Piwigo\History\HistoryService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeParams;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Search\SearchFilterRenderer;
-use Piwigo\Search\SearchRepository;
-use Piwigo\Search\SearchService;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionPopulator;
@@ -114,7 +103,7 @@ final class GalleryController implements ControllerInterface
             self::categoryService(),
             self::permissionService(),
             self::tagService(),
-            new SearchService(new SearchRepository($conn), self::permissionService(), self::categoryService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService),
+            \Piwigo\Bootstrap\ExtendedDomainAccessor::searchService(),
             new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), self::activityService($conn), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn),
             $this->redirectService,
             $this->urlService,
@@ -302,16 +291,7 @@ final class GalleryController implements ControllerInterface
             }
         }
 
-        $resolved_search_id = new SearchFilterRenderer(
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-            $template,
-            new SearchRepository($conn),
-            new SearchService(new SearchRepository($conn), self::permissionService(), self::categoryService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $redirectService, $tagService),
-            $tagService,
-            new CategoryRepository($conn),
-            self::permissionService(),
-            $urlService,
-        )->render($section_context);
+        $resolved_search_id = \Piwigo\Bootstrap\ExtendedDomainAccessor::searchFilterRenderer()->render($section_context);
 
         if ($section_context->section === 'categories' and $section_context->category !== null and $section_context->combinedCategories === null) {
             $template->assign(
@@ -546,27 +526,12 @@ final class GalleryController implements ControllerInterface
           and ($section_context->section === 'recent_cats' or $section_context->section === 'categories')
           and ($section_context->category === null or $categoryCountCategories === null or $categoryCountCategories > 0)
         ) {
-            new CategoryCatsRenderer(
-                new FilterService(),
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-                $template,
-                new CategoryRepository($conn),
-                $categoryService,
-                self::permissionService(),
-                new ImageRepository($conn),
-                $urlService
-            )->render($section_context->section, $section_context->category, $section_context->startcat);
+            \Piwigo\Bootstrap\CoreDomainAccessor::categoryCatsRenderer()->render($section_context->section, $section_context->category, $section_context->startcat);
         }
 
         $slideshow_url = null;
         if ($page_items !== []) {
-            $slideshow_url = new CategoryDefaultRenderer(
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-                $template,
-                new ImageRepository($conn),
-                new CommentRepository($conn),
-                $urlService
-            )->render($page_items, $page_start, $page_nb_image_page, $section_context->section);
+            $slideshow_url = \Piwigo\Bootstrap\CoreDomainAccessor::categoryDefaultRenderer()->render($page_items, $page_start, $page_nb_image_page, $section_context->section);
 
             if (\Piwigo\Config\CurrentConfig::indexSizesIcon()) {
                 $url = $urlService->addUrlParams(
@@ -645,7 +610,7 @@ final class GalleryController implements ControllerInterface
         $template->parse('index', false);
 
         // ------------------------------------------------ log informations
-        new HistoryService(new HistoryRepository($conn), $configService)
+        \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService()
             ->logVisit(
                 section: $section_context->section,
                 category: $section_context->category,

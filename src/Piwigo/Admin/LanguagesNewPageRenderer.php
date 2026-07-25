@@ -51,7 +51,7 @@ final class LanguagesNewPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
-            new \Piwigo\Html\HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }
 
@@ -84,7 +84,7 @@ final class LanguagesNewPageRenderer
                 \Piwigo\Core\PageState::current()->addError(Lang::t('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
-                    ->checkOrFail(new \Piwigo\Html\HtmlService(), $this->redirectService);
+                    ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
                 // $_GET values are always string|array; 'revision' is only ever
                 // built from $language['revision_id'] in this file's own template

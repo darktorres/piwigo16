@@ -84,7 +84,7 @@ final class ThemesStandardPagesPageRenderer
 
         if (isset($_POST['submit']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new \Piwigo\Html\HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
             // use_standard_pages or not -- a checkbox POST value, so "not
             // set"/''/'0' are all "unchecked", matching empty()'s own

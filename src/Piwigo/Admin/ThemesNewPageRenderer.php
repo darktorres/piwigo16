@@ -45,7 +45,7 @@ final class ThemesNewPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
-            new \Piwigo\Html\HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }
 
@@ -74,7 +74,7 @@ final class ThemesNewPageRenderer
                 \Piwigo\Core\PageState::current()->addError(Lang::t('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
-                    ->checkOrFail(new \Piwigo\Html\HtmlService(), $this->redirectService);
+                    ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
                 $extraction = $pem_catalog->extractArchive(ExtensionType::Theme, 'install', $_GET['revision'], $_GET['extension']);
                 $install_status = $extraction['status'];
@@ -175,7 +175,7 @@ final class ThemesNewPageRenderer
             \Piwigo\Core\PageState::current()->addError(Lang::t('Can\'t connect to server.'));
         }
 
-        $admin_theme_pref = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
+        $admin_theme_pref = \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
         $template->assign(
             'default_screenshot',
             $this->urlService->getRootUrl() . 'themes/admin/' . (is_string($admin_theme_pref) ? $admin_theme_pref : \Piwigo\Config\CurrentConfig::adminTheme()) . '/images/missing_screenshot.png'

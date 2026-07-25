@@ -125,7 +125,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
     private static function userService(Connection $conn): \Piwigo\Users\UserService
     {
-        return new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), self::activityService($conn), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
+        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
     }
 
     #[\Override]

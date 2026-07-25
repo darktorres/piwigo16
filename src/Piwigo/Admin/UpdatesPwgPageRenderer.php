@@ -5,15 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\CoreUpdateService;
-use Piwigo\Admin\Extensions\ExtensionScanner;
-use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
-use Piwigo\Admin\Extensions\PemCatalog;
-use Piwigo\Admin\Extensions\ZipExtractor;
-use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
-use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Template\Template;
 
 /**
@@ -41,8 +35,6 @@ final class UpdatesPwgPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ConfigService $configService,
     ) {}
 
     public function render(): void
@@ -50,7 +42,7 @@ final class UpdatesPwgPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Config\CurrentConfig::enableCoreUpdate()) {
-            new \Piwigo\Html\HtmlService()
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('Piwigo core update system is disabled');
         }
 
@@ -84,7 +76,7 @@ final class UpdatesPwgPageRenderer
             $upgrade_to = is_string($get_to) ? $get_to : '';
         }
 
-        $core_update_service = new CoreUpdateService(new ZipExtractor(), $this->redirectService, $this->urlService, $this->configService, \Piwigo\Core\CurrentPaths::get());
+        $core_update_service = \Piwigo\Bootstrap\AdminAccessor::coreUpdateService();
         $new_versions = $core_update_service->getPiwigoNewVersions();
 
         // +-----------------------------------------------------------------------+
@@ -119,7 +111,7 @@ final class UpdatesPwgPageRenderer
         if ($step === 2 and \Piwigo\Auth\AccessControl::isWebmaster()) {
             if (isset($_POST['submit']) and isset($_POST['upgrade_to']) and is_string($_POST['upgrade_to'])) {
                 new \Piwigo\Csrf\CsrfService()
-                    ->checkOrFail(new \Piwigo\Html\HtmlService(), $this->redirectService);
+                    ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
                 $core_update_service->upgradeTo($_POST['upgrade_to'], $step);
             }
         }
@@ -130,11 +122,11 @@ final class UpdatesPwgPageRenderer
         if ($step === 3 and \Piwigo\Auth\AccessControl::isWebmaster()) {
             if (isset($_POST['submit']) and isset($_POST['upgrade_to']) and is_string($_POST['upgrade_to'])) {
                 new \Piwigo\Csrf\CsrfService()
-                    ->checkOrFail(new \Piwigo\Html\HtmlService(), $this->redirectService);
+                    ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
                 $core_update_service->upgradeTo($_POST['upgrade_to'], $step);
             }
 
-            $extension_update_checker = new ExtensionUpdateChecker(new ExtensionScanner(), new PemCatalog(new ZipExtractor()), $this->urlService, $this->configService);
+            $extension_update_checker = \Piwigo\Bootstrap\AdminAccessor::extensionUpdateChecker();
             $template->assign('missing', $extension_update_checker->getMissingExtensions($upgrade_to));
         }
 

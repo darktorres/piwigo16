@@ -38,6 +38,7 @@ use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -84,8 +85,21 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
+        // DI-phase follow-on: MaintenanceActionDispatcher now resolves
+        // DbMaintenanceRepository via Bootstrap\AdminAccessor ->
+        // Kernel::container(), which this isolated Integration test (no
+        // full RequestBootstrap) wouldn't otherwise boot.
+        Kernel::boot();
+
         $this->conn = DbConnection::build();
         $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository()));
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        Kernel::reset();
+        parent::tearDown();
     }
 
     public function test_search_purges_history_and_assigns_the_real_info_message(): void

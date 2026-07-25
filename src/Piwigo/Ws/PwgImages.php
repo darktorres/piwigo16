@@ -16,11 +16,8 @@ use Exception;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Upload\UploadService;
-use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
-use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Cache\PermissionCacheInvalidator;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
@@ -36,12 +33,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Metadata\MetadataRepository;
-use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Rate\RateRepository;
-use Piwigo\Rate\RateService;
-use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tag\TagRepository;
@@ -74,16 +66,9 @@ final class PwgImages
         return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
     }
 
-    private static function searchService(Connection $conn): SearchService
+    private static function searchService(): SearchService
     {
-        return new SearchService(
-            new SearchRepository($conn),
-            self::permissionService(),
-            self::categoryService(),
-            \Piwigo\Bootstrap\PresentationAccessor::mailService(),
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-            new RedirectService(),
-        );
+        return \Piwigo\Bootstrap\ExtendedDomainAccessor::searchService();
     }
 
     /**
@@ -124,10 +109,7 @@ final class PwgImages
     private static function addImageCategoryRelations(int $image_id, string $categories_string, bool $replace_mode = false): true|PwgError
     {
         $categoryConn = DbConnection::build();
-        $categoryService = new CategoryService(
-            new CategoryRepository($categoryConn),
-            self::permissionService()
-        );
+        $categoryService = self::categoryService();
 
         // let's add links between the image and the categories
         //
@@ -715,7 +697,7 @@ SELECT DISTINCT id
             return new PwgError(404, 'Invalid image_id or access denied');
         }
 
-        $res = new RateService(new RateRepository(DbConnection::build()), new CookieService())
+        $res = \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()
             ->rate($params['image_id'], (int) $params['rate']);
 
         if ($res === false) {
@@ -752,7 +734,7 @@ SELECT DISTINCT id
         }
 
         $searchConn = DbConnection::build();
-        $search_result = self::searchService($searchConn)->getQuickSearchResults(
+        $search_result = self::searchService()->getQuickSearchResults(
             $params['query'],
             [
                 'super_order_by' => $super_order_by,
@@ -847,7 +829,7 @@ SELECT DISTINCT id
     {
 
         $searchConn = DbConnection::build();
-        $searchService = self::searchService($searchConn);
+        $searchService = self::searchService();
 
         // * check the search exists
         $search_info = null;
@@ -1710,7 +1692,7 @@ SELECT id, name, permalink
 
         // update metadata from the uploaded file (exif/iptc), even if the sync
         // was already performed by add_uploaded_file().
-        new MetadataService(new MetadataRepository($conn))
+        \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService()
             ->syncMetadata([(int) $image_id]);
 
         return [
@@ -2998,7 +2980,7 @@ SELECT id
 
         $image_ids = array_values(array_map(intval(...), array_filter($image_ids, is_numeric(...))));
 
-        new MetadataService(new MetadataRepository($conn))
+        \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService()
             ->syncMetadata($image_ids);
 
         return [

@@ -41,7 +41,7 @@ final class GroupListPageRenderer
 
         if ($_POST !== [] or isset($_GET['delete']) or isset($_GET['toggle_is_default'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(new \Piwigo\Html\HtmlService(), $this->redirectService);
+                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
         }
 
         $template->set_filenames([

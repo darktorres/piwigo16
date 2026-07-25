@@ -7,7 +7,6 @@ namespace Piwigo\Admin;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -72,7 +71,7 @@ final class CatOptionsPageRenderer
             }
 
             $section_param = $_GET['section'] ?? '';
-            new CategoryAdminService(self::categoryService())
+            \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()
                 ->setCategoryOption($cat_true, is_string($section_param) ? $section_param : '', false, self::activityService($conn));
         } elseif (isset($_POST['trueify'])
                  and isset($_POST['cat_false'])
@@ -86,7 +85,7 @@ final class CatOptionsPageRenderer
             }
 
             $section_param = $_GET['section'] ?? '';
-            new CategoryAdminService(self::categoryService())
+            \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()
                 ->setCategoryOption($cat_false, is_string($section_param) ? $section_param : '', true, self::activityService($conn));
         }
 

@@ -22,7 +22,6 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Ws\PwgError;
@@ -539,7 +538,7 @@ SELECT
         if (\Piwigo\Config\CurrentConfig::useExif() and ! function_exists('exif_read_data')) {
             \Piwigo\Config\CurrentConfig::setUseExif(false);
         }
-        new MetadataService(new MetadataRepository($conn))
+        \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService()
             ->syncMetadata([(int) $image_id]);
 
         // cache a derivative

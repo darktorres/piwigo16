@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -126,9 +125,7 @@ final class ElementSetRanksPageRenderer
 
                 $message = Lang::t('Images manual order was saved');
             }
-            new CategoryAdminService(
-                \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()
-            )->saveImageOrder($category_id, $image_order, isset($_POST['image_order_subcats']), $this->redirectService);
+            \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()->saveImageOrder($category_id, $image_order, isset($_POST['image_order_subcats']), $this->redirectService);
 
             $template->assign(
                 [

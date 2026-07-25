@@ -253,7 +253,7 @@ final class PluginsInstalledPageRenderer
                 'max_inactive_before_hide' => isset($_GET['show_inactive']) ? 999 : 8,
                 'isWebmaster' => (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0,
                 'ADMIN_PAGE_TITLE' => Lang::t('Plugins'),
-                'view_selector' => new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository($conn))
+                'view_selector' => \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
                     ->getParam('plugin-manager-view', 'classic'),
                 'CONF_ENABLE_EXTENSIONS_INSTALL' => \Piwigo\Config\CurrentConfig::enableExtensionsInstall(),
             ]

@@ -9,11 +9,9 @@ use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\ThemesInstalledPageRenderer;
 use Piwigo\Admin\ThemesNewPageRenderer;
-use Piwigo\Admin\ThemesStandardPagesPageRenderer;
 use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
-use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -53,7 +51,6 @@ use Psr\Http\Message\ServerRequestInterface;
 final class ThemesSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
     ) {}
@@ -92,13 +89,13 @@ final class ThemesSubController implements AdminSubControllerInterface
                 ->render('themes', $this->urlService, $this->configService);
             $template->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
         } elseif ($tab === 'new') {
-            new ThemesNewPageRenderer($this->redirectService, $this->urlService)
+            \Piwigo\Bootstrap\AdminAccessor::themesNewPageRenderer()
                 ->render('themes', $tab);
         } elseif ($tab === 'standard_pages') {
-            new ThemesStandardPagesPageRenderer($this->redirectService, $this->urlService, $this->configService)
+            \Piwigo\Bootstrap\AdminAccessor::themesStandardPagesPageRenderer()
                 ->render();
         } else {
-            new ThemesInstalledPageRenderer($this->redirectService, $this->urlService, $this->configService)
+            \Piwigo\Bootstrap\AdminAccessor::themesInstalledPageRenderer()
                 ->render('themes');
         }
     }

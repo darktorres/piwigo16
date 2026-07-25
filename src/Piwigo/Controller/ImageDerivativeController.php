@@ -436,7 +436,7 @@ final class ImageDerivativeController implements ControllerInterface
      */
     private function checkDerivativePermission(Connection $conn, int $imageId): void
     {
-        if (! new ImageVisibilityChecker($conn)->isVisibleToUser($imageId)) {
+        if (! \Piwigo\Bootstrap\CoreDomainAccessor::imageVisibilityChecker()->isVisibleToUser($imageId)) {
             $this->ierror('Forbidden', 403);
         }
     }

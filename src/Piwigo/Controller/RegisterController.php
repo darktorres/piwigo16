@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Piwigo\Audit\AuditRepository;
-use Piwigo\Audit\AuditService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -120,7 +118,7 @@ final class RegisterController implements ControllerInterface
             // user themselves (self-registration has no separate acting
             // admin); only the username is recorded, never the password.
             if ($new_user_id !== null) {
-                new AuditService(new AuditRepository($conn))
+                \Piwigo\Bootstrap\CoreDomainAccessor::auditService()
                     ->record($new_user_id, 'create', 'user', $new_user_id, null, [
                         'username' => $post_login,
                     ]);
@@ -161,7 +159,7 @@ final class RegisterController implements ControllerInterface
                         $userService->buildUser($new_user_id)
                     ));
                     \Piwigo\Users\CurrentUser::markRealUserResolved();
-                    new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())
+                    \Piwigo\Bootstrap\CoreDomainAccessor::authService()
                         ->logUser($new_user_id, false);
                 }
                 $this->redirectService->redirect($this->urlService->makeIndexUrl());

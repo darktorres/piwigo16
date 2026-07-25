@@ -15,7 +15,6 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Permalink\PermalinkRepository;
-use Piwigo\Permalink\PermalinkService;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -79,7 +78,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
                 ->checkOrFail($htmlRenderer, $this->redirectService);
             $permalink = $_POST['permalink'] ?? null;
             $permalink = is_string($permalink) ? $permalink : '';
-            $permalink_service = new PermalinkService(new PermalinkRepository($conn));
+            $permalink_service = \Piwigo\Bootstrap\ExtendedDomainAccessor::permalinkService();
             if ($permalink === '') {
                 $permalink_service->deleteCatPermalink($post_cat_id, isset($_POST['save']));
             } else {
@@ -90,7 +89,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail($htmlRenderer, $this->redirectService);
             $delete_permanent = is_string($_GET['delete_permanent']) ? $_GET['delete_permanent'] : '';
-            new PermalinkService(new PermalinkRepository($conn))
+            \Piwigo\Bootstrap\ExtendedDomainAccessor::permalinkService()
                 ->deleteOldPermalinkByValue($delete_permanent);
         }
 

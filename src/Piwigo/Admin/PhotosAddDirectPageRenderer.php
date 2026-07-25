@@ -20,8 +20,6 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Users\PreferencesService;
-use Piwigo\Users\UserRepository;
 
 /**
  * Ported from admin/photos_add_direct.php (the "direct" tab of the
@@ -103,7 +101,7 @@ DELETE FROM ' . Tables::caddie() . '
             $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=batch_manager&filter=prefilter-caddie');
         }
 
-        if ((bool) new PreferencesService(new UserRepository($conn))->getParam('promote-mobile-apps', true)) {
+        if ((bool) \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()->getParam('promote-mobile-apps', true)) {
             $query = '
 SELECT registration_date
   FROM ' . Tables::userInfos() . '

@@ -8,15 +8,9 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
-use Piwigo\Mail\NotificationByMailSender;
 use Piwigo\Menu\MenubarRenderer;
-use Piwigo\Notification\NotificationByMailRepository;
-use Piwigo\Notification\NotificationByMailService;
-use Piwigo\Notification\NotificationRepository;
-use Piwigo\Notification\NotificationService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -53,19 +47,7 @@ final class NbmController implements ControllerInterface
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
         $conn = DbConnection::build();
-        $nbmSender = new NotificationByMailSender(
-            new NotificationByMailService(new NotificationByMailRepository($conn)),
-            new NotificationService(
-                new NotificationRepository($conn),
-                \Piwigo\Bootstrap\CoreDomainAccessor::permissionService(),
-                $htmlRenderer,
-                $this->urlService
-            ),
-            new \Piwigo\Db\BatchWriter($conn),
-            new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), $htmlRenderer, $conn),
-            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), $htmlRenderer, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService()),
-            $this->urlService
-        );
+        $nbmSender = \Piwigo\Bootstrap\PresentationAccessor::notificationByMailSender();
 
         $queryParams = $request->getQueryParams();
         $subscribe = $queryParams['subscribe'] ?? null;

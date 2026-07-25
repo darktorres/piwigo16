@@ -27,8 +27,6 @@ use Piwigo\Http\RequestFactory;
 use Piwigo\Image\ImageService;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
-use Piwigo\Users\PreferencesService;
-use Piwigo\Users\UserRepository;
 
 /**
  * The admin.php page-shell orchestration (P23 batch 10): access check,
@@ -146,7 +144,7 @@ final class AdminShell
         // theme changer
         if (isset($_GET['change_theme'])) {
             $admin_themes = ['roma', 'clear'];
-            $admin_theme_param = new PreferencesService(new UserRepository($conn))
+            $admin_theme_param = \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
                 ->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
             $admin_theme_array = [is_string($admin_theme_param) ? $admin_theme_param : \Piwigo\Config\CurrentConfig::adminTheme()];
             $result = array_diff(
@@ -158,7 +156,7 @@ final class AdminShell
                 $result
             );
 
-            new PreferencesService(new UserRepository($conn))
+            \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
                 ->updateParam('admin_theme', $new_admin_theme);
 
             $url_params = [];
@@ -425,9 +423,9 @@ SELECT COUNT(*)
 
         $whats_new_major_version = \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION);
 
-        if ((bool) new PreferencesService(new UserRepository($conn))->getParam('show_whats_new_' . $whats_new_major_version, true) and $this->configService->pwgIsDbconfWriteable()) {
+        if ((bool) \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()->getParam('show_whats_new_' . $whats_new_major_version, true) and $this->configService->pwgIsDbconfWriteable()) {
             if (\Piwigo\Users\CurrentUser::get()->rawAttributes['registration_date'] > \Piwigo\Config\CurrentConfig::lastMajorUpdate()) {
-                new PreferencesService(new UserRepository($conn))
+                \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
                     ->updateParam('show_whats_new_' . $whats_new_major_version, false);
             } else {
                 // purge old whats_new_*
@@ -441,7 +439,7 @@ SELECT COUNT(*)
                 }
 
                 if (count($userprefs_params_to_delete) > 0) {
-                    new PreferencesService(new UserRepository($conn))
+                    \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
                         ->deleteParam($userprefs_params_to_delete);
                 }
 

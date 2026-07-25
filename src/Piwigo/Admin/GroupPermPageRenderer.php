@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Doctrine\DBAL\Connection;
-use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -30,9 +28,9 @@ final class GroupPermPageRenderer
         private readonly UrlServiceInterface $urlService,
     ) {}
 
-    private static function auditService(Connection $conn): AuditService
+    private static function auditService(): AuditService
     {
-        return new AuditService(new AuditRepository($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::auditService();
     }
 
     public function render(): void
@@ -108,7 +106,7 @@ final class GroupPermPageRenderer
             $subcat_ids = array_map(intval(...), $subcats);
             $group_service->removeAccess($group_id, $subcat_ids);
 
-            self::auditService($conn)
+            self::auditService()
                 ->record($actor_id, 'permission_revoke', 'group', $group_id, [
                     'category_ids' => $subcat_ids,
                 ], null);
@@ -135,7 +133,7 @@ SELECT id
             $private_uppercat_ids = array_map(intval(...), $private_uppercats);
             $group_service->addAccess($group_id, $private_uppercat_ids);
 
-            self::auditService($conn)
+            self::auditService()
                 ->record($actor_id, 'permission_grant', 'group', $group_id, null, [
                     'category_ids' => $private_uppercat_ids,
                 ]);

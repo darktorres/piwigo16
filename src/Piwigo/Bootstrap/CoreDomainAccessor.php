@@ -4,12 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use Piwigo\Audit\AuditService;
+use Piwigo\Auth\ApiKeyService;
+use Piwigo\Auth\AuthService;
+use Piwigo\Auth\PasswordService;
+use Piwigo\Category\CategoryCatsRenderer;
+use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\Kernel;
 use Piwigo\Group\GroupService;
 use Piwigo\Image\ImageService;
+use Piwigo\Permission\ImageVisibilityChecker;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\TagService;
+use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
 
 /**
@@ -82,6 +90,78 @@ final class CoreDomainAccessor
         $service = Kernel::container()->get(GroupService::class);
         if (! $service instanceof GroupService) {
             throw new \LogicException('Container returned an unexpected type for ' . GroupService::class);
+        }
+        return $service;
+    }
+
+    public static function passwordService(): PasswordService
+    {
+        $service = Kernel::container()->get(PasswordService::class);
+        if (! $service instanceof PasswordService) {
+            throw new \LogicException('Container returned an unexpected type for ' . PasswordService::class);
+        }
+        return $service;
+    }
+
+    public static function authService(): AuthService
+    {
+        $service = Kernel::container()->get(AuthService::class);
+        if (! $service instanceof AuthService) {
+            throw new \LogicException('Container returned an unexpected type for ' . AuthService::class);
+        }
+        return $service;
+    }
+
+    public static function preferencesService(): PreferencesService
+    {
+        $service = Kernel::container()->get(PreferencesService::class);
+        if (! $service instanceof PreferencesService) {
+            throw new \LogicException('Container returned an unexpected type for ' . PreferencesService::class);
+        }
+        return $service;
+    }
+
+    public static function apiKeyService(): ApiKeyService
+    {
+        $service = Kernel::container()->get(ApiKeyService::class);
+        if (! $service instanceof ApiKeyService) {
+            throw new \LogicException('Container returned an unexpected type for ' . ApiKeyService::class);
+        }
+        return $service;
+    }
+
+    public static function auditService(): AuditService
+    {
+        $service = Kernel::container()->get(AuditService::class);
+        if (! $service instanceof AuditService) {
+            throw new \LogicException('Container returned an unexpected type for ' . AuditService::class);
+        }
+        return $service;
+    }
+
+    public static function imageVisibilityChecker(): ImageVisibilityChecker
+    {
+        $service = Kernel::container()->get(ImageVisibilityChecker::class);
+        if (! $service instanceof ImageVisibilityChecker) {
+            throw new \LogicException('Container returned an unexpected type for ' . ImageVisibilityChecker::class);
+        }
+        return $service;
+    }
+
+    public static function categoryDefaultRenderer(): CategoryDefaultRenderer
+    {
+        $service = Kernel::container()->get(CategoryDefaultRenderer::class);
+        if (! $service instanceof CategoryDefaultRenderer) {
+            throw new \LogicException('Container returned an unexpected type for ' . CategoryDefaultRenderer::class);
+        }
+        return $service;
+    }
+
+    public static function categoryCatsRenderer(): CategoryCatsRenderer
+    {
+        $service = Kernel::container()->get(CategoryCatsRenderer::class);
+        if (! $service instanceof CategoryCatsRenderer) {
+            throw new \LogicException('Container returned an unexpected type for ' . CategoryCatsRenderer::class);
         }
         return $service;
     }

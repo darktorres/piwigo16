@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -139,7 +138,7 @@ SELECT COUNT(*)
         elseif (isset($_POST['submitAdd'])) {
             $virtual_name_raw = $_POST['virtual_name'] ?? null;
             $virtual_name = is_string($virtual_name_raw) ? $virtual_name_raw : '';
-            $output_create = new CategoryAdminService($categoryService)
+            $output_create = \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()
                 ->createVirtualCategory(
                     $virtual_name,
                     new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($categoryConn)),

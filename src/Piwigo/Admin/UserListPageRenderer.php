@@ -13,7 +13,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
 use Piwigo\Users\PreferencesService;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
@@ -29,9 +28,9 @@ final class UserListPageRenderer
         return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
     }
 
-    private static function preferencesService(Connection $conn): PreferencesService
+    private static function preferencesService(): PreferencesService
     {
-        return new PreferencesService(new UserRepository($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService();
     }
 
     public function render(UrlServiceInterface $urlService): void
@@ -293,14 +292,14 @@ SELECT id, name, is_default
         $template->assign('groups_arr_name', implode(',', $groups_arr_name));
         $template->assign('guest_id', $guest_id);
 
-        $template->assign('view_selector', self::preferencesService($conn)->getParam('user-manager-view', 'line'));
+        $template->assign('view_selector', self::preferencesService()->getParam('user-manager-view', 'line'));
 
-        if (self::preferencesService($conn)->getParam('user-manager-view', 'line') === 'line') {
+        if (self::preferencesService()->getParam('user-manager-view', 'line') === 'line') {
             // Show 5 users by default
-            $template->assign('pagination', self::preferencesService($conn)->getParam('user-manager-pagination', 5));
+            $template->assign('pagination', self::preferencesService()->getParam('user-manager-pagination', 5));
         } else {
             // Show 10 users by default
-            $template->assign('pagination', self::preferencesService($conn)->getParam('user-manager-pagination', 10));
+            $template->assign('pagination', self::preferencesService()->getParam('user-manager-pagination', 10));
         }
 
         if (self::webmasterIdIsLocal()) {

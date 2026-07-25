@@ -19,8 +19,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\History\HistoryRepository;
-use Piwigo\History\HistoryService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
@@ -33,10 +31,6 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Picture\PictureRateRenderer;
-use Piwigo\Rate\RateRepository;
-use Piwigo\Rate\RateService;
-use Piwigo\Search\SearchRepository;
-use Piwigo\Search\SearchService;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionPopulator;
@@ -142,7 +136,7 @@ final class PictureController implements ControllerInterface
             self::categoryService(),
             self::permissionService(),
             self::tagService(),
-            new SearchService(new SearchRepository($conn), self::permissionService(), self::categoryService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService),
+            \Piwigo\Bootstrap\ExtendedDomainAccessor::searchService(),
             self::userService(),
             $this->redirectService,
             $this->urlService,
@@ -426,7 +420,7 @@ UPDATE ' . Tables::categories() . '
                     if (! is_string($rate)) {
                         $rate = null;
                     }
-                    new RateService(new RateRepository($conn), new CookieService())
+                    \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()
                         ->rate($image_id, $rate);
                     $this->redirectService->redirect($url_self);
 
@@ -1230,7 +1224,7 @@ SELECT id, name, permalink
         // |                          sub pages                           |
         // +-------------------------------------------------------------+
 
-        new PictureRateRenderer(new RateRepository($conn))
+        \Piwigo\Bootstrap\PresentationAccessor::pictureRateRenderer()
             ->render($image_id, $urlService, $picture, $url_self);
         if (\Piwigo\Config\CurrentConfig::activateComments()) {
             new PictureCommentRenderer()
@@ -1267,7 +1261,7 @@ SELECT id, name, permalink
         }
         // -------------------------------------------------- log informations
         $current_image_id = $picture['current']['id'];
-        new HistoryService(new HistoryRepository($conn), $configService)
+        \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService()
             ->logVisit(
                 is_numeric($current_image_id) ? (int) $current_image_id : null,
                 'picture',

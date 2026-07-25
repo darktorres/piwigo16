@@ -95,7 +95,7 @@ final class ThemesInstalledPageRenderer
         $fs_themes = $extension_scanner->scan(ExtensionType::Theme, $this->urlService);
         uasort($fs_themes, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->nameCompare(...));
 
-        $default_theme = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new \Piwigo\Group\GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn)
+        $default_theme = \Piwigo\Bootstrap\CoreDomainAccessor::userService()
             ->getDefaultTheme();
 
         $db_theme_ids = array_keys($extension_repository->findAll(ExtensionType::Theme));

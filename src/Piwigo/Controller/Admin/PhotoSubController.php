@@ -12,7 +12,6 @@ use Piwigo\Admin\PictureModifyPageRenderer;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
@@ -43,7 +42,6 @@ final class PhotoSubController implements AdminSubControllerInterface
     private const array KNOWN_TABS = ['properties', 'coi', 'formats'];
 
     public function __construct(
-        private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
     ) {}
 
@@ -94,10 +92,10 @@ final class PhotoSubController implements AdminSubControllerInterface
         );
 
         if ($tab === 'properties') {
-            new PictureModifyPageRenderer($this->redirectService, $this->urlService)
+            \Piwigo\Bootstrap\AdminAccessor::pictureModifyPageRenderer()
                 ->render($adminPhotoBaseUrl);
         } elseif ($tab === 'coi') {
-            new PictureCoiPageRenderer($this->redirectService)
+            \Piwigo\Bootstrap\AdminAccessor::pictureCoiPageRenderer()
                 ->render();
         } elseif (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
             new PictureFormatsPageRenderer()

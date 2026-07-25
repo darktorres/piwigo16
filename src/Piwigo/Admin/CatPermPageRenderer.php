@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -82,9 +81,7 @@ final class CatPermPageRenderer
                 }
             }
 
-            new CategoryAdminService(
-                \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()
-            )->setCategoryPermissions($page['cat'], $current_status, $post_status, $apply_on_sub, $post_groups, $post_users);
+            \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()->setCategoryPermissions($page['cat'], $current_status, $post_status, $apply_on_sub, $post_groups, $post_users);
             $category['status'] = $post_status;
 
             $template->assign(

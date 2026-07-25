@@ -17,11 +17,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyRepository;
 use Piwigo\Auth\ApiKeyService;
-use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
-use Piwigo\Auth\CookieService;
-use Piwigo\Auth\PasswordRepository;
-use Piwigo\Auth\PasswordService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Lang;
@@ -38,7 +34,6 @@ use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Session\SessionService;
-use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
@@ -62,9 +57,9 @@ final class PwgUsers
      * precedent as Ws\PwgTags::activityService(Connection $conn) /
      * Bootstrap\RequestBootstrap::activityService(Connection $conn).
      */
-    private static function authService(Connection $conn): AuthService
+    private static function authService(): AuthService
     {
-        return new AuthService(new AuthRepository($conn), new ActivityService(new ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), new PasswordService(new PasswordRepository($conn)), new CookieService());
+        return \Piwigo\Bootstrap\CoreDomainAccessor::authService();
     }
 
     /**
@@ -76,7 +71,7 @@ final class PwgUsers
      */
     private static function apiKeyService(): ApiKeyService
     {
-        return new ApiKeyService(\Piwigo\Bootstrap\PresentationAccessor::mailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())), \Piwigo\Bootstrap\PresentationAccessor::urlService());
+        return \Piwigo\Bootstrap\CoreDomainAccessor::apiKeyService();
     }
 
     /**
@@ -385,7 +380,7 @@ SELECT DISTINCT ';
                     $users[$cur_user_id]['last_visit'] = $last_visit;
 
                     if (! SqlDialect::getBoolean($cur_user['last_visit_from_history']) and in_array($last_visit, [null, ''], true)) {
-                        $last_visit = self::authService($conn)->getUserLastVisitFromHistory($cur_user_id, true);
+                        $last_visit = self::authService()->getUserLastVisitFromHistory($cur_user_id, true);
                         $users[$cur_user_id]['last_visit'] = $last_visit;
                     }
 
@@ -515,7 +510,7 @@ SELECT DISTINCT ';
             return new PwgError(403, 'Invalid security token');
         }
 
-        $authkey = self::authService(DbConnection::build())->createUserAuthKey($params['user_id']);
+        $authkey = self::authService()->createUserAuthKey($params['user_id']);
 
         if ($authkey === false) {
             return new PwgError(WsError::INVALID_PARAM, 'invalid user_id');
@@ -701,7 +696,7 @@ SELECT ' . $user_field_password . ' AS password
             // precise type after the merge, so it's read back as mixed here.
             $params_password = is_string($params['password']) ? $params['password'] : '';
 
-            if (! new PasswordService(new PasswordRepository(DbConnection::build()))->verify($params_password, $current_password)) {
+            if (! \Piwigo\Bootstrap\CoreDomainAccessor::passwordService()->verify($params_password, $current_password)) {
                 return new PwgError(403, Lang::t('Current password is wrong'));
             }
 
@@ -758,7 +753,7 @@ SELECT ' . $user_field_password . ' AS password
             $value = json_decode($value, true);
         }
 
-        new PreferencesService(new UserRepository(DbConnection::build()))->updateParam($params['param'], $value);
+        \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()->updateParam($params['param'], $value);
 
         return \Piwigo\Users\CurrentUser::get()->preferences;
     }
@@ -952,14 +947,14 @@ SELECT
         }
 
         $conn = DbConnection::build();
-        $first_login = self::authService($conn)->hasAlreadyLoggedIn($params['user_id']);
+        $first_login = self::authService()->hasAlreadyLoggedIn($params['user_id']);
         $send_by_mail_response = null;
         $user_lost_language = is_string($user_lost['language']) ? $user_lost['language'] : self::userService()->getDefaultLanguage();
         $lang_to_use = $first_login ? self::userService()->getDefaultLanguage() : $user_lost_language;
 
         \Piwigo\Bootstrap\PresentationAccessor::mailService()
             ->switchLangTo($lang_to_use);
-        $generate_link = self::authService($conn)->generatePasswordLink($params['user_id'], \Piwigo\Bootstrap\PresentationAccessor::urlService(), $first_login);
+        $generate_link = self::authService()->generatePasswordLink($params['user_id'], \Piwigo\Bootstrap\PresentationAccessor::urlService(), $first_login);
 
         $user_lost_email = is_string($user_lost['email']) ? $user_lost['email'] : null;
 

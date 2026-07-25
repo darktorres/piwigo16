@@ -19,9 +19,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
-use Piwigo\Permission\PermissionService;
-use Piwigo\Search\SearchRepository;
-use Piwigo\Search\SearchService;
 use Piwigo\Tag\TagService;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -73,11 +70,6 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
     }
 
-    private static function permissionService(): PermissionService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
-    }
-
     private static function categoryService(): CategoryService
     {
         return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
@@ -110,7 +102,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         /** @var array<string, mixed> $bulk_filter */
         $bulk_filter = is_array($_SESSION['bulk_manager_filter'] ?? null) ? $_SESSION['bulk_manager_filter'] : [];
 
-        $filter_resolver = new FilterResolver(DbConnection::build());
+        $filter_resolver = \Piwigo\Bootstrap\AdminAccessor::filterResolver();
 
         $duplicates_on_fields = null;
         $cat_elements_id = $this->computeCurrentSet(
@@ -179,7 +171,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         // +-------------------------------------------------------------------+
 
         if ($tab === 'unit') {
-            new BatchManagerUnitPageRenderer($this->redirectService, $this->urlService)
+            \Piwigo\Bootstrap\AdminAccessor::batchManagerUnitPageRenderer()
                 ->render($cat_elements_id, $start);
         } else {
             new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService)
@@ -646,14 +638,7 @@ DELETE FROM ' . Tables::caddie() . '
             && isset($bulkFilter['search']['q']) && is_string($bulkFilter['search']['q'])
             && (bool) strlen($bulkFilter['search']['q'])) {
             $searchConn = DbConnection::build();
-            $res = new SearchService(
-                new SearchRepository($searchConn),
-                self::permissionService(),
-                self::categoryService(),
-                \Piwigo\Bootstrap\PresentationAccessor::mailService(),
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-                $this->redirectService,
-            )->getQuickSearchResultsNoCache($bulkFilter['search']['q'], [
+            $res = \Piwigo\Bootstrap\ExtendedDomainAccessor::searchService()->getQuickSearchResultsNoCache($bulkFilter['search']['q'], [
                 'permissions' => false,
             ]);
             $res_debug = $res['debug'];

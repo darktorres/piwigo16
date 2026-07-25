@@ -13,8 +13,6 @@ namespace Piwigo\Ws;
 
 use InvalidArgumentException;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Audit\AuditRepository;
-use Piwigo\Audit\AuditService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
@@ -88,7 +86,7 @@ final class PwgGroups
 
         // [SEC-57]
         $actor_id = \Piwigo\Users\CurrentUser::get()->id;
-        new AuditService(new AuditRepository(DbConnection::build()))
+        \Piwigo\Bootstrap\CoreDomainAccessor::auditService()
             ->record($actor_id, 'create', 'group', $inserted_id, null, [
                 'name' => $name,
             ]);

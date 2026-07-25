@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Users\Projection;
 
+use Piwigo\Core\ArrayHelper;
+
 /**
  * Typed row shape for `piwigo_user_infos` (P17-23 Stage 1b, User domain --
  * `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection shapes"
@@ -23,15 +25,19 @@ namespace Piwigo\Users\Projection;
  * boolean column; a repository-layer projection is the correct place to
  * finish that conversion to a real PHP `bool` once.
  *
- * `registration_date`/`last_visit`/`activation_key`/`activation_key_expire`/
- * `preferences` stay `?string`, not `\DateTimeImmutable` or a decoded
- * value -- every real consumer today expects the raw DB DATETIME string
- * form or, for `preferences`, the still-serialized text form (User domain
- * Stage 1a deliberately deferred the `preferences` text->JSON retype),
- * same reasoning as {@see \Piwigo\Image\Projection\Image}.
+ * `registration_date`/`last_visit`/`activation_key`/`activation_key_expire`
+ * stay `?string`, not `\DateTimeImmutable` -- every real consumer today
+ * expects the raw DB DATETIME string form, same reasoning as
+ * {@see \Piwigo\Image\Projection\Image}. `preferences` is `?array`, decoded
+ * via `ArrayHelper::safeJsonDecode()` -- the column is JSON (gap-closure
+ * Stage 1a-bis item 3), matching {@see \Piwigo\Users\User::fromUserArray()}'s
+ * own already-decoded-array expectation for the same data.
  */
 final readonly class UserInfo
 {
+    /**
+     * @param array<string, mixed>|null $preferences
+     */
     public function __construct(
         public int $userId,
         public int $nbImagePage,
@@ -50,7 +56,7 @@ final readonly class UserInfo
         public ?string $lastVisit,
         public bool $lastVisitFromHistory,
         public string $lastmodified,
-        public ?string $preferences,
+        public ?array $preferences,
     ) {}
 
     /**
@@ -58,6 +64,8 @@ final readonly class UserInfo
      */
     public static function fromRow(array $row): self
     {
+        $preferencesRaw = $row['preferences'] ?? null;
+
         return new self(
             userId: is_numeric($row['user_id'] ?? null) ? (int) $row['user_id'] : 0,
             nbImagePage: is_numeric($row['nb_image_page'] ?? null) ? (int) $row['nb_image_page'] : 0,
@@ -76,7 +84,9 @@ final readonly class UserInfo
             lastVisit: is_string($row['last_visit'] ?? null) ? $row['last_visit'] : null,
             lastVisitFromHistory: (bool) ($row['last_visit_from_history'] ?? false),
             lastmodified: is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : '',
-            preferences: is_string($row['preferences'] ?? null) ? $row['preferences'] : null,
+            preferences: is_string($preferencesRaw)
+                ? array_filter(ArrayHelper::safeJsonDecode($preferencesRaw), is_string(...), ARRAY_FILTER_USE_KEY)
+                : null,
         );
     }
 
@@ -85,7 +95,7 @@ final readonly class UserInfo
      *   expand: bool, show_nb_comments: bool, show_nb_hits: bool, recent_period: int,
      *   theme: string, registration_date: ?string, enabled_high: bool, level: int,
      *   activation_key: ?string, activation_key_expire: ?string, last_visit: ?string,
-     *   last_visit_from_history: bool, lastmodified: string, preferences: ?string}
+     *   last_visit_from_history: bool, lastmodified: string, preferences: array<string, mixed>|null}
      */
     public function toArray(): array
     {

@@ -1,8 +1,8 @@
 -- Final v17 schema (InnoDB + utf8mb4, all FK constraints, all indexes).
 -- Hand-maintained -- there is no Doctrine Migrations layer between "what
 -- the schema should be" and what a fresh install creates. Column-type
--- fixes not yet decided for any domain (remaining user_infos.preferences/
--- config.value text->JSON items) are deliberately not applied here.
+-- fixes not yet decided for any domain (remaining config.value text->JSON
+-- item) are deliberately not applied here.
 
 --
 -- Table structure for table `piwigo_activity`
@@ -502,7 +502,7 @@ CREATE TABLE `piwigo_user_infos` (
   `last_visit` datetime default NULL,
   `last_visit_from_history` tinyint(1) NOT NULL default '0',
   `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `preferences` TEXT default NULL,
+  `preferences` JSON default NULL,
   PRIMARY KEY (`user_id`),
   KEY `lastmodified` (`lastmodified`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

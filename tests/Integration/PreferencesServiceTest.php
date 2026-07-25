@@ -72,7 +72,7 @@ final class PreferencesServiceTest extends IntegrationTestCase
             ->fetchOne();
 
         self::assertIsString($value);
-        self::assertSame(['language' => 'fr_FR'], unserialize($value));
+        self::assertSame(['language' => 'fr_FR'], json_decode($value, true));
     }
 
     public function test_update_param_converts_the_string_true_and_false_to_bool(): void

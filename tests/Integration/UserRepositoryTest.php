@@ -209,9 +209,9 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame($countBefore, $countAfter);
     }
 
-    public function test_save_preferences_persists_the_serialized_value(): void
+    public function test_save_preferences_persists_the_json_encoded_value(): void
     {
-        $this->repo->savePreferences(1, serialize(['theme' => 'dark']));
+        $this->repo->savePreferences(1, ['theme' => 'dark']);
 
         $value = $this->conn->createQueryBuilder()
             ->select('preferences')
@@ -221,7 +221,7 @@ final class UserRepositoryTest extends IntegrationTestCase
             ->fetchOne();
 
         self::assertIsString($value);
-        self::assertSame(['theme' => 'dark'], unserialize($value));
+        self::assertSame(['theme' => 'dark'], json_decode($value, true));
 
         $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET preferences = NULL WHERE user_id = 1");
     }

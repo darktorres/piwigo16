@@ -681,13 +681,14 @@ SELECT
             }
         }
 
-        // Kept out of $userdata: unserialize()'s own return type is native
-        // mixed, and merging a mixed value into $userdata here would widen
-        // every other key's inferred type to mixed for the remainder of this
-        // function. Merged back in just before the final return instead.
+        // Kept out of $userdata: ArrayHelper::safeJsonDecode()'s own return
+        // type is array<int|string, mixed>, and merging that into
+        // $userdata here would widen every other key's inferred type to
+        // mixed for the remainder of this function. Merged back in just
+        // before the final return instead.
         $preferences_raw = $userdata['preferences'];
         $preferences = ! self::emptyValue($preferences_raw) && is_string($preferences_raw)
-            ? unserialize($preferences_raw)
+            ? \Piwigo\Core\ArrayHelper::safeJsonDecode($preferences_raw)
             : [];
 
         if ($useCache) {

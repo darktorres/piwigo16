@@ -454,6 +454,23 @@ something this item introduced). Item 3 (`user_infos.preferences`) starts next.
 - `UserService::getUserData()` (~line 686): drop the manual `unserialize()` call and its
   "mixed-type-widening" workaround comment; retarget onto the Projection's decoded value.
 
+**Item 3 — DONE.** `getUserData()`'s own 3-way raw JOIN never goes through the `UserInfo`
+Projection (per that Projection's own docblock -- it's scoped to `findDefaultUserInfoRow()`
+only), so its `unserialize()` call was swapped for `ArrayHelper::safeJsonDecode()` directly,
+not "retargeted onto the Projection's decoded value" as this item's text assumed; the
+Projection's own `preferences` retype is a separate, parallel fix for its one real caller.
+Found and fixed a real, non-hypothetical data risk in the fixture: unlike `piwigo_search`
+(started empty), `tests/Fixtures/piwigo-17.0.sql`'s `piwigo_user_infos` already had a live
+`serialize()` blob for `webmaster` (`show_whats_new_16`'s acknowledgement flag) --
+json_decode()-ing that under the new code would've silently produced `[]`, flipping the
+admin dashboard's what's-new banner back on. Re-encoded that one row's data to its JSON
+equivalent by hand (kept the column's own `CREATE TABLE` type as `text` for now, deferred
+to the final regen) rather than deferring and finding out via a Visual Regression failure --
+confirmed `admin-dashboard` baseline still holds. Verified: scoped PHPStan/ECS/deptrac
+clean; full Unit 615/615, Arch clean, Integration 660/660, Contract 94/94, Browser 68/68,
+Visual 34/34 (including the `admin-dashboard` baseline the fixture fix protected). Item 4
+(`activity.details`) starts next.
+
 **4. `activity.details`** (found via this sweep, not in the original 43-item list)
 
 - Schema: `piwigo_activity.details` `varchar(255)` → `JSON` (verify no stored payload

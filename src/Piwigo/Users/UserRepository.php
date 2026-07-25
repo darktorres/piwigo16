@@ -258,13 +258,16 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
         return $row === false ? null : UserInfo::fromRow($row);
     }
 
-    public function savePreferences(int|string $userId, string $serializedPreferences): void
+    /**
+     * @param array<string, mixed> $preferences
+     */
+    public function savePreferences(int|string $userId, array $preferences): void
     {
         $this->conn->createQueryBuilder()
             ->update(Tables::userInfos())
             ->set('preferences', ':preferences')
             ->where('user_id = :userId')
-            ->setParameter('preferences', $serializedPreferences)
+            ->setParameter('preferences', json_encode($preferences))
             ->setParameter('userId', $userId)
             ->executeStatement();
     }

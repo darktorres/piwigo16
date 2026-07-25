@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 /**
- * Per-user preferences: a single serialized blob on user_infos.preferences,
+ * Per-user preferences: a single JSON object on user_infos.preferences,
  * mirrored into `CurrentUser::get()->preferences` for the lifetime of the
  * request (Legacy Coupling Retirement Track A batch A3 -- previously
  * `global $user['preferences']`). Constructor-injects UserRepository,
@@ -21,14 +21,14 @@ final readonly class PreferencesService
     {
         $currentUser = CurrentUser::get();
 
-        $this->repo->savePreferences($currentUser->id, serialize($currentUser->preferences));
+        $this->repo->savePreferences($currentUser->id, $currentUser->preferences);
     }
 
     /**
-     * @param mixed $value userprefs_save() serialize()s the whole
-     *   preferences array, so this isn't limited to strings -- real
-     *   callers pass bool (admin.php), int (password.php's timestamp), and
-     *   array (functions_search.inc.php's filter list) too
+     * @param mixed $value save() json_encode()s the whole preferences
+     *   array, so this isn't limited to strings -- real callers pass bool
+     *   (admin.php), int (password.php's timestamp), and array
+     *   (functions_search.inc.php's filter list) too
      */
     public function updateParam(string $param, mixed $value): void
     {

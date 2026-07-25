@@ -394,17 +394,6 @@ SELECT id
             ->fetchAllAssociative();
     }
 
-    public function saveNbAvailableTags(int $userId, int $count): void
-    {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::userCache())
-            ->set('nb_available_tags', ':count')
-            ->where('user_id = :userId')
-            ->setParameter('count', $count)
-            ->setParameter('userId', $userId)
-            ->executeStatement();
-    }
-
     /**
      * @param  list<array{image_id: int|string, tag_id: int|string}>  $inserts
      */

@@ -58,9 +58,10 @@ final readonly class DbMaintenanceRepository
      *
      * Deliberately does NOT replicate TagService::deleteTags()'s side
      * effects -- the `delete_tags` event trigger, activity logging,
-     * `lastmodified` touch on affected images, and
-     * `UserCacheInvalidator::invalidateNbTags()`. Those are user-facing
-     * tag-management concerns; this method backs an operator-run CLI
+     * `lastmodified` touch on affected images, and the
+     * `CurrentUser::rawAttributes['nb_available_tags']` reset. Those are
+     * user-facing tag-management concerns; this method backs an
+     * operator-run CLI
      * maintenance sweep (`bin/piwigo maintenance:orphan-tags`), where a
      * plain DB cleanup is the correct scope. The existing admin web UI
      * action (`admin/maintenance_actions.php`'s `delete_orphan_tags` case)

@@ -32,12 +32,4 @@ final class UserCacheRepository extends AbstractRepository
             ->set('need_update', '1')
             ->executeStatement();
     }
-
-    public function clearNbAvailableTags(): void
-    {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::userCache())
-            ->set('nb_available_tags', 'NULL')
-            ->executeStatement();
-    }
 }

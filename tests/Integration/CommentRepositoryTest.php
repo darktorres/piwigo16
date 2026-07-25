@@ -283,25 +283,6 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->repo->findForImage(999999, false, 'id', 'mail_address', 'ASC', 10, 0));
     }
 
-    public function test_clear_nb_comments_cache_resets_every_row(): void
-    {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::userCache())
-            ->set('nb_available_comments', '5')
-            ->executeStatement();
-
-        $this->repo->clearNbCommentsCache();
-
-        $value = $this->conn->createQueryBuilder()
-            ->select('nb_available_comments')
-            ->from(Tables::userCache())
-            ->where('user_id = 1')
-            ->executeQuery()
-            ->fetchOne();
-
-        self::assertNull($value);
-    }
-
     /**
      * Inserts a fresh, disposable comment for destructive tests (delete/
      * update/validate) so they never depend on -- or on run order relative

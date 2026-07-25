@@ -76,8 +76,6 @@ final readonly class CommentService
             $nbAvailableComments = new CommentRepository(DbConnection::build())->countAvailableWithConditions($where);
             $currentUser = $currentUser->withRawAttribute('nb_available_comments', $nbAvailableComments);
             \Piwigo\Users\CurrentUser::set($currentUser);
-
-            new CommentRepository(DbConnection::build())->saveNbAvailableComments($currentUser->id, $nbAvailableComments);
         }
         $nb_available_comments = $currentUser->rawAttributes['nb_available_comments'];
         return is_numeric($nb_available_comments) ? (int) $nb_available_comments : 0;
@@ -525,7 +523,6 @@ final readonly class CommentService
     public function invalidateNbCommentsCache(): void
     {
         \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withRawAttribute('nb_available_comments', null));
-        $this->repo->clearNbCommentsCache();
     }
 
     private static function pushCrReason(string $reason): void

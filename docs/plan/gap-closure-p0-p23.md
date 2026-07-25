@@ -1382,6 +1382,22 @@ saveNbAvailableTags()`, `Comment/CommentRepository`'s equivalent,
 `nb_available_comments = NULL` invalidation write. Delete all of them outright — pure
 removal, no replacement needed.
 
+> **2026-07-25 note: 4f done.** Deleted `TagRepository::saveNbAvailableTags()`,
+> `UserCacheRepository::clearNbAvailableTags()`, `UserCacheInvalidator::invalidateNbTags()`
+> (and its 4 `TagService` call sites — the paired `CurrentUser::rawAttributes` reset lines
+> right next to each stay, only the dead invalidator call goes),
+> `CommentRepository::saveNbAvailableComments()`/`clearNbCommentsCache()` (and the latter's
+> one call site inside `CommentService::invalidateNbCommentsCache()`, same "reset stays,
+> dead DB write goes" split). Found and fixed one real test coupled to the deleted
+> behavior: `CommentServiceTest::test_invalidate_nb_comments_cache_unsets_the_global_and_
+> clears_the_db()` asserted the now-deleted DB write directly — caught by a full
+> `composer test:integration` run, not by PHPStan/ECS (a plain SQL assertion, no type
+> involved) — rewritten to assert only the real remaining behavior (the rawAttribute
+> reset), renamed to drop `_and_clears_the_db` from its own name. Verified: PHPStan/ECS/
+> deptrac clean; Unit/Arch 717, Integration 682, Browser 68 (including `TagCrudTest`,
+> which exercises the exact call path touched), Visual 34 — all unchanged from baseline
+> except the one corrected test.
+
 ### 4g. Delete `UserService::getUserData()`'s lock/wait/503 regeneration mechanism
 
 The whole `$useCache` branch (lines 694-887) — `UniqueExecLock::begins()`/`isRunning()`/

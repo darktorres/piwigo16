@@ -12,12 +12,12 @@ use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 
 /**
- * Persistence layer for the comment domain: `comments` itself, plus two
- * thin cross-domain touches kept inline rather than promoted into a new
+ * Persistence layer for the comment domain: `comments` itself, plus a
+ * thin cross-domain touch kept inline rather than promoted into a new
  * namespace dependency (same "thin cross-domain touch stays inline"
  * precedent as GroupRepository::findMemberUsernames() reading `users`
  * directly) -- usernameExists() (the guest-impersonation guard in
- * insert_user_comment()) and clearNbCommentsCache() (`user_cache`).
+ * insert_user_comment()).
  *
  * Implements `CommentCounterInterface` (see that interface's own docblock)
  * so `Category\CategoryDefaultRenderer` (L2aCoreDomain) can depend on it
@@ -235,14 +235,6 @@ final class CommentRepository extends AbstractRepository implements CommentCount
         return is_numeric($value) && (int) $value > 0;
     }
 
-    public function clearNbCommentsCache(): void
-    {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::userCache())
-            ->set('nb_available_comments', 'NULL')
-            ->executeStatement();
-    }
-
     /**
      * Distinct comment count for the given permission/validation condition
      * fragments -- CommentService::getNbAvailableComments()'s own
@@ -268,17 +260,6 @@ final class CommentRepository extends AbstractRepository implements CommentCount
             ->fetchOne();
 
         return is_numeric($value) ? (int) $value : 0;
-    }
-
-    public function saveNbAvailableComments(int $userId, int $count): void
-    {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::userCache())
-            ->set('nb_available_comments', ':count')
-            ->where('user_id = :userId')
-            ->setParameter('count', $count)
-            ->setParameter('userId', $userId)
-            ->executeStatement();
     }
 
     /**

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
-use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -262,7 +261,6 @@ final readonly class TagService
             $nbAvailableTags = count($this->getAvailableTags());
             $currentUser = $currentUser->withRawAttribute('nb_available_tags', $nbAvailableTags);
             \Piwigo\Users\CurrentUser::set($currentUser);
-            $this->repo->saveNbAvailableTags($currentUser->id, $nbAvailableTags);
         }
 
         $nbAvailableTags = $currentUser->rawAttributes['nb_available_tags'] ?? null;
@@ -425,7 +423,6 @@ final readonly class TagService
         $this->newImageService()
             ->updateImagesLastmodified($imagesToUpdate);
 
-        UserCacheInvalidator::invalidateNbTags();
         \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withRawAttribute('nb_available_tags', null));
     }
 
@@ -449,7 +446,6 @@ final readonly class TagService
 
         $this->newImageService()
             ->updateImagesLastmodified($imageIds);
-        UserCacheInvalidator::invalidateNbTags();
         \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withRawAttribute('nb_available_tags', null));
     }
 
@@ -491,7 +487,6 @@ final readonly class TagService
                     $newId = $this->repo->insertWithoutTimestamp($tagName, $urlName);
                     $this->tagIdFromTagNameCache->set($tagName, $newId);
 
-                    UserCacheInvalidator::invalidateNbTags();
                     \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withRawAttribute('nb_available_tags', null));
 
                     return $newId;
@@ -541,7 +536,6 @@ final readonly class TagService
 
         $this->newImageService()
             ->updateImagesLastmodified($imagesToUpdate);
-        UserCacheInvalidator::invalidateNbTags();
         \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withRawAttribute('nb_available_tags', null));
     }
 

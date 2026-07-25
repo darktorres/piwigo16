@@ -364,24 +364,20 @@ namespace Piwigo\Tests\Integration {
 
         // --- invalidateNbCommentsCache() -------------------------------------
 
-        public function test_invalidate_nb_comments_cache_unsets_the_global_and_clears_the_db(): void
+        /**
+         * Gap-closure Stage 4f (docs/plan/gap-closure-p0-p23.md): this no
+         * longer touches `user_cache.nb_available_comments` at all -- that
+         * write was confirmed dead (the read side only ever consults
+         * CurrentUser::rawAttributes, never the DB column) and deleted
+         * outright, along with CommentRepository::clearNbCommentsCache().
+         */
+        public function test_invalidate_nb_comments_cache_unsets_the_global(): void
         {
             CurrentUser::set(CurrentUser::get()->withRawAttribute('nb_available_comments', 5));
-            $this->conn->createQueryBuilder()
-                ->update(Tables::userCache())
-                ->set('nb_available_comments', '5')
-                ->executeStatement();
 
             $this->service->invalidateNbCommentsCache();
 
             self::assertFalse(isset(CurrentUser::get()->rawAttributes['nb_available_comments']));
-            $value = $this->conn->createQueryBuilder()
-                ->select('nb_available_comments')
-                ->from(Tables::userCache())
-                ->where('user_id = 1')
-                ->executeQuery()
-                ->fetchOne();
-            self::assertNull($value);
         }
 
         /**

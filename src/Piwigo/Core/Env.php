@@ -124,10 +124,8 @@ final class Env
      * Values are stripped of line-breaks to prevent .env injection via
      * untrusted input (e.g. a submitted install form).
      *
-     * Shared by InstallWizard::performInstall() (writing freshly submitted
-     * credentials) and DbCredentials::migrateFromLegacyFile() (migrating an
-     * existing site's credentials out of the classic database.inc.php) --
-     * both need the identical atomic merge-and-preserve behavior.
+     * Used by InstallWizard::performInstall() to write the freshly
+     * submitted DB credentials into .env.
      *
      * @param array<string, string> $values
      */

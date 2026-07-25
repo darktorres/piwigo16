@@ -9,9 +9,7 @@ declare(strict_types=1);
 // include/, a resurrected admin/include/, an include statement reaching
 // into a legacy path -- fails Arch instead of silently reviving the old
 // layout. Directory-content allowlists (not string bans) on purpose:
-// provenance docblocks legitimately mention old paths all over src/, and
-// DbPatch\Patch80 carries an 847-entry frozen data list of ancient
-// PhpWebGallery file paths.
+// provenance docblocks legitimately mention old paths all over src/.
 
 /**
  * @return list<string>
@@ -161,8 +159,6 @@ test('public/ contains exactly the relocated entry points, robots.txt, and the s
         'search.php',
         'tags.php',
         'themes',
-        'upgrade.php',
-        'upgrade_feed.php',
         'ws.php',
     ]);
 
@@ -178,7 +174,10 @@ test('public/ contains exactly the relocated entry points, robots.txt, and the s
 test('install/ contains only data files and the anti-listing stub', function (): void {
     // The 145 frozen install/db/*.php + install/upgrade_X.Y.Z.php scripts
     // were migrated to Piwigo\Admin\Install\{DbPatch,VersionUpgrade}
-    // classes and deleted (P23 batch 8g). Only schema/config data files
+    // classes and deleted (P23 batch 8g) -- those classes were themselves
+    // later deleted entirely (gap-closure Stage 1a-bis: the whole
+    // in-place-upgrade chain contradicted this codebase's own documented
+    // "no in-place upgrade" architecture). Only schema/config data files
     // may live here.
     expect(listDirectoryEntries(dirname(__DIR__, 2) . '/install'))->toBe([
         'config.sql',

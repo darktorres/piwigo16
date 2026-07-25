@@ -175,11 +175,6 @@ final class Tables
         return DbCredentials::current()->prefix . 'themes';
     }
 
-    public static function upgrade(): string
-    {
-        return DbCredentials::current()->prefix . 'upgrade';
-    }
-
     public static function userAccess(): string
     {
         return DbCredentials::current()->prefix . 'user_access';

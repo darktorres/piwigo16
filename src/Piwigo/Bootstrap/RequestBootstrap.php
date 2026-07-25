@@ -396,13 +396,6 @@ final class RequestBootstrap
             'archiveDays' => \Piwigo\Config\CurrentConfig::logArchiveDays(),
         ]));
 
-        if (! \Piwigo\Config\CurrentConfig::checkUpgradeFeed()) {
-            if (\Piwigo\Config\CurrentConfig::piwigoDbVersion() === null or \Piwigo\Config\CurrentConfig::piwigoDbVersion() !== \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)) {
-                new RedirectService()
-                    ->redirect(new UrlService(new HtmlService())->getRootUrl() . 'upgrade.php');
-            }
-        }
-
         ImageStdParams::load_from_db();
 
         session_start();
@@ -621,17 +614,6 @@ final class RequestBootstrap
                     'Retry-After' => '900',
                     'Content-Type' => 'text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset(),
                 ], 503));
-            }
-        }
-
-        if (\Piwigo\Config\CurrentConfig::checkUpgradeFeed()) {
-            // Formerly `include_once .../functions_upgrade.php` + bare
-            // check_upgrade_feed() (migrated to a real class, P23 sub-batch
-            // 8f-6; the legacy file now only carries frozen-script
-            // delegates this path doesn't need).
-            if (\Piwigo\Admin\Install\UpgradeService::checkUpgradeFeed($conn)) {
-                $pageState->addHeaderMessage('Some database upgrades are missing, '
-                  . '<a href="' . new UrlService(new HtmlService())->getAbsoluteRootUrl(false) . 'upgrade_feed.php">upgrade now</a>');
             }
         }
 

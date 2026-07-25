@@ -34,11 +34,10 @@ use Psr\Container\ContainerInterface;
  *
  * Legacy Coupling Retirement gap-closure (entry-shell define()/include
  * round): also publishes $paths to CurrentPaths::set() here -- the one
- * point every real bootstrap path (HTTP, CLI, install/upgrade) already
- * converges on a real Paths, for the handful of static-utility classes
- * (DbPatch/VersionUpgrade migration classes, LegacyFileConf/LegacyDbLayer)
- * that can't take constructor-injected Paths at all. See CurrentPaths's
- * own docblock.
+ * point every real bootstrap path (HTTP, CLI, install) already converges
+ * on a real Paths, for the handful of static-utility classes that can't
+ * take constructor-injected Paths at all. See CurrentPaths's own
+ * docblock.
  */
 final class Kernel
 {

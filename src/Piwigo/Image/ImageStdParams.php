@@ -26,10 +26,9 @@ namespace Piwigo\Image;
  * Legacy Coupling Retirement Phase 8, 8d: its write methods (save()/
  * save_disabled()/restore_default()/set_and_save()/
  * set_and_save_disabled()) go through CurrentConfigService::get()
- * (Tier 2) -- Admin\Install\DbPatch\Patch177.php and Patch123.php call
- * set_and_save_disabled()/set_and_save() directly, applied by
- * Admin\Install\UpgradeRunner, covered by
- * InstallBootstrap::activateConfigService() on the upgrade path.
+ * (Tier 2) -- Controller\Admin\ConfigurationSubController calls all 5
+ * directly from the admin Configuration page's save handler, covered by
+ * InstallBootstrap::activateConfigService() on the normal request path.
  */
 final class ImageStdParams
 {

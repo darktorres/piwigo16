@@ -82,15 +82,6 @@ test('seed() putenvs each non-null value and resets the memo', function (): void
     expect(DbCredentials::current()->host)->toBe('seeded.example.test');
 });
 
-test('migrateFromLegacyFile() is a no-op once PIWIGO_DB_HOST is already set', function (): void {
-    putenv('PIWIGO_DB_HOST=already-set.example.test');
-    DbCredentials::reset();
-
-    DbCredentials::migrateFromLegacyFile(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
-
-    expect(DbCredentials::current()->host)->toBe('already-set.example.test');
-});
-
 test('toMysqlArgs() includes -p only when a password is set', function (): void {
     $withoutPassword = new DbCredentials(host: 'localhost', user: 'root', password: '', database: 'piwigo', prefix: 'piwigo_');
     expect($withoutPassword->toMysqlArgs())->toBe(['-hlocalhost', '-uroot']);

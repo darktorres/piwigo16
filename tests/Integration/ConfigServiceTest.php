@@ -84,9 +84,9 @@ final class ConfigServiceTest extends IntegrationTestCase
      * ConfigService::allRowsFromCacheOrDb() caches the bulk load's
      * param => value map in CachePools::config() -- this is the real test
      * of both halves of that design: a write that bypasses ConfigService
-     * entirely (any of this codebase's real raw-SQL config writers --
-     * MenubarLayoutRepository, frozen DbPatch/VersionUpgrade scripts)
-     * leaves the cache stale until a real ConfigService write clears it.
+     * entirely (this codebase's real raw-SQL config writer,
+     * MenubarLayoutRepository) leaves the cache stale until a real
+     * ConfigService write clears it.
      */
     public function test_loadConfFromDb_caches_the_bulk_load_until_a_write_invalidates_it(): void
     {

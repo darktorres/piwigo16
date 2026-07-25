@@ -16,10 +16,8 @@ namespace Piwigo\Cache;
  * set raw global (null) behaved before -- a throwing get() would change
  * behavior for every one of those call sites instead of preserving it.
  *
- * Two construction sites: `Piwigo\Bootstrap\RequestBootstrap::connect()`
- * (the normal request pipeline) and
- * `Piwigo\Admin\Install\UpgradeRunner::performUpgrade()` (the version-
- * upgrade path, which never runs RequestBootstrap either).
+ * One construction site: `Piwigo\Bootstrap\RequestBootstrap::connect()` (the
+ * normal request pipeline).
  */
 final class CurrentPersistentCache
 {

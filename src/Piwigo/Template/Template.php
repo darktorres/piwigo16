@@ -30,11 +30,10 @@ use Smarty\Smarty;
  * inside __construct() goes through CurrentConfigService::get() (Tier 2)
  * -- safe even though the write fires from the constructor itself, not a
  * method called later, because every real construction site
- * (Bootstrap\RequestBootstrap.php x2, Admin\Install\InstallWizard.php,
- * Admin\Install\UpgradeRunner.php) now runs after its own path has
- * already activated CurrentConfigService (RequestBootstrap::connect()
- * resolves one before finalize() ever constructs a Template;
- * InstallWizard/UpgradeRunner are only ever constructed after
+ * (Bootstrap\RequestBootstrap.php x2, Admin\Install\InstallWizard.php) now
+ * runs after its own path has already activated CurrentConfigService
+ * (RequestBootstrap::connect() resolves one before finalize() ever
+ * constructs a Template; InstallWizard is only ever constructed after
  * InstallBootstrap::activateConfigService()).
  */
 final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\TemplateInterface
@@ -161,8 +160,8 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             // install, the config table doesn't exist yet at this exact
             // call site (confirmed via a real TableNotFoundException, not
             // assumed). Every other real construction site
-            // (Bootstrap\RequestBootstrap.php x2, Admin\Install\UpgradeRunner.php)
-            // always has an existing config table by the time it runs.
+            // (Bootstrap\RequestBootstrap.php x2) always has an existing
+            // config table by the time it runs.
             // Harmless to skip here: this write is purely a "don't repeat
             // this filesystem check" cache -- the very next real request
             // (post-install, table now exists) sees CurrentConfig::has('data_dir_checked')

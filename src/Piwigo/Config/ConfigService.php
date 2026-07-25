@@ -15,8 +15,7 @@ namespace Piwigo\Config;
  * constructor-injected where a class can be container-built, or reached
  * via Piwigo\Config\CurrentConfigService::get() otherwise (static
  * utilities, throwaway-constructed classes, and every pre-container
- * bootstrap/install/upgrade call site, including the frozen
- * DbPatch/VersionUpgrade set).
+ * bootstrap/install call site).
  *
  * loadConfFromDb()/confUpdateParam() faithfully replicate the CURRENT
  * legacy encoding (include/functions.inc.php's load_conf_from_db()/
@@ -79,7 +78,6 @@ final readonly class ConfigService
         'calendar_show_any' => 'calendarShowAny',
         'calendar_show_empty' => 'calendarShowEmpty',
         'category_url_style' => 'categoryUrlStyle',
-        'check_upgrade_feed' => 'checkUpgradeFeed',
         'checksum_compute_blocksize' => 'checksumComputeBlocksize',
         'chmod_value' => 'chmodValue',
         'comment_spam_max_links' => 'commentSpamMaxLinks',
@@ -238,7 +236,6 @@ final readonly class ConfigService
         'picture_sizes_icon' => 'pictureSizesIcon',
         'picture_slideshow_icon' => 'pictureSlideShowIcon',
         'picture_url_style' => 'pictureUrlStyle',
-        'piwigo_db_version' => 'piwigoDbVersion',
         'piwigo_installed_version' => 'piwigoInstalledVersion',
         'proxy_auth' => 'proxyAuth',
         'proxy_server' => 'proxyServer',

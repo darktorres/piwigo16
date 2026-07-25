@@ -14,17 +14,13 @@ namespace Piwigo\Core;
  *
  * Legacy Coupling Retirement gap-closure (entry-shell define()/include
  * round): exists for the static-utility classes that used to read the raw
- * `PHPWG_ROOT_PATH`/`PWG_LOCAL_DIR` constants (`LegacyFileConf::read()`,
- * `LegacyDbLayer::value()`, individual `DbPatch`/`VersionUpgrade` classes)
- * -- these are constructed with no constructor args at all
- * (`DbPatchInterface::apply(Connection $conn): void` takes no `Paths`,
- * and threading one through the entire `DbPatchRegistry`/121-class
- * interface for the ~10 classes that actually need it would be a much
- * larger, unrelated-to-this-fix ripple), so a required `Paths` constructor
- * or method parameter is impossible at those call sites -- but every real
- * entry point already computes a `Paths` before `Kernel::boot()` runs,
- * which is where this gets set (the one place every bootstrap path --
- * HTTP, CLI, install/upgrade -- already converges on a real `Paths`).
+ * `PHPWG_ROOT_PATH`/`PWG_LOCAL_DIR` constants (e.g. `ThemeCatalog`,
+ * `ImagePathHelper`) -- these have no constructor at all, so a required
+ * `Paths` constructor or method parameter is impossible at those call
+ * sites -- but every real entry point already computes a `Paths` before
+ * `Kernel::boot()` runs, which is where this gets set (the one place
+ * every bootstrap path -- HTTP, CLI, install -- already converges on a
+ * real `Paths`).
  */
 final class CurrentPaths
 {

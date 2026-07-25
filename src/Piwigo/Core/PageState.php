@@ -46,9 +46,7 @@ namespace Piwigo\Core;
  *
  * `countQueries`/`queriesTime` (batch A5.2h) are a running per-request
  * accumulator incremented by MysqliDb::query() on every database query;
- * TimingHelper/PageTailRenderer read the running total, UpgradeRunner
- * resets both to 0 as a checkpoint before a version-upgrade step so its
- * own displayed total reflects only that step's queries. No
+ * TimingHelper/PageTailRenderer read the running total. No
  * `attachGlobals()` bridging for `authKeyId`/`countQueries`/
  * `queriesTime` -- confirmed via a repo-wide grep that every real
  * reader/writer is retargeted in this same batch, so there is no
@@ -281,17 +279,6 @@ final class PageState
     public function addDebugOutput(string $line): void
     {
         $this->debugOutput .= $line;
-    }
-
-    /**
-     * Called by UpgradeRunner as a checkpoint before a version-upgrade
-     * step, so its own displayed "queries during this step" total isn't
-     * inflated by whatever ran earlier in the same request.
-     */
-    public function resetQueryCounters(): void
-    {
-        $this->countQueries = 0;
-        $this->queriesTime = 0.0;
     }
 
     public function setBodyId(string $id): void

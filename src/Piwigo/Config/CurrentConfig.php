@@ -489,22 +489,6 @@ final class CurrentConfig
         self::$categoryUrlStyle = $value;
     }
 
-    // === check_upgrade_feed ===
-    /**
-     * Check for pending database upgrades on every page load.
-     */
-    private static bool $checkUpgradeFeed = false;
-
-    public static function checkUpgradeFeed(): bool
-    {
-        return self::$checkUpgradeFeed;
-    }
-
-    public static function setCheckUpgradeFeed(bool $value): void
-    {
-        self::$checkUpgradeFeed = $value;
-    }
-
     // === checksum_compute_blocksize ===
     /**
      * Number of photos per block when computing file checksums in batch.
@@ -2710,22 +2694,6 @@ final class CurrentConfig
     public static function setPictureUrlStyle(string $value): void
     {
         self::$pictureUrlStyle = $value;
-    }
-
-    // === piwigo_db_version ===
-    /**
-     * Branch identifier of the last applied database migration (e.g. 16).
-     */
-    private static ?string $piwigoDbVersion = null;
-
-    public static function piwigoDbVersion(): ?string
-    {
-        return self::$piwigoDbVersion;
-    }
-
-    public static function setPiwigoDbVersion(?string $value): void
-    {
-        self::$piwigoDbVersion = $value;
     }
 
     // === piwigo_installed_version ===
@@ -5268,15 +5236,14 @@ final class CurrentConfig
     /**
      * A small, explicit snapshot of the handful of legacy config defaults
      * still needed before a real `config` table exists to load from --
-     * LegacyFileConf::read() (frozen DbPatch/VersionUpgrade classes) and
-     * install.php/upgrade.php/upgrade_feed.php's own entry-shell bridge
-     * both build a bare `$conf` array from this, then overlay a site's
+     * Controller\Admin\ConfigurationSubController::orderByIsLocal() builds
+     * a bare `$conf` array from this, then overlays a site's
      * local/config/config.inc.php on top. NOT a general mechanism: these
-     * are exactly the keys real callers of that bridge read (confirmed by
-     * grep, not assumed), matching the former defaultsArray()'s own real
-     * output exactly (which only ever covered non-'custom', non-null-
-     * default SCHEMA entries -- every 'custom' key's real caller already
-     * has its own inline fallback regardless, unaffected either way).
+     * are exactly the keys that real caller reads (confirmed by grep, not
+     * assumed), matching the former defaultsArray()'s own real output
+     * exactly (which only ever covered non-'custom', non-null-default
+     * SCHEMA entries -- every 'custom' key's real caller already has its
+     * own inline fallback regardless, unaffected either way).
      *
      * @return array<string, mixed>
      */
@@ -5289,7 +5256,6 @@ final class CurrentConfig
             'rate' => true,
             'rate_anonymous' => true,
             'webmaster_id' => 1,
-            'check_upgrade_feed' => false,
         ];
     }
 

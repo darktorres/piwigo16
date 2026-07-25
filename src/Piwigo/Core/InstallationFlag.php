@@ -13,10 +13,10 @@ namespace Piwigo\Core;
  * Unlike Piwigo\Core\AdminContext/WsContext, this does NOT fully retire
  * the raw define(): install.php's own performInstall() step still does
  * `define('PHPWG_INSTALLED', true)` immediately before running the
- * install, matching PWG_CHARSET/DB_CHARSET/DB_COLLATE's own established
- * Piwigo\Admin\Install\DbPatch\UpgradeCharset precedent right next to it
- * in the same block ("shell-defined constants still win when present").
- * Verified via a real repo-wide scan: nothing under
+ * install, right next to its own `PWG_CHARSET`/`DB_CHARSET`/`DB_COLLATE`
+ * `defined(...) or define(...)` guards in the same block ("shell-defined
+ * constants still win when present"). Verified via a real repo-wide scan:
+ * nothing under
  * src/Piwigo/Admin/Install/ itself reads PHPWG_INSTALLED (only
  * Core\Lang/Users\UserService/Bootstrap\SessionBootstrap do, all outside
  * the install flow), so isActive() checking defined() first is a safety

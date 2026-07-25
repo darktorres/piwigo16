@@ -21,7 +21,6 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
-use Piwigo\Admin\Install\DbPatch\LegacyFileConf;
 use Piwigo\Auth\CookieService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
@@ -53,9 +52,9 @@ use Piwigo\Users\UserService;
  *
  * The constructor reads data_location via LegacyFileConf::read() -- a
  * site owner's `local/config/config.inc.php` override is only visible
- * through the raw file, not through `CurrentConfig::`'s accessors, same
- * reasoning as the DbPatch/VersionUpgrade file family. render()'s own
- * former `global $user;` was fully retired
+ * through the raw file, not through `CurrentConfig::`'s accessors (no
+ * real `config` table exists yet at this point in the install flow).
+ * render()'s own former `global $user;` was fully retired
  * (Legacy Coupling Retirement Phase 8 gap-closure) once every consumer,
  * including `AuthService::logUser()`/`PreferencesService`'s own methods,
  * had already moved onto `CurrentUser` in earlier phases -- $user is now
@@ -499,7 +498,6 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
         $conn->executeStatement($query);
 
         $configService = \Piwigo\Config\CurrentConfigService::get();
-        $configService->confUpdateParam('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION));
         $configService->confUpdateParam('gallery_title', Lang::t('Just another Piwigo gallery'));
 
         $configService->confUpdateParam(
@@ -556,32 +554,6 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             ->createUserInfos([1, 2], [
                 'language' => $this->language,
             ]);
-
-        // Available upgrades must be ignored after a fresh installation. To
-        // make PWG avoid upgrading, we must tell it upgrades have already been
-        // made.
-        $row = $conn->fetchNumeric('SELECT NOW();');
-        assert($row !== false);
-        // Former top-level code define()d CURRENT_DATE from this value;
-        // SEC-60 forbids define() in src/Piwigo and nothing else on the
-        // install path ever reads that constant (its only real readers are
-        // the frozen install/upgrade_*.php scripts, which never run during
-        // a fresh install), so it stays a plain local here.
-        $dbnow = $row[0] ?? null;
-        $datas = [];
-        foreach (UpgradeService::getAvailableUpgradeIds() as $upgrade_id) {
-            $datas[] = [
-                'id' => $upgrade_id,
-                'applied' => $dbnow,
-                'description' => 'upgrade included in installation',
-            ];
-        }
-        new BatchWriter($conn)
-            ->massInsert(
-                Tables::upgrade(),
-                array_keys($datas[0]),
-                $datas
-            );
     }
 
     /**

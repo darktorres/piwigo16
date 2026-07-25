@@ -16,10 +16,10 @@ use Piwigo\Db\DbConnection;
  * at once, same pattern as this batch's own Piwigo\Core\FilesystemHelper.
  *
  * Legacy Coupling Retirement Phase 8, 8d: invalidate()'s confDeleteParam()
- * call goes through CurrentConfigService::get() (Tier 2) -- reachable both
- * directly (Admin\Install\UpgradeRunner.php) and transitively (via
- * Admin\Extensions\CoreUpdateService::upgradeTo()), both covered by
- * InstallBootstrap::activateConfigService() on the install/upgrade path.
+ * call goes through CurrentConfigService::get() (Tier 2) -- reachable via
+ * Admin\Extensions\CoreUpdateService::upgradeTo() (the admin Updates page's
+ * core-version-upgrade action), covered by
+ * InstallBootstrap::activateConfigService() on the normal request path.
  */
 final class UserCacheInvalidator
 {

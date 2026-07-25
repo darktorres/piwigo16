@@ -67,18 +67,13 @@ test('setAuthKeyId sets and clears the current auth key id', function (): void {
     expect($state->authKeyId)->toBeNull();
 });
 
-test('addQueryTime accumulates count and time, resetQueryCounters zeroes both', function (): void {
+test('addQueryTime accumulates count and time', function (): void {
     $state = PageState::current();
     $state->addQueryTime(0.5);
     $state->addQueryTime(0.25);
 
     expect($state->countQueries)->toBe(2)
         ->and($state->queriesTime)->toBe(0.75);
-
-    $state->resetQueryCounters();
-
-    expect($state->countQueries)->toBe(0)
-        ->and($state->queriesTime)->toBe(0.0);
 });
 
 test('attachGlobals seeds the singleton like current(), idempotently', function (): void {

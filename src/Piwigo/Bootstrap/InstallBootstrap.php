@@ -12,12 +12,12 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 
 /**
- * Legacy Coupling Retirement Phase 8, 8b -- the install.php/upgrade.php/
- * upgrade_feed.php counterpart to RequestBootstrap::bootEntryPoint()/
- * CliBootstrap::buildApplication() for the HTTP request path. Same
- * "ConfigLoader::applyDefaults()/applyEnvOverrides() then Kernel::boot()
- * before anything else" shape as both of those, applied to the one
- * remaining family of entry points that didn't have it yet.
+ * Legacy Coupling Retirement Phase 8, 8b -- the install.php counterpart to
+ * RequestBootstrap::bootEntryPoint()/CliBootstrap::buildApplication() for
+ * the HTTP request path. Same "ConfigLoader::applyDefaults()/
+ * applyEnvOverrides() then Kernel::boot() before anything else" shape as
+ * both of those, applied to the one remaining family of entry points that
+ * didn't have it yet.
  *
  * boot() itself stays deliberately minimal (container boot only, no
  * service resolution) and must run before any real credentials are known
@@ -32,20 +32,19 @@ use Piwigo\Core\Paths;
  * form) has run.
  *
  * activateConfigService() (Legacy Coupling Retirement Phase 8, 8d) is the
- * install/upgrade-path counterpart to RequestBootstrap::connect()'s/
+ * install-path counterpart to RequestBootstrap::connect()'s/
  * CliBootstrap::buildApplication()'s own CurrentConfigService::set() call
  * -- called separately, and later, than boot() for the identical reason:
- * it must run after real DB credentials are seeded (install.php: after
- * InstallWizard::boot(); upgrade.php/upgrade_feed.php: after their own
- * DbCredentials::seed(...) call), or the ConfigService/Connection
- * resolved and cached here would carry stale ones for the rest of the
- * request. Once called, every Tier-2 class
- * reachable from either path (UpgradeRunner.php/UpgradeService.php/
- * Admin/themes.php/plugins.php/updates.php/Cache/UserCacheInvalidator.php/
- * Image/ImageService.php/Page/NoPhotoYetRenderer.php/Template/Template.php/
- * Image/ImageStdParams.php/Core/UniqueExecLock.php) can safely call
- * CurrentConfigService::get() the same way they already do when reached
- * from the HTTP path (RequestBootstrap::connect() activates it there).
+ * it must run after real DB credentials are seeded (after InstallWizard::
+ * boot()'s own DbCredentials::seed(...) call), or the ConfigService/
+ * Connection resolved and cached here would carry stale ones for the rest
+ * of the request. Once called, every Tier-2 class reachable from the
+ * install path (Admin/themes.php/plugins.php/updates.php/
+ * Cache/UserCacheInvalidator.php/Image/ImageService.php/
+ * Page/NoPhotoYetRenderer.php/Template/Template.php/Image/ImageStdParams.php/
+ * Core/UniqueExecLock.php) can safely call CurrentConfigService::get() the
+ * same way they already do when reached from the HTTP path
+ * (RequestBootstrap::connect() activates it there).
  */
 final class InstallBootstrap
 {

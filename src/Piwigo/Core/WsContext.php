@@ -8,9 +8,8 @@ namespace Piwigo\Core;
  * "This request is dispatched through ws.php" marker -- Legacy Coupling
  * Retirement gap-closure (entry-shell define()/include round, Part 0b),
  * typed replacement for the raw IN_WS constant (`defined('IN_WS')`
- * reads). Same shape as Piwigo\Core\AdminContext (itself matching
- * Piwigo\Core\UpgradeFlow's precedent) -- see AdminContext's own
- * docblock for why reset() exists.
+ * reads). Same shape as Piwigo\Core\AdminContext -- see AdminContext's
+ * own docblock for why reset() exists.
  */
 final class WsContext
 {

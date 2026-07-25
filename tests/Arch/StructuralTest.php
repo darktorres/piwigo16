@@ -469,10 +469,10 @@ test('src/Piwigo/ contains no raw IN_ADMIN/IN_WS/PHPWG_INSTALLED/PHPWG_URL/PHPWG
     // above there's no legitimate exception left to allowlist. The 2
     // entry-shell define()s that still legitimately exist (admin.php/
     // admin/popuphelp.php call AdminContext::mark(), not define()) and
-    // install.php's own `define('PHPWG_INSTALLED', true)` (matching
-    // PWG_CHARSET/DB_CHARSET/DB_COLLATE's own established
-    // Admin\Install\DbPatch\UpgradeCharset precedent) are outside
-    // src/Piwigo/, so this scan never sees them.
+    // install.php's own `define('PHPWG_INSTALLED', true)` (right next to
+    // its own PWG_CHARSET/DB_CHARSET/DB_COLLATE `defined(...) or
+    // define(...)` guards) are outside src/Piwigo/, so this scan never
+    // sees them.
     $repoRoot = __DIR__ . '/../..';
 
     $hits = [
@@ -486,9 +486,8 @@ test('src/Piwigo/ contains no raw IN_ADMIN/IN_WS/PHPWG_INSTALLED/PHPWG_URL/PHPWG
 
     // Piwigo\Core\InstallationFlag::isActive() itself legitimately reads
     // `defined('PHPWG_INSTALLED')` -- it IS the typed replacement, not a
-    // caller of it (matches Admin\Install\DbPatch\UpgradeCharset's own
-    // identical defined('PWG_CHARSET')/defined('DB_CHARSET') self-reads,
-    // which this same style of test elsewhere in this file doesn't ban
+    // caller of it (this same style of test elsewhere in this file
+    // doesn't ban PWG_CHARSET/DB_CHARSET's own identical self-reads
     // either, since there's no sibling "no PWG_CHARSET" test at all).
     $unexpected = array_values(array_filter(
         $hits,
@@ -531,11 +530,14 @@ test('src/Piwigo/ contains no global $conf/$prefixeTable/$last_time/$t2 declarat
     // DbCredentials::current()->prefix for the table-prefix reads, and, for the handful
     // of keys genuinely only ever set by a site's own
     // local/config/config.inc.php (never mirrored into CurrentConfig:: mid-
-    // migration), Piwigo\Admin\Install\DbPatch\LegacyFileConf::read()/
-    // LegacyDbLayer::value(). $t2 (RequestBootstrap::configure()) is now
-    // an explicit parameter instead, passed straight through from
-    // include/common.inc.php's own capture. Zero-tolerance, no allowlist
-    // needed -- same shape as the test above.
+    // migration), LegacyFileConf::read()/LegacyDbLayer::value() (both in
+    // the now-deleted DbPatch namespace at the time; LegacyFileConf moved
+    // to Piwigo\Admin\Install\ directly, LegacyDbLayer's own last caller
+    // was deleted along with it -- gap-closure Stage 1a-bis). $t2
+    // (RequestBootstrap::configure()) is now an explicit parameter
+    // instead, passed straight through from include/common.inc.php's own
+    // capture. Zero-tolerance, no allowlist needed -- same shape as the
+    // test above.
     $repoRoot = __DIR__ . '/../..';
 
     $hits = [
@@ -862,16 +864,6 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         'Admin/Image/ImageExtImagick.php' => 1,
         'Admin/Image/PwgImage.php' => 2,
         'Admin/Upload/UploadService.php' => 10,
-
-        // Frozen historical VersionUpgrade class (Phase 1j's own scope
-        // note: "die()/exit() and ConfigDb:: calls deliberately
-        // untouched").
-        'Admin/Install/VersionUpgrade/UpgradeFrom_1_3_1.php' => 3,
-
-        // upgrade.php's own orchestration: a legacy, top-level-script-
-        // style page (no PSR-7 Response object involved), same as the
-        // Admin/Install/ orchestration classes generally.
-        'Admin/Install/UpgradeRunner.php' => 2,
 
         // Core/ShutdownHandler.php: exit(143), a deliberate, documented
         // signal-termination exit code (128 + SIGTERM), not an error path.

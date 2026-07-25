@@ -491,9 +491,16 @@ define(\'DB_COLLATE\', \'\');
             $this->prefixeTable,
         );
 
+        // gap-closure Stage 1a-bis item 5: config.value is JSON now --
+        // json_encode() the value (not the bare hex string) so
+        // ConfigService::hydrate()'s json_decode() read side gets back a
+        // real string instead of failing to parse it.
+        $secretKeyJson = json_encode(sha1(random_bytes(1000)));
+        assert($secretKeyJson !== false);
+
         $query = '
 INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
-   VALUES (\'secret_key\',\'' . sha1(random_bytes(1000)) . '\',
+   VALUES (\'secret_key\',\'' . $secretKeyJson . '\',
    \'a secret key specific to the gallery for internal use\');';
         $conn->executeStatement($query);
 

@@ -696,12 +696,21 @@ final class BrowserTestHelpers
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
         // use_standard_pages already defaults to 'true' in the fixture --
         // set explicitly anyway so this helper is correct standalone.
+        // json_encode() each value per its own CurrentConfig property type
+        // (bool stays a bare true/false literal, the two string-typed
+        // paths get JSON-quoted) -- this write bypasses ConfigService::
+        // encode() entirely, so it has to match that convention by hand.
         foreach ([
-            'use_standard_pages' => 'true',
+            'use_standard_pages' => true,
             'standard_pages_selected_logo' => 'custom_logo',
             'standard_pages_selected_logo_path' => $relativePath,
         ] as $param => $value) {
-            $escaped = $db->real_escape_string($value);
+            $jsonValue = json_encode($value);
+            if ($jsonValue === false) {
+                throw new ExpectationFailedException("json_encode failed for config param '{$param}'");
+            }
+
+            $escaped = $db->real_escape_string($jsonValue);
             $db->query(sprintf(
                 "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON DUPLICATE KEY UPDATE value = '%s'",
                 $prefix,

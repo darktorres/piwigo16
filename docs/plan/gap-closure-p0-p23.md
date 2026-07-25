@@ -550,6 +550,72 @@ Design:
   branch is still reachable once every write goes through consistent JSON encoding.
 - Schema + seed-data edits as scoped above.
 
+**Item 5 — DONE, with one real deviation from this plan text.**
+
+`piwigo_config.value` stays `text`, not `JSON` -- confirmed live (`ERROR 3140 Invalid JSON
+text`) that MySQL's JSON column type rejects non-JSON content outright, and 2 keys
+genuinely can't be JSON: `derivatives`/`disabled_derivatives` hold real `DerivativeParams`/
+`WatermarkParams` objects (`DerivativeParams` even declares its own `__serialize()` hook)
+reconstructed via `unserialize()`'s object-identity-preserving behavior, which
+`json_encode()`/`json_decode()` would silently destroy (every element becomes a plain
+array/stdClass). `ConfigService::OBJECT_SERIALIZED_PARAMS` (`['derivatives',
+'disabled_derivatives']`) carves these two out by param name in both `encode()`/`hydrate()`
+-- everything else goes through uniform `json_encode()`/`json_decode()` as planned, and
+`decodeScalar()`/`unserializeArray()` are gone entirely (folded into `hydrate()`'s
+`match()`, now doing real type-guards instead of coercion since every value already
+decodes to its own native type).
+
+Real scope was bigger than the plan's 12-row estimate -- an automated verification script
+(reflects on every `install/config.sql` row's real `CurrentConfig` setter type, checks
+`json_decode()` of the stored value against it) caught the plan's row-count 2 rows short
+and found 2 more the manual audit missed entirely: **`picture_informations`** (a `serialize()`
+array the plan's own file list never counted) and **`mail_theme`**/**`index_search_in_set_action`**
+(bare unquoted strings -- the second is a real oddity: a `?string`-typed property that
+deliberately stores the *literal text* `"true"`/`"false"`, not a real bool, so its seed row
+needed quoting even though it "looks like" one of the 38 already-fine bool rows). Total: 14
+`install/config.sql` edits (11 planned + `picture_informations` + `mail_theme` +
+`index_search_in_set_action`), `blk_menubar`'s seed row dropped entirely (relies on its
+`?array` PHP default, matching how most properties have no seed row).
+
+Found and fixed 2 real raw-SQL bypass sites that construct config rows outside
+`ConfigService::encode()` and would have silently broken under `json_decode()`:
+`InstallWizard.php`'s `secret_key` raw INSERT (now `json_encode()`s the hex string before
+interpolating it) and `ImageRepository::tryAcquireLoungeLock()`/`findLoungeLockValue()`'s
+`empty_lounge_running` lock (also switched the raw double-quote-delimited SQL literal to a
+real parameterized statement, since a `json_encode()`d string's own quotes would otherwise
+break that delimiter). Fixed `ConfigurationSubController.php`'s `picture_informations`/
+`filters_views` write path, which manually pre-`serialize()`d the POST data into a string
+specifically so a later "every `$_POST[param]` that's a string gets `confUpdateParam()`d"
+generic save loop would accept it -- relaxed that loop to accept `array|string` and pass
+the real array through, letting `encode()` do the encoding, matching the `MenubarLayoutRepository`
+precedent from item 1.
+
+`tests/Fixtures/piwigo-17.0.sql`'s own `piwigo_config` data needed the identical treatment
+(a real runtime snapshot, not just install seeds) -- a second throwaway script decoded each
+row per its old per-type convention and re-`json_encode()`d it (skipping the 2
+`OBJECT_SERIALIZED_PARAMS` keys entirely, byte-identical), fixing 19 rows. Also found and
+removed one fully orphaned row, `piwigo_db_version` (zero readers anywhere in `src/Piwigo`
+-- Stage 0 deleted its `CurrentConfig` property and its `InstallWizard` writer; the fixture
+row was just a stale pre-Stage-0 snapshot). Critically, **`tests/Browser/RegenerateFixtureTest.php`**
+-- the actual source that regenerates this fixture file, not just a consumer of it -- had
+the exact same stale-encoding bug in its own manual `$configEntries` overrides (a wrong
+comment claiming "no JSON encoding needed"); fixed it to `json_encode()` each value too, or
+every future `composer test:fixture-regen` run would have silently undone every hand-patch
+above. `tests/Browser/Helpers/BrowserTestHelpers.php::setCustomLogo()` had the same bug
+(a raw 3-key config write for Browser tests) -- found via a real `CustomLogoTest.php`
+failure, not by inspection.
+
+Verified: full-repo `vendor/bin/phpstan analyse` (802/802 files) clean, not just the scoped
+touched-files pass, given the blast radius; ECS/deptrac clean. Full suite: Unit 615/615,
+Arch clean, Integration 666/666, Contract 94/94, Browser 68/68, Visual 34/34 (including
+`admin-config`/`admin-dashboard`/`admin-history`/`admin-maintenance` baselines). One
+`RequestBootstrapBootConfigOnlyTest`/`NoPhotoYetRendererTest` failure round confirmed
+transient (stale shared `piwigo_test` DB from before the fixture fix landed) plus one real
+test-assertion fix (`no_photo_yet` is `?string`-typed, not bool -- its stored value is now
+correctly JSON-quoted, `NoPhotoYetRendererTest.php`'s raw-byte assertion updated to match).
+Stage 1 (items 1-5) is now fully complete; task #52 (fixture-regen + full suite) starts
+next.
+
 **Files:** `Config/CurrentConfig.php`, `Config/ConfigService.php`, `Menu/BlockManager.php`,
 `Menu/MenubarLayoutRepository.php`, `Admin/ExtendForTemplatesPageRenderer.php`,
 `Admin/Extensions/ExtensionUpdateChecker.php`, `Ws/PwgExtensions.php`,

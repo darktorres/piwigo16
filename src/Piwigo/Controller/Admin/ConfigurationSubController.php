@@ -398,15 +398,13 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         $picture_informations[$checkbox] =
                           ! self::emptyValue($picture_informations_raw[$checkbox] ?? null);
                     }
-                    // Phase 5: no addslashes() -- that was only ever needed
-                    // to survive the old raw-SQL write's quote-doubling
-                    // round trip (see the generic save loop below), which
-                    // incidentally stripped it back out on the way into the
-                    // DB. The parameterized ConfigService write stores
-                    // these bytes verbatim, so a plain serialize() is the
-                    // correct byte-for-byte match to what
-                    // CurrentConfig::pictureInformations() unserializes back.
-                    $_POST['picture_informations'] = serialize($picture_informations);
+                    // gap-closure Stage 1a-bis item 5: the generic save
+                    // loop below now accepts a real array (json_encode()s
+                    // it via ConfigService::confUpdateParam()'s own
+                    // encode()) -- no more manual serialize() to match
+                    // CurrentConfig::pictureInformations()'s own
+                    // already-decoded-array expectation.
+                    $_POST['picture_informations'] = $picture_informations;
                     break;
 
                 case 'search':
@@ -431,9 +429,9 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     }
                     $filters_views_post['last_filters_conf'] =
                       self::emptyValue($filters_views_raw['last_filters_conf'] ?? null) ? false : true;
-                    // Phase 5: no addslashes() -- same reasoning as
+                    // gap-closure Stage 1a-bis item 5 -- same reasoning as
                     // picture_informations above.
-                    $_POST['filters_views'] = serialize($filters_views_post);
+                    $_POST['filters_views'] = $filters_views_post;
 
             }
 
@@ -450,9 +448,9 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                     if (isset($_POST[$row['param']])) {
                         $post_value = $_POST[$row['param']];
-                        $value = is_string($post_value) ? $post_value : '';
+                        $value = is_string($post_value) || is_array($post_value) ? $post_value : '';
 
-                        if ($row['param'] === 'gallery_title') {
+                        if ($row['param'] === 'gallery_title' && is_string($value)) {
                             if (! \Piwigo\Config\CurrentConfig::allowHtmlDescriptions()) {
                                 $value = strip_tags($value);
                             }

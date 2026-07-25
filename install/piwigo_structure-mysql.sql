@@ -1,8 +1,15 @@
 -- Final v17 schema (InnoDB + utf8mb4, all FK constraints, all indexes).
 -- Hand-maintained -- there is no Doctrine Migrations layer between "what
--- the schema should be" and what a fresh install creates. Column-type
--- fixes not yet decided for any domain (remaining config.value text->JSON
--- item) are deliberately not applied here.
+-- the schema should be" and what a fresh install creates.
+--
+-- piwigo_config.value stays `text`, not `JSON`, despite every other
+-- former-TEXT/serialize() column in this file being retyped to JSON
+-- during gap-closure Stage 1a-bis: two keys (`derivatives`/
+-- `disabled_derivatives`, see ConfigService::OBJECT_SERIALIZED_PARAMS)
+-- deliberately keep storing real PHP objects via serialize(), which is
+-- not valid JSON -- MySQL's JSON column type rejects non-JSON content
+-- outright (confirmed live: `ERROR 3140 Invalid JSON text`), so the
+-- column has to stay a generic text type to hold both encodings.
 
 --
 -- Table structure for table `piwigo_activity`

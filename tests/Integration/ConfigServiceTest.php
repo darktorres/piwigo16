@@ -33,12 +33,13 @@ final class ConfigServiceTest extends IntegrationTestCase
         $this->service = new ConfigService($this->buildConfigRepository());
     }
 
-    public function test_loadConfFromDb_merges_every_row_with_boolean_coercion(): void
+    public function test_loadConfFromDb_merges_every_row_with_json_decoding(): void
     {
         $this->service->loadConfFromDb();
 
-        // Real fixture row seeded 'true'/'false' string values -- confirm
-        // the exact load_conf_from_db() coercion, not JSON decoding.
+        // Real fixture rows: 'true' (a bare JSON bool literal) for
+        // activate_comments, and a JSON-quoted string for both secret_key
+        // and gallery_title.
         self::assertTrue(CurrentConfig::activateComments());
         self::assertNotSame('', CurrentConfig::secretKey());
         self::assertSame('Fixture Gallery', CurrentConfig::galleryTitle());
@@ -97,8 +98,12 @@ final class ConfigServiceTest extends IntegrationTestCase
         self::assertSame('Fixture Gallery', CurrentConfig::galleryTitle());
 
         // Write directly through the repository, bypassing ConfigService's
-        // own cache-clearing.
-        $repo->upsert('gallery_title', 'Written Around The Cache');
+        // own cache-clearing (and its encode() -- json_encode() the value
+        // by hand here, matching what a real raw writer like
+        // MenubarLayoutRepository now does).
+        $writtenAroundTheCache = json_encode('Written Around The Cache');
+        self::assertIsString($writtenAroundTheCache);
+        $repo->upsert('gallery_title', $writtenAroundTheCache);
 
         // A second bulk load still returns the stale cached snapshot --
         // proves allRowsFromCacheOrDb() is actually caching, not
@@ -133,7 +138,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         self::assertNull($this->service->confGetParam($param));
     }
 
-    public function test_confUpdateParam_encodes_arrays_via_serialize(): void
+    public function test_confUpdateParam_encodes_arrays_via_json(): void
     {
         $param = 'p14_service_array_' . bin2hex(random_bytes(4));
 
@@ -142,12 +147,12 @@ final class ConfigServiceTest extends IntegrationTestCase
         $repo = $this->buildConfigRepository();
         $entry = $repo->find($param);
         self::assertNotNull($entry);
-        self::assertSame(serialize(['a', 'b', 'c']), $entry->value);
+        self::assertSame(json_encode(['a', 'b', 'c']), $entry->value);
 
         $repo->deleteByParam($param);
     }
 
-    public function test_confUpdateParam_encodes_bools_as_true_false_strings(): void
+    public function test_confUpdateParam_encodes_bools_as_bare_json_literals(): void
     {
         $param = 'p14_service_bool_' . bin2hex(random_bytes(4));
 
@@ -159,6 +164,54 @@ final class ConfigServiceTest extends IntegrationTestCase
         self::assertSame('false', $entry->value);
 
         $repo->deleteByParam($param);
+    }
+
+    public function test_confUpdateParam_encodes_strings_as_json_quoted_text(): void
+    {
+        $param = 'p14_service_string_' . bin2hex(random_bytes(4));
+
+        $this->service->confUpdateParam($param, 'a value');
+
+        $repo = $this->buildConfigRepository();
+        $entry = $repo->find($param);
+        self::assertNotNull($entry);
+        self::assertSame('"a value"', $entry->value);
+
+        $repo->deleteByParam($param);
+    }
+
+    public function test_confUpdateParam_leaves_disabled_derivatives_as_a_serialize_blob(): void
+    {
+        // ConfigService::OBJECT_SERIALIZED_PARAMS: this key holds real
+        // DerivativeParams objects reconstructed via unserialize()'s own
+        // object-identity-preserving behavior -- json_encode() would
+        // silently lose their class identity.
+        $params = ['a', 'b', 'c'];
+
+        $this->service->confUpdateParam('disabled_derivatives', $params);
+
+        $repo = $this->buildConfigRepository();
+        $entry = $repo->find('disabled_derivatives');
+        self::assertNotNull($entry);
+        self::assertSame(serialize($params), $entry->value);
+
+        $repo->deleteByParam('disabled_derivatives');
+    }
+
+    public function test_load_conf_from_db_hydrates_disabled_derivatives_as_the_raw_serialize_blob(): void
+    {
+        $params = ['a', 'b', 'c'];
+
+        try {
+            $this->service->confUpdateParam('disabled_derivatives', $params);
+            $this->service->loadConfFromDb('disabled_derivatives');
+
+            // Deliberately still the raw blob, not a decoded array -- every
+            // real reader (ImageStdParams) unserialize()s it itself.
+            self::assertSame(serialize($params), CurrentConfig::disabledDerivatives());
+        } finally {
+            $this->service->confDeleteParam('disabled_derivatives');
+        }
     }
 
     public function test_pwgIsDbconfWriteable_returns_true_against_a_real_writable_db(): void

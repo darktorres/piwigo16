@@ -26,7 +26,7 @@ final class MenubarLayoutRepository extends AbstractRepository
     {
         $this->conn->executeStatement(
             'UPDATE ' . Tables::config() . ' SET value = ? WHERE param = ?',
-            [serialize($positions), 'blk_' . $menuId]
+            [json_encode($positions), 'blk_' . $menuId]
         );
 
         // This write bypasses ConfigService::confUpdateParam() entirely (no

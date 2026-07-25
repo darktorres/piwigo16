@@ -4155,8 +4155,9 @@ final class CurrentConfig
      * `?array`, not the raw encoded blob -- matches every other array-shaped
      * property (gap-closure Stage 1a-bis item 1). `MenubarLayoutRepository::
      * saveLayout()` still writes this via raw SQL (deliberate, no DI
-     * dependency), so the read side here is what benefits: no more manual
-     * unserialize() in BlockManager.php.
+     * dependency) but now `json_encode()`s, matching `ConfigService::
+     * encode()`'s own item 5 convention -- so the read side stays a plain
+     * `hydrate()`-driven `json_decode()`, no manual unserialize() anywhere.
      * @var array<mixed>|null
      */
     private static ?array $blkMenubar = null;

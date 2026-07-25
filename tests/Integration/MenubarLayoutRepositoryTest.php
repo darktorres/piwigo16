@@ -48,7 +48,7 @@ final class MenubarLayoutRepositoryTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_save_layout_persists_serialized_positions(): void
+    public function test_save_layout_persists_json_encoded_positions(): void
     {
         $this->repo->saveLayout('menubar', ['mbCategories' => 50, 'mbTags' => -100]);
 
@@ -60,7 +60,7 @@ final class MenubarLayoutRepositoryTest extends IntegrationTestCase
             ->fetchOne();
 
         self::assertIsString($raw);
-        self::assertSame(['mbCategories' => 50, 'mbTags' => -100], unserialize($raw));
+        self::assertSame(['mbCategories' => 50, 'mbTags' => -100], json_decode($raw, true));
     }
 
     public function test_save_layout_overwrites_a_previous_layout(): void
@@ -76,7 +76,7 @@ final class MenubarLayoutRepositoryTest extends IntegrationTestCase
             ->fetchOne();
 
         self::assertIsString($raw);
-        self::assertSame(['mbCategories' => 200], unserialize($raw));
+        self::assertSame(['mbCategories' => 200], json_decode($raw, true));
     }
 
     public function test_save_layout_does_not_touch_other_config_rows(): void

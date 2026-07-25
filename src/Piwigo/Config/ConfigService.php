@@ -17,12 +17,12 @@ namespace Piwigo\Config;
  * utilities, throwaway-constructed classes, and every pre-container
  * bootstrap/install call site).
  *
- * loadConfFromDb()/confUpdateParam() faithfully replicate the CURRENT
- * legacy encoding (include/functions.inc.php's load_conf_from_db()/
- * conf_update_param()): scalars as literal strings, 'true'/'false'
- * coerced to bool on read, arrays/objects as serialize() blobs -- NOT the
- * reference's JSON-decode logic, since config.value is still plain TEXT
- * at this point in the replay. No addslashes() -- Doctrine parameterizes
+ * `value` is a real JSON column (gap-closure Stage 1a-bis item 5) --
+ * encode()/hydrate() below json_encode()/json_decode() every value
+ * uniformly, replacing the legacy per-PHP-type convention
+ * (include/functions.inc.php's load_conf_from_db()/conf_update_param():
+ * scalars as literal strings, 'true'/'false' coerced to bool on read,
+ * arrays as serialize() blobs). No addslashes() -- Doctrine parameterizes
  * values safely, that legacy escaping was only ever needed for raw SQL
  * string concatenation.
  */
@@ -342,6 +342,23 @@ final readonly class ConfigService
      */
     private const string CACHE_ITEM_KEY = 'all_rows';
 
+    /**
+     * Both keys hold real PHP objects (DerivativeParams/WatermarkParams,
+     * reconstructed via unserialize()'s own object-identity-preserving
+     * behavior -- DerivativeParams even declares its own __serialize()
+     * hook specifically for this), not plain scalar/array data --
+     * json_encode()/json_decode() would silently lose their class
+     * identity, turning every element into a plain array/stdClass.
+     * Piwigo\Image\ImageStdParams is the sole real reader/writer of both
+     * (its own unserialize()+instanceof narrowing already exists there),
+     * so encode()/hydrate() below pass the raw serialize() blob straight
+     * through unchanged for these two, same as every real consumer
+     * already expects.
+     *
+     * @var list<string>
+     */
+    private const array OBJECT_SERIALIZED_PARAMS = ['derivatives', 'disabled_derivatives'];
+
     public function __construct(
         private ConfigRepository $repo,
     ) {}
@@ -369,7 +386,7 @@ final readonly class ConfigService
             return $defaultValue;
         }
 
-        return self::decodeScalar($entry->value) ?? $defaultValue;
+        return json_decode($entry->value, true) ?? $defaultValue;
     }
 
     /**
@@ -458,7 +475,7 @@ final readonly class ConfigService
      */
     public function confUpdateParam(string $param, array|string|int|float|bool|null $value, bool $updateGlobal = false): void
     {
-        $this->repo->upsert($param, self::encode($value));
+        $this->repo->upsert($param, self::encode($param, $value));
         \Piwigo\Cache\CachePools::config()->clear();
 
         if ($updateGlobal) {
@@ -504,7 +521,7 @@ final readonly class ConfigService
 
         $this->confUpdateParam($param, $value);
         $entry = $this->repo->find($param);
-        $writeable = $entry !== null && $entry->value === $value;
+        $writeable = $entry !== null && $entry->value !== null && json_decode($entry->value, true) === $value;
 
         $this->confDeleteParam($param);
 
@@ -514,11 +531,10 @@ final readonly class ConfigService
     /**
      * Bridges one real config-table row into its matching CurrentConfig
      * property, via that property's own setter -- reuses each setter's
-     * existing shape validation/normalization (the array-shaped
-     * "custom" properties) rather than duplicating it here. This is the
-     * one place that decodes a raw DB TEXT value into a property's exact
-     * native PHP type; every real setter can otherwise assume it's
-     * always called with an already-correctly-shaped value.
+     * existing shape validation/normalization rather than duplicating it
+     * here. This is the one place that decodes a raw DB JSON value into a
+     * property's exact native PHP type; every real setter can otherwise
+     * assume it's always called with an already-correctly-shaped value.
      */
     private static function hydrate(string $param, ?string $raw): void
     {
@@ -540,21 +556,26 @@ final readonly class ConfigService
             return;
         }
 
-        $decoded = self::decodeScalar($raw);
+        if (in_array($param, self::OBJECT_SERIALIZED_PARAMS, true)) {
+            $setter->invoke(null, $raw);
+
+            return;
+        }
+
+        $decoded = json_decode($raw, true);
 
         $value = match ($paramTypeName) {
-            'bool' => is_bool($decoded) ? $decoded : filter_var($decoded, \FILTER_VALIDATE_BOOLEAN),
-            'int' => is_numeric($decoded) ? (int) $decoded : 0,
-            'float' => is_numeric($decoded) ? (float) $decoded : 0.0,
-            'string' => is_string($decoded) ? $decoded : ($decoded === true ? 'true' : 'false'),
-            'array' => is_string($decoded) ? self::unserializeArray($decoded) : [],
-            // Union/object-typed setters (disabledDerivatives's array|string,
-            // recentPostDates's NotificationConfig by way of its own
-            // array-accepting setter -- getName() above already returned
-            // null for both, since neither is a single ReflectionNamedType)
-            // get the decoded scalar as-is; each such setter already knows
-            // how to handle it (see CurrentConfig's own "custom-shaped
-            // properties" section).
+            'bool' => is_bool($decoded) ? $decoded : false,
+            'int' => is_int($decoded) ? $decoded : 0,
+            'float' => is_float($decoded) || is_int($decoded) ? (float) $decoded : 0.0,
+            'string' => is_string($decoded) ? $decoded : '',
+            'array' => is_array($decoded) ? $decoded : [],
+            // Union/object-typed setters (recentPostDates's
+            // NotificationConfig by way of its own array-accepting setter
+            // -- getName() above already returned null, since it isn't a
+            // single ReflectionNamedType) get the decoded value as-is;
+            // each such setter already knows how to handle it (see
+            // CurrentConfig's own "custom-shaped properties" section).
             default => $decoded,
         };
 
@@ -562,40 +583,21 @@ final readonly class ConfigService
     }
 
     /**
-     * @return array<mixed>
-     */
-    private static function unserializeArray(string $raw): array
-    {
-        $unserialized = \Piwigo\Core\ArrayHelper::safeUnserialize($raw);
-
-        return is_array($unserialized) ? $unserialized : [];
-    }
-
-    private static function decodeScalar(?string $raw): string|bool|null
-    {
-        if ($raw === 'true') {
-            return true;
-        }
-        if ($raw === 'false') {
-            return false;
-        }
-        return $raw;
-    }
-
-    /**
      * @param array<mixed>|string|int|float|bool|null $value
      */
-    private static function encode(array|string|int|float|bool|null $value): ?string
+    private static function encode(string $param, array|string|int|float|bool|null $value): ?string
     {
         if ($value === null) {
             return null;
         }
-        if (is_array($value)) {
-            return serialize($value);
+
+        if (in_array($param, self::OBJECT_SERIALIZED_PARAMS, true)) {
+            return is_string($value) ? $value : serialize($value);
         }
-        if (is_bool($value)) {
-            return $value ? 'true' : 'false';
-        }
-        return (string) $value;
+
+        $encoded = json_encode($value);
+        assert($encoded !== false);
+
+        return $encoded;
     }
 }

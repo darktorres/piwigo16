@@ -134,7 +134,11 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
 
         $this->renderer->render();
 
-        self::assertSame('false', $this->readFlag());
+        // ConfigService::confUpdateParam() json_encode()s the string
+        // 'false' (no_photo_yet is ?string-typed, not bool -- a real
+        // three-state marker: null/'true'/'false'), so the raw stored
+        // bytes are JSON-quoted.
+        self::assertSame('"false"', $this->readFlag());
     }
 }
 }

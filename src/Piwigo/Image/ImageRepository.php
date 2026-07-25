@@ -213,16 +213,22 @@ DELETE
 
     /**
      * Atomically claims the lounge-emptying lock via `INSERT IGNORE` --
-     * a no-op if another process already holds it.
+     * a no-op if another process already holds it. json_encode()s
+     * $lockValue (gap-closure Stage 1a-bis item 5: config.value is JSON
+     * now) so it round-trips through CurrentConfig::emptyLoungeRunning()'s
+     * own ConfigService::hydrate() read path too, not just
+     * findLoungeLockValue() below -- a bare unquoted value would also
+     * break this INSERT's own double-quote-delimited SQL literal.
      */
     public function tryAcquireLoungeLock(string $lockValue): void
     {
-        $this->conn->executeStatement('
-INSERT IGNORE
-  INTO ' . Tables::config() . '
-  SET param="empty_lounge_running"
-    , value="' . $lockValue . '"
-;');
+        $encodedLockValue = json_encode($lockValue);
+        assert($encodedLockValue !== false);
+
+        $this->conn->executeStatement(
+            'INSERT IGNORE INTO ' . Tables::config() . ' SET param = ?, value = ?',
+            ['empty_lounge_running', $encodedLockValue]
+        );
     }
 
     public function findLoungeLockValue(): ?string
@@ -231,7 +237,9 @@ INSERT IGNORE
             'SELECT value FROM ' . Tables::config() . ' WHERE param = "empty_lounge_running"'
         )->fetchOne();
 
-        return is_string($value) ? $value : null;
+        $decoded = is_string($value) ? json_decode($value, true) : null;
+
+        return is_string($decoded) ? $decoded : null;
     }
 
     /**

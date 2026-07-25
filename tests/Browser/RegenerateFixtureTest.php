@@ -312,32 +312,40 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             $now
         ));
 
-        // 14. A few config tweaks (piwigo_config.value is a plain TEXT column
-        // in this schema — no JSON encoding needed). show_piwigo_latest_news/
-        // dashboard_check_for_updates default to true (config_default.inc.php)
-        // and have no row from a fresh install, so this must be an upsert, not
-        // an UPDATE — matching conf_update_param()'s own real INSERT ... ON
-        // DUPLICATE KEY UPDATE pattern (piwigo_config.param is the PRIMARY
-        // KEY). Both gate live HTTP calls to piwigo.org from the admin
-        // dashboard (a real news-feed fetch and a core/extension update
-        // check) that have nothing to do with test-mode's frozen clock and
-        // must never fire from a test run.
+        // 14. A few config tweaks. piwigo_config.value is JSON-encoded
+        // (gap-closure Stage 1a-bis item 5: ConfigService::encode()) except
+        // for the 2 OBJECT_SERIALIZED_PARAMS keys, neither of which this
+        // list touches -- each entry below is json_encode()d to match.
+        // show_piwigo_latest_news/dashboard_check_for_updates default to
+        // true (config_default.inc.php) and have no row from a fresh
+        // install, so this must be an upsert, not an UPDATE — matching
+        // conf_update_param()'s own real INSERT ... ON DUPLICATE KEY UPDATE
+        // pattern (piwigo_config.param is the PRIMARY KEY). Both gate live
+        // HTTP calls to piwigo.org from the admin dashboard (a real
+        // news-feed fetch and a core/extension update check) that have
+        // nothing to do with test-mode's frozen clock and must never fire
+        // from a test run.
         $configEntries = [
             'gallery_title'                => 'Fixture Gallery',
-            'activate_comments'            => 'true',
-            'comments_validation'          => 'true',
-            'nb_categories_page'           => '12',
-            'rate'                         => 'true',
-            'show_piwigo_latest_news'      => 'false',
-            'dashboard_check_for_updates'  => 'false',
+            'activate_comments'            => true,
+            'comments_validation'          => true,
+            'nb_categories_page'           => 12,
+            'rate'                         => true,
+            'show_piwigo_latest_news'      => false,
+            'dashboard_check_for_updates'  => false,
         ];
         foreach ($configEntries as $param => $value) {
+            $jsonValue = json_encode($value);
+            if ($jsonValue === false) {
+                throw new \RuntimeException("json_encode failed for config param '{$param}'");
+            }
+
             $db->query(sprintf(
                 "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON DUPLICATE KEY UPDATE value = '%s'",
                 $this->dbPrefix,
                 $db->real_escape_string($param),
-                $db->real_escape_string($value),
-                $db->real_escape_string($value)
+                $db->real_escape_string($jsonValue),
+                $db->real_escape_string($jsonValue)
             ));
         }
         $db->close();

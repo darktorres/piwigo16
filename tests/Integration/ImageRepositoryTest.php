@@ -255,4 +255,32 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         return (int) $this->conn->lastInsertId();
     }
+
+    public function test_try_acquire_lounge_lock_then_find_lounge_lock_value_round_trips(): void
+    {
+        try {
+            $this->repo->tryAcquireLoungeLock('exec123-1700000000');
+
+            self::assertSame('exec123-1700000000', $this->repo->findLoungeLockValue());
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
+        }
+    }
+
+    public function test_try_acquire_lounge_lock_is_a_noop_once_held(): void
+    {
+        try {
+            $this->repo->tryAcquireLoungeLock('exec123-1700000000');
+            $this->repo->tryAcquireLoungeLock('exec456-1700000001');
+
+            self::assertSame('exec123-1700000000', $this->repo->findLoungeLockValue());
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
+        }
+    }
+
+    public function test_find_lounge_lock_value_returns_null_when_no_lock_held(): void
+    {
+        self::assertNull($this->repo->findLoungeLockValue());
+    }
 }

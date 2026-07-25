@@ -250,9 +250,45 @@ Integration run hit a MySQL deadlock (52 failures) from a concurrency mistake ma
 verifying this stage (briefly running two Integration suites against the same DB at
 once, not a real regression) — confirmed transient on an immediate clean re-run.
 
-**Stage 1d — CachePools wiring: 1 of 3 done.** `CachePools::config()` is now real (wired
-into `ConfigService::loadConfFromDb()` this session, `feede75c9`). `CachePools::permissions()`
-and `CachePools::tagCloud()` still have zero callers anywhere in `src/Piwigo`.
+**Stage 1d — CachePools wiring: DONE, 2026-07-25.** The plan's own "3 items" framing was
+stale — direct re-verification found 5 real pools, not 3: `categoryTree()` and `general()`
+were both added later (Legacy Coupling Retirement work), neither mentioned in this plan's
+original text.
+
+- `config()` — already done (wired into `ConfigService::loadConfFromDb()`, `feede75c9`).
+- `categoryTree()` — already done, discovered via this re-verification: wired into
+  `CategoryService::getCategoriesMenu()` via `CategoryTreeCache` (a dedicated wrapper
+  class, since `CategoryService` is constructed manually — no DI container — at ~10 call
+  sites, so a pool dependency can't go on its own constructor).
+- `permissions()` — wired this pass. Same "manually constructed at ~40 call sites"
+  constraint as `CategoryService` applies even harder to `PermissionService`, so a new
+  `Permission\ForbiddenCategoriesCache` wrapper (same shape as `CategoryTreeCache`) takes
+  over `getForbiddenCategories()`'s per-user 30s-TTL caching. Only 3 of its 4 real call
+  sites were retargeted onto it — `PictureModifyPageRenderer.php`,
+  `BatchManagerUnitPageRenderer.php`, `Ws/PwgCategories.php` (all read-only
+  authorization/display lookups, where the plan's own 30s staleness tradeoff is
+  appropriate). The 4th, `UserService::generateUserCache()`, is deliberately **not**
+  retargeted: it's the authoritative writer of `user_cache.forbidden_categories` (the very
+  value this cache exists to avoid recomputing elsewhere) and must always read a fresh
+  value, never a stale one from the pool it would otherwise feed.
+- `tagCloud()` — wired this pass, replacing `TagService::getAvailableTags()`'s older
+  `CurrentPersistentCache` mechanism directly (no wrapper class needed here —
+  `TagService`'s caching branch is entirely self-contained inside one method, not
+  something external callers wrap, unlike `permissions()`/`categoryTree()`). Same accepted
+  tradeoff `CategoryTreeCache`'s own docblock already documents: a fixed 300s TTL replaces
+  the old `cacheUpdateTime`-keyed immediate invalidation. `CurrentPersistentCache` remains
+  very much alive elsewhere (`UserCacheInvalidator`, `RequestBootstrap`,
+  `SearchFilterRenderer`, `NbmController`/`FeedController`, `SectionPopulator`,
+  `NotificationByMailSubController`, `CalendarRenderer`, `MaintenanceActionDispatcher`) —
+  this change is scoped to `TagService`'s one specific use, not a broader retirement.
+- `general()` — genuinely a no-specific-target catch-all (its own docblock says so,
+  unlike the other 4, none of which named a future consumer the way `config()`/`tagCloud()`
+  originally did) — left unwired, not a pending item.
+
+Verified: PHPStan/ECS/deptrac clean repo-wide; Unit+Arch 690/690 (unchanged), Integration
+675/675 (671 + 4 new: `ForbiddenCategoriesCacheTest.php` and a new `TagServiceTest.php`
+caching test), Contract 94/94 (`PwgCategories.php`'s own retarget exercised directly via
+`pwg.categories.getList`), Browser 68/68, Visual 34/34.
 
 **Stage 1e — die() elimination: NOT STARTED, 0/20.** Exact same counts as the plan's own
 re-derived figures: `UploadService.php` (9), `Admin/Image/ImageGd.php` (5),

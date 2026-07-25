@@ -208,28 +208,29 @@ final readonly class TagService
         );
 
         if ($usePersistentCache) {
-            $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
-            if (! $persistent_cache instanceof \Piwigo\Cache\PersistentCache) {
-                throw new \LogicException('Piwigo\Cache\CurrentPersistentCache not initialised.');
-            }
-            $currentUser = \Piwigo\Users\CurrentUser::get();
-            $userId = (string) $currentUser->id;
-            $userCacheUpdateTime = $currentUser->cacheUpdateTime;
-            $cacheKey = $persistent_cache->make_key(__METHOD__ . $userId . $userCacheUpdateTime);
+            // CachePools::tagCloud() (P23 Stage 1d) replaces the older
+            // CurrentPersistentCache mechanism -- a fixed 300s TTL instead
+            // of the previous cacheUpdateTime-keyed immediate invalidation,
+            // same accepted staleness tradeoff CategoryTreeCache's own
+            // docblock already documents for the equivalent categoryTree()
+            // wiring. TagService is constructed manually (`new
+            // TagService(...)`) at ~18 call sites, no DI container, so the
+            // pool is fetched inline here rather than constructor-injected
+            // (same reasoning as CachePools::config()'s own inline use in
+            // ConfigService).
+            $pool = \Piwigo\Cache\CachePools::tagCloud();
+            $item = $pool->getItem('counts_' . \Piwigo\Users\CurrentUser::get()->id);
+            $cached = $item->isHit() ? $item->get() : null;
+            $tagCounters = is_array($cached) ? $cached : null;
 
-            if (! $persistent_cache->get($cacheKey, $tagCounters)) {
+            if ($tagCounters === null) {
                 $tagCounters = $this->repo->countImagesPerTag($tagIds, $fandFSql);
-                $persistent_cache->set($cacheKey, $tagCounters);
+                $item->set($tagCounters);
+                $pool->save($item);
             }
         } else {
             $tagCounters = $this->repo->countImagesPerTag($tagIds, $fandFSql);
         }
-
-        // $persistent_cache->get()'s by-reference $value output param is
-        // declared mixed (a cache hit could genuinely hold anything), so
-        // narrow once here regardless of which branch above ran.
-        $tagCountersRaw = $tagCounters ?? null;
-        $tagCounters = is_array($tagCountersRaw) ? $tagCountersRaw : [];
 
         if ($tagCounters === []) {
             return [];

@@ -10,7 +10,6 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\SqlDialect;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
@@ -209,17 +208,13 @@ final class PictureCommentRenderer
             );
 
             foreach ($rows as $row) {
-                if ($row['author'] === 'guest') {
-                    $row['author'] = Lang::t('guest');
-                }
+                $author = $row->author === 'guest' ? Lang::t('guest') : $row->author;
 
                 $email = null;
-                $rowUserEmail = $row['user_email'] ?? null;
-                $rowEmail = $row['email'] ?? null;
-                if (is_string($rowUserEmail) && $rowUserEmail !== '' && $rowUserEmail !== '0') {
-                    $email = $rowUserEmail;
-                } elseif (is_string($rowEmail) && $rowEmail !== '' && $rowEmail !== '0') {
-                    $email = $rowEmail;
+                if ($row->userEmail !== null && $row->userEmail !== '' && $row->userEmail !== '0') {
+                    $email = $row->userEmail;
+                } elseif ($row->email !== null && $row->email !== '' && $row->email !== '0') {
+                    $email = $row->email;
                 }
 
                 // com.date is nullable now (Comment domain Stage 1a
@@ -229,28 +224,28 @@ final class PictureCommentRenderer
                 // sentinel is the correct fallback, not an assert(),
                 // matching PwgComments::getList()'s own identical guard
                 // for this same column.
-                $rowDate = is_string($row['date']) ? $row['date'] : false;
+                $rowDate = $row->date ?? false;
 
                 $tplComment =
                   [
-                      'ID' => $row['id'],
-                      'AUTHOR' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_author', $row['author']),
+                      'ID' => $row->id,
+                      'AUTHOR' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_author', $author),
                       'DATE' => \Piwigo\Core\DateHelper::formatDate($rowDate, ['day_name', 'day', 'month', 'year', 'time']),
-                      'CONTENT' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_content', $row['content']),
-                      'WEBSITE_URL' => $row['website_url'],
+                      'CONTENT' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_content', $row->content),
+                      'WEBSITE_URL' => $row->websiteUrl,
                   ];
 
                 // com.author_id allows NULL (anonymous/guest comments); no
                 // real user id is ever negative, so -1 is a safe
                 // "never matches" sentinel.
-                $commentAuthorId = is_numeric($row['author_id']) ? (int) $row['author_id'] : -1;
+                $commentAuthorId = $row->authorId ?? -1;
 
                 if (\Piwigo\Auth\AccessControl::canManageComment('delete', $commentAuthorId)) {
                     $tplComment['U_DELETE'] = $urlService->addUrlParams(
                         $url_self,
                         [
                             'action' => 'delete_comment',
-                            'comment_to_delete' => $row['id'],
+                            'comment_to_delete' => $row->id,
                             'pwg_token' => new \Piwigo\Csrf\CsrfService()
                                 ->getToken(),
                         ]
@@ -261,15 +256,15 @@ final class PictureCommentRenderer
                         $url_self,
                         [
                             'action' => 'edit_comment',
-                            'comment_to_edit' => $row['id'],
+                            'comment_to_edit' => $row->id,
                         ]
                     );
-                    if ($editCommentId !== null and is_numeric($row['id']) and (int) $row['id'] === $editCommentId) {
+                    if ($editCommentId !== null and $row->id === $editCommentId) {
                         $tplComment['IN_EDIT'] = true;
                         $key = new \Piwigo\Auth\EphemeralKeyService()
                             ->generate(2, (string) $imageId);
                         $tplComment['KEY'] = $key;
-                        $tplComment['CONTENT'] = $row['content'];
+                        $tplComment['CONTENT'] = $row->content;
                         $tplComment['PWG_TOKEN'] = new \Piwigo\Csrf\CsrfService()->getToken();
                         $tplComment['U_CANCEL'] = $url_self;
                     }
@@ -277,12 +272,12 @@ final class PictureCommentRenderer
                 if (\Piwigo\Auth\AccessControl::isAdmin()) {
                     $tplComment['EMAIL'] = $email;
 
-                    if (! SqlDialect::getBoolean($row['validated'])) {
+                    if (! $row->validated) {
                         $tplComment['U_VALIDATE'] = $urlService->addUrlParams(
                             $url_self,
                             [
                                 'action' => 'validate_comment',
-                                'comment_to_validate' => $row['id'] ?? null,
+                                'comment_to_validate' => $row->id,
                                 'pwg_token' => new \Piwigo\Csrf\CsrfService()
                                     ->getToken(),
                             ]

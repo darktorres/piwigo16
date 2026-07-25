@@ -231,12 +231,16 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
     public function test_find_for_image_returns_matching_rows_joined_with_user_email(): void
     {
-        // fixture: image 2 has comment 2, authored by regular_user.
+        // fixture: image 2 has comment 2, authored by regular_user, whose
+        // own mail_address is NULL -- this exercises the LEFT JOIN's own
+        // "known user, no email on file" case, not "unknown/anonymous
+        // author" (author_id IS NULL), which findForImage() also allows.
         $rows = $this->repo->findForImage(2, true, 'id', 'mail_address', 'ASC', 10, 0);
 
         self::assertCount(1, $rows);
-        self::assertSame(2, $rows[0]['id']);
-        self::assertArrayHasKey('user_email', $rows[0]);
+        self::assertSame(2, $rows[0]->id);
+        self::assertSame(3, $rows[0]->authorId);
+        self::assertNull($rows[0]->userEmail);
     }
 
     public function test_find_for_image_excludes_unvalidated_when_restricted(): void
@@ -250,7 +254,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findForImage(4, false, 'id', 'mail_address', 'ASC', 10, 0);
 
         self::assertCount(1, $rows);
-        self::assertSame(5, $rows[0]['id']);
+        self::assertSame(5, $rows[0]->id);
     }
 
     public function test_find_for_image_respects_limit_and_offset(): void
@@ -270,7 +274,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
         self::assertCount(2, $firstPage);
         self::assertCount(1, $secondPage);
-        $allIds = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', array_merge(array_column($firstPage, 'id'), array_column($secondPage, 'id')));
+        $allIds = array_merge(array_column($firstPage, 'id'), array_column($secondPage, 'id'));
         self::assertCount(3, array_unique($allIds));
     }
 

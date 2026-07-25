@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Comment;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Comment\Projection\Comment;
 use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\Env;
 use Piwigo\Db\AbstractRepository;
@@ -356,7 +357,7 @@ final class CommentRepository extends AbstractRepository implements CommentCount
      *   validate this before calling (matches the original's own
      *   in_array(strtoupper($x), ['ASC', 'DESC']) check), this method
      *   concatenates it directly into the query with no further validation.
-     * @return list<array<string, mixed>>
+     * @return list<Comment>
      */
     public function findForImage(
         int $imageId,
@@ -392,8 +393,9 @@ final class CommentRepository extends AbstractRepository implements CommentCount
             $qb->andWhere('com.validated = 1');
         }
 
-        /** @var list<array<string, mixed>> */
-        return $qb->executeQuery()
+        $rows = $qb->executeQuery()
             ->fetchAllAssociative();
+
+        return array_map(Comment::fromRow(...), $rows);
     }
 }

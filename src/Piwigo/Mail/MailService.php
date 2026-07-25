@@ -570,8 +570,15 @@ final class MailService implements MailerInterface
             return true;
         }
 
+        // mail()'s own $to parameter is a deliberately dynamic, many-shapes
+        // contract (used by every other caller too, see
+        // getCleanRecipientsList()'s own docblock) -- converted back to
+        // array form here, at this one boundary, rather than widening that
+        // shared contract to also understand a real MailRecipient object.
+        $adminRows = array_map(static fn (\Piwigo\Mail\Projection\MailRecipient $r): array => $r->toArray(), $admins);
+
         $this->switchLangTo($this->userService()->getDefaultLanguage());
-        $return = $this->mail($admins, $args, $tpl);
+        $return = $this->mail($adminRows, $args, $tpl);
         $this->switchLangBack();
 
         return $return;
@@ -629,15 +636,10 @@ final class MailService implements MailerInterface
             $this->switchLangTo($language);
 
             foreach ($users as $u) {
-                $uUserId = $u['user_id'];
-                if (! is_numeric($uUserId)) {
-                    continue;
-                }
-                $uStatus = $u['status'];
-                $uEmail = $u['email'];
+                $uEmail = $u->email;
 
                 $authkey = $this->authService()
-                    ->createUserAuthKey((int) $uUserId, $uStatus);
+                    ->createUserAuthKey($u->userId, $u->status);
 
                 $userTpl = $tpl;
 

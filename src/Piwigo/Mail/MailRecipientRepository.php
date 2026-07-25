@@ -7,6 +7,7 @@ namespace Piwigo\Mail;
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
+use Piwigo\Mail\Projection\MailRecipient;
 
 /**
  * Persistence layer for mailing-recipient discovery: MailService's own
@@ -20,7 +21,7 @@ final class MailRecipientRepository extends AbstractRepository
 {
     /**
      * @param  list<string>  $userStatuses
-     * @return list<array{user_id: string, name: string, email: string}>
+     * @return list<MailRecipient>
      */
     public function findAdminsAndWebmasters(
         string $idColumn,
@@ -54,9 +55,10 @@ final class MailRecipientRepository extends AbstractRepository
                 ->setParameter('excludeUserId', $excludeUserId);
         }
 
-        /** @var list<array{user_id: string, name: string, email: string}> */
-        return $qb->executeQuery()
+        $rows = $qb->executeQuery()
             ->fetchAllAssociative();
+
+        return array_map(MailRecipient::fromRow(...), $rows);
     }
 
     /**
@@ -89,7 +91,7 @@ final class MailRecipientRepository extends AbstractRepository
     }
 
     /**
-     * @return list<array{user_id: string, status: ?string, name: string, email: string}>
+     * @return list<MailRecipient>
      */
     public function findByGroupAndLanguage(
         string $idColumn,
@@ -98,8 +100,7 @@ final class MailRecipientRepository extends AbstractRepository
         int $groupId,
         string $language
     ): array {
-        /** @var list<array{user_id: string, status: ?string, name: string, email: string}> */
-        return $this->conn->createQueryBuilder()
+        $rows = $this->conn->createQueryBuilder()
             ->select(
                 'ui.user_id',
                 'ui.status',
@@ -116,5 +117,7 @@ final class MailRecipientRepository extends AbstractRepository
             ->setParameter('language', $language)
             ->executeQuery()
             ->fetchAllAssociative();
+
+        return array_map(MailRecipient::fromRow(...), $rows);
     }
 }

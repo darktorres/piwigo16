@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Search\Projection;
 
+use Piwigo\Core\ArrayHelper;
+
 /**
  * Typed row shape for `piwigo_search` (P17-23 Stage 1b, Search domain --
  * `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection shapes"
@@ -17,20 +19,29 @@ namespace Piwigo\Search\Projection;
  * whose `$fromSql` varies per caller and can't be represented by a single
  * table's projection).
  *
- * `rules` stays `?string`, still serialized -- User domain's own
- * `preferences` text->JSON retype precedent applies here too and is
- * deliberately deferred the same way; every real consumer already
- * `unserialize()`s it itself.
+ * `rules` is `?array`, decoded here via `json_decode()` -- the column is
+ * JSON (gap-closure Stage 1a-bis item 2), so every real consumer reads an
+ * already-decoded value instead of hand-rolling `unserialize()`/
+ * `json_decode()` itself. Every writer ({@see
+ * \Piwigo\Search\SearchService::saveSearch()}'s own `array<string, mixed>
+ * $rules` parameter) only ever stores a string-keyed JSON object, so the
+ * decoded value is filtered down to string keys here rather than carrying
+ * `ArrayHelper::safeJsonDecode()`'s more permissive `array<int|string,
+ * mixed>` (shared with callers that genuinely can get a JSON list back)
+ * through every one of this projection's own consumers.
  */
 final readonly class Search
 {
+    /**
+     * @param array<string, mixed>|null $rules
+     */
     public function __construct(
         public int $id,
         public ?string $searchUuid,
         public ?string $createdOn,
         public ?int $createdBy,
         public ?int $forkedFrom,
-        public ?string $rules,
+        public ?array $rules,
     ) {}
 
     /**
@@ -44,13 +55,25 @@ final readonly class Search
             createdOn: is_string($row['created_on'] ?? null) ? $row['created_on'] : null,
             createdBy: is_numeric($row['created_by'] ?? null) ? (int) $row['created_by'] : null,
             forkedFrom: is_numeric($row['forked_from'] ?? null) ? (int) $row['forked_from'] : null,
-            rules: is_string($row['rules'] ?? null) ? $row['rules'] : null,
+            rules: self::decodeRules($row['rules'] ?? null),
         );
     }
 
     /**
+     * @return array<string, mixed>|null
+     */
+    private static function decodeRules(mixed $rulesRaw): ?array
+    {
+        if (! is_string($rulesRaw)) {
+            return null;
+        }
+
+        return array_filter(ArrayHelper::safeJsonDecode($rulesRaw), is_string(...), ARRAY_FILTER_USE_KEY);
+    }
+
+    /**
      * @return array{id: int, search_uuid: ?string, created_on: ?string,
-     *   created_by: ?int, forked_from: ?int, rules: ?string}
+     *   created_by: ?int, forked_from: ?int, rules: array<string, mixed>|null}
      */
     public function toArray(): array
     {

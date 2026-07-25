@@ -47,22 +47,10 @@ namespace {
     // accessors directly (Legacy Coupling Retirement Track A batch A4), so
     // this isolated test seeds real CurrentConfig setters below instead.
 
-    if (! function_exists('safe_unserialize')) {
-        // Copied verbatim from the legacy include/functions.inc.php
-        // (deleted in P23 batch 8f-4).
-        /**
-         * @param  array<int|string, mixed>|string  $value
-         * @return mixed
-         */
-        function safe_unserialize($value)
-        {
-            if (is_string($value)) {
-                return unserialize($value);
-            }
-
-            return $value;
-        }
-    }
+    // safe_unserialize()'s own stub is gone too -- gap-closure Stage 1a-bis
+    // item 2 moved SearchService's rules decoding off unserialize()
+    // entirely (json_decode() via the Search projection now), so nothing
+    // in this test's call path reaches it anymore.
 
     // get_default_language() -- SearchService now calls the real
     // Piwigo\Users\UserService::getDefaultLanguage() directly (P23 batch
@@ -254,7 +242,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
     public function test_get_search_info_returns_the_stored_row(): void
     {
-        $this->repo->insertSearch(serialize(['q' => 'nature']), '2026-07-12 00:00:00', 1, 'psk-20260712-infotest01', null);
+        $this->repo->insertSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-infotest01', null);
 
         $info = $this->service->getSearchInfo('psk-20260712-infotest01');
 
@@ -267,10 +255,10 @@ final class SearchServiceTest extends IntegrationTestCase
         self::assertNull($this->service->getSearchInfo('garbage'));
     }
 
-    public function test_get_search_array_round_trips_the_serialized_rules(): void
+    public function test_get_search_array_round_trips_the_json_encoded_rules(): void
     {
         $rules = ['q' => 'nature', 'fields' => ['allwords' => ['words' => ['nature']]]];
-        $this->repo->insertSearch(serialize($rules), '2026-07-12 00:00:00', 1, 'psk-20260712-arraytest0', null);
+        $this->repo->insertSearch($rules, '2026-07-12 00:00:00', 1, 'psk-20260712-arraytest0', null);
 
         $decoded = $this->service->getSearchArray('psk-20260712-arraytest0');
 
@@ -295,7 +283,7 @@ final class SearchServiceTest extends IntegrationTestCase
     public function test_get_available_search_uuid_skips_a_colliding_uuid(): void
     {
         $uuid = $this->service->getAvailableSearchUuid();
-        $this->repo->insertSearch(serialize(['q' => 'x']), '2026-07-12 00:00:00', null, $uuid, null);
+        $this->repo->insertSearch(['q' => 'x'], '2026-07-12 00:00:00', null, $uuid, null);
 
         $next = $this->service->getAvailableSearchUuid();
 

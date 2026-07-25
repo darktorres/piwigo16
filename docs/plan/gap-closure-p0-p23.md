@@ -423,6 +423,26 @@ confirmed clean on immediate re-run alone). Item 2 (`search.rules`) starts next.
 - `Ws/PwgCore.php` (~lines 972–1002): replace the raw `INSERT`/`SELECT` against
   `piwigo_search` with a real `SearchRepository` call.
 
+**Item 2 — DONE.** `Search::$rules` is `?array<string, mixed>` (string keys, not the
+generic `array<int|string, mixed>` `ArrayHelper::safeJsonDecode()` returns -- filtered down
+in `fromRow()`'s own `decodeRules()`, since every real writer, `SearchService::saveSearch()`,
+only ever stores a string-keyed JSON object). `SearchRepository::insertSearch()` now takes
+`array $rules` (`json_encode()`s internally) with `$createdOn`/`$createdBy`/`$searchUuid`/
+`$forkedFrom` all made nullable (default `null`) so `Ws/PwgCore.php`'s ephemeral,
+metadata-less insert doesn't have to fabricate values the original raw SQL never set.
+Both raw-SQL bypass sites in `Ws/PwgCore.php::historySearch()` fixed: the single-row
+INSERT/SELECT now goes through `SearchRepository::insertSearch()`/`findOneByClause()`; the
+bulk multi-id lookup (previously string-concatenated `WHERE id IN (...)`, no parameter
+binding at all) now goes through a new `SearchRepository::findRulesByIds()` using a real
+`ArrayParameterType::INTEGER` bound array -- fixes a real SQL-string-splicing gap the plan
+didn't call out, found while touching this exact clause for the leak fix. Verified: scoped
+PHPStan/ECS/deptrac clean; full Unit 615/615, Arch clean, Integration 660/660 (3 new
+`findRulesByIds()` tests), Contract 94/94 (`WsHistoryTest`'s `pwg.history.search` coverage
+exercises the rewritten bypass sites directly), Browser 68/68, Visual 34/34. Also removed
+a `SearchServiceTest.php` `safe_unserialize()` stub found dead during this item's work (zero
+real callers anywhere in src/tests, pre-existing debt from an earlier P23 batch, not
+something this item introduced). Item 3 (`user_infos.preferences`) starts next.
+
 **3. `user_infos.preferences`**
 
 - Schema: `piwigo_user_infos.preferences` TEXT → JSON.

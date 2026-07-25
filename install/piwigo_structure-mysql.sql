@@ -2,8 +2,7 @@
 -- Hand-maintained -- there is no Doctrine Migrations layer between "what
 -- the schema should be" and what a fresh install creates. Column-type
 -- fixes not yet decided for any domain (remaining user_infos.preferences/
--- search.rules/config.value text->JSON items) are deliberately not
--- applied here.
+-- config.value text->JSON items) are deliberately not applied here.
 
 --
 -- Table structure for table `piwigo_activity`
@@ -332,7 +331,7 @@ CREATE TABLE `piwigo_search` (
   `created_on` DATETIME DEFAULT NULL,
   `created_by` MEDIUMINT(8) UNSIGNED,
   `forked_from` INT(10) UNSIGNED,
-  `rules` text,
+  `rules` JSON,
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

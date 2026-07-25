@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
+use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Core\ArrayHelper;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 use Piwigo\Search\Projection\Search;
@@ -105,21 +107,63 @@ final class SearchRepository extends AbstractRepository
     }
 
     /**
+     * $createdOn/$searchUuid default to null for Ws\PwgCore::historySearch()'s
+     * ephemeral, metadata-less inserts (no user-facing permalink, never
+     * forked) -- SearchService::saveSearch() always passes real values for
+     * both.
+     *
+     * @param array<string, mixed> $rules
      * @return int the new row's auto-increment id
      */
     public function insertSearch(
-        string $rulesSerialized,
-        string $createdOn,
-        ?int $createdBy,
-        string $searchUuid,
-        ?int $forkedFrom
+        array $rules,
+        ?string $createdOn = null,
+        ?int $createdBy = null,
+        ?string $searchUuid = null,
+        ?int $forkedFrom = null
     ): int {
         $this->conn->executeStatement(
             'INSERT INTO ' . Tables::search() . ' (rules, created_on, created_by, search_uuid, forked_from) VALUES (?, ?, ?, ?, ?)',
-            [$rulesSerialized, $createdOn, $createdBy, $searchUuid, $forkedFrom]
+            [json_encode($rules), $createdOn, $createdBy, $searchUuid, $forkedFrom]
         );
 
         return (int) $this->conn->lastInsertId();
+    }
+
+    /**
+     * Batch lookup of decoded `rules` for a list of search ids, used by
+     * Ws\PwgCore::historySearch()'s history-listing enrichment (one query
+     * for every `search_id` referenced across a page of history rows,
+     * instead of unserialize()-ing a raw per-row string itself).
+     *
+     * @param list<int> $ids
+     * @return array<int, array<string, mixed>|null> keyed by search id
+     */
+    public function findRulesByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $rows = $this->conn->executeQuery(
+            'SELECT id, rules FROM ' . Tables::search() . ' WHERE id IN (?)',
+            [$ids],
+            [ArrayParameterType::INTEGER]
+        )->fetchAllAssociative();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_numeric($row['id'] ?? null)) {
+                continue;
+            }
+
+            $rulesRaw = $row['rules'] ?? null;
+            $result[(int) $row['id']] = is_string($rulesRaw)
+                ? array_filter(ArrayHelper::safeJsonDecode($rulesRaw), is_string(...), ARRAY_FILTER_USE_KEY)
+                : null;
+        }
+
+        return $result;
     }
 
     public function now(): string

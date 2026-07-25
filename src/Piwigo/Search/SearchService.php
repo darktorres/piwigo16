@@ -148,23 +148,12 @@ final readonly class SearchService
             return false;
         }
 
-        $rules = $search->rules;
-        if (! is_string($rules)) {
-            return false;
-        }
-
-        $result = unserialize($rules);
-        if (! is_array($result)) {
-            return false;
-        }
-
-        /** @var array<string, mixed> $result */
-        return $result;
+        return $search->rules ?? false;
     }
 
     /**
-     * Returns search rules stored into a serialized array in "search"
-     * table. Same as getSearchArray(), but resolves the candidate id via
+     * Returns search rules stored in "search" table. Same as
+     * getSearchArray(), but resolves the candidate id via
      * getValidatedSearchInfo() (die()/fatal_error()-on-hacking-attempt
      * request-context validation, since this is only meant for a
      * user-supplied search identifier from the URL, unlike getSearchArray()'s
@@ -182,18 +171,7 @@ final readonly class SearchService
             $this->htmlRenderer->badRequest($this->redirectService, 'this search identifier does not exist');
         }
 
-        $rules = $search->rules;
-        if (! is_string($rules)) {
-            return false;
-        }
-
-        $result = unserialize($rules);
-        if (! is_array($result)) {
-            return false;
-        }
-
-        /** @var array<string, mixed> $result */
-        return $result;
+        return $search->rules ?? false;
     }
 
     /**
@@ -1330,7 +1308,7 @@ final readonly class SearchService
 
         $userId = \Piwigo\Users\CurrentUser::get()->id;
 
-        $this->repo->insertSearch(serialize($rules), $dbNow, $userId, $searchUuid, $forkedFrom);
+        $this->repo->insertSearch($rules, $dbNow, $userId, $searchUuid, $forkedFrom);
 
         if (! \Piwigo\Auth\AccessControl::isAGuest() && ! \Piwigo\Auth\AccessControl::isGeneric()) {
             $rulesFields = $rules['fields'] ?? [];

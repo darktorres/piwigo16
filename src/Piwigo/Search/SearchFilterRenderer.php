@@ -121,8 +121,8 @@ final readonly class SearchFilterRenderer
         $resolvedSearchId = null;
         $mySearch = $this->searchService->getValidatedSearchArray($searchId, $sectionContext->section, $resolvedSearchId);
         if (! is_array($mySearch)) {
-            // get_search_array() only returns false when unserialize() fails
-            // on malformed data; this method only runs for an
+            // getValidatedSearchArray() only returns false when a search
+            // row's `rules` is malformed/null; this method only runs for an
             // already-validated search (get_search_info() calls
             // bad_request() otherwise), so this is just a defensive
             // fallback keeping the rest of this method array-typed.

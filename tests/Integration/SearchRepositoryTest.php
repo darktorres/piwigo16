@@ -52,7 +52,7 @@ final class SearchRepositoryTest extends IntegrationTestCase
 
     public function test_find_one_by_clause_returns_the_matching_row(): void
     {
-        $this->repo->insertSearch(serialize(['q' => 'nature']), '2026-07-12 00:00:00', 1, 'psk-20260712-abcdefghij', null);
+        $this->repo->insertSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-abcdefghij', null);
 
         $row = $this->repo->findOneByClause('search_uuid = ?', ['psk-20260712-abcdefghij']);
 
@@ -107,14 +107,14 @@ final class SearchRepositoryTest extends IntegrationTestCase
 
     public function test_count_by_uuid_returns_one_after_insert(): void
     {
-        $this->repo->insertSearch(serialize(['q' => 'travel']), '2026-07-12 00:00:00', 1, 'psk-20260712-klmnopqrst', null);
+        $this->repo->insertSearch(['q' => 'travel'], '2026-07-12 00:00:00', 1, 'psk-20260712-klmnopqrst', null);
 
         self::assertSame(1, $this->repo->countByUuid('psk-20260712-klmnopqrst'));
     }
 
     public function test_insert_search_returns_the_new_autoincrement_id(): void
     {
-        $id = $this->repo->insertSearch(serialize(['q' => 'family']), '2026-07-12 00:00:00', null, 'psk-20260712-uvwxyzabcd', null);
+        $id = $this->repo->insertSearch(['q' => 'family'], '2026-07-12 00:00:00', null, 'psk-20260712-uvwxyzabcd', null);
 
         self::assertGreaterThan(0, $id);
 
@@ -126,12 +126,33 @@ final class SearchRepositoryTest extends IntegrationTestCase
 
     public function test_insert_search_stores_forked_from(): void
     {
-        $parentId = $this->repo->insertSearch(serialize(['q' => 'parent']), '2026-07-12 00:00:00', 1, 'psk-20260712-parentuuid', null);
-        $childId = $this->repo->insertSearch(serialize(['q' => 'child']), '2026-07-12 00:00:00', 1, 'psk-20260712-childuuidx', $parentId);
+        $parentId = $this->repo->insertSearch(['q' => 'parent'], '2026-07-12 00:00:00', 1, 'psk-20260712-parentuuid', null);
+        $childId = $this->repo->insertSearch(['q' => 'child'], '2026-07-12 00:00:00', 1, 'psk-20260712-childuuidx', $parentId);
 
         $row = $this->repo->findOneByClause('id = ?', [$childId]);
         self::assertNotNull($row);
         self::assertSame($parentId, $row->forkedFrom);
+    }
+
+    public function test_find_rules_by_ids_returns_decoded_rules_keyed_by_id(): void
+    {
+        $firstId = $this->repo->insertSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-bulklook01', null);
+        $secondId = $this->repo->insertSearch(['q' => 'travel', 'fields' => ['allwords' => ['words' => ['travel']]]], '2026-07-12 00:00:00', 1, 'psk-20260712-bulklook02', null);
+
+        $rules = $this->repo->findRulesByIds([$firstId, $secondId]);
+
+        self::assertSame(['q' => 'nature'], $rules[$firstId]);
+        self::assertSame(['q' => 'travel', 'fields' => ['allwords' => ['words' => ['travel']]]], $rules[$secondId]);
+    }
+
+    public function test_find_rules_by_ids_returns_empty_array_for_an_empty_id_list(): void
+    {
+        self::assertSame([], $this->repo->findRulesByIds([]));
+    }
+
+    public function test_find_rules_by_ids_omits_ids_with_no_matching_row(): void
+    {
+        self::assertSame([], $this->repo->findRulesByIds([999999]));
     }
 
     public function test_now_returns_a_non_empty_datetime_string(): void

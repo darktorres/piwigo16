@@ -39,6 +39,7 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
+use Piwigo\Search\SearchRepository;
 use Piwigo\Url\UrlService;
 
 /**
@@ -970,16 +971,8 @@ SELECT
         // store seach in database
         // register search rules in database, then they will be available on
         // thumbnails page and picture page.
-        $query = '
-  INSERT INTO ' . Tables::search() . '
-  (rules)
-  VALUES
-  (' . $conn->quote(serialize($search)) . ')
-  ;';
-
-        $conn->executeStatement($query);
-
-        $search_id = (int) $conn->lastInsertId();
+        $searchRepository = new SearchRepository($conn);
+        $search_id = $searchRepository->insertSearch($search);
 
         // Remove redirect for ajax //
         // redirect(
@@ -987,19 +980,13 @@ SELECT
         //   );
 
         // what are the lines to display in reality ?
-        $query = '
-SELECT rules
-  FROM ' . Tables::search() . '
-  WHERE id = ' . $search_id . '
-;';
-        $serialized_rules = $conn->fetchOne($query);
+        $storedSearch = $searchRepository->findOneByClause('id = ?', [$search_id]);
         // this row is the one we just INSERTed above (via $search_id =
-        // Connection::lastInsertId()) with a serialize() call we made
-        // ourselves, so the 'rules' column is guaranteed to be a non-null
-        // string here.
-        assert(is_string($serialized_rules));
+        // Connection::lastInsertId()) with rules we just encoded ourselves,
+        // so it's guaranteed to be found with a non-null, decoded array.
+        assert($storedSearch !== null && is_array($storedSearch->rules));
 
-        $page['search'] = unserialize($serialized_rules);
+        $page['search'] = $storedSearch->rules;
 
         // Known limitation: the query behind this fetches more rows than
         // the page actually displays instead of a SQL_CALC_FOUND_ROWS-based
@@ -1068,26 +1055,14 @@ SELECT rules
         // is empty.
         $search_details = [];
         if (count($search_ids) > 0) {
-            $query = '
-SELECT
-    id,
-    rules
-  FROM ' . Tables::search() . '
-  WHERE id IN (' . implode(',', $search_ids) . ')
-;';
-            $search_details_raw = array_column($conn->fetchAllAssociative($query), 'rules', 'id');
-            // Built into a fresh array (rather than mutating $search_details_raw
-            // while iterating over it) so PHPStan can keep a precise
-            // array<int|string, array<array-key, mixed>> element type instead of
-            // widening to mixed from the in-place self-reassignment.
-            foreach ($search_details_raw as $id_search => $rules_search_raw) {
-                if (! is_string($rules_search_raw)) {
+            $rules_by_search_id = $searchRepository->findRulesByIds(array_map(intval(...), $search_ids));
+            foreach ($rules_by_search_id as $id_search => $rules_full) {
+                if ($rules_full === null) {
                     continue;
                 }
 
-                $unserialized = \Piwigo\Core\ArrayHelper::safeUnserialize($rules_search_raw);
-                $rules_search = is_array($unserialized) && isset($unserialized['fields']) && is_array($unserialized['fields'])
-                    ? $unserialized['fields']
+                $rules_search = isset($rules_full['fields']) && is_array($rules_full['fields'])
+                    ? $rules_full['fields']
                     : [];
 
                 $rules_tags = is_array($rules_search['tags'] ?? null) ? $rules_search['tags'] : [];
@@ -1337,7 +1312,7 @@ SELECT
                         'representative_ext' => $image_infos[$line_image_id]['representative_ext'],
                     ];
                     $page_search = $page['search'];
-                    $page_search_fields = is_array($page_search) ? ($page_search['fields'] ?? null) : null;
+                    $page_search_fields = $page_search['fields'] ?? null;
                     $thumbnail_display = is_array($page_search_fields) ? ($page_search_fields['display_thumbnail'] ?? 'no_display_thumbnail') : 'no_display_thumbnail';
                 } else {
                     $thumbnail_display = 'no_display_thumbnail';

@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
@@ -175,12 +176,12 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         self::assertCount(4, $rows);
 
         foreach ($rows as $row) {
-            self::assertSame('user', $row['object']);
-            self::assertSame('fixture_admin', $row['username']);
+            self::assertSame('user', $row->object);
+            self::assertSame('fixture_admin', $row->username);
         }
 
         // newest first
-        self::assertGreaterThan($rows[count($rows) - 1]['activity_id'], $rows[0]['activity_id']);
+        self::assertGreaterThan($rows[count($rows) - 1]->activityId, $rows[0]->activityId);
     }
 
     public function test_find_system_object_log_with_usernames_uses_the_real_username_when_performed_by_is_a_real_user(): void
@@ -203,10 +204,10 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             // The fixture's own row 1 (action='install') is also a
             // 'system' row -- filter to this test's own inserted row
             // rather than assuming it's the only one.
-            $matching = array_values(array_filter($rows, static fn (array $row): bool => $row['action'] === 'maintenance'));
+            $matching = array_values(array_filter($rows, static fn (SystemActivityLogEntry $row): bool => $row->action === 'maintenance'));
 
             self::assertCount(1, $matching);
-            self::assertSame('fixture_admin', $matching[0]['username']);
+            self::assertSame('fixture_admin', $matching[0]->username);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action != 'install'");
         }
@@ -242,11 +243,11 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             // The fixture's own row 1 (action='install', also performed_by
             // NULL) legitimately renders "System" too -- filter to this
             // test's own inserted row rather than assuming it's the only one.
-            $matching = array_values(array_filter($rows, static fn (array $row): bool => $row['action'] === 'update'));
+            $matching = array_values(array_filter($rows, static fn (SystemActivityLogEntry $row): bool => $row->action === 'update'));
 
             self::assertCount(1, $matching);
-            self::assertNull($matching[0]['performed_by']);
-            self::assertSame('System', $matching[0]['username']);
+            self::assertNull($matching[0]->performedBy);
+            self::assertSame('System', $matching[0]->username);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action != 'install'");
         }

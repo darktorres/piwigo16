@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Maintenance;
 
+use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\Lang;
 
@@ -21,31 +22,30 @@ use Piwigo\Core\Lang;
 final class ActivityLogEntryFormatter
 {
     /**
-     * @param array<string, mixed> $row
      * @param array<string, mixed> $maintActions
      *
      * @return array<string, mixed>
      */
-    public function format(array $row, array $maintActions): array
+    public function format(SystemActivityLogEntry $row, array $maintActions): array
     {
         $major_infos = false;
         $object = '';
         $object_icon = '';
         $action_icon = '';
         $action_color = '';
-        $action = $row['action'];
-        $details = is_array($row['details']) ? $row['details'] : [];
+        $action = $row->action;
+        $details = $row->details ?? [];
         $detail = [
             'type' => 'empty',
         ];
 
         // For each categories (Core, Plugin and Theme) we need to format theirs actions
-        switch ($row['object_id']) {
+        switch ($row->objectId) {
             case ActivitySystem::Core:
                 $object_icon = 'icon-piwigo';
                 $object = Lang::t('Core');
 
-                switch ($row['action']) {
+                switch ($row->action) {
                     case 'install':
                         $action_icon = 'icon-download';
                         $action_color = 'icon-green';
@@ -155,7 +155,7 @@ final class ActivityLogEntryFormatter
                 if (isset($details['plugin_id']) && is_string($details['plugin_id'])) {
                     $object = str_replace(['_', '-'], ' ', $details['plugin_id']);
                 }
-                switch ($row['action']) {
+                switch ($row->action) {
                     case 'install':
                         $action_icon = 'icon-download';
                         $action_color = 'icon-green';
@@ -233,7 +233,7 @@ final class ActivityLogEntryFormatter
                     $object = str_replace(['_', '-'], ' ', $details['theme_id']);
                 }
 
-                switch ($row['action']) {
+                switch ($row->action) {
                     case 'install':
                         $action_icon = 'icon-download';
                         $action_color = 'icon-green';
@@ -310,19 +310,18 @@ final class ActivityLogEntryFormatter
 
         // Format our data before send
         // This data will be manipulate by maintenance_sys.js
-        $occured_on = is_string($row['occured_on'] ?? null) ? $row['occured_on'] : '';
-        [$date, $hour] = explode(' ', $occured_on);
+        [$date, $hour] = explode(' ', $row->occuredOn);
 
         return [
             'major_infos' => $major_infos,
-            'id' => $row['activity_id'],
+            'id' => $row->activityId,
             'object_icon' => $object_icon,
             'object' => ucwords($object),
             'action_icon' => $action_icon,
             'action_color' => $action_color,
             'action' => $action,
-            'user_id' => $row['performed_by'],
-            'username' => $row['username'],
+            'user_id' => $row->performedBy,
+            'username' => $row->username,
             'date' => \Piwigo\Core\DateHelper::formatDate($date),
             'hour' => $hour,
             'detail' => $detail,

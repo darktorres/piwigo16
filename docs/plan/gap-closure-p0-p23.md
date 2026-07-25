@@ -41,41 +41,70 @@ verified by reading that file directly, not by finding a migration.
 
 **All ~40 concretely-named items are done.** Stage 1a is fully closed out.
 
-**Stage 1b — Typed DTO/Projection pattern: 10 of 32 repositories done.** (33 total minus
+**Stage 1b — Typed DTO/Projection pattern: 12 of 32 repositories done.** (33 total minus
 `ConfigRepository`, already excluded per the plan — confirmed still the sole
 Doctrine-ORM-backed repository.) Verified by checking which repositories actually reference
 their own `Projection\*` class and call `::fromRow(`, not just which domain directory
 happens to contain a `Projection/` folder (e.g. `Auth/Projection/ApiKey.php` exists, but
 `AuthRepository.php`/`PasswordRepository.php` in the same domain don't use it yet).
 
-- **Done:** `ApiKeyRepository`, `CategoryRepository`, `ImageRepository`,
-  `PermalinkRepository`, `PluginRepository`, `RateRepository`, `SearchRepository`,
-  `SiteRepository`, `TagRepository`, `UserRepository`.
-- **Not done (22):** `ActivityRepository`, `Admin/Extensions/ExtensionRepository`,
+- **Done:** `ActivityRepository`, `ApiKeyRepository`, `CategoryRepository`,
+  `CommentRepository`, `ImageRepository`, `PermalinkRepository`, `PluginRepository`,
+  `RateRepository`, `SearchRepository`, `SiteRepository`, `TagRepository`,
+  `UserRepository`.
+- **Not done (20):** `Admin/Extensions/ExtensionRepository`,
   `Admin/Maintenance/DbMaintenanceRepository`, `AuditRepository`, `AuthRepository`,
   `PasswordRepository`, `Cache/UserCacheRepository`, `CaddieRepository`,
-  `CalendarRepository`, `CommentRepository`, `FeedRepository`, `GroupRepository`,
+  `CalendarRepository`, `FeedRepository`, `GroupRepository`,
   `HistoryRepository`, `LangRepository`, `MailRecipientRepository`,
   `MenubarLayoutRepository`, `MetadataRepository`, `NotificationByMailRepository`,
   `NotificationRepository`, `PermissionRepository`, `SectionRepository`,
   `SessionRepository`.
+- **2026-07-25: Comment + Activity done.** `CommentRepository` had exactly one
+  row-returning method (`findForImage()`, a `LEFT JOIN` onto `piwigo_users` for the
+  comment author's email) — every other method is a scalar/aggregate read, so a single
+  `Comment\Projection\Comment` DTO (with the joined `userEmail` baked in as a real
+  property, since that query has exactly one real caller and this is precisely its
+  shape) closes the repository out. `PictureCommentRenderer::render()`'s consumption
+  loop dropped its own `is_string()`/`is_numeric()` narrowing accordingly. Added
+  `tests/Unit/Comment/Projection/CommentTest.php` (fromRow/toArray round-trip, matching
+  `tests/Unit/Image/Projection/ImageTest.php`'s own precedent) — Comment domain's own
+  Stage 1c zero-Unit-coverage gap closes in the same pass, per the plan's own
+  instruction not to defer it.
+  `ActivityRepository` had two row-returning methods, each a differently-shaped join
+  already doing its own inline `array_map()` narrowing (not a plain `SELECT *`) --
+  `findSystemObjectLogWithUsernames()` (`LEFT JOIN`, `details` decoded to `?array`, feeds
+  `ActivityLogEntryFormatter::format()`) and `findUserObjectLogWithUsernames()` (`INNER
+  JOIN`, `details` stays raw JSON text, feeds the CSV export) — given two distinct real
+  shapes, not one. Became `Activity\Projection\SystemActivityLogEntry`/
+  `UserActivityLogEntry`. `countByUser()`/`findMinOccuredOn()`/`findMaxOccuredOn()`/
+  `findActionCounts()` stay raw (genuine aggregates, not table rows, same precedent as
+  `Tag::countImagesPerTag()`). Activity domain already had real Unit coverage
+  (`ActivityLogEntryFormatterTest.php`, pre-existing) — updated its `makeActivityRow()`
+  test helper to build the new typed object directly instead of a raw array.
 - Execution departed from the plan's suggested order (Image → Category → User → Tag →
   Comment → Activity → Rate → remaining 26) — Rate/Search/Site/PluginConfig/Permalink/Auth
-  landed before Comment/Activity. Fine per the plan's own "detail worked out at
-  implementation time" allowance; **Comment and Activity are next in the original
-  sequence if resuming in-order.**
+  landed before Comment/Activity, which landed before the plan's own "remaining 26"
+  step. Fine per the plan's own "detail worked out at implementation time" allowance.
 - `BatchManagerUnitPageRenderer.php`'s stale-`$row` bug (lines ~364–374, called out as
-  "fix along the way") is **still open** — its own inline comment still says "pre-existing
-  bug, not fixed here."
+  "fix along the way") is **still open, and misattributed in this plan's own text** — on
+  inspection it's entirely `Tables::images()`/`ImageRepository` code (the file's own
+  docblock documents it as a known, deliberately-not-fixed-here carry-forward from the
+  original P23 port), not Comment or Activity. `ImageRepository`'s own Stage 1b pass
+  already happened (see "Done" above) and missed it — a real, verified gap, not this
+  session's to fix; flagged for a future Image-domain follow-up rather than bundled in
+  here on a false premise.
 
-**Stage 1c — Per-namespace Unit test coverage: NOT STARTED, 0/11.** `Audit`, `Caddie`,
-`Calendar`, `Comment`, `Group`, `History`, `Metadata`, `Permission`, `Picture`, `Site`,
-`Tag` all still have zero files under `tests/Unit/`. Notably, `Site` and `Tag` already
-had their Stage 1b pass land (Projection classes exist) without the companion Unit tests
-the plan says should ship in the same pass — a real, verified deviation from the stated
-intent, not yet caught up. `Picture` (the flagged priority — `PictureCommentRenderer`'s
-documented prior bug) still has zero tests in any suite; only `tests/Arch/StructuralTest.php`
-references its renderer class names, and only for a structural check, not behavior.
+**Stage 1c — Per-namespace Unit test coverage: 1 of 11 caught up, 2026-07-25.** `Audit`,
+`Caddie`, `Calendar`, `Group`, `History`, `Metadata`, `Permission`, `Picture`, `Site`,
+`Tag` still have zero files under `tests/Unit/`. `Comment` no longer does —
+`tests/Unit/Comment/Projection/CommentTest.php` landed in the same pass as its own
+Stage 1b Projection work, per the plan's own instruction. `Site` and `Tag` are still the
+documented deviation (Projection classes exist, no companion Unit tests yet — not caught
+up by this pass, which was scoped to Comment + Activity only). `Picture` (the flagged
+priority — `PictureCommentRenderer`'s documented prior bug) still has zero tests in any
+suite; only `tests/Arch/StructuralTest.php` references its renderer class names, and
+only for a structural check, not behavior.
 
 **Stage 1d — CachePools wiring: 1 of 3 done.** `CachePools::config()` is now real (wired
 into `ConfigService::loadConfFromDb()` this session, `feede75c9`). `CachePools::permissions()`

@@ -26,6 +26,7 @@ if (! function_exists('format_date')) {
     }
 }
 
+use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Admin\Maintenance\ActivityLogEntryFormatter;
 use Piwigo\Core\ActivitySystem;
 
@@ -38,23 +39,24 @@ use Piwigo\Core\ActivitySystem;
  * needed.
  */
 /**
- * @param array<string, mixed> $overrides
- *
- * @return array<string, mixed>
+ * @param array{activity_id?: int, performed_by?: ?int, object_id?: int,
+ *   action?: string, occured_on?: string, details?: ?array<string, mixed>,
+ *   username?: ?string} $overrides same column-name keys the real DB row
+ *   uses -- unlike SystemActivityLogEntry::fromRow() (which decodes
+ *   'details' from a JSON *string*, matching the real repository's own row
+ *   shape), 'details' is passed here as a real array directly, since every
+ *   test call site already builds one.
  */
-function makeActivityRow(array $overrides = []): array
+function makeActivityRow(array $overrides = []): SystemActivityLogEntry
 {
-    return array_merge(
-        [
-            'activity_id' => 42,
-            'performed_by' => 1,
-            'object_id' => ActivitySystem::Core,
-            'action' => 'install',
-            'occured_on' => '2026-08-01 12:34:56',
-            'details' => null,
-            'username' => 'fixture_admin',
-        ],
-        $overrides
+    return new SystemActivityLogEntry(
+        activityId: $overrides['activity_id'] ?? 42,
+        performedBy: $overrides['performed_by'] ?? 1,
+        objectId: $overrides['object_id'] ?? ActivitySystem::Core,
+        action: $overrides['action'] ?? 'install',
+        occuredOn: $overrides['occured_on'] ?? '2026-08-01 12:34:56',
+        details: $overrides['details'] ?? null,
+        username: $overrides['username'] ?? 'fixture_admin',
     );
 }
 

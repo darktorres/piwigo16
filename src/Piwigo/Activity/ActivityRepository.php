@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Activity;
 
-use Piwigo\Core\ArrayHelper;
+use Piwigo\Activity\Projection\SystemActivityLogEntry;
+use Piwigo\Activity\Projection\UserActivityLogEntry;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 
@@ -157,17 +158,7 @@ final class ActivityRepository extends AbstractRepository
      * {@see findSystemObjectLogWithUsernames()}'s own consumer, which does
      * structured `$details['key']` access and needs the real array.
      *
-     * @return list<array{
-     *   activity_id: int,
-     *   performed_by: ?int,
-     *   object: string,
-     *   object_id: int,
-     *   action: string,
-     *   ip_address: ?string,
-     *   occured_on: string,
-     *   details: ?string,
-     *   username: string,
-     * }>
+     * @return list<UserActivityLogEntry>
      */
     public function findUserObjectLogWithUsernames(string $usernameColumn, string $idColumn): array
     {
@@ -180,20 +171,7 @@ final class ActivityRepository extends AbstractRepository
             ->executeQuery()
             ->fetchAllAssociative();
 
-        return array_map(
-            static fn (array $row): array => [
-                'activity_id' => is_numeric($row['activity_id']) ? (int) $row['activity_id'] : 0,
-                'performed_by' => is_numeric($row['performed_by']) ? (int) $row['performed_by'] : null,
-                'object' => is_string($row['object']) ? $row['object'] : '',
-                'object_id' => is_numeric($row['object_id']) ? (int) $row['object_id'] : 0,
-                'action' => is_string($row['action']) ? $row['action'] : '',
-                'ip_address' => is_string($row['ip_address']) ? $row['ip_address'] : null,
-                'occured_on' => is_string($row['occured_on']) ? $row['occured_on'] : '',
-                'details' => is_string($row['details']) ? $row['details'] : null,
-                'username' => is_string($row['username']) ? $row['username'] : '',
-            ],
-            $rows
-        );
+        return array_map(UserActivityLogEntry::fromRow(...), $rows);
     }
 
     /**
@@ -219,15 +197,7 @@ final class ActivityRepository extends AbstractRepository
      * does structured `$details['key']` access and used to `unserialize()`
      * it itself.
      *
-     * @return list<array{
-     *   activity_id: int,
-     *   performed_by: ?int,
-     *   object_id: int,
-     *   action: string,
-     *   occured_on: string,
-     *   details: array<string, mixed>|null,
-     *   username: ?string,
-     * }>
+     * @return list<SystemActivityLogEntry>
      */
     public function findSystemObjectLogWithUsernames(string $usernameColumn, string $idColumn): array
     {
@@ -240,19 +210,6 @@ final class ActivityRepository extends AbstractRepository
             ->executeQuery()
             ->fetchAllAssociative();
 
-        return array_map(
-            static fn (array $row): array => [
-                'activity_id' => is_numeric($row['activity_id']) ? (int) $row['activity_id'] : 0,
-                'performed_by' => is_numeric($row['performed_by']) ? (int) $row['performed_by'] : null,
-                'object_id' => is_numeric($row['object_id']) ? (int) $row['object_id'] : 0,
-                'action' => is_string($row['action']) ? $row['action'] : '',
-                'occured_on' => is_string($row['occured_on']) ? $row['occured_on'] : '',
-                'details' => is_string($row['details'])
-                    ? array_filter(ArrayHelper::safeJsonDecode($row['details']), is_string(...), ARRAY_FILTER_USE_KEY)
-                    : null,
-                'username' => is_string($row['username']) ? $row['username'] : null,
-            ],
-            $rows
-        );
+        return array_map(SystemActivityLogEntry::fromRow(...), $rows);
     }
 }

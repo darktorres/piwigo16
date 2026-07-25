@@ -186,17 +186,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
     }
 
     /**
-     * @return list<array{
-     *   activity_id: int,
-     *   performed_by: ?int,
-     *   object: string,
-     *   object_id: int,
-     *   action: string,
-     *   ip_address: ?string,
-     *   occured_on: string,
-     *   details: ?string,
-     *   username: string,
-     * }>
+     * @return list<\Piwigo\Activity\Projection\UserActivityLogEntry>
      */
     public function getUserObjectLogWithUsernames(string $usernameColumn, string $idColumn): array
     {

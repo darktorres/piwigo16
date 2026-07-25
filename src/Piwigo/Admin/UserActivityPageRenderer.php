@@ -59,21 +59,20 @@ final class UserActivityPageRenderer
             $rows = $activity_service->getUserObjectLogWithUsernames($user_fields['username'], $user_fields['id']);
             array_push($output_lines, ['User', 'ID_User', 'Object', 'Object_ID', 'Action', 'Date', 'Hour', 'IP_Address', 'Details']);
             foreach ($rows as $row) {
-                $row['details'] = str_replace('`groups`', 'groups', (string) $row['details']);
-                $row['details'] = str_replace('`rank`', 'rank', $row['details']);
+                $details = str_replace(['`groups`', '`rank`'], ['groups', 'rank'], (string) $row->details);
 
-                [$date, $hour] = explode(' ', $row['occured_on']);
+                [$date, $hour] = explode(' ', $row->occuredOn);
 
                 $output_lines[] = [
-                    'username' => $row['username'],
-                    'user_id' => (string) $row['performed_by'],
-                    'object' => $row['object'],
-                    'object_id' => (string) $row['object_id'],
-                    'action' => $row['action'],
+                    'username' => $row->username,
+                    'user_id' => (string) $row->performedBy,
+                    'object' => $row->object,
+                    'object_id' => (string) $row->objectId,
+                    'action' => $row->action,
                     'date' => $date,
                     'hour' => $hour,
-                    'ip_address' => (string) $row['ip_address'],
-                    'details' => $row['details'],
+                    'ip_address' => (string) $row->ipAddress,
+                    'details' => $details,
                 ];
             }
 

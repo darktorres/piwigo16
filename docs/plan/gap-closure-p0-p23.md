@@ -290,10 +290,54 @@ Verified: PHPStan/ECS/deptrac clean repo-wide; Unit+Arch 690/690 (unchanged), In
 caching test), Contract 94/94 (`PwgCategories.php`'s own retarget exercised directly via
 `pwg.categories.getList`), Browser 68/68, Visual 34/34.
 
-**Stage 1e — die() elimination: NOT STARTED, 0/20.** Exact same counts as the plan's own
-re-derived figures: `UploadService.php` (9), `Admin/Image/ImageGd.php` (5),
+**Stage 1e — die() elimination: DONE, 2026-07-25.** Re-verified the real scope directly
+(token-level `T_EXIT` count, immune to the comment-vs-code confusion a naive `grep` hits)
+before touching anything: still exactly 17 real calls, not 20 — the `UpgradeFrom_1_3_1.php`
+"3 real calls, 1 file" item is moot (that file was deleted outright in Stage 0's legacy-
+upgrade-chain removal, well before this stage started).
+
+Added `Piwigo\Admin\Image\ImageProcessingException` (`extends \RuntimeException`, not
+`Piwigo\Http\ResponseReadyException` — that class is deliberately for *expected* control
+flow that must never reach Sentry, per its own docblock; these are genuine unexpected
+failures that should). Converted all 17: `Admin/Image/ImageGd.php` (5),
 `Admin/Image/PwgImage.php` (2), `Admin/Image/ImageExtImagick.php` (1),
-`UpgradeFrom_1_3_1.php` (3). No `ImageProcessingException` class exists yet.
+`Admin/Upload/UploadService.php` (9). `Ws/PwgServer.php:91`'s `die(0)` stays excluded, still
+tied to P26's future removal of the whole legacy WS server.
+
+`Http\Middleware\ExceptionHandlerMiddleware` (catches/logs/Sentry-reports any `\Throwable`
+reaching it for a real HTTP request) and Symfony Messenger's own consumer loop (the
+`Job\BatchUploadJob`/`BatchUploadHandler` background-job caller) both already handle a
+plain thrown exception correctly with zero new wiring needed — a strict improvement over
+`die()`, which produced neither logging nor Sentry visibility and skipped every pending
+`finally` block. Traced `ImageDerivativeController.php`'s own `catch (ResponseReadyException)
+{ throw $e; } catch (\Exception) { ... }` block to confirm it doesn't swallow these: it's
+scoped narrowly to the rotation-detection code above the real `new PwgImage(...)`/
+`pwg_resize()` calls, which sit outside any local try/catch and propagate normally.
+
+`tests/Arch/StructuralTest.php`'s die()/exit() allowlist updated: `ImageGd.php`/
+`ImageExtImagick.php`/`PwgImage.php` entries removed entirely (0 real calls left);
+`UploadService.php`'s count dropped from 10 to 1 (only its own unrelated, legitimate
+IN_WS-branch `exit()` remains). The old "a hard die() is correct in both real callers"
+comment justifying these entries was itself the audit's own "materially wrong" finding —
+corrected in place, not just deleted.
+
+New tests: `tests/Unit/Admin/Image/{ImageGdTest,PwgImageTest,ImageExtImagickTest}.php` (4
+tests total; ImageExtImagickTest.php uses the real external `magick`/`convert` CLI already
+available in this environment, matching `PwgImage::is_ext_imagick()`'s own detection —
+skips cleanly if unavailable). `imagecreatetruecolor()`'s 3 failure branches and
+`PwgImage`'s "no library available" branch stay untested: genuinely unreachable in this
+environment without mocking a global function these classes have no seam to inject (GD is
+real and always resolves). `UploadService.php`'s own 9 converted call sites
+(`addUploadedFile()`/`addFormat()`/`prepareDirectoryStatic()`) stay untested directly too
+-- reaching them needs a real DB row + filesystem permission tricks, disproportionate to
+this stage's own scope; the existing Browser suite's real upload flow
+(`PhotoUploadApiTest.php`, exercising `addUploadedFile()`'s success path end-to-end) gives
+confidence the surrounding code wasn't disturbed.
+
+Verified: PHPStan/ECS/deptrac clean repo-wide; Unit+Arch 694/694 (690 + 4 new), Integration
+675/675 (unchanged), Contract 94/94 (unchanged), Browser 68/68 (unchanged, including
+`PhotoUploadApiTest.php`'s real `addUploadedFile()` success-path exercise), Visual 34/34
+(unchanged).
 
 **Stage 1f — reset() arch-test coverage: NOT STARTED, still 6/~29.** `StructuralTest.php`
 has exactly the same 6 `"X::reset() is only called from tests/"` tests the plan's baseline

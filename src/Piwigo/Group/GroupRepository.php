@@ -9,6 +9,7 @@ use Doctrine\DBAL\ParameterType;
 use Piwigo\Core\Env;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
+use Piwigo\Group\Projection\Group;
 
 /**
  * Persistence layer for the group domain: `groups`, `user_group` (group
@@ -39,7 +40,7 @@ final class GroupRepository extends AbstractRepository
     /**
      * Every group's id/name/is_default, ordered by name.
      *
-     * @return list<array{id: int, name: string, is_default: bool}>
+     * @return list<Group>
      */
     public function findAllBasic(): array
     {
@@ -50,14 +51,7 @@ final class GroupRepository extends AbstractRepository
             ->executeQuery()
             ->fetchAllAssociative();
 
-        return array_map(
-            static fn (array $row): array => [
-                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
-                'name' => is_string($row['name']) ? $row['name'] : '',
-                'is_default' => (bool) $row['is_default'],
-            ],
-            $rows
-        );
+        return array_map(Group::fromRow(...), $rows);
     }
 
     /**

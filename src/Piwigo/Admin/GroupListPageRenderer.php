@@ -72,21 +72,21 @@ final class GroupListPageRenderer
         $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
         foreach ($groups as $row) {
-            $members = $group_repo->findMemberUsernames($row['id'], $user_fields['username'], $user_fields['id']);
+            $members = $group_repo->findMemberUsernames($row->id, $user_fields['username'], $user_fields['id']);
 
             $template->append(
                 'groups',
                 [
-                    'NAME' => $row['name'],
-                    'ID' => $row['id'],
-                    'IS_DEFAULT' => ($row['is_default'] ? ' [' . Lang::t('default') . ']' : ''),
+                    'NAME' => $row->name,
+                    'ID' => $row->id,
+                    'IS_DEFAULT' => ($row->isDefault ? ' [' . Lang::t('default') . ']' : ''),
                     'NB_MEMBERS' => count($members),
                     'L_MEMBERS' => implode(' <span class="userSeparator">&middot;</span> ', $members),
                     'MEMBERS' => Translator::get()->plural('%d member', '%d members', count($members)),
-                    'U_DELETE' => $del_url . $row['id'] . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
-                    'U_PERM' => $perm_url . $row['id'],
-                    'U_USERS' => $users_url . $row['id'],
-                    'U_ISDEFAULT' => $toggle_is_default_url . $row['id'] . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
+                    'U_DELETE' => $del_url . $row->id . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
+                    'U_PERM' => $perm_url . $row->id,
+                    'U_USERS' => $users_url . $row->id,
+                    'U_ISDEFAULT' => $toggle_is_default_url . $row->id . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                 ]
             );
 

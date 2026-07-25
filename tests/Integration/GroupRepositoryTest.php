@@ -44,7 +44,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
 
         $names = array_column($groups, 'name');
         self::assertSame(['Editors', 'Guests', 'Reviewers'], $names);
-        self::assertFalse($groups[0]['is_default']);
+        self::assertFalse($groups[0]->isDefault);
     }
 
     public function test_exists_is_true_for_a_fixture_group_and_false_for_a_bogus_id(): void

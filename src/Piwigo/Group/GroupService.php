@@ -33,7 +33,7 @@ final readonly class GroupService
     ) {}
 
     /**
-     * @return list<array{id: int, name: string, is_default: bool}>
+     * @return list<\Piwigo\Group\Projection\Group>
      */
     public function getAllBasic(): array
     {

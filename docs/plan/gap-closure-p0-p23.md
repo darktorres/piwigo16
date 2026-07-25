@@ -41,26 +41,52 @@ verified by reading that file directly, not by finding a migration.
 
 **All ~40 concretely-named items are done.** Stage 1a is fully closed out.
 
-**Stage 1b — Typed DTO/Projection pattern: 12 of 32 repositories done.** (33 total minus
-`ConfigRepository`, already excluded per the plan — confirmed still the sole
-Doctrine-ORM-backed repository.) Verified by checking which repositories actually reference
-their own `Projection\*` class and call `::fromRow(`, not just which domain directory
-happens to contain a `Projection/` folder (e.g. `Auth/Projection/ApiKey.php` exists, but
-`AuthRepository.php`/`PasswordRepository.php` in the same domain don't use it yet).
+**Stage 1b — Typed DTO/Projection pattern: 32 of 32 repositories done, 2026-07-25.**
+(33 total minus `ConfigRepository`, already excluded per the plan — confirmed still the
+sole Doctrine-ORM-backed repository.) Verified by checking which repositories actually
+reference their own `Projection\*` class and call `::fromRow(`, not just which domain
+directory happens to contain a `Projection/` folder (e.g. `Auth/Projection/ApiKey.php`
+exists, but `AuthRepository.php`/`PasswordRepository.php` in the same domain didn't use
+it until this pass).
 
-- **Done:** `ActivityRepository`, `ApiKeyRepository`, `CategoryRepository`,
-  `CommentRepository`, `ImageRepository`, `PermalinkRepository`, `PluginRepository`,
-  `RateRepository`, `SearchRepository`, `SiteRepository`, `TagRepository`,
-  `UserRepository`.
-- **Not done (20):** `Admin/Extensions/ExtensionRepository`,
-  `Admin/Maintenance/DbMaintenanceRepository`, `AuditRepository`, `AuthRepository`,
-  `PasswordRepository`, `Cache/UserCacheRepository`, `CaddieRepository`,
-  `CalendarRepository`, `FeedRepository`, `GroupRepository`,
-  `HistoryRepository`, `LangRepository`, `MailRecipientRepository`,
-  `MenubarLayoutRepository`, `MetadataRepository`, `NotificationByMailRepository`,
-  `NotificationRepository`, `PermissionRepository`, `SectionRepository`,
-  `SessionRepository`.
-- **2026-07-25: Comment + Activity done.** `CommentRepository` had exactly one
+- **Done via a real Projection (20):** `ActivityRepository`, `ApiKeyRepository`,
+  `AuditRepository`, `AuthRepository`, `CategoryRepository`, `CommentRepository`,
+  `GroupRepository`, `HistoryRepository`, `ImageRepository`, `MailRecipientRepository`,
+  `MetadataRepository`, `NotificationByMailRepository`, `PermalinkRepository`,
+  `PluginRepository`, `RateRepository`, `SearchRepository`, `SiteRepository`,
+  `TagRepository`, `UserRepository`.
+- **Done via a documented exception, no new Projection needed (12)** — re-framed the
+  Stage 1b metric from "every repo has a Projection" to its own underlying goal, "no
+  untyped `array<string, mixed>` row ever reaches a consumer that then re-implements the
+  same defensive narrowing" — a repo can satisfy that without a class of its own:
+  - **Write-only or scalar-only, no row shape exists to type:** `PasswordRepository`,
+    `CaddieRepository`, `Cache/UserCacheRepository`, `SessionRepository`,
+    `MenubarLayoutRepository` (already write-only since Stage 1a-bis),
+    `Admin/Maintenance/DbMaintenanceRepository`.
+  - **Genuinely dynamic caller-built SQL, shape varies per call, same precedent as
+    `SearchRepository`'s own fragment-passing methods:** `SectionRepository`,
+    `CalendarRepository`.
+  - **Genuinely polymorphic across 3 heterogeneous tables (plugins/themes/languages,
+    different real columns each), documented in the class's own docblock:**
+    `Admin/Extensions/ExtensionRepository`.
+  - **Every real return is a scalar list or a grouped scalar map, no row shape at all:**
+    `PermissionRepository`.
+  - **Trivial (≤2-field) shape, already zero-`mixed`-residue, exactly one real consumer —
+    not worth a ceremonial single-purpose class:** `LangRepository::findAll()`,
+    `FeedRepository::findById()`, `AuthRepository::findUsernameAndPassword()`.
+  - **Genuine `GROUP BY` aggregate over a table, not a real row of it (same precedent as
+    `Tag::countImagesPerTag()`):** `NotificationRepository::findRecentPostDates()`/
+    `::findRecentCategoriesForDate()`.
+  - **Deliberately-deferred full-row passthrough, no per-field access at the one real
+    boundary that reads it:** `GroupRepository::findWithMemberCounts()` (feeds
+    `Ws\PwgGroups::getList()`'s JSON response directly, same shape as
+    `Tag::findCommonTags()`'s own deferral); `HistoryRepository::search()` (merges into a
+    heterogeneous `$data` array for sort/CSV passthrough);
+    `NotificationRepository::findRecentElementsForDate()` (returns a full `images` row
+    that gets cached wholesale and consumed several methods later via an `is_array($element)`
+    guard — converting it to a real object would have silently broken that guard, a real
+    regression caught before landing, not after).
+- **2026-07-25, batch 1 (Comment + Activity).** `CommentRepository` had exactly one
   row-returning method (`findForImage()`, a `LEFT JOIN` onto `piwigo_users` for the
   comment author's email) — every other method is a scalar/aggregate read, so a single
   `Comment\Projection\Comment` DTO (with the joined `userEmail` baked in as a real
@@ -100,6 +126,57 @@ happens to contain a `Projection/` folder (e.g. `Auth/Projection/ApiKey.php` exi
   and a bare `===` against `$item_category_id` (`int|string` depending on the driver) —
   under Doctrine DBAL's native `int` return for this column, that `===` would have failed
   even with the correct row. Both sides now normalize to a real `int` before comparing.
+- **2026-07-25, batch 2 (the remaining 20, closing Stage 1b out): 8 new Projections,
+  12 documented exceptions** — user-directed "work through all of them, leave tests to
+  the end" (no new `tests/Unit/` coverage added this batch; Stage 1c stays at 1/11).
+  - `Audit\Projection\AuditLogEntry` — `AuditRepository::findAllInOrder()`'s own inline
+    `array_map()` narrowing (11 fields), single consumer (`AuditService::verifyChain()`).
+  - `Mail\Projection\MailRecipient` — shared by `MailRecipientRepository`'s
+    `findAdminsAndWebmasters()`/`findByGroupAndLanguage()` (same core `user_id`/`name`/
+    `email` triple, `status` nullable since only one method selects it). `mailAdmins()`
+    converts back to array via `->toArray()` immediately before `mail()`'s own `$to`
+    param, which is a deliberately dynamic many-shapes contract shared with every other
+    caller — not widened to also understand a real object.
+  - `Metadata\Projection\MetadataImage` — shared by `MetadataRepository`'s
+    `findImagesByIds()`/`findImagesByStorageCategoryIds()` (identical 3-field shape).
+    Both real consumers (`MetadataService::syncMetadata()`,
+    `SiteUpdateSubController`'s 2 callers via `getFilelist()`) treat the row as a
+    growable data bag merging in exif/iptc fields before a batch write — `getFilelist()`
+    keeps its own `array<int, array<string, mixed>>` contract, converting back via
+    `->toArray()` at that boundary. Retyping surfaced 2 now-provably-redundant
+    `assert(is_array(...))` + `@var` guards in `SiteUpdateSubController.php`, removed.
+  - `Notification\Projection\UserMailNotification` —
+    `NotificationByMailRepository::findUserNotifications()`, replacing ~20
+    `$nbmUser['x']` accesses spread across `NotificationByMailSender`'s own several
+    methods (some via a since-removed by-ref param, `setUserOnEnv(array &$nbmUser, ...)`
+    → `setUserOnEnv(UserMailNotification $nbmUser, ...)`, since nothing ever mutated it)
+    plus one more consumer block in `NotificationByMailSubController.php`. `userId`
+    upgraded from the legacy "everything is `string|null`" convention (the repository's
+    own docblock had documented this as deliberate, matching legacy
+    `MysqliDb::fetchAssoc()`) to a real `int`, same direction every other domain's own
+    Projection had already gone.
+  - `Auth\Projection\AuthUser`/`AuthKeyDetails` — `AuthRepository::findByUsernameOrEmail()`/
+    `::findAuthKeyDetails()`, both feeding **security-critical** paths
+    (`AuthService::pwgLogin()`'s timing-attack-mitigated login,
+    `AuthService::authKeyLogin()`'s auth_key/api_key login) — ported with extra care,
+    field-by-field, preserving exact original semantics (the constant-time fake-user
+    fallback via `??`, the `?->` nullsafe PHPStan itself then flagged as unnecessary
+    since PHP's own `??` already suppresses "read property on null" for its left operand
+    the same way it does `isset()` for array access — confirmed empirically before
+    trusting it, not just following the suggestion blind). Zero existing test coverage
+    for either method to update.
+  - `History\Projection\HistorySummaryCursor`/`HistorySummaryCount` — 2 distinct classes
+    (matching the `Activity` domain's own 2-distinct-shapes precedent), not one shared
+    class with 2 always-one-null fields: `findLastSummaryWithHistoryIdTo()`'s and
+    `findSummaryRowsForHierarchy()`'s own SELECT lists never overlap beyond
+    `year`/`month`/`day`/`hour`. `findGroupedCountsSince()`/`search()` stay raw (a real
+    aggregate and a genuine passthrough, respectively — see exceptions above).
+  - `Group\Projection\Group` — `GroupRepository::findAllBasic()` (3 fields), consumed by
+    `GroupListPageRenderer.php`. `findWithMemberCounts()` stays raw (see exceptions
+    above).
+  - Full verification: PHPStan/ECS/deptrac clean repo-wide; Unit+Arch 619/619 (unchanged
+    from batch 1 — no new tests), Integration 668/668, Contract 94/94, Browser 68/68,
+    Visual 34/34 (all unchanged counts, confirming no regressions).
 
 **Stage 1c — Per-namespace Unit test coverage: 1 of 11 caught up, 2026-07-25.** `Audit`,
 `Caddie`, `Calendar`, `Group`, `History`, `Metadata`, `Permission`, `Picture`, `Site`,

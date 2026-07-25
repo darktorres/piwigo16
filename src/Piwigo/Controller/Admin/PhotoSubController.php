@@ -16,8 +16,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
-use Piwigo\Image\ImageRepository;
-use Piwigo\Image\ImageService;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -78,7 +76,7 @@ final class PhotoSubController implements AdminSubControllerInterface
 
         // retrieving direct information about picture
         $imageConn = DbConnection::build();
-        $page['image'] = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+        $page['image'] = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
             ->getImageInfos($get_image_id, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), true);
 
         $tab_param = $_GET['tab'] ?? null;

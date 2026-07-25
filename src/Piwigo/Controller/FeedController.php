@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use DateTimeImmutable;
-use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -43,9 +42,9 @@ final class FeedController implements ControllerInterface
         private readonly UrlServiceInterface $urlService,
     ) {}
 
-    private static function userService(Connection $conn): \Piwigo\Users\UserService
+    private static function userService(): \Piwigo\Users\UserService
     {
-        return new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository($conn), new GroupRepository($conn), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
+        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
     }
 
     #[\Override]
@@ -80,7 +79,7 @@ final class FeedController implements ControllerInterface
             }
             $feed_last_check = $feed_row['lastCheck'];
             if ($feed_row['userId'] !== \Piwigo\Users\CurrentUser::get()->id) { // new user
-                $feed_owner = self::userService($conn)->buildUser($feed_row['userId']);
+                $feed_owner = self::userService()->buildUser($feed_row['userId']);
                 // The feed is per-user-token, so this request's "current user"
                 // genuinely becomes the feed owner, not the real session user.
                 \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($feed_owner));
@@ -89,7 +88,7 @@ final class FeedController implements ControllerInterface
             $image_only = true;
             if (! \Piwigo\Auth\AccessControl::isAGuest()) {// auto session was created - so switch to guest
                 $guest_id = \Piwigo\Config\CurrentConfig::guestId();
-                $guest_user = self::userService($conn)->buildUser($guest_id);
+                $guest_user = self::userService()->buildUser($guest_id);
                 \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($guest_user));
             }
         }

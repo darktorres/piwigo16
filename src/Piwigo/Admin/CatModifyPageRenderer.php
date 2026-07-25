@@ -5,17 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Category\CategoryRepository;
-use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
 
 /**
@@ -45,10 +40,7 @@ final class CatModifyPageRenderer
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
         $categoryConn = DbConnection::build();
-        $categoryService = new CategoryService(
-            new CategoryRepository($categoryConn),
-            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn), new CategoryRepository($categoryConn))
-        );
+        $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_cat_modify');
 

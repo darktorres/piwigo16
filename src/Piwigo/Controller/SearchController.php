@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -14,9 +13,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Http\ControllerInterface;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
@@ -39,14 +36,14 @@ final class SearchController implements ControllerInterface
         private readonly UrlServiceInterface $urlService,
     ) {}
 
-    private static function permissionService(Connection $conn): PermissionService
+    private static function permissionService(): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
     }
 
-    private static function categoryService(Connection $conn): CategoryService
+    private static function categoryService(): CategoryService
     {
-        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
     }
 
     #[\Override]
@@ -59,8 +56,8 @@ final class SearchController implements ControllerInterface
         $conn = DbConnection::build();
         $searchService = new SearchService(
             new SearchRepository($conn),
-            self::permissionService($conn),
-            self::categoryService($conn),
+            self::permissionService(),
+            self::categoryService(),
             \Piwigo\Bootstrap\PresentationAccessor::mailService(),
             \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             $this->redirectService,
@@ -184,7 +181,7 @@ SELECT
             ];
         }
 
-        $tagService = new TagService(new TagRepository($conn), self::permissionService($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)));
+        $tagService = new TagService(new TagRepository($conn), self::permissionService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)));
 
         if (count($tagService->getAvailableTags()) > 0) {
             $tag_ids = [];
@@ -216,7 +213,7 @@ SELECT
     id
   FROM ' . Tables::images() . ' AS i
     JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  ' . self::permissionService($conn)->getSqlConditionFandF([
+  ' . self::permissionService()->getSqlConditionFandF([
                 'forbidden_categories' => 'category_id',
                 'visible_categories' => 'category_id',
                 'visible_images' => 'id',

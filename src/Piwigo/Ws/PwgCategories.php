@@ -26,12 +26,9 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
@@ -41,12 +38,9 @@ use Piwigo\Users\UserService;
  */
 final class PwgCategories
 {
-    private static function categoryService(Connection $conn): CategoryService
+    private static function categoryService(): CategoryService
     {
-        return new CategoryService(
-            new CategoryRepository($conn),
-            self::permissionService($conn)
-        );
+        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
     }
 
     /**
@@ -65,7 +59,7 @@ final class PwgCategories
      */
     private static function categoryTreeCache(Connection $conn): CategoryTreeCache
     {
-        return new CategoryTreeCache(self::categoryService($conn), new CategoryRepository($conn), CachePools::categoryTree());
+        return new CategoryTreeCache(self::categoryService(), new CategoryRepository($conn), CachePools::categoryTree());
     }
 
     /**
@@ -75,9 +69,9 @@ final class PwgCategories
      * same "shared connection passed in" precedent as
      * Ws\PwgTags::activityService(Connection $conn).
      */
-    private static function permissionService(Connection $conn): PermissionService
+    private static function permissionService(): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
     }
 
     /**
@@ -99,9 +93,9 @@ final class PwgCategories
      * unconditionally for any given user id (Stage 4b/4g), so this reuses
      * it rather than re-deriving forbidden_categories by hand.
      */
-    private static function userService(Connection $conn): UserService
+    private static function userService(): UserService
     {
-        return new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), self::activityService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
+        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
     }
 
     /**
@@ -186,7 +180,7 @@ SELECT id
         if ($where_clauses !== []) {
             $where_clauses = ['(' . implode("\n    OR ", $where_clauses) . ')'];
         }
-        $where_clauses[] = self::permissionService($conn)->getSqlConditionFandF([
+        $where_clauses[] = self::permissionService()->getSqlConditionFandF([
             'forbidden_categories' => 'id',
         ], null, true);
 
@@ -208,7 +202,7 @@ SELECT
         if ($cats !== []) {
             $where_clauses = WsHelper::stdImageSqlFilter($params, $service, 'i.');
             $where_clauses[] = 'category_id IN (' . implode(',', array_keys($cats)) . ')';
-            $where_clauses[] = self::permissionService($conn)->getSqlConditionFandF([
+            $where_clauses[] = self::permissionService()->getSqlConditionFandF([
                 'visible_images' => 'i.id',
             ], null, true);
 
@@ -283,7 +277,7 @@ SELECT
     category_id
   FROM ' . Tables::imageCategory() . '
   WHERE image_id IN (' . implode(',', $image_ids) . ')
-    AND ' . self::permissionService($conn)->getSqlConditionFandF([
+    AND ' . self::permissionService()->getSqlConditionFandF([
                     'forbidden_categories' => 'category_id',
                 ], null, true) . '
 ;';
@@ -387,7 +381,7 @@ SELECT
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
         $categoryConn = DbConnection::build();
-        $categoryService = self::categoryService($categoryConn);
+        $categoryService = self::categoryService();
 
         if (! in_array($params['thumbnail_size'], array_keys(ImageStdParams::get_defined_type_map()), true)) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid thumbnail_size');
@@ -455,7 +449,7 @@ SELECT
             // CategoryTreeCache already computes/caches for this same
             // user id, so feeding it back into that same cache pool here
             // cannot desync it.
-            $guest_userdata = self::userService($categoryConn)->getUserData($repr_user_id);
+            $guest_userdata = self::userService()->getUserData($repr_user_id);
             $guest_forbidden_categories = $guest_userdata['forbidden_categories'] ?? '0';
             $guest_forbidden_categories = is_string($guest_forbidden_categories) ? $guest_forbidden_categories : '0';
             $where[] = 'id NOT IN (' . $guest_forbidden_categories . ')';
@@ -466,7 +460,7 @@ SELECT
             // categories that are either locked or private and not permitted
             //
             // calculate_permissions does not consider empty categories as forbidden
-            $forbidden_categories = new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService($categoryConn), \Piwigo\Cache\CachePools::permissions())
+            $forbidden_categories = new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService(), \Piwigo\Cache\CachePools::permissions())
                 ->getForUser($user_id, $currentUser->status->value);
             $where[] = 'id NOT IN (' . $forbidden_categories . ')';
             // Deliberately NOT CategoryTreeCache: that pool is keyed only
@@ -640,7 +634,7 @@ SELECT representative_picture_id
   FROM ' . Tables::categories() . '
   WHERE uppercats LIKE \'' . $row['uppercats'] . ',%\'
     AND representative_picture_id IS NOT NULL
-        ' . self::permissionService($categoryConn)->getSqlConditionFandF([
+        ' . self::permissionService()->getSqlConditionFandF([
                         'visible_categories' => 'id',
                     ], "\n  AND") . '
   ORDER BY ' . SqlDialect::DB_RANDOM_FUNCTION . '()
@@ -992,7 +986,7 @@ SELECT
         }
 
         $categoryConn = DbConnection::build();
-        $creation_output = self::categoryService($categoryConn)->createVirtualCategory(
+        $creation_output = self::categoryService()->createVirtualCategory(
             (! \Piwigo\Config\CurrentConfig::allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params['name']) : $params['name'],
             new ActivityService(new ActivityRepository($categoryConn)),
             $params['parent'],
@@ -1082,7 +1076,7 @@ SELECT id
             }
         }
         // set the global rank
-        self::categoryService($conn)->saveCategoriesOrder($order_new);
+        self::categoryService()->saveCategoriesOrder($order_new);
 
         return null;
     }
@@ -1116,7 +1110,7 @@ SELECT id
             return new PwgError(404, 'category_id not found');
         }
 
-        $categoryService = self::categoryService($categoryConn);
+        $categoryService = self::categoryService();
 
         if (! in_array($params['status'], [null, ''], true)) {
             if (! in_array($params['status'], ['private', 'public'], true)) {
@@ -1329,7 +1323,7 @@ SELECT
             return new PwgError(401, 'not permitted');
         }
 
-        $categoryService = self::categoryService($categoryConn);
+        $categoryService = self::categoryService();
 
         $categoryService->setRandomRepresentant([$params['category_id']]);
 
@@ -1419,7 +1413,7 @@ SELECT id
             return null;
         }
 
-        $categoryService = self::categoryService($categoryConn);
+        $categoryService = self::categoryService();
         $categoryService->deleteCategories(
             $category_ids,
             new ActivityService(new ActivityRepository($categoryConn)),
@@ -1529,7 +1523,7 @@ SELECT id, name, dir, uppercats
         // move_categories function, not here
         // 0 as parent means "move categories at gallery root"
         if ($params['parent'] !== 0) {
-            $subcat_ids = self::categoryService($categoryConn)->getSubcatIds([$params['parent']]);
+            $subcat_ids = self::categoryService()->getSubcatIds([$params['parent']]);
             if (count($subcat_ids) === 0) {
                 return new PwgError(403, 'Unknown parent category id');
             }
@@ -1539,7 +1533,7 @@ SELECT id, name, dir, uppercats
         $pageState->infos = [];
         $pageState->errors = [];
 
-        self::categoryService($categoryConn)->moveCategories(
+        self::categoryService()->moveCategories(
             $category_ids,
             new ActivityService(new ActivityRepository($categoryConn)),
             $params['parent']
@@ -1588,7 +1582,7 @@ SELECT
         $update_cats = [];
         foreach (array_unique($update_cat_ids) as $update_cat) {
             $nb_sub_photos = 0;
-            $sub_cat_without_parent = array_diff(self::categoryService($categoryConn)->getSubcatIds([$update_cat]), [$update_cat]);
+            $sub_cat_without_parent = array_diff(self::categoryService()->getSubcatIds([$update_cat]), [$update_cat]);
 
             foreach ($sub_cat_without_parent as $id_sub_cat) {
                 $nb_photos_for_sub_cat = $nb_photos_in[$id_sub_cat] ?? 0;
@@ -1635,7 +1629,7 @@ SELECT DISTINCT
         $category['has_images'] = $conn->fetchOne($query) !== false;
 
         // number of sub-categories
-        $subcat_ids = self::categoryService($conn)->getSubcatIds([$category_id]);
+        $subcat_ids = self::categoryService()->getSubcatIds([$category_id]);
 
         $category['nb_subcats'] = count($subcat_ids) - 1;
 

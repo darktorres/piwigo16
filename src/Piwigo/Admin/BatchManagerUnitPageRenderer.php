@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\PermissionCacheInvalidator;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -17,15 +15,12 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 
@@ -74,27 +69,19 @@ final class BatchManagerUnitPageRenderer
         private readonly UrlServiceInterface $urlService,
     ) {}
 
-    private static function tagService(Connection $conn): TagService
+    private static function tagService(): TagService
     {
-        return new TagService(
-            new TagRepository($conn),
-            self::permissionService($conn),
-            new ActivityService(new ActivityRepository($conn))
-        );
+        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
     }
 
-    /**
-     * DRY extraction (Phase 1k DI-chain audit): the same PermissionService
-     * recipe was repeated verbatim at 2 sites in this file.
-     */
-    private static function permissionService(Connection $conn): PermissionService
+    private static function permissionService(): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
     }
 
-    private static function categoryService(Connection $conn): CategoryService
+    private static function categoryService(): CategoryService
     {
-        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
     }
 
     /**
@@ -128,7 +115,7 @@ SELECT id, date_creation
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $collection) . ')
 ;';
-            $tagService = self::tagService($conn);
+            $tagService = self::tagService();
 
             foreach ($conn->fetchAllAssociative($query) as $row) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this
@@ -314,7 +301,7 @@ SELECT *
   FROM ' . Tables::images();
 
             if ($is_category) {
-                $category_info = self::categoryService($conn)->getCategoryInfo($filter_category_id);
+                $category_info = self::categoryService()->getCategoryInfo($filter_category_id);
 
                 $order_by = \Piwigo\Config\CurrentConfig::orderByInsideCategory();
                 $category_image_order = $category_info !== null ? ($category_info['image_order'] ?? null) : null;
@@ -361,7 +348,7 @@ SELECT
                 $added_by_username_of = array_column($conn->fetchAllAssociative($query), 'username', 'id');
             }
 
-            $tagService = self::tagService($conn);
+            $tagService = self::tagService();
             $imageService = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)));
 
             foreach ($images as $row) {
@@ -482,7 +469,7 @@ SELECT
                     ),
                     explode(
                         ',',
-                        new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService($conn), \Piwigo\Cache\CachePools::permissions())
+                        new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService(), \Piwigo\Cache\CachePools::permissions())
                             ->getForUser($currentUser->id, $currentUser->status->value)
                     )
                 );

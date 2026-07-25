@@ -4,17 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Category\CategoryRepository;
-use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 use Piwigo\Rate\RateRepository;
 
 /**
@@ -61,10 +56,7 @@ final class RatingPageRenderer
 
         $cat_ids = [];
         if (isset($_GET['cat']) and is_numeric($_GET['cat'])) {
-            $categoryService = new CategoryService(
-                new CategoryRepository($conn),
-                new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
-            );
+            $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
             $cat_ids = array_values(array_map(intval(...), array_filter($categoryService->getSubcatIds([(int) $_GET['cat']]), is_numeric(...))));
         }
 

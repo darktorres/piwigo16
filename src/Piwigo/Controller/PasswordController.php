@@ -17,7 +17,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
@@ -75,9 +74,9 @@ final class PasswordController implements ControllerInterface
         return new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn));
     }
 
-    private static function userService(Connection $conn): UserService
+    private static function userService(): UserService
     {
-        return new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), self::activityService($conn), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
+        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
     }
 
     private static function passwordService(Connection $conn): PasswordService
@@ -141,7 +140,7 @@ final class PasswordController implements ControllerInterface
             $user_id = $this->checkPasswordResetKey($_GET['key']);
             if (is_numeric($user_id)) {
                 $conn = DbConnection::build();
-                $userdata = self::userService($conn)->getUserData((int) $user_id);
+                $userdata = self::userService()->getUserData((int) $user_id);
                 $userdata_username = $userdata['username'] ?? null;
                 $this->username = is_string($userdata_username) ? $userdata_username : '';
                 $template->assign('key', $_GET['key']);
@@ -296,10 +295,10 @@ final class PasswordController implements ControllerInterface
         $conn = DbConnection::build();
 
         // retrievies user by email is not try by username
-        $user_id_raw = self::userService($conn)->getUserIdByEmail($username_or_email);
+        $user_id_raw = self::userService()->getUserIdByEmail($username_or_email);
 
         if (! is_numeric($user_id_raw)) {
-            $user_id_raw = self::userService($conn)->getUserId($username_or_email);
+            $user_id_raw = self::userService()->getUserId($username_or_email);
         }
 
         // when no user is found, we assign guest_id instead of stopping.
@@ -313,7 +312,7 @@ final class PasswordController implements ControllerInterface
             $user_id = $guest_id;
         }
 
-        $userdata = self::userService($conn)->getUserData($user_id);
+        $userdata = self::userService()->getUserData($user_id);
 
         $status = $userdata['status'] ?? '';
         $status = is_string($status) ? $status : '';
@@ -429,7 +428,7 @@ final class PasswordController implements ControllerInterface
                 // lockout account for 1hour
                 if ($has_valid_user_id) {
                     $saveCurrentUser = \Piwigo\Users\CurrentUser::get();
-                    $target_user_data = self::userService($conn)->buildUser((int) $user_id_raw);
+                    $target_user_data = self::userService()->buildUser((int) $user_id_raw);
                     // PreferencesService writes onto CurrentUser::get()->id
                     // (Legacy Coupling Retirement Track A batch A3), so the
                     // identity must switch here too, or the preference
@@ -463,7 +462,7 @@ final class PasswordController implements ControllerInterface
         $user_id = (int) $user_id_raw;
 
         $saveCurrentUser = \Piwigo\Users\CurrentUser::get();
-        $target_user_data = self::userService($conn)->buildUser($user_id);
+        $target_user_data = self::userService()->buildUser($user_id);
         // Same CurrentUser identity-switch requirement as the lockout branch
         // above -- PreferencesService::deleteParam() writes onto
         // CurrentUser::get()->id.

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\PermissionCacheInvalidator;
@@ -18,7 +17,6 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
@@ -26,9 +24,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
@@ -53,34 +49,23 @@ final class PictureModifyPageRenderer
         private readonly UrlServiceInterface $urlService,
     ) {}
 
-    private static function userService(Connection $conn): UserService
+    private static function userService(): UserService
     {
-        return new UserService(
-            new UserRepository($conn),
-            new GroupRepository($conn),
-            \Piwigo\Bootstrap\PresentationAccessor::mailService(),
-            new ActivityService(new ActivityRepository($conn)),
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-            $conn
-        );
+        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
     }
 
-    private static function tagService(Connection $conn): TagService
+    private static function tagService(): TagService
     {
-        return new TagService(
-            new TagRepository($conn),
-            self::permissionService($conn),
-            new ActivityService(new ActivityRepository($conn))
-        );
+        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
     }
 
     /**
      * DRY extraction (Phase 1k DI-chain audit): the same PermissionService
      * recipe was repeated verbatim at 3 sites in this file.
      */
-    private static function permissionService(Connection $conn): PermissionService
+    private static function permissionService(): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
     }
 
     public function render(string $adminPhotoBaseUrl): void
@@ -152,7 +137,7 @@ SELECT id
             // 2. else use the first reachable linked category
             // 3. redirect to gallery root
 
-            if ((bool) ($custom_context = self::userService($conn)->getEditContext($image_id))) {
+            if ((bool) ($custom_context = self::userService()->getEditContext($image_id))) {
                 // considering we have a context available, we fake one to build the url
                 // and we replace it with the context found in the session for this image_id
                 $this->redirectService->redirect(str_replace('list/1,2', $custom_context, $this->urlService->makeIndexUrl([
@@ -222,7 +207,7 @@ SELECT id
                 );
 
             // time to deal with tags
-            $tagService = self::tagService($conn);
+            $tagService = self::tagService();
 
             $tag_ids = [];
             $raw_tags_post = $_POST['tags'] ?? null;
@@ -280,7 +265,7 @@ SELECT id
             if (count($no_longer_thumbnail_for) > 0) {
                 new CategoryService(
                     new CategoryRepository($conn),
-                    self::permissionService($conn)
+                    self::permissionService()
                 )->setRandomRepresentant($no_longer_thumbnail_for);
             }
 
@@ -318,7 +303,7 @@ SELECT
     JOIN ' . Tables::tags() . ' AS t ON t.id = it.tag_id
   WHERE image_id = ' . $image_id . '
 ;';
-        $tag_selection = self::tagService($conn)
+        $tag_selection = self::tagService()
             ->getTagList($query, $htmlRenderer);
 
         // getImageInfos($image_id, $htmlRenderer, true) fatal_errors (never returns) when the
@@ -531,7 +516,7 @@ SELECT category_id, uppercats, dir
             $image_level = (int) $page['image']['level'];
         }
 
-        if ((bool) ($custom_context = self::userService($conn)->getEditContext($image_id))) {
+        if ((bool) ($custom_context = self::userService()->getEditContext($image_id))) {
             $template->assign('U_JUMPTO', $this->urlService->makePictureUrl([
                 'image_id' => $image_id,
             ]) . '/' . $custom_context);
@@ -557,7 +542,7 @@ SELECT category_id
                 $authorized_category_ids,
                 explode(
                     ',',
-                    new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService($conn), \Piwigo\Cache\CachePools::permissions())
+                    new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService(), \Piwigo\Cache\CachePools::permissions())
                         ->getForUser(\Piwigo\Users\CurrentUser::get()->id, \Piwigo\Users\CurrentUser::get()->status->value)
                 )
             );

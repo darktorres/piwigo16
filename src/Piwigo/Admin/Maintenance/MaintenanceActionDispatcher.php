@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Maintenance;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Auth\CookieService;
 use Piwigo\Cache\PermissionCacheInvalidator;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
@@ -19,12 +17,10 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
@@ -77,18 +73,18 @@ final class MaintenanceActionDispatcher
      * DRY extraction (Phase 1k DI-chain audit): the same PermissionService
      * recipe was repeated verbatim at 3 sites in this file.
      */
-    private static function permissionService(Connection $conn): PermissionService
+    private static function permissionService(): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
     }
 
     /**
      * DRY extraction (Phase 1k DI-chain audit): the same CategoryService
      * recipe was repeated verbatim at 2 sites in this file.
      */
-    private static function categoryService(Connection $conn): CategoryService
+    private static function categoryService(): CategoryService
     {
-        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
     }
 
     public function dispatch(string $action): void
@@ -132,7 +128,7 @@ final class MaintenanceActionDispatcher
             case 'categories':
 
                 FilesystemIntegrityChecker::imagesIntegrity();
-                $categoriesService = self::categoryService($conn);
+                $categoriesService = self::categoryService();
                 $categoriesService->checkCategoriesIntegrity();
                 $categoriesService->updateUppercats();
                 $categoriesService->updateCategory('all');
@@ -144,7 +140,7 @@ final class MaintenanceActionDispatcher
             case 'images':
 
                 FilesystemIntegrityChecker::imagesIntegrity();
-                self::categoryService($conn)
+                self::categoryService()
                     ->updatePath();
                 new RateService(new RateRepository($conn), new CookieService())
                     ->updateRatingScore();
@@ -154,7 +150,7 @@ final class MaintenanceActionDispatcher
 
             case 'delete_orphan_tags':
 
-                new TagService(new TagRepository($conn), self::permissionService($conn), new ActivityService(new ActivityRepository($conn)))
+                new TagService(new TagRepository($conn), self::permissionService(), new ActivityService(new ActivityRepository($conn)))
                     ->deleteOrphanTags();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Delete orphan tags'), Lang::t('action successfully performed.')));
                 break;

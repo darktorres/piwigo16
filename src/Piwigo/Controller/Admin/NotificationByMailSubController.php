@@ -7,7 +7,6 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -24,8 +23,6 @@ use Piwigo\Notification\NotificationByMailRepository;
 use Piwigo\Notification\NotificationByMailService;
 use Piwigo\Notification\NotificationRepository;
 use Piwigo\Notification\NotificationService;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -109,7 +106,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
             new NotificationByMailService(new NotificationByMailRepository($conn)),
             new NotificationService(
                 new NotificationRepository($conn),
-                new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn)),
+                \Piwigo\Bootstrap\CoreDomainAccessor::permissionService(),
                 $htmlRenderer,
                 $this->urlService
             ),

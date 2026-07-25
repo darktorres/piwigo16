@@ -7,7 +7,6 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -15,11 +14,8 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -129,10 +125,7 @@ SELECT
   uppercats, global_rank
 FROM ' . Tables::categories();
 
-        new CategoryService(
-            new CategoryRepository($conn),
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
-        )->displaySelectCatWrapper($query, $selected_cat, 'categories', $htmlRenderer, $template, false);
+        \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->displaySelectCatWrapper($query, $selected_cat, 'categories', $htmlRenderer, $template, false);
 
         $pwg_token = new \Piwigo\Csrf\CsrfService()
             ->getToken();

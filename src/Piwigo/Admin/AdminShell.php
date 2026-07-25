@@ -11,9 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Doctrine\DBAL\Connection;
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Bootstrap\AdminDispatcher;
 use Piwigo\Bootstrap\PageTail;
@@ -26,15 +23,12 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Http\RequestFactory;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
-use Piwigo\Users\UserService;
 
 /**
  * The admin.php page-shell orchestration (P23 batch 10): access check,
@@ -64,9 +58,9 @@ final class AdminShell
      * DRY extraction (Phase 1k DI-chain audit): the same ImageService
      * recipe was repeated verbatim at 2 sites in this file.
      */
-    private static function imageService(Connection $conn): ImageService
+    private static function imageService(): ImageService
     {
-        return new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
     }
 
     /**
@@ -188,14 +182,7 @@ final class AdminShell
 
         // sync_user() is only useful when external authentication is activated
         if (\Piwigo\Config\DeploymentPolicy::current()->externalAuthentification) {
-            new UserService(
-                new UserRepository($conn),
-                new GroupRepository($conn),
-                \Piwigo\Bootstrap\PresentationAccessor::mailService(),
-                new ActivityService(new ActivityRepository($conn)),
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-                $conn
-            )->syncUsers();
+            \Piwigo\Bootstrap\CoreDomainAccessor::userService()->syncUsers();
         }
 
         // +-------------------------------------------------------------------+
@@ -375,7 +362,7 @@ SELECT COUNT(*)
 
         // any photos with no md5sum ?
         if (in_array($page_slug, ['site_update', 'batch_manager'], true)) {
-            $imageService = self::imageService($conn);
+            $imageService = self::imageService();
 
             $nb_no_md5sum = count($imageService->getPhotosNoMd5sum());
 
@@ -391,7 +378,7 @@ SELECT COUNT(*)
         $nb_photos_total_raw = $row !== false ? $row[0] : 0;
         $nb_photos_total = is_numeric($nb_photos_total_raw) ? (int) $nb_photos_total_raw : 0;
         if ($nb_photos_total < 100000) { // 100k is already a big gallery
-            $nb_orphans = self::imageService($conn)
+            $nb_orphans = self::imageService()
                 ->countOrphans();
         }
         \Piwigo\Core\PageState::current()->setNbPhotosTotal($nb_photos_total);

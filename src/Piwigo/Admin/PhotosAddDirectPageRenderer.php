@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Core\AppInfo;
@@ -20,7 +18,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
-use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Users\PreferencesService;
@@ -163,7 +160,7 @@ SELECT COUNT(*)
                 ->validate('formats', $_GET, false, ValidationPattern::ID, false);
 
             $formats_id_param = $_GET['formats'];
-            $formats_original_info = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)))
+            $formats_original_info = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
                 ->getImageInfos(is_string($formats_id_param) ? $formats_id_param : '', $htmlRenderer);
             if ((bool) $formats_original_info) {
                 $src_image = new SrcImage($formats_original_info);

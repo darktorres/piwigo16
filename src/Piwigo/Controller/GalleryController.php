@@ -26,7 +26,6 @@ use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Menu\MenubarRenderer;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Search\SearchFilterRenderer;
 use Piwigo\Search\SearchRepository;
@@ -36,7 +35,6 @@ use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionPopulator;
 use Piwigo\Section\SectionRepository;
 use Piwigo\Session\SessionService;
-use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
@@ -79,14 +77,14 @@ final class GalleryController implements ControllerInterface
         private readonly ConfigService $configService,
     ) {}
 
-    private static function permissionService(Connection $conn): PermissionService
+    private static function permissionService(): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
     }
 
-    private static function categoryService(Connection $conn): CategoryService
+    private static function categoryService(): CategoryService
     {
-        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
     }
 
     private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
@@ -94,9 +92,9 @@ final class GalleryController implements ControllerInterface
         return new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn));
     }
 
-    private static function tagService(Connection $conn): TagService
+    private static function tagService(): TagService
     {
-        return new TagService(new TagRepository($conn), self::permissionService($conn), self::activityService($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
     }
 
     #[\Override]
@@ -113,10 +111,10 @@ final class GalleryController implements ControllerInterface
             \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             $template,
             new SectionRepository($conn),
-            self::categoryService($conn),
-            self::permissionService($conn),
-            self::tagService($conn),
-            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService),
+            self::categoryService(),
+            self::permissionService(),
+            self::tagService(),
+            new SearchService(new SearchRepository($conn), self::permissionService(), self::categoryService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService),
             new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), self::activityService($conn), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn),
             $this->redirectService,
             $this->urlService,
@@ -144,7 +142,7 @@ final class GalleryController implements ControllerInterface
 
         // access authorization check
         if ($section_context->category !== null && is_numeric($section_context->category['id'] ?? null)) {
-            self::categoryService($conn)->checkRestrictions((int) $section_context->category['id'], \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+            self::categoryService()->checkRestrictions((int) $section_context->category['id'], \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
         }
         if ($page_start > 0 && $page_start >= count($page_items)) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()
@@ -161,8 +159,8 @@ final class GalleryController implements ControllerInterface
         // straight into PageHeaderRenderer::render() below) -- no other
         // file reads $GLOBALS['title']. Plain local, not global.
 
-        $tagService = self::tagService($conn);
-        $categoryService = self::categoryService($conn);
+        $tagService = self::tagService();
+        $categoryService = self::categoryService();
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_index');
 
@@ -308,10 +306,10 @@ final class GalleryController implements ControllerInterface
             \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             $template,
             new SearchRepository($conn),
-            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $redirectService, $tagService),
+            new SearchService(new SearchRepository($conn), self::permissionService(), self::categoryService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $redirectService, $tagService),
             $tagService,
             new CategoryRepository($conn),
-            self::permissionService($conn),
+            self::permissionService(),
             $urlService,
         )->render($section_context);
 
@@ -554,7 +552,7 @@ final class GalleryController implements ControllerInterface
                 $template,
                 new CategoryRepository($conn),
                 $categoryService,
-                self::permissionService($conn),
+                self::permissionService(),
                 new ImageRepository($conn),
                 $urlService
             )->render($section_context->section, $section_context->category, $section_context->startcat);

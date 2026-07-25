@@ -17,13 +17,10 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\Template\Template;
-use Piwigo\Users\UserRepository;
-use Piwigo\Users\UserService;
 
 /**
  * Ported from admin/album_notification.php (the "notification" tab of the
@@ -211,7 +208,7 @@ SELECT
                         $user_args['auth_key'] = $authkey['auth_key'];
                     }
 
-                    $user_language = is_string($u['language']) ? $u['language'] : new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(new ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn)->getDefaultLanguage();
+                    $user_language = is_string($u['language']) ? $u['language'] : \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getDefaultLanguage();
                     $user_email = is_string($u['email']) ? $u['email'] : '';
 
                     \Piwigo\Bootstrap\PresentationAccessor::mailService()

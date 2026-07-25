@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Activity\ActivityService;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -15,11 +12,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Users\UserRepository;
-use Piwigo\Users\UserService;
 
 /**
  * Ported from admin/user_perm.php (page slug "user_perm"). Its raw
@@ -45,11 +38,8 @@ final class UserPermPageRenderer
         $conn = DbConnection::build();
         // Built once, reused below -- was the same PermissionService recipe
         // repeated verbatim at 2 sites in this method (Phase 1k DI-chain audit).
-        $permissionService = new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
-        $categoryService = new CategoryService(
-            new CategoryRepository($conn),
-            $permissionService
-        );
+        $permissionService = \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
+        $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -113,7 +103,7 @@ final class UserPermPageRenderer
             [
                 'TITLE' => Lang::t(
                     'Manage permissions for user "%s"',
-                    new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(new ActivityRepository($conn)), $htmlRenderer, $conn)
+                    \Piwigo\Bootstrap\CoreDomainAccessor::userService()
                         ->getUsername($user_id)
                 ),
                 'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -13,9 +12,6 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
 
 /**
@@ -47,10 +43,7 @@ final class AlbumsPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $conn = DbConnection::build();
-        $categoryService = new CategoryService(
-            new CategoryRepository($conn),
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
-        );
+        $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
 
         $query = '
 SELECT

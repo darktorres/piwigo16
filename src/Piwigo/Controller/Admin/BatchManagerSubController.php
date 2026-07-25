@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\BatchManagerGlobalPageRenderer;
 use Piwigo\Admin\BatchManagerUnitPageRenderer;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -19,15 +17,11 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
-use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -69,29 +63,24 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
     ) {}
 
-    private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
+    private static function imageService(): ImageService
     {
-        return new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
     }
 
-    private static function imageService(Connection $conn): ImageService
+    private static function tagService(): TagService
     {
-        return new ImageService(new ImageRepository($conn), self::activityService($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
     }
 
-    private static function tagService(Connection $conn): TagService
+    private static function permissionService(): PermissionService
     {
-        return new TagService(new TagRepository($conn), self::permissionService($conn), self::activityService($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
     }
 
-    private static function permissionService(Connection $conn): PermissionService
+    private static function categoryService(): CategoryService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
-    }
-
-    private static function categoryService(Connection $conn): CategoryService
-    {
-        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
     }
 
     #[\Override]
@@ -321,7 +310,7 @@ DELETE FROM ' . Tables::caddie() . '
                 } else {
                     $filter_tags = is_string($raw_filter_tags) ? $raw_filter_tags : '';
                 }
-                $_SESSION['bulk_manager_filter']['tags'] = self::tagService(DbConnection::build())
+                $_SESSION['bulk_manager_filter']['tags'] = self::tagService()
                     ->getTagIds($filter_tags, false);
 
                 if (isset($_POST['tag_mode']) and in_array($_POST['tag_mode'], ['AND', 'OR'], true)) {
@@ -559,8 +548,8 @@ DELETE FROM ' . Tables::caddie() . '
             $prefilter_result = match ($prefilter) {
                 // getOrphans()/getPhotosNoMd5sum() are existing, already-tested
                 // ImageService methods -- not duplicated into FilterResolver.
-                'no_album' => self::imageService(DbConnection::build())->getOrphans(),
-                'no_sync_md5sum' => self::imageService(DbConnection::build())->getPhotosNoMd5sum(),
+                'no_album' => self::imageService()->getOrphans(),
+                'no_sync_md5sum' => self::imageService()->getPhotosNoMd5sum(),
                 default => $filterResolver->resolvePrefilter($prefilter, $bulkFilter, $userId, $confOrderBy),
             };
 
@@ -587,7 +576,7 @@ DELETE FROM ' . Tables::caddie() . '
             }
 
             $categories = isset($bulkFilter['category_recursive'])
-                ? self::categoryService(DbConnection::build())->getSubcatIds([$category_id])
+                ? self::categoryService()->getSubcatIds([$category_id])
                 : [$category_id];
             $categories = array_values(array_map(intval(...), array_filter($categories, is_numeric(...))));
 
@@ -612,7 +601,7 @@ DELETE FROM ' . Tables::caddie() . '
 
             $filter_tag_mode = is_string($bulkFilter['tag_mode'] ?? null) ? $bulkFilter['tag_mode'] : 'AND';
 
-            $filter_sets[] = self::tagService(DbConnection::build())
+            $filter_sets[] = self::tagService()
                 ->getImageIdsForTags(
                     $filter_tag_ids,
                     $filter_tag_mode,
@@ -659,8 +648,8 @@ DELETE FROM ' . Tables::caddie() . '
             $searchConn = DbConnection::build();
             $res = new SearchService(
                 new SearchRepository($searchConn),
-                self::permissionService($searchConn),
-                self::categoryService($searchConn),
+                self::permissionService(),
+                self::categoryService(),
                 \Piwigo\Bootstrap\PresentationAccessor::mailService(),
                 \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
                 $this->redirectService,

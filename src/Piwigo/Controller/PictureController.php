@@ -8,7 +8,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Cache\PermissionCacheInvalidator;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
@@ -20,7 +19,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
 use Piwigo\Http\ControllerInterface;
@@ -31,7 +29,6 @@ use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\MenubarRenderer;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\Picture\PictureMetadataRenderer;
@@ -45,10 +42,8 @@ use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionPopulator;
 use Piwigo\Section\SectionRepository;
 use Piwigo\Session\SessionService;
-use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -97,14 +92,14 @@ final class PictureController implements ControllerInterface
         private readonly ConfigService $configService,
     ) {}
 
-    private static function permissionService(Connection $conn): PermissionService
+    private static function permissionService(): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
     }
 
-    private static function categoryService(Connection $conn): CategoryService
+    private static function categoryService(): CategoryService
     {
-        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
     }
 
     private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
@@ -112,19 +107,19 @@ final class PictureController implements ControllerInterface
         return new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn));
     }
 
-    private static function tagService(Connection $conn): TagService
+    private static function tagService(): TagService
     {
-        return new TagService(new TagRepository($conn), self::permissionService($conn), self::activityService($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
     }
 
-    private static function userService(Connection $conn): UserService
+    private static function userService(): UserService
     {
-        return new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), self::activityService($conn), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
+        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
     }
 
-    private static function imageService(Connection $conn): ImageService
+    private static function imageService(): ImageService
     {
-        return new ImageService(new ImageRepository($conn), self::activityService($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
     }
 
     private static function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
@@ -144,11 +139,11 @@ final class PictureController implements ControllerInterface
             \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             \Piwigo\Template\CurrentTemplate::get(),
             new SectionRepository($conn),
-            self::categoryService($conn),
-            self::permissionService($conn),
-            self::tagService($conn),
-            new SearchService(new SearchRepository($conn), self::permissionService($conn), self::categoryService($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService),
-            self::userService($conn),
+            self::categoryService(),
+            self::permissionService(),
+            self::tagService(),
+            new SearchService(new SearchRepository($conn), self::permissionService(), self::categoryService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService),
+            self::userService(),
             $this->redirectService,
             $this->urlService,
         )->populate();
@@ -165,7 +160,7 @@ final class PictureController implements ControllerInterface
             throw new \RuntimeException('SectionContextRegistry::current() is null after SectionPopulator::populate()');
         }
 
-        self::userService($conn)->saveEditContext($section_context->sectionUrl, $section_context->imageId);
+        self::userService()->saveEditContext($section_context->sectionUrl, $section_context->imageId);
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
@@ -174,7 +169,7 @@ final class PictureController implements ControllerInterface
         // access authorization check
         if ($page_category !== null) {
             $category_id = $page_category['id'] ?? null;
-            self::categoryService($conn)->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+            self::categoryService()->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
         }
 
         // $section_context->items is mutated in place below (best_rated
@@ -261,7 +256,7 @@ SELECT id, file, level
 SELECT id
   FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
   WHERE id=' . $image_id
-                      . self::permissionService($conn)->getSqlConditionFandF([
+                      . self::permissionService()->getSqlConditionFandF([
                           'forbidden_categories' => 'category_id',
                       ], ' AND') . '
   LIMIT 1';
@@ -607,7 +602,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::categories() . ' ON category_id = id
   WHERE image_id = ' . $image_id . '
-' . self::permissionService($conn)->getSqlConditionFandF([
+' . self::permissionService()->getSqlConditionFandF([
             'forbidden_categories' => 'id',
             'visible_categories' => 'id',
         ], 'AND') . '
@@ -704,9 +699,9 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             ]);
 
             $get_slideshow = $_GET['slideshow'];
-            $slideshow_params = self::imageService($conn)
+            $slideshow_params = self::imageService()
                 ->decodeSlideshowParams(is_string($get_slideshow) ? $get_slideshow : null);
-            $slideshow_url_params['slideshow'] = self::imageService($conn)->encodeSlideshowParams($slideshow_params);
+            $slideshow_url_params['slideshow'] = self::imageService()->encodeSlideshowParams($slideshow_params);
 
             if ((bool) $slideshow_params['play']) {
                 $id_pict_redirect = '';
@@ -901,7 +896,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
                       $urlService->addUrlParams(
                           $picture['current']['url'],
                           [
-                              'slideshow' => self::imageService($conn)
+                              'slideshow' => self::imageService()
                                   ->encodeSlideshowParams(
                                       array_merge(
                                           $slideshow_params,
@@ -924,7 +919,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
                 $slideshow_period_step = \Piwigo\Config\CurrentConfig::slideshowPeriodStep();
                 $new_period = $current_period + ((($op === 'dec') ? -1 : 1) * $slideshow_period_step);
                 $new_slideshow_params =
-                  self::imageService($conn)
+                  self::imageService()
                       ->correctSlideshowParams(
                           array_merge(
                               $slideshow_params,
@@ -940,7 +935,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
                           $urlService->addUrlParams(
                               $picture['current']['url'],
                               [
-                                  'slideshow' => self::imageService($conn)
+                                  'slideshow' => self::imageService()
                                       ->encodeSlideshowParams($new_slideshow_params),
                               ]
                           );
@@ -1119,7 +1114,7 @@ SELECT COUNT(*) AS nb_fav
         $template->assign('display_info', \Piwigo\Config\CurrentConfig::pictureInformations());
 
         // related tags
-        $tags = self::tagService($conn)
+        $tags = self::tagService()
             ->getCommonTags([$image_id], -1, \Piwigo\Bootstrap\PresentationAccessor::htmlService());
         if ($tags !== []) {
             foreach ($tags as $tag) {
@@ -1190,7 +1185,7 @@ SELECT id, name, permalink
             $template->assign(
                 [
                     'PDF_VIEWER_FILESIZE_THRESHOLD' => $pdf_viewer_filesize_threshold * 1024,
-                    'PDF_NB_PAGES' => self::imageService($conn)
+                    'PDF_NB_PAGES' => self::imageService()
                         ->countPdfPages($picture['current']['path']),
                 ]
             );

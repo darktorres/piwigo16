@@ -11,9 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
-use Doctrine\DBAL\Connection;
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Db\BatchWriter;
@@ -21,9 +18,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Session\SessionService;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 final class C13yInternal
@@ -46,16 +41,9 @@ final class C13yInternal
         \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('list_check_integrity', $this->c13y_user(...));
     }
 
-    private static function userService(Connection $conn): UserService
+    private static function userService(): UserService
     {
-        return new UserService(
-            new UserRepository($conn),
-            new GroupRepository($conn),
-            \Piwigo\Bootstrap\PresentationAccessor::mailService(),
-            new ActivityService(new ActivityRepository($conn)),
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-            $conn
-        );
+        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
     }
 
     /**
@@ -241,7 +229,7 @@ final class C13yInternal
                     if (isset($name)) {
                         $name_ok = false;
                         while (! $name_ok) {
-                            $name_ok = (self::userService($conn)->getUserId($name) === false);
+                            $name_ok = (self::userService()->getUserId($name) === false);
                             if (! $name_ok) {
                                 $name .= SessionService::get()->generateKey(1);
                             }
@@ -257,7 +245,7 @@ final class C13yInternal
                         new BatchWriter($conn)
                             ->massInsert(Tables::users(), array_keys($inserts[0]), $inserts);
 
-                        self::userService($conn)->createUserInfos([$id]);
+                        self::userService()->createUserInfos([$id]);
 
                         \Piwigo\Core\PageState::current()->addInfo(sprintf(Lang::t('User "%s" created with "%s" like password'), $name, $password ?? ''));
 
@@ -290,7 +278,7 @@ final class C13yInternal
                                 $updates
                             );
 
-                        $updated_username = self::userService($conn)->getUsername($id);
+                        $updated_username = self::userService()->getUsername($id);
                         \Piwigo\Core\PageState::current()->addInfo(sprintf(Lang::t('Status of user "%s" updated'), $updated_username === false ? '' : $updated_username));
 
                         $result = true;

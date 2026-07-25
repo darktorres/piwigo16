@@ -4,19 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
-use Piwigo\Tag\TagRepository;
-use Piwigo\Tag\TagService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -74,7 +68,7 @@ final class TagsController implements ControllerInterface
         $template->assign('display_mode', $display_mode);
 
         $conn = DbConnection::build();
-        $tagService = new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)));
+        $tagService = \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
 
         // find all tags available for the current user
         $tags = $tagService->getAvailableTags();

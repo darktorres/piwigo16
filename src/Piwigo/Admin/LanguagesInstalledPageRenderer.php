@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Doctrine\DBAL\Connection;
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionLifecycle;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
@@ -18,9 +15,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Template\Template;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
@@ -50,16 +45,9 @@ final class LanguagesInstalledPageRenderer
         private readonly ConfigService $configService,
     ) {}
 
-    private static function userService(Connection $conn): UserService
+    private static function userService(): UserService
     {
-        return new UserService(
-            new UserRepository($conn),
-            new GroupRepository($conn),
-            \Piwigo\Bootstrap\PresentationAccessor::mailService(),
-            new ActivityService(new ActivityRepository($conn)),
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-            $conn
-        );
+        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
     }
 
     /**
@@ -125,7 +113,7 @@ final class LanguagesInstalledPageRenderer
         // +-----------------------------------------------------------------------+
         // |                     start template output                             |
         // +-----------------------------------------------------------------------+
-        $default_language = self::userService($conn)->getDefaultLanguage();
+        $default_language = self::userService()->getDefaultLanguage();
 
         $tpl_languages = [];
 
@@ -176,7 +164,7 @@ final class LanguagesInstalledPageRenderer
         );
 
         foreach ($missing_language_ids as $language_id) {
-            $extension_repository->reassignUsersFromLanguage($language_id, self::userService($conn)->getDefaultLanguage());
+            $extension_repository->reassignUsersFromLanguage($language_id, self::userService()->getDefaultLanguage());
             $extension_repository->delete(ExtensionType::Language, $language_id);
         }
 

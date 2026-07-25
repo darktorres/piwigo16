@@ -9,7 +9,6 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 
@@ -248,7 +247,7 @@ final class CategoryAdminService
         }
 
         if (count($userIds) > 0) {
-            new PermissionService($permissionRepository, new GroupRepository($conn), new CategoryRepository($conn))
+            \Piwigo\Bootstrap\CoreDomainAccessor::permissionService()
                 ->addPermissionOnCategory($catId, $userIds);
         }
     }

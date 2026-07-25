@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Doctrine\DBAL\Connection;
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
@@ -20,10 +17,8 @@ use Piwigo\Core\UniqueExecLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
@@ -57,9 +52,9 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
      * DRY extraction (Phase 1k DI-chain audit): the same UserService
      * recipe was repeated verbatim at 2 sites in this file.
      */
-    private static function userService(Connection $conn): UserService
+    private static function userService(): UserService
     {
-        return new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(new ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
+        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
     }
 
     #[\Override]
@@ -362,7 +357,7 @@ SELECT
         $piwigoInfos['general_stats']['nb_private_themes'] = count(array_keys($privateThemes));
         $piwigoInfos['general_stats']['nb_themes'] = $piwigoInfos['general_stats']['nb_private_themes'] + count($piwigoInfos['themes']);
 
-        $defaultTheme = self::userService($conn)
+        $defaultTheme = self::userService()
             ->getDefaultTheme();
         if (isset($privateThemes[$defaultTheme])) {
             $defaultTheme = 'private theme';
@@ -394,7 +389,7 @@ SELECT
         }
         $piwigoInfos['themes_usage'] = $themesUsage;
 
-        $piwigoInfos['general_stats']['default_language'] = self::userService($conn)->getDefaultLanguage();
+        $piwigoInfos['general_stats']['default_language'] = self::userService()->getDefaultLanguage();
 
         $query = '
 SELECT

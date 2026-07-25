@@ -7,16 +7,11 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
-use Piwigo\Category\CategoryRepository;
-use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 use Piwigo\Site\SiteRepository;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -136,10 +131,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             switch ($_GET['action']) {
                 case 'delete':
 
-                    new CategoryService(
-                        new CategoryRepository($conn),
-                        new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
-                    )->deleteSite($site_id, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), $this->urlService);
+                    \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->deleteSite($site_id, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), $this->urlService);
                     \Piwigo\Core\PageState::current()->addInfo($galleries_url . ' ' . Lang::t('deleted'));
                     break;
 

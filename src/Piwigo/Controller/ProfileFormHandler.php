@@ -20,9 +20,7 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Template\Template;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
@@ -49,9 +47,9 @@ final class ProfileFormHandler
         return new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn));
     }
 
-    private static function userService(Connection $conn): UserService
+    private static function userService(): UserService
     {
-        return new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), self::activityService($conn), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
+        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
     }
 
     private static function passwordService(Connection $conn): PasswordService
@@ -103,8 +101,8 @@ final class ProfileFormHandler
                 $_POST['theme'],
                 $_POST['language']
             );
-            $_POST['theme'] = self::userService($conn)->getDefaultTheme();
-            $_POST['language'] = self::userService($conn)->getDefaultLanguage();
+            $_POST['theme'] = self::userService()->getDefaultTheme();
+            $_POST['language'] = self::userService()->getDefaultLanguage();
         }
 
         if (! \Piwigo\Core\AdminContext::isActive()) {
@@ -148,7 +146,7 @@ final class ProfileFormHandler
             // if $_POST and $userdata have are same email
             // validate_mail_address allows, however, to check email
             $mail_address_input = is_string($_POST['mail_address']) ? $_POST['mail_address'] : null;
-            $mail_error = self::userService($conn)->validateMailAddress($user_id, $mail_address_input);
+            $mail_error = self::userService()->validateMailAddress($user_id, $mail_address_input);
             if ($mail_error !== '' && $mail_error !== '0') {
                 $errors[] = $mail_error;
             }
@@ -215,7 +213,7 @@ final class ProfileFormHandler
                 $username_for_update = $_POST['username'] ?? null;
                 if (is_string($username_for_update) and $username_for_update !== '' and $username_for_update !== '0') {
                     $username = $username_for_update;
-                    if ($username !== $userdata['username'] and (bool) self::userService($conn)->getUserId($username)) {
+                    if ($username !== $userdata['username'] and (bool) self::userService()->getUserId($username)) {
                         \Piwigo\Core\PageState::current()->addError(Lang::t('this login is already used'));
                         unset($_POST['redirect']);
                     } else {
@@ -224,7 +222,7 @@ final class ProfileFormHandler
 
                         // send email to the user
                         if ($username !== $userdata['username']) {
-                            $notification_language = is_string($userdata['language']) ? $userdata['language'] : self::userService($conn)->getDefaultLanguage();
+                            $notification_language = is_string($userdata['language']) ? $userdata['language'] : self::userService()->getDefaultLanguage();
                             \Piwigo\Bootstrap\PresentationAccessor::mailService()
                                 ->switchLangTo($notification_language);
 

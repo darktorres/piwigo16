@@ -20,8 +20,6 @@ use Piwigo\Db\Tables;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
-use Piwigo\Image\ImageRepository;
-use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataRepository;
@@ -291,7 +289,7 @@ SELECT
             }
 
             // delete all physical files related to the photo (thumbnail, web site, HD)
-            new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)))
+            \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
                 ->deleteElementFiles([$image_id], $urlService);
         } else {
             // this photo is new
@@ -594,7 +592,7 @@ SELECT
 
         if (isset($categories) and count($categories) > 0) {
             $imageConn = DbConnection::build();
-            $imageService = new ImageService(new ImageRepository($imageConn), new ActivityService(new ActivityRepository($imageConn)));
+            $imageService = \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
 
             if (\Piwigo\Config\CurrentConfig::loungeActive()) {
                 // fillLounge() requires int keys for $categories; a WS param

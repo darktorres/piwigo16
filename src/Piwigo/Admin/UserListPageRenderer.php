@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -14,7 +12,6 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -27,16 +24,9 @@ use Piwigo\Users\UserService;
  */
 final class UserListPageRenderer
 {
-    private static function userService(Connection $conn): UserService
+    private static function userService(): UserService
     {
-        return new UserService(
-            new UserRepository($conn),
-            new GroupRepository($conn),
-            \Piwigo\Bootstrap\PresentationAccessor::mailService(),
-            new ActivityService(new ActivityRepository($conn)),
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-            $conn
-        );
+        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
     }
 
     private static function preferencesService(Connection $conn): PreferencesService
@@ -120,7 +110,7 @@ ORDER BY registration_year, registration_month
             'user_list' => 'user_list.tpl',
         ]);
 
-        $default_user = self::userService($conn)->getDefaultUserInfo();
+        $default_user = self::userService()->getDefaultUserInfo();
         if (! is_array($default_user)) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('Default user not found');
@@ -189,9 +179,9 @@ SELECT
                 'NB_IMAGE_PAGE' => $default_user['nb_image_page'],
                 'RECENT_PERIOD' => $default_user['recent_period'],
                 'theme_options' => \Piwigo\Core\ThemeCatalog::getPwgThemes(),
-                'theme_selected' => self::userService($conn)->getDefaultTheme(),
+                'theme_selected' => self::userService()->getDefaultTheme(),
                 'language_options' => \Piwigo\Lang\LangService::getLanguages(),
-                'language_selected' => self::userService($conn)->getDefaultLanguage(),
+                'language_selected' => self::userService()->getDefaultLanguage(),
                 'association_options' => $groups,
                 'protected_users' => implode(',', array_unique($protected_users)),
                 'password_protected_users' => implode(',', array_unique($password_protected_users)),

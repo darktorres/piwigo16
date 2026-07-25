@@ -18,8 +18,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Http\HttpClientService;
-use Piwigo\Image\ImageRepository;
-use Piwigo\Image\ImageService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -125,7 +123,7 @@ final class IntroSubController implements AdminSubControllerInterface
         $nb_orphans = \Piwigo\Core\PageState::current()->nbOrphans; // already calculated in admin.php
 
         if (\Piwigo\Core\PageState::current()->nbPhotosTotal >= 100000) { // but has not been calculated on a big gallery, so force it now
-            $nb_orphans = new ImageService(new ImageRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)))
+            $nb_orphans = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
                 ->countOrphans();
         }
 

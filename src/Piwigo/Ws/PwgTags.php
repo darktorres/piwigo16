@@ -14,18 +14,13 @@ namespace Piwigo\Ws;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageRepository;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
-use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 
 /**
@@ -37,8 +32,7 @@ final class PwgTags
 {
     private static function tagService(): TagService
     {
-        $conn = DbConnection::build();
-        return new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn)), new ActivityService(new ActivityRepository(DbConnection::build())));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
     }
 
     /**

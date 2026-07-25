@@ -6,7 +6,6 @@ namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\EphemeralKeyService;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
@@ -18,14 +17,12 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\MenubarRenderer;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -49,14 +46,14 @@ final class CommentsController implements ControllerInterface
         private readonly UrlServiceInterface $urlService,
     ) {}
 
-    private static function permissionService(Connection $conn): PermissionService
+    private static function permissionService(): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
     }
 
-    private static function categoryService(Connection $conn): CategoryService
+    private static function categoryService(): CategoryService
     {
-        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
     }
 
     #[\Override]
@@ -196,7 +193,7 @@ final class CommentsController implements ControllerInterface
             $cat_id = $_GET['cat'];
             $cat_id = is_string($cat_id) ? $cat_id : '0';
 
-            $category_ids = self::categoryService($conn)->getSubcatIds([$cat_id]);
+            $category_ids = self::categoryService()->getSubcatIds([$cat_id]);
             if ($category_ids === []) {
                 $category_ids = [-1];
             }
@@ -277,7 +274,7 @@ final class CommentsController implements ControllerInterface
             $whereClauses[] = 'validated=1';
         }
 
-        $whereClauses[] = self::permissionService($conn)->getSqlConditionFandF([
+        $whereClauses[] = self::permissionService()->getSqlConditionFandF([
             'forbidden_categories' => 'category_id',
             'visible_categories' => 'category_id',
             'visible_images' => 'ic.image_id',
@@ -426,12 +423,12 @@ final class CommentsController implements ControllerInterface
         $query = '
 SELECT id, name, uppercats, global_rank
   FROM ' . Tables::categories() . '
-' . self::permissionService($conn)->getSqlConditionFandF([
+' . self::permissionService()->getSqlConditionFandF([
             'forbidden_categories' => 'id',
             'visible_categories' => 'id',
         ], 'WHERE') . '
 ;';
-        self::categoryService($conn)
+        self::categoryService()
             ->displaySelectCatWrapper($query, [@$_GET['cat']], $blockname, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template, true);
 
         // Filter on recent comments...

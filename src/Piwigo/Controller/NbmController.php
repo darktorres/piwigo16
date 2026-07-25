@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -18,8 +17,6 @@ use Piwigo\Notification\NotificationByMailRepository;
 use Piwigo\Notification\NotificationByMailService;
 use Piwigo\Notification\NotificationRepository;
 use Piwigo\Notification\NotificationService;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -60,7 +57,7 @@ final class NbmController implements ControllerInterface
             new NotificationByMailService(new NotificationByMailRepository($conn)),
             new NotificationService(
                 new NotificationRepository($conn),
-                new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn)),
+                \Piwigo\Bootstrap\CoreDomainAccessor::permissionService(),
                 $htmlRenderer,
                 $this->urlService
             ),

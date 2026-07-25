@@ -5,13 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
-use Piwigo\Category\CategoryRepository;
-use Piwigo\Category\CategoryService;
-use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -21,8 +16,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Group\GroupService;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 
 /**
  * Ported from admin/group_perm.php (page slug "group_perm"). Already used
@@ -35,7 +28,6 @@ final class GroupPermPageRenderer
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
-        private readonly ConfigService $configService,
     ) {}
 
     private static function auditService(Connection $conn): AuditService
@@ -48,10 +40,7 @@ final class GroupPermPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $conn = DbConnection::build();
-        $categoryService = new CategoryService(
-            new CategoryRepository($conn),
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
-        );
+        $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -106,7 +95,7 @@ final class GroupPermPageRenderer
 
         $group_id = (int) $_GET['group_id'];
 
-        $group_service = new GroupService(new GroupRepository($conn), new ActivityService(new ActivityRepository($conn)), self::auditService($conn), $this->configService);
+        $group_service = \Piwigo\Bootstrap\CoreDomainAccessor::groupService();
 
         // [SEC-57] actor for either branch below
         $actor_id = \Piwigo\Users\CurrentUser::get()->id;

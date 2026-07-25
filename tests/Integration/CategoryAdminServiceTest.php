@@ -12,6 +12,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -93,6 +94,13 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
+        // DI-phase follow-on to gap-closure Stage 4: CategoryAdminService
+        // now resolves PermissionService via
+        // Bootstrap\CoreDomainAccessor -> Kernel::container(), which this
+        // isolated Integration test (no full RequestBootstrap) wouldn't
+        // otherwise boot.
+        Kernel::boot();
+
         $this->conn = DbConnection::build();
         $categoryService = new CategoryService(
             new CategoryRepository($this->conn),
@@ -112,6 +120,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         $this->conn->executeStatement('DELETE FROM ' . Tables::userAccess());
         $this->conn->executeStatement('DELETE FROM ' . Tables::groupAccess());
         $this->conn->executeStatement('INSERT INTO ' . Tables::groupAccess() . ' (group_id, cat_id) VALUES (1, 1), (1, 2), (2, 1), (3, 1)');
+        Kernel::reset();
         parent::tearDown();
     }
 

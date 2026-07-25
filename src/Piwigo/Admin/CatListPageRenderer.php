@@ -6,17 +6,12 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Cache\PermissionCacheInvalidator;
-use Piwigo\Category\CategoryRepository;
-use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
 
 /**
@@ -50,10 +45,7 @@ final class CatListPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $categoryConn = DbConnection::build();
-        $categoryService = new CategoryService(
-            new CategoryRepository($categoryConn),
-            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn), new CategoryRepository($categoryConn))
-        );
+        $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_cat_list');
 

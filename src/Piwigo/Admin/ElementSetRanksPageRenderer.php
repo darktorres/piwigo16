@@ -6,20 +6,14 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
-use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
-use Piwigo\Image\ImageRepository;
-use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
 
 /**
@@ -101,7 +95,7 @@ final class ElementSetRanksPageRenderer
                 $rank_of_image = array_filter($_POST['rank_of_image'], is_numeric(...));
                 asort($rank_of_image, SORT_NUMERIC);
 
-                new ImageService(new ImageRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)))
+                \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
                     ->saveImagesOrder(
                         $category_id,
                         array_map(intval(...), array_keys($rank_of_image))
@@ -133,10 +127,7 @@ final class ElementSetRanksPageRenderer
                 $message = Lang::t('Images manual order was saved');
             }
             new CategoryAdminService(
-                new CategoryService(
-                    new CategoryRepository($conn),
-                    new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
-                )
+                \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()
             )->saveImageOrder($category_id, $image_order, isset($_POST['image_order_subcats']), $this->redirectService);
 
             $template->assign(

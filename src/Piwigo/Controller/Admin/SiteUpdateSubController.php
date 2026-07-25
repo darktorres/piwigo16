@@ -8,7 +8,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
@@ -19,7 +18,6 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
@@ -107,14 +105,14 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
     ) {}
 
-    private static function permissionService(Connection $conn): PermissionService
+    private static function permissionService(): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
     }
 
-    private static function categoryService(Connection $conn): CategoryService
+    private static function categoryService(): CategoryService
     {
-        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
     }
 
     private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
@@ -314,7 +312,7 @@ SELECT id, uppercats, global_rank, status, visible
 
             // get categort full directories in an array for comparison with file
             // system directory tree
-            $db_fulldirs = self::categoryService($conn)->getFulldirs(array_map(intval(...), array_keys($db_categories)));
+            $db_fulldirs = self::categoryService()->getFulldirs(array_map(intval(...), array_keys($db_categories)));
 
             // what is the base directory to search file system sub-directories ?
             if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
@@ -532,7 +530,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         new BatchWriter($conn)
                             ->massInsert(Tables::userAccess(), ['user_id', 'cat_id'], $insert_granted_users);
                     } else {
-                        self::permissionService($conn)
+                        self::permissionService()
                             ->addPermissionOnCategory($category_ids, new UserRepository($conn)->findAdminIds());
                     }
                 }
@@ -561,7 +559,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
 
             if (count($to_delete) > 0) {
                 if (! $simulate) {
-                    self::categoryService($conn)->deleteCategories($to_delete, self::activityService($conn), $this->urlService);
+                    self::categoryService()->deleteCategories($to_delete, self::activityService($conn), $this->urlService);
                     foreach ($to_delete_derivative_dirs as $to_delete_dir) {
                         if (is_dir($to_delete_dir)) {
                             new DerivativeCacheService()
@@ -845,7 +843,7 @@ DELETE
             and ($_POST['sync'] === 'dirs' or $_POST['sync'] === 'files')
             and ! $general_failure) {
             if (! $simulate) {
-                $syncCategoryService = self::categoryService($conn);
+                $syncCategoryService = self::categoryService();
 
                 $start = \Piwigo\Core\TimingHelper::getMoment();
                 $syncCategoryService->updateCategory('all');
@@ -966,7 +964,7 @@ DELETE
             $datas = [];
             $tags_of = [];
 
-            $tagService = new TagService(new TagRepository($conn), self::permissionService($conn), self::activityService($conn));
+            $tagService = new TagService(new TagRepository($conn), self::permissionService(), self::activityService($conn));
 
             foreach ($files as $id => $element_infos) {
                 $data = $site_reader->get_element_metadata($element_infos);
@@ -1120,7 +1118,7 @@ DELETE
 SELECT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . '
   WHERE site_id = ' . $site_id;
-        self::categoryService($conn)->displaySelectCatWrapper(
+        self::categoryService()->displaySelectCatWrapper(
             $query,
             $cat_selected,
             'category_options',

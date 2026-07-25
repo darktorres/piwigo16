@@ -18,8 +18,6 @@ use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Group\GroupRepository;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
@@ -58,16 +56,9 @@ final readonly class ExtensionLifecycle
         private ConfigService $configService,
     ) {}
 
-    private static function userService(Connection $conn): UserService
+    private static function userService(): UserService
     {
-        return new UserService(
-            new UserRepository($conn),
-            new GroupRepository($conn),
-            \Piwigo\Bootstrap\PresentationAccessor::mailService(),
-            self::activityService($conn),
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-            $conn
-        );
+        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
     }
 
     /**
@@ -318,7 +309,7 @@ final readonly class ExtensionLifecycle
                     break;
                 }
 
-                if ($id === self::userService(DbConnection::build())->getDefaultTheme()) {
+                if ($id === self::userService()->getDefaultTheme()) {
                     $newTheme = $this->pickReplacementDefaultTheme($id);
                     $this->setDefaultTheme($newTheme);
                 }
@@ -392,7 +383,7 @@ final readonly class ExtensionLifecycle
                     $errors[] = 'CANNOT DEACTIVATE - LANGUAGE IS ALREADY DEACTIVATED';
                     break;
                 }
-                if ($id === self::userService($conn)->getDefaultLanguage()) {
+                if ($id === self::userService()->getDefaultLanguage()) {
                     $errors[] = 'CANNOT DEACTIVATE - LANGUAGE IS DEFAULT LANGUAGE';
                     break;
                 }
@@ -410,7 +401,7 @@ final readonly class ExtensionLifecycle
                     break;
                 }
 
-                $this->repo->reassignUsersFromLanguage($id, self::userService($conn)->getDefaultLanguage());
+                $this->repo->reassignUsersFromLanguage($id, self::userService()->getDefaultLanguage());
 
                 $languagesDir = \Piwigo\Core\CurrentPaths::get()->root . 'language/';
                 FilesystemHelper::deltree($languagesDir . $id, $languagesDir . 'trash');
@@ -477,7 +468,7 @@ final readonly class ExtensionLifecycle
     private function setDefaultTheme(string $themeId): void
     {
 
-        $defaultTheme = self::userService(DbConnection::build())->getDefaultTheme();
+        $defaultTheme = self::userService()->getDefaultTheme();
         $userIds = $this->repo->findUserIdsByTheme($defaultTheme);
 
         $defaultUserId = \Piwigo\Config\CurrentConfig::defaultUserId();

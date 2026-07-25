@@ -12,12 +12,10 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use InvalidArgumentException;
-use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
 use Piwigo\Cache\PermissionCacheInvalidator;
-use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
@@ -282,6 +280,6 @@ final class PwgGroups
      */
     private static function groupService(): GroupService
     {
-        return new GroupService(new GroupRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new AuditService(new AuditRepository(DbConnection::build())), CurrentConfigService::get());
+        return \Piwigo\Bootstrap\CoreDomainAccessor::groupService();
     }
 }

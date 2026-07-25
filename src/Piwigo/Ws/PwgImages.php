@@ -32,14 +32,12 @@ use Piwigo\Core\WsError;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
@@ -66,22 +64,22 @@ final class PwgImages
      * "shared connection passed in" precedent as
      * Ws\PwgCategories::permissionService(Connection $conn).
      */
-    private static function permissionService(Connection $conn): PermissionService
+    private static function permissionService(): PermissionService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
     }
 
-    private static function categoryService(Connection $conn): CategoryService
+    private static function categoryService(): CategoryService
     {
-        return new CategoryService(new CategoryRepository($conn), self::permissionService($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
     }
 
     private static function searchService(Connection $conn): SearchService
     {
         return new SearchService(
             new SearchRepository($conn),
-            self::permissionService($conn),
-            self::categoryService($conn),
+            self::permissionService(),
+            self::categoryService(),
             \Piwigo\Bootstrap\PresentationAccessor::mailService(),
             \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             new RedirectService(),
@@ -96,17 +94,17 @@ final class PwgImages
      * call, fixed here to reuse $conn, matching the DbConnection::build()
      * has-no-caching finding from Phase 1d.
      */
-    private static function tagService(Connection $conn): TagService
+    private static function tagService(): TagService
     {
-        return new TagService(new TagRepository($conn), self::permissionService($conn), new ActivityService(new ActivityRepository($conn)));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
     }
 
     /**
      * Constructed identically 7 times across this file.
      */
-    private static function imageService(Connection $conn): ImageService
+    private static function imageService(): ImageService
     {
-        return new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
     }
 
     /**
@@ -128,7 +126,7 @@ final class PwgImages
         $categoryConn = DbConnection::build();
         $categoryService = new CategoryService(
             new CategoryRepository($categoryConn),
-            self::permissionService($categoryConn)
+            self::permissionService()
         );
 
         // let's add links between the image and the categories
@@ -400,7 +398,7 @@ SELECT DISTINCT image_id
       INNER JOIN ' . Tables::categories() . ' ON category_id=id
   WHERE commentable=1
     AND image_id=' . $params['image_id'] .
-          self::permissionService($conn)->getSqlConditionFandF([
+          self::permissionService()->getSqlConditionFandF([
               'forbidden_categories' => 'id',
               'visible_categories' => 'id',
               'visible_images' => 'image_id',
@@ -458,7 +456,7 @@ SELECT DISTINCT image_id
 SELECT *
   FROM ' . Tables::images() . '
   WHERE id=' . $params['image_id'] .
-          self::permissionService($conn)->getSqlConditionFandF([
+          self::permissionService()->getSqlConditionFandF([
               'visible_images' => 'id',
           ], ' AND') . '
 LIMIT 1
@@ -504,7 +502,7 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::categories() . ' ON category_id = id
   WHERE image_id = ' . $image_id .
-          self::permissionService($conn)->getSqlConditionFandF([
+          self::permissionService()->getSqlConditionFandF([
               'forbidden_categories' => 'category_id',
           ], ' AND') . '
 ;';
@@ -551,7 +549,7 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
         }
 
         // -------------------------------------------------------------- related tags
-        $related_tags = self::tagService($conn)
+        $related_tags = self::tagService()
             ->getCommonTags([$image_id], -1, \Piwigo\Bootstrap\PresentationAccessor::htmlService());
         foreach ($related_tags as $i => $tag) {
             $tag['url'] = \Piwigo\Bootstrap\PresentationAccessor::urlService()->makeIndexUrl(
@@ -707,7 +705,7 @@ SELECT DISTINCT id
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
   WHERE id=' . $params['image_id']
-          . self::permissionService($conn)->getSqlConditionFandF([
+          . self::permissionService()->getSqlConditionFandF([
               'forbidden_categories' => 'category_id',
               'forbidden_images' => 'id',
           ], '    AND') . '
@@ -1172,7 +1170,7 @@ UPDATE ' . Tables::images() . '
         $conn = DbConnection::build();
 
         if (count($params['image_id']) > 1) {
-            self::imageService($conn)
+            self::imageService()
                 ->saveImagesOrder(
                     $params['category_id'],
                     $params['image_id']
@@ -1556,7 +1554,7 @@ SELECT id, name, permalink
 
         // and now, let's create tag associations
         if (isset($params['tag_ids']) and $params['tag_ids'] !== '') {
-            self::tagService($conn)
+            self::tagService()
                 ->setTags(
                     explode(',', $params['tag_ids']),
                     (int) $image_id
@@ -1672,7 +1670,7 @@ SELECT COUNT(*)
             );
 
         if (isset($params['tags']) and $params['tags'] !== '' and $params['tags'] !== []) {
-            $tagService = self::tagService($conn);
+            $tagService = self::tagService();
 
             $tag_ids = [];
             if (is_array($params['tags'])) {
@@ -2147,7 +2145,7 @@ SELECT COUNT(*)
 
         // and now, let's create tag associations
         if (isset($params['tag_ids']) and $params['tag_ids'] !== '') {
-            self::tagService($conn)
+            self::tagService()
                 ->setTags(
                     explode(',', $params['tag_ids']),
                     (int) $image_id
@@ -2694,7 +2692,7 @@ SELECT path
         }
 
         // and now, let's create tag associations
-        $tagService = self::tagService($conn);
+        $tagService = self::tagService();
 
         if (isset($params['tag_ids'])) {
             $tag_ids = [];
@@ -2789,7 +2787,7 @@ SELECT path
         }
 
         $imageConn = DbConnection::build();
-        $ret = self::imageService($imageConn)
+        $ret = self::imageService()
             ->deleteElements($image_ids, \Piwigo\Bootstrap\PresentationAccessor::urlService(), true);
         PermissionCacheInvalidator::invalidate();
 
@@ -2825,7 +2823,7 @@ SELECT path
     {
         $imageConn = DbConnection::build();
         $ret = [
-            'rows' => self::imageService($imageConn)
+            'rows' => self::imageService()
                 ->emptyLounge(),
         ];
 
@@ -2878,7 +2876,7 @@ SELECT path
         // the list of images moved from the lounge might not be the same than
         // $image_ids (canbe a subset or more image_ids from another upload too)
         $imageConn = DbConnection::build();
-        $moved_from_lounge = self::imageService($imageConn)
+        $moved_from_lounge = self::imageService()
             ->emptyLounge();
 
         $query = '
@@ -2928,7 +2926,7 @@ SELECT
         }
 
         $imageConn = DbConnection::build();
-        $imageService = self::imageService($imageConn);
+        $imageService = self::imageService();
 
         $no_md5sum_ids = $imageService->getPhotosNoMd5sum();
         $added_count = 0;
@@ -3023,7 +3021,7 @@ SELECT id
         }
 
         $imageConn = DbConnection::build();
-        $imageService = self::imageService($imageConn);
+        $imageService = self::imageService();
 
         $orphan_ids_to_delete = array_slice($imageService->getOrphans(), 0, $params['block_size']);
         $deleted_count = $imageService->deleteElements($orphan_ids_to_delete, \Piwigo\Bootstrap\PresentationAccessor::urlService(), true);
@@ -3065,7 +3063,7 @@ SELECT
             return new PwgError(404, 'category_id not found');
         }
 
-        $imageService = self::imageService($imageConn);
+        $imageService = self::imageService();
 
         if ($params['action'] === 'associate') {
             $imageService->associateImagesToCategories($params['image_id'], [$params['category_id']]);

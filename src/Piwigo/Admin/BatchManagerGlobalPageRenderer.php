@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\PermissionCacheInvalidator;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -18,7 +16,6 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
@@ -26,10 +23,7 @@ use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 use Piwigo\Site\LocalSiteReader;
-use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 
@@ -65,26 +59,14 @@ final class BatchManagerGlobalPageRenderer
         private readonly UrlServiceInterface $urlService,
     ) {}
 
-    private static function permissionService(Connection $conn): PermissionService
+    private static function tagService(): TagService
     {
-        return new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
     }
 
-    private static function tagService(Connection $conn): TagService
+    private static function categoryService(): CategoryService
     {
-        return new TagService(
-            new TagRepository($conn),
-            self::permissionService($conn),
-            new ActivityService(new ActivityRepository($conn))
-        );
-    }
-
-    private static function categoryService(Connection $conn): CategoryService
-    {
-        return new CategoryService(
-            new CategoryRepository($conn),
-            self::permissionService($conn)
-        );
+        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
     }
 
     /**
@@ -194,7 +176,7 @@ final class BatchManagerGlobalPageRenderer
             $action = is_string($_POST['selectAction'] ?? null) ? $_POST['selectAction'] : '';
             $redirect = false;
 
-            $tagService = self::tagService($conn);
+            $tagService = self::tagService();
             $imageService = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)));
 
             if ($action === 'remove_from_caddie') {
@@ -294,7 +276,7 @@ DELETE
                         // before "associate" became a multi-value field).
                         $first_associate_category = reset($associate_categories);
                         if ($first_associate_category !== false) {
-                            $category_info = self::categoryService($conn)->getCategoryInfo($first_associate_category);
+                            $category_info = self::categoryService()->getCategoryInfo($first_associate_category);
                             if (($category_info['dir'] ?? '') === '') {
                                 $redirect = true;
                             }
@@ -314,7 +296,7 @@ DELETE
                     $redirect = true;
                 } elseif ($prefilter_value === 'no_virtual_album') {
                     if ($move_category !== null) {
-                        $category_info = self::categoryService($conn)->getCategoryInfo($move_category);
+                        $category_info = self::categoryService()->getCategoryInfo($move_category);
                         if (($category_info['dir'] ?? '') === '') {
                             $redirect = true;
                         }
@@ -560,7 +542,7 @@ DELETE
 
         if (count($cat_elements_id) > 0) {
             // remove tags
-            $template->assign('associated_tags', self::tagService($conn)
+            $template->assign('associated_tags', self::tagService()
                 ->getCommonTags($cat_elements_id, -1, \Piwigo\Bootstrap\PresentationAccessor::htmlService()));
         }
 
@@ -652,7 +634,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
   FROM ' . Tables::images();
 
             if ($is_category) {
-                $category_info = self::categoryService($conn)->getCategoryInfo($filter_category_id);
+                $category_info = self::categoryService()->getCategoryInfo($filter_category_id);
 
                 $order_by = \Piwigo\Config\CurrentConfig::orderByInsideCategory();
                 $category_image_order = $category_info !== null ? ($category_info['image_order'] ?? null) : null;

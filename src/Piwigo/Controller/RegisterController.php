@@ -11,11 +11,9 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -102,7 +100,7 @@ final class RegisterController implements ControllerInterface
             // "someone tried to register your username" email instead of
             // the requester ever seeing an error here).
             $conn = DbConnection::build();
-            $userService = new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
+            $userService = \Piwigo\Bootstrap\CoreDomainAccessor::userService();
             $registration_result = $userService
                 ->registerUser(
                     $post_login,

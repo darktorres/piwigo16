@@ -4,18 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
-use Piwigo\Tag\TagRepository;
-use Piwigo\Tag\TagService;
 
 /**
  * Ported from admin/tags.php (page slug "tags").
@@ -45,7 +39,7 @@ final class TagsPageRenderer
         $tabsheet->assign();
 
         $tagConn = DbConnection::build();
-        $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn), new CategoryRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($tagConn)));
+        $tagService = \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
 
         if (($_GET['action'] ?? null) === 'delete_orphans') {
             new \Piwigo\Csrf\CsrfService()

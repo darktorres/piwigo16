@@ -8,7 +8,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Category\CategoryAdminService;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -17,9 +16,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 
 /**
  * Ported from admin/cat_options.php (page slug "cat_options") -- a flat
@@ -41,12 +37,9 @@ final class CatOptionsPageRenderer
         return new ActivityService(new ActivityRepository($conn));
     }
 
-    private static function categoryService(Connection $conn): CategoryService
+    private static function categoryService(): CategoryService
     {
-        return new CategoryService(
-            new CategoryRepository($conn),
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn))
-        );
+        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
     }
 
     public function render(): void
@@ -79,7 +72,7 @@ final class CatOptionsPageRenderer
             }
 
             $section_param = $_GET['section'] ?? '';
-            new CategoryAdminService(self::categoryService($conn))
+            new CategoryAdminService(self::categoryService())
                 ->setCategoryOption($cat_true, is_string($section_param) ? $section_param : '', false, self::activityService($conn));
         } elseif (isset($_POST['trueify'])
                  and isset($_POST['cat_false'])
@@ -93,7 +86,7 @@ final class CatOptionsPageRenderer
             }
 
             $section_param = $_GET['section'] ?? '';
-            new CategoryAdminService(self::categoryService($conn))
+            new CategoryAdminService(self::categoryService())
                 ->setCategoryOption($cat_false, is_string($section_param) ? $section_param : '', true, self::activityService($conn));
         }
 
@@ -209,7 +202,7 @@ SELECT DISTINCT id,name,uppercats,global_rank
                 'L_CAT_OPTIONS_FALSE' => $l_false,
             ]
         );
-        $categoryService = self::categoryService($conn);
+        $categoryService = self::categoryService();
         $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template);
         $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template);
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());

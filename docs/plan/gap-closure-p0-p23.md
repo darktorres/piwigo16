@@ -34,7 +34,7 @@ verified by reading that file directly, not by finding a migration.
 | 9 binary→utf8mb4_bin | **DONE, 9/9** |
 | 8 `1970-01-01`→`NULL` defaults | **DONE, 8/8** |
 | 6 TIMESTAMP NOT NULL additions | **DONE, 6/6** |
-| 5 text→JSON | **NOT DONE, 0/5** — `config.value`, `search.rules`, `user_cache.forbidden_categories`, `user_cache.image_access_list`, `user_infos.preferences` are all still plain `text`/`mediumtext`. |
+| 5 text→JSON | **IN PROGRESS — full plan below.** `user_cache.forbidden_categories`/`image_access_list` turned out not to be serialize-leak candidates at all (comma-separated ID lists spliced into raw SQL, not `serialize()` blobs) — carved out as a separate future finding. `config.value`, `search.rules`, `user_infos.preferences` (plus `activity.details`, a newly-found 4th column not in the original 43-item list) get a real fix: see "1a-bis" below. |
 | 1 new column (`history_summary.summary_id` AUTO_INCREMENT PK) | **NOT DONE** — table still has no primary key at all, only the `UNIQUE KEY (year,month,day,hour)`. |
 | 3 unsigned fixes | **NOT DONE** — `sites.id` is still `tinyint(4) NOT NULL auto_increment` without `unsigned`, the one confirmed candidate. |
 | Serialized-blob normalization (separate from the 43) | **NOT DONE** — `extents_for_templates` (`ExtendForTemplatesPageRenderer.php`) and `updates_ignored` (`ExtensionUpdateChecker.php:129`) are both still `serialize()`d config values; the `extension_ignored_updates` table exists but nothing writes to it yet. |
@@ -258,6 +258,226 @@ consumer reading/writing the old representation (`'true'`/`'false'` strings, raw
 `BINARY` comparison semantics) gets updated in the same commit as its column — the same set of
 call sites 1b's DTO work also touches, so sequence each domain's migration immediately before
 that domain's DTO/repository pass, not as one separate 43-column mega-migration.
+
+### 1a-bis. Delete the legacy upgrade chain; fix the config/search/user/activity serialize leak (2026-07-24)
+
+While closing out 1a's "5 text→JSON" item, investigation of every `serialize(`/
+`unserialize(` call site in `src/Piwigo` found the real shape of the problem is bigger
+than 5 columns, and includes one large, unrelated discovery. Two separable pieces of work:
+
+**Finding 1 — the legacy in-place upgrade chain contradicts this codebase's own
+documented architecture and should be deleted.** `docs/PLAN-REPLAY.md`'s "Migration path"
+section states outright: *"This is a clean fork. No in-place upgrade from upstream Piwigo
+is provided... there is currently no version-to-version upgrade mechanism for a shipped
+install, since nothing has shipped yet."* The intended path for adopting an existing
+Piwigo install was always a one-way `bin/piwigo import:legacy` data-import tool (unbuilt,
+this doc's own Stage 3) — not a schema-patching upgrade chain. Yet
+`src/Piwigo/Admin/Install/DbPatch/` (127 files) and `VersionUpgrade/` (26 files),
+orchestrated by `UpgradeRunner`/`UpgradeService`/`UpgradeFeedRunner` and exposed via
+`public/upgrade.php`/`upgrade_feed.php`, implement exactly that contradicted mechanism —
+apparently carried over mechanically during the P17–P23 porting phases without anyone
+catching the conflict. User direction: delete the whole chain.
+
+**Finding 2 — several places store structured (array-shaped) data as a serialized blob
+but leave encode/decode to client code instead of the owning class/repository.**
+- `config.value` (`piwigo_config`, a classic EAV key-value table: `param` PK, `value
+  TEXT`, ~289 independently-typed keys) has no schema-level typing at all — only
+  `ConfigService`'s own hand-rolled `hydrate()`/`encode()` convention does.
+  `updatesIgnored`/`extentsForTemplates`/`c13yIgnore` already have working typed
+  `CurrentConfig` properties with automatic `serialize()`/`unserialize()` via that
+  convention — the leak is that ~6 call sites still bypass them with manual
+  `confUpdateParam($key, serialize($x))`. `blkMenubar` has a property, but it's typed
+  `string` (the raw blob) instead of `?array`, unlike every other array-shaped property.
+- `search.rules` and `user_infos.preferences` are genuinely, deliberately deferred — each
+  Projection's own docblock says so explicitly.
+- `activity.details` (`varchar(255)`, not in the original 43-item list) has the identical
+  leak, found via this broader sweep rather than the audit's TEXT-only inventory.
+- Two repository-bypass sites: `Ws/PwgCore.php` has its own raw SQL against
+  `piwigo_search` (bypassing `SearchRepository`) and a raw `unserialize()` read against
+  `activity.details` (bypassing `ActivityRepository`).
+
+User direction: fix all of it in one pass, including `config.value`'s underlying EAV
+design — not deferred. This is safe to do in one pass specifically *because* of finding 1:
+deleting the legacy upgrade chain removes the ~30 frozen `DbPatch` scripts that write raw,
+non-JSON strings to `config.value`, which was otherwise the real risk in converting that
+column to JSON.
+
+**Carved out as separate future findings, not part of this work:**
+- `user_cache.forbidden_categories`/`image_access_list` are not this pattern at all —
+  comma-separated ID-list strings spliced directly into raw SQL `IN (...)` clauses across
+  15+ files (`CategoryService`, `PermissionService`, `Ws/PwgCategories`, `Ws/PwgImages`,
+  `SearchService`, `TagService`, `CalendarService`, `CommentsController`,
+  `PictureController`, `ActionController`, `NotificationService`, and more). Fixing this
+  means redesigning SQL-building across all of them — a separate, much larger effort.
+- The DBAL→ORM migration. `docs/PLAN-REPLAY.md`'s P14 audit note describes a "User
+  decision" to migrate all ~27 domain repositories to real Doctrine ORM
+  (`ServiceEntityRepository`), "tracked as a new `remediation:` initiative in
+  `docs/plan/manifest.yaml`" — no such entry exists there. Stage 1b's own Projection work
+  (10 domains done so far) doesn't address this either: every repository, done or not,
+  still `extends AbstractRepository` and uses raw DBAL `QueryBuilder`. Real, unaddressed,
+  separately-scoped gap.
+- Prepared statements are not a concern either way — DBAL's `QueryBuilder::setParameter()`
+  and Doctrine ORM's DQL layer both compile to real parameterized queries at the driver
+  level already.
+
+#### Design: delete the legacy upgrade chain
+
+**Delete outright:**
+- `src/Piwigo/Admin/Install/DbPatch/` — entire directory (127 files, including
+  `DbPatchInterface.php`, `DbPatchRegistry.php`, `DatabaseConfigChanges.php`,
+  `LegacyDbLayer.php`, `LegacyFileConf.php`, every `Patch*.php`).
+- `src/Piwigo/Admin/Install/VersionUpgrade/` — entire directory (26 files, including
+  `VersionUpgradeInterface.php`, `VersionUpgradeRegistry.php`, every `UpgradeFrom_*.php`).
+- `src/Piwigo/Admin/Install/UpgradeRunner.php`, `UpgradeService.php`,
+  `UpgradeFeedRunner.php` — verified each exists solely to orchestrate the deleted chain
+  (`UpgradeService`'s 9 methods are all upgrade-only; none shared with fresh-install).
+- `public/upgrade.php`, `public/upgrade_feed.php` — each is 100% orchestration of the
+  deleted classes.
+- `src/Piwigo/Db/DbCredentials.php`: delete `migrateFromLegacyFile()` and its private
+  `extractLegacyValues()` helper only. **Keep `seed()`** — real, independent caller
+  (`InstallWizard.php:192`, the fresh-install form-submission path).
+- `tests/Browser/UpgradePathTest.php` — entire file, exists solely for the deleted flow.
+- `tests/Unit/Db/DbCredentialsTest.php` — remove only the `migrateFromLegacyFile()` tests;
+  keep `fromEnv()`/`current()`/`seed()` coverage.
+
+**Update, don't delete:**
+- `tests/Arch/StructuralTest.php` — remove the 2 die()/exit()-count allowlist entries for
+  `VersionUpgrade/UpgradeFrom_1_3_1.php` (`=> 3`) and `UpgradeRunner.php` (`=> 2`) — this
+  also simplifies Stage 1e below (its "3 real calls, 1 file" bullet for
+  `UpgradeFrom_1_3_1.php` becomes moot once that file is gone; 17 image-processing calls
+  remain in scope there, not 20).
+- Docblock-only mentions of `UpgradeRunner` (contextual rationale, no real call — verified
+  by direct read) in `Cache/UserCacheInvalidator.php`, `Cache/CurrentPersistentCache.php`,
+  `Core/PageState.php`, `Image/ImageStdParams.php`, `Template/Template.php` — clean up so
+  none assert a now-nonexistent class.
+
+**Verify:** repo-wide grep for `DbPatch`, `VersionUpgrade`, `UpgradeRunner`,
+`UpgradeService`, `UpgradeFeedRunner`, `migrateFromLegacyFile` (src/tests/public/docs/
+composer.json/psalm.xml/phpstan.neon) confirms zero remaining references.
+`vendor/bin/deptrac --no-progress`, then full Unit/Arch/Integration/Contract/Browser/
+Visual — a deletion this size needs the full suite, not a scoped check.
+
+#### Design: fix the serialize()/unserialize() leak
+
+**1. `blkMenubar`/`updatesIgnored`/`extentsForTemplates`/`c13yIgnore`**
+
+- `blkMenubar`: retype `private static string $blkMenubar = '';` → `?array` (default
+  `null`) in `CurrentConfig.php`, matching every other array-shaped property.
+  `BlockManager.php:88`'s `@unserialize(CurrentConfig::blkMenubar())` becomes a plain
+  `CurrentConfig::blkMenubar()` call. `MenubarLayoutRepository::saveLayout()` keeps its
+  deliberate raw-SQL write (documented "write half only, no DI dependency" scope) but
+  switches its `serialize()` call to `json_encode()`, matching item 5's new `config.value`
+  convention.
+- `updatesIgnored`/`extentsForTemplates`/`c13yIgnore`: no property changes — retarget the
+  leaking call sites onto the already-working typed accessor, dropping the manual
+  serialize/unserialize: `ExtendForTemplatesPageRenderer.php:159` (write),
+  `Admin/Extensions/ExtensionUpdateChecker.php:129` (write), `Ws/PwgExtensions.php:352,367`
+  (write), `Admin/UpdatesExtPageRenderer.php` (read — verify current state at execution
+  time), `Admin/Integrity/CheckIntegrity.php:51,276` (`c13y_ignore` read/write).
+
+**2. `search.rules`**
+
+- Schema: `piwigo_search.rules` TEXT → JSON (`install/piwigo_structure-mysql.sql` +
+  regenerate `tests/Fixtures/piwigo-17.0.sql`).
+- `Search` Projection: `rules` becomes `?array`, decoded via `json_decode($row['rules'],
+  true)` in `fromRow()`; remove the "deliberately deferred" docblock note.
+- `SearchRepository`: retype `insertSearch()`/its read path to accept/return the real
+  array, encoding via `json_encode()` internally.
+- `SearchService`: `getSearchArray()`/`getValidatedSearchArray()`/`saveSearch()` drop their
+  own `unserialize()`/`serialize()` calls.
+- `Ws/PwgCore.php` (~lines 972–1002): replace the raw `INSERT`/`SELECT` against
+  `piwigo_search` with a real `SearchRepository` call.
+
+**3. `user_infos.preferences`**
+
+- Schema: `piwigo_user_infos.preferences` TEXT → JSON.
+- `UserInfo` Projection: `preferences` becomes `?array`, decoded via `json_decode(...,
+  true)`; remove the "deliberately deferred" docblock note.
+- `UserRepository::savePreferences()`: retype to accept `array`, encode via
+  `json_encode()` internally.
+- `PreferencesService::save()`: drop the manual `serialize()` call.
+- `UserService::getUserData()` (~line 686): drop the manual `unserialize()` call and its
+  "mixed-type-widening" workaround comment; retarget onto the Projection's decoded value.
+
+**4. `activity.details`** (found via this sweep, not in the original 43-item list)
+
+- Schema: `piwigo_activity.details` `varchar(255)` → `JSON` (verify no stored payload
+  depends on the 255-char bound; JSON has no inherent cap).
+- `ActivityRepository` has no Projection yet (full Stage-1b pass stays separately tracked
+  in 1b below) — add narrowly-scoped encode/decode just for the `details` column's own
+  read/write methods.
+- `ActivityService.php:109`: drop the manual `serialize()` call.
+- `Admin/Maintenance/ActivityLogEntryFormatter.php:37`: drop the manual `unserialize()`
+  call.
+- `Ws/PwgCore.php` (~line 679): replace the raw `@unserialize($row_details)` read (and its
+  `str_replace()` pre-cleanup, if still needed under real JSON) with a repository-level
+  read.
+
+**5. `config.value`'s EAV storage — real fix, not deferred**
+
+Replace `ConfigService`'s per-PHP-type encoding convention (`'true'`/`'false'` strings,
+numeric strings, `serialize()` blobs) with uniform `json_encode()`/`json_decode()`, then
+retype `piwigo_config.value` from `TEXT` to `JSON`.
+
+Real scope, precisely counted (not estimated): `install/config.sql` seeds only 52 of the
+~289 config keys — the rest rely on their PHP default until first changed. Cross-checking
+every seeded key's type against `CurrentConfig`:
+
+| Type | Seeded rows | Rewrite needed? |
+| --- | --- | --- |
+| bool (`'true'`/`'false'`) | 38 | No — already valid bare JSON literals as stored. |
+| int (`'10'`, `'12'`) | 2 | No — already valid bare JSON numbers as stored. |
+| string | 10 | Yes — needs JSON quote-wrapping. |
+| array (`serialize()` blobs) | 2 | Yes — needs re-encoding to real JSON. |
+
+Only 12 rows need editing. The 10 string rows (verify unchanged at execution time):
+`comments_order` (`ASC`), `gallery_title`, `page_banner`, `nbm_send_mail_as`,
+`nbm_complementary_mail_content` (empty), `email_admin_on_new_user` (`none`),
+`blk_menubar` (empty), `week_starts_on` (`monday`), `order_by`/`order_by_inside_category`
+(`ORDER BY date_available DESC, file ASC, id ASC`). The 2 array rows: `extents_for_templates`
+(`a:0:{}` → `[]`), `updates_ignored` (`a:3:{...}` → `{"plugins":[],"themes":[],"languages":[]}`).
+No leading zeros, non-standard floats, or unicode-escaping edge cases in the real data.
+
+Decide at execution time whether `blk_menubar`'s seed row should become JSON `null`
+(matching its new `?array` default) or be dropped entirely (matching how most properties
+have no seed row at all, relying on the PHP default).
+
+This is safe as a single pass, not deferred, specifically because the legacy-chain
+deletion above already removed every frozen script that wrote raw non-JSON strings to
+this column — the only remaining raw writer is `MenubarLayoutRepository::saveLayout()`,
+already covered in item 1.
+
+Design:
+- `ConfigService::encode()`: single `json_encode($value)` call for every non-null value,
+  replacing the `is_array`/`is_bool`/else-`(string)` branches.
+- `ConfigService::hydrate()`: since `json_decode($raw, true)` already returns a properly
+  typed PHP value, most of the `match ($paramTypeName)` branches collapse to "decode once,
+  coerce only where genuinely needed" — verify at execution time whether any coercion
+  branch is still reachable once every write goes through consistent JSON encoding.
+- Schema + seed-data edits as scoped above.
+
+**Files:** `Config/CurrentConfig.php`, `Config/ConfigService.php`, `Menu/BlockManager.php`,
+`Menu/MenubarLayoutRepository.php`, `Admin/ExtendForTemplatesPageRenderer.php`,
+`Admin/Extensions/ExtensionUpdateChecker.php`, `Ws/PwgExtensions.php`,
+`Admin/UpdatesExtPageRenderer.php`, `Admin/Integrity/CheckIntegrity.php`,
+`install/piwigo_structure-mysql.sql`, `install/config.sql`,
+`tests/Fixtures/piwigo-17.0.sql`, `Search/Projection/Search.php`,
+`Search/SearchRepository.php`, `Search/SearchService.php`, `Ws/PwgCore.php`,
+`Users/Projection/UserInfo.php`, `Users/UserRepository.php`,
+`Users/PreferencesService.php`, `Users/UserService.php`, `Activity/ActivityRepository.php`,
+`Activity/ActivityService.php`, `Admin/Maintenance/ActivityLogEntryFormatter.php`, plus the
+Stage-0-deletion files listed above.
+
+**Verify:** per sub-item, `php -l` + scoped `vendor/bin/phpstan analyse` + `vendor/bin/ecs
+check --fix` + `vendor/bin/deptrac --no-progress`. One `composer test:fixture-regen` at the
+end covering all four schema changes together. A dedicated pass confirming every
+`CurrentConfig` property round-trips through the new JSON encoding — extend
+`tests/Unit/Config/SchemaIntegrityTest.php`'s existing reflection-based sweep rather than
+hand-writing per-property assertions. Once every sub-item lands: `composer test`
+(Unit+Arch), `tools/pest-cleanup.sh --testsuite Integration` and `--testsuite Contract`,
+`composer test:browser`, `composer test:visual` — one full pass, not per sub-item. One
+commit per logical sub-item (chain deletion; Config-keys retarget; search.rules;
+user_infos.preferences; activity.details; config.value redesign), `(p23)` scope tag.
 
 ### 1b. Typed DTO/Projection pattern (finding #1 — the biggest unmet claim)
 

@@ -220,13 +220,18 @@ final class InstallWizard
         // render() is never clobbered by this).
         \Piwigo\Users\CurrentUser::attachGlobals();
 
-        // Same no-boot gap, third dependency: CurrentLogger. Found live one
-        // step later than CurrentUser (render()'s UserService::buildUser()
-        // -> getUserData() -> CurrentLogger::get()). Same construction
-        // recipe as RequestBootstrap::connect()'s (the normal request
-        // pipeline's own site) -- no DB access needed, just Config/
-        // DbCredentials reads already valid this early (the DB password was
-        // just seeded above).
+        // Same no-boot gap, third dependency: CurrentLogger. Originally found
+        // live one step later than CurrentUser (render()'s
+        // UserService::buildUser() -> getUserData() -> CurrentLogger::get())
+        // -- that specific call chain is gone (gap-closure Stage 4g deleted
+        // getUserData()'s own CurrentLogger use along with the lock/wait/503
+        // mechanism it logged), but whether some other consumer on this
+        // no-boot install path still needs CurrentLogger set this early is
+        // unverified and out of that stage's scope -- left in place rather
+        // than removed on an unaudited assumption. Same construction recipe
+        // as RequestBootstrap::connect()'s (the normal request pipeline's
+        // own site) -- no DB access needed, just Config/DbCredentials reads
+        // already valid this early (the DB password was just seeded above).
         \Piwigo\Core\CurrentLogger::set(new Logger([
             'directory' => $this->paths->root . CurrentConfig::dataLocation() . CurrentConfig::logDir(),
             'severity' => CurrentConfig::logLevel(),
@@ -638,10 +643,8 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             session_set_cookie_params(0, new CookieService()->cookiePath());
             register_shutdown_function(session_write_close(...));
 
-            // we don't load user cache because since Piwigo 15.4.0 the calculation of user
-            // cache requires $logger which is not instanciated
             $user = $this->userService($conn)
-                ->buildUser(1, false);
+                ->buildUser(1);
             // build_user() returns array<string, mixed>; the 'id' key we just set
             // to the literal user id 1 doesn't retain that literal type through
             // the return, so narrow to what log_user() actually accepts.
@@ -697,7 +700,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
 
             // Legacy Coupling Retirement Phase 8 gap-closure: sync CurrentUser
             // before PreferencesService::save() reads it -- this install-time
-            // $user is a fresh buildUser(1, false) result, never routed
+            // $user is a fresh buildUser(1) result, never routed
             // through RequestBootstrap/UserBootstrap's own sync calls. (The
             // raw global $user bridge this comment used to reference was
             // fully retired once every consumer -- including this one --

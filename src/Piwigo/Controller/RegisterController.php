@@ -162,7 +162,7 @@ final class RegisterController implements ControllerInterface
                     // which is why this must run BEFORE calling it, not
                     // after -- to performed_by=NULL instead of their own new id.
                     \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray(
-                        $userService->buildUser($new_user_id, false)
+                        $userService->buildUser($new_user_id)
                     ));
                     \Piwigo\Users\CurrentUser::markRealUserResolved();
                     new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository($conn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())

@@ -568,15 +568,28 @@ final class BrowserTestHelpers
     }
 
     /**
-     * Flips a category's status and recomputes the guest user's
-     * user_cache.forbidden_categories accordingly -- the same 2-step real
-     * permission recomputation a real "make this album private" admin
-     * action performs, not just the categories.status flag alone (Image\
-     * Permission\ImageVisibilityChecker::isVisibleToUser() reads
-     * user_cache.forbidden_categories exclusively, a precomputed cache
-     * column, never live category status -- confirmed live while adding
-     * this helper: flipping status alone left every existing derivative
-     * still served to anonymous requests).
+     * Flips a category's status and clears the effective-permission cache
+     * pools accordingly -- the same 2-step real permission recomputation a
+     * real "make this album private" admin action performs (via
+     * Cache\UserCacheInvalidator::invalidate(), gap-closure Stage 4g),
+     * not just the categories.status flag alone.
+     *
+     * Gap-closure Stage 4g gap-closure (2026-07-25): previously wrote
+     * directly to `user_cache.forbidden_categories` -- confirmed live while
+     * originally adding this helper that flipping status alone left every
+     * existing derivative still served to anonymous requests, because
+     * Permission\ImageVisibilityChecker::isVisibleToUser() read that
+     * precomputed column, never live category status. Stage 4g retargeted
+     * that class onto `CurrentUser::forbiddenCategories`
+     * (Permission\EffectiveForbiddenCategoriesCache, cached in
+     * Cache\CachePools::permissions()/effectivePermissions()), so this
+     * helper now clears those pools directly instead -- a real Browser-test
+     * failure (this exact test, `2 failed`) caught the old write becoming a
+     * silent no-op once `getUserData()` stopped writing `user_cache` at
+     * all. Uses the app's own FilesystemAdapter-backed cache directory (no
+     * ext-apcu in this environment, confirmed via CacheFactory's own
+     * docblock), so a clear() from this separate CLI process is visible to
+     * the real dev-server process on the next request.
      */
     public static function setCategoryPrivate(int $categoryId, bool $private): void
     {
@@ -590,11 +603,10 @@ final class BrowserTestHelpers
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
         $status = $private ? 'private' : 'public';
         $db->query(sprintf("UPDATE %scategories SET status = '%s' WHERE id = %d", $prefix, $status, $categoryId));
-        // guest_id defaults to 2 (CurrentConfig::guestId()) -- this fixture never
-        // overrides it.
-        $forbidden = $private ? (string) $categoryId : '0';
-        $db->query(sprintf("UPDATE %suser_cache SET forbidden_categories = '%s' WHERE user_id = 2", $prefix, $forbidden));
         $db->close();
+
+        \Piwigo\Cache\CachePools::permissions()->clear();
+        \Piwigo\Cache\CachePools::effectivePermissions()->clear();
     }
 
     /**

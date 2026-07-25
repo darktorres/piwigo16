@@ -10,15 +10,19 @@ namespace Piwigo\Users;
  * P18 records a baseline read-count, P27's arch test enforces zero reads
  * outside `Users/`, P32 deletes the property entirely.
  *
- * `forbiddenCategories`/`level`/`cacheUpdateTime`/`preferences` were
- * promoted from `rawAttributes` to named properties in Legacy Coupling
- * Retirement Track A batch A3 -- a real key-frequency audit of every
- * `global $user; ... $user['key']` read across `src/Piwigo/` found these 4
- * used 13/9/10/13 times respectively (vs. id/username/etc.'s existing
- * 124/21/10/43-range frequencies), clearing the same "common enough to
- * warrant a named property" bar those were promoted under. Lower-frequency
- * keys (`recent_period`, `nb_available_tags`, etc., all under 7 reads
- * combined) stay in `rawAttributes`.
+ * `forbiddenCategories`/`level`/`preferences` were promoted from
+ * `rawAttributes` to named properties in Legacy Coupling Retirement Track A
+ * batch A3 -- a real key-frequency audit of every `global $user; ...
+ * $user['key']` read across `src/Piwigo/` found these used 13/9/13 times
+ * respectively (vs. id/username/etc.'s existing 124/21/10/43-range
+ * frequencies), clearing the same "common enough to warrant a named
+ * property" bar those were promoted under. Lower-frequency keys
+ * (`recent_period`, `nb_available_tags`, etc., all under 7 reads combined)
+ * stay in `rawAttributes`. `cacheUpdateTime` was promoted alongside these 3
+ * in the same batch, then demoted back out and deleted entirely in
+ * gap-closure Stage 4g (docs/plan/gap-closure-p0-p23.md) once its own
+ * `user_cache.cache_update_time`-keyed invalidation pattern was replaced
+ * with `CachePools`-backed TTLs (Stage 4a) and no reader remained.
  */
 final readonly class User
 {
@@ -37,7 +41,6 @@ final readonly class User
         public bool $enabledHigh,
         public string $forbiddenCategories = '',
         public int $level = 0,
-        public string $cacheUpdateTime = '',
         public array $preferences = [],
         public array $internalStatus = [],
         public array $rawAttributes = [],
@@ -61,7 +64,6 @@ final readonly class User
             enabledHigh: (bool) ($row['enabled_high'] ?? false),
             forbiddenCategories: is_string($row['forbidden_categories'] ?? null) ? $row['forbidden_categories'] : '',
             level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
-            cacheUpdateTime: is_scalar($row['cache_update_time'] ?? null) ? (string) $row['cache_update_time'] : '',
             preferences: is_array($preferences) ? array_filter($preferences, is_string(...), ARRAY_FILTER_USE_KEY) : [],
             rawAttributes: $row,
         );
@@ -88,7 +90,6 @@ final readonly class User
             'enabled_high' => $this->enabledHigh,
             'forbidden_categories' => $this->forbiddenCategories,
             'level' => $this->level,
-            'cache_update_time' => $this->cacheUpdateTime,
             'preferences' => $this->preferences,
         ]);
     }
@@ -108,7 +109,6 @@ final readonly class User
             enabledHigh: $this->enabledHigh,
             forbiddenCategories: $this->forbiddenCategories,
             level: $this->level,
-            cacheUpdateTime: $this->cacheUpdateTime,
             preferences: $this->preferences,
             internalStatus: $this->internalStatus,
             rawAttributes: $rawAttributes,
@@ -130,7 +130,6 @@ final readonly class User
             enabledHigh: $this->enabledHigh,
             forbiddenCategories: $this->forbiddenCategories,
             level: $this->level,
-            cacheUpdateTime: $this->cacheUpdateTime,
             preferences: $this->preferences,
             internalStatus: $this->internalStatus,
             rawAttributes: $rawAttributes,
@@ -152,7 +151,6 @@ final readonly class User
             enabledHigh: $this->enabledHigh,
             forbiddenCategories: $this->forbiddenCategories,
             level: $level,
-            cacheUpdateTime: $this->cacheUpdateTime,
             preferences: $this->preferences,
             internalStatus: $this->internalStatus,
             rawAttributes: $rawAttributes,
@@ -177,7 +175,6 @@ final readonly class User
             enabledHigh: $this->enabledHigh,
             forbiddenCategories: $this->forbiddenCategories,
             level: $this->level,
-            cacheUpdateTime: $this->cacheUpdateTime,
             preferences: $preferences,
             internalStatus: $this->internalStatus,
             rawAttributes: $rawAttributes,
@@ -199,7 +196,6 @@ final readonly class User
             enabledHigh: $enabledHigh,
             forbiddenCategories: $this->forbiddenCategories,
             level: $this->level,
-            cacheUpdateTime: $this->cacheUpdateTime,
             preferences: $this->preferences,
             internalStatus: $this->internalStatus,
             rawAttributes: $rawAttributes,
@@ -221,7 +217,6 @@ final readonly class User
             enabledHigh: $this->enabledHigh,
             forbiddenCategories: $this->forbiddenCategories,
             level: $this->level,
-            cacheUpdateTime: $this->cacheUpdateTime,
             preferences: $this->preferences,
             internalStatus: $this->internalStatus,
             rawAttributes: $rawAttributes,
@@ -249,7 +244,6 @@ final readonly class User
             enabledHigh: $this->enabledHigh,
             forbiddenCategories: $this->forbiddenCategories,
             level: $this->level,
-            cacheUpdateTime: $this->cacheUpdateTime,
             preferences: $this->preferences,
             internalStatus: $this->internalStatus,
             rawAttributes: $rawAttributes,

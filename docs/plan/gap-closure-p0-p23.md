@@ -1427,7 +1427,66 @@ parameter itself is removed, not left as a no-op flag: `getUserData(int $userId)
 its one call site building `$user_use_cache`) are deleted, and all ~14 call sites passing a
 literal `true`/`false` second argument (`InstallWizard`, `NotificationByMailSender`,
 `RedirectService`, `RegisterController`, `Controller/Admin/ConfigurationSubController` ×2,
-`FeedController` ×2, `PasswordController` ×4, `UserBootstrap`) drop that argument.
+`FeedController` ×2, `PasswordController` ×4, `UserBootstrap`) drop that argument. Also
+dropped `User::$cacheUpdateTime` entirely (property + all 7 `with*()` threadings +
+`fromUserArray()`/`toUserArray()`) — Stage 4a's own text flagged this as folded into 4g,
+since the column was still being *written* by this block until now, even though every real
+*reader* was already gone. The `user_cache` `LEFT JOIN`/`uc.*` columns are dropped from both
+of `getUserData()`'s own queries (the main one and the `externalAuthentification` counter
+query, which never selected any `uc.*` column and whose `LEFT JOIN` provably never changed
+its `COUNT(1)` result either) — genuinely dead once nothing downstream reads or writes
+through them.
+
+> **2026-07-25 note: 4g done, including a real [SEC-33] regression this stage's own
+> verification caught and fixed, not a design afterthought.** Full verification:
+> PHPStan/ECS/deptrac clean; Unit/Arch 711/711 (6 fewer than baseline —
+> `UserBootstrapShouldUseUserCacheTest.php` deleted along with the method it tested);
+> Integration 685/685; Browser 68/68; Visual 34/34.
+>
+> **The regression, found by a failing Browser test, not by this stage's own design
+> review:** `Permission\ImageVisibilityChecker::isVisibleToUser()` — a [SEC-33]-tagged
+> class gating every derivative/thumbnail request — reads `user_cache.forbidden_categories`
+> **directly from the database**, completely bypassing `CurrentUser`/`getUserData()`/every
+> class this whole Stage 4 effort built. This consumer was missed by Stage 4's own original
+> investigation (which searched for `CurrentUser::forbiddenCategories`/`rawAttributes` reads,
+> not raw `Tables::userCache()` SQL reads by unrelated classes) — the same category of gap
+> [[feedback_verify_new_class_against_real_callsite_not_isolation]] already documents, this
+> time surfacing in the *deletion* direction: removing `getUserData()`'s only remaining write
+> to `user_cache` froze this column at whatever it last held, forever. `DerivativePermissionTest`
+> (Browser) caught it first as `61` (of 68) `failed` — every test hitting real login/
+> permission code touched by this stage's other changes — then, once those were fixed, as
+> the 2 real failures this specific test file's own private-album scenario reproduced.
+> An exhaustive re-audit of every `Tables::userCache()` reference project-wide (not just this
+> one class) confirmed it was the *only* remaining real reader; `UserRepository::
+> deleteUser()`/`UserService`'s own generic
+> "delete/sync orphaned rows across every user-related table" bookkeeping are unaffected
+> maintenance, not live reads.
+>
+> Fixed in 3 parts, each independently necessary (confirmed by re-running the failing test
+> after each and watching the failure mode change, not assumed complete after the first):
+> 1. **`ImageVisibilityChecker::isVisibleToUser(int $imageId)`** (the `$userId` param
+>    dropped too — its one real caller always passed `CurrentUser::get()->id`) now reads
+>    `CurrentUser::forbiddenCategories` directly (a plain property access, zero queries for
+>    the permission check itself, strictly faster than the DB read it replaces) instead of
+>    querying `user_cache`.
+> 2. **`Cache\UserCacheInvalidator::invalidate()`** now also clears
+>    `CachePools::permissions()`/`effectivePermissions()` — restoring the "a revocation takes
+>    effect on the very next request" guarantee the deleted lock/wait mechanism used to
+>    provide, for every one of its ~30 already-existing real callers at once (category
+>    status/visibility changes, group/user access grants and revokes, image-level changes),
+>    with no lock: a `CacheItemPoolInterface::clear()` is an uncoordinated, cheap delete, not
+>    something concurrent requests wait on. This is *better* than the original 30s-TTL-only
+>    design this doc's own earlier stages accepted — revocations are immediate again, reads
+>    stay uncoordinated.
+> 3. **`tests/Browser/Helpers/BrowserTestHelpers::setCategoryPrivate()`** — a raw-mysqli test
+>    helper that bypasses all real application code (deliberately, for speed) — previously
+>    hand-wrote the same `user_cache.forbidden_categories` value `ImageVisibilityChecker`
+>    used to read; retargeted to call `CachePools::permissions()->clear()`/
+>    `effectivePermissions()->clear()` directly, the same end-state a real admin action now
+>    produces via fix 2. Added `tests/Integration/ImageVisibilityCheckerTest.php` (4 tests) —
+>    this [SEC-33] class had **zero** prior test coverage of any kind, the same
+>    no-direct-coverage-of-a-hot-path gap Stage 4b's own `UserServiceTest` gap already
+>    exposed once this session.
 
 ### 4h. `user_cache_categories`: finish the batch-3 migration, not just verify it
 

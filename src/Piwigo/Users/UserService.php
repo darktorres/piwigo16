@@ -559,12 +559,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      *
      * @return array<string, mixed>
      */
-    public function buildUser(int $userId, bool $useCache = true): array
+    public function buildUser(int $userId): array
     {
 
         $user = [];
         $user['id'] = $userId;
-        $user = array_merge($user, $this->getUserData($userId, $useCache));
+        $user = array_merge($user, $this->getUserData($userId));
 
         $userStatusValue = $user['status'] ?? null;
         if (is_numeric($user['id']) and (int) $user['id'] === \Piwigo\Config\CurrentConfig::guestId()
@@ -595,10 +595,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      *
      * @return array<string, mixed>
      */
-    public function getUserData(int $userId, bool $useCache = false): array
+    public function getUserData(int $userId): array
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
-
         // see validateMailAddress() for why this is string=>string
         /** @var array<string, string> $user_fields */
         $user_fields = \Piwigo\Config\CurrentConfig::userFields();
@@ -627,11 +625,15 @@ SELECT ';
 
         // retrieve additional user data ?
         if (\Piwigo\Config\DeploymentPolicy::current()->externalAuthentification) {
+            // Gap-closure Stage 4g: dropped the LEFT JOIN onto user_cache --
+            // it never affected this COUNT(1) (a LEFT JOIN can only ever
+            // add exactly 0 or 1 matching row per ui row, and GROUP BY
+            // ui.user_id collapses that back to 1 either way), and nothing
+            // here selects any of its columns.
             $query = '
 SELECT
     COUNT(1) AS counter
   FROM ' . Tables::userInfos() . ' AS ui
-    LEFT JOIN ' . Tables::userCache() . ' AS uc ON ui.user_id = uc.user_id
     LEFT JOIN ' . Tables::themes() . ' AS t ON t.id = ui.theme
   WHERE ui.user_id = ' . $userId . '
   GROUP BY ui.user_id
@@ -643,14 +645,15 @@ SELECT
             }
         }
 
-        // retrieve user info
+        // retrieve user info. Gap-closure Stage 4g: dropped the LEFT JOIN
+        // onto user_cache (`uc.*`) -- getUserData() no longer reads any of
+        // its columns, and nothing writes that table any more either
+        // (deleted alongside this same stage's lock/wait/503 mechanism).
         $query = '
 SELECT
     ui.*,
-    uc.*,
     t.name AS theme_name
   FROM ' . Tables::userInfos() . ' AS ui
-    LEFT JOIN ' . Tables::userCache() . ' AS uc ON ui.user_id = uc.user_id
     LEFT JOIN ' . Tables::themes() . ' AS t ON t.id = ui.theme
   WHERE ui.user_id = ' . $userId . '
 ;';
@@ -673,21 +676,19 @@ SELECT
         }
         unset($value);
 
-        // Docs/PLAN-REPLAY-AUDIT.md gap-closure, User domain Stage 1a (+
-        // UserCache domain Stage 1a for need_update): enabled_high/expand/
-        // last_visit_from_history/show_nb_comments/show_nb_hits
-        // (user_infos) and need_update (user_cache, joined into this same
-        // $userdata array) are all real tinyint columns now -- the
+        // Docs/PLAN-REPLAY-AUDIT.md gap-closure, User domain Stage 1a:
+        // enabled_high/expand/last_visit_from_history/show_nb_comments/
+        // show_nb_hits (user_infos) are all real tinyint columns now -- the
         // generic true/false-string scan above only ever matched the
         // *old* enum('true','false') representation, so it silently
         // stops converting these to bool (DBAL/mysqli returns a native
         // int for a tinyint column). Named explicitly instead of
         // pattern-matched by value, same fix as
-        // CategoryService::getCategoryInfo(). need_update specifically
-        // feeds the `! is_bool($userdata['need_update'])` check just
-        // below -- left un-normalized, every request would wrongly think
-        // the cache always needs rebuilding.
-        foreach (['enabled_high', 'expand', 'last_visit_from_history', 'show_nb_comments', 'show_nb_hits', 'need_update'] as $k) {
+        // CategoryService::getCategoryInfo(). (need_update, the sibling
+        // user_cache column this list also carried, was dropped in
+        // gap-closure Stage 4g alongside the lock/wait/503 mechanism it
+        // gated -- nothing reads it any more.)
+        foreach (['enabled_high', 'expand', 'last_visit_from_history', 'show_nb_comments', 'show_nb_hits'] as $k) {
             if (isset($userdata[$k])) {
                 $userdata[$k] = (bool) $userdata[$k];
             }
@@ -703,207 +704,21 @@ SELECT
             ? \Piwigo\Core\ArrayHelper::safeJsonDecode($preferences_raw)
             : [];
 
-        if ($useCache) {
-            $generate_user_cache = false;
-            $cache_generation_token_name = 'generate_user_cache-u' . $userId;
-            $exec_code = substr(sha1(random_bytes(1000)), 0, 4);
-            $logger_msg_prefix = '[' . __METHOD__ . '][exec_code=' . $exec_code . '][user_id=' . $userId . '] ';
-
-            if (! isset($userdata['need_update'])
-                or ! is_bool($userdata['need_update'])
-                or $userdata['need_update']) {
-                $logger->info($logger_msg_prefix . 'needs user_cache to be rebuilt');
-
-                $exec_id = \Piwigo\Core\UniqueExecLock::begins($cache_generation_token_name);
-                if ($exec_id === false) {
-                    $logger->info($logger_msg_prefix . 'starts to wait for another request to build user_cache');
-                    $user_cache_waiting_start_time = \Piwigo\Core\TimingHelper::getMoment();
-                    for ($k = 0; $k < 20; $k++) {
-                        sleep(1);
-
-                        $query = '
-SELECT
-   COUNT(*)
-  FROM ' . Tables::userCache() . '
-  WHERE user_id=' . $userId . '
-;';
-                        $row = $this->conn->fetchNumeric($query);
-                        assert($row !== false);
-                        $nb_cache_lines = $row[0] ?? null;
-
-                        $logger_msg = $logger_msg_prefix . 'user_cache generation waiting k=' . $k . ' ';
-                        $waiting_time = \Piwigo\Core\TimingHelper::getElapsedTime($user_cache_waiting_start_time, \Piwigo\Core\TimingHelper::getMoment());
-
-                        if ($nb_cache_lines > 0) {
-                            $logger->info($logger_msg . 'user_cache rebuilt, after waiting ' . $waiting_time);
-                            return $this->getUserData($userId, false);
-                        }
-                        if (! \Piwigo\Core\UniqueExecLock::isRunning($cache_generation_token_name)) {
-                            $logger->info($logger_msg . 'user_cache rebuilt but has been reset since, give it another try, after waiting ' . $waiting_time);
-                            return $this->getUserData($userId, true);
-                        } else {
-                            $logger->info($logger_msg . 'user_cache not ready yet, after waiting ' . $waiting_time);
-                        }
-                    }
-
-                    $logger->info($logger_msg_prefix . 'user_cache generation waiting has timed out after ' . \Piwigo\Core\TimingHelper::getElapsedTime($user_cache_waiting_start_time, \Piwigo\Core\TimingHelper::getMoment()));
-                    $this->htmlRenderer->setStatusHeader(503, 'Service Unavailable');
-                    @header('Retry-After: 900');
-                    header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
-                    echo Lang::t('Rebuilding user cache takes long. Please, come back later.');
-                    echo str_repeat(' ', 512); // IE6 doesn't error output if below a size
-                    exit();
-                } else {
-                    $generate_user_cache = true;
-                }
-            }
-
-            if ($generate_user_cache) {
-                $user_cache_generation_start_time = \Piwigo\Core\TimingHelper::getMoment();
-                $cache_update_time = time();
-                $userdata['cache_update_time'] = $cache_update_time;
-
-                // Set need update are done
-                $need_update = false;
-                $userdata['need_update'] = $need_update;
-
-                $status = $userdata['status'];
-                assert(is_string($status));
-
-                $forbidden_categories = $this->permissionService()
-                    ->getForbiddenCategories($userId, $status);
-                $userdata['forbidden_categories'] = $forbidden_categories;
-
-                $level = $userdata['level'] ?? '0';
-                assert(is_string($level));
-
-                /* now we build the list of forbidden images (this list does not contain
-                images that are not in at least an authorized category)*/
-                $query = '
-SELECT DISTINCT(id)
-  FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
-  WHERE category_id NOT IN (' . $forbidden_categories . ')
-    AND level>' . $level;
-                $forbidden_ids = array_map(
-                    static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-                    array_column($this->conn->fetchAllAssociative($query), 'id')
-                );
-
-                if ($forbidden_ids === []) {
-                    $forbidden_ids[] = '0';
-                }
-                $image_access_type = 'NOT IN';
-                $userdata['image_access_type'] = $image_access_type;
-                $image_access_list = implode(',', $forbidden_ids);
-                $userdata['image_access_list'] = $image_access_list;
-
-                $query = '
-SELECT COUNT(DISTINCT(image_id)) as total
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id NOT IN (' . $forbidden_categories . ')
-    AND image_id ' . $image_access_type . ' (' . $image_access_list . ')';
-                $row = $this->conn->fetchNumeric($query);
-                assert($row !== false);
-                $nb_total_images = $row[0] ?? null;
-                $nb_total_images = is_scalar($nb_total_images) ? (string) $nb_total_images : '0';
-                $userdata['nb_total_images'] = $nb_total_images;
-
-                // now we update user cache categories
-                $computed_categories = $this->categoryService()
-                    ->getComputedCategories($userdata, null);
-                $user_cache_cats = $computed_categories['categories'];
-                if (! AccessControl::isAdmin($status)) { // for non admins we forbid categories with no image (feature 1053)
-                    $forbidden_ids = [];
-                    foreach ($user_cache_cats as $cat) {
-                        if ((is_numeric($cat['count_images']) ? (int) $cat['count_images'] : 0) === 0) {
-                            $cat_id = $cat['cat_id'];
-                            assert(is_string($cat_id));
-                            $forbidden_ids[] = $cat_id;
-                            CategoryService::removeComputedCategory($user_cache_cats, $cat);
-                        }
-                    }
-                    if ($forbidden_ids !== []) {
-                        if ($forbidden_categories === '') {
-                            $forbidden_categories = implode(',', $forbidden_ids);
-                        } else {
-                            $forbidden_categories .= ',' . implode(',', $forbidden_ids);
-                        }
-                        $userdata['forbidden_categories'] = $forbidden_categories;
-                    }
-                }
-
-                $last_photo_date = $computed_categories['lastPhotoDate'];
-                assert($last_photo_date === null || is_string($last_photo_date));
-
-                // delete user cache
-                $query = '
-DELETE FROM ' . Tables::userCacheCategories() . '
-  WHERE user_id = ' . $userId;
-                $this->conn->executeStatement($query);
-
-                // Due to concurrency issues, we ask MySQL to ignore errors on
-                // insert. This may happen when cache needs refresh and that Piwigo is
-                // called "very simultaneously".
-                new BatchWriter($this->conn)
-                    ->massInsert(
-                        Tables::userCacheCategories(),
-                        [
-                            'user_id', 'cat_id',
-                            'date_last', 'max_date_last', 'nb_images', 'count_images', 'nb_categories', 'count_categories',
-                        ],
-                        // BatchWriter::massInsert() only reads values (row shape/data), never
-                        // this array's own keys -- CategoryService::
-                        // getComputedCategories() keys by cat_id (int|string, a
-                        // raw DB fetch value) for the removeComputedCategory()
-                        // lookups above, not relevant here
-                        array_values($user_cache_cats),
-                        [
-                            'ignore' => true,
-                        ]
-                    );
-
-                // update user cache
-                $query = '
-DELETE FROM ' . Tables::userCache() . '
-  WHERE user_id = ' . $userId;
-                $this->conn->executeStatement($query);
-
-                // need_update is a real tinyint(1) column now (UserCache
-                // domain Stage 1a) -- a numeric literal, not the old
-                // enum('true','false') string; SqlDialect::booleanToInt()
-                // only returns non-int when its input isn't a bool,
-                // $need_update is always a real bool here, so the result
-                // is guaranteed to be an int.
-                $need_update_int = SqlDialect::booleanToInt($need_update);
-                assert(is_int($need_update_int));
-
-                // for the same reason as user_cache_categories, we ignore error on
-                // this insert
-                $query = '
-INSERT IGNORE INTO ' . Tables::userCache() . '
-  (user_id, need_update, cache_update_time, forbidden_categories, nb_total_images,
-    last_photo_date,
-    image_access_type, image_access_list)
-  VALUES
-  (' . $userId . ',' . $need_update_int . ','
-  . $cache_update_time . ',\''
-  . $forbidden_categories . '\',' . $nb_total_images . ',' .
-  (self::emptyValue($last_photo_date) ? 'NULL' : '\'' . $last_photo_date . '\'') .
-  ',\'' . $image_access_type . '\',\'' . $image_access_list . '\')';
-                $this->conn->executeStatement($query);
-
-                \Piwigo\Core\UniqueExecLock::ends($cache_generation_token_name);
-                $logger->info($logger_msg_prefix . 'user_cache generated, executed in ' . \Piwigo\Core\TimingHelper::getElapsedTime($user_cache_generation_start_time, \Piwigo\Core\TimingHelper::getMoment()));
-            }
-        }
-
-        // Gap-closure Stage 4b/4c/4d (docs/plan/gap-closure-p0-p23.md):
-        // overwrite the (possibly stale, $useCache-gated) values read from
-        // `user_cache` above with a fresh cache-pool-backed computation,
-        // unconditionally -- the real cutover for these 4 columns. The
-        // `$useCache` block above still runs and still writes to
-        // `user_cache` until Stage 4g removes it outright; nothing
-        // meaningfully reads that write's own output anymore after this.
+        // Gap-closure Stage 4g (docs/plan/gap-closure-p0-p23.md): this used
+        // to be gated behind a `$useCache` param and a UniqueExecLock-based
+        // lock/wait/503 mechanism coordinating exclusive regeneration of
+        // the `user_cache` row -- deleted outright once 4a-4f replaced
+        // every real column with an independent cache-pool-backed
+        // computation, each already safe for uncoordinated concurrent
+        // access (a PSR-6 cache-pool miss just triggers an independent
+        // recompute per request, no shared mutable row to corrupt).
+        // Accepted, deliberate tradeoff, not an oversight: a burst of
+        // concurrent requests for the same just-invalidated user can now
+        // each independently recompute the cheap permission snapshot
+        // rather than one computing while others wait -- matches P23's
+        // own original design text exactly ("recursive CTE cached in the
+        // APCu/Redis permissions pool"), which never mentioned a lock for
+        // the replacement.
         $effective_status = $userdata['status'];
         assert(is_string($effective_status));
         $effective_level_raw = $userdata['level'] ?? '0';

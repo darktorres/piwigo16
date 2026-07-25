@@ -182,13 +182,6 @@ final class UserBootstrap
             $_SESSION['connected_with'] = 'pwg.images.uploadAsync';
         }
 
-        $http_referer = $_SERVER['HTTP_REFERER'] ?? null;
-        $user_use_cache = self::shouldUseUserCache(
-            \Piwigo\Core\AdminContext::isActive(),
-            isset($_REQUEST['method']),
-            is_string($http_referer) ? $http_referer : null,
-        );
-
         // $user['id'] is always numeric here (either \Piwigo\Config\CurrentConfig::guestId(), a
         // $_SESSION['pwg_uid'] set by a prior login, or the int|false result of
         // get_userid()/register_user() coerced above); the is_numeric() check is a
@@ -196,7 +189,7 @@ final class UserBootstrap
         // guest_id fallback already used earlier in this file.
         $user_id_int = is_numeric($user['id']) ? (int) $user['id'] : $guest_id_int;
 
-        $user = $userService->buildUser($user_id_int, $user_use_cache);
+        $user = $userService->buildUser($user_id_int);
         // Legacy Coupling Retirement Track A batch A3: sync CurrentUser here,
         // not only in RequestBootstrap::connect() after this method returns
         // -- AccessControl::isAGuest()/isGeneric() right below already read
@@ -223,25 +216,6 @@ final class UserBootstrap
             }
         }
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('user_init', $user);
-    }
-
-    /**
-     * The $user_use_cache decision (originally inline in
-     * include/user.inc.php) -- extracted as a pure function so it's
-     * directly Unit-testable, same "extract the one real piece of pure
-     * logic" precedent as every prior P23 batch's own extractions.
-     */
-    public static function shouldUseUserCache(bool $inAdmin, bool $methodRequested, ?string $httpReferer): bool
-    {
-        if ($inAdmin) {
-            return false;
-        }
-
-        if ($methodRequested && $httpReferer !== null && preg_match('/\/admin\.php\?page=/', $httpReferer) === 1) {
-            return false;
-        }
-
-        return true;
     }
 
     /**

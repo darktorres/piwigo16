@@ -1102,7 +1102,13 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // caught by the same RequestBootstrap::bootEntryPoint() catch point
         // (below) as configure()/connect()/finalize()'s other
         // short-circuits -- both reachable from exactly one dispatch
-        // context (the bootstrap phase), unlike UserService.php below.
+        // context (the bootstrap phase). (UserService.php's own 503
+        // exit() -- reachable from 3 different dispatch contexts, which is
+        // why it was deliberately NOT converted alongside these 2 -- was
+        // deleted outright in gap-closure Stage 4g, not converted: the
+        // whole lock/wait/503 mechanism it belonged to had nothing left to
+        // protect once Stage 4a-4f replaced every `user_cache` column with
+        // an independent cache-pool-backed computation.)
         //
         // include/+admin/ deletion batch: bootEntryPoint()'s own catch-and-
         // emit block (`new ResponseEmitter()->emit($e->response()); exit;`)
@@ -1113,22 +1119,6 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // one exit() site simply moved into a file this test scans; it is
         // not new debt.
         'Bootstrap/RequestBootstrap.php' => 1,
-
-        // 503 Service-Unavailable raw response (custom Retry-After header
-        // + hand-written body, no template): the user-cache-still-
-        // generating page. Deliberately NOT converted alongside
-        // RequestBootstrap.php's own 2 sites above: UserService::
-        // getUserData() is reachable from 3 different dispatch contexts
-        // (UserBootstrap -> the bootstrap phase, catch point 1;
-        // Controller\PasswordController/Admin\ConfigurationSubController
-        // -> the controller phase, catch point 2; Ws\PwgUsers.php's WS
-        // methods -> no catch point at all, same excluded WS-protocol-
-        // internals category as Ws/PwgServer.php above) -- converting it
-        // would either leave the WS path with an uncaught exception
-        // (worse than today's clean exit()) or need its own dedicated
-        // design pass (a 4th catch point, or a parameter threading the
-        // right behaviour through), not a mechanical single-site fix.
-        'Users/UserService.php' => 1,
 
         // Full legacy template render + exit(), matching the pre-rewrite
         // include-then-die() page shape verbatim. Not part of Workstream

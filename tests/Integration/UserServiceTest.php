@@ -214,24 +214,14 @@ namespace Piwigo\Tests\Integration {
          * EffectiveForbiddenCategoriesCache::getForUser() first assumed)
          * shipped through PHPStan/Unit/Arch/Integration and was only
          * caught by the Browser suite hitting a real dev-server process.
-         * Covers both useCache branches -- true additionally exercises the
-         * still-present (until Stage 4g) legacy `user_cache`-regenerating
-         * block with the same real DBAL-typed row.
+         * Gap-closure Stage 4g deleted the `$useCache` parameter entirely
+         * (it only ever gated the legacy lock/wait/503 regeneration block,
+         * itself deleted the same stage) -- one test now covers the single
+         * remaining code path.
          */
-        public function test_build_user_populates_effective_permission_fields_without_use_cache(): void
+        public function test_build_user_populates_effective_permission_fields(): void
         {
-            $user = $this->service->buildUser(1, false);
-
-            self::assertIsString($user['forbidden_categories']);
-            self::assertSame('NOT IN', $user['image_access_type']);
-            self::assertIsString($user['image_access_list']);
-            self::assertIsString($user['nb_total_images']);
-            self::assertIsString($user['last_photo_date']);
-        }
-
-        public function test_build_user_populates_effective_permission_fields_with_use_cache(): void
-        {
-            $user = $this->service->buildUser(1, true);
+            $user = $this->service->buildUser(1);
 
             self::assertIsString($user['forbidden_categories']);
             self::assertSame('NOT IN', $user['image_access_type']);

@@ -143,7 +143,7 @@ final class PasswordController implements ControllerInterface
             $user_id = $this->checkPasswordResetKey($_GET['key']);
             if (is_numeric($user_id)) {
                 $conn = DbConnection::build();
-                $userdata = self::userService($conn)->getUserData((int) $user_id, false);
+                $userdata = self::userService($conn)->getUserData((int) $user_id);
                 $userdata_username = $userdata['username'] ?? null;
                 $this->username = is_string($userdata_username) ? $userdata_username : '';
                 $template->assign('key', $_GET['key']);
@@ -315,7 +315,7 @@ final class PasswordController implements ControllerInterface
             $user_id = $guest_id;
         }
 
-        $userdata = self::userService($conn)->getUserData($user_id, false);
+        $userdata = self::userService($conn)->getUserData($user_id);
 
         $status = $userdata['status'] ?? '';
         $status = is_string($status) ? $status : '';
@@ -431,7 +431,7 @@ final class PasswordController implements ControllerInterface
                 // lockout account for 1hour
                 if ($has_valid_user_id) {
                     $saveCurrentUser = \Piwigo\Users\CurrentUser::get();
-                    $target_user_data = self::userService($conn)->buildUser((int) $user_id_raw, false);
+                    $target_user_data = self::userService($conn)->buildUser((int) $user_id_raw);
                     // PreferencesService writes onto CurrentUser::get()->id
                     // (Legacy Coupling Retirement Track A batch A3), so the
                     // identity must switch here too, or the preference
@@ -465,7 +465,7 @@ final class PasswordController implements ControllerInterface
         $user_id = (int) $user_id_raw;
 
         $saveCurrentUser = \Piwigo\Users\CurrentUser::get();
-        $target_user_data = self::userService($conn)->buildUser($user_id, false);
+        $target_user_data = self::userService($conn)->buildUser($user_id);
         // Same CurrentUser identity-switch requirement as the lockout branch
         // above -- PreferencesService::deleteParam() writes onto
         // CurrentUser::get()->id.

@@ -10,17 +10,35 @@ use Piwigo\Db\Tables;
 
 /**
  * [SEC-33] Decides, from precomputed permission data only, whether an
- * image is visible to a given user -- false means the image belongs
- * exclusively to categories the user cannot see (or that no permission
- * data exists for the user at all, which fails closed).
+ * image is visible to the current user -- false means the image belongs
+ * exclusively to categories the user cannot see.
  *
  * P23 batch 8f (i.php): relocated from i.php's
  * check_derivative_permission() free function (minus the HTTP 403
  * emission, which stays with the caller), unchanged logic. Mirrors the
- * bootMinimal()-era design ADR-0007/0008 already settled: 1 query for the
- * already-computed user_cache.forbidden_categories, never recomputing
- * permissions live on the fast path -- deliberately NOT PermissionService,
- * whose live recomputation is exactly what this fast path must avoid.
+ * bootMinimal()-era design ADR-0007/0008 already settled: never
+ * recomputing permissions live on the fast path -- deliberately NOT
+ * PermissionService, whose live recomputation is exactly what this fast
+ * path must avoid.
+ *
+ * Gap-closure Stage 4g gap-closure (2026-07-25): retargeted from a raw
+ * `user_cache.forbidden_categories` read onto `CurrentUser::
+ * forbiddenCategories` -- a real regression this fix closes, caught by a
+ * failing Browser test, not found during Stage 4's own original
+ * investigation. `getUserData()` no longer writes `user_cache` at all as
+ * of Stage 4g, so the old read was frozen at whatever value predated that
+ * change (or a test's own direct DB poke) forever after -- a live
+ * security-relevant staleness bug, not just an inefficiency.
+ * `CurrentUser::forbiddenCategories` is the *same* effective value
+ * (`Permission\EffectiveForbiddenCategoriesCache`, Stage 4b), already
+ * fresh every request (RequestBootstrap::connect() ->
+ * UserBootstrap::initialize() populates it before this class's own sole
+ * caller ever runs) -- reading it here is a plain property access, not a
+ * new query, so the "1 query" fast-path property this class's docblock
+ * used to describe is now "0 queries for the permission check itself,"
+ * strictly better. The `$userId` parameter is dropped -- its one real
+ * caller (Controller\ImageDerivativeController::checkDerivativePermission())
+ * always passed `CurrentUser::get()->id`, never an arbitrary other user's.
  *
  * Was legacy-mysqli-only until Legacy Coupling Retirement: DI+DBAL
  * migration retargeted it onto DBAL (Connection is directly
@@ -37,26 +55,9 @@ final readonly class ImageVisibilityChecker
         private Connection $conn,
     ) {}
 
-    public function isVisibleToUser(int $imageId, int $userId): bool
+    public function isVisibleToUser(int $imageId): bool
     {
-        $forbiddenRaw = $this->conn->createQueryBuilder()
-            ->select('forbidden_categories')
-            ->from(Tables::userCache())
-            ->where('user_id = :userId')
-            ->setParameter('userId', $userId)
-            ->executeQuery()
-            ->fetchOne();
-
-        // No user_cache row at all for this identity -- fail closed. A
-        // missing row means permissions were never computed for this user,
-        // not that nothing is forbidden (see PermissionService::
-        // getForbiddenCategories()'s own "at least contains 0" contract,
-        // which this cache column always reflects once computed).
-        if ($forbiddenRaw === false) {
-            return false;
-        }
-
-        $forbidden = is_string($forbiddenRaw) ? trim($forbiddenRaw) : '';
+        $forbidden = trim(\Piwigo\Users\CurrentUser::get()->forbiddenCategories);
 
         if ($forbidden === '' || $forbidden === '0') {
             return true; // nothing forbidden for this user -- fast accept

@@ -23,6 +23,21 @@ use Piwigo\Db\DbConnection;
  * Admin\Extensions\CoreUpdateService::upgradeTo() (the admin Updates page's
  * core-version-upgrade action), covered by
  * InstallBootstrap::activateConfigService() on the normal request path.
+ *
+ * Gap-closure Stage 4g gap-closure (2026-07-25): also clears
+ * `CachePools::permissions()`/`effectivePermissions()` -- a real Browser-
+ * test-caught regression, not a design afterthought. Deleting Stage 4g's
+ * lock/wait/503 mechanism removed the *only* thing that used to force an
+ * immediate, synchronous permission-snapshot recompute on the very next
+ * request after a real permission change (category made private/public,
+ * group/user access granted/revoked, an image's own access level
+ * changed); every one of those real mutations already calls this method
+ * (~30 call sites: GroupService, Ws\PwgGroups/PwgCategories/PwgImages,
+ * Admin\CatListPageRenderer/PictureModifyPageRenderer, etc.), so hooking
+ * the clear here restores the "revocation takes effect on the next
+ * request" guarantee for every one of them at once, without reintroducing
+ * a lock -- a `CacheItemPoolInterface::clear()` is a cheap, uncoordinated
+ * delete, not something concurrent requests need to wait on.
  */
 final class UserCacheInvalidator
 {
@@ -44,6 +59,8 @@ final class UserCacheInvalidator
             throw new \LogicException('Piwigo\Cache\CurrentPersistentCache not initialised.');
         }
         $persistent_cache->purge(true);
+        CachePools::permissions()->clear();
+        CachePools::effectivePermissions()->clear();
         \Piwigo\Config\CurrentConfigService::get()->confDeleteParam('count_orphans');
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('invalidate_user_cache', $full);
     }

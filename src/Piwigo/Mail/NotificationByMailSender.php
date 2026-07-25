@@ -200,7 +200,7 @@ final class NotificationByMailSender
 
     public function setUserOnEnv(UserMailNotification $nbmUser, bool $isActionSend): void
     {
-        $user = $this->userService->buildUser($nbmUser->userId, true);
+        $user = $this->userService->buildUser($nbmUser->userId);
         \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
 
         $currentUserLanguage = \Piwigo\Users\CurrentUser::get()->language;

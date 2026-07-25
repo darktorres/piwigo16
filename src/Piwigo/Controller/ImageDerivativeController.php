@@ -22,7 +22,6 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Permission\ImageVisibilityChecker;
 use Piwigo\Url\UrlService;
-use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -425,18 +424,19 @@ final class ImageDerivativeController implements ControllerInterface
     /**
      * [SEC-33] Denies (403), regardless of whether a cached derivative
      * already exists on disk, any request for an image belonging exclusively
-     * to categories the current visitor cannot see (1 query for the
-     * already-computed user_cache.forbidden_categories, never recomputing
-     * permissions live). The visibility decision itself lives in
-     * Piwigo\Permission\ImageVisibilityChecker; the user id comes from
-     * CurrentUser, already resolved by RequestBootstrap::connect() ->
+     * to categories the current visitor cannot see -- a plain
+     * CurrentUser::forbiddenCategories property read, never recomputing
+     * permissions live (gap-closure Stage 4g: no query at all any more, see
+     * ImageVisibilityChecker's own docblock). The visibility decision itself
+     * lives in Piwigo\Permission\ImageVisibilityChecker; CurrentUser is
+     * already resolved by RequestBootstrap::connect() ->
      * UserBootstrap::initialize() (cookie/auto-login/Apache-auth/auth-key,
      * guest id when none apply) before this controller ever runs -- no
      * separate session-cookie lookup needed here any more.
      */
     private function checkDerivativePermission(Connection $conn, int $imageId): void
     {
-        if (! new ImageVisibilityChecker($conn)->isVisibleToUser($imageId, CurrentUser::get()->id)) {
+        if (! new ImageVisibilityChecker($conn)->isVisibleToUser($imageId)) {
             $this->ierror('Forbidden', 403);
         }
     }

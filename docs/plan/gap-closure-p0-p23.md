@@ -34,13 +34,12 @@ verified by reading that file directly, not by finding a migration.
 | 9 binary→utf8mb4_bin | **DONE, 9/9** |
 | 8 `1970-01-01`→`NULL` defaults | **DONE, 8/8** |
 | 6 TIMESTAMP NOT NULL additions | **DONE, 6/6** |
-| 5 text→JSON | **IN PROGRESS — full plan below.** `user_cache.forbidden_categories`/`image_access_list` turned out not to be serialize-leak candidates at all (comma-separated ID lists spliced into raw SQL, not `serialize()` blobs) — carved out as a separate future finding. `config.value`, `search.rules`, `user_infos.preferences` (plus `activity.details`, a newly-found 4th column not in the original 43-item list) get a real fix: see "1a-bis" below. |
-| 1 new column (`history_summary.summary_id` AUTO_INCREMENT PK) | **NOT DONE** — table still has no primary key at all, only the `UNIQUE KEY (year,month,day,hour)`. |
-| 3 unsigned fixes | **NOT DONE** — `sites.id` is still `tinyint(4) NOT NULL auto_increment` without `unsigned`, the one confirmed candidate. |
-| Serialized-blob normalization (separate from the 43) | **NOT DONE** — `extents_for_templates` (`ExtendForTemplatesPageRenderer.php`) and `updates_ignored` (`ExtensionUpdateChecker.php:129`) are both still `serialize()`d config values; the `extension_ignored_updates` table exists but nothing writes to it yet. |
+| 5 text→JSON | **DONE, 4/4 real columns.** `user_cache.forbidden_categories`/`image_access_list` turned out not to be serialize-leak candidates at all (comma-separated ID lists spliced into raw SQL, not `serialize()` blobs) — carved out as a separate future finding (see below). `config.value`, `search.rules`, `user_infos.preferences`, plus `activity.details` (a newly-found 4th column not in the original 43-item list) all fixed end-to-end — see "1a-bis" below. |
+| 1 new column (`history_summary.summary_id` AUTO_INCREMENT PK) | **DONE** (`e05c1c92a`) — `summary_id int(10) unsigned NOT NULL auto_increment` is now the real PRIMARY KEY; `UNIQUE KEY history_summary_ymdh` kept alongside it. |
+| 3 unsigned fixes | **DONE, the 1 confirmed candidate** (`e05c1c92a`) — `sites.id` is now `tinyint(4) unsigned NOT NULL auto_increment`. |
+| Serialized-blob normalization (separate from the 43) | **DONE** (1a-bis item 1) — `extents_for_templates`/`updates_ignored` (plus `c13yIgnore`, found to have the same leak) now use their typed `CurrentConfig` accessors end-to-end, no manual `serialize()`/`unserialize()` left at any call site. |
 
-**34 of the ~40 concretely-named items are done.** Remaining: the 5 text→JSON columns +
-their consumers, 1 new PK column, `sites.id unsigned`, and the 2 serialized-blob cutovers.
+**All ~40 concretely-named items are done.** Stage 1a is fully closed out.
 
 **Stage 1b — Typed DTO/Projection pattern: 10 of 32 repositories done.** (33 total minus
 `ConfigRepository`, already excluded per the plan — confirmed still the sole

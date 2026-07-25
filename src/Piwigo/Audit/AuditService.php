@@ -72,27 +72,27 @@ final readonly class AuditService
         $expectedPrevHash = null;
 
         foreach ($this->repo->findAllInOrder() as $row) {
-            if ($row['prevHash'] !== $expectedPrevHash) {
+            if ($row->prevHash !== $expectedPrevHash) {
                 return false;
             }
 
             $expectedHash = self::computeHash(
-                $row['prevHash'],
-                $row['actorId'],
-                $row['action'],
-                $row['entityType'],
-                $row['entityId'],
-                $row['beforeJson'],
-                $row['afterJson'],
-                $row['ipAddress'],
-                $row['createdAt'],
+                $row->prevHash,
+                $row->actorId,
+                $row->action,
+                $row->entityType,
+                $row->entityId,
+                $row->beforeJson,
+                $row->afterJson,
+                $row->ipAddress,
+                $row->createdAt,
             );
 
-            if (! hash_equals($expectedHash, $row['rowHash'])) {
+            if (! hash_equals($expectedHash, $row->rowHash)) {
                 return false;
             }
 
-            $expectedPrevHash = $row['rowHash'];
+            $expectedPrevHash = $row->rowHash;
         }
 
         return true;

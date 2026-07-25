@@ -143,12 +143,12 @@ final class AuditRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findAllInOrder();
 
         self::assertCount(2, $rows);
-        self::assertSame('create', $rows[0]['action']);
-        self::assertNull($rows[0]['prevHash']);
-        self::assertSame(str_repeat('a', 64), $rows[0]['rowHash']);
-        self::assertSame('delete', $rows[1]['action']);
-        self::assertSame(str_repeat('a', 64), $rows[1]['prevHash']);
-        self::assertIsString($rows[1]['beforeJson']);
-        self::assertSame(['name' => 'x'], json_decode($rows[1]['beforeJson'], true));
+        self::assertSame('create', $rows[0]->action);
+        self::assertNull($rows[0]->prevHash);
+        self::assertSame(str_repeat('a', 64), $rows[0]->rowHash);
+        self::assertSame('delete', $rows[1]->action);
+        self::assertSame(str_repeat('a', 64), $rows[1]->prevHash);
+        self::assertIsString($rows[1]->beforeJson);
+        self::assertSame(['name' => 'x'], json_decode($rows[1]->beforeJson, true));
     }
 }

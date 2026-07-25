@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Audit;
 
+use Piwigo\Audit\Projection\AuditLogEntry;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 
@@ -77,19 +78,7 @@ final class AuditRepository extends AbstractRepository
      * Every row in insertion order, for chain verification and for the
      * (future, P29) admin viewer.
      *
-     * @return list<array{
-     *   id: int,
-     *   actorId: ?int,
-     *   action: string,
-     *   entityType: string,
-     *   entityId: ?int,
-     *   beforeJson: ?string,
-     *   afterJson: ?string,
-     *   ipAddress: ?string,
-     *   createdAt: string,
-     *   prevHash: ?string,
-     *   rowHash: string,
-     * }>
+     * @return list<AuditLogEntry>
      */
     public function findAllInOrder(): array
     {
@@ -100,21 +89,6 @@ final class AuditRepository extends AbstractRepository
             ->executeQuery()
             ->fetchAllAssociative();
 
-        return array_map(
-            static fn (array $row): array => [
-                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
-                'actorId' => is_numeric($row['actor_id']) ? (int) $row['actor_id'] : null,
-                'action' => is_string($row['action']) ? $row['action'] : '',
-                'entityType' => is_string($row['entity_type']) ? $row['entity_type'] : '',
-                'entityId' => is_numeric($row['entity_id']) ? (int) $row['entity_id'] : null,
-                'beforeJson' => is_string($row['before_json']) ? $row['before_json'] : null,
-                'afterJson' => is_string($row['after_json']) ? $row['after_json'] : null,
-                'ipAddress' => is_string($row['ip_address']) ? $row['ip_address'] : null,
-                'createdAt' => is_string($row['created_at']) ? $row['created_at'] : '',
-                'prevHash' => is_string($row['prev_hash']) ? $row['prev_hash'] : null,
-                'rowHash' => is_string($row['row_hash']) ? $row['row_hash'] : '',
-            ],
-            $rows
-        );
+        return array_map(AuditLogEntry::fromRow(...), $rows);
     }
 }

@@ -232,8 +232,8 @@ final class RequestBootstrap
         // request -- resets ActivityService::record()'s "was a real user
         // resolved this request" flag before anything else can mark it
         // (UserBootstrap::initialize()). Monotonic within a request, so it
-        // needs a real reset here rather than relying on
-        // CurrentUser::reset() (arch-test-restricted to tests/).
+        // needs a real reset here rather than relying on CurrentUser's own
+        // full reset (restricted to tests/ by an arch test).
         \Piwigo\Users\CurrentUser::resetRealUserResolvedFlag();
 
         // include/common.inc.php captures $requestStart = microtime(true)

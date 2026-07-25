@@ -67,10 +67,17 @@ final class DbCredentials
     }
 
     /**
-     * Test-only, for test-isolation between requests -- mirrors
-     * CurrentConfigService's/CurrentLogger's/CurrentTemplate's own reset()
-     * methods. Also forces the next current() call to re-derive from the
-     * process environment after seed() changes it.
+     * Not test-only, unlike CurrentConfigService's/CurrentLogger's/
+     * CurrentTemplate's own reset() methods (each restricted to tests/ by
+     * their own arch test) -- Admin\Install\InstallWizard::performInstall()
+     * has a real production call, forcing the next current() call to
+     * re-derive from the process environment right after it writes fresh
+     * DB credentials to .env/.env.test, so the same request's own
+     * subsequent connection attempts pick up the new values instead of a
+     * stale cached self::$current. Also used for test-isolation between
+     * cases, the same as those other classes' reset() methods, just not
+     * *exclusively* so -- P23 Stage 1f's own "reset() is only called from
+     * tests/" arch-test pattern deliberately does not cover this class.
      */
     public static function reset(): void
     {

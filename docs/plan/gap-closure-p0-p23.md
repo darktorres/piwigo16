@@ -339,10 +339,49 @@ Verified: PHPStan/ECS/deptrac clean repo-wide; Unit+Arch 694/694 (690 + 4 new), 
 `PhotoUploadApiTest.php`'s real `addUploadedFile()` success-path exercise), Visual 34/34
 (unchanged).
 
-**Stage 1f — reset() arch-test coverage: NOT STARTED, still 6/~29.** `StructuralTest.php`
-has exactly the same 6 `"X::reset() is only called from tests/"` tests the plan's baseline
-names (`Kernel`, `ShutdownHandler`, `CurrentConfig`, `SessionService`, `StorageRegistry`,
-`CurrentConfigService`). None of the other ~23 classes have gained one.
+**Stage 1f — reset() arch-test coverage: DONE, 2026-07-25.** Re-verified the real scope
+directly (not trusting the plan's stale "~29 classes, 23 untested, no exceptions" claim,
+already 2 classes out of date): 31 classes now declare `public static function reset():
+void`, 7 already arch-tested (the plan's baseline 6, plus `DeploymentPolicy` — added since,
+under its own "set()/reset() are only called from tests/" title, missed by a naive count).
+
+24 remained. Checking each for a real external caller (not just trusting "no exceptions")
+found 2 genuine special cases the plan's own list couldn't have known about, since both
+classes postdate it:
+
+- `Db/DbCredentials.php` — a real production caller,
+  `Admin\Install\InstallWizard::performInstall()`, reloading credentials right after
+  writing a fresh `.env`/`.env.test` so the same request's later connection attempts see
+  the new values instead of a stale cached one. Its own docblock claimed "test-only,"
+  which was simply wrong — corrected in place rather than arch-tested; deliberately
+  excluded from this stage's coverage.
+- `Core/CurrentPaths.php` — `Core/Kernel.php`'s own `reset()` cascades into it (and
+  `Kernel::reset()` is already verified test-only), so this is a legitimate non-tests/
+  call, not a violation. Given its own filtered arch test instead of a plain one:
+  `Kernel.php`'s one known cascade call is excluded by path, so any *other* new direct
+  caller still fails it.
+- `Users/CurrentUser.php` — a genuinely comment-only false-positive risk, not a real
+  caller: `Bootstrap/RequestBootstrap.php` had a comment literally containing the
+  substring `CurrentUser::reset()` (explaining why a narrower reset is used instead) --
+  `findCallSites()`'s plain substring scan is comment-blind by design (unlike
+  `countExitCallsPerFile()`'s real tokenization), so this would have been a false arch-test
+  failure the moment the test existed. Reworded the comment to avoid the literal substring
+  rather than weakening the scanner.
+
+The other 22 classes needed no special handling: `Admin/LoadedPlugins`,
+`Admin/Maintenance/FilesystemIntegrityChecker`, `Cache/CurrentPersistentCache`,
+`Core/AdminContext`, `Core/ApiKeyRequestFlag`, `Core/CurrentLogger`, `Core/ErrorCollector`,
+`Core/FilterState`, `Core/InstallationFlag`, `Core/Lang`, `Core/PageState`,
+`Core/ProcessCache`, `Core/RequestMountDepth`, `Core/ServerTiming`, `Core/WsContext`,
+`Lang/Translator`, `Mail/MailService`, `PluginConfig/EventDispatcher`,
+`Section/SectionContextRegistry`, `Template/CurrentTemplate`, `Url/RootPathOverride`,
+`Users/CurrentUser` all got the standard `"X::reset() is only called from tests/"` test,
+verified individually (not just as a batch) to rule out any other false positive before
+trusting a clean run.
+
+Verified: PHPStan/ECS/deptrac clean repo-wide; Unit+Arch 717/717 (694 + 23 new arch tests),
+Integration 675/675 (unchanged), Contract 94/94 (unchanged), Browser 68/68 (unchanged),
+Visual 34/34 (unchanged).
 
 **Stage 2 — FrankenPHP worker mode: NOT STARTED.** `docker/Caddyfile` still has no `worker`
 directive; `public/index.php` has no `bootMinimal`/`frankenphp_handle_request` references.

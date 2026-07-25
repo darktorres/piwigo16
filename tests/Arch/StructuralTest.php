@@ -348,6 +348,303 @@ test('DeploymentPolicy::set()/reset() are only called from tests/', function ():
     expect(describeCallSites($hits))->toBe([]);
 });
 
+/**
+ * P23 Stage 1f (finding #15, testable half): 24 more classes gained the
+ * same "static reset() exists purely for test isolation between cases"
+ * shape as the 7 above without ever getting their own arch test. Re-
+ * verified directly (not trusting the plan's own stale "23 classes, no
+ * exceptions" claim, which predates 2 of these classes entirely) --
+ * DbCredentials::reset() turned out to have a real production caller
+ * (Admin\Install\InstallWizard::performInstall(), reloading credentials
+ * right after writing a fresh .env) and is deliberately excluded here,
+ * its own docblock corrected instead of arch-tested. CurrentPaths::reset()
+ * has exactly one real caller too, but a legitimate one: Kernel::reset()
+ * itself cascades into it, and Kernel::reset() is already test-only-
+ * verified above -- filtered out below by name rather than left
+ * unguarded, so any *other* new direct caller still fails this test.
+ */
+test('LoadedPlugins::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'LoadedPlugins::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'LoadedPlugins::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'LoadedPlugins::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('FilesystemIntegrityChecker::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'FilesystemIntegrityChecker::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'FilesystemIntegrityChecker::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'FilesystemIntegrityChecker::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('CurrentPersistentCache::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'CurrentPersistentCache::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'CurrentPersistentCache::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'CurrentPersistentCache::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('AdminContext::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'AdminContext::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'AdminContext::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'AdminContext::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('ApiKeyRequestFlag::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'ApiKeyRequestFlag::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'ApiKeyRequestFlag::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'ApiKeyRequestFlag::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('CurrentLogger::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'CurrentLogger::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'CurrentLogger::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'CurrentLogger::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('CurrentPaths::reset() is only called from tests/ or the Kernel::reset() cascade', function (): void {
+    // Kernel::reset() (already verified test-only above) cascades into
+    // CurrentPaths::reset() itself -- the one legitimate non-tests/ call
+    // site, filtered out by path so any *other* direct caller still fails.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = array_values(array_filter(
+        [
+            ...findCallSites($repoRoot . '/src/Piwigo', 'CurrentPaths::reset('),
+            ...findCallSitesInRootPhpFiles($repoRoot, 'CurrentPaths::reset('),
+            ...findCallSitesInBinFiles($repoRoot, 'CurrentPaths::reset('),
+        ],
+        static fn (array $hit): bool => ! str_ends_with($hit['path'], '/Core/Kernel.php')
+    ));
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('ErrorCollector::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'ErrorCollector::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'ErrorCollector::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'ErrorCollector::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('FilterState::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'FilterState::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'FilterState::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'FilterState::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('InstallationFlag::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'InstallationFlag::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'InstallationFlag::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'InstallationFlag::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('Lang::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'Lang::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'Lang::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'Lang::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('PageState::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'PageState::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'PageState::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'PageState::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('ProcessCache::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'ProcessCache::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'ProcessCache::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'ProcessCache::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('RequestMountDepth::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'RequestMountDepth::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'RequestMountDepth::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'RequestMountDepth::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('ServerTiming::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'ServerTiming::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'ServerTiming::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'ServerTiming::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('WsContext::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'WsContext::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'WsContext::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'WsContext::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('Translator::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'Translator::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'Translator::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'Translator::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('MailService::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'MailService::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'MailService::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'MailService::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('EventDispatcher::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'EventDispatcher::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'EventDispatcher::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'EventDispatcher::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('SectionContextRegistry::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'SectionContextRegistry::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'SectionContextRegistry::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'SectionContextRegistry::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('CurrentTemplate::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'CurrentTemplate::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'CurrentTemplate::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'CurrentTemplate::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('RootPathOverride::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'RootPathOverride::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'RootPathOverride::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'RootPathOverride::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('CurrentUser::reset() is only called from tests/', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'CurrentUser::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'CurrentUser::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'CurrentUser::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
 // P16: src/Piwigo/ is the typed source of truth for the 52 retired
 // include/constants.php constants (AppInfo/AccessLevel/ActivitySystem/
 // ValidationPattern/Tables/Config accessors) -- a regression guard, not a

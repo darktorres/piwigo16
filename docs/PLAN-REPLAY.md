@@ -5363,6 +5363,128 @@ Integration test pattern (`IntegrationTestCase` base class):
 
 ---
 
+### Remediation — DBAL→ORM migration
+
+> **Tier** T2 · **Depends on** P23 (and, in execution order, gap-closure `docs/plan/gap-closure-p0-p23.md`
+> Stage 4 — see that doc's own note on why: Stage 4i deletes `Cache\UserCacheRepository`
+> before this item's own repository classification would otherwise have to account for it).
+> `docs/plan/manifest.yaml`'s `remediation:` section. **2026-07-25:** this item is this
+> doc's own P14 audit note ("tracked as a new `remediation:` initiative... sequenced after
+> P23") finally acted on — 30 DBAL repositories, all `extends AbstractRepository`
+> (`Tables::*()` prefix helpers, manual `new XRepository(DbConnection::build())`
+> construction at hundreds of call sites — `PermissionService` alone has ~40), against the
+> one existing real ORM precedent, `Config\ConfigRepository` (`#[ORM\Entity(repositoryClass:
+> ...)]` + `#[ORM\Table(name: ...)]`, `extends EntityRepository`, obtained via
+> `Kernel::container()->get(ConfigService::class)` — DI-resolved, never manually
+> constructed). **Decision, asked and confirmed during planning**: go full DI-container
+> resolution matching `ConfigRepository`'s real precedent, not a narrower
+> "thread an EntityManager through the existing manual-construction shape" alternative —
+> the real blast radius (hundreds of call sites, not 30 classes) only surfaced by checking
+> `ConfigRepository`'s actual construction pattern against the other 30's real one, and the
+> user accepted the larger churn in favor of ending up in one consistent DI philosophy
+> instead of two indefinitely, rather than a lower-churn shortcut that would leave the
+> codebase permanently split between two construction patterns.
+
+**B0 — prerequisite: domain services become real container-managed services.** Every
+domain service (`PermissionService`, `CategoryService`, `TagService`, and so on through all
+30 repositories' owning services) needs container registration with autowired repository
+dependencies *before* any individual repository's own internal migration — this is the real
+prerequisite the audit note's own "sequenced after P23" framing didn't fully anticipate (it
+assumed per-repository migration, not a whole-codebase construction-pattern change).
+`config/container.php` grows one entry per service (matches P8's own "container grows WITH
+each subsequent phase" convention).
+
+**B1 — the real per-repository classification (all 30, not a sample):**
+
+- **Clean DQL/ORM migration** (plain CRUD, single-entity or simple-JOIN shape, no dynamic
+  SQL fragments): `PasswordRepository`, `LangRepository`, `SiteRepository`,
+  `FeedRepository`, `ApiKeyRepository`, `AuditRepository`, `NotificationByMailRepository`,
+  `PluginRepository`, `MetadataRepository`, `MailRecipientRepository`,
+  `PermalinkRepository`, `GroupRepository`, `RateRepository`, `UserRepository`,
+  `ActivityRepository`, `CommentRepository` (all methods but
+  `countAvailableWithConditions()`, see below), `PermissionRepository` (all but the
+  `massInsertUserAccess` bulk-write, which can still be a real DQL/native bulk insert, not a
+  reason to exclude the whole class), `MenubarLayoutRepository` (already a documented,
+  deliberate write-only exception from gap-closure Stage 1b — stays that way, migrates its
+  one write to DQL regardless).
+- **Structural, permanent exceptions — genuinely can't/shouldn't be pure ORM/DQL, not
+  deferred:**
+  - `SessionRepository` — implements PHP's own `read()`/`write()`/`destroy()`/`gc()`
+    `SessionHandlerInterface` contract (fixed signatures PHP itself imposes via
+    `session_set_save_handler()`), not an ordinary domain repository. Stays DBAL (or a
+    hand-rolled native-SQL `EntityRepository`, but the *interface* shape can't change).
+  - `SearchRepository`, `CalendarRepository`, `SectionRepository` — already gap-closure
+    Stage 1b's own documented "genuinely dynamic caller-built SQL" exceptions
+    (`findRowsByClause`/`queryColumn`/`findRows(string $rawQuery)` etc. take whole
+    caller-built fragments, not parameterizable in DQL's static-query model). Doctrine
+    `NativeQuery` + `ResultSetMapping` (raw SQL, entity-hydrated results) is the documented
+    mechanism here — still container-resolved, still an `EntityRepository` subclass, just
+    backed by native SQL internally for these specific methods.
+  - `HistoryRepository::search()` — same dynamic-fragment shape (many optional filter
+    params built into a dynamic WHERE) — `NativeQuery` for this one method; every other
+    method (the bulk of it, including gap-closure Stage 1b's own `HistorySummaryCursor`/
+    `HistorySummaryCount` projections) migrates cleanly.
+  - `ExtensionRepository` — Stage 1b's own "genuinely polymorphic across 3 heterogeneous
+    tables" exception. Not a dynamic-SQL problem — becomes 3 separate entities
+    (plugin/theme/language), each a real, clean ORM mapping; the "exception" is "3 entities
+    instead of 1," not "stays raw SQL."
+  - `TagRepository::countImagesPerTag()` (dynamic `$fandFSql` fragment) and
+    `CommentRepository::countAvailableWithConditions()` (dynamic WHERE clauses) —
+    `NativeQuery` for these 2 methods specifically; both repositories otherwise migrate
+    cleanly.
+  - `Cache\UserCacheRepository` — **not migrated at all**, deleted outright by gap-closure
+    Stage 4i before this phase would ever reach it. A real, concrete dependency between the
+    two initiatives, not just a scheduling preference.
+- **Large, dedicated sub-efforts given sheer size** (flagged, not micro-planned
+  per-method — the right granularity for a 60+/30+-method class is "migrate it as its own
+  tracked sub-stage using the same classify-each-method methodology above"):
+  - `CategoryRepository` — 66 methods, the largest. Real tell-tales visible from names
+    alone: `fetchCallerBuiltQuery` (dynamic, `NativeQuery`), `massUpdateRanks`/
+    `massUpdateRanksAndGlobalRank`/`massUpdateRepresentativePictures`/
+    `massUpdateUppercats`/`massInsertGroupAccess` (bulk writers — decide per-method at
+    execution time whether DQL's own bulk-update syntax suffices or a native bulk statement
+    is genuinely faster, a performance question, not a design gap), the rest largely clean
+    single/multi-entity finds. Deepest, riskiest single item in this whole migration —
+    budget it as its own multi-part effort, not a single commit.
+  - `ImageRepository` — 35 methods, same shape: several `mass*` bulk writers
+    (`massInsertLounge`/`massInsertImageCategory`/`massUpdateMd`/
+    `massUpdateImageCategoryRanks`), the rest clean.
+
+**B2 — sequencing.** Bottom-up through `deptrac.yaml`'s own 6-layer model (L1
+Infrastructure → L2a Core Domain → L2b Extended Domain → L3 Presentation → L4 Integration)
+— a lower layer's entity/mapping must be stable before anything above it depends on the
+change, same reasoning gap-closure Stage 1b's own domain-by-domain execution already
+validated in practice. Within a layer, migrate the domains with the fewest external
+dependents first (matching how Stage 1b started with Comment/Activity, not
+Category/Image).
+
+**B3 — real ORM-adoption risks to carry into execution, not silently discover mid-migration:**
+
+- **Implicit flush-everything semantics**: `EntityManager::flush()` with no argument
+  flushes *every* pending change across the whole unit of work, not just the entity a given
+  repository method is nominally about — a real behavior difference from today's
+  single-purpose DBAL statements. Prefer `flush($entity)` (single-entity flush) at each
+  repository write method by default; a bare `flush()` becomes its own explicit, reviewed
+  decision, not the default.
+- **Composite/join-table primary keys**: several repositories
+  (`CategoryRepository`'s `image_category`/`user_access`/`group_access`,
+  `TagRepository`'s `image_tag`) map onto tables with no surrogate `id`, just a composite
+  key — Doctrine supports multiple `#[ORM\Id]` properties on one entity; designed per-entity
+  at execution time (mechanical application of a known technique, not an open question).
+- **`Tables::*()` prefix helpers stay untouched** — entities use
+  `#[ORM\Table(name: 'bare_name')]`, `TablePrefixListener` already applies the real prefix
+  at metadata-load time (confirmed via `Config\ConfigEntry`'s own docblock). This migration
+  is scoped to the repository/query layer, not the table-naming mechanism.
+
+**Verify:** per-domain (matching gap-closure Stage 1b's own cadence) — migrate one domain's
+entity + repository + container registration + retarget its own real call sites, full
+suite, one commit per domain, before moving to the next. `CategoryRepository`/
+`ImageRepository` each get a dedicated multi-commit sequence given their size. A repo-wide
+`grep -rn "new .*Repository("` before declaring this remediation done, confirming zero
+manual-construction call sites remain outside the documented structural exceptions above.
+
+---
+
 ### Epoch F — Frontend (P24–P25)
 
 > **Epoch depends on** P23 (service layer complete). Two gated phases: P24 Vite/TS/jQuery-removal,
@@ -8032,6 +8154,8 @@ tracks:                      # T3, cuttable; attach after the dependency phase; 
   - {id: T3-RIDERS, cuttable: true, hosts: {cqrs: P20, libvips_heic: P19, vector_clip: P15, tus: P20, webhooks: P20, fibers: P20, mercure: P11, passkeys: P28, oidc: P28, soft_delete: P15}}
 adoption:                    # non-cuttable, outside the parity sequence
   - {id: legacy-import, tier: T2, cuttable: false, depends_on: [P15, P23], status: planned}  # sole adoption path for existing installs
+remediation:                 # non-cuttable, post-hoc fix to a design gap in an already-`done` phase
+  - {id: dbal-orm-migration, tier: T2, cuttable: false, depends_on: [P23], status: planned}  # see "Remediation — DBAL→ORM migration" above
 sec:
   - {id: SEC-01, phase: P4, threat: "Sensitive files over HTTP", verified_by: ".htaccess E2E", status: planned}
   # … through SEC-65 (phases remapped to P0–P32 / T3-AI; see master checklist)

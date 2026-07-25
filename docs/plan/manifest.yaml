@@ -7,6 +7,9 @@
 #   execution ORDER is still strictly linear P0->P32 regardless.
 # tracks: T3, cuttable; attach after their dependency phase; never gate a backbone commit.
 # adoption: non-cuttable, outside the parity sequence.
+# remediation: non-cuttable, post-hoc fixes to a design gap found in an already-`done`
+#   phase (as opposed to `tracks`/new forward work) - tracked separately from `phases`
+#   because it isn't part of the P0->P32 gated backbone sequence.
 # sec: SEC-01..SEC-65 master checklist, cross-referenced with the threat model.
 # tiers: T1 core-parity, T2 modernization, T3 cuttable stretch. A phase may span two
 #   tiers (e.g. "T1-T2") when its scope mixes both.
@@ -67,6 +70,15 @@ tracks:
 
 adoption:
   - {id: legacy-import, tier: T2, cuttable: false, depends_on: [P15, P23], status: planned}
+
+# 2026-07-25: P14's own audit note promised this would be "tracked as a new
+# `remediation:` initiative... sequenced after P23" but never actually added
+# it - added now, alongside gap-closure-p0-p23.md's Stage 4 (user_cache/
+# user_cache_categories deletion), which this item depends on: Stage 4i
+# deletes UserCacheRepository before this item's own repository
+# classification would otherwise have to account for it.
+remediation:
+  - {id: dbal-orm-migration, tier: T2, cuttable: false, depends_on: [P23], status: planned}
 
 sec:
   - {id: SEC-01, phase: P4,  threat: "Sensitive files served over HTTP", verified_by: ".htaccess deny E2E (P4); isolation gate (P32)", status: done}

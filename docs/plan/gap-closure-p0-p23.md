@@ -1147,6 +1147,263 @@ docs — that's a real design pass to have at the start of this stage, not a gap
 > **2026-07-24 note:** `SchemaDump` no longer exists (removed alongside the Doctrine
 > Migrations mechanism, `212628d46`) — 7 commands remain today, not 8.
 
+## Stage 4 — Delete `user_cache` + `user_cache_categories` (2026-07-25, findings #3c/#8 continuation)
+
+Not a new finding — a genuine P23 shortfall, same species as Stage 1's own backfill work.
+`docs/PLAN-REPLAY.md`'s P23 "cache table rationalization" section promises `user_cache`/
+`user_cache_categories`/`history_summary` deleted entirely. A "Batch 3" progress note shows
+partial historical execution — 3a (`user_cache_categories` existence-filter reads) and 3b
+(`CategoryRepository::findMenuCategories()` → `CategoryTreeCache`) done; 3c
+(`history_summary`) honestly flagged `deferred`. `user_cache` itself was never attempted —
+not flagged deferred, just silently missing. Direct-code investigation found the true scope
+is a live 10-column table, a still-alive sibling table, 6 cache-invalidation call sites
+beyond the table itself, and one still-active distributed-lock/wait/503 mechanism, not just
+"a few raw SQL splices." Real `piwigo_user_cache` columns (`install/piwigo_structure-mysql.sql`):
+`user_id`, `need_update`, `cache_update_time`, `forbidden_categories`, `nb_total_images`,
+`last_photo_date`, `nb_available_tags`, `nb_available_comments`, `image_access_type`,
+`image_access_list`. All 10 traced to their real current readers/writers below.
+
+### 4a. The `cacheUpdateTime`-keyed invalidation pattern → pure TTL pools
+
+`User::$cacheUpdateTime` (sourced from `user_cache.cache_update_time`) is used as a
+cache-busting key *component*, still on the older `CurrentPersistentCache`/
+`PersistentFileCache` mechanism (`make_key()` + `get()`/`set()`) — the exact shape
+`TagService::getAvailableTags()` was on before Stage 1d converted it to
+`CachePools::tagCloud()` (that commit's own comment, "of the previous
+cacheUpdateTime-keyed immediate invalidation," is the direct precedent here, not a new
+pattern). Re-grepped precisely rather than trusting the original 5-site estimate — the
+real count is higher in one file:
+
+- `Section/SectionPopulator.php:337-338` — one `all_iids` key (per-user visible image-id
+  list for a section). `$persistent_cache` (`CurrentPersistentCache::get()`) has no other
+  use anywhere else in this file.
+- `Search/SearchFilterRenderer.php` — **7 distinct cache-key sites**, not 1: `filter_author_rows`
+  (263), `filter_added_by_rows` (383), `file_exts` (521), `filter_ratings` (586),
+  `filter_ratios` (705), plus `renderDateFilter()`'s shared key (1080, used by the
+  date_posted/date_created call sites at 320/344) — all built off the single
+  `$userCacheUpdateTime` captured once at line 116, all through the same
+  `CurrentPersistentCache::get()` instance with no other use in the file.
+- `Search/SearchService.php:1049` (`getQuickSearchResults()`) — uses a constructor-injected
+  `PersistentFileCache $cache` (not the static locator), with its own explicit 300s
+  `set()` TTL. `$this->cache` has no other use in this class.
+- `Calendar/CalendarRenderer.php:290` — one calendar navigation-bar key. Same
+  no-other-use shape as `SectionPopulator`.
+- `Notification/NotificationService.php:149` (`getRecentPostDates()`) — constructor-injected
+  `PersistentCache $cache`, no other use in the class.
+
+All 5 files are permission-filtered content, same reasoning `CachePools::permissions()`'s
+own docblock already gives (30s TTL: "a permission change... becomes visible well within
+one user session"). Add 4 new `CachePools::` methods — `sectionImageIds()`,
+`searchResults()` (covers both `SearchFilterRenderer`'s 7 keys and
+`SearchService::getQuickSearchResults()` — one "search" concept, several key prefixes,
+same one-pool-many-prefixes shape `permissions()` already uses per-user), `calendarNav()`,
+`notifications()` — each its own pool at 30s TTL. **Deliberate accepted behavior change**:
+`SearchService::getQuickSearchResults()`'s existing 300s `set()` argument drops to the
+uniform 30s — the 300s was never a considered "search content changes slowly" choice on
+its own, it was bundled with the `cacheUpdateTime` permission-invalidation concern; 30s
+favors faster permission-change visibility (a forbidden category's images disappearing
+from search promptly) over fewer cache hits on unrelated content churn, matching every
+other pool's own reasoning.
+
+Each of the 5 files fetches its own new `CachePools::` pool inline at point of use — same
+as `TagService`'s precedent (`TagService` is manually constructed at ~18 call sites, no DI
+container, so the pool is fetched inline rather than constructor-injected). Since
+`$this->cache` (`SearchService`/`NotificationService`) and `$persistent_cache`
+(`SectionPopulator`/`CalendarRenderer`, including each file's own
+`! $persistent_cache instanceof PersistentCache` → `fatalError()` guard) have **no other
+use** in any of the 4 classes once this lands, the whole mechanism is removed, not left as
+dead weight: delete `SearchService`'s `PersistentFileCache $cache` constructor param and
+`NotificationService`'s `PersistentCache $cache` one (retarget all real construction sites —
+`SearchController`, `FeedController`, `GalleryController` ×2, `BatchManagerSubController`,
+`PwgImages`, `PictureController`, `NotificationByMailSubController`, `NbmController`, plus
+`tests/Integration/{SearchServiceTest,NotificationServiceTest}.php`), and delete
+`SectionPopulator`/`CalendarRenderer`'s `CurrentPersistentCache::get()` call + guard
+entirely (no constructor param to remove there — it was never injected).
+
+Once all 5 are converted, `cacheUpdateTime` has zero remaining real readers — delete
+`User::$cacheUpdateTime`, `user_cache.cache_update_time`, and `getUserData()`'s own write of
+it (folded into 4g below, same commit).
+
+### 4b. `forbidden_categories`: two distinct concepts, don't conflate them
+
+**Critical finding, would cause a real regression if missed**: the value stored in
+`user_cache.forbidden_categories` (read via `CurrentUser::forbiddenCategories`, 9 real
+consumer files including `PermissionService::getSqlConditionFandF()` itself) is **not**
+the same as `PermissionService::getForbiddenCategories()`'s own return value.
+`UserService::getUserData()`'s cache-generation block (verified directly,
+`UserService.php:761-823`) computes the base structural value via `getForbiddenCategories()`,
+then **adds** every category with zero visible images for non-admins (feature 1053,
+`CategoryService::getComputedCategories()`) before storing it. Stage 1d's own
+`Permission\ForbiddenCategoriesCache` wraps only the narrower, structural value — verified
+safe because its own 3 call sites (`PictureModifyPageRenderer`, `BatchManagerUnitPageRenderer`,
+`Ws/PwgCategories`) already called `getForbiddenCategories()` directly pre-Stage-1d, never
+the broader stored one. Naively reusing `ForbiddenCategoriesCache` here would silently drop
+the empty-category exclusion.
+
+New class `Permission\EffectiveForbiddenCategoriesCache` (distinct name, distinct
+computation, not an extension of `ForbiddenCategoriesCache`): wraps
+`PermissionService::getForbiddenCategories()` + the same empty-category-exclusion query
+`getUserData()` runs today, cached per-user in a new `CachePools::effectivePermissions()`
+pool, 30s TTL. Wherever `CurrentUser::set()`/`UserBootstrap` populates `forbiddenCategories`
+today (from the `user_cache`-joined row) switches to this new class instead.
+
+### 4c. `image_access_type`/`image_access_list`: paired cache helper
+
+Real computation (`getUserData()` lines 768-786, verified): images above the user's own
+permission `level`, within categories not in the (effective) forbidden set — genuinely
+distinct from "forbidden categories" itself. Consumed via
+`CurrentUser::rawAttributes['image_access_type'/'image_access_list']`, same
+`PermissionService::getSqlConditionFandF()` call site plus a final grep pass for the full
+read set at execution time (the computation and cache design are already fully specified
+here). New class `Permission\ImageAccessListCache`, same `CachePools::effectivePermissions()`
+pool as 4b (one user, one permission snapshot, one cache entry holding both is more correct
+than two entries that could theoretically desync under a race).
+
+### 4d. `nb_total_images`: folded into 4b/4c's pool
+
+A `COUNT(DISTINCT image_id)` over `image_category` filtered by the same effective
+forbidden-categories + image-access-list computation (`getUserData()` lines 788-797). Only
+real consumer: `Menu/MenubarRenderer.php:151`. Computed together with 4b/4c in the same
+`EffectiveForbiddenCategoriesCache`/pool entry, since they already share the same underlying
+query dependency chain in `getUserData()` today.
+
+### 4e. `last_photo_date`: consolidate two independent implementations into one
+
+Two things compute this today, independently: `getUserData()`'s own eager computation (via
+`CategoryService::getComputedCategories()`), and `Filter/FilterService.php:143-148`'s own
+separate, conditional computation (only inside its own "recent period filter" feature,
+caching onto `CurrentUser::rawAttributes['last_photo_date']` when it runs). Real consumers:
+`Category/CategoryCatsRenderer.php:94`, `Users/UserService.php:1070-1084`. Since
+`FilterService`'s own branch doesn't run on every request, a consumer hit outside that
+branch depends on `getUserData()`'s own eager write having already happened — the two
+implementations aren't redundant, they're both real and currently uncoordinated.
+
+Proper fix (matching the already-established `nb_available_tags`/`nb_available_comments`
+pattern, see 4f): one new lazy method, `Category\LastPhotoDateCache::getForUser(User
+$user): ?string` (compute via `CategoryService::getComputedCategories()` if
+`CurrentUser::rawAttributes['last_photo_date']` isn't already set, cache onto
+`rawAttributes` for the rest of the request — no cross-request pool needed, this is cheap
+to recompute per-request). `FilterService`'s own inline computation and `getUserData()`'s
+eager one both retarget onto this single method instead of each doing their own thing.
+
+### 4f. Delete dead `nb_available_tags`/`nb_available_comments` DB write-back
+
+Already fully modernized, confirmed dead weight, not part of the real migration work:
+`Tag/TagService::getNbAvailableTags()` / `Comment/CommentService`'s equivalent already
+compute fresh (via the cache-pool-backed methods Stage 1c/1d already built) and cache onto
+`CurrentUser::rawAttributes` per request — the *read* side never touches the DB column. The
+only remaining DB touch is a write nothing ever reads back: `TagRepository::
+saveNbAvailableTags()`, `Comment/CommentRepository`'s equivalent,
+`UserCacheRepository::clearNbAvailableTags()`, `Comment/CommentRepository`'s own
+`nb_available_comments = NULL` invalidation write. Delete all of them outright — pure
+removal, no replacement needed.
+
+### 4g. Delete `UserService::getUserData()`'s lock/wait/503 regeneration mechanism
+
+The whole `$useCache` branch (lines 694-887) — `UniqueExecLock::begins()`/`isRunning()`/
+`ends()`, the 20×`sleep(1)` polling wait loop, the 503 "Rebuilding user cache takes long"
+fallback with a raw `exit()` — exists solely to coordinate exclusive regeneration of the
+`user_cache` row across concurrent requests for the same user. Once 4a-4e replace every
+real column with an independent cache-pool-backed computation (each already safe for
+uncoordinated concurrent access — a PSR-6 cache-pool miss just triggers an independent
+recompute per request, no shared mutable row to corrupt), this coordination has nothing
+left to protect. **Accepted, deliberate tradeoff, not an oversight**: a burst of concurrent
+requests for the same just-invalidated user can now each independently recompute the
+(cheap, single-query) permission snapshot rather than one computing while others wait —
+matches P23's own original design text exactly ("recursive CTE cached in the APCu/Redis
+permissions pool"), which never mentioned a lock for the replacement. `UniqueExecLock` the
+*class* is not touched — `PiwigoInfosSender`/`Bootstrap/PageTail.php` are real, unrelated
+callers.
+
+`getUserData()` itself drops the `user_cache` `LEFT JOIN` and the `uc.*` columns entirely,
+and populates `forbiddenCategories`/`rawAttributes['image_access_type'/'image_access_list'/
+'nb_total_images']` from 4b/4c/4d's new cache classes unconditionally.
+
+**Also verified**: with the whole `$useCache`-gated block gone, `getUserData()`'s
+`$useCache` parameter has no remaining effect on the method body at all — it existed solely
+to gate this one block. Per this codebase's own "no vestigial parameters" standard, the
+parameter itself is removed, not left as a no-op flag: `getUserData(int $userId): array`,
+`buildUser(int $userId): array`, and `Bootstrap/UserBootstrap::shouldUseUserCache()` (plus
+its one call site building `$user_use_cache`) are deleted, and all ~14 call sites passing a
+literal `true`/`false` second argument (`InstallWizard`, `NotificationByMailSender`,
+`RedirectService`, `RegisterController`, `Controller/Admin/ConfigurationSubController` ×2,
+`FeedController` ×2, `PasswordController` ×4, `UserBootstrap`) drop that argument.
+
+### 4h. `user_cache_categories`: finish the batch-3 migration, not just verify it
+
+Batch 3a/3b's own "done" claim covered only the read surfaces each sub-batch specifically
+targeted. Direct grep found 3 real, unconverted readers/writers still remaining:
+
+- `Ws/PwgCategories.php` — 4 real sites (2 JOINs building the WS category list, 1 UPDATE,
+  1 reference inside an insert helper).
+- `Search/SearchFilterRenderer.php:479` — 1 real `INNER JOIN`.
+- `Category/CategoryRepository::findRandomRepresentativeIdAmongSubcategories()` — 1 real
+  `INNER JOIN` (finds a random representative image among visible subcategories).
+
+Convert each onto `Category\CategoryTreeCache` (already the real batch-3b replacement
+mechanism — same category-visibility-rollup concept, not a new computation to design) or an
+equivalent permission-filtered subquery where a full rollup would be wasteful (e.g. the
+representative-image lookup only needs "is this category visible," not the full
+per-category count rollup — a mechanical per-site fit, not open design).
+
+`UserService.php:1567`/`UserRepository.php:314`/`CategoryService.php:1037`'s own
+`Tables::userCacheCategories()` references are generic "delete/verify orphaned rows in
+every user-related table" maintenance bookkeeping — remove the table from those lists,
+nothing to migrate.
+
+### 4i. Drop both tables
+
+Once 4a-4h land and zero real readers remain: drop `piwigo_user_cache` and
+`piwigo_user_cache_categories` from `install/piwigo_structure-mysql.sql` + the test
+fixture; delete `Cache/UserCacheRepository.php`, `Cache/UserCacheInvalidator.php`, and every
+one of the ~30 `UserCacheInvalidator::invalidate()`/`invalidateNbTags()` call sites across
+`Admin/*`, `Ws/PwgImages.php`, `Ws/PwgCategories.php`, `Ws/PwgGroups.php`,
+`Group/GroupService.php`, `Tag/TagService.php`, `Image/ImageService.php`,
+`Controller/PictureController.php`, `Users/UserService.php`,
+`Admin/Extensions/CoreUpdateService.php`, `Admin/Upload/UploadService.php` — every one
+becomes a no-op deletion (the TTL-based replacements invalidate themselves; nothing needs
+an explicit "mark dirty" signal any more), **except** `invalidate()`'s other 2 real effects
+(`$persistent_cache->purge(true)`, `confDeleteParam('count_orphans')`) — verify at each call
+site whether *those* still have independent value beyond the `user_cache` concern before
+deleting the whole call, not just assumed dead by association.
+
+### 4j. `history_summary` (flagged, not designed this pass — genuinely different kind of open question)
+
+3c's own deferral reason ("two real, substantial `admin/*.php` files... unlike 3a/3b")
+appears resolved as a side effect of unrelated work: `admin/stats.php`/
+`get_pwg_general_statitics()` are now `Admin/StatsPageRenderer.php`/
+`Admin/InstallationStats.php` inside `src/Piwigo/`, confirmed by direct grep — so 3c's
+specific blocker (reading a table directly from code batch 6 hadn't absorbed yet) no longer
+applies as stated. Stage 1b's own `History\Projection\HistorySummaryCursor`/
+`HistorySummaryCount` typed projections would anchor a real migration. **Not designed
+here**: P23's own text leaves the actual replacement mechanism as an open choice (`WITH
+ROLLUP` live queries vs. a materialized summary refreshed by a maintenance job) that
+depends on real data-volume/query-frequency characteristics no amount of code-reading
+resolves — a materialized summary refreshed via the already-existing
+`DbMaintenanceRepository`/`HistoryService::summarize()`/`autopurge()` maintenance-job
+pattern is the recommended direction (reuses an established mechanism rather than
+introducing a new live-query dependency), but this is its own follow-on investigation, not
+bundled into 4a-4i's already-fully-resolved scope.
+
+**Verify Stage 4:** standard per-sub-stage cadence (4a-4i, each its own commit,
+`(p23)` scope tag) — `composer lint:php` + `vendor/bin/phpstan analyse` +
+`tools/pest-cleanup.sh` (Unit/Arch) as each sub-stage lands; `composer test:integration`
+once 4a-4i all land (catches cross-domain consumers a per-sub-stage pass might miss);
+`composer test:browser`/`test:visual` at the end; `composer test:fixture-regen` once, for
+the 2 dropped tables. Audit existing `UserServiceTest`/`UserRepositoryTest` coverage against
+the redesigned `getUserData()` before trusting it still passes for the right reason, not
+just still-green.
+
+## Remediation — DBAL→ORM migration
+
+Tracked separately, `docs/plan/manifest.yaml`'s `remediation:` section + a dedicated
+`docs/PLAN-REPLAY.md` section (after P23) — genuinely new forward work (P14's own audit
+note: "tracked as a new `remediation:` initiative... sequenced after P23," never actually
+added until now), not a P23 backfill, so it doesn't get its own Stage number here. Sequenced
+after Stage 4: Part B's own repository classification excludes `UserCacheRepository`
+(deleted by Stage 4i before this would ever reach it) — a real dependency, not just a
+scheduling preference.
+
 ## Verification (applies throughout)
 
 - Per-domain/per-batch: `composer lint:php`, `vendor/bin/phpstan analyse`,
@@ -1159,6 +1416,9 @@ docs — that's a real design pass to have at the start of this stage, not a gap
 - Cross-check any suspicious zero-match `grep` on a `$`-containing pattern with Python before
   trusting it (this audit was bitten by this twice already).
 - One commit per logical unit, `(p23)` scope tag for Stage 0/1 work (finishing P23's own
-  claims), `(p8)` for Stage 2, and whatever scope tag fits the legacy-import adoption item in
-  Stage 3. Update `docs/plan/manifest.yaml` and `docs/PLAN-REPLAY-AUDIT.md` as each stage's
-  gaps actually close, not preemptively.
+  claims), `(p8)` for Stage 2, whatever scope tag fits the legacy-import adoption item in
+  Stage 3, and `(p23)` again for Stage 4 (same "finishing P23's own claims" reasoning — the
+  DBAL→ORM remediation that follows Stage 4 gets its own scope tag when that work starts,
+  not `(p23)`, since it's new forward work rather than a backfill). Update
+  `docs/plan/manifest.yaml` and `docs/PLAN-REPLAY-AUDIT.md` as each stage's gaps actually
+  close, not preemptively.

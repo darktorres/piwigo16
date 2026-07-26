@@ -94,7 +94,7 @@ final class IntroSubController implements AdminSubControllerInterface
         // | tabs                                                                  |
         // +-----------------------------------------------------------------------+
 
-        if (isset($_GET['action']) and $_GET['action'] === 'hide_newsletter_subscription') {
+        if (Request\IntroActionRequest::fromGlobals()->isHideNewsletterSubscription) {
             \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
                 ->updateParam('show_newsletter_subscription', 'false');
             exit();

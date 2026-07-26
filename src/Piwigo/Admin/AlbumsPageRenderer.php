@@ -7,7 +7,6 @@ namespace Piwigo\Admin;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
@@ -52,8 +51,7 @@ SELECT
         $row = $conn->fetchNumeric($query);
         $albums_counter = $row !== false ? $row[0] : 0;
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('parent_id', $_GET, false, ValidationPattern::ID);
+        $albumsRequest = Request\AlbumsRequest::fromGlobals();
 
         // +-------------------------------------------------------------------+
         // | tabs                                                              |
@@ -82,7 +80,7 @@ SELECT COUNT(*)
         // |                         categories auto order                     |
         // +-------------------------------------------------------------------+
 
-        $open_cat = $_GET['parent_id'] ?? -1;
+        $open_cat = $albumsRequest->parentId;
 
         $sort_orders = [
             'name ASC',
@@ -95,21 +93,15 @@ SELECT COUNT(*)
             'natural_order ASC',
         ];
 
-        if (isset($_POST['simpleAutoOrder']) || isset($_POST['recursiveAutoOrder'])) {
+        if ($albumsRequest->simpleAutoOrder || $albumsRequest->recursiveAutoOrder) {
 
-            $post_order = $_POST['order'] ?? null;
+            $post_order = $albumsRequest->order;
             if (! is_string($post_order) || ! in_array($post_order, $sort_orders, true)) {
                 \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('Invalid sort order');
             }
-            new \Piwigo\Validation\InputValidator()
-                ->validate('id', $_POST, false, '/^-?\d+$/');
 
-            // check_input_parameter() above fatal_error()s on a non-scalar or
-            // non-matching value, but only narrows the type on its own end; $_POST
-            // itself is still mixed to PHPStan, so re-derive the validated string here.
-            $post_id = $_POST['id'] ?? null;
-            $post_id = is_string($post_id) ? $post_id : '';
+            $post_id = $albumsRequest->id;
 
             $query = '
 SELECT id
@@ -128,7 +120,7 @@ SELECT id
                 array_filter($category_ids_raw, static fn (mixed $v): bool => is_int($v) || is_string($v))
             ));
 
-            if (isset($_POST['recursiveAutoOrder'])) {
+            if ($albumsRequest->recursiveAutoOrder) {
                 $category_ids = $categoryService->getSubcatIds($category_ids);
             }
 
@@ -183,7 +175,7 @@ SELECT id, name, id_uppercat
 
             $categoryService->saveCategoriesOrder($categories);
 
-            $open_cat = $_POST['id'];
+            $open_cat = $albumsRequest->rawId;
         }
 
         $template->assign('open_cat', $open_cat);

@@ -72,16 +72,17 @@ final class ThemesInstalledPageRenderer
         // |                          perform actions                              |
         // +-----------------------------------------------------------------------+
 
-        if (isset($_GET['action']) and is_string($_GET['action']) and isset($_GET['theme']) and is_string($_GET['theme']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
+        $themesAction = Request\ThemesInstalledActionRequest::fromGlobals();
+        if ($themesAction->action !== null and $themesAction->themeId !== null and \Piwigo\Auth\AccessControl::isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
-            $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme, $this->urlService)[$_GET['theme']] ?? null;
-            $action_errors = $extension_lifecycle->performAction(ExtensionType::Theme, $_GET['action'], $_GET['theme'], $fs_theme_entry);
+            $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme, $this->urlService)[$themesAction->themeId] ?? null;
+            $action_errors = $extension_lifecycle->performAction(ExtensionType::Theme, $themesAction->action, $themesAction->themeId, $fs_theme_entry);
             \Piwigo\Core\PageState::current()->errors = array_values(array_filter($action_errors, is_string(...)));
 
             if ($action_errors === []) {
-                if ($_GET['action'] === 'activate' or $_GET['action'] === 'deactivate') {
+                if ($themesAction->action === 'activate' or $themesAction->action === 'deactivate') {
                     $template->delete_compiled_templates();
                 }
                 $this->redirectService->redirect($base_url);

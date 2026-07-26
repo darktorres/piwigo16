@@ -87,6 +87,9 @@ final class PwgUsers
      *   $params['max_level'] but absent from this method's ws.php signature)
      *   -- reachable only if a client sends an unregistered extra GET/POST
      *   key, covered by the shape's open tail, never explicitly typed.
+     * Genuinely dynamic response shape: which per-user fields are present
+     * depends on the client-controlled 'display' param (a comma-separated
+     * field list), not a single fixed row shape.
      * @return PwgError|array<int|string, mixed>
      */
     public static function getList(array $params, PwgServer &$service): PwgError|array
@@ -431,6 +434,11 @@ SELECT DISTINCT ';
      *   shape). password/email: null default, no 'type' flag -- always
      *   present, string|null. password_confirm: WsParamFlag::OPTIONAL with no
      *   'default' key -- may be entirely absent.
+     *
+     * Return type genuinely can't be narrower than mixed: the success path
+     * forwards $service->invoke('pwg.users.getList', ...)'s own result,
+     * and PwgServer::invoke() is itself a generic by-name dispatcher across
+     * every registered WS method, each with its own distinct return shape.
      */
     public static function add(array $params, PwgServer &$service): mixed
     {
@@ -499,8 +507,10 @@ SELECT DISTINCT ';
      * @param array{user_id: int, pwg_token: string, ...} $params neither has a
      *   'default' key -- both mandatory, always present. user_id: WsParamType::ID,
      *   not FORCE_ARRAY here -- a plain int.
+     *
+     * @return PwgError|array{auth_key: string, user_id: int, created_on: string, duration: int, expired_on: string, key_type: string, auth_key_id: string}
      */
-    public static function getAuthKey(array $params, PwgServer &$service): mixed
+    public static function getAuthKey(array $params, PwgServer &$service): PwgError|array
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -583,6 +593,9 @@ SELECT
      *   other key: WsParamFlag::OPTIONAL with no 'default' key -- may be entirely
      *   absent; group_id: WsParamType::INT only (no POSITIVE) since -1 is a valid
      *   value ("dissociate from all groups").
+     *
+     * Return type genuinely can't be narrower than mixed -- same
+     * invoke()-forwarding rationale as add() above.
      */
     public static function setInfo(array $params, PwgServer &$service): mixed
     {
@@ -737,8 +750,12 @@ SELECT ' . $user_field_password . ' AS password
      *   param: no 'default' key -- mandatory, always present. value:
      *   WsParamFlag::OPTIONAL with no 'default' key -- may be entirely absent.
      *   is_json: non-null bool default, WsParamType::BOOL -- always present.
+     *
+     * @return PwgError|array<string, mixed> matches
+     *   Users\User::$preferences' own by-design arbitrary per-user
+     *   key-value shape (User.php's own $preferences docblock)
      */
-    public static function preferencesSet(array $params, PwgServer &$service): mixed
+    public static function preferencesSet(array $params, PwgServer &$service): PwgError|array
     {
         if (! (bool) preg_match('/^[a-zA-Z0-9_-]+$/', $params['param'])) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid param name #' . $params['param'] . '#');
@@ -913,7 +930,7 @@ SELECT
      *   user_id/pwg_token: no 'default' key -- mandatory, always present,
      *   WsParamType::ID guarantees a plain int for user_id. send_by_mail: non-null
      *   bool default, WsParamType::BOOL -- always present.
-     * @return PwgError|array{generated_link: mixed, send_by_mail: string|false|null, time_validation: mixed}
+     * @return PwgError|array{generated_link: string, send_by_mail: string|false|null, time_validation: string}
      */
     public static function generatePasswordLink(array $params, PwgServer &$service): PwgError|array
     {
@@ -1030,7 +1047,7 @@ SELECT
      * @param array{key_name: string, duration: int, pwg_token: string, ...} $params
      *   none has a 'default' key -- all mandatory, always present; duration:
      *   WsParamType::INT|WsParamType::POSITIVE guarantees a plain int.
-     * @return PwgError|array<string, mixed>
+     * @return PwgError|array{auth_key: string, apikey_secret: string, apikey_name: string, user_id: int, created_on: string, duration: int, key_type: string, expired_on: string}
      */
     public static function createApiKey(array $params, PwgServer &$service): PwgError|array
     {
@@ -1158,7 +1175,7 @@ SELECT
      *
      * @param array{pwg_token: string, ...} $params no 'default' key --
      *   mandatory, always present, no 'type' flag.
-     * @return PwgError|array<int, mixed>|string
+     * @return PwgError|string|list<array{auth_key: string, apikey_secret: string, apikey_name: string, created_on: string, duration: ?int, expired_on: string, revoked_on: ?string, last_used_on: ?string, last_notified_on: ?string, created_on_format: string, expired_on_format: string, last_used_on_since: string, is_expired: bool, expiration: string, expired_on_since: string, revoked_on_since: ?string, revoked_on_message: ?string}>
      */
     public static function getApiKey(array $params, PwgServer &$service): PwgError|array|string
     {

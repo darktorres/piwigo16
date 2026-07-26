@@ -294,7 +294,7 @@ final class HistoryRepository extends EntityRepository
      * @param list<string> $types every possible image_type value + 'none'
      *   (matched against a NULL image_type)
      * @param ?list<int> $imageIdsFromFilename
-     * @return list<array<string, mixed>>
+     * @return list<array{date: ?string, time: string, user_id: int, IP: string, section: ?string, category_id: ?int, search_id: ?int, tag_ids: ?string, image_id: ?int, image_type: ?string}>
      */
     public function search(
         ?string $dateAfter,

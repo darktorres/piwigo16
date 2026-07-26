@@ -227,7 +227,10 @@ final readonly class HistoryService
     }
 
     /**
-     * Callback used to sort history entries.
+     * Callback used to sort history entries. Same cross-domain
+     * generic-row-reader rationale as
+     * Category\CategoryService::compareByGlobalRank() -- only
+     * 'date'/'time' are read, defensively.
      *
      * @param array<string, mixed> $a
      * @param array<string, mixed> $b

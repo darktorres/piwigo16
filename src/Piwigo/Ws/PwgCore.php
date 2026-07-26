@@ -40,6 +40,12 @@ use Piwigo\Search\SearchRepository;
  * include/ws_default_methods.inc.php. historyGet() is the 'get_history'
  * event handler (registered via first-class-callable, not an addMethod()
  * WS registration).
+ *
+ * `$params`/`$param` throughout this class (every `mixed[]`/`array<string,
+ * mixed>`-typed WS method parameter) is raw, unvalidated WS-protocol
+ * request data -- flagged for Phase 4 (SEC-40/P27 Request DTOs), not
+ * narrowed in this pass. Every real read already narrows defensively at
+ * its own use site.
  */
 final class PwgCore
 {
@@ -327,6 +333,10 @@ SELECT id, path, representative_ext, width, height, rotation
 
         $infos['last_date_calc'] = date('Y-m-d H:i:s');
 
+        // $output matches PwgNamedArray::$_content's own by-design generic
+        // array<int, mixed> contract (a name/value pair list encoded
+        // generically for XML/REST) -- $infos itself is genuinely
+        // heterogeneous (int/array/string/null per key).
         /** @var array<int, mixed> $output */
         $output = [];
         foreach ($infos as $name => $value) {
@@ -510,6 +520,10 @@ DELETE FROM ' . Tables::rate() . '
      *    int|null. offset: WsParamType::INT|POSITIVE, default 0 (non-null) ->
      *    always int. date_min/date_max/object/action: no WS_TYPE flag, null
      *    default -> string|null.
+     * result_lines' rows are genuinely heterogeneous (piwigo_activity.details
+     * is an entity-agnostic per-action payload, same rationale as
+     * Admin\Maintenance\ActivityLogEntryFormatter's own $details); 'params'
+     * echoes $param back for the WS client, same by-design shape.
      * @return PwgError|array{result_lines: array<int, array<string, mixed>>, page_offset: int, end_page: bool, params: array<string, mixed>}
      */
     public static function getActivityList(array $param, PwgServer &$service): PwgError|array

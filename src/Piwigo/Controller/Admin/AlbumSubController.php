@@ -86,7 +86,6 @@ final class AlbumSubController implements AdminSubControllerInterface
             \Piwigo\Bootstrap\AdminAccessor::elementSetRanksPageRenderer()
                 ->render();
         } elseif ($tab === 'permissions') {
-            $_GET['cat'] = $cat_id;
             \Piwigo\Bootstrap\AdminAccessor::catPermPageRenderer()
                 ->render($adminAlbumBaseUrl, $category);
         } else {

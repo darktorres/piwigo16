@@ -482,8 +482,8 @@ final class MailService implements MailerInterface
      * Sends a notification email to all administrators. The current user
      * (if admin) is not notified.
      *
-     * @param string|array<int|string, mixed> $subject
-     * @param string|array<int|string, mixed> $content
+     * @param string|array{key_args: array<int, mixed>} $subject
+     * @param string|list<array{key_args: array<int, mixed>}> $content
      * @param bool $sendTechnicalDetails send user IP and browser
      */
     #[\Override]
@@ -686,7 +686,7 @@ final class MailService implements MailerInterface
      * Sends an email, using Piwigo-specific information.
      *
      * @param string|array<int|string, mixed> $to
-     * @param array{from?: mixed, reply_to_mail_address?: string, reply_to_name?: string, Cc?: mixed, Bcc?: mixed, subject?: mixed, content?: mixed, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
+     * @param array{from?: array|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array|string, Bcc?: array|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
      *        from: sender [default value webmaster email]
      *        reply_to_mail_address/reply_to_name: reply-to can differ from "from"
      *        Cc/Bcc: carbon-copy/blind-carbon-copy receivers

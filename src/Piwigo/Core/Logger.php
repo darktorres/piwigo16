@@ -14,6 +14,11 @@ namespace Piwigo\Core;
 /**
  * Modified version of KLogger 0.2.0
  *
+ * Every $cat/$args/$context parameter below stays a generic
+ * array<int|string, mixed> by design -- matches PSR-3 LoggerInterface's own
+ * $context parameter, var_export()'d as-is by contextToString() regardless
+ * of shape.
+ *
  * @author  Kenny Katzgrau <katzgrau@gmail.com>
  */
 final class Logger
@@ -68,8 +73,13 @@ final class Logger
     ];
 
     /**
-     * Instance options.
-     * @var array<string, mixed>
+     * Instance options. directory/filename start null and are normalized to
+     * real strings by the constructor (unless severity is OFF, which
+     * returns before normalizing -- every real caller passes both anyway,
+     * see the two production construction sites); filePath is added by the
+     * constructor, never passed in.
+     *
+     * @var array{directory?: string|null, filename?: string|null, globPattern?: string, severity?: int|string, dateFormat?: string, archiveDays?: int, filePath?: string}
      */
     private array $options = [
         'directory' => null, // Log files directory
@@ -93,7 +103,7 @@ final class Logger
     private $_fileHandle;
 
     /**
-     * @param array<string, mixed> $options
+     * @param array{directory?: string|null, filename?: string|null, globPattern?: string, severity?: int|string, dateFormat?: string, archiveDays?: int} $options
      */
     public function __construct($options)
     {

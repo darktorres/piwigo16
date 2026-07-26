@@ -13,6 +13,10 @@ use Psr\Http\Message\ResponseInterface;
 final class ResponseFactory
 {
     /**
+     * $data's values are genuinely arbitrary by design -- fed straight into
+     * json_encode(mixed $value), same category as PwgResponseEncoder's own
+     * generic serialization boundary.
+     *
      * @param array<string, mixed> $data
      */
     public static function json(array $data, int $status = 200): ResponseInterface

@@ -13,7 +13,7 @@ final readonly class SendNotificationEmailJob
 {
     /**
      * @param string|array<int|string, mixed> $to
-     * @param array{from?: mixed, reply_to_mail_address?: string, reply_to_name?: string, Cc?: mixed, Bcc?: mixed, subject?: mixed, content?: mixed, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
+     * @param array{from?: array|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array|string, Bcc?: array|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
      * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl
      */
     public function __construct(

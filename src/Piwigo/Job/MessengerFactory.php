@@ -150,6 +150,10 @@ final class MessengerFactory
     }
 
     /**
+     * $factories' return values are genuinely arbitrary by design -- any
+     * PHP-DI-bound service, matching PSR-11 ContainerInterface::get()'s own
+     * `mixed` return below (a real interface override, not a design choice).
+     *
      * @param array<string, \Closure(): mixed> $factories
      */
     private static function containerOf(array $factories): ContainerInterface

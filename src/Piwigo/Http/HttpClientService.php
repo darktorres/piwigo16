@@ -35,6 +35,12 @@ use Symfony\Contracts\HttpClient\ResponseInterface as SymfonyResponseInterface;
  * raw local-file-read fallback this class's SEC-24 companion removes, and
  * zero SSRF/IP-range validation). Built from the security doc's own SEC-23
  * description.
+ *
+ * $getData/$postData values are genuinely arbitrary by design -- fed
+ * straight into PHP's own http_build_query(array|object $data).
+ * $extraOptions mirrors Symfony HttpClientInterface::request()'s own
+ * heterogeneous $options array (timeout: float, proxy: string, ...),
+ * merged onto the underlying client call unchanged.
  */
 final readonly class HttpClientService implements ClientInterface
 {

@@ -22,15 +22,27 @@ namespace Piwigo\Core;
 interface MailerInterface
 {
     /**
+     * from/Cc/Bcc: array|string, matching unformatEmail()'s own accepted
+     * param type (a single "email"/"name" array or a "Name <email>"/plain
+     * email string) -- neither of this interface's 2 real callers actually
+     * sets any of the 3, but mail()'s own body handles both forms.
+     * subject/content: both real callers always pass a plain string
+     * (Lang::t()/Lang::args() results).
+     *
      * @param string|array<int|string, mixed> $to
-     * @param array{from?: mixed, reply_to_mail_address?: string, reply_to_name?: string, Cc?: mixed, Bcc?: mixed, subject?: mixed, content?: mixed, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
+     * @param array{from?: array|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array|string, Bcc?: array|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
      * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl
      */
     public function mail(string|array $to, array $args = [], array $tpl = []): bool;
 
     /**
-     * @param string|array<int|string, mixed> $subject
-     * @param string|array<int|string, mixed> $content
+     * Array form is one (subject) or a list of (content) Lang::buildArgs()
+     * results -- every real caller builds $content via repeated
+     * `$keyargsContent[] = Lang::buildArgs(...)`, matching buildArgs()'s own
+     * declared return shape.
+     *
+     * @param string|array{key_args: array<int, mixed>} $subject
+     * @param string|list<array{key_args: array<int, mixed>}> $content
      */
     public function mailNotificationAdmins(string|array $subject, string|array $content, bool $sendTechnicalDetails = true, int|string|null $groupId = null): bool;
 }

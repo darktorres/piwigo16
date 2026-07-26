@@ -15,6 +15,12 @@ use Piwigo\Core\AppInfo;
 
 /**
  * Provides a persistent cache mechanism across multiple page loads/sessions etc...
+ *
+ * get()/set()'s cached value is genuinely arbitrary by design -- matches
+ * PSR-16 CacheInterface's own get(string $key, mixed $default = null):
+ * mixed / set(string $key, mixed $value, ...): bool contract. make_key()'s
+ * $key parts are scalar-checked (with a serialize() fallback) at their own
+ * use site rather than assumed.
  */
 abstract class PersistentCache
 {

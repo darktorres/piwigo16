@@ -82,7 +82,9 @@ final class SqlDialect
 
     /**
      * Returns string 'true' or 'false' if the given var is boolean.
-     * If the input is another type, it is not changed.
+     * If the input is another type, it is not changed -- an identity
+     * passthrough for any non-bool BatchWriter column value (int, string,
+     * float, null), so the return type mirrors the param type by design.
      */
     public static function booleanToString(mixed $var): mixed
     {
@@ -100,7 +102,8 @@ final class SqlDialect
      * show_nb_comments/show_nb_hits) -- booleanToString()'s 'true'/
      * 'false' strings are non-numeric and strict SQL mode rejects them
      * against an int column. If the input is another type, it is not
-     * changed.
+     * changed -- same identity-passthrough-for-non-bool rationale as
+     * booleanToString() above.
      */
     public static function booleanToInt(mixed $var): mixed
     {

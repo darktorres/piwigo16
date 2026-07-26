@@ -62,7 +62,7 @@ final class CoreTabs
     }
 
     /**
-     * Called by each real writer file (10 *SubController.php, 8
+     * Called by each real writer file (13 *SubController.php, 12
      * *PageRenderer.php called from a SubController) right before it
      * constructs its own Tabsheet -- see CoreTabsContext's own docblock
      * for why this can't be a real addCoreTabs() parameter. Worker-mode

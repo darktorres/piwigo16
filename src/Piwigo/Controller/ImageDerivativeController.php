@@ -100,7 +100,7 @@ final class ImageDerivativeController implements ControllerInterface
 
     /**
      * @var ?array{int, ?int} width is guaranteed int once set (see the
-     *   $row->width !== null guard in serve()'s own flow), but height can
+     *   $row->width !== null guard in __invoke()'s own flow), but height can
      *   still independently be null (both are separately-nullable DB
      *   columns).
      */

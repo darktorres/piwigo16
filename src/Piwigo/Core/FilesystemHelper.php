@@ -53,7 +53,7 @@ final class FilesystemHelper
     private static ?HtmlRenderingInterface $htmlRenderer = null;
 
     /**
-     * Set once by include/common.inc.php (legacy, not subject to deptrac) --
+     * Set once by Piwigo\Bootstrap\RequestBootstrap::configure() --
      * same static-setter shape as Piwigo\Core\Lang::setDefaultLanguageProvider(),
      * needed because this L1Infrastructure class may not depend on
      * L3Presentation's HtmlService directly (deptrac).

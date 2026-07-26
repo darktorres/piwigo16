@@ -28,8 +28,8 @@ class ThemeMaintain
      * @param array<int, string> $errors - used to return error messages
      * @return mixed - matches DummyThemeMaintain::activate()'s committed
      *   native `mixed` return; kept docblock-only here (not native) for the
-     *   same third-party-subclass contravariance reason as PluginMaintain
-     *   above.
+     *   same third-party-subclass contravariance reason as
+     *   PluginMaintain::install() (see Piwigo\Admin\PluginMaintain).
      */
     public function activate($theme_version, &$errors = [])
     {

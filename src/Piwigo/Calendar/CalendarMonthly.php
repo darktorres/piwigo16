@@ -170,9 +170,10 @@ final class CalendarMonthly extends CalendarBase
     }
 
     /**
-     * Returns an array with all the days in a given month.
+     * Returns the number of days (28-31) in a given month, accounting for
+     * leap years.
      *
-     * @param int|string $year both callers pass $page['chronology_date'][self::CYEAR],
+     * @param int|string $year each caller passes $page['chronology_date'][self::CYEAR],
      *   a numeric string parsed from the URL (or the literal 'any')
      * @param int|string $month same: $page['chronology_date'][self::CMONTH]
      */

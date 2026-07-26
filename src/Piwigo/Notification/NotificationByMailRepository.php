@@ -34,9 +34,9 @@ final class NotificationByMailRepository extends AbstractRepository
      * as parameters anyway, SQL doesn't allow placeholders for
      * identifiers). $checkKeyList, by contrast, IS bound -- [SEC-18]-class
      * improvement over the original's unescaped `'\'' . $s . '\''`
-     * string-literal quoting (`quote_check_key_list()`, still used
-     * unchanged by admin/notification_by_mail.php's own out-of-scope raw
-     * query, kept untouched here).
+     * string-literal quoting (now `NotificationByMailSender::quoteCheckKeyList()`,
+     * still used unchanged by NotificationByMailSubController's own
+     * out-of-scope raw query, kept untouched here).
      *
      * @param  list<string>  $checkKeyList
      * @return list<UserMailNotification>

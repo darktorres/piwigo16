@@ -37,10 +37,11 @@ final class TimingHelper
     }
 
     /**
-     * append a variable to the $debug global
+     * append a line to PageState's accumulated debug output
      *
      * P23 batch 8d: relocated from include/functions.inc.php's
-     * pwg_debug(), unchanged logic.
+     * pwg_debug(), unchanged logic (former `global $debug` accumulator is
+     * now PageState::current()'s debugOutput property).
      */
     public static function debug(string $string): void
     {

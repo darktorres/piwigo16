@@ -289,7 +289,7 @@ final readonly class MetadataService
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<string, string>
      */
     public function getSyncExifData(string $file): array
     {

@@ -30,11 +30,10 @@ use Psr\Http\Message\ServerRequestInterface;
  * accumulator mechanics this relies on.
  *
  * check_status() stays outside this method's own render logic on
- * purpose: it can call access_denied() (-> exit()) directly on failure,
- * same accepted exit()-based-termination limitation as every other
- * legacy redirect/denial path (see docs/plan/manifest.yaml's P22 entry)
- * -- unrelated to the ob_start() question above (Workstream C3's scope,
- * not this one).
+ * purpose: on failure it throws ResponseReadyException (via
+ * HtmlService::accessDenied()/RedirectService::redirectHttp()/
+ * redirectHtml()), same as every other controller (Workstream C3) --
+ * not an exit()-based termination.
  */
 final class AboutController implements ControllerInterface
 {

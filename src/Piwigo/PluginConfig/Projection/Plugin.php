@@ -7,10 +7,13 @@ namespace Piwigo\PluginConfig\Projection;
 /**
  * Typed row shape for `piwigo_plugins` (P17-23 Stage 1b, PluginConfig
  * domain -- `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection
- * shapes" reference). `fromRow()` centralises the `is_string($row['x']) ?
- * ... : default` narrowing {@see \Piwigo\PluginConfig\PluginRepository}'s
- * own caller ({@see \Piwigo\Admin\PluginLoader::loadPlugin()}) used to do
- * inline, same shape as {@see \Piwigo\Category\Projection\Category}.
+ * shapes" reference). `fromRow()` is unused since the DBAL->ORM migration
+ * (c9b0ff0a8): {@see \Piwigo\PluginConfig\PluginRepository}'s
+ * `getDbPlugins()` now builds this straight from `PluginEntity`'s
+ * already-typed properties instead of narrowing a raw `$row` array; kept
+ * only for parity with the Projection convention's own
+ * `fromRow()`/`toArray()` shape, same shape as
+ * {@see \Piwigo\Category\Projection\Category}.
  *
  * `state` stays `string`, not an enum -- 'inactive'/'active' is a genuine
  * multi-value status column, not a boolean-string retype candidate (same

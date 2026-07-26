@@ -8,18 +8,19 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\ValidationPattern;
 
 /**
- * Typed replacement for `check_input_parameter()`
- * (include/functions.inc.php) -- the request-input hacking-attempt guard
- * used at 43 call sites app-wide. Those call sites are left untouched;
- * `check_input_parameter()` becomes a thin free-function delegate to
- * `validate()` (same shape as `get_ephemeral_key()`).
+ * Typed replacement for the legacy `check_input_parameter()` free
+ * function (formerly include/functions.inc.php) -- the request-input
+ * hacking-attempt guard. That free function (and its include/ home) has
+ * since been fully removed; every former call site now calls this
+ * class's `validate()` directly (same end state as `get_ephemeral_key()`'s
+ * own migration).
  *
  * P23 batch 8f-3: `validate()` is this class's own single, near-universal
  * method (81 real construction sites) -- constructor- or parameter-
  * injecting `HtmlRenderingInterface` would ripple across every one of
  * them for zero real benefit, so this uses the same static-setter shape
  * as `Piwigo\Core\Lang::setDefaultLanguageProvider()` instead: set once by
- * include/common.inc.php (legacy, not subject to deptrac), reused by
+ * `Bootstrap\RequestBootstrap` (not subject to deptrac), reused by
  * every `validate()` call in the request. Needed because this
  * L1Infrastructure class may not depend on L3Presentation's HtmlService
  * directly (deptrac), and every real call site already relies on

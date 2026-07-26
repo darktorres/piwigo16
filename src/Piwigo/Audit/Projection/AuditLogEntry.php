@@ -8,8 +8,10 @@ namespace Piwigo\Audit\Projection;
  * Typed row shape for `piwigo_audit_log` (P17-23 Stage 1b, Audit domain --
  * `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection shapes"
  * reference). `fromRow()` centralises the `is_numeric($row['x']) ? ... :
- * default` narrowing {@see \Piwigo\Audit\AuditRepository::findAllInOrder()}'s
- * own inline `array_map()` closure used to do inline, same shape as
+ * default` narrowing a raw DBAL row read of this table would need -- unlike
+ * {@see \Piwigo\Audit\AuditRepository::findAllInOrder()}'s own inline
+ * `array_map()` closure, which builds this shape straight off a typed
+ * {@see AuditLogEntity}'s properties instead, same shape as
  * {@see \Piwigo\Category\Projection\Category}.
  */
 final readonly class AuditLogEntry

@@ -16,9 +16,10 @@ use Piwigo\Url\UrlService;
 /**
  * Same "point CurrentPaths at a fresh temp root" Template setup as
  * PictureCommentRendererTest.php -- see that file's own docblock.
- * render()'s only DB-free branch is rate_enabled=false, checked before
- * $picture/the repository are ever touched; every other branch needs a
- * real RateRepository row and stays at Integration level.
+ * render() also stays DB-free whenever rate_enabled=true but
+ * $picture['current']['rating_score'] is null -- neither repository call
+ * is reached in that case either; every branch that does need a real
+ * RateRepository row stays at Integration level.
  */
 function picture_rate_test_rrmdir(string $dir): void
 {

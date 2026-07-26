@@ -145,7 +145,7 @@ final class UrlService implements UrlServiceInterface
 
     /**
      * Returns the configured gallery_url's host[:port], or null when
-     * unconfigured (auto-detect mode). Reads Piwigo\Config\Config::
+     * unconfigured (auto-detect mode). Reads Piwigo\Config\CurrentConfig::
      * galleryUrl() directly -- safe since Legacy Coupling Retirement Track A
      * batch A4's ConfigDb fix (see EphemeralKeyService's own docblock for
      * the mechanism); previously this and every other admin-configurable
@@ -568,6 +568,9 @@ final class UrlService implements UrlServiceInterface
      *
      * @param string[] $tokens of url tokens to parse
      * @param int $nextToken the index in the array of url tokens; in/out
+     * @param RedirectServiceInterface $redirectService used to issue the
+     *   badRequest()/pageNotFound() redirects triggered when a token fails
+     *   to resolve (unknown permalink, missing tag, ...)
      * @return array<string, mixed>
      */
     #[\Override]
@@ -851,7 +854,7 @@ final class UrlService implements UrlServiceInterface
 
     /**
      * @param array<string, mixed> $elementInfo containing element information
-     * from db; at least 'id', 'path' should be present
+     * from db; only 'path' is actually read
      */
     #[\Override]
     public function getElementUrl(array $elementInfo): string

@@ -290,9 +290,12 @@ final class PageState
     }
 
     /**
-     * Called by MysqliDb::query() after every real query -- accumulates
-     * both counters together, matching that call site's own original
-     * combined increment.
+     * Accumulates both counters together, matching the legacy MysqliDb::
+     * query()'s own original combined increment -- MysqliDb itself has
+     * since been removed (DB access now goes through Piwigo\Db\
+     * DbConnection), and no current call site invokes this method in
+     * production; countQueries/queriesTime stay at 0 outside of tests
+     * that call it directly.
      */
     public function addQueryTime(float $time): void
     {

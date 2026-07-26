@@ -12,8 +12,9 @@ use Doctrine\ORM\Mapping as ORM;
  * composite PK (user_id, cat_id), no per-row payload. No `repositoryClass`,
  * same no-single-owner shape as Group\GroupAccessEntity/UserGroupEntity:
  * CategoryRepository writes it (permission grants tied to a category being
- * created/deleted/moved), Permission\PermissionRepository reads it (owns
- * no table of its own), both via DQL through their own EntityManager.
+ * created/deleted/moved), Permission\PermissionRepository both reads and
+ * writes/deletes it from the permission-management side (owns no table of
+ * its own), both via DQL through their own EntityManager.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'user_access')]

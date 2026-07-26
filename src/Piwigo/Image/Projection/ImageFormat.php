@@ -10,11 +10,11 @@ use Piwigo\Image\ImageFormatEntity;
  * Typed row shape for `piwigo_image_format` (P17-23 Stage 1b, Image domain
  * -- `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection shapes"
  * reference). `fromRow()` centralises the `is_scalar($row['x']) ? ... :
- * default` narrowing that used to be duplicated across every one of this
- * table's own `SELECT *` call sites (ActionController/
- * PictureFormatsPageRenderer/PhotosAddDirectPageRenderer/
- * PictureModifyPageRenderer/PictureController/SiteUpdateSubController),
- * same shape as {@see \Piwigo\Category\Projection\Category}.
+ * default` narrowing for any raw `SELECT *` reader of this table, same
+ * shape as {@see \Piwigo\Category\Projection\Category} -- current real
+ * readers (SiteUpdateSubController, PictureController) go through
+ * {@see ImageRepository::findFullFormatsByImageIds()}'s `fromEntity()`
+ * path instead, so `fromRow()` itself currently has no real caller.
  *
  * `ImageRepository::findFormatsByImageIds()`'s own curated `image_id, ext`
  * projection stays a raw array, deliberately -- narrower than this shape,

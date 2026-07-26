@@ -37,9 +37,9 @@ use Piwigo\Ws\PwgError;
  * The original file already declared its own `global $conf, $user;` /
  * `global $service;` at true top-level script scope (index.php ->
  * common.inc.php -> user.inc.php, all raw `include`s). Its own
- * `$page['user_use_cache'] = ...` write (Legacy Coupling Retirement Track
- * A batch A5) is now a plain local variable -- shouldUseUserCache()'s
- * result is only ever read a few lines below, in this same method.
+ * `$page['user_use_cache']` write and the shouldUseUserCache() helper that
+ * fed it were removed entirely once Stage 4g dropped buildUser()'s
+ * $useCache parameter and the user_cache lock/wait mechanism it supported.
  */
 final class UserBootstrap
 {
@@ -218,8 +218,9 @@ final class UserBootstrap
     /**
      * The Apache-authentication REMOTE_USER/REDIRECT_REMOTE_USER
      * resolution loop (originally inline in include/user.inc.php) --
-     * extracted as a pure function for the same reason as
-     * shouldUseUserCache() above.
+     * extracted as a pure function so it's directly Unit-testable, same
+     * "extract the one real piece of pure logic" precedent as every prior
+     * P23 batch's own extractions.
      *
      * @param  array<int|string, mixed>  $server
      */

@@ -63,7 +63,7 @@ final class PwgCategories
 
     /**
      * Constructed identically 5 times across getImages()/getList() --
-     * including once inside getList()'s per-category while loop -- takes
+     * including once inside getList()'s per-category foreach loop -- takes
      * the caller's own $conn instead of building a fresh one per call,
      * same "shared connection passed in" precedent as
      * Ws\PwgTags::activityService(Connection $conn).

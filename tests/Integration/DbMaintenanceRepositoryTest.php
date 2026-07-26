@@ -13,9 +13,11 @@ use Piwigo\Db\Tables;
 
 /**
  * Fixture: piwigo_history/piwigo_history_summary/piwigo_search/
- * piwigo_lounge/piwigo_user_feed are all empty; piwigo_sessions has 1 row
- * (user 1's real session). Every test inserts its own disposable rows and
- * cleans up via try/finally, matching this suite's established pattern.
+ * piwigo_lounge/piwigo_user_feed are all empty; piwigo_sessions has several
+ * rows (1 real session for user 1, plus a handful of anonymous/guest
+ * sessions with empty `data`). Every test inserts its own disposable rows
+ * and cleans up via try/finally, matching this suite's established
+ * pattern.
  */
 final class DbMaintenanceRepositoryTest extends IntegrationTestCase
 {

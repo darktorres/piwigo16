@@ -12,10 +12,10 @@ namespace Piwigo\Audit;
  *
  * PII-aware: `record()` stores `$actorId` (a user id), never raw PII. The
  * `$before`/`$after` snapshots are the CALLER's own responsibility to keep
- * PII-minimal -- this service doesn't redact anything itself. P18's own
- * call sites (UserService::registerUser(), GroupService::create()/delete()/
- * addAccess()/removeAccess()) only ever pass identifying-but-not-sensitive
- * fields (e.g. a new user's username, never their password hash).
+ * PII-minimal -- this service doesn't redact anything itself. Real call
+ * sites (GroupService::delete(), GroupPermPageRenderer's permission
+ * grant/revoke) only ever pass identifying-but-not-sensitive fields (e.g.
+ * a deleted group's name, never a password hash).
  *
  * Hash chain: `row_hash` = sha256(prev row's row_hash + this row's own
  * content), so altering any row (content or its own stored hash)

@@ -10,9 +10,10 @@ use Piwigo\Db\EntityManagerFactory;
 
 /**
  * Thin object-oriented facade over Lang/Translator for constructor
- * injection -- t()/l10n() delegate straight to Lang::t(), matching l10n()'s
- * existing free-function contract exactly (both accept a possibly-null key
- * for parity with legacy call sites that pass an unchecked array value).
+ * injection -- t()/l10n() delegate straight to Lang::t(), matching the
+ * now-deleted free function l10n()'s former contract exactly (both accept
+ * a possibly-null key for parity with legacy call sites that pass an
+ * unchecked array value).
  *
  * loadLanguageForPlugin() is new: discovers and loads a plugin's own PO
  * file (`<pluginDir>/language/<locale>/plugin.po`). `$locale` is an
@@ -67,7 +68,7 @@ final readonly class LangService
      * directly rather than the DI container -- same reasoning as
      * DbConnection::build() being callable from anywhere, no DI ceremony.
      *
-     * @return string[]
+     * @return array<string, string>
      */
     public static function getLanguages(): array
     {

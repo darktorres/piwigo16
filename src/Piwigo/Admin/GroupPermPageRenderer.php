@@ -11,14 +11,12 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Group\GroupService;
 
 /**
  * Ported from admin/group_perm.php (page slug "group_perm"). Already used
- * GroupService/GroupRepository/AuditService (P18) directly for its own
- * group-category permission grant/deny before this batch; nothing new to
- * extract.
+ * GroupService/AuditService (P18) directly for its own group-category
+ * permission grant/deny before this batch; nothing new to extract.
  */
 final class GroupPermPageRenderer
 {

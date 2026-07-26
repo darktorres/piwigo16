@@ -24,19 +24,21 @@ use Piwigo\Core\UrlServiceInterface;
  * send_piwigo_infos() free function, deleted with
  * include/functions.inc.php) has the exact same L3-may-not-reach-L4 shape
  * -- injected here as Piwigo\Core\TelemetrySenderInterface (constructor
- * injection: exactly one construction site, Bootstrap\PageTail::render(),
- * which passes the concrete Piwigo\Admin\PiwigoInfosSender).
+ * injection: exactly two construction sites, Bootstrap\PageTail::render()
+ * and Bootstrap\PageTail::renderToString(), both of which pass the
+ * concrete Piwigo\Admin\PiwigoInfosSender).
  *
  * Legacy Coupling Retirement Phase 4c: UrlServiceInterface is also
  * real constructor injection here, unlike Html\HtmlService/
  * Mail\MailService/Users\UserService/Template\Template/
- * PageHeaderRenderer's throwaway-per-call pattern -- this class's own one
- * real construction site is Bootstrap\PageTail::render() itself, already
- * an established composition root manually wiring
- * TelemetrySenderInterface's concrete implementation; wiring a second
- * interface there the same way is consistent, not circular (unlike those
- * other classes, this one isn't reachable from
- * Piwigo\Bootstrap\RedirectService's own construction chain).
+ * PageHeaderRenderer's throwaway-per-call pattern -- this class's own real
+ * construction sites are Bootstrap\PageTail::render() and
+ * Bootstrap\PageTail::renderToString(), both already an established
+ * composition root manually wiring TelemetrySenderInterface's concrete
+ * implementation; wiring a second interface there the same way is
+ * consistent, not circular (unlike those other classes, this one isn't
+ * reachable from Piwigo\Bootstrap\RedirectService's own construction
+ * chain).
  */
 final readonly class PageTailRenderer
 {

@@ -34,8 +34,8 @@ final class PageHeaderRenderer
      *   the original page_header.php include.
      * @param string|null $refresh optional meta-refresh delay in seconds;
      *   only applied together with $urlLink, matching the original
-     *   $refresh/$url_link top-level-scope contract (no current caller
-     *   sets either).
+     *   $refresh/$url_link top-level-scope contract -- Bootstrap\RedirectService::redirectHtml()
+     *   is the one real caller that sets both today.
      */
     public function render(string $title, ?string $refresh = null, ?string $urlLink = null): void
     {

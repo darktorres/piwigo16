@@ -27,15 +27,16 @@ use Piwigo\Permission\PermissionService;
  * Piwigo\Mail\MailService directly -- same L2b-may-not-depend-on-L3
  * constraint as UserService, see deptrac.yaml's own comment on the Mail
  * namespace entry and MailerInterface's own docblock. P23 batch 8f-3:
- * `validateComment()`'s unknown-comment-id `fatal_error()` call is now
+ * `getCommentAuthorId()`'s unknown-comment-id `fatal_error()` call is now
  * routed through the same-shaped HtmlRenderingInterface (Piwigo\Core)
  * instead of staying a bare free-function call.
  *
- * is_admin()/is_a_guest()/is_classic_user() and the `$user`/`$conf`
- * globals they and this class read are called exactly as the original
- * functions_comment.inc.php did -- the entire access-level-check family is
- * explicitly out of scope for this phase (see task #343), too widely used
- * app-wide to safely wrap here.
+ * AccessControl::isAdmin()/isAGuest()/isClassicUser() and the
+ * CurrentUser::get()/CurrentConfig:: accessors they and this class use
+ * replace the original functions_comment.inc.php's bare is_admin()/
+ * is_a_guest()/is_classic_user() calls and `$user`/`$conf` globals -- the
+ * entire access-level-check family is explicitly out of scope for this
+ * phase (see task #343), too widely used app-wide to safely wrap here.
  */
 final readonly class CommentService
 {
@@ -82,8 +83,8 @@ final readonly class CommentService
 
     /**
      * Basic spam check (plugins can do more via the same `user_comment_check`
-     * event). Registered in include/common.inc.php's default-event-handlers
-     * block (P23 batch 8c, relocated from the now-deleted
+     * event). Registered in Piwigo\Bootstrap\RequestBootstrap's own
+     * default-event-handlers block (P23 batch 8c, relocated from the now-deleted
      * functions_comment.inc.php) as that event's own handler -- called by
      * trigger_change() from insertComment()/updateComment() themselves, not
      * directly by callers.

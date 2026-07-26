@@ -164,8 +164,8 @@ final class ImageStdParams
      * @param int $w
      * @param int $h
      * @param float $crop
-     * @param int $minw
-     * @param int $minh
+     * @param ?int $minw
+     * @param ?int $minh
      */
     public static function get_custom($w, $h, $crop = 0, $minw = null, $minh = null): DerivativeParams
     {
@@ -389,7 +389,7 @@ final class ImageStdParams
     }
 
     /**
-     * Compute 'apply_watermark'
+     * Compute 'use_watermark'
      *
      * @param DerivativeParams $params
      */

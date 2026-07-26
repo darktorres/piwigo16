@@ -18,11 +18,10 @@ use Piwigo\Db\Tables;
  * performed_by=1 (fixture_admin), covering object types
  * user/album/photo/tag/group: user (2,3 login; 14,15 add), album (4,5 add),
  * photo (6-10 add), tag (11-13 add), group (16-18 add). Every row shares
- * the same fixture-wide timestamp (2026-08-01 00:00:00, matching
- * PIWIGO_TEST_NOW) -- tests needing genuinely distinguishable dates mutate
- * their own row(s), scoped to that test only. Read-only tests query this
- * fixture data directly; write tests insert their own disposable rows and
- * clean up via try/finally.
+ * the same fixture-wide timestamp (2026-08-01 03:00:00) -- tests needing
+ * genuinely distinguishable dates mutate their own row(s), scoped to that
+ * test only. Read-only tests query this fixture data directly; write
+ * tests insert their own disposable rows and clean up via try/finally.
  */
 final class ActivityRepositoryTest extends IntegrationTestCase
 {

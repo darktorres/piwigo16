@@ -15,10 +15,13 @@ use Piwigo\Users\UserInfoEntity;
  * to duplicate for itself, same shape as
  * {@see \Piwigo\Category\Projection\Category}.
  *
- * Scoped to `findDefaultUserInfoRow()` only, per the Stage 1b plan --
- * `UserService::getUserData()`'s own 3-way raw JOIN (`users`/`user_infos`/
- * `user_cache`) stays a raw array; that query never selects a clean
- * single-table row this projection could represent.
+ * `findDefaultUserInfoRow()`, the only real caller, actually builds this
+ * via `fromEntity()` instead (it already holds a loaded `UserInfoEntity`
+ * from Doctrine) -- `fromRow()` stays available for a future raw-row
+ * caller but has none today. `UserService::getUserData()`'s own 3-way raw
+ * JOIN (`users`/`user_infos`/`user_cache`) stays a raw array; that query
+ * never selects a clean single-table row this projection could
+ * represent.
  *
  * `expand`/`show_nb_comments`/`show_nb_hits`/`enabled_high`/
  * `last_visit_from_history` are real `bool` here, not the raw tinyint the

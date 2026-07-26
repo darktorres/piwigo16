@@ -11,7 +11,7 @@ use Piwigo\Backup\BackupService;
  * replacing the rewire tools/restore-drill.sh's own header comment
  * anticipated ("Rewire onto the real bin/piwigo backup:restore once P12
  * lands"). Deliberately NOT wired into that script/its CI job instead --
- * see docs/PLAN-REPLAY.md P12's scope-decision section for why: that job
+ * see docs/RUNBOOK.md's Restore section for why: that job
  * is intentionally PHP-dependency-free (~10s, no composer install step),
  * and adding one just for this would regress its own deliberate
  * minimalism. This test reuses the exact row-count + join-query smoke

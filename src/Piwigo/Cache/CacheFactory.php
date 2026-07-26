@@ -23,10 +23,12 @@ use Symfony\Component\Cache\Adapter\RedisAdapter;
  *
  * `$namespace`/`$defaultLifetime` (P23 batch 2) let CachePools build several
  * independent, non-colliding pools sharing one backend -- every Symfony
- * cache adapter used here accepts both as its own first two constructor
- * params, so this just threads them through instead of hardcoding 'piwigo'/0
- * the way every call site did until now (still the default, so the existing
- * single generic pool wired in config/container.php is unaffected).
+ * cache adapter used here accepts both (ApcuAdapter/FilesystemAdapter as
+ * their first two constructor params; RedisAdapter as its 2nd/3rd, after
+ * the required connection), so this just threads them through instead of
+ * hardcoding 'piwigo'/0 the way every call site did until now (still the
+ * default, so the existing single generic pool wired in
+ * config/container.php is unaffected).
  */
 final class CacheFactory
 {

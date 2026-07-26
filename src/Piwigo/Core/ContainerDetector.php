@@ -17,10 +17,10 @@ final class ContainerDetector
      * hosting, and bare metal installs.
      *
      * Possible values:
-     *  ('none', null)                 => PHP is not running in a container
-     *  ('Official', <VersionCode>)    => PHP is running in an official container
-     *  ('LinuxServer', <VersionCode>) => PHP is running in a LinuxServer container
-     *  ('Unknown', null)              => PHP is running in a non-identified container
+     *  ('none', null)                    => PHP is not running in a container
+     *  ('Official', <VersionCode>)       => PHP is running in an official container
+     *  ('LinuxServer.io', <VersionCode>) => PHP is running in a LinuxServer container
+     *  ('Unknown', null)                 => PHP is running in a non-identified container
      *
      * @since 16.3
      *

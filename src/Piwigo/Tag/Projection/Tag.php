@@ -11,7 +11,7 @@ namespace Piwigo\Tag\Projection;
  * default` narrowing every {@see \Piwigo\Tag\TagRepository} caller used to
  * duplicate for itself, same shape as {@see \Piwigo\Category\Projection\Category}.
  *
- * Scoped to the 3 pure single-table `piwigo_tags` row methods (findAll()/
+ * Scoped to the 3 pure single-table `piwigo_tags` row methods (findAllTags()/
  * findByIdsUrlNamesOrNames()/findByIdsOrAll()) -- findCommonTags()'s own
  * `t.*, count(*) AS counter` JOIN-plus-aggregate query stays a raw array,
  * same deliberate deferral as UserService::getUserData()'s own 3-way raw

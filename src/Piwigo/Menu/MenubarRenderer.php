@@ -17,10 +17,11 @@ use Piwigo\Tag\TagService;
 /**
  * Builds the main menubar's blocks. Injects nothing on its own
  * constructor -- same "no constructor deps" shape as
- * Html\HtmlService/Url\UrlService: cross-domain calls (is_a_guest(),
- * get_filter_page_value(), script_basename(), l10n(),
- * get_nb_available_comments(), is_autorize_status(), is_admin()) stay as
- * plain global-function calls to modules migrated in earlier phases.
+ * Html\HtmlService/Url\UrlService: cross-domain calls
+ * (AccessControl::isAGuest()/isAuthorizeStatus()/isAdmin(),
+ * PageFilterHelper::getFilterPageValue()/scriptBasename(), Lang::t(),
+ * CommentService::getNbAvailableComments()) already call the real
+ * migrated OOP classes directly, not plain global-function wrappers.
  * get_available_tags()/get_nb_available_tags()/tags_counter_compare()
  * (functions_tag.inc.php) and get_categories_menu()/
  * get_related_categories_menu() (functions_category.inc.php) were ported

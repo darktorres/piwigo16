@@ -1042,6 +1042,7 @@ DELETE FROM ' . Tables::favorites() . '
      *    @option bool show_nb_comments (optional)
      *    @option bool show_nb_hits (optional)
      *    @option bool enabled_high (optional)
+     *    @option int[] group_id (optional)
      *
      * $params is Ws-method-parameter-shaped raw input (see the assert()
      * calls below already narrowing individual keys) -- the @option list

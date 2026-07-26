@@ -13,8 +13,9 @@ use Psr\Http\Server\RequestHandlerInterface;
 /**
  * Adds a Server-Timing header from whatever ServerTiming has recorded.
  * Gated by a raw SERVER_TIMING_ENABLED env var -- the doc's own
- * server_timing_enabled config-key + admin/anonymous role gate needs
- * Config (P13) and CurrentUser (P16), neither of which exist yet.
+ * server_timing_enabled config-key + admin/anonymous role gate hasn't
+ * been wired up here yet, even though Config and CurrentUser (both now
+ * implemented) could support it.
  */
 final class ServerTimingMiddleware implements MiddlewareInterface
 {

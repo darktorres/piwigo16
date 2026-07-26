@@ -24,10 +24,11 @@ use Piwigo\Tag\Projection\Tag;
  * this exact layering constraint (see ActivityLoggerInterface's own
  * docblock).
  *
- * Calls trigger_change() directly -- a free function, no class dependency,
- * no deptrac concern. Former bare MysqliDb::singleUpdate()/::massInserts()
- * calls now go through TagRepository (Legacy Coupling Retirement: DI+DBAL
- * migration, Phase 1b).
+ * Calls EventDispatcher::get()->triggerChange()/->triggerNotify() directly
+ * -- a static singleton accessor, no constructor dependency, no deptrac
+ * concern. Former bare MysqliDb::singleUpdate()/::massInserts() calls now
+ * go through TagRepository (Legacy Coupling Retirement: DI+DBAL migration,
+ * Phase 1b).
  *
  * getAllTags()/getCommonTags()/getTagList() each take HtmlRenderingInterface
  * as an explicit parameter (P23 batch 8f-3), same per-method shape as
@@ -294,8 +295,8 @@ final readonly class TagService
      * @param int[] $tagIds
      * @param string|null $extraImagesWhereSql optionally apply a sql where
      *   filter to retrieved images; null is treated the same as '' (both
-     *   are empty() below), and BatchManagerSubController passes null
-     *   explicitly
+     *   are matched via a strict in_array() check below), and
+     *   BatchManagerSubController passes null explicitly
      * @param string|null $orderBy optionally overwrite default photo order;
      *   null is treated the same as '' for the same reason
      * @return list<int>
@@ -616,7 +617,7 @@ final readonly class TagService
     /**
      * Create a new tag.
      *
-     * @return array{info: string, id: int|string}|array{error: string}
+     * @return array{info: string, id: int}|array{error: string}
      */
     public function createTag(string $tagName): array
     {

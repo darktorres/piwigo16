@@ -21,24 +21,26 @@ use Piwigo\Image\Projection\ImageFormat;
  * domain.
  *
  * Owns `images` ({@see ImageEntity}) and `image_format`
- * ({@see ImageFormatEntity}) -- only the single-row/simple-list methods
- * against those two tables go through DQL; every other method here is a
- * bulk id-list operation (raw string-concatenated `IN (...)`, matching
- * the original) or a cross-domain read/write into a table another
- * repository owns (`categories`, `image_category`, `image_tag`,
- * `comments`, `favorites`, `rate`, `caddie`) -- those stay plain DBAL via
- * $this->getEntityManager()->getConnection(), same "mixed repository"
- * shape Tag/Category's own conversions established, skewed further
- * toward "stays raw" given how few of this repository's real methods are
- * single-entity CRUD. `lounge`/`config` (the empty-lounge lock flag) are
- * read/written raw for the same reason -- `config` specifically can't
- * delegate to Config\ConfigRepository::upsert() the way
- * Admin\MenubarPageRenderer's own config write can (that one is a plain
- * upsert; the now-deleted Menu\MenubarLayoutRepository::saveLayout() this
- * mirrors was the same shape): tryAcquireLoungeLock() needs real atomic
- * INSERT-IGNORE claim semantics no find()+persist()+flush() sequence can
- * provide (a race would let two processes both believe they won the
- * lock), so it keeps the raw statement.
+ * ({@see ImageFormatEntity}) -- the single-row/simple-list methods
+ * against those two tables go through DQL, as do two bulk id-list
+ * methods against `images` itself (deleteImages()/touchLastmodified(),
+ * both QueryBuilder delete()/update() with a bound `IN (:ids)`); every
+ * other method here is a bulk id-list operation (raw string-concatenated
+ * `IN (...)`, matching the original) or a cross-domain read/write into a
+ * table another repository owns (`categories`, `image_category`,
+ * `image_tag`, `comments`, `favorites`, `rate`, `caddie`) -- those stay
+ * plain DBAL via $this->getEntityManager()->getConnection(), same "mixed
+ * repository" shape Tag/Category's own conversions established, skewed
+ * further toward "stays raw" given how few of this repository's real
+ * methods are single-entity CRUD. `lounge`/`config` (the empty-lounge
+ * lock flag) are read/written raw for the same reason -- `config`
+ * specifically can't delegate to Config\ConfigRepository::upsert() the
+ * way Admin\MenubarPageRenderer's own config write can (that one is a
+ * plain upsert; the now-deleted Menu\MenubarLayoutRepository::saveLayout()
+ * this mirrors was the same shape): tryAcquireLoungeLock() needs real
+ * atomic INSERT-IGNORE claim semantics no find()+persist()+flush()
+ * sequence can provide (a race would let two processes both believe
+ * they won the lock), so it keeps the raw statement.
  *
  * @extends EntityRepository<ImageEntity>
  */

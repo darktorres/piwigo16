@@ -64,8 +64,9 @@ final class ZipExtractor
      * single file after making its destination writable).
      *
      * Returns null on: failure to open the archive, more than MAX_ENTRIES
-     * entries, more than MAX_UNCOMPRESSED_BYTES total uncompressed size, or
-     * any entry whose resolved destination would fall outside $destPath.
+     * entries, more than MAX_UNCOMPRESSED_BYTES total uncompressed size, any
+     * entry whose stored name is absolute or contains a null byte, or any
+     * entry whose resolved destination would fall outside $destPath.
      *
      * @return list<array{filename: string, stored_filename: string, status: string}>|null
      */

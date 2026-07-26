@@ -18,8 +18,10 @@ use Piwigo\Core\Env;
  * MySQL-specific today (`DB_RANDOM_FUNCTION`/date-function names), same
  * as the class this was extracted from -- `DbCredentials::current()->driver`
  * already supports `'pgsql'` for the DBAL connection layer itself, but
- * nothing under `src/Piwigo/` ever exercised that beyond
- * `install/schema/pgsql.sql` existing; a real multi-dialect split (a
+ * nothing under `src/Piwigo/` ever exercised pgsql beyond
+ * `DbConnection::build()`'s own driver branch supporting it -- no
+ * `install/schema/pgsql.sql` or equivalent exists in this repo; a real
+ * multi-dialect split (a
  * `Piwigo\Db\SqlDialect` interface with MySQL/Postgres implementations,
  * selected by `DbCredentials::current()->driver`) is out of scope for this pass and left as a
  * follow-up once a real pgsql install path is exercised end-to-end.

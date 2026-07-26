@@ -19,9 +19,10 @@ use Piwigo\Session\PwgSession;
  * Lives in Bootstrap (L4), not Piwigo\Session (L1): the body constructs
  * Piwigo\Auth\CookieService (L2a), an upward dependency L1 may not take —
  * same "only violation-free home" reasoning as UserBootstrap. Called from
- * RequestBootstrap::connect() on every request, and directly by the
- * install.php/upgrade.php/upgrade_feed.php entry scripts (which used to
- * include_once the deleted file at the same point).
+ * RequestBootstrap::connect() on every request, and directly by
+ * public/install.php (upgrade.php/upgrade_feed.php were deleted in full by
+ * the Stage 0 legacy in-place upgrade chain removal; no upgrade entry
+ * script remains).
  *
  * In PHP 8.4+ calling session_set_save_handler with two parameters is
  * deprecated. To correct this, we pass a SessionHandlerInterface instance.

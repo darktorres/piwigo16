@@ -140,7 +140,7 @@ final class SrcImage
     public $rotation = 0;
 
     /**
-     * @var int[]
+     * @var int[]|null
      */
     private ?array $size = null;
 

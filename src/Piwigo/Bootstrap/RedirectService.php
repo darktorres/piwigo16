@@ -33,10 +33,9 @@ use Piwigo\Users\UserService;
  * Kernel::container() instead of manually repeating UserService's 6-arg
  * construction chain 3 times in redirectHtml() -- safe because
  * RequestBootstrap::configure() (Phase 8, 8a) now calls Kernel::boot() as
- * its own first statement, ahead of connect()'s own real
- * redirectHtml()-reaching call site (the "database needs upgrading"
- * redirect), so the container is guaranteed available at every real call
- * site of this class, including the early-crash fallback path below.
+ * its own first statement, ahead of every real call site of this class
+ * reachable from connect()/finalize() (e.g. the early-crash fallback path
+ * below), so the container is guaranteed available at every one of them.
  *
  * Workstream C3: redirectHttp()/redirectHtml() now throw
  * Piwigo\Http\ResponseReadyException instead of calling header()/echo/

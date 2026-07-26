@@ -48,10 +48,10 @@ final class PwgUsers
     /**
      * Constructed repeatedly across getList()/getAuthKey()/
      * generatePasswordLink() -- including once inside getList()'s
-     * per-user foreach loop -- takes the caller's own $conn instead of
-     * building a fresh one per call, same "shared connection passed in"
-     * precedent as Ws\PwgTags::activityService(Connection $conn) /
-     * Bootstrap\RequestBootstrap::activityService(Connection $conn).
+     * per-user foreach loop. Unlike Ws\PwgTags::activityService(Connection $conn) /
+     * Bootstrap\RequestBootstrap::activityService(Connection $conn), this
+     * method takes no $conn parameter -- it simply delegates to
+     * Bootstrap\CoreDomainAccessor::authService() on every call.
      */
     private static function authService(): AuthService
     {

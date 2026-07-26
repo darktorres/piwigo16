@@ -19,7 +19,7 @@ use Piwigo\Core\CurrentPaths;
  * Piwigo\Core\PageState/Piwigo\Lang\Translator/Piwigo\Session\
  * SessionService, not the reference implementation's Kernel::boot()-eager-
  * resolution approach: the Kernel's own DI-container accessor is
- * arch-test-restricted to Bootstrap/ and index.php (services must receive
+ * arch-test-restricted to src/Piwigo/Bootstrap/ only (services must receive
  * dependencies via constructor injection, never a service locator), so
  * procedural upload code (functions_upload.inc.php etc.) cannot reach it
  * that way.

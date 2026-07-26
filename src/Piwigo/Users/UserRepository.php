@@ -22,11 +22,14 @@ use Piwigo\Users\Projection\UserInfo;
  * same "not every table a repository touches gets an entity" principle
  * Group/Tag's own conversions already established.
  *
- * Scoped to what's genuinely self-contained: build_user()/getuserdata()'s
- * user_cache generation and check_user_favorites() stay procedural for now
- * -- both are deeply coupled to Category/Image domain internals
- * (get_computed_categories(), Tables::imageCategory(), image-count-based
- * cache invalidation) that don't exist as typed modules yet (P19).
+ * `build_user()`/`getuserdata()`/`check_user_favorites()` (the original
+ * free-function names) ended up ported into
+ * {@see \Piwigo\Users\UserService} instead of here, as OOP methods
+ * (`buildUser()`/`getUserData()`/`checkUserFavorites()`) -- `user_cache`
+ * itself no longer exists (deleted in gap-closure Stage 4g, see
+ * {@see UserService::getUserData()}'s own comment), and the
+ * Category-domain rollup they depended on (`get_computed_categories()`)
+ * is now `CategoryService::getComputedCategories()`.
  *
  * @extends EntityRepository<UserInfoEntity>
  */

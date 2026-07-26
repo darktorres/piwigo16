@@ -16,8 +16,10 @@ use Piwigo\Core\UrlServiceInterface;
  * tokenization, the picture-page image-id parsing, and the
  * parse_section_url() call/merge) -- the much larger second half of that
  * file (category/tags/search/favorites/... DB-query building and
- * $page/$template population) stays procedural, P22 (frontend controller
- * migration) scope, same as category_cats.inc.php/search_filters.inc.php.
+ * $page/$template population) was absorbed into SectionPopulator::
+ * populate() in P23 batch 4d (see that class's own docblock), same as
+ * category_cats.inc.php/search_filters.inc.php were ported to
+ * CategoryCatsRenderer/SearchFilterRenderer.
  *
  * Contains a real bad_request() call (exit-triggering), same established
  * precedent as Html\HtmlService/Page\NoPhotoYetRenderer -- not routed

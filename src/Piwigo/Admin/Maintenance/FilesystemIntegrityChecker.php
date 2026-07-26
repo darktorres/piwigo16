@@ -31,7 +31,9 @@ final class FilesystemIntegrityChecker
     private static bool $fsQuickCheckDone = false;
 
     /**
-     * Displays a header warning if we find missing photos on a random sample.
+     * Displays a header warning if we find missing photos on a random
+     * sample, or if we find duplicate image paths (checked across the
+     * whole images table, not just the sample).
      *
      * @since 13.4.0
      */

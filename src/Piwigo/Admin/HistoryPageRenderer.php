@@ -17,8 +17,8 @@ use Piwigo\Db\Tables;
  * Ported from admin/history.php (page slug "history") -- displays the
  * filtered history lines panel. The actual line listing is fetched
  * client-side via an async ws.php?method=pwg.history.search call
- * (include/ws_functions/pwg.php's ws_history_search(), unchanged, out of
- * this batch's scope); this page only renders the filter form.
+ * (Ws\PwgCore::historySearch(), out of this batch's scope); this page
+ * only renders the filter form.
  *
  * Legacy Coupling Retirement Track A batch A5.2h: dropped a confirmed-dead
  * `if (isset($page['search_id'])) { ... }` navbar block -- the only write

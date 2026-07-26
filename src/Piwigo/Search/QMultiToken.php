@@ -74,6 +74,7 @@ class QMultiToken implements \Stringable
      * @param string $q the actual query to be parsed
      * @param int $qi the character index in $q where to start parsing
      * @param int $level the depth from root in the tree (number of opened and unclosed opening brackets)
+     * @param QExpression $root the root expression tree, used to resolve scope names (e.g. 'tag:') at every recursion level
      */
     protected function parse_expression(string $q, int &$qi, int $level, QExpression $root): void
     {

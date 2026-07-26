@@ -116,10 +116,11 @@ final readonly class SectionContext
      * current URL with these params redefined/removed" links -- adapted
      * from 16.x-rewrite's own SectionContext::toUrlParams() (this
      * project's reference implementation already solved the identical
-     * problem). Each field is included only when it differs from this
-     * class's own default, matching the original global $page array's
-     * real invariant: a key was only ever present when something
-     * actually set it, never present-but-default-valued.
+     * problem). `section` is always included; every other field is
+     * included only when it differs from this class's own default,
+     * matching the original global $page array's real invariant: a key
+     * was only ever present when something actually set it, never
+     * present-but-default-valued.
      *
      * @return array<string, mixed>
      */

@@ -79,12 +79,12 @@ final readonly class CategoryService
     }
 
     /**
-     * Generic cross-domain sort comparator -- 16 real call sites across
+     * Generic cross-domain sort comparator -- 12 real call sites across
      * Category/Ws/Admin/Controller/Picture pass wildly different row
      * shapes (category rows, picture rows, image rows, ...) that merely
      * happen to share a 'global_rank' key; only that one key is read, and
      * defensively (is_scalar()-checked), so $a/$b can't be narrowed to any
-     * single domain's row shape without being wrong for the other 15.
+     * single domain's row shape without being wrong for the other 11.
      *
      * @param  array<string, mixed>  $a
      * @param  array<string, mixed>  $b
@@ -555,10 +555,10 @@ final readonly class CategoryService
 
     /**
      * Common-categories tree for a list of items, WITHOUT the page-URL
-     * decoration (`url` key) -- the free-function wrapper
-     * `get_related_categories_menu()` adds that from `$page`/
-     * `make_index_url()` afterward, same split as every other
-     * $page-coupled function in this domain.
+     * decoration (`url` key) -- {@see getRelatedCategoriesMenuWithUrls()}
+     * adds that afterward, same split the former free-function wrapper
+     * `get_related_categories_menu()` (functions_category.inc.php, deleted)
+     * used to have.
      *
      * @param  list<int>  $items
      * @param  list<int>  $excludedCatIds

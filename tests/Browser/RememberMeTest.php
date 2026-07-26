@@ -6,8 +6,11 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 use PHPUnit\Framework\ExpectationFailedException;
 
 /**
- * Verifies identify + remember-me flow: checking "remember me" sets the
- * pwg_remember cookie; leaving it unchecked doesn't; logout clears it.
+ * Verifies identify + remember-me flow indirectly: logging in with
+ * "remember me" checked authenticates normally, logging in without it
+ * also authenticates normally (the pwg_remember cookie itself isn't
+ * directly inspectable via this browser plugin -- see the second test's
+ * own comment), and logout clears the session back to guest status.
  */
 it('login with remember-me sets the remember cookie', function (): void {
     $page = H::visitPwg($this, '/identification.php');

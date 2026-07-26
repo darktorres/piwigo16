@@ -25,10 +25,13 @@ use Psr\Http\Message\ServerRequestInterface;
  * this docblock originally claiming so. It's consumed indirectly by
  * `Piwigo\Admin\CoreTabs::addCoreTabs()`'s own `case 'themes':` branch
  * (formerly `admin/include/add_core_tabs.inc.php`'s `add_core_tabs()`,
- * folded in P23 batch 8b-6), read via `global $my_base_url;` when
- * `Tabsheet::select()` fires its `tabsheet_before_select` event a few
- * lines below -- dropping it silently degraded every tab href (missing
- * the `admin.php?page=themes` prefix entirely). Restored here.
+ * folded in P23 batch 8b-6) -- dropping it silently degraded every tab
+ * href (missing the `admin.php?page=themes` prefix entirely). Restored
+ * here via `CoreTabs::setContext(new CoreTabsContext(myBaseUrl: ...))`
+ * below; `CoreTabs::addCoreTabs()`'s `'themes'` case now reads it via
+ * `self::contextField(self::context()->myBaseUrl, 'myBaseUrl')`, not the
+ * `global $my_base_url;` read this paragraph originally described (that
+ * mechanism was retired by P24 phase 8g's CoreTabsContext migration).
  *
  * The "installed"/"new" tab bodies were migrated off the themes.class.php
  * god-class (already replaced by PemCatalog/ExtensionScanner/

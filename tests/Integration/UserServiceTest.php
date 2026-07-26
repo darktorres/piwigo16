@@ -25,10 +25,11 @@ namespace Piwigo\Tests\Integration {
      * user with no email on file, so notifyExistingAccountOfDuplicateRegistration()
      * short-circuits before ever calling MailerInterface::mail() -- this
      * harness shouldn't attempt a real mail send). registerUser()'s full SUCCESS
-     * path calls pwg_activity()/trigger_notify(), which need the legacy
-     * $mysqli dblayer connection this lightweight harness doesn't
-     * bootstrap -- live-verified separately instead, same limitation as
-     * GroupService (see its own test class docblock).
+     * path calls ActivityLoggerInterface::record() and
+     * EventDispatcher::triggerNotify() -- both fully DBAL/in-memory now, no
+     * legacy $mysqli dependency -- but this class still doesn't cover it;
+     * live-verified separately instead, same limitation as GroupService
+     * (see its own test class docblock).
      */
     final class UserServiceTest extends IntegrationTestCase
     {

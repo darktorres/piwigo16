@@ -215,9 +215,10 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     /**
      * Whether a user with this exact username exists. Matches the
      * original's own plain `=` comparison -- case sensitivity depends on
-     * the column's collation (this schema's `users` table uses a `_ci`
-     * collation, so this is effectively case-insensitive), not on
-     * anything this query controls. $usernameColumn is the configurable
+     * the column's collation (this schema's `users` table defines `username`
+     * with an explicit `utf8mb4_bin` collation, overriding the table's own
+     * `utf8mb4_unicode_ci` default, so this comparison is case-sensitive), not
+     * on anything this query controls. $usernameColumn is the configurable
      * DB column name (see \Piwigo\Config\CurrentConfig::userFields()), not user-controlled.
      */
     public function usernameExists(string $usernameColumn, string $username): bool

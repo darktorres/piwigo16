@@ -14,11 +14,10 @@ use Psr\Container\ContainerInterface;
  * wrong type hint, missing binding, or a circular dependency -- and would
  * cause a runtime 500 the first time that service is requested.
  *
- * P8: config/container.php is still empty, so the resolution loop below
- * runs zero iterations -- "always green because it only tests what's wired"
- * (docs/PLAN-REPLAY.md's Epoch C test-list description). Grows with each
- * later phase as real service definitions are added. Extends plain
- * TestCase, not IntegrationTestCase -- no DB is touched at this phase.
+ * config/container.php is now fully populated, so the resolution loop
+ * below exercises every real service definition wired so far. Extends
+ * plain TestCase, not IntegrationTestCase -- no DB is touched at this
+ * phase.
  */
 final class ContainerSmokeTest extends TestCase
 {

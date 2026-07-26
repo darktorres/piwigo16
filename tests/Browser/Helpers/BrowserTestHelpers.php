@@ -202,9 +202,14 @@ final class BrowserTestHelpers
     /**
      * Extracts the underlying Webpage, bypassing pest-plugin-browser's
      * assertion-retry wrapper. Public: any one-shot action slower than the
-     * ~1s-per-attempt ceiling described below needs this, not just
-     * navigate()/content() (see InstallTest.php's use for click('install'),
-     * which submits the install form -- a ~4-5s server-side operation).
+     * ~1s-per-attempt ceiling described below needs this -- currently
+     * navigate() (via navigateOk()) and content() (via
+     * assertNoServerErrors()). InstallTest.php's click('install') (also a
+     * ~4-5s server-side operation) was tried against rawWebpage()->click()
+     * too, but that still hit Playwright's own ~5s default action timeout;
+     * it now goes through clickWithTimeout() instead (see that method's own
+     * docblock), which reaches nativePage() directly rather than
+     * rawWebpage().
      *
      * AwaitableWebpage::__call() wraps every method call (except a
      * hardcoded 2-item exclusion list) in Execution::waitForExpectation(),

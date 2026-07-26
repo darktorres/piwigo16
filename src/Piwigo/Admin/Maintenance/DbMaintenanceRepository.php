@@ -11,10 +11,10 @@ use Piwigo\Db\Tables;
 
 /**
  * Persistence layer for admin/maintenance_actions.php's own raw SQL
- * (identically duplicated in admin/maintenance_env.php -- both files
- * implement the exact same 16-action dispatch switch; see
- * MaintenanceActionDispatcher's own docblock for why that duplication is
- * consolidated there, not just here).
+ * (originally duplicated, with 2 known behavioral drifts, in
+ * admin/maintenance_env.php -- see MaintenanceActionDispatcher's own
+ * docblock for the consolidated ~18-case dispatch switch and the drifts
+ * its consolidation fixed).
  *
  * Owns no table itself -- every method here is a cross-domain maintenance
  * sweep against a table another repository owns (history/tags/sessions

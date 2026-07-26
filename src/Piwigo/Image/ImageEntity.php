@@ -14,14 +14,17 @@ use Doctrine\ORM\Mapping as ORM;
  * already-documented decision (every real consumer wants the raw DB
  * DATETIME string form).
  *
- * Only the handful of single-row-by-id ImageRepository methods
+ * The single-row-by-id ImageRepository methods
  * (findById/findByPath/updateCoi/updateRotation/updateDimensions) go
- * through this entity -- every bulk/list/dynamic-fragment method (the
- * large majority) stays plain DBAL via $this->getEntityManager()->
- * getConnection(), same "mixed repository" shape Tag/Category's own
- * conversions already established, just skewed further toward "stays
- * raw" given how much of this repository's real method list is bulk
- * id-list operations rather than single-entity CRUD.
+ * through this entity via find()/findOneBy(), and two bulk id-list
+ * methods (deleteImages()/touchLastmodified()) also target it via
+ * QueryBuilder delete()/update() DQL -- every other bulk/list/
+ * dynamic-fragment method (the large majority) stays plain DBAL via
+ * $this->getEntityManager()->getConnection(), same "mixed repository"
+ * shape Tag/Category's own conversions already established, just
+ * skewed further toward "stays raw" given how much of this
+ * repository's real method list is bulk id-list operations rather
+ * than single-entity CRUD.
  */
 #[ORM\Entity(repositoryClass: ImageRepository::class)]
 #[ORM\Table(name: 'images')]

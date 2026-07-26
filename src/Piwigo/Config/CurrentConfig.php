@@ -4073,7 +4073,7 @@ final class CurrentConfig
 
     // === api_key_duration ===
     /**
-     * Lifetime configuration for API keys (array with count and unit).
+     * Selectable API-key expiration presets, in days (plus the literal 'custom' entry).
      * @var list<string>
      */
     private static array $apiKeyDuration = ['30', '90', '180', '365', 'custom'];
@@ -5169,9 +5169,9 @@ final class CurrentConfig
 
     // === user_fields ===
     /**
-     * Simplified from the reference's typed UserFieldsMap return: that VO
-     * lives under the not-yet-existing Piwigo\Users namespace (P16) --
-     * returns the same column-name mapping as a plain array instead.
+     * Simplified from the reference's typed UserFieldsMap return -- no such
+     * VO exists in this codebase's Piwigo\Users namespace; returns the same
+     * column-name mapping as a plain array instead.
      * @var array{id: string, username: string, password: string, email: string}
      */
     private static array $userFields = [

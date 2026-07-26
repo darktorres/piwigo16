@@ -37,8 +37,8 @@ use Piwigo\Users\UserService;
  * Piwigo\Core\TelemetrySenderInterface (bound in config/container.php),
  * and its one real caller, Piwigo\Page\PageTailRenderer (L3Presentation,
  * which cannot depend on this L4 class directly), constructor-injects
- * that interface instead; include/page_tail.php passes the concrete
- * instance. See TelemetrySenderInterface's own docblock.
+ * that interface instead; Piwigo\Bootstrap\PageTail::render() passes the
+ * concrete instance. See TelemetrySenderInterface's own docblock.
  *
  * get_graphics_library()/get_pwg_general_statitics()/get_installation_date()
  * were migrated onto PwgImage::get_graphics_library()/

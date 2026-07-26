@@ -35,11 +35,11 @@ use Piwigo\Search\SearchRepository;
 /**
  * P23 batch 8e-4: relocated from include/ws_functions/pwg.php.
  * Top-level `pwg.*` WS methods (getVersion, getInfos, getCacheSize,
- * caddie.add, rates.delete, session.*, getActivityList, history.log/
- * search -- 13 registrations) -- registered via callable arrays in
- * include/ws_default_methods.inc.php. historyGet() is the 'get_history'
- * event handler (registered via first-class-callable, not an addMethod()
- * WS registration).
+ * getMissingDerivatives, caddie.add, rates.delete, session.*,
+ * getActivityList, history.log/search -- 12 registrations) -- registered
+ * via callable arrays in src/Piwigo/Ws/WsDefaultMethods.php. historyGet()
+ * is the 'get_history' event handler (registered via first-class-callable,
+ * not an addMethod() WS registration).
  *
  * `$params`/`$param` throughout this class (every `mixed[]`/`array<string,
  * mixed>`-typed WS method parameter) is raw, unvalidated WS-protocol
@@ -838,7 +838,7 @@ SELECT
 
     /**
      * Perform history search. Registered as the default 'get_history' event
-     * handler (see include/ws_init.inc.php) -- historySearch() (this
+     * handler (see src/Piwigo/Ws/WsInitializer.php) -- historySearch() (this
      * class's only real caller of that event) dispatches via
      * trigger_change() rather than calling this directly, so a plugin can
      * still override history search behavior by registering its own

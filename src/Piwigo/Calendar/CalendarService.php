@@ -14,8 +14,9 @@ use Piwigo\Permission\PermissionService;
  * fragment for the requested category/section context. The rest of that
  * function (chronology style/view resolution, calendar object
  * construction, the view-switcher UI links) is entirely `$page`/
- * `$template`-coupled and stays in the free-function delegate, same split
- * as every other P19 domain.
+ * `$template`-coupled and stays in {@see CalendarRenderer::render()}
+ * itself -- P23 batch 8c ported the free-function delegate this doc used
+ * to describe (`initialize_calendar()`) into that method and deleted it.
  */
 final readonly class CalendarService
 {

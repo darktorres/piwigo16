@@ -51,11 +51,10 @@ use Psr\Cache\CacheItemPoolInterface;
  * directly (`new X(...)`, no DI container) at many call sites -- adding a
  * cache dependency to either constructor would break every one of them.
  *
- * Deliberately NOT used by `UserService::getUserData()`'s own legacy
- * `user_cache`-regenerating block (still gated by `$useCache` until
- * gap-closure Stage 4g removes it) -- that block is the authoritative
- * *writer* these cached values exist to avoid recomputing elsewhere, so it
- * must always read fresh values, never a stale one from this pool.
+ * Used directly by `UserService::getUserData()` -- gap-closure Stage 4g
+ * deleted that method's old `$useCache`-gated `user_cache`-regenerating
+ * block outright and replaced it with an unconditional call into this
+ * class, so there is no separate legacy writer left to go stale against.
  */
 final readonly class EffectiveForbiddenCategoriesCache
 {

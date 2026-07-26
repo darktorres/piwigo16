@@ -43,7 +43,8 @@ final class DisplayBlock
     public $template;
 
     /**
-     * @var string
+     * @var string|null never assigned by any in-tree caller today -- stays
+     *   at its default null (see BlockManager::apply()'s own null check).
      */
     public $raw_content;
 

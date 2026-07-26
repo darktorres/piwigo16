@@ -23,9 +23,9 @@ final class DateHelper
      * @param int|string|\DateTime|false $original timestamp, datetime
      *   string, or an already-converted DateTime (returned as-is; some
      *   callers pass the same value through this method repeatedly) --
-     *   false/empty short-circuits to the empty() check below, so callers
-     *   may pass another method's own DateTime|false return straight
-     *   through
+     *   false/empty short-circuits to the false/''/0/'0' check below, so
+     *   callers may pass another method's own DateTime|false return
+     *   straight through
      * @param string|null $format input format respecting date() syntax
      */
     public static function str2DateTime(int|string|\DateTime|false $original, ?string $format = null): \DateTime|false
@@ -302,7 +302,7 @@ final class DateHelper
     /**
      * Checks if the provided string is valid for a comparison test with a datetime field in MySQL
      *
-     * Possible values : YYYY-MM-DD HH-MM-SS or YYYY-MM-DD
+     * Possible values : YYYY-MM-DD HH:MM:SS or YYYY-MM-DD
      *
      * @since 16.3
      */

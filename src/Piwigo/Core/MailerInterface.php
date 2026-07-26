@@ -15,9 +15,9 @@ namespace Piwigo\Core;
  * implements it; `config/container.php` binds the two.
  *
  * Only the 2 methods real L2a/L2b callers actually use
- * (`Users\UserService`/`Comment\CommentService`) — grows if a 3rd
- * consumer needs another `MailService` method later, not pre-populated
- * ahead of need.
+ * (`Users\UserService`/`Comment\CommentService`/`Auth\ApiKeyService`) —
+ * grows if a consumer needs another `MailService` method later, not
+ * pre-populated ahead of need.
  */
 interface MailerInterface
 {

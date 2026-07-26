@@ -960,7 +960,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      *    - width (required if type is empty)
      *    - height (required if type is empty)
      *    - crop (optional, used if type is empty)
-     *    - min_height (optional, used with crop)
+     *    - min_width (optional, used with crop)
      *    - min_height (optional, used with crop)
      * @param array<string, mixed> $params
      * @param Smarty $smarty
@@ -1036,7 +1036,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      *
      * @param array $params
      *   - id (required)
-     *   - path (required)
+     *   - path (optional) falls back to ScriptLoader's well-known script paths when omitted
      *   - load (optional) 'header', 'footer' or 'async'
      *   - require (optional) comma separated list of script ids required to be loaded
      *     and executed before this one
@@ -1226,7 +1226,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     }
 
     /**
-     * The "get_combined_scripts" function returns a placeholder for delayed
+     * The "get_combined_css" function returns a placeholder for delayed
      * CSS files combination and minification.
      *
      * @param array<int, mixed> $params (unused)

@@ -9,7 +9,7 @@ namespace Piwigo\Csrf;
  * session id keyed by the secret-key config, so they're stable for the
  * lifetime of a session and invalidated on logout.
  *
- * Reads Piwigo\Config\Config::secretKey() directly -- safe since Legacy
+ * Reads Piwigo\Config\CurrentConfig::secretKey() directly -- safe since Legacy
  * Coupling Retirement Track A batch A4's ConfigDb fix (see
  * EphemeralKeyService's own docblock for the mechanism). Historically
  * (P18) CurrentConfig::secretKey() was silently inert on a live request: secret_key

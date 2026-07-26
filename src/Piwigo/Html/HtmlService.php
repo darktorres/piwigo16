@@ -620,7 +620,7 @@ final class HtmlService implements HtmlRenderingInterface
 
     /**
      * Returns the category comment for rendering in html textual mode
-     * (subcatify). This method is called by a trigger_notify().
+     * (subcatify). This method is called by a trigger_change().
      */
     public function renderCategoryLiteralDescription(?string $desc): string
     {
@@ -633,7 +633,7 @@ final class HtmlService implements HtmlRenderingInterface
 
     /**
      * Add known menubar blocks.
-     * This method is called by a trigger_change().
+     * This method is called by a trigger_notify().
      *
      * @param BlockManager[] $menuRefArr
      */

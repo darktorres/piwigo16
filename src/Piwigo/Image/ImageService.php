@@ -396,10 +396,10 @@ final readonly class ImageService
      * Associate a list of images to a list of categories.
      * The function will not duplicate links and will preserve ranks.
      *
-     * @param array<int|string> $images real callers don't guarantee a list
+     * @param array<int|string> $images
+     * @param array<int|string> $categories real callers don't guarantee a list
      *   (e.g. UploadService's own int[]|null $categories) -- key type is
      *   never read below, only values
-     * @param array<int|string> $categories
      */
     public function associateImagesToCategories(array $images, array $categories): ?false
     {
@@ -472,10 +472,10 @@ final readonly class ImageService
      * This function will preserve ranks.
      *
      * @param array<int, int|string> $images
-     * @param array<int, int|string>|string $categories Piwigo\Admin\PictureModifyPageRenderer's
-     *   $_POST['associate'] can reach here as a non-array scalar (e.g. a
-     *   literal '0') since check_input_parameter() only validates array-ness
-     *   when the value is non-empty
+     * @param array<int, int|string>|string $categories kept as a union for
+     *   defensive callers -- Piwigo\Admin\PictureModifyPageRenderer itself
+     *   now always passes the `list<int>` guaranteed by
+     *   Request\PictureModifyRequest::$associate, never a raw scalar
      */
     public function moveImagesToCategories(array $images, array|string $categories): ?false
     {
@@ -607,10 +607,11 @@ final readonly class ImageService
      *
      * Returns a plain array, not the repository's typed Image projection --
      * every real caller (PictureModifyPageRenderer, PhotoSubController,
-     * photos_add_direct) stores this straight into a growing Smarty
-     * template-variable bag (`$page['image']`), including reassigning
-     * individual keys on it after the fact, which a readonly projection
-     * can't support. The narrowing win still applies: {@see
+     * photos_add_direct, BatchManagerUnitPageRenderer) stores this straight
+     * into a growing Smarty template-variable bag (`$page['image']` or
+     * `$media['image']`), including reassigning individual keys on it after
+     * the fact, which a readonly projection can't support. The narrowing
+     * win still applies: {@see
      * \Piwigo\Image\Projection\Image::fromRow()} does it once, this just
      * unboxes back to array at this public boundary.
      *

@@ -20,13 +20,13 @@ use Piwigo\Template\Template;
  * so the original cat_list.php's own (redundant) check_status() call is
  * dropped here -- same precedent as PhotosAddSubController.
  *
- * `global $my_base_url;` below is a real bug fix (P23 batch 6j-1), not a
- * mechanical carry-over: the inline tabsheet block below (formerly
- * admin/include/albums_tab.inc.php, folded in P23 batch 8b-5) sets
- * `$my_base_url` via a bare assignment, and without a preceding `global`
- * declaration in this method's own call frame that assignment stays local
- * to this method, invisible to CoreTabs::addCoreTabs()'s own
- * `global $my_base_url;` read for the 'albums' tabsheet case. Verified
+ * `CoreTabs::setContext(new CoreTabsContext(myBaseUrl: ...))` below is a
+ * real bug fix (P23 batch 6j-1), not a mechanical carry-over: the inline
+ * tabsheet block below (formerly admin/include/albums_tab.inc.php, folded
+ * in P23 batch 8b-5) needs this page's own base URL, and
+ * CoreTabs::addCoreTabs() reads it off the injected CoreTabsContext
+ * (`self::context()->myBaseUrl`) for the 'albums' tabsheet case -- nothing
+ * had previously called setContext() with myBaseUrl for this page. Verified
  * live that this page's own "List"/"Permalinks" tab hrefs were rendering
  * as bare `href="albums"` / `href="permalinks"` instead of
  * `admin.php?page=albums` / `admin.php?page=permalinks` before this fix.

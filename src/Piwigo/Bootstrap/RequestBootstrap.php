@@ -75,8 +75,8 @@ use Piwigo\Users\UserService;
  *
  * Legacy Coupling Retirement Phase 8, 8a (the "boot-first" fix):
  * configure() now calls Kernel::boot($paths) as its own first statement --
- * genuinely load-bearing, not just tidiness, since connect() below has a
- * real production call site (the "database needs upgrading" redirect)
+ * genuinely load-bearing, not just tidiness, since connect() below
+ * performs real work (DB connection, plugin loading, user resolution)
  * that used to run before the former Piwigo\Bootstrap\CommonBootstrap::run()
  * (index.php/admin.php and the other P22 roots called it right after the
  * common.inc.php include, previously the *only* Kernel::boot() call on
@@ -203,7 +203,9 @@ final class RequestBootstrap
      * wiring, Config seeding, install-sentinel check
      * (include/common.inc.php's former lines up to the install redirect).
      *
-     * The seam file defines PHPWG_INSTALLED right after this returns.
+     * bootEntryPoint() calls InstallationFlag::mark() right after this
+     * returns -- the former seam file's raw PHPWG_INSTALLED define(), now
+     * gone entirely (see this class's own docblock).
      *
      * One deliberate ordering deviation from the original file: the
      * superglobal sanitization used to run before the
@@ -311,9 +313,11 @@ final class RequestBootstrap
      * resolution (include/common.inc.php's former middle section, from the
      * dblayer include through UserBootstrap::initialize()).
      *
-     * The seam file defines PHPWG_DOMAIN/PHPWG_URL/PEM_URL right after
-     * this returns (the original defined them at exactly this point,
-     * between UserBootstrap and the language loading in finalize()).
+     * The former seam file used to define PHPWG_DOMAIN/PHPWG_URL/PEM_URL
+     * right after this returned (between UserBootstrap and the language
+     * loading in finalize()); those defines are gone entirely now (Legacy
+     * Coupling Retirement gap-closure, entry-shell define()/include round,
+     * Part 0b) -- see this class's own docblock.
      */
     public static function connect(): void
     {

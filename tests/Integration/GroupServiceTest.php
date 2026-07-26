@@ -22,12 +22,10 @@ use Piwigo\Group\GroupService;
  * pwg_activity()/trigger_notify()/Piwigo\Cache\PermissionCacheInvalidator --
  * those need the full legacy request bootstrap (global $mysqli,
  * $persistent_cache, $logger from common.inc.php), which this lightweight
- * DBAL-only Integration harness deliberately doesn't load (same limitation
- * PermalinkServiceTest works around by only exercising l10n()-dependent
- * code, not DB-writing procedural side effects). The full create/update/
- * duplicate/merge/delete/addMembers/removeMembers success paths are
- * live-verified via ws.php against the running Apache instance instead --
- * see the P18 wrap-up memory for the exact commands used.
+ * DBAL-only Integration harness deliberately doesn't load. The full
+ * create/update/duplicate/merge/delete/addMembers/removeMembers success
+ * paths are live-verified via ws.php against the running Apache instance
+ * instead -- see the P18 wrap-up memory for the exact commands used.
  */
 final class GroupServiceTest extends IntegrationTestCase
 {

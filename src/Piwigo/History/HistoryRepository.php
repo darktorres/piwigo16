@@ -23,9 +23,12 @@ use Piwigo\History\Projection\HistorySummaryCursor;
  * through it; every other method (including every `history_summary` touch)
  * stays plain DBAL via $this->getEntityManager()->getConnection(), same
  * "mixed repository" shape Image/Category/Rate's own conversions
- * established. Both owned tables are exclusively touched by this
- * repository (confirmed via a repo-wide grep) -- no cross-repository
- * identity-map risk from leaving the rest raw.
+ * established. A handful of other classes (AuthRepository,
+ * Admin\Maintenance\DbMaintenanceRepository, Admin\HistoryPageRenderer,
+ * Admin\InstallationStats, Admin\StatsPageRenderer, Ws\PwgCore) also touch
+ * these two tables directly via raw DBAL -- no cross-repository
+ * identity-map risk from leaving the rest raw here either, since none of
+ * those go through the ORM/entity manager for these tables.
  *
  * @extends EntityRepository<HistoryEntity>
  */
@@ -438,11 +441,11 @@ final class HistoryRepository extends EntityRepository
 
     /**
      * Widens the `section` column's ENUM definition to include every
-     * option in $options -- $options is always either DB-introspected
-     * values (getSectionEnumOptions()'s own output) or a single new value
-     * already regex-validated by the caller (HistoryService::logVisit(),
-     * `/^[a-zA-Z0-9_-]+$/`), never raw user input, matching the original's
-     * own trust boundary for this DDL statement.
+     * option in $options -- $options is always getSectionEnumOptions()'s
+     * own DB-introspected values with one new value appended, that new
+     * value already regex-validated by the caller (HistoryService::
+     * logVisit(), `/^[a-zA-Z0-9_-]+$/`), never raw user input, matching
+     * the original's own trust boundary for this DDL statement.
      *
      * @param  list<string>  $options
      */

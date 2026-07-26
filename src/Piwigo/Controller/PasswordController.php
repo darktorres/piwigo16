@@ -57,9 +57,9 @@ final class PasswordController implements ControllerInterface
     private array $errors = [];
 
     /**
-     * Shared across __invoke()/processPasswordRequest() (the latter is
-     * called from the former) -- same "multiple methods of this class"
-     * shape as $errors above.
+     * Local to __invoke() -- unlike $username below (set by both
+     * __invoke() and processPasswordRequest()), $action is never read or
+     * written outside this one method.
      */
     private ?string $action = null;
 
@@ -269,8 +269,9 @@ final class PasswordController implements ControllerInterface
     }
 
     /**
-     * checks the validity of input parameters, fills $this->errors and
-     * PageState's infos, and sends an email with the verification code
+     * checks the validity of input parameters, fills $this->errors,
+     * and sends an email with the verification code (the caller,
+     * __invoke(), adds the PageState success info once this returns true)
      */
     private function processVerificationCode(): bool
     {

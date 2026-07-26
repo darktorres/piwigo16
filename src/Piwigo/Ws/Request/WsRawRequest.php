@@ -11,7 +11,8 @@ namespace Piwigo\Ws\Request;
  * `$params` bag every `Ws\*` method receives -- analogous to
  * `Piwigo\Http\RequestFactory::fromGlobals()`'s own sole legitimate
  * superglobal read for PSR-7 construction. Downstream `$params` values
- * are still coerced per-parameter by `PwgServer::checkParamType()` against
+ * are still coerced per-parameter by `PwgServer::invoke()`'s own
+ * parameter-checking loop (which calls `PwgServer::checkType()`) against
  * each method's own `WsParamType`/`WsParamFlag` signature (a real,
  * already-existing validation layer, just not `InputValidator`-based) --
  * this DTO only extracts the raw method name + parameter bag, faithfully

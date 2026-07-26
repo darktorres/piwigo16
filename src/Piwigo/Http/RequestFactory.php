@@ -9,8 +9,9 @@ use Nyholm\Psr7Server\ServerRequestCreator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Builds a PSR-7 ServerRequest from PHP superglobals. No `_route_path`
- * request attribute yet — that's RoutingMiddleware's concern (P9).
+ * Builds a PSR-7 ServerRequest from PHP superglobals. Routing info is
+ * attached separately by RoutingMiddleware, which sets a
+ * `RouteResult::class` request attribute, not on this factory.
  */
 final class RequestFactory
 {

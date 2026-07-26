@@ -27,8 +27,13 @@ namespace Piwigo\Users;
 final readonly class User
 {
     /**
-     * $internalStatus has zero real readers/writers outside this class
-     * today (reserved slot, same rationale as Core\PageState::$bodyData).
+     * $internalStatus has no real writer today (User::fromUserArray()
+     * never populates it from `$row['internal_status']`, so it's always
+     * the constructor default `[]`), but it IS read externally --
+     * Bootstrap\RequestBootstrap.php reads
+     * `CurrentUser::get()->internalStatus['guest_must_be_guest']` to
+     * decide whether to show a header warning, so this isn't a fully
+     * reserved slot the way Core\PageState::$bodyData is.
      * $preferences' values are genuinely arbitrary by design -- see
      * PreferencesService::updateParam()'s own docblock (real callers pass
      * bool/int/array, not just strings).

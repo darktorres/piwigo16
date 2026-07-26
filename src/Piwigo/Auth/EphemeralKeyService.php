@@ -7,7 +7,7 @@ namespace Piwigo\Auth;
 /**
  * Short-lived, time-windowed keys sent back with a form (e.g. a signed
  * "not submitted too fast" / "not submitted too late" token), keyed by the
- * secret-key config. Reads Piwigo\Config\Config::secretKey() directly --
+ * secret-key config. Reads Piwigo\Config\CurrentConfig::secretKey() directly --
  * safe since Legacy Coupling Retirement Track A batch A4's ConfigDb fix:
  * ConfigDb::loadConfFromDb()/confUpdateParam() now sync every DB-persisted
  * config row into CurrentConfig::$data at the same point they update the legacy

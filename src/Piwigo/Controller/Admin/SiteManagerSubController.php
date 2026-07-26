@@ -37,14 +37,15 @@ use Psr\Http\Message\ServerRequestInterface;
  * pages for a purely cosmetic gain. Left as-is (P23 batch 6j scoping pass,
  * see `p23/04-batch6j-overview.md`).
  *
- * `global $my_base_url;` is required before the assignment below -- this
- * method is always invoked from inside an AdminSubControllerInterface::
- * handle() call frame (Piwigo\Bootstrap\AdminDispatcher), never real
- * top-level script scope, so a bare `$my_base_url = ...` would only be
- * local to this call frame, invisible to CoreTabs::addCoreTabs()'s own
- * `global $my_base_url;` read a few lines below inside
- * $tabsheet->select() (same fix class as P23 batch 6i-4's cross-batch
- * regression).
+ * `CoreTabs::setContext(new CoreTabsContext(myBaseUrl: ...))` must run
+ * before `$tabsheet->select()` below -- `CoreTabs::addCoreTabs()`'s own
+ * `case 'site_update':` branch reads that value via
+ * `self::contextField(self::context()->myBaseUrl, 'myBaseUrl')` a few
+ * lines below, inside `$tabsheet->select()`'s `tabsheet_before_select`
+ * event. This replaced the old `global $my_base_url;` mechanism this
+ * paragraph used to describe (P24 phase 8g, CoreTabsContext + Bucket A
+ * global retirement); there is no bare `$my_base_url` variable or
+ * `global` statement left in this method.
  */
 final class SiteManagerSubController implements AdminSubControllerInterface
 {

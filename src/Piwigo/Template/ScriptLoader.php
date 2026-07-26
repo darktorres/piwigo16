@@ -284,7 +284,7 @@ final class ScriptLoader
     /**
      * Fill a script dependancies with the known jQuery UI scripts.
      *
-     * @param string $id in FileCombiner::$known_paths
+     * @param string $id in self::$known_paths
      */
     private static function fill_well_known($id, Script $script): void
     {
@@ -321,7 +321,7 @@ final class ScriptLoader
     /**
      * Add a known jQuery UI script to loaded scripts.
      *
-     * @param string $id in FileCombiner::$known_paths
+     * @param string $id in self::$known_paths
      * @param int $load_mode
      */
     private function load_known_required_script($id, $load_mode): bool

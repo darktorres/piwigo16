@@ -213,7 +213,7 @@ final class FileCombiner
     /**
      * Process a JS file.
      *
-     * @param string $js file content
+     * @param string|null $js file content
      */
     private static function process_js(?string $js): string
     {
@@ -223,7 +223,7 @@ final class FileCombiner
     /**
      * Process a CSS file.
      *
-     * @param string $css file content
+     * @param string|null $css file content
      * @param string $file
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
@@ -241,7 +241,7 @@ final class FileCombiner
     /**
      * Resolves relative links in CSS file.
      *
-     * @param string $css file content
+     * @param string|null $css file content
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
      */

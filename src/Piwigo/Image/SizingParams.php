@@ -21,7 +21,7 @@ final class SizingParams
      * @param int[] $ideal_size - two element array of maximum output dimensions (width, height)
      * @param float $max_crop - from 0=no cropping to 1= max cropping (100% of width/height);
      *    expressed as a factor of the input width/height
-     * @param int[] $min_size - (used only if _$max_crop_ !=0) two element array of output dimensions (width, height)
+     * @param int[]|null $min_size - (used only if _$max_crop_ !=0) two element array of output dimensions (width, height); null when $max_crop=0
      */
     public function __construct(
         public $ideal_size,

@@ -26,13 +26,11 @@ use Piwigo\Http\HttpClientService;
  * "one generic PEM-communication concern, parameterized by ExtensionType"
  * shape clean.
  *
- * Note: updates.class.php (src/Piwigo/Admin/updates.php) is NOT deleted by
- * this batch -- upgrade.php, include/page_tail.php's new-version notifier
- * and src/Piwigo/Ws/PwgExtensions.php all still construct it directly, and
- * none of those are admin pages (P21's real scope, per
- * docs/PLAN-REPLAY.md's own "62 admin pages" framing). Only the
- * admin/updates_pwg.php page (this batch's real scope) is migrated to use
- * this new class instead.
+ * updates.class.php (src/Piwigo/Admin/updates.php) no longer exists in this
+ * codebase -- every real caller now goes through this class instead:
+ * Bootstrap\PageTail::render() constructs it directly, while
+ * Ws\PwgExtensions::checkUpdates() and UpdatesPwgPageRenderer resolve it via
+ * Bootstrap\AdminAccessor::coreUpdateService().
  */
 final readonly class CoreUpdateService
 {

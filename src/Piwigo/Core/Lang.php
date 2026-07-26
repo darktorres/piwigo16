@@ -42,7 +42,7 @@ final class Lang
      * $lang['day']/$lang['month'] are the two legacy exceptions to an
      * otherwise string-valued array -- a nested list<string> keyed by
      * day-of-week/month-of-year index (see Piwigo\Lang\Translator::
-     * mirrorToGlobal(), which populates them from the piwigo_day_N/
+     * mirror(), which populates them from the piwigo_day_N/
      * piwigo_month_N PO entries). day()/month() below read them back out.
      *
      * @var array<string, string|array<int, string>>
@@ -54,7 +54,7 @@ final class Lang
      * see poHeadersToLangInfo()'s own docblock for the full key list).
      * Legacy Coupling Retirement Track A gap-fill batch G5: every real
      * external reader (MailService, IntroSubController, Template,
-     * Http/functions.php's redirect_html()) goes through langInfo()/
+     * Bootstrap\RedirectService::redirectHtml()) goes through langInfo()/
      * setLangInfo()/isLangInfoInitialized() instead of a raw global -- unlike
      * $data above, nothing outside this class reads $GLOBALS['lang_info']
      * directly, so no $GLOBALS bridge is needed here.
@@ -65,10 +65,10 @@ final class Lang
 
     /**
      * True once load() has populated $langInfo at least once in this
-     * request. Http/functions.php's redirect_html() uses this to detect
+     * request. Bootstrap\RedirectService::redirectHtml() uses this to detect
      * "called before common.inc.php finished bootstrapping" (a real early-
      * fatal path) -- the same role CurrentTemplate::isInitialized() plays a
-     * few lines below it in that same function. Deliberately a separate
+     * few lines below it in that same method. Deliberately a separate
      * flag rather than `$langInfo !== []`: a real load() call can legitimately
      * produce an empty array-shaped result, and that must still count as
      * "initialised", matching the original global's isset() semantics.

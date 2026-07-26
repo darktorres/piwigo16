@@ -19,24 +19,27 @@ use Piwigo\Db\TablePrefixListener;
 
 /**
  * `orm:validate-schema`-equivalent check: does the mapped entity metadata
- * (currently just ConfigEntry -- P17-23 maps the other 33 origin tables)
  * actually match the live database, on whichever provider this test
- * process is connected to. The multi-provider guarantee comes from the
- * CI matrix job (P15) running this exact file against real MySQL,
- * MariaDB, and PostgreSQL service containers -- not from this test
- * looping over 3 hardcoded connections itself, matching every other
- * Integration test's single-connection-from-env design.
+ * process is connected to. This test's own $ormConfig scans all of
+ * src/Piwigo (not just ConfigEntry) for attribute-mapped entities -- 22
+ * entities are mapped as of this writing, with the remaining origin
+ * tables still unmapped; ConfigEntry is simply the one this file's 2nd
+ * test targets directly. CI's own `integration` job
+ * (.github/workflows/ci.yml) currently exercises only a single MySQL 9.7
+ * service container -- there is no matrix job and no MariaDB/PostgreSQL
+ * coverage yet, matching every other Integration test's
+ * single-connection-from-env design.
  *
  * Deliberately does NOT use SchemaValidator::schemaInSyncWithMetadata()
  * for a whole-database comparison -- verified empirically that it treats
- * "in sync" as "the live database contains ONLY what's mapped," so with
- * just ConfigEntry mapped it proposes dropping all 41 other tables and
- * all 42 FK constraints. That's not a real mismatch, just the wrong tool
- * for this project's deliberately incremental entity-mapping strategy
- * (P14's own "first repositories needed for Config/DB bootstrap"
- * scoping, carried through P15). validateMapping() (metadata-internal
- * correctness) plus a targeted column-level check against just the
- * config table is the real, meaningful parity check at this stage.
+ * "in sync" as "the live database contains ONLY what's mapped," so it
+ * flags every still-unmapped table and FK constraint as a phantom drop.
+ * That's not a real mismatch, just the wrong tool for this project's
+ * deliberately incremental entity-mapping strategy (P14's own "first
+ * repositories needed for Config/DB bootstrap" scoping, carried through
+ * P15). validateMapping() (metadata-internal correctness) plus a
+ * targeted column-level check against just the config table is the
+ * real, meaningful parity check at this stage.
  */
 final class SchemaParityTest extends IntegrationTestCase
 {

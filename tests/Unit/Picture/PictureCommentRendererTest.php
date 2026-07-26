@@ -23,7 +23,7 @@ use Piwigo\Users\UserStatus;
  * the 2 reject-response throws -- every other branch needs a real
  * CommentRepository row (findForImage()/countForImage()), which is a DB
  * call and stays at Integration level (see
- * tests/Integration/Picture/PictureCommentRendererTest.php for the
+ * tests/Integration/PictureCommentRendererTest.php for the
  * edit/delete permission-gating + the bug-fix regression check).
  */
 function picture_comment_test_rrmdir(string $dir): void

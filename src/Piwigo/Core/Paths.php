@@ -41,10 +41,10 @@ namespace Piwigo\Core;
  * `define()` a custom value *before* including the app's entry point,
  * supporting Piwigo's classic multi-site-instance-sharing-one-codebase
  * deployment shape (confirmed still a real, tested capability --
- * `tests/Unit/Config/ConfigLoaderTest.php`'s own `local_dir_site` test,
- * `install.php`'s own "PWG_LOCAL_DIR is a real dependency" comment -- not
- * dead legacy code safe to drop, and genuinely a *different* directory
- * than `local` in that deployment shape, not just an alias for it).
+ * `tests/Unit/Core/PathsTest.php`'s own `PIWIGO_LOCAL_DIR` override
+ * tests -- not dead legacy code safe to drop, and genuinely a
+ * *different* directory than `local` in that deployment shape, not
+ * just an alias for it).
  * Replaced with a `PIWIGO_LOCAL_DIR` env var, the same
  * deployment-level-override idiom `ConfigLoader::ENV_MAPPING` already
  * uses for `PIWIGO_DB_*` -- strictly more robust than the old "define a

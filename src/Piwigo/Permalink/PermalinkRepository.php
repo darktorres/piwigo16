@@ -18,8 +18,8 @@ use Piwigo\Permalink\Projection\OldPermalink;
  * DBAL, since a raw write would leave any CategoryEntity already in this
  * EntityManager's identity map stale); `old_permalinks` is deliberately
  * never entity-mapped anywhere in this migration (see
- * Category\CategoryEntity's own docblock). Holds EntityManagerInterface
- * directly, same shape as Auth\AuthRepository.
+ * Category\CategoryRepository::touchOldPermalinkHit()'s own docblock).
+ * Holds EntityManagerInterface directly, same shape as Auth\AuthRepository.
  */
 final readonly class PermalinkRepository
 {

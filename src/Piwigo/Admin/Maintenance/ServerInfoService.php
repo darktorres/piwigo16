@@ -12,8 +12,10 @@ namespace Piwigo\Admin\Maintenance;
  * module's build flags, environment variables, and (depending on php.ini)
  * a phpinfo() build that leaks the server's real IP/hostname). Curated to
  * what's actually useful for troubleshooting a Piwigo install: PHP/SAPI/OS
- * version, loaded extensions, and the handful of ini settings that
- * actually affect upload/execution limits.
+ * version, loaded extensions, ini settings covering upload/execution limits
+ * (memory_limit, upload_max_filesize, post_max_size, max_execution_time,
+ * max_input_time, max_file_uploads), plus a few general diagnostics
+ * (default_charset, date.timezone, display_errors).
  */
 final class ServerInfoService
 {

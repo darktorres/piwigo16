@@ -20,10 +20,10 @@ use Psr\Cache\CacheItemPoolInterface;
  * own constructor would break every one of them, same reasoning as
  * {@see \Piwigo\Category\CategoryTreeCache}.
  *
- * Deliberately NOT used by UserService::generateUserCache() -- that method
- * is the authoritative writer of `user_cache.forbidden_categories` (the
- * value this cache exists to avoid recomputing elsewhere), so it must always
- * read a fresh value, never a stale one from this pool.
+ * Not used by `UserService::getUserData()` -- that method gets its own
+ * `forbidden_categories` value from {@see EffectiveForbiddenCategoriesCache}
+ * (the *effective* value) instead; `user_cache` itself is no longer written
+ * by anything as of gap-closure Stage 4g.
  */
 final readonly class ForbiddenCategoriesCache
 {

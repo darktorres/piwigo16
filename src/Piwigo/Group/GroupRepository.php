@@ -263,7 +263,7 @@ final class GroupRepository extends EntityRepository
      * legitimately pass an already-member user id. No query-builder/DQL
      * equivalent for INSERT IGNORE; raw SQL + bindings on the entity
      * manager's own connection is safe here (no string concatenation of
-     * values), same precedent as SessionRepository::write()'s REPLACE INTO.
+     * values).
      *
      * @param array<int, int> $userIds
      */

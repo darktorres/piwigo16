@@ -28,9 +28,10 @@ final class InstallationFlag
     private static bool $marked = false;
 
     /**
-     * Called once from include/common.inc.php, exactly where the former
+     * Called once from RequestBootstrap::bootEntryPoint(), between
+     * configure() and connect() -- the same point the former
      * `defined('PHPWG_INSTALLED') or define('PHPWG_INSTALLED', true);`
-     * guard sat.
+     * guard sat in the now-deleted include/common.inc.php seam file.
      */
     public static function mark(): void
     {

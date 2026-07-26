@@ -341,10 +341,10 @@ final class PwgImage
     }
 
     /**
-     * @param int|numeric-string $rotation_code i.php's only caller passes
-     *   $row['rotation'] straight from a mysqli fetch_assoc() result, which
-     *   comes back as a numeric string (confirmed empirically against the
-     *   real test DB — this driver does not use native int/float fetching)
+     * @param int|numeric-string $rotation_code ImageDerivativeController's
+     *   only caller passes $row->rotation, a native ?int hydrated by
+     *   Doctrine ORM from ImageEntity's smallint `rotation` column --
+     *   not a mysqli-fetched numeric string
      */
     public static function get_rotation_angle_from_code(int|string $rotation_code): int
     {

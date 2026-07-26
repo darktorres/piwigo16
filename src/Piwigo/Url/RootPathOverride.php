@@ -15,11 +15,13 @@ namespace Piwigo\Url;
  * this same ref-counting stack) -- PHP forbids `static` properties inside
  * a `readonly class`, so this state can't live on UrlService itself.
  * Static methods here instead, same shape as SectionContextRegistry --
- * required anyway since every real caller (Url\functions.php's
- * set_make_full_url()/unset_make_full_url() free functions) constructs a
- * brand new UrlService instance per call, so a per-instance property
- * couldn't share ref-count state across calls the way the original
- * global did.
+ * required anyway since real callers each construct their own `new
+ * UrlService(new HtmlService())` instance at the call site (Mail\
+ * MailService, Admin\Upload\UploadService, Ws\WsInitializer, ... --
+ * Url/functions.php's own free-function bridge, including
+ * set_make_full_url()/unset_make_full_url(), was deleted in Phase 4c),
+ * so a per-instance property couldn't share ref-count state across calls
+ * the way the original global did.
  *
  * Simpler than the original's own save/restore dance: the original had
  * to remember the previous `$page['root_path']` value (or its absence)

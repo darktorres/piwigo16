@@ -75,7 +75,7 @@ final readonly class ExtensionLifecycle
 
     /**
      * DRY extraction (Phase 1k DI-chain audit): the same ActivityService
-     * recipe was repeated verbatim at 3 sites in this file.
+     * recipe was repeated verbatim at 2 sites in this file.
      */
     private static function activityService(Connection $conn): ActivityService
     {

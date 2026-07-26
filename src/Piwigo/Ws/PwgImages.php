@@ -48,10 +48,10 @@ use Piwigo\Ws\Encoder\PwgResponseEncoder;
 final class PwgImages
 {
     /**
-     * Constructed identically 12 times across this file -- takes the
-     * caller's own $conn instead of building a fresh one per call, same
-     * "shared connection passed in" precedent as
-     * Ws\PwgCategories::permissionService(Connection $conn).
+     * Constructed identically 4 times across this file (addComment(),
+     * getInfo() x2, rate()) -- takes no arguments; delegates to
+     * Bootstrap\CoreDomainAccessor::permissionService(), same zero-argument
+     * accessor shape as categoryService()/searchService() above.
      */
     private static function permissionService(): PermissionService
     {
@@ -69,12 +69,10 @@ final class PwgImages
     }
 
     /**
-     * Constructed identically 5 times across this file. The original call
-     * sites built the ActivityService param off a fresh, unrelated
-     * DbConnection::build() instead of the same $conn used for
-     * TagRepository/PermissionService -- an extra needless connection per
-     * call, fixed here to reuse $conn, matching the DbConnection::build()
-     * has-no-caching finding from Phase 1d.
+     * Constructed identically 5 times across this file. Takes no arguments;
+     * delegates to Bootstrap\CoreDomainAccessor::tagService(), same
+     * zero-argument accessor shape as categoryService()/searchService()
+     * above.
      */
     private static function tagService(): TagService
     {
@@ -2313,7 +2311,10 @@ SELECT id, file
 
     /**
      * API method
-     * Check if an image exists by it's name or md5 sum
+     * Checks, for each candidate filename supplied by the client, whether a
+     * matching photo already exists (by filename with known format
+     * extensions stripped) and whether a format with that extension is
+     * already associated with it
      *
      * @since 13
      * @param array{filename_list: string, ...} $params filename_list: no

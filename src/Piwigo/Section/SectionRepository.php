@@ -18,12 +18,12 @@ use Piwigo\Db\AbstractRepository;
 final class SectionRepository extends AbstractRepository
 {
     /**
-     * Same shape as {@see \Piwigo\Db\MysqliDb::query2Array()} called with
-     * only a value column name (`query2Array($sql, null, $column)`) --
-     * every value cast to string|null the same way
-     * {@see \Piwigo\Db\MysqliDb::fetchAssoc()} always did, so this is a
-     * behavior-preserving 1:1 API swap for SectionPopulator's own
-     * single-column item-id queries.
+     * Same shape as the since-deleted \Piwigo\Db\MysqliDb::query2Array()
+     * called with only a value column name (`query2Array($sql, null,
+     * $column)`) -- every value cast to string|null the same way
+     * MysqliDb::fetchAssoc() always did, so this is a behavior-preserving
+     * 1:1 API swap for SectionPopulator's own single-column item-id
+     * queries.
      *
      * @return list<string|null>
      */

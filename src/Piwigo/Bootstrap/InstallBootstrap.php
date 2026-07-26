@@ -15,9 +15,12 @@ use Piwigo\Core\Paths;
  * Legacy Coupling Retirement Phase 8, 8b -- the install.php counterpart to
  * RequestBootstrap::bootEntryPoint()/CliBootstrap::buildApplication() for
  * the HTTP request path. Same "ConfigLoader::applyDefaults()/
- * applyEnvOverrides() then Kernel::boot() before anything else" shape as
- * both of those, applied to the one remaining family of entry points that
- * didn't have it yet.
+ * applyEnvOverrides() then Kernel::boot()" shape as CliBootstrap::
+ * buildApplication() specifically -- RequestBootstrap::configure() runs
+ * Kernel::boot() first and only calls ConfigLoader::applyDefaults()/
+ * applyEnvOverrides() afterward (the opposite order, deliberately, per
+ * that class's own docblock), applied to the one remaining family of
+ * entry points that didn't have it yet.
  *
  * boot() itself stays deliberately minimal (container boot only, no
  * service resolution) and must run before any real credentials are known

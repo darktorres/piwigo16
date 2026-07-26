@@ -10,8 +10,8 @@ namespace Piwigo\Db;
  * that P16's 52-`define()` retirement gives it 34 real callers (one per
  * origin table's legacy TABLE_NAME constant). Also covers the 7 new P15
  * tables, which never had legacy constants but complete the utility for
- * future P17-23 callers -- cheap to include now, matches the reference's
- * real, final 41-method shape.
+ * future P17-23 callers -- cheap to include now; the class has 39 static
+ * methods, 2 short of the reference's final 41-method shape.
  *
  * ORM repositories never need this -- they address tables via entity
  * mapping (`#[ORM\Table(name: ...)]`, prefix applied by

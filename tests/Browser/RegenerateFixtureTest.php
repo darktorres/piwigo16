@@ -21,7 +21,7 @@ use Piwigo\Tests\Integration\IntegrationTestCase;
  * --exclude-group=fixture-regen) — this wipes the test DB and overwrites a
  * committed fixture file. It is not a regression test.
  *
- * Credentials come from .env.test (PIWIGO_DB_HOST/PORT/USER/PASSWORD/BASE),
+ * Credentials come from .env.test (PIWIGO_DB_HOST/USER/PASSWORD/BASE/PREFIX),
  * loaded via IntegrationTestCase::setUpConnectionFromEnv().
  */
 #[Group('fixture-regen')]
@@ -450,10 +450,12 @@ final class RegenerateFixtureTest extends IntegrationTestCase
     /**
      * Narrows a WS response id field down to a real int. Piwigo's WS layer
      * surfaces ids in two different but equally real shapes depending on
-     * the call: \Piwigo\Db\MysqliDb::insertId()'s own return type is int|string (see
-     * create_virtual_category()/create_tag(), backing pwg.categories.add/
-     * pwg.tags.add, and ws_images_addSimple()'s own declared return shape
-     * of PwgError or array{image_id: int|string, url: string}), while ids
+     * the call: the repository layer's insert path (e.g.
+     * CategoryRepository::insertCategory(), TagRepository::insert())
+     * returns int|string (see CategoryService::createVirtualCategory()/
+     * TagService::createTag(), backing pwg.categories.add/pwg.tags.add,
+     * and Ws\PwgImages::addSimple()'s own declared return shape of
+     * PwgError or array{image_id: int|string, url: string}), while ids
      * that come back through a getList-style response (pwg.groups.add ->
      * pwg.groups.getList, pwg.users.add -> pwg.users.getList) are either
      * intval()'d server-side (real int) or, for pwg.groups.add, surfaced

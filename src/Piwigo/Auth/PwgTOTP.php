@@ -10,7 +10,7 @@ use Piwigo\Core\UrlServiceInterface;
 final class PwgTOTP
 {
     /**
-     * Generate a Base32 secret for TOTP
+     * Generate a TOTP code for a given 30s-interval timestamp
      *
      * @param string $secret Base32-encoded secret
      * @param float $timestamp 30s intervasl since 1970

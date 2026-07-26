@@ -90,7 +90,7 @@ abstract class ContractTestCase extends IntegrationTestCase
     /**
      * Establishes an admin session by POSTing to identification.php.
      * This sets $_SESSION['connected_with'] = 'pwg_ui', which is required by
-     * methods that call connected_with_pwg_ui() (e.g. pwg.users.api_key.*).
+     * methods that call ApiKeyService::connectedWithPwgUi() (e.g. pwg.users.api_key.*).
      *
      * The page requires an existing session cookie before it will accept a POST,
      * so we GET it first to seed the cookie jar, then POST the credentials.

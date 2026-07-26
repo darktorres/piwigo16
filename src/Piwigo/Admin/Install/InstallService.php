@@ -31,10 +31,11 @@ use RuntimeException;
  * pre-installation entry path (install.php) where no DI container exists,
  * matching the Env/FilesystemHelper/MysqliDb precedent.
  *
- * The frozen install/db/86-database.php script still calls the bare
- * activate_core_themes() delegate kept in
- * admin/include/functions_install.inc.php (a file it include_once's
- * itself), which forwards to activateCoreThemes() here.
+ * The former frozen install/db/86-database.php script and
+ * admin/include/functions_install.inc.php's bare activate_core_themes()
+ * delegate (which forwarded to activateCoreThemes() here) were both
+ * deleted in P23 batch 8g-6; InstallWizard::performInstall() now calls
+ * activateCoreThemes() here directly.
  */
 final class InstallService
 {
@@ -110,7 +111,9 @@ final class InstallService
      * (which reads DbCredentials::current()) resolves to them directly; no
      * local $_POST parsing needed here.
      *
-     * @param array<int, string> $infos - populated with infos
+     * @param array<int, string> $infos - accepted by reference for
+     *   signature symmetry with $errors, but never written to by this
+     *   method
      * @param array<int, string> $errors - populated with errors
      */
     public static function installDbConnect(array &$infos, array &$errors): ?Connection

@@ -12,7 +12,7 @@ namespace Piwigo\Core;
  * `deptrac.yaml`'s ruleset forbids L1Infrastructure depending upward on
  * L2aCoreDomain regardless of whether the dependency reaches the class via
  * the container or an inline `new`. `UserService` implements this;
- * `include/common.inc.php` (legacy, not subject to deptrac) constructs one
+ * `Piwigo\Bootstrap\RequestBootstrap::finalize()` constructs one
  * and calls `Lang::setDefaultLanguageProvider()` once, at the same point
  * its own former `load_language()` calls already ran — every later
  * `Lang::load()` call in the request reuses it instead of reconstructing

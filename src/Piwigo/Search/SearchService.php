@@ -105,7 +105,8 @@ final readonly class SearchService
      * $resolvedSearchId (batch A5.2h, replacing the former
      * `$page['search_id']` write) are explicit params instead of
      * `global $page;` -- this method's two real callers are
-     * SearchFilterRenderer::render() (passes SectionContext::section,
+     * SearchService::getValidatedSearchArray() (reached from
+     * SearchFilterRenderer::render(), which passes SectionContext::section,
      * always available there, and returns the resolved id up its own
      * call chain to GalleryController) and Ws\PwgImages::
      * filteredSearchCreate() (a WS method that never runs

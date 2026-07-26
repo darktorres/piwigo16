@@ -47,12 +47,15 @@ use Psr\Http\Message\ServerRequestInterface;
  * (a Closure is an object), same conversion precedent as
  * Piwigo\Admin\Integrity\C13yInternal.php's own handler registrations.
  *
- * The "actions" switch (favorite/caddie/rate/comment moderation, all
- * ending in redirect()) is the last place any exit()-capable call happens
- * before the render body (confirmed via a full-file grep for redirect()/
- * redirect_http()/page_not_found()/access_denied()/die()/exit -- every hit
- * above the "number of hits" section already throws ResponseReadyException
- * via RedirectService, unrelated to Workstream C3c below).
+ * The "actions" switch (favorite/caddie/rate/comment moderation) is the
+ * last place any exit()-capable call happens before the render body
+ * (confirmed via a full-file grep for redirect()/redirect_http()/
+ * page_not_found()/access_denied()/die()/exit -- every hit above the
+ * "number of hits" section already throws ResponseReadyException via
+ * RedirectService, unrelated to Workstream C3c below). Not every case
+ * redirects, though: edit_comment falls through to the render body
+ * without calling redirect() whenever no comment content was submitted
+ * (i.e. just displaying the edit-comment form itself).
  *
  * Workstream C3c: converted off LegacyRenderCapture's ob_start()/
  * ob_get_contents() capture -- the render body that used to be a separate

@@ -12,11 +12,13 @@ use Piwigo\Template\Template;
 /**
  * Same "point CurrentPaths at a fresh temp root" Template setup as
  * PictureCommentRendererTest.php -- see that file's own docblock.
- * render()'s only DB-free branch is show_exif=false and show_iptc=false
- * together, checked before $picture['current']['src_image'] (and
- * MetadataService's own DB-bound getExifData()/getIptcData()) are ever
- * touched; every other branch needs a real image file and stays at
- * Integration level.
+ * render()'s only branch reachable without a real image file is
+ * show_exif=false and show_iptc=false together, checked before
+ * $picture['current']['src_image'] (and MetadataService's own
+ * filesystem-bound getExifData()/getIptcData(), which read the image
+ * file via getimagesize()/exif_read_data() rather than the database)
+ * are ever touched; every other branch needs a real image file and
+ * stays at Integration level.
  */
 function picture_metadata_test_rrmdir(string $dir): void
 {

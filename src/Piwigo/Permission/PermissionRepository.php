@@ -15,10 +15,9 @@ use Piwigo\Db\Tables;
  * computation, plus the `user_access` write methods below. Owns no table
  * itself -- `categories`/`group_access` are read-only cross-domain
  * touches (each owned elsewhere), and `user_access` is a shared join
- * table with no single owner (see Category\UserAccessEntity's own
- * docblock: CategoryRepository writes permission grants tied to a
- * category's own lifecycle, this class writes/deletes them from the
- * permission-management side) -- holds EntityManagerInterface directly
+ * table with no single owner: CategoryRepository writes permission grants
+ * tied to a category's own lifecycle, this class writes/deletes them from
+ * the permission-management side -- holds EntityManagerInterface directly
  * rather than being resolved via getRepository(), same shape as
  * Auth\AuthRepository.
  *
@@ -26,7 +25,9 @@ use Piwigo\Db\Tables;
  * "reads only" when Part B's DBAL->ORM migration first surveyed this
  * class -- wrong; both are real writes into user_access, found via a
  * later audit of raw/BatchWriter call sites outside the repository layer
- * that turned up this same gap inside the repository layer too.
+ * that turned up this same gap inside the repository layer too. (Category\
+ * UserAccessEntity's own docblock still describes this class as read-only
+ * and needs the same correction.)
  */
 final readonly class PermissionRepository
 {

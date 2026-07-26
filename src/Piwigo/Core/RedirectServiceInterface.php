@@ -37,9 +37,9 @@ interface RedirectServiceInterface
      * Redirects to the given URL by rendering an HTML page with a
      * meta-refresh/link fallback (used when headers are already sent, or
      * $refresh_time is non-zero). $status lets HtmlService's
-     * accessDenied()/badRequest()/pageNotFound()/pageForbidden() thread
-     * their own real status code through instead of the emitted Response
-     * always reporting 200 (Workstream C3).
+     * badRequest()/pageNotFound()/pageForbidden() thread their own real
+     * status code through instead of the emitted Response always reporting
+     * 200 (Workstream C3).
      */
     public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never;
 

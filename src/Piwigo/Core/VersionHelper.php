@@ -38,9 +38,10 @@ final class VersionHelper
     /**
      * return the branch from the version. For example version 11.1.2 is on branch 11
      *
-     * the algorithm is a bit complicated to just retrieve the first digits
-     * before the first "." -- it's because before version 11.0.0, we used
-     * to take the 2 first digits, ie version 2.2.4 was on branch 2.2
+     * always takes just the first digits before the first "." -- unlike the
+     * pre-migration legacy get_branch_from_version(), whose own comment
+     * described a (never-actually-implemented) special case for versions
+     * before 11.0.0 taking the first 2 digits (e.g. 2.2.4 on branch 2.2)
      */
     public static function getBranchFromVersion(string $version): string
     {

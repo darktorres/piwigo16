@@ -15,11 +15,12 @@ use Symfony\Component\Process\Process;
 /**
  * New CLI-only capability (no web equivalent). Reads via a raw `mysql`
  * client shell-out (env-var credentials, Piwigo\Db\DbCredentials) rather
- * than the legacy include/common.inc.php bootstrap chain or a Users domain
- * service -- neither is available to CLI code yet (see
- * docs/PLAN-REPLAY.md P12's scope-decision section). A stopgap expected to
- * be replaced once Doctrine DBAL (P14) or a real Users domain service
- * (P16+) lands.
+ * than a Users domain service. docs/PLAN-REPLAY.md's P12 audit note
+ * (2026-07-13) records that this docblock used to point at a
+ * "scope-decision section" that never existed. Doctrine DBAL (P14) and a
+ * real Users domain service (Piwigo\Users\UserRepository/UserService) have
+ * both since landed and are usable from CLI commands (see sibling commands
+ * in this directory); this command has not yet been migrated to use them.
  */
 #[AsCommand(name: 'user:list', description: 'List registered users (id, username, email, status, registered)')]
 final class UserListCommand extends Command

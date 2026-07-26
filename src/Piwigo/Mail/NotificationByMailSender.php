@@ -134,7 +134,7 @@ final class NotificationByMailSender
      * Whether the last checkSendmailTimeout() call found the session past
      * its deadline -- read by callers that need to react to a timeout
      * detected during an earlier doSubscribeUnsubscribeNotificationByMail()/
-     * doActionSendMailNotification() call, once it has already returned.
+     * sendMailNotifications() call, once it has already returned.
      */
     public function isSendmailTimeout(): bool
     {
@@ -460,7 +460,7 @@ final class NotificationByMailSender
      * boundaries.
      *
      * @param array<int, mixed> $checkKeyList
-     * @return ($action is 'send' ? list<string> : list<string|UserMailNotification>)
+     * @return ($action is 'send' ? list<string> : list<UserMailNotification>)
      */
     public function sendMailNotifications(string $action = 'list_to_send', array $checkKeyList = [], string $customizeMailContent = ''): array
     {

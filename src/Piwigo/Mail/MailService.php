@@ -65,7 +65,7 @@ final class MailService implements MailerInterface
      * P23 batch 8f-4: replaces the 2 deliberately-bare
      * get_webmaster_mail_address() calls (free function deleted with
      * include/functions.inc.php). Optional-with-lazy-default rather than
-     * required: this class has ~98 `new MailService()` construction sites
+     * required: this class has ~50 `new MailService()` construction sites
      * and the dependency is only reached on the sender-fallback/
      * Bcc-webmaster paths -- production sites keep constructing with no
      * args and get the real Piwigo\Users\UserRepository (a legal L3->L2a
@@ -90,7 +90,7 @@ final class MailService implements MailerInterface
 
     /**
      * Optional-with-lazy-default, same reasoning as
-     * $webmasterMailProvider above -- ~98 `new MailService()` construction
+     * $webmasterMailProvider above -- ~50 `new MailService()` construction
      * sites, most of which never reach mailAdmins()/mailGroup().
      */
     private function recipientRepo(): MailRecipientRepository
@@ -101,7 +101,7 @@ final class MailService implements MailerInterface
 
     /**
      * Optional-with-lazy-default, same reasoning as
-     * $webmasterMailProvider above -- ~98 `new MailService()` construction
+     * $webmasterMailProvider above -- ~50 `new MailService()` construction
      * sites, only mailGroup() reaches this. Unlike UserService (which
      * genuinely can't be a constructor dependency here -- UserService
      * constructor-depends on MailerInterface, i.e. this class, a real
@@ -123,7 +123,7 @@ final class MailService implements MailerInterface
 
     /**
      * Throwaway construction, not a constructor property -- this class
-     * has ~98 `new MailService()` construction sites, several of them
+     * has ~50 `new MailService()` construction sites, several of them
      * inside Piwigo\Bootstrap\RedirectService's own early-crash fallback
      * chain (RedirectService -> UserService -> MailService, all literal
      * `new` calls). PHP-DI's reflection-based autowiring only ever

@@ -65,6 +65,8 @@ final class PasswordController implements ControllerInterface
 
     private ?string $username = null;
 
+    private Request\PasswordRequest $request;
+
     private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
     {
         return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
@@ -94,12 +96,11 @@ final class PasswordController implements ControllerInterface
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_password');
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('action', $_GET, false, '/^(lost|reset|lost_code|reset_end|none)$/');
-        $action_param = is_string($_GET['action'] ?? null) ? $_GET['action'] : null;
+        $this->request = Request\PasswordRequest::fromGlobals();
+        $action_param = $this->request->action;
 
         // ------------------------------------------------------- process form
-        if (isset($_POST['submit'])) {
+        if ($this->request->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
@@ -128,18 +129,19 @@ final class PasswordController implements ControllerInterface
         $first_login = false;
 
         // a connected user can't reset the password from a mail
-        if (isset($_GET['key']) and ! \Piwigo\Auth\AccessControl::isAGuest()) {
-            unset($_GET['key']);
+        $key = $this->request->key;
+        if ($key !== null and ! \Piwigo\Auth\AccessControl::isAGuest()) {
+            $key = null;
         }
 
-        if (isset($_GET['key']) and ! isset($_POST['submit'])) {
-            $user_id = $this->checkPasswordResetKey($_GET['key']);
+        if ($key !== null and ! $this->request->isSubmitted) {
+            $user_id = $this->checkPasswordResetKey($key);
             if (is_numeric($user_id)) {
                 $conn = DbConnection::build();
                 $userdata = self::userService()->getUserData((int) $user_id);
                 $userdata_username = $userdata['username'] ?? null;
                 $this->username = is_string($userdata_username) ? $userdata_username : '';
-                $template->assign('key', $_GET['key']);
+                $template->assign('key', $key);
                 $first_login = self::authService()->hasAlreadyLoggedIn((int) $user_id);
 
                 if ($this->action === null) {
@@ -159,7 +161,7 @@ final class PasswordController implements ControllerInterface
         }
 
         if ($this->action === 'reset') {
-            if ((! isset($_GET['key']) and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric())) and ! isset($_SESSION['valid_reset_password_code'])) {
+            if (($key === null and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric())) and ! isset($_SESSION['valid_reset_password_code'])) {
                 $gallery_home_url = $this->urlService->getGalleryHomeUrl();
                 $this->redirectService->redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
             }
@@ -192,8 +194,8 @@ final class PasswordController implements ControllerInterface
         if ($action === 'lost') {
             $title = Lang::t('Forgot your password?');
 
-            if (isset($_POST['username_or_email']) and is_string($_POST['username_or_email'])) {
-                $template->assign('username_or_email', htmlspecialchars(stripslashes($_POST['username_or_email'])));
+            if ($this->request->usernameOrEmailPresent) {
+                $template->assign('username_or_email', htmlspecialchars(stripslashes($this->request->usernameOrEmail)));
             }
         } elseif ($action === 'reset' and $first_login) {
             $title = Lang::t('Welcome');
@@ -281,8 +283,7 @@ final class PasswordController implements ControllerInterface
         }
 
         // empty param
-        $username_or_email_raw = $_POST['username_or_email'] ?? '';
-        $username_or_email = is_string($username_or_email_raw) ? trim($username_or_email_raw) : '';
+        $username_or_email = trim($this->request->usernameOrEmail);
         if ($username_or_email === '') {
             $this->errors['password_form_error'] = Lang::t('Invalid username or email');
             return false;
@@ -408,8 +409,7 @@ final class PasswordController implements ControllerInterface
         $has_valid_user_id = is_numeric($user_id_raw) && (int) $user_id_raw !== 0;
 
         $is_valid = true;
-        $user_code_raw = $_POST['user_code'] ?? '';
-        $user_code = is_string($user_code_raw) ? trim($user_code_raw) : '';
+        $user_code = trim($this->request->userCode);
 
         if (
             $user_code === '' // empty user code
@@ -492,17 +492,16 @@ final class PasswordController implements ControllerInterface
      * checks the activation key: does it match the expected pattern? is it
      * linked to a user? is this user allowed to reset his password?
      *
-     * $reset_key stays mixed -- raw $_GET['key'] at both real call sites,
-     * flagged for Phase 4 (SEC-40/P27 Request DTOs). The return value is
-     * always false or $row['user_id'] (a NOT NULL int primary key,
-     * verified is_numeric() just before every return), never genuinely
-     * mixed -- matches resetPasswordKey()'s own already-real return type.
+     * The return value is always false or $row['user_id'] (a NOT NULL int
+     * primary key, verified is_numeric() just before every return), never
+     * genuinely mixed -- matches resetPasswordKey()'s own already-real
+     * return type.
      *
      * @return false|int|string user_id if OK, false otherwise
      */
-    private function checkPasswordResetKey(mixed $reset_key): false|int|string
+    private function checkPasswordResetKey(?string $reset_key): false|int|string
     {
-        $key = is_string($reset_key) ? $reset_key : '';
+        $key = $reset_key ?? '';
         if (! (bool) preg_match('/^[a-z0-9]{20}$/i', $key)) {
             $this->errors['password_page_error'] = Lang::t('Invalid key');
             return false;
@@ -551,10 +550,8 @@ SELECT
      */
     private function resetPassword(): bool
     {
-        $new_password_raw = $_POST['use_new_pwd'] ?? '';
-        $new_password = is_string($new_password_raw) ? $new_password_raw : '';
-        $password_conf_raw = $_POST['passwordConf'] ?? '';
-        $password_conf = is_string($password_conf_raw) ? $password_conf_raw : '';
+        $new_password = $this->request->newPassword;
+        $password_conf = $this->request->passwordConf;
 
         if ($new_password !== $password_conf) {
             $this->errors['password_form_error'] = Lang::t('The passwords do not match');
@@ -626,11 +623,18 @@ SELECT
 
     private function resetPasswordKey(): false|float|int|string
     {
-        if (! isset($_GET['key'])) {
+        // Read directly from the request, not the guest-nulled $key:
+        // this method is only ever reached via the submit-processing path
+        // (resetPassword(), called from __invoke()'s own "process form"
+        // block), which runs strictly before __invoke() computes the
+        // nulled effective key below -- same execution order the original
+        // relied on (its unset($_GET['key']) mutation happened later in
+        // the method body than this call chain).
+        if ($this->request->key === null) {
             return false;
         }
 
-        $user_id = $this->checkPasswordResetKey($_GET['key']);
+        $user_id = $this->checkPasswordResetKey($this->request->key);
 
         if (! is_numeric($user_id)) {
             return false;

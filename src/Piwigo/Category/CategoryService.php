@@ -359,7 +359,7 @@ final readonly class CategoryService
 
     /**
      * @param  array<string, mixed>  $userdata
-     * @return array{categories: array<int|string, array<string, mixed>>, lastPhotoDate: mixed}
+     * @return array{categories: array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}>, lastPhotoDate: ?string}
      */
     public function getComputedCategories(array $userdata, ?int $filterDays = null): array
     {
@@ -447,8 +447,8 @@ final readonly class CategoryService
     }
 
     /**
-     * @param  array<int|string, array<string, mixed>>  $cats
-     * @param  array<string, mixed>  $cat  category to remove
+     * @param  array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}>  $cats
+     * @param  array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}  $cat  category to remove
      */
     public static function removeComputedCategory(array &$cats, array $cat): void
     {

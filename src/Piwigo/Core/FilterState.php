@@ -35,14 +35,18 @@ final class FilterState
     private static string $visibleImages = '';
 
     /**
-     * @var array<int|string, mixed>
+     * Always CategoryService::getComputedCategories()'s own 'categories'
+     * shape -- FilterService::initializeFromRequest() (the sole writer)
+     * assigns it straight from that method's return value.
+     *
+     * @var array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}>
      */
     private static array $categories = [];
 
     private static bool $initialized = false;
 
     /**
-     * @param array<int|string, mixed> $categories
+     * @param array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}> $categories
      */
     public static function set(bool $enabled, string $visibleCategories = '', string $visibleImages = '', array $categories = []): void
     {
@@ -75,7 +79,7 @@ final class FilterState
     }
 
     /**
-     * @return array<int|string, mixed>
+     * @return array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}>
      */
     public static function categories(): array
     {

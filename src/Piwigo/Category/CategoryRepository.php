@@ -257,7 +257,7 @@ final class CategoryRepository extends EntityRepository
      * (CategoryService::compareByRank()) -- CategoryService/CategoryTreeCache
      * themselves never read it.
      *
-     * @return list<array<string, mixed>>
+     * @return list<array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int}>
      */
     public function findComputedCategoriesRollup(int $level, ?int $filterDays, string $forbiddenCategoriesCsv): array
     {
@@ -405,11 +405,12 @@ final class CategoryRepository extends EntityRepository
     }
 
     /**
-     * id/name/permalink/id_uppercat/uppercats/global_rank, loosely typed
-     * same as {@see findComputedCategoriesRollup()}.
+     * id/name/permalink/id_uppercat/uppercats/global_rank -- a deliberately
+     * narrower 6-column contract than the full Category Projection, see
+     * findFullCategoriesByIds()'s own docblock.
      *
      * @param  list<int>  $ids
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, name: string, permalink: ?string, id_uppercat: ?int, uppercats: string, global_rank: ?string}>
      */
     public function findCategoriesByIds(array $ids): array
     {

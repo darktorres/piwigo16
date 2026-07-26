@@ -122,10 +122,12 @@ final class GalleryController implements ControllerInterface
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_index');
 
+        $galleryDisplay = Request\GalleryDisplayRequest::fromGlobals();
+
         // ---------------------------------------- change of image display order
-        if (isset($_GET['image_order'])) {
-            if (is_numeric($_GET['image_order']) && (int) $_GET['image_order'] > 0) {
-                SessionService::get()->setSessionVar('image_order', (int) $_GET['image_order']);
+        if ($galleryDisplay->hasImageOrder) {
+            if ($galleryDisplay->validImageOrder !== null) {
+                SessionService::get()->setSessionVar('image_order', $galleryDisplay->validImageOrder);
             } else {
                 SessionService::get()->unsetSessionVar('image_order');
             }
@@ -136,10 +138,10 @@ final class GalleryController implements ControllerInterface
                 )
             );
         }
-        if (isset($_GET['display'])) {
+        if ($galleryDisplay->hasDisplayParam) {
             \Piwigo\Core\PageState::current()->setMetaRobotsFlag('noindex');
-            if (is_string($_GET['display']) && array_key_exists($_GET['display'], ImageStdParams::get_defined_type_map())) {
-                SessionService::get()->setSessionVar('index_deriv', $_GET['display']);
+            if ($galleryDisplay->display !== null && array_key_exists($galleryDisplay->display, ImageStdParams::get_defined_type_map())) {
+                SessionService::get()->setSessionVar('index_deriv', $galleryDisplay->display);
             }
         }
 
@@ -154,7 +156,7 @@ final class GalleryController implements ControllerInterface
         $template->assign('thumb_navbar', $navigationBar);
 
         // caddie filling :-)
-        if (isset($_GET['caddie'])) {
+        if ($galleryDisplay->hasCaddie) {
             \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($page_items);
             $redirectService->redirect($urlService->duplicateIndexUrl());
         }
@@ -534,7 +536,7 @@ final class GalleryController implements ControllerInterface
         // informations
         $slideshow_url_present = is_string($slideshow_url) && $slideshow_url !== '' && $slideshow_url !== '0';
         if ($slideshow_url_present) {
-            if (isset($_GET['slideshow'])) {
+            if ($galleryDisplay->hasSlideshow) {
                 $redirectService->redirect($slideshow_url);
             } elseif (\Piwigo\Config\CurrentConfig::indexSlideShowIcon()) {
                 $template->assign('U_SLIDESHOW', $slideshow_url);

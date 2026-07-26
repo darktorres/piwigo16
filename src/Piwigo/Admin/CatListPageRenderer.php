@@ -212,7 +212,7 @@ SELECT id, name, permalink, dir, `rank`, status
   ORDER BY `rank` ASC
 ;';
         $categories = array_column($categoryConn->fetchAllAssociative($query), null, 'id');
-        /** @var array<int|string, array<string, mixed>> $categories */
+        /** @var array<int|string, array{id: int|string, name: string, permalink: ?string, dir: ?string, rank: int|string|null, status: string}> $categories */
 
         // get the categories containing images directly
         $categories_with_images = [];
@@ -273,13 +273,6 @@ SELECT
         }
 
         foreach ($categories as $category) {
-            // 'id' is the Tables::categories() primary key (NOT NULL, auto-increment) --
-            // always numeric here (native int under DBAL, numeric string under
-            // mysqli); this is a real guard, not dead code, since the row's return
-            // type is generically mixed for every column.
-            if (! is_numeric($category['id'])) {
-                continue;
-            }
             $cat_id = (int) $category['id'];
 
             $cat_list_url = $base_url . 'cat_list';

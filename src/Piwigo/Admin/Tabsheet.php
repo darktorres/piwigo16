@@ -21,7 +21,10 @@ final class Tabsheet
     public $sheets;
 
     /**
-     * @var mixed
+     * Only ever assigned null (constructor) or a real string (set_id()) --
+     * confirmed via every real read/write site in this class.
+     *
+     * @var ?string
      */
     public $uniqid;
 

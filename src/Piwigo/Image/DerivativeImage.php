@@ -80,7 +80,7 @@ final class DerivativeImage
     /**
      * Generates the url of a thumbnail.
      *
-     * @param array<string, mixed>|SrcImage $infos array of info from db or SrcImage
+     * @param array<string, mixed>|SrcImage $infos array of info from db or SrcImage -- see SrcImage::__construct()'s own docblock for why the array form stays generic
      */
     public static function thumb_url($infos): string
     {

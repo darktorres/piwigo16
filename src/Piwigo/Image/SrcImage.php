@@ -147,6 +147,17 @@ final class SrcImage
     private int $flags = 0;
 
     /**
+     * $infos is genuinely cross-domain by design, confirmed by tracing its
+     * ~17 real construction sites: full `images` table rows (Ws\WsHelper,
+     * Controller\ActionController), but also category-listing rows
+     * (Category\CategoryCatsRenderer's own tree-cache-row shape) and
+     * upload-pipeline rows (Admin\Upload\UploadService) that merely
+     * happen to carry a subset of the same key names. Every key read
+     * below is already isset()/is_*()-guarded with a safe fallback, so a
+     * caller's row missing any of them degrades gracefully rather than
+     * erroring -- the same cross-domain-generic-row-reader shape as
+     * Category\CategoryService::compareByGlobalRank().
+     *
      * @param array<string, mixed> $infos assoc array of data from images table
      */
     public function __construct(

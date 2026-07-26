@@ -63,7 +63,7 @@ final readonly class ImageService
     }
 
     /**
-     * @return array{period: mixed, repeat: mixed, play: bool}
+     * @return array{period: int, repeat: bool, play: bool}
      */
     public function getDefaultSlideshowParams(): array
     {
@@ -76,6 +76,11 @@ final readonly class ImageService
     }
 
     /**
+     * Stays a generic bag by design (unlike getDefaultSlideshowParams()'s
+     * own precise 3-key shape): decodeSlideshowParams() can add arbitrary
+     * regex-matched keys (any 'name-value'-style token in the encoded
+     * string), not just period/repeat/play.
+     *
      * @param  array<string, mixed>  $params
      * @return array<string, mixed>
      */
@@ -317,8 +322,9 @@ final readonly class ImageService
      * Move images from the lounge to the categories they were intended for.
      *
      * @since 12
-     * @return array<int, array<string, mixed>>|null the moved image_id/category_id
-     *   rows, or null if another call is already emptying the lounge concurrently
+     * @return list<array{image_id: int, category_id: int}>|null the moved
+     *   image_id/category_id rows, or null if another call is already
+     *   emptying the lounge concurrently
      */
     public function emptyLounge(bool $invalidateUserCache = true): ?array
     {
@@ -618,7 +624,12 @@ final readonly class ImageService
      *   PictureModifyPageRenderer, Piwigo\Controller\Admin\PhotoSubController,
      *   admin/photos_add_direct.php) pass a raw, unvalidated $_GET value
      *   directly
-     * @return array<string, mixed>|null
+     * @return array{id: int, file: string, date_available: ?string, date_creation: ?string,
+     *   name: ?string, comment: ?string, author: ?string, hit: int, filesize: ?int,
+     *   width: ?int, height: ?int, coi: ?string, representative_ext: ?string,
+     *   date_metadata_update: ?string, rating_score: ?float, path: string,
+     *   storage_category_id: ?int, level: int, md5sum: ?string, added_by: ?int,
+     *   rotation: ?int, latitude: ?float, longitude: ?float, lastmodified: string}|null
      */
     public function getImageInfos(int|string $imageId, HtmlRenderingInterface $htmlRenderer, bool $dieOnMissing = false): ?array
     {

@@ -150,7 +150,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * @param array<int, int|string> $imageIds
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, path: string, representative_ext: ?string}>
      */
     public function findPathsForFileDeletion(array $imageIds): array
     {
@@ -243,7 +243,7 @@ SELECT
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array{image_id: int, category_id: int}>
      */
     public function findLoungeRows(): array
     {
@@ -483,17 +483,20 @@ SELECT
     }
 
     /**
-     * @return list<mixed>
+     * @return list<int>
      */
     public function findLoungedImageIds(): array
     {
-        return $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery('SELECT image_id FROM ' . Tables::lounge() . ';')->fetchFirstColumn();
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->getEntityManager()
+                ->getConnection()
+                ->executeQuery('SELECT image_id FROM ' . Tables::lounge() . ';')->fetchFirstColumn()
+        );
     }
 
     /**
-     * @param list<mixed> $loungedIds
+     * @param list<int> $loungedIds
      * @return list<int>
      */
     public function findOrphanImageIds(array $loungedIds): array

@@ -51,7 +51,8 @@ final class ImagePathHelper
     }
 
     /**
-     * get the full path of an image
+     * get the full path of an image. Same cross-domain-generic-row-reader
+     * rationale as SrcImage::__construct() -- only 'path' is read here.
      *
      * @param array<string, mixed> $elementInfo element information from db (at least 'path')
      */

@@ -65,12 +65,14 @@ final class FilterService implements FilterUpdaterInterface
 
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
+        $recentFilterRequest = Request\RecentFilterRequest::fromGlobals();
+
         if (! (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('cancel')) {
-            if (isset($_GET['filter'])) {
+            if ($recentFilterRequest->filterPresent) {
                 $filter['matches'] = [];
-                $filter_get_param = $_GET['filter'];
+                $filter_get_param = $recentFilterRequest->filterValue;
                 $filter['enabled'] =
-                  is_string($filter_get_param)
+                  $filter_get_param !== null
                   && preg_match('/^start-recent-(\d+)$/', $filter_get_param, $filter['matches']) === 1;
             } else {
                 $filter['enabled'] = SessionService::get()->getSessionVar('filter_enabled', false);

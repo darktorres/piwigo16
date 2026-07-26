@@ -47,8 +47,9 @@ final class DeviceHelper
             return false;
         }
 
-        if (isset($_GET['mobile'])) {
-            $is_mobile_theme = \Piwigo\Db\SqlDialect::getBoolean($_GET['mobile']);
+        $mobileThemeRequest = Request\MobileThemeRequest::fromGlobals();
+        if ($mobileThemeRequest->mobilePresent) {
+            $is_mobile_theme = \Piwigo\Db\SqlDialect::getBoolean($mobileThemeRequest->mobileRaw);
             SessionService::get()->setSessionVar('mobile_theme', $is_mobile_theme);
         } else {
             $session_mobile_theme = SessionService::get()->getSessionVar('mobile_theme');

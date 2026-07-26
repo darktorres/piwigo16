@@ -12,7 +12,6 @@ use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -66,15 +65,15 @@ final class PhotosAddDirectPageRenderer
 
         $user_id = \Piwigo\Users\CurrentUser::get()->id;
 
+        $photosAddDirectRequest = Request\PhotosAddDirectRequest::fromGlobals(\Piwigo\Config\CurrentConfig::isFormatsEnabled());
+
         // +-------------------------------------------------------------------+
         // |                        batch management request                   |
         // +-------------------------------------------------------------------+
 
-        if (isset($_GET['batch'])) {
+        if ($photosAddDirectRequest->batchPresent) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
-            new \Piwigo\Validation\InputValidator()
-                ->validate('batch', $_GET, false, '/^\d+(,\d+)*$/');
 
             $query = '
 DELETE FROM ' . Tables::caddie() . '
@@ -83,8 +82,7 @@ DELETE FROM ' . Tables::caddie() . '
             $conn->executeStatement($query);
 
             $inserts = [];
-            $batch_param = $_GET['batch'];
-            foreach (array_unique(explode(',', is_string($batch_param) ? $batch_param : '')) as $image_id) {
+            foreach (array_unique(explode(',', $photosAddDirectRequest->batch)) as $image_id) {
                 $inserts[] = [
                     'user_id' => $user_id,
                     'element_id' => $image_id,
@@ -145,20 +143,16 @@ SELECT COUNT(*)
         // |                             Formats Mode                          |
         // +-------------------------------------------------------------------+
 
-        $display_formats = \Piwigo\Config\CurrentConfig::isFormatsEnabled() && isset($_GET['formats']);
+        $display_formats = $photosAddDirectRequest->displayFormats;
 
         $have_formats_original = false;
         $formats_original_info = [];
         $formats_ext_info = null;
 
         // If URL parameter isn't empty
-        if ($display_formats && (bool) $_GET['formats']) {
-            new \Piwigo\Validation\InputValidator()
-                ->validate('formats', $_GET, false, ValidationPattern::ID, false);
-
-            $formats_id_param = $_GET['formats'];
+        if ($photosAddDirectRequest->formatsTruthy) {
             $formats_original_info = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
-                ->getImageInfos(is_string($formats_id_param) ? $formats_id_param : '', $htmlRenderer);
+                ->getImageInfos($photosAddDirectRequest->formatsId, $htmlRenderer);
             if ((bool) $formats_original_info) {
                 $src_image = new SrcImage($formats_original_info);
 
@@ -206,7 +200,7 @@ SELECT COUNT(*)
         // |                             prepare form                          |
         // +-------------------------------------------------------------------+
 
-        $this->prepareUploadForm($conn);
+        $this->prepareUploadForm($conn, $photosAddDirectRequest);
 
         // +-------------------------------------------------------------------+
         // |                           sending html code                       |
@@ -237,7 +231,7 @@ SELECT COUNT(*)
      * render(), unlike the shared admin/include/*.inc.php files this
      * project has kept as real includes elsewhere.
      */
-    private function prepareUploadForm(Connection $conn): void
+    private function prepareUploadForm(Connection $conn, Request\PhotosAddDirectRequest $photosAddDirectRequest): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -321,16 +315,9 @@ SELECT COUNT(*)
         // we need to know the category in which the last photo was added
         $selected_category = [];
 
-        if (isset($_GET['album'])) {
+        if ($photosAddDirectRequest->albumPresent) {
             // set the category from get url or ...
-            new \Piwigo\Validation\InputValidator()
-                ->validate('album', $_GET, false, ValidationPattern::ID);
-
-            // check_input_parameter() above validated (or killed the request via
-            // fatal_error()) that a non-empty $_GET['album'] matches ValidationPattern::ID
-            // (digits only) -- it doesn't retype the superglobal though, so we
-            // narrow once here and reuse this variable below.
-            $album_id = is_numeric($_GET['album']) ? (int) $_GET['album'] : null;
+            $album_id = $photosAddDirectRequest->albumId;
 
             // test if album really exists
             $query = '
@@ -387,7 +374,7 @@ SELECT
         $template->assign('NB_ALBUMS', $nb_albums);
 
         // image level options
-        $selected_level = $_POST['level'] ?? 0;
+        $selected_level = $photosAddDirectRequest->postLevel;
         $template->assign(
             [
                 'level_options' => \Piwigo\Permission\PermissionService::getPrivacyLevelOptions(),
@@ -417,7 +404,7 @@ SELECT
         ]);
 
         // Warnings
-        if (isset($_GET['hide_warnings'])) {
+        if ($photosAddDirectRequest->hideWarningsPresent) {
             $_SESSION['upload_hide_warnings'] = true;
         }
 

@@ -9,7 +9,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -42,63 +41,34 @@ final class GroupPermPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        if ($_POST !== []) {
+        $groupPermSubmit = Request\GroupPermSubmitRequest::fromGlobals();
+
+        if ($groupPermSubmit->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
-            new \Piwigo\Validation\InputValidator()
-                ->validate('cat_true', $_POST, true, ValidationPattern::ID);
-            new \Piwigo\Validation\InputValidator()
-                ->validate('cat_false', $_POST, true, ValidationPattern::ID);
         }
 
-        // check_input_parameter() above already fatal_error()s out unless
-        // these are arrays of digit-only strings, but that guarantee isn't
-        // visible to static analysis across the call; re-derive real array
-        // types here.
-        $post_cat_true = $_POST['cat_true'] ?? null;
-        $cat_true = [];
-        if (is_array($post_cat_true)) {
-            foreach ($post_cat_true as $raw_cat_id) {
-                if (is_string($raw_cat_id)) {
-                    $cat_true[] = $raw_cat_id;
-                }
-            }
-        }
-        $post_cat_false = $_POST['cat_false'] ?? null;
-        $cat_false = [];
-        if (is_array($post_cat_false)) {
-            foreach ($post_cat_false as $raw_cat_id) {
-                if (is_numeric($raw_cat_id)) {
-                    $cat_false[] = (int) $raw_cat_id;
-                }
-            }
-        }
+        $cat_true = $groupPermSubmit->catTrue;
+        $cat_false = $groupPermSubmit->catFalse;
 
-        if (! isset($_GET['group_id'])) {
+        if (! $groupPermSubmit->groupIdPresent) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('group_id URL parameter is missing');
         }
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('group_id', $_GET, false, ValidationPattern::ID);
-
-        // check_input_parameter() above already fatal_error()s out unless
-        // group_id matches ValidationPattern::ID (digits only), but that
-        // guarantee isn't visible to static analysis across the call;
-        // re-check here for a real int narrowing.
-        if (! is_numeric($_GET['group_id'])) {
+        if (! is_numeric($groupPermSubmit->groupId)) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('group_id URL parameter is missing');
         }
 
-        $group_id = (int) $_GET['group_id'];
+        $group_id = (int) $groupPermSubmit->groupId;
 
         $group_service = \Piwigo\Bootstrap\CoreDomainAccessor::groupService();
 
         // [SEC-57] actor for either branch below
         $actor_id = \Piwigo\Users\CurrentUser::get()->id;
 
-        if (isset($_POST['falsify'])
+        if ($groupPermSubmit->isFalsify
             and count($cat_true) > 0) {
             // if you forbid access to a category, all sub-categories become
             // automatically forbidden
@@ -110,7 +80,7 @@ final class GroupPermPageRenderer
                 ->record($actor_id, 'permission_revoke', 'group', $group_id, [
                     'category_ids' => $subcat_ids,
                 ], null);
-        } elseif (isset($_POST['trueify'])
+        } elseif ($groupPermSubmit->isTrueify
                  and count($cat_false) > 0) {
             $uppercats = $categoryService->getUppercatIds($cat_false);
             $private_uppercats = [];

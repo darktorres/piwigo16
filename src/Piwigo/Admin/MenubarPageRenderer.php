@@ -78,13 +78,13 @@ final class MenubarPageRenderer
             $idx++;
         }
 
-        if (isset($_POST['submit']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
+        $menubarSubmit = Request\MenubarSubmitRequest::fromGlobals();
+        if ($menubarSubmit->isSubmitted and \Piwigo\Auth\AccessControl::isWebmaster()) {
             foreach ($mb_conf as $id => $pos) {
-                $hide = isset($_POST['hide_' . $id]);
+                $hide = $menubarSubmit->isHidden($id);
                 $mb_conf[$id] = ($hide ? -1 : +1) * abs($pos);
 
-                $pos_input = $_POST['pos_' . $id] ?? null;
-                $pos = is_numeric($pos_input) ? (int) $pos_input : 0;
+                $pos = $menubarSubmit->positionFor($id);
                 if ($pos > 0) {
                     $mb_conf[$id] = $mb_conf[$id] > 0 ? $pos : -$pos;
                 }

@@ -67,16 +67,16 @@ final class ThemesNewPageRenderer
         // |                       perform installation                            |
         // +-----------------------------------------------------------------------+
 
-        if (isset($_GET['revision']) and isset($_GET['extension'])
-            and is_string($_GET['revision']) and is_string($_GET['extension'])
-        ) {
+        $themesNewInstall = Request\ThemesNewInstallRequest::fromGlobals();
+
+        if ($themesNewInstall->revision !== null and $themesNewInstall->extension !== null) {
             if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
                 \Piwigo\Core\PageState::current()->addError(Lang::t('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
                     ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
-                $extraction = $pem_catalog->extractArchive(ExtensionType::Theme, 'install', $_GET['revision'], $_GET['extension']);
+                $extraction = $pem_catalog->extractArchive(ExtensionType::Theme, 'install', $themesNewInstall->revision, $themesNewInstall->extension);
                 $install_status = $extraction['status'];
                 $theme_id = $extraction['id'];
 
@@ -88,13 +88,13 @@ final class ThemesNewPageRenderer
         // |                        installation result                            |
         // +-----------------------------------------------------------------------+
 
-        if (isset($_GET['installstatus'])) {
-            switch ($_GET['installstatus']) {
+        if ($themesNewInstall->installStatus !== null) {
+            switch ($themesNewInstall->installStatus) {
                 case 'ok':
                     \Piwigo\Core\PageState::current()->addInfo(Lang::t('Theme has been successfully installed'));
 
-                    $installed_theme_id = $_GET['theme_id'] ?? null;
-                    $installed_fs_theme = is_string($installed_theme_id) ? ($extension_scanner->scan(ExtensionType::Theme, $this->urlService)[$installed_theme_id] ?? null) : null;
+                    $installed_theme_id = $themesNewInstall->installedThemeId;
+                    $installed_fs_theme = $installed_theme_id !== null ? ($extension_scanner->scan(ExtensionType::Theme, $this->urlService)[$installed_theme_id] ?? null) : null;
                     if ($installed_fs_theme !== null) {
                         \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()->record('system', ActivitySystem::Theme, 'install', [
                             'theme_id' => $installed_theme_id,
@@ -116,12 +116,10 @@ final class ThemesNewPageRenderer
                     break;
 
                 default:
-                    $installstatus_raw = $_GET['installstatus'];
-                    $installstatus_str = is_string($installstatus_raw) ? $installstatus_raw : '';
                     \Piwigo\Core\PageState::current()->addError(
                         Lang::t(
                             'An error occured during extraction (%s).',
-                            htmlspecialchars($installstatus_str)
+                            htmlspecialchars($themesNewInstall->installStatus)
                         )
                     );
             }

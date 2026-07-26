@@ -8,7 +8,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
@@ -38,10 +37,7 @@ final class UserListPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
         $conn = DbConnection::build();
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('group', $_GET, false, ValidationPattern::ID);
-        new \Piwigo\Validation\InputValidator()
-            ->validate('user_id', $_GET, false, ValidationPattern::ID);
+        $userListFilter = Request\UserListFilterRequest::fromGlobals();
 
         CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
 
@@ -185,8 +181,8 @@ SELECT
                 'protected_users' => implode(',', array_unique($protected_users)),
                 'password_protected_users' => implode(',', array_unique($password_protected_users)),
                 'guest_user' => $guest_id,
-                'filter_group' => ($_GET['group'] ?? null),
-                'search_input' => ((isset($_GET['user_id']) && is_string($_GET['user_id'])) ? 'id:' . $_GET['user_id'] : null),
+                'filter_group' => $userListFilter->groupId,
+                'search_input' => $userListFilter->userSearchInput,
                 'connected_user' => \Piwigo\Users\CurrentUser::get()->id,
                 'connected_user_status' => \Piwigo\Users\CurrentUser::get()->status->value,
                 'owner' => $webmaster_id,

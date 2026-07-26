@@ -6,7 +6,6 @@ namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryService;
@@ -71,37 +70,34 @@ final class ActionController implements ControllerInterface
 
         $conn = DbConnection::build();
 
-        if (\Piwigo\Config\CurrentConfig::isFormatsEnabled() and isset($_GET['format'])) {
-            new \Piwigo\Validation\InputValidator()
-                ->validate('format', $_GET, false, ValidationPattern::ID);
+        $actionRequest = Request\ActionRequest::fromGlobals(\Piwigo\Config\CurrentConfig::isFormatsEnabled());
 
-            if (! is_numeric($_GET['format'])) {
+        $format = null;
+        if ($actionRequest->formatRequested) {
+            if ($actionRequest->formatId === null) {
                 return $this->doError(400, 'Invalid request - format');
             }
-            $format_id = (int) $_GET['format'];
 
             $format = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
-                ->findFormatById($format_id);
+                ->findFormatById($actionRequest->formatId);
 
             if ($format === null) {
                 return $this->doError(400, 'Invalid request - format');
             }
 
-            $_GET['id'] = $format->imageId;
-            $_GET['part'] = 'f'; // "f" for "format"
-        }
+            $image_id = $format->imageId;
+            $get_part = 'f'; // "f" for "format"
+        } else {
+            if ($actionRequest->id === null or $actionRequest->part === null) {
+                return $this->doError(400, 'Invalid request - id/part');
+            }
 
-        $get_part = $_GET['part'] ?? null;
-        if (! isset($_GET['id'])
-            or ! is_numeric($_GET['id'])
-            or ! is_string($get_part)
-            or ! in_array($get_part, ['e', 'r', 'f'], true)) {
-            return $this->doError(400, 'Invalid request - id/part');
+            $image_id = $actionRequest->id;
+            $get_part = $actionRequest->part;
         }
-        $_GET['id'] = (int) $_GET['id'];
 
         $elementImage = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
-            ->findById($_GET['id']);
+            ->findById($image_id);
         if ($elementImage === null) {
             return $this->doError(404, 'Requested id not found');
         }
@@ -112,7 +108,7 @@ final class ActionController implements ControllerInterface
 
         // special download action for admins
         $is_admin_download = false;
-        if (\Piwigo\Auth\AccessControl::isAdmin() and isset($_GET['pwg_token']) and $_GET['pwg_token'] === new \Piwigo\Csrf\CsrfService()->getToken()) {
+        if (\Piwigo\Auth\AccessControl::isAdmin() and $actionRequest->pwgToken === new \Piwigo\Csrf\CsrfService()->getToken()) {
             $is_admin_download = true;
             \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withEnabledHigh(true));
         }
@@ -125,7 +121,7 @@ final class ActionController implements ControllerInterface
 SELECT id
   FROM ' . Tables::categories() . '
     INNER JOIN ' . Tables::imageCategory() . ' ON category_id = id
-  WHERE image_id = ' . $_GET['id'] . '
+  WHERE image_id = ' . $image_id . '
 ' . \Piwigo\Bootstrap\CoreDomainAccessor::permissionService()->getSqlConditionFandF([
             'forbidden_categories' => 'category_id',
             'forbidden_images' => 'image_id',
@@ -136,9 +132,9 @@ SELECT id
             return $this->doError(401, 'Access denied');
         }
 
-        // $format is only set when the enable_formats block above ran;
-        // part=f is reachable directly by request even when it never ran.
-        $format_row = $format ?? null;
+        // $format is only set on the format-resolved path above; part=f is
+        // reachable directly by request even when that path never ran.
+        $format_row = $format;
 
         $file = '';
         switch ($get_part) {
@@ -177,7 +173,7 @@ SELECT id
             return $this->doError(404, 'Requested file not found');
         }
 
-        $image_id_val = $_GET['id'];
+        $image_id_val = $image_id;
         if ($get_part === 'e') {
             $this->historyService()
                 ->logVisit($image_id_val, 'high');
@@ -236,7 +232,7 @@ SELECT id
 
         $http_headers['Content-Type'] = $ctype;
 
-        if (isset($_GET['download'])) {
+        if ($actionRequest->downloadPresent) {
             $http_headers['Content-Disposition'] = 'attachment; filename="' . htmlspecialchars_decode($element_info['file']) . '";';
             $http_headers['Content-Transfer-Encoding'] = 'binary';
         } else {

@@ -98,10 +98,9 @@ final class QNumericRangeScope extends QSearchScope
     #[\Override]
     public function get_sql(string $field, QSingleToken $token): string
     {
-        // set by parse() above as ['range' => array{0: int|float|string, 1:
-        // int|float|string}, 'strict' => array{0: int, 1: int}] — see
-        // QSingleToken::$scope_data's own docblock for why this can't be a
-        // static property type.
+        // QSingleToken::$scope_data's own declared type already covers this
+        // shape; still discriminated at runtime since the property is a
+        // union across both real writers.
         $scope_data = $token->scope_data;
         $range = is_array($scope_data) && is_array($scope_data['range'] ?? null) ? $scope_data['range'] : ['', ''];
         $strict = is_array($scope_data) && is_array($scope_data['strict'] ?? null) ? $scope_data['strict'] : [0, 0];

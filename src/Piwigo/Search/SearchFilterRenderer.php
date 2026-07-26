@@ -28,6 +28,14 @@ use Piwigo\Tag\TagService;
  * {@see \Piwigo\Cache\CachePools::searchResults()} (30s TTL) instead of the
  * older `PersistentCache`/`cacheUpdateTime`-keyed mechanism this class's
  * docblock previously kept deliberately out of scope.
+ *
+ * Every `mixed` below stays that way by design: cacheGet()/cacheSet() are
+ * a generic PSR-6 cache-pool wrapper (arbitrary cached value, same
+ * rationale as Cache\PersistentCache); every `$page` param is this file's
+ * own "plain local array shaped like the old global $page" (see this
+ * method's own docblock below) -- a genuinely heterogeneous bag (section/
+ * category/chronology/cat/tags/... all mixed together), not a single
+ * reusable domain shape.
  */
 final readonly class SearchFilterRenderer
 {
@@ -1243,7 +1251,8 @@ SELECT
      *
      * @param array<string, mixed> $page see getClauseForFilter()'s own
      *   docblock for why this is by-ref
-     * @return array<int, mixed>|false array of image_ids, or false
+     * @return list<int|string>|false array of image_ids (or the literal
+     *   -1 sentinel meaning "none"), or false
      */
     private function getItemsForFilter(string $filterName, array &$page): false|array
     {
@@ -1326,7 +1335,7 @@ SELECT
 
         // only ever populated a few lines above (in this same method) with an
         // array<int, mixed> $otherFiltersItems.
-        /** @var array<int, mixed> $cachedItems */
+        /** @var list<int|string> $cachedItems */
         return $cachedItems;
     }
 }

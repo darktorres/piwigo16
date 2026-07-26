@@ -47,10 +47,14 @@ final class QSingleToken implements \Stringable
     public $variants = [];
 
     /**
-     * @var mixed set by QSearchScope::parse() (or a subclass override);
-     *   QNumericRangeScope stores array{range: array, strict: array},
-     *   QDateRangeScope stores a plain 2-element string[] range — the shape
-     *   depends on which scope subclass parsed this token
+     * Set by QSearchScope::parse() (or a subclass override) -- exactly one
+     * of the 2 concrete subclasses in this namespace. Each get_sql() still
+     * discriminates with an is_array()/isset() runtime check before
+     * reading a key, but the declared type itself can be a real union of
+     * both real writers' shapes; null until a real scope parses this
+     * token.
+     *
+     * @var array{range: array{0: int|float|string, 1: int|float|string}, strict: array{0: int, 1: int}}|array{0: string, 1: string}|null
      */
     public $scope_data;
 

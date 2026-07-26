@@ -74,9 +74,9 @@ final class QDateRangeScope extends QSearchScope
     #[\Override]
     public function get_sql(string $field, QSingleToken $token): string
     {
-        // set by parse() above as a plain 2-element string[] range — see
-        // QSingleToken::$scope_data's own docblock for why this can't be a
-        // static property type.
+        // QSingleToken::$scope_data's own declared type already covers this
+        // shape; still discriminated at runtime since the property is a
+        // union across both real writers.
         $scope_data = $token->scope_data;
         $date_range = is_array($scope_data) ? $scope_data : ['', ''];
         $date_range_0_raw = $date_range[0] ?? '';

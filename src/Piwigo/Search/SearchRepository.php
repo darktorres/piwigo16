@@ -22,6 +22,14 @@ use Piwigo\Search\Projection\Search;
  * small number of generic, fully parameterized executors instead of one
  * method per query shape, matching this project's documented allowance for
  * hand-written parameterized SQL on complex dynamic queries.
+ *
+ * Every `mixed` below stays that way by design: $params mirrors DBAL
+ * Connection::executeQuery()'s own untyped bound-parameter contract
+ * (values vary by which dynamically-built WHERE clause a caller
+ * assembled); findRowsByClause()'s row shape genuinely varies with
+ * $fromSql, same category as CategoryRepository::fetchCallerBuiltQuery();
+ * $rules matches Search Projection's own already-documented JSON
+ * rules-bag rationale.
  */
 final class SearchRepository extends AbstractRepository
 {

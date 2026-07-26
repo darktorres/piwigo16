@@ -36,6 +36,12 @@ use Piwigo\Users\UserService;
  * `get_sql()`, numeric/date values only) into a single WHERE string, where
  * a `?`-bound parameter can't cleanly compose; `quote()` is the correct,
  * driver-safe way to inline a free-text value into that kind of clause.
+ *
+ * Every `mixed` below stays that way by design: $search/$field/
+ * $allwordsField (and every advanced-search-criterion param derived from
+ * them) trace back to Search Projection's own already-documented JSON
+ * rules bag; every `list<mixed> $params` matches SearchRepository's own
+ * DBAL-bound-parameter rationale.
  */
 final readonly class SearchService
 {
@@ -1031,6 +1037,9 @@ final readonly class SearchService
     }
 
     /**
+     * Same "widened by the qsearch_results plugin hook" rationale as
+     * getQuickSearchResultsNoCache() below.
+     *
      * @param  array<string, mixed>  $options
      * @return array<string, mixed>
      */

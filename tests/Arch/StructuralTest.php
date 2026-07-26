@@ -757,6 +757,70 @@ test('src/Piwigo/ contains no PHPWG_ROOT_PATH/PWG_LOCAL_DIR reads', function ():
     expect(describeCallSites($hits))->toBe([]);
 });
 
+test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO or a documented exception', function (): void {
+    // P27/SEC-40 completion: every page controller/WS method/domain
+    // service that used to read $_GET/$_POST/$_REQUEST/$_FILES directly
+    // now does so through a validating `{Module}/Request/{Name}` DTO's
+    // own `fromGlobals()` (the sole legitimate raw read a DTO class makes
+    // for itself -- this scan only covers files OUTSIDE any `Request/`
+    // directory, matching `RequestFactory::fromGlobals()`'s own
+    // established "the wrapper's internals are exempt from the rule it
+    // enforces on everyone else" shape). A hit anywhere else means a new
+    // raw read was introduced and must be migrated onto a Request DTO,
+    // not allowlisted -- the 6 files below are the only real exceptions
+    // that survived a full repo audit, each already documented at its own
+    // call site:
+    //   - Admin/AdminShell.php: runDispatch()'s own page-slug alias
+    //     rewriting ($_GET['page']/['section']/['tab']) -- load-bearing,
+    //     must survive into RequestFactory::fromGlobals()'s own later
+    //     read in the same method.
+    //   - Bootstrap/UserBootstrap.php: the api_key pwg_token synthesis
+    //     ($_POST['pwg_token'] = $_GET['pwg_token'] = ...) -- load-
+    //     bearing, must survive into Ws\Request\WsRawRequest's own later
+    //     read in the same request.
+    //   - Bootstrap/RequestBootstrap.php: the once-per-request magic-
+    //     quotes-style superglobal sanitization pass (array_walk_recursive
+    //     over the whole $_GET/$_POST), which necessarily runs before any
+    //     Request DTO in the app could read either array -- the same
+    //     "earliest possible bootstrap stage" category as
+    //     RequestFactory::fromGlobals() itself.
+    //   - Ws/PwgServer.php: isPost()'s own `$_POST !== []` -- a minimal
+    //     single-fact reader (matches this same file's own docblock),
+    //     not a bag of request data a DTO wrapper would help.
+    //   - Ws/PwgImages.php: upload()'s own `$_FILES !== []` top-level
+    //     existence check -- governs a broader condition ("was ANY file
+    //     posted") than the 'file' key specifically, which
+    //     Ws\Request\UploadedFileRequest already covers.
+    //   - Admin/BatchManagerGlobalPageRenderer.php: the pre-DTO CSRF gate
+    //     (`count($_POST) > 0`), which must run before
+    //     Admin\Request\BatchManagerGlobalRequest::fromGlobals() to match
+    //     the original's own CSRF-before-field-validation ordering.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', '$_POST'),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', '$_GET'),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', '$_REQUEST'),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', '$_FILES'),
+    ];
+
+    $allowlistedSuffixes = [
+        'Admin/AdminShell.php',
+        'Bootstrap/UserBootstrap.php',
+        'Bootstrap/RequestBootstrap.php',
+        'Ws/PwgServer.php',
+        'Ws/PwgImages.php',
+        'Admin/BatchManagerGlobalPageRenderer.php',
+    ];
+    $unexpected = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! str_contains($hit['path'], '/Request/')
+            && array_all($allowlistedSuffixes, static fn (string $suffix): bool => ! str_ends_with($hit['path'], $suffix))
+    ));
+
+    expect(describeCallSites($unexpected))->toBe([]);
+});
+
 test('src/Piwigo/ contains no raw IN_ADMIN/IN_WS/PHPWG_INSTALLED/PHPWG_URL/PHPWG_DOMAIN/PEM_URL reads', function (): void {
     // Legacy Coupling Retirement gap-closure (entry-shell define()/include
     // round, Part 0b): all 6 are fully retired, zero-tolerance -- typed

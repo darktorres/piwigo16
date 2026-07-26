@@ -29,7 +29,18 @@ final class CatPermPageRenderer
     ) {}
 
     /**
-     * @param array<string, mixed> $category
+     * $category is AlbumSubController::handle()'s own
+     * {@see \Piwigo\Category\Projection\Category::toArray()} result, shared
+     * verbatim with AlbumNotificationPageRenderer/CatModifyPageRenderer's
+     * own render() calls from that same dispatch site. Unlike
+     * CatModifyPageRenderer, this method's own 'status' reassignment below
+     * stays the same string type, so the full Projection shape applies
+     * safely throughout.
+     *
+     * @param array{id: int, name: string, id_uppercat: ?int, comment: ?string,
+     *   dir: ?string, rank: ?int, status: string, site_id: ?int, visible: bool,
+     *   representative_picture_id: ?int, uppercats: string, commentable: bool,
+     *   global_rank: ?string, image_order: ?string, permalink: ?string, lastmodified: string} $category
      */
     public function render(string $admin_album_base_url, array $category): void
     {
@@ -46,8 +57,7 @@ final class CatPermPageRenderer
         // |                       variable initialization                     |
         // +-------------------------------------------------------------------+
 
-        // category id is the NOT NULL primary key, always numeric once fetched.
-        $page['cat'] = is_numeric($category['id']) ? (int) $category['id'] : 0;
+        $page['cat'] = $category['id'];
 
         // +-------------------------------------------------------------------+
         // |                           form submission                         |
@@ -60,7 +70,7 @@ final class CatPermPageRenderer
             // the status <select> always submits this field; fall back to an empty
             // string (never matches 'public'/'private') on malformed input
             $post_status = isset($_POST['status']) && is_string($_POST['status']) ? $_POST['status'] : '';
-            $current_status = is_string($category['status']) ? $category['status'] : '';
+            $current_status = $category['status'];
             $apply_on_sub = isset($_POST['apply_on_sub']);
 
             $post_groups = [];
@@ -133,9 +143,9 @@ SELECT group_id
   FROM ' . Tables::groupAccess() . '
   WHERE cat_id = ' . $page['cat'] . '
 ;';
-        // array_from_query()'s own return type is declared array<int|string, mixed>;
-        // narrow to the real int ids (DB values are string|null per this driver,
-        // group_id is a NOT NULL numeric column)
+        // array_column()'s extracted value is mixed (fetchAllAssociative()'s
+        // own row type); narrow to the real int ids (group_id is a NOT NULL
+        // numeric column, native int or numeric string depending on driver)
         $group_granted_ids = [];
         foreach (array_column($conn->fetchAllAssociative($query), 'group_id') as $raw_group_id) {
             if (is_numeric($raw_group_id)) {
@@ -167,9 +177,9 @@ SELECT user_id
   FROM ' . Tables::userAccess() . '
   WHERE cat_id = ' . $page['cat'] . '
 ;';
-        // array_from_query()'s own return type is declared array<int|string, mixed>;
-        // narrow to the real int ids (DB values are string|null per this driver,
-        // user_id is a NOT NULL numeric column)
+        // array_column()'s extracted value is mixed (fetchAllAssociative()'s
+        // own row type); narrow to the real int ids (user_id is a NOT NULL
+        // numeric column, native int or numeric string depending on driver)
         $user_granted_direct_ids = [];
         foreach (array_column($conn->fetchAllAssociative($query), 'user_id') as $raw_user_id) {
             if (is_numeric($raw_user_id)) {
@@ -223,8 +233,8 @@ SELECT user_id, group_id
             foreach ($granted_groups as $group_id => $group_users) {
                 $group_usernames = [];
                 foreach ($group_users as $user_id) {
-                    // simple_hash_from_query()'s own return type is declared
-                    // array<int|string, mixed>; narrow to the real username string
+                    // $users is array_column(..., 'username', 'id')'s result,
+                    // value type mixed; narrow to the real username string
                     if (in_array($user_id, $user_granted_indirect_ids, true) && isset($users[$user_id]) && is_string($users[$user_id])) {
                         $group_usernames[] = $users[$user_id];
                     }

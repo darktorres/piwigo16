@@ -32,7 +32,15 @@ final class AlbumNotificationPageRenderer
     ) {}
 
     /**
-     * @param array<string, mixed> $category
+     * $category is AlbumSubController::handle()'s own
+     * {@see \Piwigo\Category\Projection\Category::toArray()} result, shared
+     * verbatim with CatModifyPageRenderer/CatPermPageRenderer's own
+     * render() calls from that same dispatch site.
+     *
+     * @param array{id: int, name: string, id_uppercat: ?int, comment: ?string,
+     *   dir: ?string, rank: ?int, status: string, site_id: ?int, visible: bool,
+     *   representative_picture_id: ?int, uppercats: string, commentable: bool,
+     *   global_rank: ?string, image_order: ?string, permalink: ?string, lastmodified: string} $category
      */
     public function render(string $admin_album_base_url, array $category): void
     {
@@ -49,10 +57,7 @@ final class AlbumNotificationPageRenderer
         // |                       variable initialization                     |
         // +-------------------------------------------------------------------+
 
-        // category id is the NOT NULL primary key, always numeric once
-        // fetched -- narrowed once here and reused by every raw-SQL splice
-        // below instead of re-guarding `$category['id']` at each site.
-        $category_id = is_numeric($category['id']) ? (int) $category['id'] : 0;
+        $category_id = $category['id'];
         $page['cat'] = $category_id;
 
         // \Piwigo\Config\CurrentConfig::userFields() maps generic field names to table-specific column
@@ -80,11 +85,11 @@ final class AlbumNotificationPageRenderer
             // lookup ("use a child album's representative instead"), only
             // a direct-representative check. Not a defect, just a smaller
             // feature than a full recursive lookup would be.
-            if (is_numeric($category['representative_picture_id']) && (int) $category['representative_picture_id'] !== 0) {
+            if ($category['representative_picture_id'] !== null && $category['representative_picture_id'] !== 0) {
                 $query = '
 SELECT id, file, path, representative_ext
   FROM ' . Tables::images() . '
-  WHERE id = ' . (string) $category['representative_picture_id'] . '
+  WHERE id = ' . $category['representative_picture_id'] . '
 ;';
 
                 $img_rows = $conn->fetchAllAssociative($query);
@@ -257,9 +262,10 @@ SELECT
 
         $template->set_filename('album_notification', 'album_notification.tpl');
 
-        // $page['cat'] was set to (int) $category['id'] above, in this same
-        // method scope with no intervening by-reference calls, so its
-        // narrowing is still provably int here.
+        // $page['cat'] was set to $category['id'] (a real int) above, in
+        // this same method scope with no intervening by-reference calls,
+        // so its narrowing is still provably int here ($page itself is
+        // array<string, mixed>).
         $page_cat = $page['cat'];
 
         $template->assign(

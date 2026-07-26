@@ -31,6 +31,17 @@ use Piwigo\Template\Template;
 final class CatModifyPageRenderer
 {
     /**
+     * $category starts as AlbumSubController::handle()'s own
+     * {@see \Piwigo\Category\Projection\Category::toArray()} result (same
+     * as AlbumNotificationPageRenderer/CatPermPageRenderer's own $category)
+     * -- but unlike those two siblings, this method both widens 2 of its
+     * core fields' types (the "nullable fields" loop below turns
+     * site_id/id_uppercat from ?int into int|string by substituting ''
+     * for null) and adds 5 brand new keys (is_virtual/has_images/
+     * nb_subcats/nb_images_recursive/cat_full_dir) -- genuinely outgrows
+     * the Projection's own shape as this method progresses, same "risk of
+     * untested retype" call as PictureModifyPageRenderer's own $row.
+     *
      * @param array<string, mixed> $category
      */
     public function render(UrlServiceInterface $urlService, array $category): void

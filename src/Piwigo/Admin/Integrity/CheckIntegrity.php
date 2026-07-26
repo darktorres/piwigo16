@@ -97,15 +97,16 @@ final class CheckIntegrity
         }
 
         // Treatments
-        if (isset($_POST['c13y_submit_correction']) and isset($_POST['c13y_selection']) and is_array($_POST['c13y_selection'])) {
-            $c13y_selection = $_POST['c13y_selection'];
+        $c13yTreatment = Request\C13yTreatmentRequest::fromGlobals();
+        if ($c13yTreatment->mode === 'correction') {
+            $c13y_selection = $c13yTreatment->selection;
             $corrected_count = 0;
             $not_corrected_count = 0;
 
             foreach ($this->retrieve_list as $i => $c13y) {
                 if (! in_array($c13y['correction_fct'] ?? null, [null, false, 0, '0', '', []], true) and
                     (bool) $c13y['is_callable'] and
-                    in_array(is_string($c13y['id']) ? $c13y['id'] : '', array_map(static fn (mixed $v): string => is_string($v) ? $v : '', $c13y_selection), true)) {
+                    in_array(is_string($c13y['id']) ? $c13y['id'] : '', $c13y_selection, true)) {
                     if (is_array($c13y['correction_fct_args'])) {
                         $args = $c13y['correction_fct_args'];
                     } elseif ($c13y['correction_fct_args'] !== null) {
@@ -141,12 +142,12 @@ final class CheckIntegrity
                 ));
             }
         } else {
-            if (isset($_POST['c13y_submit_ignore']) and isset($_POST['c13y_selection']) and is_array($_POST['c13y_selection'])) {
-                $c13y_selection = $_POST['c13y_selection'];
+            if ($c13yTreatment->mode === 'ignore') {
+                $c13y_selection = $c13yTreatment->selection;
                 $ignored_count = 0;
 
                 foreach ($this->retrieve_list as $i => $c13y) {
-                    if (in_array(is_string($c13y['id']) ? $c13y['id'] : '', array_map(static fn (mixed $v): string => is_string($v) ? $v : '', $c13y_selection), true)) {
+                    if (in_array(is_string($c13y['id']) ? $c13y['id'] : '', $c13y_selection, true)) {
                         $this->build_ignore_list[] = $c13y['id'];
                         $this->retrieve_list[$i]['ignored'] = true;
                         ++$ignored_count;

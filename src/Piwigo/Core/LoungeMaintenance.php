@@ -34,7 +34,8 @@ final class LoungeMaintenance
             return false;
         }
 
-        if (isset($_REQUEST['method']) && in_array($_REQUEST['method'], ['pwg.images.upload', 'pwg.images.uploadAsync'], true)) {
+        $requestMethod = Request\LoungeMaintenanceRequest::fromGlobals()->requestMethod;
+        if (in_array($requestMethod, ['pwg.images.upload', 'pwg.images.uploadAsync'], true)) {
             return false;
         }
 

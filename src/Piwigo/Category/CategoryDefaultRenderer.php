@@ -107,8 +107,7 @@ final readonly class CategoryDefaultRenderer
                       ['start']
                   ),
                   [
-                      'slideshow' => ($_GET['slideshow']
-                                                         ?? ''),
+                      'slideshow' => Request\CategorySlideshowRequest::fromGlobals()->slideshow,
                   ]
               );
 

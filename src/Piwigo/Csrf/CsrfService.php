@@ -82,8 +82,8 @@ final class CsrfService
      */
     public function check(): ?bool
     {
-        $submitted = $_REQUEST['pwg_token'] ?? null;
-        if (! is_string($submitted) || $submitted === '') {
+        $submitted = Request\CsrfTokenRequest::fromGlobals()->submittedToken;
+        if ($submitted === null) {
             return null;
         }
 

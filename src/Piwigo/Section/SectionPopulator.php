@@ -472,7 +472,7 @@ SELECT id
                 );
 
                 $user_id_sql = \Piwigo\Users\CurrentUser::get()->id;
-                if (($_GET['action'] ?? null) === 'remove_all_from_favorites') {
+                if (Request\FavoritesActionRequest::fromGlobals()->removeAllFromFavorites) {
                     $query = '
 DELETE FROM ' . Tables::favorites() . '
   WHERE user_id = ' . $user_id_sql . '

@@ -195,16 +195,10 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
             case 'subscribe':
 
                 if (isset($_POST['falsify']) and isset($_POST['cat_true']) and is_array($_POST['cat_true'])) {
-                    // unsubscribeNotificationByMail() is declared to return
-                    // mixed[] (a list, always sequentially int-keyed in practice via
-                    // $check_key_treated[] appends), but PHPStan reads that shorthand
-                    // as array<mixed> (key type not pinned to int); array_values()
-                    // re-keys it to the array<int, mixed> doTimeoutTreatment()
-                    // actually expects.
-                    $check_key_treated = array_values($nbmSender->unsubscribeNotificationByMail(true, array_values($_POST['cat_true'])));
+                    $check_key_treated = $nbmSender->unsubscribeNotificationByMail(true, array_values($_POST['cat_true']));
                     $must_repost = self::doTimeoutTreatment($nbmSender, 'cat_true', $check_key_treated);
                 } elseif (isset($_POST['trueify']) and isset($_POST['cat_false']) and is_array($_POST['cat_false'])) {
-                    $check_key_treated = array_values($nbmSender->subscribeNotificationByMail(true, array_values($_POST['cat_false'])));
+                    $check_key_treated = $nbmSender->subscribeNotificationByMail(true, array_values($_POST['cat_false']));
                     $must_repost = self::doTimeoutTreatment($nbmSender, 'cat_false', $check_key_treated);
                 }
                 break;
@@ -393,7 +387,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
     /**
      * Do timeout treatment in order to finish to send mails
-     * @param array<int, mixed> $check_key_treated: array of check_key treated
+     * @param list<string> $check_key_treated: array of check_key treated
      * @return bool whether treatment timed out and must be reposted
      */
     private static function doTimeoutTreatment(NotificationByMailSender $nbmSender, string $post_keyname, array $check_key_treated = []): bool
@@ -407,11 +401,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 } else {
                     $time_refresh = 0;
                 }
-                // $check_key_treated is check_key strings returned by the nbm
-                // sender (typed mixed[] there); keep only the string ones so
-                // array_diff() gets values it can actually compare.
-                $check_key_treated_strings = array_filter($check_key_treated, is_string(...));
-                $_POST[$post_keyname] = array_diff(array_filter($_POST[$post_keyname], is_string(...)), $check_key_treated_strings);
+                $_POST[$post_keyname] = array_diff(array_filter($_POST[$post_keyname], is_string(...)), $check_key_treated);
 
                 \Piwigo\Core\PageState::current()->addError(Translator::get()->plural(
                     'Execution time is out, treatment must be continue [Estimated time: %d second].',
@@ -523,11 +513,7 @@ order by
 
             // On timeout simulate like tabsheet send
             if ($nbmSender->isSendmailTimeout()) {
-                // doSubscribeUnsubscribeNotificationByMail() returns mixed[]
-                // of check_key strings; narrow before array_diff() needs values
-                // castable to string.
-                $check_key_treated_strings = array_filter($check_key_treated, is_string(...));
-                $quoted_check_key_list = NotificationByMailSender::quoteCheckKeyList(array_diff($check_key_list, $check_key_treated_strings));
+                $quoted_check_key_list = NotificationByMailSender::quoteCheckKeyList(array_diff($check_key_list, $check_key_treated));
                 if (count($quoted_check_key_list) !== 0) {
                     $query = 'delete from ' . Tables::userMailNotification() . ' where check_key in (' . implode(',', $quoted_check_key_list) . ');';
                     $conn->executeStatement($query);

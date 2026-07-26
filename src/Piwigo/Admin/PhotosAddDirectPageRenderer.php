@@ -17,7 +17,6 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 
@@ -170,7 +169,7 @@ SELECT COUNT(*)
                 // because that function's return signature is array<string, mixed>.
                 $formats_image_id = is_numeric($formats_original_info['id']) ? (int) $formats_original_info['id'] : 0;
 
-                $formats = new ImageRepository($conn)
+                $formats = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
                     ->findFormatsForImage($formats_image_id);
 
                 if ($formats !== []) {

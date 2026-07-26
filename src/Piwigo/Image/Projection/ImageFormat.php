@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Image\Projection;
 
+use Piwigo\Image\ImageFormatEntity;
+
 /**
  * Typed row shape for `piwigo_image_format` (P17-23 Stage 1b, Image domain
  * -- `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection shapes"
@@ -27,6 +29,16 @@ final readonly class ImageFormat
         public string $ext,
         public ?int $filesize,
     ) {}
+
+    public static function fromEntity(ImageFormatEntity $entity): self
+    {
+        return new self(
+            formatId: $entity->formatId ?? 0,
+            imageId: $entity->imageId,
+            ext: $entity->ext,
+            filesize: $entity->filesize,
+        );
+    }
 
     /**
      * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `piwigo_image_format`

@@ -1,0 +1,57 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Auth;
+
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * Maps the `user_auth_keys` table (`piwigo_user_auth_keys` once
+ * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
+ * No `repositoryClass` -- this table has no single natural owner:
+ * {@see AuthRepository} owns its `auth_key`-type rows (persistent login),
+ * {@see ApiKeyRepository} owns its `api_key`-type rows (personal API
+ * keys), same physical table, different lifecycle/owner (both classes'
+ * own docblocks already documented this before either converted). Both
+ * query this entity directly via DQL through their own EntityManager,
+ * matching Group\UserGroupEntity/GroupAccessEntity's own no-owner
+ * precedent. `created_on`/`expired_on` are genuine NOT NULL columns
+ * (unlike every other datetime-shaped column here); every other datetime
+ * column stays plain ?string, not \DateTimeImmutable, matching
+ * Auth\Projection\ApiKey's own already-documented decision.
+ */
+#[ORM\Entity]
+#[ORM\Table(name: 'user_auth_keys')]
+final class UserAuthKeyEntity
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(name: 'auth_key_id', type: 'integer')]
+    public ?int $authKeyId = null;
+
+    public function __construct(
+        #[ORM\Column(name: 'auth_key', type: 'string', length: 255)]
+        public string $authKey,
+        #[ORM\Column(name: 'apikey_secret', type: 'string', length: 255, nullable: true)]
+        public ?string $apikeySecret,
+        #[ORM\Column(name: 'user_id', type: 'integer')]
+        public int $userId,
+        #[ORM\Column(name: 'created_on', type: 'string', length: 19)]
+        public string $createdOn,
+        #[ORM\Column(type: 'integer', nullable: true)]
+        public ?int $duration,
+        #[ORM\Column(name: 'expired_on', type: 'string', length: 19)]
+        public string $expiredOn,
+        #[ORM\Column(name: 'apikey_name', type: 'string', length: 100, nullable: true)]
+        public ?string $apikeyName,
+        #[ORM\Column(name: 'key_type', type: 'string', length: 40, nullable: true)]
+        public ?string $keyType,
+        #[ORM\Column(name: 'revoked_on', type: 'string', length: 19, nullable: true)]
+        public ?string $revokedOn = null,
+        #[ORM\Column(name: 'last_used_on', type: 'string', length: 19, nullable: true)]
+        public ?string $lastUsedOn = null,
+        #[ORM\Column(name: 'last_notified_on', type: 'string', length: 19, nullable: true)]
+        public ?string $lastNotifiedOn = null,
+    ) {}
+}

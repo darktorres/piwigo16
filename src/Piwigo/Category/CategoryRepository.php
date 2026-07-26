@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\ORM\EntityRepository;
 use Piwigo\Category\Projection\Category;
-use Piwigo\Db\AbstractRepository;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupAccessEntity;
 
 /**
  * Persistence layer for the category domain: tree/menu queries, permalink
@@ -18,20 +20,29 @@ use Piwigo\Db\Tables;
  * the caller (CategoryService, via PermissionService::getSqlConditionFandF())
  * rather than constructed here -- same "repository takes a pre-built
  * permission condition string" shape as RateRepository/CommentRepository.
+ *
+ * Owns `categories` ({@see CategoryEntity}) and shares `user_access`
+ * ({@see UserAccessEntity})/`group_access` ({@see \Piwigo\Group\GroupAccessEntity},
+ * created during the Group batch) with Group/Permission -- only the
+ * single-row/simple-id-list methods against those three tables go
+ * through DQL; the large majority of this repository's 65 methods are
+ * dynamic-fragment (caller-built permission/ORDER BY SQL), dynamically
+ * table/column-named (findOrphanedColumnValues/deleteRowsWhereColumnIn/
+ * deleteInconsistentAccess), or cross-domain joins/reads, and stay plain
+ * DBAL via $this->getEntityManager()->getConnection() -- same "mixed
+ * repository" shape Image/Tag's own conversions established.
+ * `image_category` is never entity-mapped anywhere in this migration
+ * (see CategoryEntity's own docblock).
+ *
+ * @extends EntityRepository<CategoryEntity>
  */
-final class CategoryRepository extends AbstractRepository
+final class CategoryRepository extends EntityRepository
 {
     public function findById(int $id): ?Category
     {
-        $row = $this->conn->createQueryBuilder()
-            ->select('*')
-            ->from(Tables::categories())
-            ->where('id = :id')
-            ->setParameter('id', $id)
-            ->executeQuery()
-            ->fetchAssociative();
+        $entity = $this->find($id);
 
-        return $row === false ? null : Category::fromRow($row);
+        return $entity === null ? null : Category::fromEntity($entity);
     }
 
     /**
@@ -44,7 +55,9 @@ final class CategoryRepository extends AbstractRepository
             return [];
         }
 
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('id', 'name', 'permalink')
             ->from(Tables::categories())
             ->where('id IN (:ids)')
@@ -69,7 +82,9 @@ final class CategoryRepository extends AbstractRepository
      */
     public function findAllIdNamePermalink(): array
     {
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('id', 'name', 'permalink')
             ->from(Tables::categories())
             ->executeQuery()
@@ -100,7 +115,9 @@ final class CategoryRepository extends AbstractRepository
             return [];
         }
 
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('DISTINCT id')
             ->from(Tables::categories());
 
@@ -147,7 +164,10 @@ final class CategoryRepository extends AbstractRepository
             return [];
         }
 
-        $rows = $this->conn->createQueryBuilder()
+        $conn = $this->getEntityManager()
+            ->getConnection();
+
+        $rows = $conn->createQueryBuilder()
             ->select('cat_id AS id', 'permalink', '1 AS is_old')
             ->from(Tables::oldPermalinks())
             ->where('permalink IN (:permalinks)')
@@ -155,7 +175,7 @@ final class CategoryRepository extends AbstractRepository
             ->executeQuery()
             ->fetchAllAssociative();
 
-        $rows2 = $this->conn->createQueryBuilder()
+        $rows2 = $conn->createQueryBuilder()
             ->select('id', 'permalink', '0 AS is_old')
             ->from(Tables::categories())
             ->where('permalink IN (:permalinks)')
@@ -172,9 +192,19 @@ final class CategoryRepository extends AbstractRepository
         return $byPermalink;
     }
 
+    /**
+     * `hit = hit + 1` is a self-referential SQL fragment a mapped entity
+     * property write can't express -- stays raw DBAL, same reasoning as
+     * Image\ImageRepository::incrementVisitCounter(). `old_permalinks`
+     * is never entity-mapped in this migration (this is its only write
+     * method; every other touch is a read), so there's no identity map
+     * to clear here.
+     */
     public function touchOldPermalinkHit(string $permalink, int $catId): void
     {
-        $this->conn->createQueryBuilder()
+        $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->update(Tables::oldPermalinks())
             ->set('last_hit', 'NOW()')
             ->set('hit', 'hit + 1')
@@ -192,7 +222,9 @@ final class CategoryRepository extends AbstractRepository
             ? '(c.id = :catId OR uppercats LIKE :uppercatsLike)'
             : 'c.id = :catId';
 
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('image_id')
             ->from(Tables::categories(), 'c')
             ->innerJoin('c', Tables::imageCategory(), 'ic', 'ic.category_id = c.id')
@@ -242,7 +274,9 @@ final class CategoryRepository extends AbstractRepository
             $imagesJoinCondition .= ' AND i.date_available > ' . SqlDialect::getRecentPeriodExpression($filterDays);
         }
 
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select(
                 'c.id AS cat_id',
                 'id_uppercat',
@@ -280,7 +314,9 @@ final class CategoryRepository extends AbstractRepository
             return [];
         }
 
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('id')
             ->from(Tables::images(), 'i')
             ->innerJoin('i', Tables::imageCategory(), 'ic', 'id = ic.image_id')
@@ -332,7 +368,9 @@ final class CategoryRepository extends AbstractRepository
             return [];
         }
 
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('c.id', 'c.uppercats', 'COUNT(*) AS counter')
             ->from(Tables::imageCategory())
             ->innerJoin(Tables::imageCategory(), Tables::categories(), 'c', 'category_id = c.id')
@@ -379,7 +417,9 @@ final class CategoryRepository extends AbstractRepository
             return [];
         }
 
-        return $this->conn->createQueryBuilder()
+        return $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('id', 'name', 'permalink', 'id_uppercat', 'uppercats', 'global_rank')
             ->from(Tables::categories())
             ->where('id IN (:ids)')
@@ -406,7 +446,9 @@ final class CategoryRepository extends AbstractRepository
             return [];
         }
 
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('*')
             ->from(Tables::categories())
             ->where('id IN (:ids)')
@@ -422,7 +464,7 @@ final class CategoryRepository extends AbstractRepository
      */
     public function findCategoryIdsBySite(int $siteId): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->createQueryBuilder()
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->createQueryBuilder()
             ->select('id')
             ->from(Tables::categories())
             ->where('site_id = :siteId')
@@ -433,7 +475,9 @@ final class CategoryRepository extends AbstractRepository
 
     public function deleteSiteRow(int $id): void
     {
-        $this->conn->createQueryBuilder()
+        $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->delete(Tables::sites())
             ->where('id = :id')
             ->setParameter('id', $id)
@@ -450,7 +494,7 @@ final class CategoryRepository extends AbstractRepository
             return [];
         }
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
 SELECT id
   FROM ' . Tables::images() . '
   WHERE storage_category_id IN (
@@ -468,7 +512,7 @@ SELECT id
             return [];
         }
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
 SELECT
     DISTINCT(image_id)
   FROM ' . Tables::imageCategory() . '
@@ -491,7 +535,7 @@ SELECT
             return [];
         }
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
 SELECT
     DISTINCT(image_id)
   FROM ' . Tables::imageCategory() . '
@@ -505,7 +549,9 @@ SELECT
      */
     public function deleteImageCategoryLinksForCategories(array $ids): void
     {
-        $this->conn->executeStatement('
+        $this->getEntityManager()
+            ->getConnection()
+            ->executeStatement('
 DELETE FROM ' . Tables::imageCategory() . '
   WHERE category_id IN (
 ' . wordwrap(implode(', ', $ids), 80, "\n") . ')
@@ -517,11 +563,18 @@ DELETE FROM ' . Tables::imageCategory() . '
      */
     public function deleteUserAccessForCategories(array $ids): void
     {
-        $this->conn->executeStatement('
-DELETE FROM ' . Tables::userAccess() . '
-  WHERE cat_id IN (
-' . wordwrap(implode(', ', $ids), 80, "\n") . ')
-;');
+        if ($ids === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(UserAccessEntity::class, 'ua')
+            ->where('ua.catId IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -529,11 +582,18 @@ DELETE FROM ' . Tables::userAccess() . '
      */
     public function deleteGroupAccessForCategories(array $ids): void
     {
-        $this->conn->executeStatement('
-DELETE FROM ' . Tables::groupAccess() . '
-  WHERE cat_id IN (
-' . wordwrap(implode(', ', $ids), 80, "\n") . ')
-;');
+        if ($ids === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(GroupAccessEntity::class, 'ga')
+            ->where('ga.catId IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -553,12 +613,16 @@ DELETE FROM ' . Tables::groupAccess() . '
             return;
         }
 
-        $this->conn->executeStatement('
-DELETE
-  FROM ' . Tables::userAccess() . '
-  WHERE user_id IN (' . implode(',', $userIds) . ')
-    AND cat_id IN (' . implode(',', $catIds) . ')
-;');
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(UserAccessEntity::class, 'ua')
+            ->where('ua.userId IN (:userIds)')
+            ->andWhere('ua.catId IN (:catIds)')
+            ->setParameter('userIds', $userIds)
+            ->setParameter('catIds', $catIds)
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -573,12 +637,16 @@ DELETE
             return;
         }
 
-        $this->conn->executeStatement('
-DELETE
-  FROM ' . Tables::groupAccess() . '
-  WHERE group_id IN (' . implode(',', $groupIds) . ')
-    AND cat_id IN (' . implode(',', $catIds) . ')
-;');
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(GroupAccessEntity::class, 'ga')
+            ->where('ga.groupId IN (:groupIds)')
+            ->andWhere('ga.catId IN (:catIds)')
+            ->setParameter('groupIds', $groupIds)
+            ->setParameter('catIds', $catIds)
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -586,11 +654,18 @@ DELETE
      */
     public function deleteCategoriesByIds(array $ids): void
     {
-        $this->conn->executeStatement('
-DELETE FROM ' . Tables::categories() . '
-  WHERE id IN (
-' . wordwrap(implode(', ', $ids), 80, "\n") . ')
-;');
+        if ($ids === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(CategoryEntity::class, 'c')
+            ->where('c.id IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -598,7 +673,13 @@ DELETE FROM ' . Tables::categories() . '
      */
     public function deleteOldPermalinksForCategories(array $ids): void
     {
-        $this->conn->executeStatement('
+        if ($ids === []) {
+            return;
+        }
+
+        $this->getEntityManager()
+            ->getConnection()
+            ->executeStatement('
 DELETE FROM ' . Tables::oldPermalinks() . '
   WHERE cat_id IN (' . implode(',', $ids) . ')');
     }
@@ -612,7 +693,7 @@ DELETE FROM ' . Tables::oldPermalinks() . '
      */
     public function findWrongRepresentativeCategoryIds(string $whereCatsSql): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
 SELECT DISTINCT c.id
   FROM ' . Tables::categories() . ' AS c LEFT JOIN ' . Tables::images() . ' AS i
     ON c.representative_picture_id = i.id
@@ -627,12 +708,20 @@ SELECT DISTINCT c.id
      */
     public function clearRepresentativePictureIds(array $ids): void
     {
-        $this->conn->executeStatement('
-UPDATE ' . Tables::categories() . '
-  SET representative_picture_id = NULL
-  WHERE id IN (
-' . wordwrap(implode(', ', $ids), 120, "\n") . ')
-;');
+        if ($ids === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->update(CategoryEntity::class, 'c')
+            ->set('c.representativePictureId', ':null')
+            ->where('c.id IN (:ids)')
+            ->setParameter('null', null)
+            ->setParameter('ids', $ids)
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -640,7 +729,7 @@ UPDATE ' . Tables::categories() . '
      */
     public function findCategoriesNeedingRandomRepresentative(string $whereCatsSql): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
 SELECT DISTINCT id
   FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::imageCategory() . '
     ON id = category_id
@@ -654,7 +743,7 @@ SELECT DISTINCT id
      */
     public function findOrphanedColumnValues(string $table, string $column): array
     {
-        return array_values(array_unique(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->conn->executeQuery('
+        return array_values(array_unique(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->getEntityManager()->getConnection()->executeQuery('
 SELECT
     ' . $column . '
   FROM ' . $table . '
@@ -668,7 +757,9 @@ SELECT
      */
     public function deleteRowsWhereColumnIn(string $table, string $column, array $values): void
     {
-        $this->conn->executeStatement('
+        $this->getEntityManager()
+            ->getConnection()
+            ->executeStatement('
 DELETE
   FROM ' . $table . '
   WHERE ' . $column . ' IN (' . implode(',', $values) . ')
@@ -684,7 +775,9 @@ DELETE
      */
     public function findCategoriesForRankUpdate(): array
     {
-        return $this->conn->executeQuery('
+        return $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT id, id_uppercat, uppercats, `rank`, global_rank
   FROM ' . Tables::categories() . '
   ORDER BY id_uppercat, `rank`, name
@@ -697,16 +790,20 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
      */
     public function updateCategoryVisibility(array $ids, bool $visible): void
     {
-        // Bound as int, not bool: a plain executeStatement() param array
-        // (no explicit Types::) can't always tell mysqli how to bind a raw
-        // PHP bool -- found live, it silently became the empty string ''
-        // instead of 0/1, which strict SQL mode then rejects outright
-        // ("Incorrect integer value: '' for column"). An int has one
-        // unambiguous wire representation on every platform.
-        $this->conn->executeStatement('
-UPDATE ' . Tables::categories() . '
-  SET visible = ?
-  WHERE id IN (' . implode(',', $ids) . ')', [(int) $visible]);
+        if ($ids === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->update(CategoryEntity::class, 'c')
+            ->set('c.visible', ':visible')
+            ->where('c.id IN (:ids)')
+            ->setParameter('visible', $visible)
+            ->setParameter('ids', array_values($ids))
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -714,10 +811,20 @@ UPDATE ' . Tables::categories() . '
      */
     public function updateCategoryCommentable(array $ids, bool $commentable): void
     {
-        $this->conn->executeStatement('
-UPDATE ' . Tables::categories() . '
-  SET commentable = ?
-  WHERE id IN (' . implode(',', $ids) . ')', [(int) $commentable]);
+        if ($ids === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->update(CategoryEntity::class, 'c')
+            ->set('c.commentable', ':commentable')
+            ->where('c.id IN (:ids)')
+            ->setParameter('commentable', $commentable)
+            ->setParameter('ids', array_values($ids))
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -725,11 +832,20 @@ UPDATE ' . Tables::categories() . '
      */
     public function updateCategoryStatus(array $ids, string $status): void
     {
-        $this->conn->executeStatement('
-UPDATE ' . Tables::categories() . '
-  SET status = \'' . $status . '\'
-  WHERE id IN (' . implode(',', $ids) . ')
-;');
+        if ($ids === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->update(CategoryEntity::class, 'c')
+            ->set('c.status', ':status')
+            ->where('c.id IN (:ids)')
+            ->setParameter('status', $status)
+            ->setParameter('ids', array_values($ids))
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -738,13 +854,14 @@ UPDATE ' . Tables::categories() . '
      */
     public function updateImageOrder(int $catId, ?string $imageOrder): void
     {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::categories())
-            ->set('image_order', ':imageOrder')
-            ->where('id = :id')
-            ->setParameter('imageOrder', $imageOrder)
-            ->setParameter('id', $catId)
-            ->executeStatement();
+        $entity = $this->find($catId);
+        if ($entity === null) {
+            return;
+        }
+
+        $entity->imageOrder = $imageOrder;
+        $this->getEntityManager()
+            ->flush();
     }
 
     /**
@@ -754,13 +871,16 @@ UPDATE ' . Tables::categories() . '
      */
     public function updateImageOrderForDescendants(string $uppercatsPrefix, ?string $imageOrder): void
     {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::categories())
-            ->set('image_order', ':imageOrder')
-            ->where('uppercats LIKE :uppercatsPrefix')
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->update(CategoryEntity::class, 'c')
+            ->set('c.imageOrder', ':imageOrder')
+            ->where('c.uppercats LIKE :uppercatsPrefix')
             ->setParameter('imageOrder', $imageOrder)
             ->setParameter('uppercatsPrefix', $uppercatsPrefix . '%')
-            ->executeStatement();
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -773,7 +893,9 @@ UPDATE ' . Tables::categories() . '
             return [];
         }
 
-        $rows = $this->conn->executeQuery('
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT
     id,
     status
@@ -795,11 +917,16 @@ SELECT
      */
     public function findAccessUserIds(int $catId): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
-SELECT user_id
-  FROM ' . Tables::userAccess() . '
-  WHERE cat_id = ' . $catId . '
-;')->fetchFirstColumn());
+        $entities = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('ua')
+            ->from(UserAccessEntity::class, 'ua')
+            ->where('ua.catId = :catId')
+            ->setParameter('catId', $catId)
+            ->getQuery()
+            ->getResult();
+
+        return array_map(static fn (UserAccessEntity $ua): int => $ua->userId, $entities);
     }
 
     /**
@@ -807,11 +934,16 @@ SELECT user_id
      */
     public function findAccessGroupIds(int $catId): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
-SELECT group_id
-  FROM ' . Tables::groupAccess() . '
-  WHERE cat_id = ' . $catId . '
-;')->fetchFirstColumn());
+        $entities = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('ga')
+            ->from(GroupAccessEntity::class, 'ga')
+            ->where('ga.catId = :catId')
+            ->setParameter('catId', $catId)
+            ->getQuery()
+            ->getResult();
+
+        return array_map(static fn (GroupAccessEntity $ga): int => $ga->groupId, $entities);
     }
 
     /**
@@ -822,12 +954,15 @@ SELECT group_id
      */
     public function deleteInconsistentAccess(string $table, string $field, array $keepIds, array $catIds): void
     {
-        $this->conn->executeStatement('
+        $em = $this->getEntityManager();
+        $em->getConnection()
+            ->executeStatement('
 DELETE
   FROM ' . $table . '
   WHERE ' . $field . ' NOT IN (' . implode(',', $keepIds) . ')
     AND cat_id IN (' . implode(',', $catIds) . ')
 ;');
+        $em->clear();
     }
 
     /**
@@ -840,7 +975,7 @@ DELETE
             return [];
         }
 
-        return array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->getEntityManager()->getConnection()->executeQuery('
 SELECT uppercats
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $ids) . ')
@@ -861,7 +996,9 @@ SELECT uppercats
             return [];
         }
 
-        $rows = $this->conn->executeQuery('
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT id, uppercats
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $ids) . ')
@@ -896,7 +1033,9 @@ SELECT id, uppercats
             return [];
         }
 
-        $rows = $this->conn->executeQuery('
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT
     category_id,
     ' . $minmax . '(' . $field . ') as ref_date
@@ -946,7 +1085,9 @@ SELECT
 
     public function findRandomImageIdInCategory(int $categoryId): ?int
     {
-        $value = $this->conn->executeQuery('
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT image_id
   FROM ' . Tables::imageCategory() . '
   WHERE category_id = ' . $categoryId . '
@@ -975,7 +1116,7 @@ SELECT image_id
      */
     public function findCategoryDirsById(): array
     {
-        return array_filter($this->conn->executeQuery('
+        return array_filter($this->getEntityManager()->getConnection()->executeQuery('
 SELECT id, dir
   FROM ' . Tables::categories() . '
   WHERE dir IS NOT NULL
@@ -988,7 +1129,7 @@ SELECT id, dir
      */
     public function findSiteGalleriesUrls(): array
     {
-        return array_filter($this->conn->executeQuery('
+        return array_filter($this->getEntityManager()->getConnection()->executeQuery('
 SELECT id, galleries_url
   FROM ' . Tables::sites() . '
 ;')->fetchAllKeyValue(), is_string(...));
@@ -1004,7 +1145,9 @@ SELECT id, galleries_url
             return [];
         }
 
-        return $this->conn->executeQuery('
+        return $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT id, uppercats, site_id
   FROM ' . Tables::categories() . '
   WHERE dir IS NOT NULL
@@ -1018,7 +1161,7 @@ SELECT id, uppercats, site_id
      */
     public function findDistinctStorageCategoryIds(): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
 SELECT DISTINCT(storage_category_id)
   FROM ' . Tables::images() . '
   WHERE storage_category_id IS NOT NULL
@@ -1027,7 +1170,9 @@ SELECT DISTINCT(storage_category_id)
 
     public function updateImagePathsForCategory(int $categoryId, string $fulldir): void
     {
-        $this->conn->executeStatement('
+        $this->getEntityManager()
+            ->getConnection()
+            ->executeStatement('
 UPDATE ' . Tables::images() . '
   SET path = ' . SqlDialect::concat(["'" . $fulldir . "/'", 'file']) . '
   WHERE storage_category_id = ' . $categoryId . '
@@ -1040,7 +1185,9 @@ UPDATE ' . Tables::images() . '
      */
     public function findCategoriesForMove(array $ids): array
     {
-        return $this->conn->executeQuery('
+        return $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT id, id_uppercat, status, uppercats
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $ids) . ')
@@ -1049,7 +1196,9 @@ SELECT id, id_uppercat, status, uppercats
 
     public function findCategoryUppercatsById(int $id): ?string
     {
-        $value = $this->conn->executeQuery('
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT uppercats
   FROM ' . Tables::categories() . '
   WHERE id = ' . $id . '
@@ -1061,24 +1210,35 @@ SELECT uppercats
     /**
      * $newParent is either a numeric category id or the literal string
      * `'NULL'` (root) -- matches the original's own `$new_parent < 1 ?
-     * 'NULL' : $new_parent` substitution, embedded directly into the SQL
-     * (not bindable as a parameter since it must appear unquoted as either
-     * a number or the SQL keyword).
+     * 'NULL' : $new_parent` substitution. Parsed here into a real bound
+     * parameter (int or null) rather than embedded unquoted into the SQL,
+     * now that this is a DQL bulk update against the owned CategoryEntity.
      *
      * @param  array<int>  $ids  real callers don't guarantee a list
      */
     public function updateCategoryParent(array $ids, string $newParent): void
     {
-        $this->conn->executeStatement('
-UPDATE ' . Tables::categories() . '
-  SET id_uppercat = ' . $newParent . '
-  WHERE id IN (' . implode(',', $ids) . ')
-;');
+        if ($ids === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->update(CategoryEntity::class, 'c')
+            ->set('c.idUppercat', ':newParent')
+            ->where('c.id IN (:ids)')
+            ->setParameter('newParent', $newParent === 'NULL' ? null : (int) $newParent)
+            ->setParameter('ids', array_values($ids))
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     public function findCategoryStatus(int $id): ?string
     {
-        $value = $this->conn->executeQuery('
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT status
   FROM ' . Tables::categories() . '
   WHERE id = ' . $id . '
@@ -1093,7 +1253,9 @@ SELECT status
         // '0', and '' all mean "no parent" / root level).
         $parentIsEmpty = $parentId === null || $parentId === 0 || $parentId === '0' || $parentId === '';
 
-        $value = $this->conn->executeQuery('
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT MAX(`rank`) AS max_rank
   FROM ' . Tables::categories() . '
   WHERE id_uppercat ' . ($parentIsEmpty ? 'IS NULL' : '= ' . (string) $parentId) . '
@@ -1107,7 +1269,9 @@ SELECT MAX(`rank`) AS max_rank
      */
     public function findParentCategoryForCreate(int|string $parentId): ?array
     {
-        $row = $this->conn->executeQuery('
+        $row = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT id, uppercats, global_rank, visible, status
   FROM ' . Tables::categories() . '
   WHERE id = ' . $parentId . '
@@ -1135,7 +1299,9 @@ SELECT id, uppercats, global_rank, visible, status
      */
     public function fetchCallerBuiltQuery(string $query): array
     {
-        return $this->conn->executeQuery($query)
+        return $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery($query)
             ->fetchAllAssociative();
     }
 
@@ -1144,7 +1310,8 @@ SELECT id, uppercats, global_rank, visible, status
      */
     public function massUpdateRanks(array $datas): void
     {
-        $this->batchWriter()
+        $em = $this->getEntityManager();
+        new BatchWriter($em->getConnection())
             ->massUpdate(
                 Tables::categories(),
                 [
@@ -1153,6 +1320,7 @@ SELECT id, uppercats, global_rank, visible, status
                 ],
                 $datas
             );
+        $em->clear();
     }
 
     /**
@@ -1160,7 +1328,8 @@ SELECT id, uppercats, global_rank, visible, status
      */
     public function massUpdateRanksAndGlobalRank(array $datas): void
     {
-        $this->batchWriter()
+        $em = $this->getEntityManager();
+        new BatchWriter($em->getConnection())
             ->massUpdate(
                 Tables::categories(),
                 [
@@ -1169,6 +1338,7 @@ SELECT id, uppercats, global_rank, visible, status
                 ],
                 $datas
             );
+        $em->clear();
     }
 
     /**
@@ -1176,7 +1346,8 @@ SELECT id, uppercats, global_rank, visible, status
      */
     public function massUpdateRepresentativePictures(array $datas): void
     {
-        $this->batchWriter()
+        $em = $this->getEntityManager();
+        new BatchWriter($em->getConnection())
             ->massUpdate(
                 Tables::categories(),
                 [
@@ -1185,6 +1356,7 @@ SELECT id, uppercats, global_rank, visible, status
                 ],
                 $datas
             );
+        $em->clear();
     }
 
     /**
@@ -1192,7 +1364,8 @@ SELECT id, uppercats, global_rank, visible, status
      */
     public function massUpdateUppercats(array $datas): void
     {
-        $this->batchWriter()
+        $em = $this->getEntityManager();
+        new BatchWriter($em->getConnection())
             ->massUpdate(
                 Tables::categories(),
                 [
@@ -1201,19 +1374,27 @@ SELECT id, uppercats, global_rank, visible, status
                 ],
                 $datas
             );
+        $em->clear();
     }
 
     /**
-     * Inserts a new category row and returns its auto-generated id.
+     * Inserts a new category row and returns its auto-generated id. Stays
+     * raw DBAL (BatchWriter) -- $insert is a generic, caller-built
+     * column=>value map (dynamic keyset), which a fixed-property
+     * CategoryEntity can't represent, same "dynamic column map" exception
+     * as Users\UserRepository::insertUser().
      *
      * @param array<string, mixed> $insert
      */
     public function insertCategory(array $insert): int|string
     {
-        $this->batchWriter()
+        $em = $this->getEntityManager();
+        new BatchWriter($em->getConnection())
             ->singleInsert(Tables::categories(), $insert);
+        $em->clear();
 
-        return $this->conn->lastInsertId();
+        return $em->getConnection()
+            ->lastInsertId();
     }
 
     /**
@@ -1221,10 +1402,12 @@ SELECT id, uppercats, global_rank, visible, status
      */
     public function updateCategoryAfterInsert(int|string $id, array $data): void
     {
-        $this->batchWriter()
+        $em = $this->getEntityManager();
+        new BatchWriter($em->getConnection())
             ->singleUpdate(Tables::categories(), $data, [
                 'id' => $id,
             ]);
+        $em->clear();
     }
 
     /**
@@ -1235,15 +1418,20 @@ SELECT id, uppercats, global_rank, visible, status
      * unique constraint. createVirtualCategory()'s inheritance-on-creation
      * caller doesn't need it -- a freshly INSERTed category id can't
      * already have any group_access rows -- so the default is false.
+     * Stays raw DBAL (BatchWriter) -- persist()+flush() has no INSERT
+     * IGNORE equivalent, same reasoning as Group\GroupRepository::
+     * addMembers().
      *
      * @param array<int, array{group_id: mixed, cat_id: mixed}> $inserts
      */
     public function massInsertGroupAccess(array $inserts, bool $ignore = false): void
     {
-        $this->batchWriter()
+        $em = $this->getEntityManager();
+        new BatchWriter($em->getConnection())
             ->massInsert(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts, [
                 'ignore' => $ignore,
             ]);
+        $em->clear();
     }
 
     /**
@@ -1271,17 +1459,19 @@ SELECT id, uppercats, global_rank, visible, status
      */
     public function findRandomRepresentativeIdAmongSubcategories(string $uppercats, string $permissionCondition): ?string
     {
-        $value = $this->conn->executeQuery('
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT representative_picture_id
   FROM ' . Tables::categories() . '
   WHERE uppercats LIKE :uppercatsLike
     AND representative_picture_id IS NOT NULL'
-  . $permissionCondition . '
+              . $permissionCondition . '
   ORDER BY ' . SqlDialect::DB_RANDOM_FUNCTION . '()
   LIMIT 1
 ;', [
-      'uppercatsLike' => $uppercats . ',%',
-  ])->fetchOne();
+                  'uppercatsLike' => $uppercats . ',%',
+              ])->fetchOne();
 
         return is_scalar($value) ? (string) $value : null;
     }
@@ -1301,7 +1491,9 @@ SELECT representative_picture_id
             return [];
         }
 
-        $rows = $this->conn->executeQuery('
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT
     category_id,
     MIN(date_creation) AS `from`,
@@ -1312,10 +1504,10 @@ SELECT
 ' . $permissionCondition . '
   GROUP BY category_id
 ;', [
-            'categoryIds' => $categoryIds,
-        ], [
-            'categoryIds' => ArrayParameterType::INTEGER,
-        ])->fetchAllAssociative();
+                'categoryIds' => $categoryIds,
+            ], [
+                'categoryIds' => ArrayParameterType::INTEGER,
+            ])->fetchAllAssociative();
 
         $byId = [];
         foreach ($rows as $row) {

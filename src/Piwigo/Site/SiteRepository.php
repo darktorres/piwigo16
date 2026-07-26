@@ -4,40 +4,36 @@ declare(strict_types=1);
 
 namespace Piwigo\Site;
 
-use Piwigo\Db\AbstractRepository;
-use Piwigo\Db\Tables;
+use Doctrine\ORM\EntityRepository;
 use Piwigo\Site\Projection\Site;
 
 /**
  * Persistence layer for the site/gallery-root domain.
+ *
+ * @extends EntityRepository<SiteEntity>
  */
-final class SiteRepository extends AbstractRepository
+final class SiteRepository extends EntityRepository
 {
     /**
      * Count sites with the given galleries_url.
      */
     public function countByUrl(string $galleriesUrl): int
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('COUNT(id)')
-            ->from(Tables::sites())
-            ->where('galleries_url = :url')
+        $value = $this->createQueryBuilder('s')
+            ->select('COUNT(s.id)')
+            ->where('s.galleriesUrl = :url')
             ->setParameter('url', $galleriesUrl)
-            ->executeQuery()
-            ->fetchOne();
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }
 
     public function insert(string $galleriesUrl): void
     {
-        $this->conn->createQueryBuilder()
-            ->insert(Tables::sites())
-            ->values([
-                'galleries_url' => ':url',
-            ])
-            ->setParameter('url', $galleriesUrl)
-            ->executeStatement();
+        $em = $this->getEntityManager();
+        $em->persist(new SiteEntity($galleriesUrl));
+        $em->flush();
     }
 
     /**
@@ -45,15 +41,7 @@ final class SiteRepository extends AbstractRepository
      */
     public function findGalleriesUrlById(int $id): ?string
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('galleries_url')
-            ->from(Tables::sites())
-            ->where('id = :id')
-            ->setParameter('id', $id)
-            ->executeQuery()
-            ->fetchOne();
-
-        return is_string($value) ? $value : null;
+        return $this->find($id)?->galleriesUrl;
     }
 
     /**
@@ -61,14 +49,11 @@ final class SiteRepository extends AbstractRepository
      *
      * @return list<Site>
      */
-    public function findAll(): array
+    public function findAllSites(): array
     {
-        $rows = $this->conn->createQueryBuilder()
-            ->select('*')
-            ->from(Tables::sites())
-            ->executeQuery()
-            ->fetchAllAssociative();
-
-        return array_map(Site::fromRow(...), $rows);
+        return array_map(
+            static fn (SiteEntity $entity): Site => new Site($entity->id ?? 0, $entity->galleriesUrl),
+            $this->findAll(),
+        );
     }
 }

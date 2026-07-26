@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth\Projection;
 
+use Piwigo\Auth\UserAuthKeyEntity;
+
 /**
  * Typed row shape for `piwigo_user_auth_keys` (P17-23 Stage 1b, Auth
  * domain -- `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection
@@ -33,6 +35,24 @@ final readonly class ApiKey
         public ?string $lastUsedOn,
         public ?string $lastNotifiedOn,
     ) {}
+
+    public static function fromEntity(UserAuthKeyEntity $entity): self
+    {
+        return new self(
+            authKeyId: $entity->authKeyId ?? 0,
+            authKey: $entity->authKey,
+            apikeySecret: $entity->apikeySecret,
+            apikeyName: $entity->apikeyName,
+            userId: $entity->userId,
+            createdOn: $entity->createdOn,
+            duration: $entity->duration,
+            expiredOn: $entity->expiredOn,
+            keyType: $entity->keyType,
+            revokedOn: $entity->revokedOn,
+            lastUsedOn: $entity->lastUsedOn,
+            lastNotifiedOn: $entity->lastNotifiedOn,
+        );
+    }
 
     /**
      * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `piwigo_user_auth_keys`

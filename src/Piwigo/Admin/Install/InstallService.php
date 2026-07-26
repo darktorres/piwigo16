@@ -78,7 +78,7 @@ final class InstallService
     {
         $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         $lifecycle = new ExtensionLifecycle(
-            new ExtensionRepository(DbConnection::build()),
+            new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())),
             new PemCatalog(new ZipExtractor()),
             $urlService,
             CurrentConfigService::get(),

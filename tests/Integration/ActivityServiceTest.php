@@ -49,7 +49,7 @@ final class ActivityServiceTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/some/script.php';
 
         $this->conn = DbConnection::build();
-        $this->service = new ActivityService(new ActivityRepository($this->conn));
+        $this->service = new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class));
     }
 
     #[\Override]

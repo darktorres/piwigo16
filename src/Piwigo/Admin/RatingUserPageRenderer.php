@@ -10,7 +10,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Rate\RateRepository;
 
 /**
  * Ported from admin/rating_user.php (page slug "rating_user") -- the admin
@@ -41,7 +40,7 @@ final class RatingUserPageRenderer
         // build users
         /** @var array<string, string> $user_fields */
         $user_fields = \Piwigo\Config\CurrentConfig::userFields();
-        $rate_repository = new RateRepository(DbConnection::build());
+        $rate_repository = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Rate\RateEntity::class);
 
         $users_by_id = [];
         foreach ($rate_repository->findUsersWithStatusByIdUsername($user_fields['id'], $user_fields['username']) as $u) {

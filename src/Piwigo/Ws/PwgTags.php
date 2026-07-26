@@ -19,7 +19,6 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Tag\TagService;
 
 /**
@@ -186,7 +185,7 @@ SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
             $rank_of = array_flip($image_ids);
             $favorite_ids = $urlService->getUserFavorites();
 
-            foreach (new ImageRepository($conn)->findByIds($image_ids) as $row_id => $imageRow) {
+            foreach (\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)->findByIds($image_ids) as $row_id => $imageRow) {
                 // Unboxed here rather than kept as the typed object -- this
                 // loop rebuilds a differently-shaped $image array from
                 // $row's fields and separately passes the whole row to

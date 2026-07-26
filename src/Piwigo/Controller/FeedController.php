@@ -48,7 +48,7 @@ final class FeedController implements ControllerInterface
 
         $feed_helper = new FeedHelper();
         $conn = DbConnection::build();
-        $feed_repo = new FeedRepository($conn);
+        $feed_repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Feed\FeedEntity::class);
         $notificationService = \Piwigo\Bootstrap\ExtendedDomainAccessor::notificationService();
 
         new \Piwigo\Validation\InputValidator()

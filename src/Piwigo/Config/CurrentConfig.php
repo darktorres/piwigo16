@@ -4153,11 +4153,14 @@ final class CurrentConfig
      * practice.
      *
      * `?array`, not the raw encoded blob -- matches every other array-shaped
-     * property (gap-closure Stage 1a-bis item 1). `MenubarLayoutRepository::
-     * saveLayout()` still writes this via raw SQL (deliberate, no DI
-     * dependency) but now `json_encode()`s, matching `ConfigService::
-     * encode()`'s own item 5 convention -- so the read side stays a plain
-     * `hydrate()`-driven `json_decode()`, no manual unserialize() anywhere.
+     * property (gap-closure Stage 1a-bis item 1). `Admin\MenubarPageRenderer`
+     * writes this directly via `Config\ConfigRepository::upsert()` (P24
+     * Part B: the row-shaped write this used to do through the now-deleted
+     * `Menu\MenubarLayoutRepository` needed no dedicated repository once
+     * `ConfigEntry` existed), `json_encode()`-d the same way `ConfigService::
+     * encode()`'s own item 5 convention does -- so the read side stays a
+     * plain `hydrate()`-driven `json_decode()`, no manual unserialize()
+     * anywhere.
      * @var array<mixed>|null
      */
     private static ?array $blkMenubar = null;

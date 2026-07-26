@@ -18,7 +18,6 @@ use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
-use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
@@ -29,7 +28,6 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Permission\PermissionService;
@@ -397,7 +395,7 @@ SELECT DISTINCT image_id
         ];
 
         $infos = [];
-        $comment_action = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService())
+        $comment_action = new CommentService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService())
             ->insertComment($comm, $params['key'], $infos);
 
         switch ($comment_action) {
@@ -764,7 +762,7 @@ SELECT DISTINCT id
             $favorite_ids = \Piwigo\Bootstrap\PresentationAccessor::urlService()
                 ->getUserFavorites();
 
-            foreach (new ImageRepository($searchConn)->findByIds(array_keys($image_ids)) as $imageRow) {
+            foreach (\Piwigo\Db\EntityManagerFactory::build($searchConn)->getRepository(\Piwigo\Image\ImageEntity::class)->findByIds(array_keys($image_ids)) as $imageRow) {
                 // Unboxed here rather than kept as the typed object -- this
                 // loop rebuilds a differently-shaped $image array from
                 // $row's fields and separately passes the whole row to
@@ -1810,7 +1808,7 @@ SELECT id, name, permalink
             rename("{$filePath}.part", $filePath);
 
             if (isset($params['format_of'])) {
-                $imageRow = new ImageRepository($conn)
+                $imageRow = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
                     ->findById($params['format_of']);
                 if ($imageRow === null) {
                     return new PwgError(404, __FUNCTION__ . ' : image_id not found');
@@ -2585,7 +2583,7 @@ SELECT path
         }
 
         $conn = DbConnection::build();
-        $imageRow = new ImageRepository($conn)
+        $imageRow = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
             ->findById($params['image_id']);
 
         if ($imageRow === null) {

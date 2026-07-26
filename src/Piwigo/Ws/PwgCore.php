@@ -27,7 +27,6 @@ use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeUrlCodec;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
@@ -805,7 +804,7 @@ SELECT
         // when visiting a photo (which is currently, in version 14, the only event registered
         // by pwg.history.log) we should also increment images.hit
         if ($params['image_id'] !== 0) {
-            new ImageRepository(DbConnection::build())->incrementVisitCounter($params['image_id']);
+            \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class)->incrementVisitCounter($params['image_id']);
         }
 
         $image_type = 'picture';

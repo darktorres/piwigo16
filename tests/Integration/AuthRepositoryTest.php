@@ -36,7 +36,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new AuthRepository($this->conn);
+        $this->repo = new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
     }
 
     public function test_find_username_and_password_returns_a_fixture_user(): void

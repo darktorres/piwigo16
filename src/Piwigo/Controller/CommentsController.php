@@ -7,7 +7,6 @@ namespace Piwigo\Controller;
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Category\CategoryService;
-use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -288,7 +287,7 @@ final class CommentsController implements ControllerInterface
         $action = null;
         $edit_comment = null;
 
-        $commentService = new CommentService(new CommentRepository($conn), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->urlService);
+        $commentService = new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->urlService);
 
         $actions = ['delete', 'validate', 'edit'];
         foreach ($actions as $loop_action) {
@@ -549,7 +548,7 @@ AND ', $where_clauses) . '
             // retrieving element informations
             $elements = array_map(
                 static fn (\Piwigo\Image\Projection\Image $image): array => $image->toArray(),
-                new ImageRepository($conn)
+                \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
                     ->findByIds($element_ids)
             );
 

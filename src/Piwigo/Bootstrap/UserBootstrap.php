@@ -52,8 +52,8 @@ final class UserBootstrap
     {
         $conn = DbConnection::build();
         $authService = new AuthService(
-            new AuthRepository($conn),
-            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)),
+            new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
+            new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
             new HtmlService(),
             new PasswordService(new PasswordRepository($conn)),
             new CookieService(),
@@ -62,7 +62,7 @@ final class UserBootstrap
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
             new \Piwigo\Mail\MailService(),
-            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)),
+            new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
             new HtmlService(),
             $conn,
         );

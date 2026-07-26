@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\Projection\AuthKeyDetails;
 use Piwigo\Auth\Projection\AuthUser;
-use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
+use Piwigo\Users\UserInfoEntity;
 
 /**
  * Persistence layer for the login/logout domain: username+password lookup
@@ -17,6 +18,18 @@ use Piwigo\Db\Tables;
  * covers the same physical `user_auth_keys` table's `api_key`-type rows
  * (personal API keys), a different lifecycle/concern.
  *
+ * Owns no entity itself ({@see UserAuthKeyEntity} has no `repositoryClass`,
+ * shared with ApiKeyRepository) -- holds EntityManagerInterface directly.
+ * `users` is never ORM-mapped (Users\UserRepository's own docblock);
+ * every method touching it takes caller-supplied column names
+ * (\Piwigo\Config\CurrentConfig::userFields()) and stays plain DBAL via
+ * $this->em->getConnection(). `user_infos` IS ORM-mapped
+ * ({@see UserInfoEntity}, owned by Users\UserRepository) -- writes here
+ * go through it (find+set+flush) rather than raw DBAL, since a raw write
+ * would leave any UserInfoEntity already in this EntityManager's identity
+ * map stale for the rest of the request (same reasoning as every other
+ * repository's own identity-map-staleness fix this migration).
+ *
  * Every `NOW()`/`ADDDATE(NOW(), ...)` computation the original raw SQL did
  * in MySQL is done in PHP against \Piwigo\Core\Env::now() instead --
  * matches Piwigo\Session\SessionRepository::write()/
@@ -25,9 +38,13 @@ use Piwigo\Db\Tables;
  * freeze, so a fixture-driven test comparing "now" against a fixture-dated
  * column would silently use two different clocks.
  */
-final class AuthRepository extends AbstractRepository
+final readonly class AuthRepository
 {
     private const DATETIME_FORMAT = 'Y-m-d H:i:s';
+
+    public function __construct(
+        private EntityManagerInterface $em,
+    ) {}
 
     /**
      * @return array{username: string, password: string}|null
@@ -38,7 +55,8 @@ final class AuthRepository extends AbstractRepository
         string $usernameColumn,
         string $passwordColumn
     ): ?array {
-        $row = $this->conn->createQueryBuilder()
+        $row = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select($usernameColumn . ' AS username', $passwordColumn . ' AS password')
             ->from(Tables::users())
             ->where($idColumn . ' = :id')
@@ -58,13 +76,13 @@ final class AuthRepository extends AbstractRepository
 
     public function updateLanguage(int|string $userId, string $language): void
     {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::userInfos())
-            ->set('language', ':language')
-            ->where('user_id = :userId')
-            ->setParameter('language', $language)
-            ->setParameter('userId', $userId)
-            ->executeStatement();
+        $entity = $this->em->find(UserInfoEntity::class, (int) $userId);
+        if ($entity === null) {
+            return;
+        }
+
+        $entity->language = $language;
+        $this->em->flush();
     }
 
     /**
@@ -80,7 +98,8 @@ final class AuthRepository extends AbstractRepository
         string $emailColumn,
         string $passwordColumn
     ): ?AuthUser {
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select(
                 'u.' . $idColumn . ' AS id',
                 'u.' . $usernameColumn . ' AS username',
@@ -113,7 +132,8 @@ final class AuthRepository extends AbstractRepository
      */
     public function findAuthKeyDetails(string $authKey, string $idColumn, string $usernameColumn, string $emailColumn): ?AuthKeyDetails
     {
-        $row = $this->conn->createQueryBuilder()
+        $row = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select(
                 'uak.auth_key_id',
                 'uak.user_id',
@@ -140,39 +160,34 @@ final class AuthRepository extends AbstractRepository
 
     public function touchAuthKeyLastUsed(int|string $userId, string $authKey, \DateTimeInterface $lastUsedOn): void
     {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::userAuthKeys())
-            ->set('last_used_on', ':lastUsedOn')
-            ->where('user_id = :userId')
-            ->andWhere('auth_key = :authKey')
+        $this->em->createQueryBuilder()
+            ->update(UserAuthKeyEntity::class, 'uak')
+            ->set('uak.lastUsedOn', ':lastUsedOn')
+            ->where('uak.userId = :userId')
+            ->andWhere('uak.authKey = :authKey')
             ->setParameter('lastUsedOn', $lastUsedOn->format(self::DATETIME_FORMAT))
             ->setParameter('userId', $userId)
             ->setParameter('authKey', $authKey)
-            ->executeStatement();
+            ->getQuery()
+            ->execute();
+
+        $this->em->clear();
     }
 
     public function findUserStatus(int $userId): ?string
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('status')
-            ->from(Tables::userInfos())
-            ->where('user_id = :userId')
-            ->setParameter('userId', $userId)
-            ->executeQuery()
-            ->fetchOne();
-
-        return is_string($value) ? $value : null;
+        return $this->em->find(UserInfoEntity::class, $userId)?->status;
     }
 
     public function authKeyCandidateExists(string $candidate): bool
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::userAuthKeys())
-            ->where('auth_key = :candidate')
+        $value = $this->em->createQueryBuilder()
+            ->select('COUNT(uak.authKeyId)')
+            ->from(UserAuthKeyEntity::class, 'uak')
+            ->where('uak.authKey = :candidate')
             ->setParameter('candidate', $candidate)
-            ->executeQuery()
-            ->fetchOne();
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) && (int) $value > 0;
     }
@@ -185,65 +200,66 @@ final class AuthRepository extends AbstractRepository
      */
     public function insertAuthKey(array $key): string
     {
-        $this->conn->createQueryBuilder()
-            ->insert(Tables::userAuthKeys())
-            ->values([
-                'auth_key' => ':authKey',
-                'user_id' => ':userId',
-                'created_on' => ':createdOn',
-                'duration' => ':duration',
-                'expired_on' => ':expiredOn',
-                'key_type' => ':keyType',
-            ])
-            ->setParameter('authKey', $key['auth_key'])
-            ->setParameter('userId', $key['user_id'])
-            ->setParameter('createdOn', $key['created_on'])
-            ->setParameter('duration', $key['duration'])
-            ->setParameter('expiredOn', $key['expired_on'])
-            ->setParameter('keyType', $key['key_type'])
-            ->executeStatement();
+        $entity = new UserAuthKeyEntity(
+            authKey: $key['auth_key'],
+            apikeySecret: null,
+            userId: $key['user_id'],
+            createdOn: $key['created_on'],
+            duration: $key['duration'],
+            expiredOn: $key['expired_on'],
+            apikeyName: null,
+            keyType: $key['key_type'],
+        );
 
-        return (string) $this->conn->lastInsertId();
+        $this->em->persist($entity);
+        $this->em->flush();
+
+        assert($entity->authKeyId !== null);
+
+        return (string) $entity->authKeyId;
     }
 
     public function deactivateAuthKeys(int $userId, \DateTimeInterface $now): void
     {
         $nowStr = $now->format(self::DATETIME_FORMAT);
 
-        $this->conn->createQueryBuilder()
-            ->update(Tables::userAuthKeys())
-            ->set('expired_on', ':now')
-            ->where('user_id = :userId')
-            ->andWhere('expired_on > :nowCompare')
-            ->andWhere("key_type = 'auth_key'")
+        $this->em->createQueryBuilder()
+            ->update(UserAuthKeyEntity::class, 'uak')
+            ->set('uak.expiredOn', ':now')
+            ->where('uak.userId = :userId')
+            ->andWhere('uak.expiredOn > :nowCompare')
+            ->andWhere("uak.keyType = 'auth_key'")
             ->setParameter('now', $nowStr)
             ->setParameter('userId', $userId)
             ->setParameter('nowCompare', $nowStr)
-            ->executeStatement();
+            ->getQuery()
+            ->execute();
+
+        $this->em->clear();
     }
 
     public function clearActivationKey(int $userId): void
     {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::userInfos())
-            ->set('activation_key', 'NULL')
-            ->set('activation_key_expire', 'NULL')
-            ->where('user_id = :userId')
-            ->setParameter('userId', $userId)
-            ->executeStatement();
+        $entity = $this->em->find(UserInfoEntity::class, $userId);
+        if ($entity === null) {
+            return;
+        }
+
+        $entity->activationKey = null;
+        $entity->activationKeyExpire = null;
+        $this->em->flush();
     }
 
     public function setActivationKey(int $userId, string $hash, \DateTimeInterface $expire): void
     {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::userInfos())
-            ->set('activation_key', ':hash')
-            ->set('activation_key_expire', ':expire')
-            ->where('user_id = :userId')
-            ->setParameter('hash', $hash)
-            ->setParameter('expire', $expire->format(self::DATETIME_FORMAT))
-            ->setParameter('userId', $userId)
-            ->executeStatement();
+        $entity = $this->em->find(UserInfoEntity::class, $userId);
+        if ($entity === null) {
+            return;
+        }
+
+        $entity->activationKey = $hash;
+        $entity->activationKeyExpire = $expire->format(self::DATETIME_FORMAT);
+        $this->em->flush();
     }
 
     /**
@@ -255,7 +271,8 @@ final class AuthRepository extends AbstractRepository
      */
     public function findLastVisitFromHistory(int $userId): ?string
     {
-        $row = $this->conn->createQueryBuilder()
+        $row = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('date', 'time')
             ->from(Tables::history())
             ->where('user_id = :userId')
@@ -281,14 +298,20 @@ final class AuthRepository extends AbstractRepository
      * bumping an ON UPDATE CURRENT_TIMESTAMP-style column while still
      * writing the other two columns; a raw SQL fragment (not a bound
      * parameter) is required to reference the column itself rather than a
-     * value. `last_visit_from_history` is a real tinyint column now (User
-     * domain Stage 1a) -- the literal unquoted `1` below is the numeric
-     * equivalent of the old `'true'` string literal, not a bound value,
-     * same reasoning as `lastmodified`.
+     * value, which a mapped entity property write can't express (a plain
+     * property assignment either changes lastmodified's own value or
+     * leaves it out of the UPDATE entirely, letting the schema's own ON
+     * UPDATE trigger fire regardless) -- stays raw DBAL, clearing the
+     * identity map afterward since this bypasses the ORM for a table
+     * {@see UserInfoEntity} maps. `last_visit_from_history` is a real
+     * tinyint column now (User domain Stage 1a) -- the literal unquoted
+     * `1` below is the numeric equivalent of the old `'true'` string
+     * literal, not a bound value, same reasoning as `lastmodified`.
      */
     public function saveLastVisitFromHistory(int $userId, ?string $lastVisit): void
     {
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->em->getConnection()
+            ->createQueryBuilder()
             ->update(Tables::userInfos())
             ->set('last_visit_from_history', '1')
             ->set('lastmodified', 'lastmodified')
@@ -303,11 +326,14 @@ final class AuthRepository extends AbstractRepository
         }
 
         $qb->executeStatement();
+
+        $this->em->clear();
     }
 
     public function countLoginActivity(int $userId): int
     {
-        $value = $this->conn->createQueryBuilder()
+        $value = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('COUNT(*)')
             ->from(Tables::activity())
             ->where("action = 'login'")

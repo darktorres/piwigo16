@@ -17,7 +17,6 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeUrlCodec;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Permission\ImageVisibilityChecker;
@@ -128,7 +127,7 @@ final class ImageDerivativeController implements ControllerInterface
         }
 
         $conn = DbConnection::build();
-        $imageRepo = new ImageRepository($conn);
+        $imageRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class);
 
         // parseRequest() fills these by mutating $this's own properties;
         // returning its result directly (rather than re-reading

@@ -46,7 +46,7 @@ final class MetadataServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->service = new MetadataService(new MetadataRepository($this->conn));
+        $this->service = new MetadataService(new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)));
 
         CurrentConfig::setUseIptc(false);
         CurrentConfig::setUseExif(true);

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Activity\ActivityRepository;
 use Piwigo\Admin\Maintenance\ActivityLogEntryFormatter;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
@@ -46,7 +45,7 @@ final class MaintenanceSysPageRenderer
                 $username_field = $user_fields['username'];
                 $id_field = $user_fields['id'];
 
-                $activity_log = new ActivityRepository(DbConnection::build())
+                $activity_log = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)
                     ->findSystemObjectLogWithUsernames($username_field, $id_field);
 
                 $formatter = new ActivityLogEntryFormatter();

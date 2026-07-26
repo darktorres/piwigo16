@@ -53,7 +53,7 @@ final class ForbiddenCategoriesCacheTest extends IntegrationTestCase
             new PermissionService(
                 new PermissionRepository($this->conn),
                 \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class),
-                new CategoryRepository($this->conn),
+                \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
             ),
             $this->pool,
         );

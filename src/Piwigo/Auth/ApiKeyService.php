@@ -37,17 +37,13 @@ final readonly class ApiKeyService
      * @return array<string, mixed> auth_key / apikey_secret / apikey_name /
      *   user_id / created_on / duration / expired_on / key_type
      */
-    public function create(int $userId, ?int $duration, string $keyName): array
+    public function create(int $userId, int $duration, string $keyName): array
     {
         $key_id = 'pkid-' . date('Ymd') . '-' . SessionService::get()->generateKey(20);
         $key_secret = SessionService::get()->generateKey(40);
 
         $now = Env::now();
-
-        $expiration = null;
-        if ($duration !== null && $duration !== 0) {
-            $expiration = (clone $now)->modify('+' . ($duration * 60 * 60 * 24) . ' seconds')->format('Y-m-d H:i:s');
-        }
+        $expiration = (clone $now)->modify('+' . ($duration * 60 * 60 * 24) . ' seconds')->format('Y-m-d H:i:s');
 
         $key = [
             'auth_key' => $key_id,
@@ -55,10 +51,7 @@ final readonly class ApiKeyService
             'apikey_name' => $keyName,
             'user_id' => $userId,
             'created_on' => $now->format('Y-m-d H:i:s'),
-            // matches the original's own `if (! empty($duration))` gate:
-            // a falsy $duration (null or 0) leaves the column at its NULL
-            // default rather than storing a literal 0.
-            'duration' => ($duration === null || $duration === 0) ? null : $duration,
+            'duration' => $duration,
             'key_type' => 'api_key',
             'expired_on' => $expiration,
         ];

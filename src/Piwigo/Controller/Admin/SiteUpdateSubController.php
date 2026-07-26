@@ -19,7 +19,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeCacheService;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -37,7 +36,9 @@ use Psr\Http\Message\ServerRequestInterface;
  * rather than delegating to a separate admin/include/*.inc.php helper the
  * way Upload/Albums/Users' pages did. The P21 plan's own scope for this
  * batch names only ConfigService/ConfigRepository/SiteRepository/
- * PermalinkService/MenubarLayoutRepository as reused pieces -- no new
+ * PermalinkService as reused pieces (a `MenubarLayoutRepository` also
+ * named there was later deleted entirely, P24 Part B, once
+ * `ConfigRepository::upsert()` alone covered its one call site) -- no new
  * "SiteSyncService" is called for, and extracting one now would be a
  * large, high-risk undertaking disproportionate to this batch (matching
  * task #343's own deferral precedent in the Users batch). Left as legacy
@@ -699,7 +700,7 @@ SELECT id, path
 
                     // find formats for existing photos (already in database)
                     $existing_ids_int = array_values(array_map(intval(...), array_filter($existing_ids, is_numeric(...))));
-                    foreach (new ImageRepository($conn)->findFullFormatsByImageIds($existing_ids_int) as $formatRow) {
+                    foreach (\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)->findFullFormatsByImageIds($existing_ids_int) as $formatRow) {
                         $format_image_id = $formatRow->imageId;
                         if (! isset($db_formats[$format_image_id])) {
                             $db_formats[$format_image_id] = [];
@@ -820,7 +821,7 @@ DELETE
             }
             if (count($to_delete_elements) > 0) {
                 if (! $simulate) {
-                    new ImageService(new ImageRepository($conn), self::activityService())
+                    new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService())
                         ->deleteElements($to_delete_elements, $this->urlService);
                 }
                 $counts['del_elements'] = count($to_delete_elements);

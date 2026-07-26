@@ -4,53 +4,55 @@ declare(strict_types=1);
 
 namespace Piwigo\PluginConfig;
 
-use Piwigo\Db\AbstractRepository;
-use Piwigo\Db\Tables;
+use Doctrine\ORM\EntityRepository;
 use Piwigo\PluginConfig\Projection\Plugin;
 
-final class PluginRepository extends AbstractRepository
+/**
+ * @extends EntityRepository<PluginEntity>
+ */
+final class PluginRepository extends EntityRepository
 {
     /**
      * Returns plugins defined in the database, optionally filtered by state
-     * and/or id. Bound parameters replace the original get_db_plugins()'s
-     * raw string-concatenated WHERE clause (no addslashes() even).
+     * and/or id.
      *
      * @return list<Plugin>
      */
     public function getDbPlugins(string $state = '', string $id = ''): array
     {
-        $query = 'SELECT * FROM ' . Tables::plugins();
-        $clauses = [];
-        $params = [];
+        $qb = $this->createQueryBuilder('p');
 
         if ($state !== '') {
-            $clauses[] = 'state = ?';
-            $params[] = $state;
+            $qb->andWhere('p.state = :state')
+                ->setParameter('state', $state);
         }
         if ($id !== '') {
-            $clauses[] = 'id = ?';
-            $params[] = $id;
-        }
-        if ($clauses !== []) {
-            $query .= ' WHERE ' . implode(' AND ', $clauses);
+            $qb->andWhere('p.id = :id')
+                ->setParameter('id', $id);
         }
 
-        /** @var list<array<string, mixed>> $rows */
-        $rows = $this->conn->fetchAllAssociative($query, $params);
+        $entities = $qb->getQuery()
+            ->getResult();
 
-        return array_map(Plugin::fromRow(...), $rows);
+        return array_map(
+            static fn (PluginEntity $entity): Plugin => new Plugin($entity->id, $entity->state, $entity->version),
+            $entities,
+        );
     }
 
     /**
      * Records a plugin's filesystem version after autoupdate_plugin()
-     * detects a newer main.inc.php header -- bound parameters replace the
-     * original's raw string-concatenated UPDATE.
+     * detects a newer main.inc.php header.
      */
     public function updateVersion(string $id, string $version): void
     {
-        $this->conn->executeStatement(
-            'UPDATE ' . Tables::plugins() . ' SET version = ? WHERE id = ?',
-            [$version, $id],
-        );
+        $entity = $this->find($id);
+        if ($entity === null) {
+            return;
+        }
+
+        $entity->version = $version;
+        $this->getEntityManager()
+            ->flush();
     }
 }

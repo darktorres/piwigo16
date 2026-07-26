@@ -6,7 +6,6 @@ namespace Piwigo\Comment;
 
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\EphemeralKeyService;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
@@ -67,13 +66,13 @@ final readonly class CommentService
             if (! AccessControl::isAdmin()) {
                 $where[] = 'validated=1';
             }
-            $where[] = new PermissionService(new PermissionRepository(DbConnection::build()), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository(DbConnection::build()))
+            $where[] = new PermissionService(new PermissionRepository(DbConnection::build()), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class))
                 ->getSqlConditionFandF([
                     'forbidden_categories' => 'category_id',
                     'forbidden_images' => 'ic.image_id',
                 ], '', true);
 
-            $nbAvailableComments = new CommentRepository(DbConnection::build())->countAvailableWithConditions($where);
+            $nbAvailableComments = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class)->countAvailableWithConditions($where);
             $currentUser = $currentUser->withRawAttribute('nb_available_comments', $nbAvailableComments);
             \Piwigo\Users\CurrentUser::set($currentUser);
         }

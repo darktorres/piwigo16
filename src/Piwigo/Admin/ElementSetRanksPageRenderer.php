@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -145,7 +144,7 @@ final class ElementSetRanksPageRenderer
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php';
 
-        $category = new CategoryRepository($conn)
+        $category = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class)
             ->findById($category_id);
         if ($category === null) {
             $htmlRenderer->pageNotFound($this->redirectService, 'Requested album does not exist');

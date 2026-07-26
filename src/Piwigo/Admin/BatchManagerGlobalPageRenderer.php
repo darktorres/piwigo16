@@ -16,7 +16,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -175,7 +174,7 @@ final class BatchManagerGlobalPageRenderer
             $redirect = false;
 
             $tagService = self::tagService();
-            $imageService = new ImageService(new ImageRepository($conn), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService());
+            $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService());
 
             if ($action === 'remove_from_caddie') {
                 $current_user_id = \Piwigo\Users\CurrentUser::get()->id;

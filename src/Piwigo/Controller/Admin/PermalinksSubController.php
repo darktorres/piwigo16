@@ -175,7 +175,7 @@ SELECT id, permalink, uppercats, global_rank
         $url_del_base = $this->urlService->getRootUrl() . 'admin.php?page=permalinks';
         $orderByColumn = count($sort_by) > 0 ? $sort_by[0] : null;
         $deleted_permalinks = [];
-        foreach (new PermalinkRepository($conn)->findAllOrderedBy($orderByColumn) as $permalinkRow) {
+        foreach (new PermalinkRepository(\Piwigo\Db\EntityManagerFactory::build($conn))->findAllOrderedBy($orderByColumn) as $permalinkRow) {
             $row = $permalinkRow->toArray();
             $row['name'] = $htmlRenderer->getCatDisplayNameCache((string) $permalinkRow->catId);
             $row['U_DELETE'] =

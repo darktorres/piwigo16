@@ -35,7 +35,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new CommentRepository($this->conn);
+        $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class);
     }
 
     public function test_insert_creates_a_new_comment_and_returns_its_id(): void

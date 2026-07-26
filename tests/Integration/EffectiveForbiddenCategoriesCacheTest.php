@@ -58,11 +58,11 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
         $permissionService = new PermissionService(
             new PermissionRepository($this->conn),
             \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class),
-            new CategoryRepository($this->conn),
+            \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
         );
         $this->cache = new EffectiveForbiddenCategoriesCache(
             $permissionService,
-            new CategoryService(new CategoryRepository($this->conn), $permissionService),
+            new CategoryService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $permissionService),
             $this->conn,
             $this->pool,
         );
@@ -120,8 +120,8 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
             // here is a genuinely fresh computation reflecting the new
             // forbidden category, not a per-user cache-entry distinction.
             $afterCache = new EffectiveForbiddenCategoriesCache(
-                new PermissionService(new PermissionRepository($this->conn), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository($this->conn)),
-                new CategoryService(new CategoryRepository($this->conn), new PermissionService(new PermissionRepository($this->conn), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository($this->conn))),
+                new PermissionService(new PermissionRepository($this->conn), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)),
+                new CategoryService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class), new PermissionService(new PermissionRepository($this->conn), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class))),
                 $this->conn,
                 new ArrayAdapter(),
             );
@@ -142,7 +142,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
      */
     public function test_get_for_user_widens_forbidden_categories_for_a_non_admin_with_an_empty_album(): void
     {
-        $categoryRepo = new CategoryRepository($this->conn);
+        $categoryRepo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class);
         // 'uppercats' is deliberately omitted here, not passed as '' --
         // BatchWriter::singleInsert() maps an empty-string value to a bare
         // SQL NULL, which the NOT NULL column rejects; the schema's own

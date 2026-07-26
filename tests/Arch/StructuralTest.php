@@ -1231,7 +1231,7 @@ function countTopLevelArgs(string $inner): int
  * expensive `new XService(new YRepository(...), new ZService(...), ...)`
  * chain (2+ top-level args, at least one nested `new`) appearing verbatim
  * 2+ times in one file. Single-dependency constructions (`new
- * ActivityService(new ActivityRepository($conn))` and similar) are
+ * ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class))` and similar) are
  * deliberately not flagged even when they recur, matching the
  * already-established "cheap, stateless-ish service, built fresh where
  * needed" design used throughout this codebase.

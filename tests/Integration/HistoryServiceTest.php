@@ -43,7 +43,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         $GLOBALS['logger'] = new Logger(['severity' => Logger::OFF]);
 
         $this->conn = DbConnection::build();
-        $this->service = new HistoryService(new HistoryRepository($this->conn), new ConfigService($this->buildConfigRepository()));
+        $this->service = new HistoryService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\History\HistoryEntity::class), new ConfigService($this->buildConfigRepository()));
     }
 
     #[\Override]

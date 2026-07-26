@@ -9,7 +9,6 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\Projection\Tag;
@@ -68,7 +67,7 @@ final readonly class TagService
      */
     private function newImageService(): ImageService
     {
-        return new ImageService(new ImageRepository(DbConnection::build()), $this->activityLogger);
+        return new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityLogger);
     }
 
     /**

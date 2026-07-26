@@ -54,7 +54,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->commentRepo = new CommentRepository($this->conn);
+        $this->commentRepo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class);
 
         // dataDirChecked() defaults to null after applyDefaults(), which
         // would make Template's constructor reach for CurrentConfigService

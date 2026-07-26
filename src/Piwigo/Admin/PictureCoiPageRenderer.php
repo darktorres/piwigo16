@@ -11,7 +11,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeUrlCodec;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 
@@ -58,11 +57,11 @@ final class PictureCoiPageRenderer
                   . DerivativeUrlCodec::fractionToChar($to_fraction($_POST['r'] ?? null))
                   . DerivativeUrlCodec::fractionToChar($to_fraction($_POST['b'] ?? null));
             }
-            new ImageRepository($conn)
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
                 ->updateCoi($image_id, $coi);
         }
 
-        $image = new ImageRepository($conn)
+        $image = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
             ->findById($image_id);
         if ($image === null) {
             $htmlRenderer->pageNotFound($this->redirectService, 'Requested photo does not exist');

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Bootstrap;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\PluginLoader;
 use Piwigo\Admin\Upload\UploadService;
@@ -16,7 +15,6 @@ use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Cache\PersistentFileCache;
-use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ActivitySystem;
@@ -33,7 +31,6 @@ use Piwigo\Core\StringHelper;
 use Piwigo\Db\DbConnection;
 use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Mail\MailService;
@@ -281,7 +278,7 @@ final class RequestBootstrap
         Lang::setHtmlRenderer(new HtmlService());
         \Piwigo\Validation\InputValidator::setHtmlRenderer(new HtmlService());
         \Piwigo\Image\SrcImage::setHtmlRenderer(new HtmlService());
-        \Piwigo\Image\SrcImage::setImageRepository(new ImageRepository(DbConnection::build()));
+        \Piwigo\Image\SrcImage::setImageRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class));
         \Piwigo\Image\SrcImage::setUrlService(new UrlService(new HtmlService()));
         \Piwigo\Image\DerivativeImage::setUrlService(new UrlService(new HtmlService()));
         \Piwigo\Template\ScriptLoader::setUrlService(new UrlService(new HtmlService()));
@@ -433,7 +430,7 @@ final class RequestBootstrap
         }
 
         if (\Piwigo\Core\LoungeMaintenance::needsEmptying()) {
-            new ImageService(new ImageRepository($conn), self::activityService($conn))
+            new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService($conn))
                 ->emptyLounge();
         }
 
@@ -530,7 +527,7 @@ final class RequestBootstrap
         if ($notify_api_key_expiration !== null) {
             $notify_username = CurrentUser::get()->username;
             $notify_email = CurrentUser::get()->email;
-            $apiKeyRepo = new \Piwigo\Auth\ApiKeyRepository($conn);
+            $apiKeyRepo = new \Piwigo\Auth\ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
             $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new UrlService(new HtmlService()))
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
 
@@ -657,7 +654,7 @@ final class RequestBootstrap
         // (unlike UploadService's static upload_file handlers below), hence the
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('user_comment_check', new CommentService(new CommentRepository($conn), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()))->checkForSpam(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('user_comment_check', new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()))->checkForSpam(...));
         // Relocated from include/functions_user.inc.php (deleted, P23 batch 8d) --
         // same reasoning as user_comment_check above: every real caller of
         // AuthService::tryLogUser() now constructs AuthService directly instead of
@@ -665,7 +662,7 @@ final class RequestBootstrap
         // always executes. pwgLogin() is a bound instance method, same
         // first-class-callable shape as checkForSpam() above.
         \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('try_log_user', new AuthService(
-            new AuthRepository($conn),
+            new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             self::activityService($conn),
             new HtmlService(),
             new PasswordService(new PasswordRepository($conn)),
@@ -724,7 +721,7 @@ final class RequestBootstrap
      */
     private static function activityService(Connection $conn): ActivityService
     {
-        return new ActivityService(new ActivityRepository($conn));
+        return new ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class));
     }
 
     /**

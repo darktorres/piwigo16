@@ -43,7 +43,7 @@ final class MetadataRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new MetadataRepository($this->conn);
+        $this->repo = new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
     }
 
     #[\Override]

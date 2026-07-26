@@ -42,7 +42,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new HistoryRepository($this->conn);
+        $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\History\HistoryEntity::class);
     }
 
     public function test_find_last_summary_with_history_id_to_returns_null_when_empty(): void

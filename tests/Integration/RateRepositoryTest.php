@@ -45,7 +45,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new RateRepository($this->conn);
+        $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Rate\RateEntity::class);
     }
 
     public function test_find_element_ids_for_user_and_anonymous_id(): void

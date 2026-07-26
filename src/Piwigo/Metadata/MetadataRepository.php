@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Metadata;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Piwigo\Db\AbstractRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 use Piwigo\Metadata\Projection\MetadataImage;
 
@@ -18,9 +19,18 @@ use Piwigo\Metadata\Projection\MetadataImage;
  * 8b-1) were pure computation over raw EXIF/IPTC/SVG file data (parsing,
  * charset conversion, GPS math, keyword normalization) with no DB access
  * of their own; they live on {@see MetadataService} instead.
+ *
+ * Owns no table itself -- every query here reads `images`/`categories`
+ * (each owned elsewhere, Image\ImageEntity/Category\CategoryEntity), so
+ * holds EntityManagerInterface directly rather than being resolved via
+ * getRepository(), same shape as Auth\AuthRepository.
  */
-final class MetadataRepository extends AbstractRepository
+final readonly class MetadataRepository
 {
+    public function __construct(
+        private EntityManagerInterface $em,
+    ) {}
+
     /**
      * @param  list<int>  $ids
      * @return list<MetadataImage>
@@ -31,7 +41,8 @@ final class MetadataRepository extends AbstractRepository
             return [];
         }
 
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('id', 'path', 'representative_ext')
             ->from(Tables::images())
             ->where('id IN (:ids)')
@@ -47,7 +58,8 @@ final class MetadataRepository extends AbstractRepository
      */
     public function findCategoryIds(int $siteId, int|string $categoryId, bool $recursive): array
     {
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('id')
             ->from(Tables::categories())
             ->where('site_id = :siteId')
@@ -83,7 +95,8 @@ final class MetadataRepository extends AbstractRepository
             return [];
         }
 
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('id', 'path', 'representative_ext')
             ->from(Tables::images())
             ->where('storage_category_id IN (:categoryIds)')
@@ -111,7 +124,7 @@ final class MetadataRepository extends AbstractRepository
      */
     public function massUpdateImages(array $updateFields, array $datas): void
     {
-        $this->batchWriter()
+        new BatchWriter($this->em->getConnection())
             ->massUpdate(
                 Tables::images(),
                 [
@@ -119,7 +132,9 @@ final class MetadataRepository extends AbstractRepository
                     'update' => $updateFields,
                 ],
                 $datas,
-                \Piwigo\Db\BatchWriter::SKIP_EMPTY
+                BatchWriter::SKIP_EMPTY
             );
+
+        $this->em->clear();
     }
 }

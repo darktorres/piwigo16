@@ -114,7 +114,7 @@ namespace Piwigo\Tests\Integration {
             $_POST['cr'] = [];
 
             $this->conn = DbConnection::build();
-            $this->service = new CommentService(new CommentRepository($this->conn), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()));
+            $this->service = new CommentService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()));
         }
 
         // --- checkForSpam() -------------------------------------------------

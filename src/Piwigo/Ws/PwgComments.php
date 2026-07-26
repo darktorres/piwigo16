@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Piwigo\Auth\EphemeralKeyService;
-use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Core\Lang;
 use Piwigo\Csrf\CsrfService;
@@ -322,6 +321,6 @@ GROUP BY author_id
      */
     private static function commentService(): CommentService
     {
-        return new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService());
+        return new CommentService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService());
     }
 }

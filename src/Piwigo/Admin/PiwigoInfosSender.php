@@ -252,7 +252,7 @@ SELECT
         $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         $fsPlugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService);
-        $dbPluginsById = new ExtensionRepository($conn)
+        $dbPluginsById = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn))
             ->findAll(ExtensionType::Plugin);
         $piwigoInfos['general_stats']['nb_private_plugins'] = 0;
         $piwigoInfos['plugins'] = [];
@@ -305,7 +305,7 @@ SELECT
 
         $fsThemes = new ExtensionScanner()
             ->scan(ExtensionType::Theme, $urlService);
-        $dbThemesById = new ExtensionRepository($conn)
+        $dbThemesById = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn))
             ->findAll(ExtensionType::Theme);
         $piwigoInfos['general_stats']['nb_private_themes'] = 0;
         $piwigoInfos['themes'] = [];

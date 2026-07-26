@@ -73,7 +73,7 @@ final class PluginsInstalledPageRenderer
             ->getToken();
 
         $conn = DbConnection::build();
-        $extension_repository = new ExtensionRepository($conn);
+        $extension_repository = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
         $pem_catalog = new PemCatalog(new ZipExtractor());
         $fs_plugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService);

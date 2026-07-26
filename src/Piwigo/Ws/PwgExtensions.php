@@ -51,7 +51,7 @@ final class PwgExtensions
         $fs_plugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService);
         uasort($fs_plugins, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->nameCompare(...));
-        $db_plugins_by_id = new ExtensionRepository(DbConnection::build())->findAll(ExtensionType::Plugin);
+        $db_plugins_by_id = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()))->findAll(ExtensionType::Plugin);
         $plugin_list = [];
 
         foreach ($fs_plugins as $plugin_id => $fs_plugin) {
@@ -109,7 +109,7 @@ final class PwgExtensions
 
         $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         $lifecycle = new ExtensionLifecycle(
-            new ExtensionRepository(DbConnection::build()),
+            new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())),
             new PemCatalog(new ZipExtractor()),
             $urlService,
             CurrentConfigService::get(),
@@ -155,7 +155,7 @@ final class PwgExtensions
 
         $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         $lifecycle = new ExtensionLifecycle(
-            new ExtensionRepository(DbConnection::build()),
+            new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())),
             new PemCatalog(new ZipExtractor()),
             $urlService,
             CurrentConfigService::get(),
@@ -217,7 +217,7 @@ final class PwgExtensions
 
         $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         $scanner = new ExtensionScanner();
-        $repo = new ExtensionRepository(DbConnection::build());
+        $repo = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()));
         $pemCatalog = new PemCatalog(new ZipExtractor());
         $lifecycle = new ExtensionLifecycle($repo, $pemCatalog, $urlService, CurrentConfigService::get());
 

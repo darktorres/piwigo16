@@ -31,7 +31,7 @@ final class FeedRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $this->repo = new FeedRepository(DbConnection::build());
+        $this->repo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Feed\FeedEntity::class);
     }
 
     #[\Override]

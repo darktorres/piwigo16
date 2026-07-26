@@ -5489,6 +5489,67 @@ suite, one commit per domain, before moving to the next. `CategoryRepository`/
 `grep -rn "new .*Repository("` before declaring this remediation done, confirming zero
 manual-construction call sites remain outside the documented structural exceptions above.
 
+**Executed (2026-07-26), superseding the classification above where it turned out wrong.**
+Real census was **31** un-migrated repositories, not 30 (`DbMaintenanceRepository`,
+`AuthRepository`, `CaddieRepository`, `NotificationRepository` were never named above) —
+`MenubarLayoutRepository` was then deleted outright rather than migrated (its one write
+retargets onto `ConfigRepository::upsert()`; `Admin\MenubarPageRenderer` calls it directly),
+leaving **30** repositories that actually got new entities. B0 ran as its own complete pass
+("DI-phase batch 4") before any entity conversion touched a repository, not folded per-repo as
+first planned — a real sweep found 5 more Bucket-A construction-gap classes the original
+131-class DI-phase audit missed (`Activity\ActivityService`, `Filter\FilterService`'s default
+case, `Calendar\CalendarRenderer`, `Section\SectionPopulator`, plus confirming
+`Menu\MenubarRenderer`'s own zero-arg construction needed no fix at all — the real blocker was
+its `render()` method's inline construction, unreachable via any constructor change).
+
+**The single biggest correction: not every table a converted repository touches gets an
+entity — some don't even own one table that does.** `users` is never ORM-mapped, anywhere,
+permanently — every method touching it takes its column names as caller-supplied parameters
+(`Config\CurrentConfig::userFields()`, Piwigo's multi-auth column-remapping: confirmed real,
+loaded from a `config` row on every boot, but confirmed dead in this rewrite's own
+install/migration path — no schema variant and no admin UI ever produces a non-default
+mapping). `Auth\PasswordRepository`/`Permission\PermissionRepository` own no table at all and
+needed zero changes, ever. `Auth\AuthRepository`/`Auth\ApiKeyRepository`/
+`Metadata\MetadataRepository`/`Permalink\PermalinkRepository`/
+`Admin\Maintenance\DbMaintenanceRepository`/`Admin\Extensions\ExtensionRepository` own no
+entity of their own either, but hold `EntityManagerInterface` directly (not resolved via
+`getRepository()`) since they touch tables *other* repositories own
+(`Users\UserInfoEntity`/`Auth\UserAuthKeyEntity`/`Images`/`Categories`), via DQL where the
+touch is a simple write, plain DBAL where it's a read or a dynamic fragment. `Category`'s own
+`user_access` got a new `UserAccessEntity` (no `repositoryClass`, shared with
+`Permission\PermissionRepository`'s reads) mirroring `Group\GroupAccessEntity`'s already-real
+no-single-owner precedent; `image_category` was deliberately left unmapped by every repository
+that touches it (Image, Category) — almost every touch is a dynamic-fragment or
+cross-table-join method, and the couple of clean exceptions didn't justify the
+cross-repository coordination a shared entity would need.
+
+**`EntityManager::flush($entity)`/`clear($entityClass)` don't exist in the installed Doctrine
+ORM 3.6** (the per-argument overloads were removed after ORM 2.x) — every write uses bare
+`flush()`/`clear()`, contradicting this section's own original B3 risk note above (written
+before touching real code). **A second, more consequential B3 correction**: Doctrine's
+identity map can serve stale data after a bulk DQL statement or a raw non-ORM SQL write to a
+mapped table, within one `EntityManager`'s lifetime — every bulk/raw write onto a table some
+entity maps calls `$em->clear()` immediately after, not just the composite-PK mechanics this
+section originally flagged.
+
+**Repository-by-repository outcome**, layer by layer: `Lang`/`Audit`/`Session` (L1,
+clean/structural), `Group`/`Tag`/`User`/`Auth`/`ApiKey` (L2a core), `Image`/`Category` (L2a
+large sub-efforts — both "mixed": only single-row/simple-bulk-by-id methods went through
+DQL, the large majority of their real method lists stayed plain DBAL, same shape as every
+other "mixed repository" below), `Site`/`Feed`/`Activity`/`Comment`/`Permalink`/`Plugin`/
+`Rate`/`History` (L2b, real conversions, each similarly "mixed" except the tiny ones which
+converted in full), `Caddie`/`Section`/`NotificationByMail`/`Calendar`/`Notification`/`Search`
+(L2b, confirmed genuine zero-change structural exceptions — no owned table, or every method
+already a caller-built dynamic executor, matching this section's own original classification
+for some of these and correcting it for others), `MailRecipientRepository` (L3, zero changes —
+pure reads across `users`'s permanently-unmapped dynamic columns), `DbMaintenanceRepository` +
+`ExtensionRepository` (L4, real conversions for their `user_infos`-touching methods only,
+otherwise dynamic-table-name structural exceptions). `HistoryRepository::search()`'s own
+dynamic-fragment shape stayed plain DBAL rather than `NativeQuery` + `ResultSetMapping` — a
+simpler, equally correct choice once "some methods on an owned-table repository stay raw DBAL
+forever" was already the established pattern for every other mixed repository, not a
+`NativeQuery`-specific mechanism reserved for this one method.
+
 ---
 
 ### Epoch F — Frontend (P24–P25)
@@ -8161,7 +8222,7 @@ tracks:                      # T3, cuttable; attach after the dependency phase; 
 adoption:                    # non-cuttable, outside the parity sequence
   - {id: legacy-import, tier: T2, cuttable: false, depends_on: [P15, P23], status: planned}  # sole adoption path for existing installs
 remediation:                 # non-cuttable, post-hoc fix to a design gap in an already-`done` phase
-  - {id: dbal-orm-migration, tier: T2, cuttable: false, depends_on: [P23], status: planned}  # see "Remediation — DBAL→ORM migration" above
+  - {id: dbal-orm-migration, tier: T2, cuttable: false, depends_on: [P23], status: done}  # see "Remediation — DBAL→ORM migration" above, "Executed (2026-07-26)"
 sec:
   - {id: SEC-01, phase: P4, threat: "Sensitive files over HTTP", verified_by: ".htaccess E2E", status: planned}
   # … through SEC-65 (phases remapped to P0–P32 / T3-AI; see master checklist)

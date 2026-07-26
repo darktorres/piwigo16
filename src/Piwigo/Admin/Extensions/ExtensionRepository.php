@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
-use Doctrine\DBAL\ArrayParameterType;
-use Piwigo\Db\AbstractRepository;
-use Piwigo\Db\Tables;
+use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Users\UserInfoEntity;
 
 /**
  * Persistence layer for the plugins/themes/languages tables. Row shape
@@ -19,15 +18,39 @@ use Piwigo\Db\Tables;
  * That real state-machine asymmetry lives in ExtensionLifecycle, which
  * calls the plain CRUD methods here -- this repository itself stays a
  * thin, type-parameterized wrapper with no lifecycle logic of its own.
+ *
+ * $type->table() is a genuinely dynamic table selector (plugins/themes/
+ * languages, chosen at runtime by the caller) -- the CRUD methods below
+ * stay plain DBAL for that reason, same "dynamic table name" structural
+ * exception as Category\CategoryRepository::deleteRowsWhereColumnIn().
+ * `plugins` also has its own dedicated PluginConfig\PluginEntity from a
+ * separate, narrower repository (PluginConfig\PluginRepository) -- not
+ * reused here, since branching this class's own generic per-type methods
+ * to sometimes use an entity and sometimes not would fragment the "thin
+ * wrapper" design more than it would help.
+ *
+ * `user_infos` (touched by the 4 user-reassignment methods below, when a
+ * theme/language is deleted) IS entity-mapped ({@see UserInfoEntity},
+ * owned by Users\UserRepository) -- those 4 go through it via DQL rather
+ * than raw DBAL, for the same identity-map-staleness reason as every
+ * other cross-domain write onto an owned table this migration has fixed.
+ * Holds EntityManagerInterface directly rather than being resolved via
+ * getRepository() (this class owns no entity of its own), same shape as
+ * Auth\AuthRepository.
  */
-final class ExtensionRepository extends AbstractRepository
+final readonly class ExtensionRepository
 {
+    public function __construct(
+        private EntityManagerInterface $em,
+    ) {}
+
     /**
      * @return array<string, array<string, string|null>> keyed by id
      */
     public function findAll(ExtensionType $type): array
     {
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('*')
             ->from($type->table())
             ->executeQuery()
@@ -51,7 +74,8 @@ final class ExtensionRepository extends AbstractRepository
      */
     public function find(ExtensionType $type, string $id): ?array
     {
-        $row = $this->conn->createQueryBuilder()
+        $row = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('*')
             ->from($type->table())
             ->where('id = :id')
@@ -68,7 +92,8 @@ final class ExtensionRepository extends AbstractRepository
      */
     public function insertPlugin(string $id, string $version, string $state = 'inactive'): void
     {
-        $this->conn->createQueryBuilder()
+        $this->em->getConnection()
+            ->createQueryBuilder()
             ->insert(ExtensionType::Plugin->table())
             ->values([
                 'id' => ':id',
@@ -83,7 +108,8 @@ final class ExtensionRepository extends AbstractRepository
 
     public function insertNamed(ExtensionType $type, string $id, string $version, string $name): void
     {
-        $this->conn->createQueryBuilder()
+        $this->em->getConnection()
+            ->createQueryBuilder()
             ->insert($type->table())
             ->values([
                 'id' => ':id',
@@ -98,7 +124,8 @@ final class ExtensionRepository extends AbstractRepository
 
     public function updatePluginState(string $id, string $state): void
     {
-        $this->conn->createQueryBuilder()
+        $this->em->getConnection()
+            ->createQueryBuilder()
             ->update(ExtensionType::Plugin->table())
             ->set('state', ':state')
             ->where('id = :id')
@@ -109,7 +136,8 @@ final class ExtensionRepository extends AbstractRepository
 
     public function updateVersion(ExtensionType $type, string $id, string $version): void
     {
-        $this->conn->createQueryBuilder()
+        $this->em->getConnection()
+            ->createQueryBuilder()
             ->update($type->table())
             ->set('version', ':version')
             ->where('id = :id')
@@ -120,7 +148,8 @@ final class ExtensionRepository extends AbstractRepository
 
     public function delete(ExtensionType $type, string $id): void
     {
-        $this->conn->createQueryBuilder()
+        $this->em->getConnection()
+            ->createQueryBuilder()
             ->delete($type->table())
             ->where('id = :id')
             ->setParameter('id', $id)
@@ -133,7 +162,8 @@ final class ExtensionRepository extends AbstractRepository
      */
     public function count(ExtensionType $type): int
     {
-        $value = $this->conn->createQueryBuilder()
+        $value = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('COUNT(*)')
             ->from($type->table())
             ->executeQuery()
@@ -149,7 +179,8 @@ final class ExtensionRepository extends AbstractRepository
      */
     public function findAnyThemeIdExcluding(string $excludeId): ?string
     {
-        $value = $this->conn->createQueryBuilder()
+        $value = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('id')
             ->from(ExtensionType::Theme->table())
             ->where('id != :id')
@@ -166,22 +197,15 @@ final class ExtensionRepository extends AbstractRepository
      */
     public function findUserIdsByTheme(string $theme): array
     {
-        $ids = $this->conn->createQueryBuilder()
-            ->select('user_id')
-            ->from(Tables::userInfos())
-            ->where('theme = :theme')
+        $ids = $this->em->createQueryBuilder()
+            ->select('ui.userId')
+            ->from(UserInfoEntity::class, 'ui')
+            ->where('ui.theme = :theme')
             ->setParameter('theme', $theme)
-            ->executeQuery()
-            ->fetchFirstColumn();
+            ->getQuery()
+            ->getResult();
 
-        $stringIds = [];
-        foreach ($ids as $id) {
-            if (is_scalar($id)) {
-                $stringIds[] = (string) $id;
-            }
-        }
-
-        return $stringIds;
+        return array_map(static fn (array $row): string => (string) $row['userId'], $ids);
     }
 
     /**
@@ -193,13 +217,15 @@ final class ExtensionRepository extends AbstractRepository
             return;
         }
 
-        $this->conn->createQueryBuilder()
-            ->update(Tables::userInfos())
-            ->set('theme', ':theme')
-            ->where('user_id IN (:ids)')
+        $this->em->createQueryBuilder()
+            ->update(UserInfoEntity::class, 'ui')
+            ->set('ui.theme', ':theme')
+            ->where('ui.userId IN (:ids)')
             ->setParameter('theme', $theme)
-            ->setParameter('ids', $userIds, ArrayParameterType::STRING)
-            ->executeStatement();
+            ->setParameter('ids', $userIds)
+            ->getQuery()
+            ->execute();
+        $this->em->clear();
     }
 
     /**
@@ -208,13 +234,15 @@ final class ExtensionRepository extends AbstractRepository
      */
     public function reassignUsersFromLanguage(string $oldLanguage, string $newLanguage): void
     {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::userInfos())
-            ->set('language', ':new')
-            ->where('language = :old')
+        $this->em->createQueryBuilder()
+            ->update(UserInfoEntity::class, 'ui')
+            ->set('ui.language', ':new')
+            ->where('ui.language = :old')
             ->setParameter('new', $newLanguage)
             ->setParameter('old', $oldLanguage)
-            ->executeStatement();
+            ->getQuery()
+            ->execute();
+        $this->em->clear();
     }
 
     /**
@@ -222,12 +250,14 @@ final class ExtensionRepository extends AbstractRepository
      */
     public function setLanguageForUserIds(string $language, int $defaultUserId, int $guestId): void
     {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::userInfos())
-            ->set('language', ':language')
-            ->where('user_id IN (:ids)')
+        $this->em->createQueryBuilder()
+            ->update(UserInfoEntity::class, 'ui')
+            ->set('ui.language', ':language')
+            ->where('ui.userId IN (:ids)')
             ->setParameter('language', $language)
-            ->setParameter('ids', [$defaultUserId, $guestId], ArrayParameterType::INTEGER)
-            ->executeStatement();
+            ->setParameter('ids', [$defaultUserId, $guestId])
+            ->getQuery()
+            ->execute();
+        $this->em->clear();
     }
 }

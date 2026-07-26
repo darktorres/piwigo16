@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Category\Projection;
 
+use Piwigo\Category\CategoryEntity;
+
 /**
  * Typed row shape for `piwigo_categories` (P17-23 Stage 1b, Category domain
  * -- `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection shapes"
@@ -46,6 +48,28 @@ final readonly class Category
         public ?string $permalink,
         public string $lastmodified,
     ) {}
+
+    public static function fromEntity(CategoryEntity $entity): self
+    {
+        return new self(
+            id: $entity->id ?? 0,
+            name: $entity->name,
+            idUppercat: $entity->idUppercat,
+            comment: $entity->comment,
+            dir: $entity->dir,
+            rank: $entity->rank,
+            status: $entity->status,
+            siteId: $entity->siteId,
+            visible: $entity->visible,
+            representativePictureId: $entity->representativePictureId,
+            uppercats: $entity->uppercats,
+            commentable: $entity->commentable,
+            globalRank: $entity->globalRank,
+            imageOrder: $entity->imageOrder,
+            permalink: $entity->permalink,
+            lastmodified: $entity->lastmodified,
+        );
+    }
 
     /**
      * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `piwigo_categories`

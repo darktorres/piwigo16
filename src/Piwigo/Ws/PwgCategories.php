@@ -58,7 +58,7 @@ final class PwgCategories
      */
     private static function categoryTreeCache(Connection $conn): CategoryTreeCache
     {
-        return new CategoryTreeCache(self::categoryService(), new CategoryRepository($conn), CachePools::categoryTree());
+        return new CategoryTreeCache(self::categoryService(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class), CachePools::categoryTree());
     }
 
     /**
@@ -1103,7 +1103,7 @@ SELECT id
         $categoryConn = DbConnection::build();
 
         // does the category really exist?
-        $category = new CategoryRepository($categoryConn)
+        $category = \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class)
             ->findById($params['category_id']);
         if ($category === null) {
             return new PwgError(404, 'category_id not found');
@@ -1329,7 +1329,7 @@ SELECT
         self::activityService()->record('album', $params['category_id'], 'edit');
 
         // return url of the new representative
-        $category = new CategoryRepository($categoryConn)
+        $category = \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class)
             ->findById($params['category_id']);
         // the category's existence was already verified above, and nothing
         // in between could have deleted it

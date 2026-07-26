@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Cache\PermissionCacheInvalidator;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -16,7 +15,6 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -74,7 +72,7 @@ final class PictureModifyPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $conn = DbConnection::build();
-        $imageService = new ImageService(new ImageRepository($conn), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService());
+        $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService());
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -259,7 +257,7 @@ SELECT id
             $no_longer_thumbnail_for = array_diff($represented_albums, $represent_categories);
             if (count($no_longer_thumbnail_for) > 0) {
                 new CategoryService(
-                    new CategoryRepository($conn),
+                    \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
                     self::permissionService()
                 )->setRandomRepresentant($no_longer_thumbnail_for);
             }
@@ -431,7 +429,7 @@ SELECT
             }
         }
 
-        $formats = new ImageRepository($conn)
+        $formats = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
             ->findFormatsForImage($image_id);
 
         if ($formats !== []) {

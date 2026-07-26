@@ -31,7 +31,7 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $this->repo = new PermalinkRepository(DbConnection::build());
+        $this->repo = new PermalinkRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()));
     }
 
     public function test_set_then_find_category_id_by_permalink_round_trips(): void

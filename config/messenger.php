@@ -49,7 +49,7 @@ return [
         BatchUploadJob::class => static fn (): callable => new BatchUploadHandler(new UrlService(new HtmlService())),
         GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService()),
         RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService()),
-        ReindexImagesJob::class => static fn (): callable => new ReindexImagesHandler(new MetadataService(new MetadataRepository(DbConnection::build()))),
+        ReindexImagesJob::class => static fn (): callable => new ReindexImagesHandler(new MetadataService(new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())))),
         SendNotificationEmailJob::class => static fn (): callable => new SendNotificationEmailHandler(new MailService()),
     ],
 ];

@@ -53,7 +53,7 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new ExtensionRepository($this->conn);
+        $this->repo = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
     }
 
     public function test_find_all_returns_the_fixture_language(): void

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Maintenance;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\Tables;
 
@@ -15,38 +15,51 @@ use Piwigo\Db\Tables;
  * implement the exact same 16-action dispatch switch; see
  * MaintenanceActionDispatcher's own docblock for why that duplication is
  * consolidated there, not just here).
+ *
+ * Owns no table itself -- every method here is a cross-domain maintenance
+ * sweep against a table another repository owns (history/tags/sessions
+ * each have their own entity) -- holds EntityManagerInterface directly
+ * rather than being resolved via getRepository(), same shape as
+ * Auth\AuthRepository, and clears the identity map after each bulk write
+ * that bypasses one of those owned entities.
  */
 final readonly class DbMaintenanceRepository
 {
     public function __construct(
-        private Connection $conn,
+        private EntityManagerInterface $em,
     ) {}
 
     public function purgeHistoryDetail(): void
     {
-        $this->conn->createQueryBuilder()
+        $this->em->getConnection()
+            ->createQueryBuilder()
             ->delete(Tables::history())
             ->executeStatement();
+        $this->em->clear();
     }
 
     public function purgeHistorySummary(): void
     {
-        $this->conn->createQueryBuilder()
+        $this->em->getConnection()
+            ->createQueryBuilder()
             ->delete(Tables::historySummary())
             ->executeStatement();
     }
 
     public function purgeUnusedFeeds(): void
     {
-        $this->conn->createQueryBuilder()
+        $this->em->getConnection()
+            ->createQueryBuilder()
             ->delete(Tables::userFeed())
             ->where('last_check IS NULL')
             ->executeStatement();
+        $this->em->clear();
     }
 
     public function purgeSearchHistory(): void
     {
-        $this->conn->createQueryBuilder()
+        $this->em->getConnection()
+            ->createQueryBuilder()
             ->delete(Tables::search())
             ->executeStatement();
     }
@@ -69,7 +82,8 @@ final readonly class DbMaintenanceRepository
      */
     public function deleteOrphanTags(): int
     {
-        $orphanTagIds = $this->conn->createQueryBuilder()
+        $conn = $this->em->getConnection();
+        $orphanTagIds = $conn->createQueryBuilder()
             ->select('t.id')
             ->from(Tables::tags(), 't')
             ->leftJoin('t', Tables::imageTag(), 'it', 't.id = it.tag_id')
@@ -82,11 +96,12 @@ final readonly class DbMaintenanceRepository
             return 0;
         }
 
-        $this->conn->createQueryBuilder()
+        $conn->createQueryBuilder()
             ->delete(Tables::tags())
             ->where('id IN (:ids)')
             ->setParameter('ids', $orphanTagIds, ArrayParameterType::INTEGER)
             ->executeStatement();
+        $this->em->clear();
 
         return count($orphanTagIds);
     }
@@ -111,32 +126,34 @@ final readonly class DbMaintenanceRepository
      */
     public function repairOptimizeAllTables(): void
     {
+        $conn = $this->em->getConnection();
         $allTables = array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            $this->conn->fetchFirstColumn('SHOW TABLES LIKE \'' . DbCredentials::current()->prefix . '%\'')
+            $conn->fetchFirstColumn('SHOW TABLES LIKE \'' . DbCredentials::current()->prefix . '%\'')
         );
 
-        $this->conn->executeStatement('REPAIR TABLE ' . implode(', ', $allTables));
+        $conn->executeStatement('REPAIR TABLE ' . implode(', ', $allTables));
 
         foreach ($allTables as $tableName) {
             $allPrimaryKey = [];
-            foreach ($this->conn->fetchAllAssociative('DESC ' . $tableName . ';') as $column) {
+            foreach ($conn->fetchAllAssociative('DESC ' . $tableName . ';') as $column) {
                 if (($column['Key'] ?? null) === 'PRI' && is_scalar($column['Field'])) {
                     $allPrimaryKey[] = (string) $column['Field'];
                 }
             }
 
             if ($allPrimaryKey !== []) {
-                $this->conn->executeStatement('ALTER TABLE ' . $tableName . ' ORDER BY ' . implode(', ', $allPrimaryKey) . ';');
+                $conn->executeStatement('ALTER TABLE ' . $tableName . ' ORDER BY ' . implode(', ', $allPrimaryKey) . ';');
             }
         }
 
-        $this->conn->executeStatement('OPTIMIZE TABLE ' . implode(', ', $allTables));
+        $conn->executeStatement('OPTIMIZE TABLE ' . implode(', ', $allTables));
     }
 
     public function countLoungeItems(): int
     {
-        $value = $this->conn->createQueryBuilder()
+        $value = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('COUNT(*)')
             ->from(Tables::lounge())
             ->executeQuery()
@@ -153,13 +170,14 @@ final readonly class DbMaintenanceRepository
      */
     public function purgeSessionsForDeletedUsers(string $idColumn): void
     {
-        $sessions = $this->conn->createQueryBuilder()
+        $conn = $this->em->getConnection();
+        $sessions = $conn->createQueryBuilder()
             ->select('id', 'data')
             ->from(Tables::sessions())
             ->executeQuery()
             ->fetchAllAssociative();
 
-        $allUserIds = $this->conn->createQueryBuilder()
+        $allUserIds = $conn->createQueryBuilder()
             ->select($idColumn . ' AS id')
             ->from(Tables::users())
             ->executeQuery()
@@ -190,10 +208,11 @@ final readonly class DbMaintenanceRepository
             return;
         }
 
-        $this->conn->createQueryBuilder()
+        $conn->createQueryBuilder()
             ->delete(Tables::sessions())
             ->where('id IN (:ids)')
             ->setParameter('ids', $sessionsToDelete, ArrayParameterType::STRING)
             ->executeStatement();
+        $this->em->clear();
     }
 }

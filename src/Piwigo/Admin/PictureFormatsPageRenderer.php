@@ -9,7 +9,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeImage;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 
 /**
@@ -33,7 +32,7 @@ final class PictureFormatsPageRenderer
         $image_id = is_numeric($image_id_raw) ? (int) $image_id_raw : 0;
 
         $conn = DbConnection::build();
-        $imageRow = new ImageRepository($conn)
+        $imageRow = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
             ->findById($image_id);
         if ($imageRow === null) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()
@@ -42,7 +41,7 @@ final class PictureFormatsPageRenderer
         $image = $imageRow->toArray();
 
         $formats = [];
-        foreach (new ImageRepository($conn)->findFormatsForImage($image_id) as $formatRow) {
+        foreach (\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)->findFormatsForImage($image_id) as $formatRow) {
             $format = $formatRow->toArray();
             $format['download_url'] = 'action.php?format=' . $formatRow->formatId . '&amp;download';
 

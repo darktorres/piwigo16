@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Image\Projection;
 
+use Piwigo\Image\ImageEntity;
+
 /**
  * Typed row shape for `piwigo_images` (P17-23 Stage 1b, Image domain --
  * `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection shapes"
@@ -50,6 +52,36 @@ final readonly class Image
         public ?float $longitude,
         public string $lastmodified,
     ) {}
+
+    public static function fromEntity(ImageEntity $entity): self
+    {
+        return new self(
+            id: $entity->id ?? 0,
+            file: $entity->file,
+            dateAvailable: $entity->dateAvailable,
+            dateCreation: $entity->dateCreation,
+            name: $entity->name,
+            comment: $entity->comment,
+            author: $entity->author,
+            hit: $entity->hit,
+            filesize: $entity->filesize,
+            width: $entity->width,
+            height: $entity->height,
+            coi: $entity->coi,
+            representativeExt: $entity->representativeExt,
+            dateMetadataUpdate: $entity->dateMetadataUpdate,
+            ratingScore: $entity->ratingScore,
+            path: $entity->path,
+            storageCategoryId: $entity->storageCategoryId,
+            level: $entity->level,
+            md5sum: $entity->md5sum,
+            addedBy: $entity->addedBy,
+            rotation: $entity->rotation,
+            latitude: $entity->latitude,
+            longitude: $entity->longitude,
+            lastmodified: $entity->lastmodified,
+        );
+    }
 
     /**
      * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `piwigo_images`

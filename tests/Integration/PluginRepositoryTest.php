@@ -36,7 +36,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new PluginRepository($this->conn);
+        $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\PluginConfig\PluginEntity::class);
 
         // the fixture ships an empty plugins table -- seed it directly so
         // getDbPlugins()'s filters have something real to select against;

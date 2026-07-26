@@ -13,7 +13,6 @@ use Piwigo\History\HistoryService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Psr\Http\Message\ResponseInterface;
@@ -81,7 +80,7 @@ final class ActionController implements ControllerInterface
             }
             $format_id = (int) $_GET['format'];
 
-            $format = new ImageRepository($conn)
+            $format = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
                 ->findFormatById($format_id);
 
             if ($format === null) {
@@ -101,7 +100,7 @@ final class ActionController implements ControllerInterface
         }
         $_GET['id'] = (int) $_GET['id'];
 
-        $elementImage = new ImageRepository($conn)
+        $elementImage = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
             ->findById($_GET['id']);
         if ($elementImage === null) {
             return $this->doError(404, 'Requested id not found');

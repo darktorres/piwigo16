@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\History;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\ORM\EntityRepository;
 use Piwigo\Core\Env;
-use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 use Piwigo\History\Projection\HistorySummaryCount;
 use Piwigo\History\Projection\HistorySummaryCursor;
@@ -18,12 +18,24 @@ use Piwigo\History\Projection\HistorySummaryCursor;
  * unique index, which is why summary rows that might already exist are
  * looked up explicitly (findSummaryRowsForHierarchy()) rather than upserted
  * blindly).
+ *
+ * Owns `history` ({@see HistoryEntity}) -- only insert()/deleteBefore() go
+ * through it; every other method (including every `history_summary` touch)
+ * stays plain DBAL via $this->getEntityManager()->getConnection(), same
+ * "mixed repository" shape Image/Category/Rate's own conversions
+ * established. Both owned tables are exclusively touched by this
+ * repository (confirmed via a repo-wide grep) -- no cross-repository
+ * identity-map risk from leaving the rest raw.
+ *
+ * @extends EntityRepository<HistoryEntity>
  */
-final class HistoryRepository extends AbstractRepository
+final class HistoryRepository extends EntityRepository
 {
     public function findLastSummaryWithHistoryIdTo(): ?HistorySummaryCursor
     {
-        $row = $this->conn->createQueryBuilder()
+        $row = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('year', 'month', 'day', 'hour', 'history_id_to')
             ->from(Tables::historySummary())
             ->where('history_id_to IS NOT NULL')
@@ -37,7 +49,9 @@ final class HistoryRepository extends AbstractRepository
 
     public function findMinHistoryId(): ?int
     {
-        $value = $this->conn->createQueryBuilder()
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('MIN(id)')
             ->from(Tables::history())
             ->executeQuery()
@@ -54,7 +68,9 @@ final class HistoryRepository extends AbstractRepository
      */
     public function findGroupedCountsSince(int $minId, ?int $maxId): array
     {
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('date', 'HOUR(time) AS hour', 'MIN(id) AS min_id', 'MAX(id) AS max_id', 'COUNT(*) AS nb_pages')
             ->from(Tables::history())
             ->where('id > :minId')
@@ -93,7 +109,9 @@ final class HistoryRepository extends AbstractRepository
      */
     public function findSummaryRowsForHierarchy(int $year, ?int $month, ?int $day, ?int $hour): array
     {
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('year', 'month', 'day', 'hour', 'nb_pages')
             ->from(Tables::historySummary())
             ->where('year = :year')
@@ -129,8 +147,10 @@ final class HistoryRepository extends AbstractRepository
      */
     public function updateSummaryRows(array $rows): void
     {
+        $conn = $this->getEntityManager()
+            ->getConnection();
         foreach ($rows as $row) {
-            $qb = $this->conn->createQueryBuilder()
+            $qb = $conn->createQueryBuilder()
                 ->update(Tables::historySummary())
                 ->set('nb_pages', ':nbPages')
                 ->set('history_id_to', ':historyIdTo')
@@ -163,8 +183,10 @@ final class HistoryRepository extends AbstractRepository
      */
     public function insertSummaryRows(array $rows): void
     {
+        $conn = $this->getEntityManager()
+            ->getConnection();
         foreach ($rows as $row) {
-            $this->conn->createQueryBuilder()
+            $conn->createQueryBuilder()
                 ->insert(Tables::historySummary())
                 ->values([
                     'year' => ':year',
@@ -188,7 +210,9 @@ final class HistoryRepository extends AbstractRepository
 
     public function countAll(): int
     {
-        $value = $this->conn->createQueryBuilder()
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('COUNT(*)')
             ->from(Tables::history())
             ->executeQuery()
@@ -199,7 +223,9 @@ final class HistoryRepository extends AbstractRepository
 
     public function findLatestHistoryId(): ?int
     {
-        $value = $this->conn->createQueryBuilder()
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('id')
             ->from(Tables::history())
             ->orderBy('id', 'DESC')
@@ -212,7 +238,9 @@ final class HistoryRepository extends AbstractRepository
 
     public function findOldestHistoryId(): ?int
     {
-        $value = $this->conn->createQueryBuilder()
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('id')
             ->from(Tables::history())
             ->orderBy('id', 'ASC')
@@ -225,11 +253,14 @@ final class HistoryRepository extends AbstractRepository
 
     public function deleteBefore(int $id): void
     {
-        $this->conn->createQueryBuilder()
-            ->delete(Tables::history())
-            ->where('id < :id')
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(HistoryEntity::class, 'h')
+            ->where('h.id < :id')
             ->setParameter('id', $id)
-            ->executeStatement();
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -237,7 +268,9 @@ final class HistoryRepository extends AbstractRepository
      */
     public function findImageIdsByFilename(string $filenamePattern): array
     {
-        $ids = $this->conn->createQueryBuilder()
+        $ids = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('id')
             ->from(Tables::images())
             ->where('file LIKE :pattern')
@@ -273,7 +306,9 @@ final class HistoryRepository extends AbstractRepository
         ?array $imageIdsFromFilename,
         ?string $ip
     ): array {
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('date', 'time', 'user_id', 'IP', 'section', 'category_id', 'search_id', 'tag_ids', 'image_id', 'image_type')
             ->from(Tables::history());
 
@@ -343,8 +378,11 @@ final class HistoryRepository extends AbstractRepository
         // SessionRepository/CommentRepository's own established reasoning
         // (invisible to PIWIGO_TEST_NOW). `lastmodified = lastmodified` is
         // a deliberate self-assignment (see Auth\AuthRepository::
-        // saveLastVisitFromHistory()'s own docblock for why).
-        $this->conn->createQueryBuilder()
+        // saveLastVisitFromHistory()'s own docblock for why). Bypasses the
+        // ORM for a row Users\UserInfoEntity may already have cached.
+        $em = $this->getEntityManager();
+        $em->getConnection()
+            ->createQueryBuilder()
             ->update(Tables::userInfos())
             ->set('last_visit', ':now')
             ->set('lastmodified', 'lastmodified')
@@ -352,6 +390,7 @@ final class HistoryRepository extends AbstractRepository
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('userId', $userId)
             ->executeStatement();
+        $em->clear();
     }
 
     /**
@@ -365,7 +404,9 @@ final class HistoryRepository extends AbstractRepository
      */
     public function getSectionEnumOptions(): array
     {
-        $rows = $this->conn->executeQuery('DESC ' . Tables::history())->fetchAllAssociative();
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('DESC ' . Tables::history())->fetchAllAssociative();
 
         foreach ($rows as $row) {
             if (($row['Field'] ?? null) === 'section') {
@@ -393,9 +434,11 @@ final class HistoryRepository extends AbstractRepository
     {
         $enumList = implode(',', array_map(static fn (string $option): string => "'" . $option . "'", array_unique($options)));
 
-        $this->conn->executeStatement(
-            'ALTER TABLE ' . Tables::history() . ' CHANGE section section enum(' . $enumList . ') DEFAULT NULL'
-        );
+        $this->getEntityManager()
+            ->getConnection()
+            ->executeStatement(
+                'ALTER TABLE ' . Tables::history() . ' CHANGE section section enum(' . $enumList . ') DEFAULT NULL'
+            );
     }
 
     /**
@@ -409,36 +452,27 @@ final class HistoryRepository extends AbstractRepository
     {
         $now = Env::now();
 
-        $this->conn->createQueryBuilder()
-            ->insert(Tables::history())
-            ->values([
-                'date' => ':date',
-                'time' => ':time',
-                'user_id' => ':userId',
-                'IP' => ':ip',
-                'section' => ':section',
-                'category_id' => ':categoryId',
-                'search_id' => ':searchId',
-                'image_id' => ':imageId',
-                'image_type' => ':imageType',
-                'format_id' => ':formatId',
-                'auth_key_id' => ':authKeyId',
-                'tag_ids' => ':tagsString',
-            ])
-            ->setParameter('date', $now->format('Y-m-d'))
-            ->setParameter('time', $now->format('H:i:s'))
-            ->setParameter('userId', $data['userId'])
-            ->setParameter('ip', $data['ip'])
-            ->setParameter('section', $data['section'])
-            ->setParameter('categoryId', $data['categoryId'])
-            ->setParameter('searchId', $data['searchId'])
-            ->setParameter('imageId', $data['imageId'])
-            ->setParameter('imageType', $data['imageType'])
-            ->setParameter('formatId', $data['formatId'])
-            ->setParameter('authKeyId', $data['authKeyId'])
-            ->setParameter('tagsString', $data['tagsString'])
-            ->executeStatement();
+        $entity = new HistoryEntity(
+            date: $now->format('Y-m-d'),
+            time: $now->format('H:i:s'),
+            userId: $data['userId'],
+            ip: $data['ip'],
+            section: $data['section'],
+            categoryId: $data['categoryId'],
+            searchId: $data['searchId'],
+            tagIds: $data['tagsString'],
+            imageId: $data['imageId'],
+            imageType: $data['imageType'],
+            formatId: is_numeric($data['formatId']) ? (int) $data['formatId'] : null,
+            authKeyId: $data['authKeyId'],
+        );
 
-        return (int) $this->conn->lastInsertId();
+        $em = $this->getEntityManager();
+        $em->persist($entity);
+        $em->flush();
+
+        assert($entity->id !== null);
+
+        return $entity->id;
     }
 }

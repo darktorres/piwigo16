@@ -113,8 +113,8 @@ final class MailService implements MailerInterface
     {
         return $this->authService
             ?? new \Piwigo\Auth\AuthService(
-                new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()),
-                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())),
+                new \Piwigo\Auth\AuthRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())),
+                new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)),
                 new HtmlService(),
                 new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())),
                 new \Piwigo\Auth\CookieService(),
@@ -155,7 +155,7 @@ final class MailService implements MailerInterface
             \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class),
             \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class),
             new self(),
-            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())),
+            new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)),
             new HtmlService(),
             \Piwigo\Db\DbConnection::build(),
         );

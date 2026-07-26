@@ -1,0 +1,51 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Activity;
+
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * Maps the `activity` table (`piwigo_activity` once
+ * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
+ * `occuredOn` stays plain string, not \DateTimeImmutable -- every real
+ * reader (findMinOccuredOn/findMaxOccuredOn/the CSV export) wants the raw
+ * DB DATETIME string form, same reasoning as every other domain's own
+ * projection. `details` maps as native Doctrine `json` -- no
+ * round-trip-fidelity requirement forces a raw-string exception here,
+ * unlike Audit\AuditLogEntity's hash-chain columns.
+ */
+#[ORM\Entity(repositoryClass: ActivityRepository::class)]
+#[ORM\Table(name: 'activity')]
+final class ActivityEntity
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(name: 'activity_id', type: 'integer')]
+    public ?int $activityId = null;
+
+    public function __construct(
+        #[ORM\Column(type: 'string', length: 255)]
+        public string $object,
+        #[ORM\Column(name: 'object_id', type: 'integer')]
+        public int $objectId,
+        #[ORM\Column(type: 'string', length: 255)]
+        public string $action,
+        #[ORM\Column(name: 'performed_by', type: 'integer', nullable: true)]
+        public ?int $performedBy,
+        #[ORM\Column(name: 'session_idx', type: 'string', length: 255)]
+        public string $sessionIdx,
+        #[ORM\Column(name: 'ip_address', type: 'string', length: 50, nullable: true)]
+        public ?string $ipAddress,
+        #[ORM\Column(name: 'occured_on', type: 'string', length: 19)]
+        public string $occuredOn,
+        /**
+         * @var array<string, mixed>|null
+         */
+        #[ORM\Column(type: 'json', nullable: true)]
+        public ?array $details,
+        #[ORM\Column(name: 'user_agent', type: 'string', length: 255, nullable: true)]
+        public ?string $userAgent,
+    ) {}
+}

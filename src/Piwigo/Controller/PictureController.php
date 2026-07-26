@@ -9,7 +9,6 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
-use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
@@ -22,7 +21,6 @@ use Piwigo\Db\Tables;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -111,7 +109,7 @@ final class PictureController implements ControllerInterface
 
     private static function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
     {
-        return new CommentService(new CommentRepository($conn), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $urlService);
+        return new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $urlService);
     }
 
     #[\Override]
@@ -569,7 +567,7 @@ UPDATE ' . Tables::categories() . '
 
         // don't increment if adding a comment
         if ((bool) \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('allow_increment_element_hit_count', $inc_hit_count, $image_id)) {
-            new ImageRepository($conn)
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
                 ->incrementVisitCounter($image_id);
         }
 
@@ -603,7 +601,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             $ids[] = (string) $last_item;
         }
 
-        foreach (new ImageRepository($conn)->findByIds($ids) as $imageRow) {
+        foreach (\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)->findByIds($ids) as $imageRow) {
             $row = $imageRow->toArray();
             if ($previous_item !== null and $imageRow->id === (int) $previous_item) {
                 $i = 'previous';
@@ -810,7 +808,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
                 $picture_id = is_numeric($picture_id) ? (int) $picture_id : 0;
                 $formats = array_map(
                     static fn (\Piwigo\Image\Projection\ImageFormat $format): array => $format->toArray(),
-                    new ImageRepository($conn)
+                    \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
                         ->findFormatsForImage($picture_id)
                 );
 

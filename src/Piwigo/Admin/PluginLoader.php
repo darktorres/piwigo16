@@ -52,7 +52,7 @@ final class PluginLoader
     {
         LoadedPlugins::set([]);
         if (\Piwigo\Config\CurrentConfig::enablePlugins()) {
-            $plugins = new PluginRepository(DbConnection::build())->getDbPlugins('active');
+            $plugins = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\PluginConfig\PluginEntity::class)->getDbPlugins('active');
             foreach ($plugins as $plugin) {// include main from a function to avoid using same function context
                 // Unboxed back to array here -- loadPlugin()/autoupdatePlugin()
                 // mutate $plugin['version'] in place through a by-reference
@@ -166,7 +166,7 @@ final class PluginLoader
             // which happens for each "version=auto" plugin on each page load.
             if ($new_version !== $old_version) {
                 $conn = DbConnection::build();
-                new PluginRepository($conn)
+                \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\PluginConfig\PluginEntity::class)
                     ->updateVersion($plugin_id, $fs_version);
 
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()

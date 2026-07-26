@@ -12,7 +12,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Site\SiteRepository;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -101,7 +100,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             }
 
             // site must not exists
-            $site_repo = new SiteRepository($conn);
+            $site_repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Site\SiteEntity::class);
             if ($site_repo->countByUrl($url) > 0) {
                 \Piwigo\Core\PageState::current()->addError(Lang::t('This site already exists') . ' [' . $url . ']');
             }
@@ -126,7 +125,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         }
         if (isset($_GET['action']) and $site !== null) {
             $site_id = (int) $site;
-            $galleries_url = new SiteRepository($conn)
+            $galleries_url = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Site\SiteEntity::class)
                 ->findGalleriesUrlById($site_id);
             switch ($_GET['action']) {
                 case 'delete':
@@ -157,7 +156,7 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
         /** @var array<int|string, array<string, string|null>> $sites_detail */
         $sites_detail = array_column($conn->fetchAllAssociative($query), null, 'site_id');
 
-        foreach (new SiteRepository($conn)->findAll() as $row) {
+        foreach (\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Site\SiteEntity::class)->findAllSites() as $row) {
             $id = (string) $row->id;
             $galleries_url = $row->galleriesUrl;
             $is_remote = $this->urlService->urlIsRemote($galleries_url);

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Filter;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Db\DbConnection;
@@ -148,8 +147,8 @@ final class FilterService implements FilterUpdaterInterface
                 // consumer (e.g. CategoryCatsRenderer) observes the same
                 // value.
                 $computedCategories = new CategoryService(
-                    new CategoryRepository($categoryConn),
-                    new PermissionService(new PermissionRepository($categoryConn), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository($categoryConn))
+                    \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class),
+                    new PermissionService(new PermissionRepository($categoryConn), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class))
                 )->getComputedCategories($currentUser->toUserArray(), $filter_recent_period);
                 $filter['categories'] = $computedCategories['categories'];
                 \Piwigo\Users\CurrentUser::set($currentUser->withRawAttribute('last_photo_date', $computedCategories['lastPhotoDate']));

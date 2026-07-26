@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Comment;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\ORM\EntityRepository;
 use Piwigo\Comment\Projection\Comment;
 use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\Env;
-use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 
 /**
@@ -22,8 +22,10 @@ use Piwigo\Db\Tables;
  * Implements `CommentCounterInterface` (see that interface's own docblock)
  * so `Category\CategoryDefaultRenderer` (L2aCoreDomain) can depend on it
  * without a `deptrac analyse` `DependsOnDisallowedLayer` violation.
+ *
+ * @extends EntityRepository<CommentEntity>
  */
-final class CommentRepository extends AbstractRepository implements CommentCounterInterface
+final class CommentRepository extends EntityRepository implements CommentCounterInterface
 {
     /**
      * @param array{
@@ -46,37 +48,26 @@ final class CommentRepository extends AbstractRepository implements CommentCount
         $now = Env::now()
             ->format('Y-m-d H:i:s');
 
-        $this->conn->createQueryBuilder()
-            ->insert(Tables::comments())
-            ->values([
-                'author' => ':author',
-                'author_id' => ':authorId',
-                'anonymous_id' => ':anonymousId',
-                'content' => ':content',
-                'date' => ':now',
-                'validated' => ':validated',
-                'validation_date' => $data['validated'] ? ':now' : 'NULL',
-                'image_id' => ':imageId',
-                'website_url' => ':websiteUrl',
-                'email' => ':email',
-            ])
-            ->setParameter('author', $data['author'])
-            ->setParameter('authorId', $data['authorId'])
-            ->setParameter('anonymousId', $data['anonymousId'])
-            ->setParameter('content', $data['content'])
-            ->setParameter('now', $now)
-            // A real tinyint(1) column now (Comment domain Stage 1a) --
-            // the old 'true'/'false' string literal is not a valid
-            // integer for the column (strict SQL mode rejects it
-            // outright), same reasoning as
-            // UserRepository::insertUserInfos()'s own bool-bind fix.
-            ->setParameter('validated', (int) $data['validated'])
-            ->setParameter('imageId', $data['imageId'])
-            ->setParameter('websiteUrl', $data['websiteUrl'])
-            ->setParameter('email', $data['email'])
-            ->executeStatement();
+        $entity = new CommentEntity(
+            imageId: $data['imageId'],
+            date: $now,
+            author: $data['author'],
+            email: $data['email'],
+            authorId: $data['authorId'],
+            anonymousId: $data['anonymousId'],
+            websiteUrl: $data['websiteUrl'],
+            content: $data['content'],
+            validated: $data['validated'],
+            validationDate: $data['validated'] ? $now : null,
+        );
 
-        return (int) $this->conn->lastInsertId();
+        $em = $this->getEntityManager();
+        $em->persist($entity);
+        $em->flush();
+
+        assert($entity->id !== null);
+
+        return $entity->id;
     }
 
     /**
@@ -93,17 +84,23 @@ final class CommentRepository extends AbstractRepository implements CommentCount
             return 0;
         }
 
-        $qb = $this->conn->createQueryBuilder()
-            ->delete(Tables::comments())
-            ->where('id IN (:ids)')
-            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        $qb = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->delete(CommentEntity::class, 'c')
+            ->where('c.id IN (:ids)')
+            ->setParameter('ids', $ids);
 
         if ($authorId !== null) {
-            $qb->andWhere('author_id = :authorId')
+            $qb->andWhere('c.authorId = :authorId')
                 ->setParameter('authorId', $authorId);
         }
 
-        return (int) $qb->executeStatement();
+        $deleted = $qb->getQuery()
+            ->execute();
+        $this->getEntityManager()
+            ->clear();
+
+        return $deleted;
     }
 
     /**
@@ -116,50 +113,46 @@ final class CommentRepository extends AbstractRepository implements CommentCount
      */
     public function update(int $id, array $data, ?int $authorId): bool
     {
-        $qb = $this->conn->createQueryBuilder()
-            ->update(Tables::comments())
-            ->set('content', ':content')
-            ->set('website_url', ':websiteUrl')
-            ->set('validated', ':validated')
-            ->set('validation_date', $data['validated'] ? ':now' : 'NULL')
-            ->where('id = :id')
+        $qb = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->update(CommentEntity::class, 'c')
+            ->set('c.content', ':content')
+            ->set('c.websiteUrl', ':websiteUrl')
+            ->set('c.validated', ':validated')
+            ->set('c.validationDate', ':validationDate')
+            ->where('c.id = :id')
             ->setParameter('content', $data['content'])
             ->setParameter('websiteUrl', $data['websiteUrl'])
-            ->setParameter('validated', (int) $data['validated'])
-            ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
+            ->setParameter('validated', $data['validated'])
+            ->setParameter('validationDate', $data['validated'] ? Env::now()->format('Y-m-d H:i:s') : null)
             ->setParameter('id', $id);
 
         if ($authorId !== null) {
-            $qb->andWhere('author_id = :authorId')
+            $qb->andWhere('c.authorId = :authorId')
                 ->setParameter('authorId', $authorId);
         }
 
-        return $qb->executeStatement() > 0;
+        $updated = $qb->getQuery()
+            ->execute() > 0;
+        $this->getEntityManager()
+            ->clear();
+
+        return $updated;
     }
 
     /**
      * Raw author_id of a comment: `false` when no such comment exists,
      * `null` when the comment exists but has no owner (anonymous/guest
      * comment -- author_id allows NULL), otherwise the numeric-string id.
-     * Doctrine's fetchOne() already distinguishes "no row" (false) from
-     * "row with a NULL column" (null), which is exactly the distinction
-     * get_comment_author_id() needs.
      */
     public function findAuthorId(int $id): string|null|false
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('author_id')
-            ->from(Tables::comments())
-            ->where('id = :id')
-            ->setParameter('id', $id)
-            ->executeQuery()
-            ->fetchOne();
-
-        if ($value === false || $value === null) {
-            return $value;
+        $entity = $this->find($id);
+        if ($entity === null) {
+            return false;
         }
 
-        return is_scalar($value) ? (string) $value : null;
+        return $entity->authorId === null ? null : (string) $entity->authorId;
     }
 
     /**
@@ -171,15 +164,18 @@ final class CommentRepository extends AbstractRepository implements CommentCount
             return;
         }
 
-        $this->conn->createQueryBuilder()
-            ->update(Tables::comments())
-            ->set('validated', ':validated')
-            ->set('validation_date', ':now')
-            ->where('id IN (:ids)')
-            ->setParameter('validated', 1)
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->update(CommentEntity::class, 'c')
+            ->set('c.validated', ':validated')
+            ->set('c.validationDate', ':now')
+            ->where('c.id IN (:ids)')
+            ->setParameter('validated', true)
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
-            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
-            ->executeStatement();
+            ->setParameter('ids', $ids)
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -194,7 +190,9 @@ final class CommentRepository extends AbstractRepository implements CommentCount
         // PIWIGO_TEST_NOW, so fixture comments dated relative to it would
         // read as "within the flood window" whenever real time drifted
         // away from the fixture's own dates.
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('COUNT(1)')
             ->from(Tables::comments())
             ->where('date > SUBDATE(:now, INTERVAL :seconds SECOND)')
@@ -224,7 +222,9 @@ final class CommentRepository extends AbstractRepository implements CommentCount
      */
     public function usernameExists(string $usernameColumn, string $username): bool
     {
-        $value = $this->conn->createQueryBuilder()
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('COUNT(*)')
             ->from(Tables::users())
             ->where($usernameColumn . ' = :username')
@@ -247,7 +247,9 @@ final class CommentRepository extends AbstractRepository implements CommentCount
      */
     public function countAvailableWithConditions(array $whereClauses): int
     {
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('COUNT(DISTINCT com.id)')
             ->from(Tables::imageCategory(), 'ic')
             ->join('ic', Tables::comments(), 'com', 'ic.image_id = com.image_id');
@@ -268,7 +270,9 @@ final class CommentRepository extends AbstractRepository implements CommentCount
      */
     public function countForImage(int $imageId, bool $onlyValidated): int
     {
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('COUNT(*) AS nb_comments')
             ->from(Tables::comments())
             ->where('image_id = :imageId')
@@ -305,7 +309,9 @@ final class CommentRepository extends AbstractRepository implements CommentCount
             return [];
         }
 
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('image_id', 'COUNT(*) AS nb_comments')
             ->from(Tables::comments())
             ->where('validated = 1')
@@ -349,7 +355,9 @@ final class CommentRepository extends AbstractRepository implements CommentCount
         int $limit,
         int $offset
     ): array {
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select(
                 'com.id',
                 'com.author',

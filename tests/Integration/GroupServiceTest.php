@@ -55,7 +55,7 @@ final class GroupServiceTest extends IntegrationTestCase
 
         $this->repo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class);
         $auditRepo = EntityManagerFactory::build()->getRepository(AuditLogEntity::class);
-        $this->service = new GroupService($this->repo, new ActivityService(new ActivityRepository(DbConnection::build())), new AuditService($auditRepo), new ConfigService($this->buildConfigRepository()));
+        $this->service = new GroupService($this->repo, new ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), new AuditService($auditRepo), new ConfigService($this->buildConfigRepository()));
     }
 
     public function test_create_rejects_an_already_used_name(): void

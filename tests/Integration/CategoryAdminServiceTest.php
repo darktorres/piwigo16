@@ -103,11 +103,11 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $categoryService = new CategoryService(
-            new CategoryRepository($this->conn),
+            \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
             new PermissionService(
                 new PermissionRepository($this->conn),
                 \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class),
-                new CategoryRepository($this->conn)
+                \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)
             )
         );
         $this->service = new CategoryAdminService($categoryService);

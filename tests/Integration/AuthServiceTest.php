@@ -57,8 +57,8 @@ namespace Piwigo\Tests\Integration {
             CurrentConfig::setSecretKey('test-secret-key');
 
             $this->service = new AuthService(
-                new AuthRepository(DbConnection::build()),
-                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())),
+                new AuthRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())),
+                new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)),
                 new HtmlService(),
                 new PasswordService(new PasswordRepository(DbConnection::build())),
                 new CookieService(),

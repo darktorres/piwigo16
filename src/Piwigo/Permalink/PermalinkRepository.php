@@ -6,21 +6,34 @@ namespace Piwigo\Permalink;
 
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Types\Types;
-use Piwigo\Db\AbstractRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Category\CategoryEntity;
 use Piwigo\Db\Tables;
 use Piwigo\Permalink\Projection\OldPermalink;
 
 /**
- * Persistence layer for the category-permalink domain.
+ * Persistence layer for the category-permalink domain. Owns no table
+ * itself -- `categories.permalink` is Category\CategoryEntity's own
+ * column (writes here go through it, find+set+flush, rather than raw
+ * DBAL, since a raw write would leave any CategoryEntity already in this
+ * EntityManager's identity map stale); `old_permalinks` is deliberately
+ * never entity-mapped anywhere in this migration (see
+ * Category\CategoryEntity's own docblock). Holds EntityManagerInterface
+ * directly, same shape as Auth\AuthRepository.
  */
-final class PermalinkRepository extends AbstractRepository
+final readonly class PermalinkRepository
 {
+    public function __construct(
+        private EntityManagerInterface $em,
+    ) {}
+
     /**
      * Return the category id whose current permalink matches, or null.
      */
     public function findCategoryIdByPermalink(string $permalink): ?int
     {
-        $value = $this->conn->createQueryBuilder()
+        $value = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('id')
             ->from(Tables::categories())
             ->where('permalink = :permalink')
@@ -36,7 +49,8 @@ final class PermalinkRepository extends AbstractRepository
      */
     public function findOldCategoryId(string $permalink): ?int
     {
-        $value = $this->conn->createQueryBuilder()
+        $value = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('c.id')
             ->from(Tables::oldPermalinks(), 'op')
             ->innerJoin('op', Tables::categories(), 'c', 'op.cat_id = c.id')
@@ -54,37 +68,31 @@ final class PermalinkRepository extends AbstractRepository
      */
     public function findPermalinkByCategoryId(int $catId): ?string
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('permalink')
-            ->from(Tables::categories())
-            ->where('id = :id')
-            ->setParameter('id', $catId)
-            ->executeQuery()
-            ->fetchOne();
+        $entity = $this->em->find(CategoryEntity::class, $catId);
 
-        return is_string($value) && $value !== '' ? $value : null;
+        return $entity !== null && $entity->permalink !== '' ? $entity->permalink : null;
     }
 
     public function clearCategoryPermalink(int $catId): void
     {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::categories())
-            ->set('permalink', ':permalink')
-            ->where('id = :id')
-            ->setParameter('permalink', null)
-            ->setParameter('id', $catId)
-            ->executeStatement();
+        $entity = $this->em->find(CategoryEntity::class, $catId);
+        if ($entity === null) {
+            return;
+        }
+
+        $entity->permalink = null;
+        $this->em->flush();
     }
 
     public function setCategoryPermalink(int $catId, string $permalink): void
     {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::categories())
-            ->set('permalink', ':permalink')
-            ->where('id = :id')
-            ->setParameter('permalink', $permalink)
-            ->setParameter('id', $catId)
-            ->executeStatement();
+        $entity = $this->em->find(CategoryEntity::class, $catId);
+        if ($entity === null) {
+            return;
+        }
+
+        $entity->permalink = $permalink;
+        $this->em->flush();
     }
 
     /**
@@ -95,7 +103,8 @@ final class PermalinkRepository extends AbstractRepository
      */
     public function markOldPermalinkDeleted(int $catId, string $permalink): void
     {
-        $this->conn->createQueryBuilder()
+        $this->em->getConnection()
+            ->createQueryBuilder()
             ->update(Tables::oldPermalinks())
             ->set('date_deleted', ':deleted')
             ->where('cat_id = :cat_id')
@@ -114,16 +123,18 @@ final class PermalinkRepository extends AbstractRepository
      */
     public function insertOldPermalinkDeleted(int $catId, string $permalink): void
     {
-        $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::oldPermalinks() . ' (permalink, cat_id, date_deleted) VALUES (?, ?, ?)',
-            [$permalink, $catId, new \DateTimeImmutable()],
-            [ParameterType::STRING, ParameterType::INTEGER, Types::DATETIME_IMMUTABLE],
-        );
+        $this->em->getConnection()
+            ->executeStatement(
+                'INSERT INTO ' . Tables::oldPermalinks() . ' (permalink, cat_id, date_deleted) VALUES (?, ?, ?)',
+                [$permalink, $catId, new \DateTimeImmutable()],
+                [ParameterType::STRING, ParameterType::INTEGER, Types::DATETIME_IMMUTABLE],
+            );
     }
 
     public function deleteOldPermalink(int $catId, string $permalink): void
     {
-        $this->conn->createQueryBuilder()
+        $this->em->getConnection()
+            ->createQueryBuilder()
             ->delete(Tables::oldPermalinks())
             ->where('cat_id = :cat_id')
             ->andWhere('permalink = :permalink')
@@ -143,7 +154,8 @@ final class PermalinkRepository extends AbstractRepository
      */
     public function deleteOldPermalinkByValue(string $permalink): bool
     {
-        $affected = $this->conn->createQueryBuilder()
+        $affected = $this->em->getConnection()
+            ->createQueryBuilder()
             ->delete(Tables::oldPermalinks())
             ->where('permalink = :permalink')
             ->setParameter('permalink', $permalink)
@@ -162,7 +174,8 @@ final class PermalinkRepository extends AbstractRepository
      */
     public function findAllOrderedBy(?string $orderByColumn): array
     {
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('*')
             ->from(Tables::oldPermalinks());
 

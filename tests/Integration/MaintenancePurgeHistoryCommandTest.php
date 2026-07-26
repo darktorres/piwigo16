@@ -43,7 +43,7 @@ final class MaintenancePurgeHistoryCommandTest extends IntegrationTestCase
             ->setParameter('userId', 1)
             ->executeStatement();
 
-        $command = new MaintenancePurgeHistoryCommand(new DbMaintenanceRepository($conn));
+        $command = new MaintenancePurgeHistoryCommand(new DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($conn)));
         $tester = new CommandTester($command);
 
         $exitCode = $tester->execute([]);

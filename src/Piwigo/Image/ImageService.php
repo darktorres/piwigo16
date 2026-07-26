@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Piwigo\Cache\PermissionCacheInvalidator;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\CurrentPaths;
@@ -58,8 +57,8 @@ final readonly class ImageService
         $conn = DbConnection::build();
 
         return new CategoryService(
-            new CategoryRepository($conn),
-            new PermissionService(new PermissionRepository($conn), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository($conn))
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
+            new PermissionService(new PermissionRepository($conn), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class))
         );
     }
 
@@ -189,8 +188,6 @@ final readonly class ImageService
         foreach ($this->repo->findFormatsByImageIds($ids) as $row) {
             $formatImageId = $row['image_id'];
             $ext = $row['ext'];
-            assert(is_numeric($formatImageId) && is_string($ext));
-            $formatImageId = (int) $formatImageId;
 
             if (! isset($formatsOf[$formatImageId])) {
                 $formatsOf[$formatImageId] = [];

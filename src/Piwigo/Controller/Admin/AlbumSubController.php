@@ -11,7 +11,6 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\ElementSetRanksPageRenderer;
 use Piwigo\Admin\Tabsheet;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -54,7 +53,7 @@ final class AlbumSubController implements AdminSubControllerInterface
         $adminAlbumBaseUrl = $this->urlService->getRootUrl() . 'admin.php?page=album-' . $cat_id;
         CoreTabs::setContext(new CoreTabsContext(adminAlbumBaseUrl: $adminAlbumBaseUrl));
 
-        $categoryRow = new CategoryRepository(DbConnection::build())
+        $categoryRow = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class)
             ->findById($cat_id);
         if ($categoryRow === null) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()

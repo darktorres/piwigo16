@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Activity;
 
+use Doctrine\ORM\EntityRepository;
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
-use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 
 /**
@@ -15,8 +15,10 @@ use Piwigo\Db\Tables;
  * the greenfield P18 AuditService/SEC-57, which is a separate, dedicated
  * tamper-evident log). Also serves admin/user_activity.php's own
  * dashboard read queries.
+ *
+ * @extends EntityRepository<ActivityEntity>
  */
-final class ActivityRepository extends AbstractRepository
+final class ActivityRepository extends EntityRepository
 {
     /**
      * @param list<array{
@@ -33,41 +35,45 @@ final class ActivityRepository extends AbstractRepository
      */
     public function insertMany(array $rows): void
     {
-        foreach ($rows as $row) {
-            $this->conn->createQueryBuilder()
-                ->insert(Tables::activity())
-                ->values([
-                    'object' => ':object',
-                    'object_id' => ':objectId',
-                    'action' => ':action',
-                    'performed_by' => ':performedBy',
-                    'session_idx' => ':sessionIdx',
-                    'ip_address' => ':ipAddress',
-                    'occured_on' => ':occuredOn',
-                    'details' => ':details',
-                    'user_agent' => ':userAgent',
-                ])
-                ->setParameter('object', $row['object'])
-                ->setParameter('objectId', $row['objectId'])
-                ->setParameter('action', $row['action'])
-                ->setParameter('performedBy', $row['performedBy'])
-                ->setParameter('sessionIdx', $row['sessionIdx'])
-                ->setParameter('ipAddress', $row['ipAddress'])
-                ->setParameter('occuredOn', $row['occuredOn'])
-                ->setParameter('details', json_encode($row['details']))
-                ->setParameter('userAgent', $row['userAgent'])
-                ->executeStatement();
+        if ($rows === []) {
+            return;
         }
+
+        $em = $this->getEntityManager();
+        foreach ($rows as $row) {
+            $em->persist(new ActivityEntity(
+                object: $row['object'],
+                objectId: is_numeric($row['objectId']) ? (int) $row['objectId'] : 0,
+                action: $row['action'],
+                performedBy: $row['performedBy'],
+                sessionIdx: $row['sessionIdx'],
+                ipAddress: $row['ipAddress'],
+                occuredOn: $row['occuredOn'],
+                details: $row['details'],
+                userAgent: $row['userAgent'],
+            ));
+        }
+
+        $em->flush();
     }
 
     /**
-     * Number of logged actions per user, excluding object='system'.
+     * Number of logged actions per user, excluding object='system'. Stays
+     * plain DBAL rather than DQL -- phpstan-doctrine mis-infers a nullable
+     * scalar-selected column used in GROUP BY as always non-null (verified
+     * live: `performed_by` genuinely comes back NULL here for a
+     * non-'system' row whose acting user was later deleted, an
+     * ON-DELETE-SET-NULL FK case distinct from the system-row NULL case
+     * {@see findSystemObjectLogWithUsernames()} documents), which would
+     * make the real `is_numeric()` filter below misreported as dead code.
      *
      * @return array<int, int> performed_by => count
      */
     public function countByUser(): array
     {
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('performed_by', 'COUNT(*) AS counter')
             ->from(Tables::activity())
             ->where("object != 'system'")
@@ -89,28 +95,16 @@ final class ActivityRepository extends AbstractRepository
 
     public function findMinOccuredOn(): ?string
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('occured_on')
-            ->from(Tables::activity())
-            ->orderBy('activity_id', 'ASC')
-            ->setMaxResults(1)
-            ->executeQuery()
-            ->fetchOne();
-
-        return is_string($value) ? $value : null;
+        return $this->findOneBy([], [
+            'activityId' => 'ASC',
+        ])?->occuredOn;
     }
 
     public function findMaxOccuredOn(): ?string
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('occured_on')
-            ->from(Tables::activity())
-            ->orderBy('activity_id', 'DESC')
-            ->setMaxResults(1)
-            ->executeQuery()
-            ->fetchOne();
-
-        return is_string($value) ? $value : null;
+        return $this->findOneBy([], [
+            'activityId' => 'DESC',
+        ])?->occuredOn;
     }
 
     /**
@@ -121,26 +115,25 @@ final class ActivityRepository extends AbstractRepository
      */
     public function findActionCounts(?string $objectFilter): array
     {
-        $qb = $this->conn->createQueryBuilder()
-            ->select('object', 'action', 'COUNT(*) AS counter')
-            ->from(Tables::activity())
-            ->where("object != 'system'")
-            ->groupBy('action', 'object')
-            ->orderBy('object', 'ASC');
+        $qb = $this->createQueryBuilder('a')
+            ->select('a.object', 'a.action', 'COUNT(a.activityId) AS counter')
+            ->where("a.object != 'system'")
+            ->groupBy('a.action', 'a.object')
+            ->orderBy('a.object', 'ASC');
 
         if ($objectFilter !== null) {
-            $qb->andWhere('object = :objectFilter')
+            $qb->andWhere('a.object = :objectFilter')
                 ->setParameter('objectFilter', $objectFilter);
         }
 
-        $rows = $qb->executeQuery()
-            ->fetchAllAssociative();
+        $rows = $qb->getQuery()
+            ->getResult();
 
         return array_map(
             static fn (array $row): array => [
-                'object' => is_string($row['object']) ? $row['object'] : '',
-                'action' => is_string($row['action']) ? $row['action'] : '',
-                'counter' => is_numeric($row['counter']) ? (int) $row['counter'] : 0,
+                'object' => $row['object'],
+                'action' => $row['action'],
+                'counter' => $row['counter'],
             ],
             $rows
         );
@@ -151,7 +144,8 @@ final class ActivityRepository extends AbstractRepository
      * user's own username -- used only by the CSV export
      * (admin/user_activity.php's `type=download_logs`). $usernameColumn/
      * $idColumn are the configurable DB column names (see
-     * \Piwigo\Config\CurrentConfig::userFields()), not user-controlled.
+     * \Piwigo\Config\CurrentConfig::userFields()), not user-controlled --
+     * `users` is never ORM-mapped, so this join stays plain DBAL.
      *
      * `details` stays the raw JSON text here, not decoded to `?array` --
      * the CSV export writes it out as one opaque column value, unlike
@@ -162,7 +156,9 @@ final class ActivityRepository extends AbstractRepository
      */
     public function findUserObjectLogWithUsernames(string $usernameColumn, string $idColumn): array
     {
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('activity_id', 'performed_by', 'object', 'object_id', 'action', 'ip_address', 'occured_on', 'details', 'u.' . $usernameColumn . ' AS username')
             ->from(Tables::activity(), 'a')
             ->innerJoin('a', Tables::users(), 'u', 'a.performed_by = u.' . $idColumn)
@@ -201,7 +197,9 @@ final class ActivityRepository extends AbstractRepository
      */
     public function findSystemObjectLogWithUsernames(string $usernameColumn, string $idColumn): array
     {
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('activity_id', 'performed_by', 'object_id', 'action', 'occured_on', 'details', "IF(performed_by = 0 OR performed_by IS NULL, 'System', u." . $usernameColumn . ') AS username')
             ->from(Tables::activity(), 'a')
             ->leftJoin('a', Tables::users(), 'u', 'a.performed_by = u.' . $idColumn)

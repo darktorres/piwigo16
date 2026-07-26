@@ -85,9 +85,10 @@ final class ConfigServiceTest extends IntegrationTestCase
      * ConfigService::allRowsFromCacheOrDb() caches the bulk load's
      * param => value map in CachePools::config() -- this is the real test
      * of both halves of that design: a write that bypasses ConfigService
-     * entirely (this codebase's real raw-SQL config writer,
-     * MenubarLayoutRepository) leaves the cache stale until a real
-     * ConfigService write clears it.
+     * entirely (this codebase's real raw config writer, ConfigRepository::
+     * upsert() called directly, matching Admin\MenubarPageRenderer's own
+     * call site) leaves the cache stale until a real ConfigService write
+     * clears it.
      */
     public function test_loadConfFromDb_caches_the_bulk_load_until_a_write_invalidates_it(): void
     {
@@ -100,7 +101,8 @@ final class ConfigServiceTest extends IntegrationTestCase
         // Write directly through the repository, bypassing ConfigService's
         // own cache-clearing (and its encode() -- json_encode() the value
         // by hand here, matching what a real raw writer like
-        // MenubarLayoutRepository now does).
+        // Admin\MenubarPageRenderer's own ConfigRepository::upsert() call
+        // does).
         $writtenAroundTheCache = json_encode('Written Around The Cache');
         self::assertIsString($writtenAroundTheCache);
         $repo->upsert('gallery_title', $writtenAroundTheCache);

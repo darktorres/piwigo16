@@ -139,7 +139,7 @@ namespace Piwigo\Tests\Integration {
             Kernel::boot();
 
             $this->conn = DbConnection::build();
-            $this->repo = new ExtensionRepository($this->conn);
+            $this->repo = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
             $this->lifecycle = new ExtensionLifecycle($this->repo, new PemCatalog(new ZipExtractor()), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository()));
 
             CurrentConfig::setEnableExtensionsInstall(true);

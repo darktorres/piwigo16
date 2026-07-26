@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Piwigo\Db\AbstractRepository;
+use Doctrine\ORM\EntityRepository;
+use Piwigo\Core\Env;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\ImageFormat;
@@ -17,20 +19,50 @@ use Piwigo\Image\Projection\ImageFormat;
  * with no DB access of their own and live on {@see ImageService} instead,
  * same Repository=DB-only/Service=business-logic split as every other P19
  * domain.
+ *
+ * Owns `images` ({@see ImageEntity}) and `image_format`
+ * ({@see ImageFormatEntity}) -- only the single-row/simple-list methods
+ * against those two tables go through DQL; every other method here is a
+ * bulk id-list operation (raw string-concatenated `IN (...)`, matching
+ * the original) or a cross-domain read/write into a table another
+ * repository owns (`categories`, `image_category`, `image_tag`,
+ * `comments`, `favorites`, `rate`, `caddie`) -- those stay plain DBAL via
+ * $this->getEntityManager()->getConnection(), same "mixed repository"
+ * shape Tag/Category's own conversions established, skewed further
+ * toward "stays raw" given how few of this repository's real methods are
+ * single-entity CRUD. `lounge`/`config` (the empty-lounge lock flag) are
+ * read/written raw for the same reason -- `config` specifically can't
+ * delegate to Config\ConfigRepository::upsert() the way
+ * Admin\MenubarPageRenderer's own config write can (that one is a plain
+ * upsert; the now-deleted Menu\MenubarLayoutRepository::saveLayout() this
+ * mirrors was the same shape): tryAcquireLoungeLock() needs real atomic
+ * INSERT-IGNORE claim semantics no find()+persist()+flush() sequence can
+ * provide (a race would let two processes both believe they won the
+ * lock), so it keeps the raw statement.
+ *
+ * @extends EntityRepository<ImageEntity>
  */
-final class ImageRepository extends AbstractRepository
+final class ImageRepository extends EntityRepository
 {
     /**
      * Deliberately avoids bumping `lastmodified` (the original's own SQL
      * comment, preserved) -- an image's "last modified" timestamp should
-     * reflect real edits, not visit counting.
+     * reflect real edits, not visit counting. A raw SQL fragment (not a
+     * bound parameter) is required for the self-assignment, which a mapped
+     * entity property write can't express -- stays raw DBAL, same
+     * reasoning as Auth\AuthRepository::saveLastVisitFromHistory(). Clears
+     * the identity map afterward since this bypasses the ORM for a row
+     * {@see ImageEntity} may already have cached.
      */
     public function incrementVisitCounter(int $imageId): void
     {
-        $this->conn->executeStatement(
-            'UPDATE ' . Tables::images() . ' SET hit = hit + 1, lastmodified = lastmodified WHERE id = ?',
-            [$imageId]
-        );
+        $em = $this->getEntityManager();
+        $em->getConnection()
+            ->executeStatement(
+                'UPDATE ' . Tables::images() . ' SET hit = hit + 1, lastmodified = lastmodified WHERE id = ?',
+                [$imageId]
+            );
+        $em->clear();
     }
 
     /**
@@ -39,41 +71,42 @@ final class ImageRepository extends AbstractRepository
      */
     public function updateCoi(int $imageId, ?string $coi): void
     {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::images())
-            ->set('coi', ':coi')
-            ->where('id = :id')
-            ->setParameter('coi', $coi)
-            ->setParameter('id', $imageId)
-            ->executeStatement();
+        $entity = $this->find($imageId);
+        if ($entity === null) {
+            return;
+        }
+
+        $entity->coi = $coi;
+        $this->getEntityManager()
+            ->flush();
     }
 
     /**
      * @param array<int, int|string> $imageIds
-     * @return list<array<string, mixed>>
+     * @return list<array{image_id: int, ext: string}>
      */
     public function findFormatsByImageIds(array $imageIds): array
     {
-        return $this->conn->executeQuery('
-SELECT
-    image_id,
-    ext
-  FROM ' . Tables::imageFormat() . '
-  WHERE image_id IN (' . implode(',', $imageIds) . ')
-;')->fetchAllAssociative();
+        if ($imageIds === []) {
+            return [];
+        }
+
+        return $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('f.imageId AS image_id', 'f.ext AS ext')
+            ->from(ImageFormatEntity::class, 'f')
+            ->where('f.imageId IN (:imageIds)')
+            ->setParameter('imageIds', $imageIds)
+            ->getQuery()
+            ->getResult();
     }
 
     public function findFormatById(int $formatId): ?ImageFormat
     {
-        $row = $this->conn->createQueryBuilder()
-            ->select('*')
-            ->from(Tables::imageFormat())
-            ->where('format_id = :formatId')
-            ->setParameter('formatId', $formatId)
-            ->executeQuery()
-            ->fetchAssociative();
+        $entity = $this->getEntityManager()
+            ->find(ImageFormatEntity::class, $formatId);
 
-        return $row === false ? null : ImageFormat::fromRow($row);
+        return $entity === null ? null : ImageFormat::fromEntity($entity);
     }
 
     /**
@@ -81,15 +114,16 @@ SELECT
      */
     public function findFormatsForImage(int $imageId): array
     {
-        $rows = $this->conn->createQueryBuilder()
-            ->select('*')
-            ->from(Tables::imageFormat())
-            ->where('image_id = :imageId')
+        $entities = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('f')
+            ->from(ImageFormatEntity::class, 'f')
+            ->where('f.imageId = :imageId')
             ->setParameter('imageId', $imageId)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getResult();
 
-        return array_map(ImageFormat::fromRow(...), $rows);
+        return array_map(ImageFormat::fromEntity(...), $entities);
     }
 
     /**
@@ -102,15 +136,16 @@ SELECT
             return [];
         }
 
-        $rows = $this->conn->createQueryBuilder()
-            ->select('*')
-            ->from(Tables::imageFormat())
-            ->where('image_id IN (:imageIds)')
+        $entities = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('f')
+            ->from(ImageFormatEntity::class, 'f')
+            ->where('f.imageId IN (:imageIds)')
             ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getResult();
 
-        return array_map(ImageFormat::fromRow(...), $rows);
+        return array_map(ImageFormat::fromEntity(...), $entities);
     }
 
     /**
@@ -119,7 +154,9 @@ SELECT
      */
     public function findPathsForFileDeletion(array $imageIds): array
     {
-        return $this->conn->executeQuery('
+        return $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT
     id,
     path,
@@ -136,27 +173,36 @@ SELECT
      * image_id; rate, caddie keyed on element_id) -- grouped by column
      * name here since the delete order between them has no FK dependency
      * (only the `images` row itself, deleted separately by
-     * {@see deleteImages()}, must come last).
+     * {@see deleteImages()}, must come last). `image_format` is one of
+     * this repository's own entity-mapped tables ({@see ImageFormatEntity})
+     * but this bulk cross-table sweep stays raw DBAL for all 7 uniformly
+     * -- clears the identity map once at the end rather than converting
+     * just the one table this repository happens to own.
      *
      * @param array<int, int|string> $ids
      */
     public function deleteElementReferences(array $ids): void
     {
         $idsStr = wordwrap(implode(', ', $ids), 80, "\n");
+        $conn = $this->getEntityManager()
+            ->getConnection();
 
         foreach ([Tables::comments(), Tables::imageCategory(), Tables::imageFormat(), Tables::imageTag(), Tables::favorites()] as $table) {
-            $this->conn->executeStatement('
+            $conn->executeStatement('
 DELETE FROM ' . $table . '
   WHERE image_id IN (' . $idsStr . ')
 ;');
         }
 
         foreach ([Tables::rate(), Tables::caddie()] as $table) {
-            $this->conn->executeStatement('
+            $conn->executeStatement('
 DELETE FROM ' . $table . '
   WHERE element_id IN (' . $idsStr . ')
 ;');
         }
+
+        $this->getEntityManager()
+            ->clear();
     }
 
     /**
@@ -164,10 +210,18 @@ DELETE FROM ' . $table . '
      */
     public function deleteImages(array $ids): void
     {
-        $this->conn->executeStatement('
-DELETE FROM ' . Tables::images() . '
-  WHERE id IN (' . wordwrap(implode(', ', $ids), 80, "\n") . ')
-;');
+        if ($ids === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(ImageEntity::class, 'i')
+            ->where('i.id IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -180,7 +234,7 @@ DELETE FROM ' . Tables::images() . '
     {
         $idsStr = wordwrap(implode(', ', $ids), 80, "\n");
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
 SELECT
     id
   FROM ' . Tables::categories() . '
@@ -193,7 +247,9 @@ SELECT
      */
     public function findLoungeRows(): array
     {
-        return $this->conn->executeQuery('
+        return $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT
     image_id,
     category_id
@@ -204,11 +260,12 @@ SELECT
 
     public function deleteLoungeUpTo(int $maxImageId): void
     {
-        $this->conn->executeStatement('
-DELETE
-  FROM ' . Tables::lounge() . '
-  WHERE image_id <= ' . $maxImageId . '
-;');
+        $this->getEntityManager()
+            ->getConnection()
+            ->executeStatement(
+                'DELETE FROM ' . Tables::lounge() . ' WHERE image_id <= ?',
+                [$maxImageId]
+            );
     }
 
     /**
@@ -219,23 +276,35 @@ DELETE
      * own ConfigService::hydrate() read path too, not just
      * findLoungeLockValue() below -- a bare unquoted value would also
      * break this INSERT's own double-quote-delimited SQL literal.
+     *
+     * Stays raw DBAL rather than delegating to Config\ConfigRepository::
+     * upsert() -- that method always finds-then-writes, which can't
+     * reproduce this INSERT IGNORE's real atomicity (two concurrent
+     * emptyLounge() runs could otherwise both believe they'd won the
+     * lock). Clears the identity map afterward since this bypasses the
+     * ORM for a row Config\ConfigEntry may already have cached.
      */
     public function tryAcquireLoungeLock(string $lockValue): void
     {
         $encodedLockValue = json_encode($lockValue);
         assert($encodedLockValue !== false);
 
-        $this->conn->executeStatement(
-            'INSERT IGNORE INTO ' . Tables::config() . ' SET param = ?, value = ?',
-            ['empty_lounge_running', $encodedLockValue]
-        );
+        $em = $this->getEntityManager();
+        $em->getConnection()
+            ->executeStatement(
+                'INSERT IGNORE INTO ' . Tables::config() . ' SET param = ?, value = ?',
+                ['empty_lounge_running', $encodedLockValue]
+            );
+        $em->clear();
     }
 
     public function findLoungeLockValue(): ?string
     {
-        $value = $this->conn->executeQuery(
-            'SELECT value FROM ' . Tables::config() . ' WHERE param = "empty_lounge_running"'
-        )->fetchOne();
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery(
+                'SELECT value FROM ' . Tables::config() . ' WHERE param = "empty_lounge_running"'
+            )->fetchOne();
 
         $decoded = is_string($value) ? json_decode($value, true) : null;
 
@@ -250,7 +319,7 @@ DELETE
     public function findExistingAssociations(array $images, array $categories): array
     {
         $existing = [];
-        foreach ($this->conn->executeQuery('
+        foreach ($this->getEntityManager()->getConnection()->executeQuery('
 SELECT
     image_id,
     category_id
@@ -273,7 +342,9 @@ SELECT
      */
     public function findMaxRanksByCategory(array $categories): array
     {
-        $rows = $this->conn->executeQuery('
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT
     category_id,
     MAX(`rank`) AS max_rank
@@ -299,7 +370,7 @@ SELECT
      */
     public function findDissociableImageIds(array $images, int|string $category): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
 SELECT id
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::images() . ' ON image_id = id
@@ -317,12 +388,15 @@ SELECT id
      */
     public function deleteImageCategoryLinks(array $imageIds, int|string $category): void
     {
-        $this->conn->executeStatement('
+        $em = $this->getEntityManager();
+        $em->getConnection()
+            ->executeStatement('
 DELETE
   FROM ' . Tables::imageCategory() . '
   WHERE category_id = ' . $category . '
     AND image_id IN (' . implode(',', $imageIds) . ')
 ');
+        $em->clear();
     }
 
     /**
@@ -353,7 +427,10 @@ DELETE ' . Tables::imageCategory() . '.*
     AND (storage_category_id IS NULL OR storage_category_id != category_id)
 ;';
 
-        $this->conn->executeStatement($query);
+        $em = $this->getEntityManager();
+        $em->getConnection()
+            ->executeStatement($query);
+        $em->clear();
     }
 
     /**
@@ -361,7 +438,7 @@ DELETE ' . Tables::imageCategory() . '.*
      */
     public function findImageIdsWithoutMd5sum(): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery('
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
 SELECT id
   FROM ' . Tables::images() . '
   WHERE md5sum is null
@@ -374,7 +451,9 @@ SELECT id
      */
     public function findPathsForMd5sum(array $ids): array
     {
-        $paths = $this->conn->executeQuery('
+        $paths = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT
     id,
     path
@@ -387,14 +466,18 @@ SELECT
 
     public function countAllImages(): int
     {
-        $count = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . Tables::images() . ';')->fetchOne();
+        $count = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('SELECT COUNT(*) FROM ' . Tables::images() . ';')->fetchOne();
 
         return is_numeric($count) ? (int) $count : 0;
     }
 
     public function countImagesInCategories(): int
     {
-        $count = $this->conn->executeQuery('SELECT COUNT(DISTINCT(image_id)) FROM ' . Tables::imageCategory() . ';')->fetchOne();
+        $count = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('SELECT COUNT(DISTINCT(image_id)) FROM ' . Tables::imageCategory() . ';')->fetchOne();
 
         return is_numeric($count) ? (int) $count : 0;
     }
@@ -404,7 +487,9 @@ SELECT
      */
     public function findLoungedImageIds(): array
     {
-        return $this->conn->executeQuery('SELECT image_id FROM ' . Tables::lounge() . ';')->fetchFirstColumn();
+        return $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('SELECT image_id FROM ' . Tables::lounge() . ';')->fetchFirstColumn();
     }
 
     /**
@@ -429,7 +514,7 @@ SELECT
   ORDER BY id ASC
 ;';
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery($query)->fetchFirstColumn());
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery($query)->fetchFirstColumn());
     }
 
     /**
@@ -437,22 +522,27 @@ SELECT
      */
     public function touchLastmodified(array $imageIds): void
     {
-        $this->conn->executeStatement('
-UPDATE ' . Tables::images() . '
-  SET lastmodified = NOW()
-  WHERE id IN (' . implode(',', $imageIds) . ')
-;');
+        if ($imageIds === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->update(ImageEntity::class, 'i')
+            ->set('i.lastmodified', ':now')
+            ->where('i.id IN (:imageIds)')
+            ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
+            ->setParameter('imageIds', $imageIds)
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     public function findById(int|string $imageId): ?Image
     {
-        $rows = $this->conn->executeQuery('
-SELECT *
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $imageId . '
-;')->fetchAllAssociative();
+        $entity = $this->find((int) $imageId);
 
-        return isset($rows[0]) ? Image::fromRow($rows[0]) : null;
+        return $entity === null ? null : Image::fromEntity($entity);
     }
 
     /**
@@ -461,26 +551,23 @@ SELECT *
      */
     public function findByPath(string $path): ?Image
     {
-        $row = $this->conn->createQueryBuilder()
-            ->select('*')
-            ->from(Tables::images())
-            ->where('path = :path')
-            ->setParameter('path', $path)
-            ->executeQuery()
-            ->fetchAssociative();
+        $entity = $this->findOneBy([
+            'path' => $path,
+        ]);
 
-        return $row === false ? null : Image::fromRow($row);
+        return $entity === null ? null : Image::fromEntity($entity);
     }
 
     public function updateRotation(int $imageId, int $rotationCode): void
     {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::images())
-            ->set('rotation', ':rotation')
-            ->where('id = :id')
-            ->setParameter('rotation', $rotationCode)
-            ->setParameter('id', $imageId)
-            ->executeStatement();
+        $entity = $this->find($imageId);
+        if ($entity === null) {
+            return;
+        }
+
+        $entity->rotation = $rotationCode;
+        $this->getEntityManager()
+            ->flush();
     }
 
     /**
@@ -495,21 +582,23 @@ SELECT *
             return [];
         }
 
-        $rows = $this->conn->executeQuery('
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT *
   FROM ' . Tables::images() . '
   WHERE id IN (:ids)
 ;', [
-            'ids' => $ids,
-        ], [
-            'ids' => ArrayParameterType::STRING,
-        ])->fetchAllAssociative();
+                'ids' => $ids,
+            ], [
+                'ids' => ArrayParameterType::STRING,
+            ])->fetchAllAssociative();
 
         $byId = [];
         foreach ($rows as $row) {
             $id = $row['id'] ?? null;
             if (is_numeric($id)) {
-                $byId[(int) $id] = Image::fromRow($row);
+                $byId[(int) $id] = \Piwigo\Image\Projection\Image::fromRow($row);
             }
         }
 
@@ -525,7 +614,7 @@ SELECT *
             return;
         }
 
-        $this->batchWriter()
+        new BatchWriter($this->getEntityManager()->getConnection())
             ->massInsert(Tables::lounge(), array_keys($inserts[0]), $inserts, [
                 'ignore' => true,
             ]);
@@ -540,8 +629,10 @@ SELECT *
             return;
         }
 
-        $this->batchWriter()
+        new BatchWriter($this->getEntityManager()->getConnection())
             ->massInsert(Tables::imageCategory(), array_keys($inserts[0]), $inserts);
+        $this->getEntityManager()
+            ->clear();
     }
 
     /**
@@ -549,7 +640,7 @@ SELECT *
      */
     public function massUpdateMd5sums(array $updates): void
     {
-        $this->batchWriter()
+        new BatchWriter($this->getEntityManager()->getConnection())
             ->massUpdate(
                 Tables::images(),
                 [
@@ -558,19 +649,21 @@ SELECT *
                 ],
                 $updates
             );
+        $this->getEntityManager()
+            ->clear();
     }
 
     public function updateDimensions(int $imageId, int $width, int $height): void
     {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::images())
-            ->set('width', ':width')
-            ->set('height', ':height')
-            ->where('id = :id')
-            ->setParameter('width', $width)
-            ->setParameter('height', $height)
-            ->setParameter('id', $imageId)
-            ->executeStatement();
+        $entity = $this->find($imageId);
+        if ($entity === null) {
+            return;
+        }
+
+        $entity->width = $width;
+        $entity->height = $height;
+        $this->getEntityManager()
+            ->flush();
     }
 
     /**
@@ -578,7 +671,7 @@ SELECT *
      */
     public function massUpdateImageCategoryRanks(array $datas): void
     {
-        $this->batchWriter()
+        new BatchWriter($this->getEntityManager()->getConnection())
             ->massUpdate(
                 Tables::imageCategory(),
                 [
@@ -587,5 +680,7 @@ SELECT *
                 ],
                 $datas
             );
+        $this->getEntityManager()
+            ->clear();
     }
 }

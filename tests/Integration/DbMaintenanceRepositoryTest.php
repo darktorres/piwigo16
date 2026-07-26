@@ -42,7 +42,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new DbMaintenanceRepository($this->conn);
+        $this->repo = new DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
     }
 
     public function test_purge_history_detail_deletes_every_row(): void

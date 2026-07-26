@@ -10,7 +10,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeImage;
-use Piwigo\Rate\RateRepository;
 
 /**
  * Ported from admin/rating.php (page slug "rating").
@@ -74,7 +73,7 @@ final class RatingPageRenderer
 
         /** @var array<string, string> $user_fields */
         $user_fields = \Piwigo\Config\CurrentConfig::userFields();
-        $rate_repository = new RateRepository($conn);
+        $rate_repository = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Rate\RateEntity::class);
 
         $usernames_by_id = $rate_repository->findUsernamesById($user_fields['id'], $user_fields['username']);
         $users = [];

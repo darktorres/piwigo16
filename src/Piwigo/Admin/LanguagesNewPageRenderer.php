@@ -61,7 +61,7 @@ final class LanguagesNewPageRenderer
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;
 
-        $extension_repository = new ExtensionRepository(DbConnection::build());
+        $extension_repository = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()));
         $pem_catalog = new PemCatalog(new ZipExtractor());
         $extension_scanner = new ExtensionScanner();
         $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService, $this->configService);

@@ -58,7 +58,7 @@ final class RedirectService implements RedirectServiceInterface
      * DRY-extracted (Legacy Coupling Retirement Phase 8, 8a) -- was 3
      * identical `new UserService(new UserRepository(DbConnection::build()),
      * new GroupRepository(DbConnection::build()), new MailService(), new
-     * ActivityService(new ActivityRepository(DbConnection::build())), new
+     * ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), new
      * HtmlService(), DbConnection::build())` chains inline in
      * redirectHtml() below.
      */

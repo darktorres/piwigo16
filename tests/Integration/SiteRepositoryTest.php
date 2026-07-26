@@ -31,7 +31,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $this->repo = new SiteRepository(DbConnection::build());
+        $this->repo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Site\SiteEntity::class);
     }
 
     #[\Override]
@@ -79,7 +79,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
 
     public function test_find_all_includes_the_seeded_local_site(): void
     {
-        $rows = $this->repo->findAll();
+        $rows = $this->repo->findAllSites();
 
         self::assertNotSame([], $rows);
         $urls = array_column($rows, 'galleriesUrl');
@@ -95,7 +95,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         $url = 'p17-test-' . bin2hex(random_bytes(4));
         $this->repo->insert($url);
 
-        $urls = array_column($this->repo->findAll(), 'galleriesUrl');
+        $urls = array_column($this->repo->findAllSites(), 'galleriesUrl');
 
         self::assertContains($url, $urls);
     }

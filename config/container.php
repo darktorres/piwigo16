@@ -7,12 +7,17 @@ use Doctrine\ORM\EntityManagerInterface;
 use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger as MonologLogger;
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\PiwigoInfosSender;
 use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Cache\CacheFactory;
+use Piwigo\Category\CategoryEntity;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
@@ -29,16 +34,28 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Feed\FeedEntity;
+use Piwigo\Feed\FeedRepository;
 use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupRepository;
+use Piwigo\History\HistoryEntity;
+use Piwigo\History\HistoryRepository;
 use Piwigo\Html\HtmlService;
+use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Lang\LangRepository;
 use Piwigo\Lang\LanguageEntity;
 use Piwigo\Mail\MailService;
+use Piwigo\PluginConfig\PluginEntity;
+use Piwigo\PluginConfig\PluginRepository;
+use Piwigo\Rate\RateEntity;
+use Piwigo\Rate\RateRepository;
 use Piwigo\Routing\Router;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
+use Piwigo\Site\SiteEntity;
+use Piwigo\Site\SiteRepository;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\Template;
@@ -234,4 +251,22 @@ return [
     TagRepository::class => factory(static fn (EntityManagerInterface $em): TagRepository => $em->getRepository(TagEntity::class)),
 
     UserRepository::class => factory(static fn (EntityManagerInterface $em): UserRepository => $em->getRepository(UserInfoEntity::class)),
+
+    ImageRepository::class => factory(static fn (EntityManagerInterface $em): ImageRepository => $em->getRepository(ImageEntity::class)),
+
+    CategoryRepository::class => factory(static fn (EntityManagerInterface $em): CategoryRepository => $em->getRepository(CategoryEntity::class)),
+
+    SiteRepository::class => factory(static fn (EntityManagerInterface $em): SiteRepository => $em->getRepository(SiteEntity::class)),
+
+    FeedRepository::class => factory(static fn (EntityManagerInterface $em): FeedRepository => $em->getRepository(FeedEntity::class)),
+
+    ActivityRepository::class => factory(static fn (EntityManagerInterface $em): ActivityRepository => $em->getRepository(ActivityEntity::class)),
+
+    CommentRepository::class => factory(static fn (EntityManagerInterface $em): CommentRepository => $em->getRepository(CommentEntity::class)),
+
+    PluginRepository::class => factory(static fn (EntityManagerInterface $em): PluginRepository => $em->getRepository(PluginEntity::class)),
+
+    RateRepository::class => factory(static fn (EntityManagerInterface $em): RateRepository => $em->getRepository(RateEntity::class)),
+
+    HistoryRepository::class => factory(static fn (EntityManagerInterface $em): HistoryRepository => $em->getRepository(HistoryEntity::class)),
 ];

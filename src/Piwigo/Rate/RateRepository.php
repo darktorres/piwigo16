@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Rate;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\ORM\EntityRepository;
 use Piwigo\Core\Env;
-use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 use Piwigo\Rate\Projection\Rate;
 
@@ -16,16 +16,24 @@ use Piwigo\Rate\Projection\Rate;
  * touch that stays inline here rather than becoming a new `ImageRepository`
  * dependency, same "thin cross-domain touch" precedent as History/
  * Activity's own single-column reads (see docs/plan/manifest.yaml's P18
- * entry).
+ * entry). Owns `rate` ({@see RateEntity}, composite PK) -- only the
+ * single/simple-condition write methods against it go through DQL; every
+ * read here (including bulk list/aggregate reads of `rate` itself) stays
+ * plain DBAL via $this->getEntityManager()->getConnection(), same "mixed
+ * repository" shape Image/Category's own conversions established.
+ *
+ * @extends EntityRepository<RateEntity>
  */
-final class RateRepository extends AbstractRepository
+final class RateRepository extends EntityRepository
 {
     /**
      * @return list<int>
      */
     public function findElementIdsForUserAndAnonymousId(int $userId, string $anonymousId): array
     {
-        $ids = $this->conn->createQueryBuilder()
+        $ids = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('element_id')
             ->from(Tables::rate())
             ->where('user_id = :userId')
@@ -47,28 +55,34 @@ final class RateRepository extends AbstractRepository
             return;
         }
 
-        $this->conn->createQueryBuilder()
-            ->delete(Tables::rate())
-            ->where('user_id = :userId')
-            ->andWhere('anonymous_id = :anonymousId')
-            ->andWhere('element_id IN (:elementIds)')
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(RateEntity::class, 'r')
+            ->where('r.userId = :userId')
+            ->andWhere('r.anonymousId = :anonymousId')
+            ->andWhere('r.elementId IN (:elementIds)')
             ->setParameter('userId', $userId)
             ->setParameter('anonymousId', $anonymousId)
-            ->setParameter('elementIds', $elementIds, ArrayParameterType::INTEGER)
-            ->executeStatement();
+            ->setParameter('elementIds', $elementIds)
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     public function reassignAnonymousId(int $userId, string $oldAnonymousId, string $newAnonymousId): void
     {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::rate())
-            ->set('anonymous_id', ':newAnonymousId')
-            ->where('user_id = :userId')
-            ->andWhere('anonymous_id = :oldAnonymousId')
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->update(RateEntity::class, 'r')
+            ->set('r.anonymousId', ':newAnonymousId')
+            ->where('r.userId = :userId')
+            ->andWhere('r.anonymousId = :oldAnonymousId')
             ->setParameter('newAnonymousId', $newAnonymousId)
             ->setParameter('userId', $userId)
             ->setParameter('oldAnonymousId', $oldAnonymousId)
-            ->executeStatement();
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -79,19 +93,22 @@ final class RateRepository extends AbstractRepository
      */
     public function deleteExistingRate(int $elementId, int $userId, ?string $anonymousId): void
     {
-        $qb = $this->conn->createQueryBuilder()
-            ->delete(Tables::rate())
-            ->where('element_id = :elementId')
-            ->andWhere('user_id = :userId')
+        $em = $this->getEntityManager();
+        $qb = $em->createQueryBuilder()
+            ->delete(RateEntity::class, 'r')
+            ->where('r.elementId = :elementId')
+            ->andWhere('r.userId = :userId')
             ->setParameter('elementId', $elementId)
             ->setParameter('userId', $userId);
 
         if ($anonymousId !== null) {
-            $qb->andWhere('anonymous_id = :anonymousId')
+            $qb->andWhere('r.anonymousId = :anonymousId')
                 ->setParameter('anonymousId', $anonymousId);
         }
 
-        $qb->executeStatement();
+        $qb->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     public function insertRate(int $elementId, int $userId, string $anonymousId, int $rate): void
@@ -102,21 +119,15 @@ final class RateRepository extends AbstractRepository
         // freeze, so a fresh rate inserted during a test would silently
         // sort before/after PIWIGO_TEST_NOW-anchored fixture dates
         // depending on which is chronologically later.
-        $this->conn->createQueryBuilder()
-            ->insert(Tables::rate())
-            ->values([
-                'user_id' => ':userId',
-                'anonymous_id' => ':anonymousId',
-                'element_id' => ':elementId',
-                'rate' => ':rate',
-                'date' => ':date',
-            ])
-            ->setParameter('userId', $userId)
-            ->setParameter('anonymousId', $anonymousId)
-            ->setParameter('elementId', $elementId)
-            ->setParameter('rate', $rate)
-            ->setParameter('date', Env::now()->format('Y-m-d'))
-            ->executeStatement();
+        $em = $this->getEntityManager();
+        $em->persist(new RateEntity(
+            elementId: $elementId,
+            userId: $userId,
+            anonymousId: $anonymousId,
+            rate: $rate,
+            date: Env::now()->format('Y-m-d'),
+        ));
+        $em->flush();
     }
 
     /**
@@ -126,7 +137,9 @@ final class RateRepository extends AbstractRepository
      */
     public function findRateSummaries(): array
     {
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('element_id', 'COUNT(rate) AS rcount', 'SUM(rate) AS rsum')
             ->from(Tables::rate())
             ->groupBy('element_id')
@@ -153,8 +166,14 @@ final class RateRepository extends AbstractRepository
      */
     public function updateRatingScores(array $updates): void
     {
+        if ($updates === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $conn = $em->getConnection();
         foreach ($updates as $update) {
-            $this->conn->createQueryBuilder()
+            $conn->createQueryBuilder()
                 ->update(Tables::images())
                 ->set('rating_score', ':score')
                 ->where('id = :id')
@@ -162,6 +181,10 @@ final class RateRepository extends AbstractRepository
                 ->setParameter('id', $update['id'])
                 ->executeStatement();
         }
+
+        // Bypasses the ORM -- images is Image\ImageEntity's own table
+        // (this repository doesn't own it, just touches this one column).
+        $em->clear();
     }
 
     /**
@@ -172,7 +195,9 @@ final class RateRepository extends AbstractRepository
      */
     public function findImageIdsWithStaleRatingScore(): array
     {
-        $ids = $this->conn->createQueryBuilder()
+        $ids = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('i.id')
             ->from(Tables::images(), 'i')
             ->leftJoin('i', Tables::rate(), 'r', 'i.id = r.element_id')
@@ -193,12 +218,15 @@ final class RateRepository extends AbstractRepository
             return;
         }
 
-        $this->conn->createQueryBuilder()
+        $em = $this->getEntityManager();
+        $em->getConnection()
+            ->createQueryBuilder()
             ->update(Tables::images())
             ->set('rating_score', 'NULL')
             ->where('id IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
             ->executeStatement();
+        $em->clear();
     }
 
     /**
@@ -206,7 +234,9 @@ final class RateRepository extends AbstractRepository
      */
     public function findUsernamesById(string $idColumn, string $usernameColumn): array
     {
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select($idColumn . ' AS id', $usernameColumn . ' AS username')
             ->from(Tables::users())
             ->executeQuery()
@@ -230,7 +260,9 @@ final class RateRepository extends AbstractRepository
      */
     public function countRatedElements(?int $filterUserId, bool $excludeFilterUser, array $categoryIds): int
     {
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('COUNT(DISTINCT r.element_id)')
             ->from(Tables::rate(), 'r');
 
@@ -264,7 +296,9 @@ final class RateRepository extends AbstractRepository
      */
     public function findRatingReport(?int $filterUserId, bool $excludeFilterUser, array $categoryIds, string $orderBySql, int $limit, int $offset): array
     {
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select(
                 'i.id',
                 'i.path',
@@ -318,7 +352,9 @@ final class RateRepository extends AbstractRepository
      */
     public function findRateRowsForElement(int $elementId): array
     {
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('*')
             ->from(Tables::rate())
             ->where('element_id = :elementId')
@@ -332,7 +368,9 @@ final class RateRepository extends AbstractRepository
 
     public function countAllRates(): int
     {
-        $value = $this->conn->createQueryBuilder()
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('COUNT(*)')
             ->from(Tables::rate())
             ->executeQuery()
@@ -350,7 +388,9 @@ final class RateRepository extends AbstractRepository
      */
     public function findUsersWithStatusByIdUsername(string $idColumn, string $usernameColumn): array
     {
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('DISTINCT u.' . $idColumn . ' AS id', 'u.' . $usernameColumn . ' AS name', 'ui.status')
             ->from(Tables::users(), 'u')
             ->innerJoin('u', Tables::userInfos(), 'ui', 'u.' . $idColumn . ' = ui.user_id')
@@ -378,7 +418,9 @@ final class RateRepository extends AbstractRepository
      */
     public function findAllRatesOrderedByDateDesc(): array
     {
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('*')
             ->from(Tables::rate())
             ->orderBy('date', 'DESC')
@@ -403,7 +445,9 @@ final class RateRepository extends AbstractRepository
             return [];
         }
 
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('id', 'name', 'file', 'path', 'representative_ext', 'level')
             ->from(Tables::images())
             ->where('id IN (:ids)')
@@ -429,7 +473,9 @@ final class RateRepository extends AbstractRepository
      */
     public function findAverageRatePerElement(): array
     {
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('element_id', 'AVG(rate) AS avg_rate')
             ->from(Tables::rate())
             ->groupBy('element_id')
@@ -451,7 +497,9 @@ final class RateRepository extends AbstractRepository
      */
     public function findTopRatedImageIds(int $limit): array
     {
-        $ids = $this->conn->createQueryBuilder()
+        $ids = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('id')
             ->from(Tables::images())
             ->orderBy('rating_score', 'DESC')
@@ -482,7 +530,9 @@ final class RateRepository extends AbstractRepository
      */
     public function findRateSummaryForElement(int $elementId): array
     {
-        $row = $this->conn->createQueryBuilder()
+        $row = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('COUNT(rate) AS count', 'ROUND(AVG(rate), 2) AS average')
             ->from(Tables::rate())
             ->where('element_id = :elementId')
@@ -511,7 +561,9 @@ final class RateRepository extends AbstractRepository
      */
     public function findUserRate(int $elementId, int $userId, ?string $anonymousId): ?int
     {
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('rate')
             ->from(Tables::rate())
             ->where('element_id = :elementId')

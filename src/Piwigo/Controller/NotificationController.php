@@ -42,7 +42,7 @@ final class NotificationController implements ControllerInterface
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_notification');
 
-        $feedRepo = new FeedRepository(DbConnection::build());
+        $feedRepo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Feed\FeedEntity::class);
         $feedId = $this->findAvailableFeedId($feedRepo);
         $urlService = $this->urlService;
 

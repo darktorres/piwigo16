@@ -8,7 +8,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Menu\BlockManager;
-use Piwigo\Menu\MenubarLayoutRepository;
 
 /**
  * Ported from admin/menubar.php (page slug "menubar").
@@ -93,7 +92,18 @@ final class MenubarPageRenderer
             self::makeConsecutive($mb_conf);
 
             $mb_conf_db = $mb_conf;
-            new MenubarLayoutRepository(DbConnection::build())->saveLayout($menu->get_id(), $mb_conf_db);
+            $encodedPositions = json_encode($mb_conf_db);
+            assert($encodedPositions !== false);
+            \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Config\ConfigEntry::class)
+                ->upsert('blk_' . $menu->get_id(), $encodedPositions);
+
+            // saveLayout() used to do this -- bypasses ConfigService::
+            // confUpdateParam() entirely (no DI dependency here), so its
+            // own cache-clearing never fires; without this,
+            // ConfigService::allRowsFromCacheOrDb() would keep serving the
+            // pre-save layout to every request until some unrelated config
+            // write happened to clear the pool.
+            \Piwigo\Cache\CachePools::config()->clear();
 
             $template->assign(
                 [

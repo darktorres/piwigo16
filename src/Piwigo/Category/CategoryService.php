@@ -16,7 +16,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionService;
@@ -71,7 +70,7 @@ final readonly class CategoryService
      */
     private function imageService(ActivityLoggerInterface $activityLogger): ImageService
     {
-        return new ImageService(new ImageRepository(DbConnection::build()), $activityLogger);
+        return new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $activityLogger);
     }
 
     private function userRepository(): UserRepository
@@ -1438,7 +1437,7 @@ final readonly class CategoryService
      */
     public function getCategoryRepresentantProperties(int|string $imageId, UrlServiceInterface $urlService, ?string $size = null): array
     {
-        $row = new ImageRepository(DbConnection::build())->findById($imageId);
+        $row = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class)->findById($imageId);
         if ($row === null) {
             throw new \Exception("getCategoryRepresentantProperties(): image {$imageId} does not exist (stale representative_picture_id?)");
         }

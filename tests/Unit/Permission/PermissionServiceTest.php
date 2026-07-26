@@ -28,7 +28,7 @@ function makePermissionService(): PermissionService
     return new PermissionService(
         new PermissionRepository($conn),
         \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
-        new CategoryRepository($conn),
+        \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
     );
 }
 

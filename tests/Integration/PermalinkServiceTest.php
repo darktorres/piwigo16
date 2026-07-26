@@ -37,7 +37,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         PageState::reset();
         PageState::attachGlobals();
 
-        $this->repo = new PermalinkRepository(DbConnection::build());
+        $this->repo = new PermalinkRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()));
         $this->service = new PermalinkService($this->repo);
 
         $this->repo->clearCategoryPermalink(1);

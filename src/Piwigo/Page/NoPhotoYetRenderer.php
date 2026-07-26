@@ -65,16 +65,15 @@ final readonly class NoPhotoYetRenderer
                 $template = new Template($this->paths->root . 'themes', $user_theme);
                 \Piwigo\Template\CurrentTemplate::set($template);
 
-                if (isset($_GET['no_photo_yet'])) {
-                    if ($_GET['no_photo_yet'] === 'browse') {
-                        $_SESSION['no_photo_yet'] = 'browse';
-                        $this->redirectService->redirect($this->urlService->makeIndexUrl());
-                    }
+                $noPhotoYetAction = Request\NoPhotoYetRequest::fromGlobals()->action;
+                if ($noPhotoYetAction === 'browse') {
+                    $_SESSION['no_photo_yet'] = 'browse';
+                    $this->redirectService->redirect($this->urlService->makeIndexUrl());
+                }
 
-                    if ($_GET['no_photo_yet'] === 'deactivate') {
-                        $this->configService->confUpdateParam('no_photo_yet', 'false');
-                        $this->redirectService->redirect($this->urlService->makeIndexUrl());
-                    }
+                if ($noPhotoYetAction === 'deactivate') {
+                    $this->configService->confUpdateParam('no_photo_yet', 'false');
+                    $this->redirectService->redirect($this->urlService->makeIndexUrl());
                 }
 
                 header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());

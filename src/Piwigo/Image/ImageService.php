@@ -338,8 +338,8 @@ final readonly class ImageService
         }
 
         $execId = SessionService::get()->generateKey(4);
-        $requestMethod = $_REQUEST['method'] ?? null;
-        $apiSuffix = is_scalar($requestMethod) ? ' (API:' . $requestMethod . ')' : '';
+        $requestMethod = Request\EmptyLoungeRequest::fromGlobals()->requestMethod;
+        $apiSuffix = $requestMethod !== null ? ' (API:' . $requestMethod . ')' : '';
         $logger->debug(__FUNCTION__ . $apiSuffix . ', exec=' . $execId . ', begins');
 
         // if lounge is already being emptied, skip

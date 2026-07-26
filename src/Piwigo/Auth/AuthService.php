@@ -552,7 +552,7 @@ final readonly class AuthService
      * Creates an authentication key.
      *
      * @since 2.8
-     * @return array<string, mixed>|false false if auth keys are disabled or the user status is ineligible
+     * @return array{auth_key: string, user_id: int, created_on: string, duration: int, expired_on: string, key_type: string, auth_key_id: string}|false false if auth keys are disabled or the user status is ineligible
      */
     public function createUserAuthKey(int $userId, ?string $userStatus = null): array|false
     {

@@ -7,6 +7,12 @@ namespace Piwigo\Auth;
 /**
  * Piwigo's own "pwg_*" cookie storage -- distinct from the session cookie,
  * used for auto-login and small persisted UI preferences.
+ *
+ * setCookieVar()/getCookieVar() stay mixed by design: $_COOKIE itself is
+ * PHP-untyped (a crafted `cookie[]=a&cookie[]=b` request header parses into
+ * a nested array, same as $_GET/$_POST), not just "every real caller
+ * happens to pass a string" -- narrowing here would misrepresent
+ * attacker-controlled input as trusted.
  */
 final class CookieService
 {

@@ -34,8 +34,7 @@ final readonly class ApiKeyService
 
     /**
      * @since 16
-     * @return array<string, mixed> auth_key / apikey_secret / apikey_name /
-     *   user_id / created_on / duration / expired_on / key_type
+     * @return array{auth_key: string, apikey_secret: string, apikey_name: string, user_id: int, created_on: string, duration: int, key_type: string, expired_on: string}
      */
     public function create(int $userId, int $duration, string $keyName): array
     {
@@ -92,7 +91,7 @@ final readonly class ApiKeyService
 
     /**
      * @since 16
-     * @return false|array<int, array<string, mixed>>
+     * @return false|list<array{auth_key: string, apikey_secret: string, apikey_name: string, created_on: string, duration: ?int, expired_on: string, revoked_on: ?string, last_used_on: ?string, last_notified_on: ?string, created_on_format: string, expired_on_format: string, last_used_on_since: string, is_expired: bool, expiration: string, expired_on_since: string, revoked_on_since: ?string, revoked_on_message: ?string}>
      */
     public function get(int $userId): false|array
     {
@@ -167,7 +166,7 @@ final readonly class ApiKeyService
 
     /**
      * @since 16
-     * @return array<int, array<string, mixed>>|false
+     * @return list<array{auth_key: string, apikey_secret: string, apikey_name: string, created_on: string, duration: ?int, expired_on: string, revoked_on: ?string, last_used_on: ?string, last_notified_on: ?string, created_on_format: string, expired_on_format: string, last_used_on_since: string, is_expired: bool, expiration: string, expired_on_since: string, revoked_on_since: ?string, revoked_on_message: ?string}>|false
      */
     public function getAvailable(int $userId): array|false
     {

@@ -99,13 +99,12 @@ final class BatchManagerUnitPageRenderer
         // |                        unit mode form submission                      |
         // +-------------------------------------------------------------------+
 
-        if (isset($_POST['submit'])) {
+        $batchManagerUnitRequest = Request\BatchManagerUnitRequest::fromGlobals();
+
+        if ($batchManagerUnitRequest->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail($htmlRenderer, $this->redirectService);
-            new \Piwigo\Validation\InputValidator()
-                ->validate('element_ids', $_POST, false, '/^\d+(,\d+)*$/');
-            $element_ids_param = $_POST['element_ids'] ?? null;
-            $collection = explode(',', is_string($element_ids_param) ? $element_ids_param : '');
+            $collection = explode(',', $batchManagerUnitRequest->elementIds);
 
             $datas = [];
 
@@ -129,19 +128,19 @@ SELECT id, date_creation
                 $data = [];
 
                 $data['id'] = $row['id'];
-                $data['name'] = $_POST['name-' . $row_id_str];
-                $data['author'] = $_POST['author-' . $row_id_str];
-                $data['level'] = $_POST['level-' . $row_id_str];
+                $data['name'] = $batchManagerUnitRequest->post['name-' . $row_id_str] ?? null;
+                $data['author'] = $batchManagerUnitRequest->post['author-' . $row_id_str] ?? null;
+                $data['level'] = $batchManagerUnitRequest->post['level-' . $row_id_str] ?? null;
 
                 if (\Piwigo\Config\CurrentConfig::allowHtmlDescriptions()) {
-                    $data['comment'] = @$_POST['description-' . $row_id_str];
+                    $data['comment'] = $batchManagerUnitRequest->post['description-' . $row_id_str] ?? null;
                 } else {
-                    $description_post = $_POST['description-' . $row_id_str] ?? null;
+                    $description_post = $batchManagerUnitRequest->post['description-' . $row_id_str] ?? null;
                     $data['comment'] = strip_tags(is_string($description_post) ? $description_post : '');
                 }
 
-                if (($_POST['date_creation-' . $row_id_str] ?? '') !== '') {
-                    $data['date_creation'] = $_POST['date_creation-' . $row_id_str];
+                if (($batchManagerUnitRequest->post['date_creation-' . $row_id_str] ?? '') !== '') {
+                    $data['date_creation'] = $batchManagerUnitRequest->post['date_creation-' . $row_id_str];
                 } else {
                     $data['date_creation'] = null;
                 }
@@ -150,7 +149,7 @@ SELECT id, date_creation
 
                 // tags management
                 $tag_ids = [];
-                $raw_tags_post = $_POST['tags-' . $row_id_str] ?? null;
+                $raw_tags_post = $batchManagerUnitRequest->post['tags-' . $row_id_str] ?? null;
                 if ($raw_tags_post !== null && $raw_tags_post !== '' && $raw_tags_post !== '0' && $raw_tags_post !== []) {
                     if (is_array($raw_tags_post)) {
                         $raw_tags_post_strings = [];
@@ -184,31 +183,26 @@ SELECT id, date_creation
 
         // collection
         $collection = [];
-        if (isset($_POST['nb_photos_deleted'])) {
-            new \Piwigo\Validation\InputValidator()
-                ->validate('nb_photos_deleted', $_POST, false, '/^\d+$/');
-
+        if ($batchManagerUnitRequest->nbPhotosDeletedPresent) {
             // let's fake a collection (we don't know the image_ids so we use "null", we only
             // care about the number of items here)
-            $nb_photos_deleted = is_numeric($_POST['nb_photos_deleted']) ? (int) $_POST['nb_photos_deleted'] : 0;
-            $collection = array_fill(0, $nb_photos_deleted, null);
-        } elseif (isset($_POST['setSelected'])) {
+            $collection = array_fill(0, $batchManagerUnitRequest->nbPhotosDeleted, null);
+        } elseif ($batchManagerUnitRequest->isSetSelected) {
             // Here we don't use check_input_parameter because preg_match has a limit in
             // the repetitive pattern. Found a limit to 3276 but may depend on memory.
             //
             // check_input_parameter('whole_set', $_POST, false, '/^\d+(,\d+)*$/');
             //
             // Instead, let's break the input parameter into pieces and check pieces one by one.
-            $whole_set_param = $_POST['whole_set'] ?? null;
-            $collection = explode(',', is_string($whole_set_param) ? $whole_set_param : '');
+            $collection = explode(',', $batchManagerUnitRequest->wholeSet);
 
             foreach ($collection as $id) {
                 if (! (bool) preg_match('/^\d+$/', $id)) {
                     $htmlRenderer->fatalError('[Hacking attempt] the input parameter "whole_set" is not valid');
                 }
             }
-        } elseif (isset($_POST['selection']) && is_array($_POST['selection'])) {
-            $collection = $_POST['selection'];
+        } elseif ($batchManagerUnitRequest->selectionPresent) {
+            $collection = $batchManagerUnitRequest->selection;
         }
 
         // +-------------------------------------------------------------------+
@@ -248,10 +242,10 @@ SELECT id, date_creation
         $template->assign('ACTIVE_PLUGINS', array_keys(LoadedPlugins::get()));
 
         // how many items to display on this page
-        if (isset($_GET['display']) && $_GET['display'] !== '' && $_GET['display'] !== '0') {
+        if ($batchManagerUnitRequest->displayRequested) {
             // \Piwigo\Config\ConfigDb::confUpdateParam('batch_manager_images_per_page_unit' , intval($_GET['display']));
             // $nb_images = \Piwigo\Config\CurrentConfig::batchManagerImagesPerPageUnit();
-            $nb_images = is_numeric($_GET['display']) ? intval($_GET['display']) : 0;
+            $nb_images = $batchManagerUnitRequest->display;
         } elseif (in_array(\Piwigo\Config\CurrentConfig::batchManagerImagesPerPageUnit(), [5, 10, 50], true)) {
             $nb_images = \Piwigo\Config\CurrentConfig::batchManagerImagesPerPageUnit();
         } else {

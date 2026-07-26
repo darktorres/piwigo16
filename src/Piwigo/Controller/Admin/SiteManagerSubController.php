@@ -63,7 +63,9 @@ final class SiteManagerSubController implements AdminSubControllerInterface
                 ->fatalError('synchronization is disabled');
         }
 
-        if ($_POST !== [] or isset($_GET['action'])) {
+        $siteManagerRequest = Request\SiteManagerRequest::fromGlobals();
+
+        if ($siteManagerRequest->requiresCsrfCheck) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
         }
@@ -86,8 +88,8 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         // +-----------------------------------------------------------------------+
         // |                        new site creation form                         |
         // +-----------------------------------------------------------------------+
-        if (isset($_POST['submit']) and ! in_array($_POST['galleries_url'], [null, false, 0, '0', '', []], true) and is_string($_POST['galleries_url'])) {
-            $galleries_url_input = $_POST['galleries_url'];
+        if ($siteManagerRequest->newSiteGalleriesUrl !== null) {
+            $galleries_url_input = $siteManagerRequest->newSiteGalleriesUrl;
             $is_remote = $this->urlService->urlIsRemote($galleries_url_input);
             if ($is_remote) {
                 \Piwigo\Bootstrap\PresentationAccessor::htmlService()
@@ -119,15 +121,11 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         // +-----------------------------------------------------------------------+
         // |                            actions on site                            |
         // +-----------------------------------------------------------------------+
-        $site = null;
-        if (isset($_GET['site']) and is_numeric($_GET['site'])) {
-            $site = $_GET['site'];
-        }
-        if (isset($_GET['action']) and $site !== null) {
-            $site_id = (int) $site;
+        if ($siteManagerRequest->action !== null and $siteManagerRequest->siteId !== null) {
+            $site_id = $siteManagerRequest->siteId;
             $galleries_url = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Site\SiteEntity::class)
                 ->findGalleriesUrlById($site_id);
-            switch ($_GET['action']) {
+            switch ($siteManagerRequest->action) {
                 case 'delete':
 
                     \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->deleteSite($site_id, \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->urlService);

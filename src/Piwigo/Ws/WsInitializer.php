@@ -61,17 +61,7 @@ final class WsInitializer
         \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('get_history', PwgCore::historyGet(...));
 
         $requestFormat = 'rest';
-        $responseFormat = null;
-
-        if (isset($_GET['format'])) {
-            // $_GET['format'] could be an array for a malformed ?format[]=x
-            // request -- PwgServer::setEncoder() requires a string.
-            $responseFormat = is_string($_GET['format']) ? $_GET['format'] : '';
-        }
-
-        if (! isset($responseFormat)) {
-            $responseFormat = $requestFormat;
-        }
+        $responseFormat = Request\WsFormatRequest::fromGlobals()->responseFormat;
 
         $service = new PwgServer();
 
@@ -86,8 +76,6 @@ final class WsInitializer
         }
         $service->setHandler($requestFormat, $handler);
 
-        // $responseFormat can never be null here: it's either $_GET['format']
-        // or, per the isset() fallback above, $requestFormat ('rest').
         $encoder = null;
         switch ($responseFormat) {
             case 'rest':

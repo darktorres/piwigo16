@@ -150,7 +150,7 @@ final class StatsPageRenderer
     /**
      * Get the last unit of time for years, months, days and hours.
      *
-     * @return list<array<string, mixed>>
+     * @return list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}>
      */
     private static function getLast(Connection $conn, int $last_number = 60, string $type = 'year'): array
     {
@@ -210,6 +210,7 @@ SELECT
 
         $output = [];
         foreach ($conn->fetchAllAssociative($query) as $row) {
+            /** @var array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null} $row */
             $output[] = $row;
         }
 
@@ -241,18 +242,21 @@ ORDER BY
             $limit = ($last - 1) * 12 + (int) $date->format('n') - 1;
             $query .=
 ' LIMIT ' . (string) $limit;
+            /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> $result */
             $result = $conn->fetchAllAssociative($query . ';');
             $lastDate = $date->sub(new DateInterval('P' . ($last - 1) . 'Y' . ((int) $date->format('n') - 1) . 'M'));
             return self::setMissingValues('month', $result, $lastDate, new DateTime());
         }
 
-        if (count($conn->fetchAllAssociative($query . ';')) > 1) {
-            return self::setMissingValues('month', $conn->fetchAllAssociative($query . ';'));
+        /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> $allRows */
+        $allRows = $conn->fetchAllAssociative($query . ';');
+        if (count($allRows) > 1) {
+            return self::setMissingValues('month', $allRows);
         } else {
             $last_year_date = new DateTime();
             return self::setMissingValues(
                 'month',
-                $conn->fetchAllAssociative($query . ';'),
+                $allRows,
                 $last_year_date->sub(new DateInterval('P1Y')),
                 new DateTime()
             );
@@ -260,7 +264,7 @@ ORDER BY
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array{month?: list<array<int|string, float|int>>, avg: ?float}
      */
     private static function getMonthStats(Connection $conn): array
     {
@@ -294,6 +298,7 @@ ORDER BY
 ;';
 
         foreach ($conn->fetchAllAssociative($query) as $value) {
+            /** @var array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null} $value */
             $date = self::getDateObject($value);
             @$months[$date->format('Y/m/1')][] = $value;
         }
@@ -336,7 +341,7 @@ ORDER BY
 ;';
 
         $row = $conn->fetchNumeric($query);
-        $result['avg'] = is_array($row) ? $row[0] : null;
+        $result['avg'] = ($row !== false && is_numeric($row[0])) ? (float) $row[0] : null;
 
         return $result;
     }
@@ -349,7 +354,7 @@ ORDER BY
      * oldest, which is why the no-explicit-dates fallback below reads from
      * those two ends.
      *
-     * @param array<int, array<string, mixed>> $data
+     * @param array<int, array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> $data
      * @return float[]|int[]
      */
     public static function setMissingValues(string $unit, array $data, ?DateTime $firstDate = null, ?DateTime $lastDate = null): array
@@ -403,24 +408,34 @@ ORDER BY
      * this cascades through them in order rather than reading all 4
      * unconditionally.
      *
-     * @param array<string, mixed> $row
+     * year/month/day/hour are smallint/tinyint columns (schema), so a raw
+     * fetched value is int|string (native int under DBAL's mysqli driver,
+     * numeric string under its pgsql driver -- see DbConnection::params()),
+     * never a genuine string -- this used to check is_string() instead,
+     * which is always false for the native-int case and silently built an
+     * empty date-string segment (a real, previously-unnoticed bug: verified
+     * against the same table's own history_summary read in
+     * HistoryRepository, which already uses is_numeric() for this exact
+     * column).
+     *
+     * @param array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages?: int|string|null} $row
      */
     public static function getDateObject(array $row): DateTime
     {
         $year = $row['year'];
-        $date_string = is_string($year) ? $year : '';
+        $date_string = is_numeric($year) ? (string) $year : '';
 
         $month = $row['month'];
         if ($month !== null) {
-            $date_string = $date_string . '-' . (is_string($month) ? $month : '');
+            $date_string = $date_string . '-' . (is_numeric($month) ? (string) $month : '');
 
             $day = $row['day'];
             if ($day !== null) {
-                $date_string = $date_string . '-' . (is_string($day) ? $day : '');
+                $date_string = $date_string . '-' . (is_numeric($day) ? (string) $day : '');
 
                 $hour = $row['hour'];
                 if ($hour !== null) {
-                    $date_string = $date_string . ' ' . (is_string($hour) ? $hour : '') . ':00';
+                    $date_string = $date_string . ' ' . (is_numeric($hour) ? (string) $hour : '') . ':00';
                 }
             }
         } else {

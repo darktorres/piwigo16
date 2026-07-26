@@ -53,7 +53,9 @@ final class ProfileController implements ControllerInterface
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Classic);
 
-        if ($_POST !== []) {
+        $profileAction = Request\ProfileActionRequest::fromGlobals();
+
+        if ($profileAction->requiresCsrfCheck) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
         }
@@ -117,7 +119,7 @@ SELECT ' . implode(',', $fields) . '
         $template->assign('DEFAULT_USER_VALUES', $default_user_for_template);
 
         // Reset to default (Guest) custom settings
-        if (isset($_POST['reset_to_default'])) {
+        if ($profileAction->resetToDefault) {
             $userdata = array_merge($userdata, $default_user);
         }
 

@@ -72,44 +72,37 @@ final class ElementSetRanksPageRenderer
             'rank ASC' => Lang::t('Manual sort order'),
         ];
 
-        if (! isset($_GET['cat_id']) or ! is_numeric($_GET['cat_id'])) {
+        $elementSetRanksRequest = Request\ElementSetRanksRequest::fromGlobals();
+
+        if (! $elementSetRanksRequest->isCatIdValid) {
             trigger_error('missing cat_id param', E_USER_ERROR);
         }
 
-        $category_id = (int) $_GET['cat_id'];
+        $category_id = $elementSetRanksRequest->catId;
 
         // +-------------------------------------------------------------------+
         // |                       global mode form submission                 |
         // +-------------------------------------------------------------------+
 
-        $image_order_choices = ['default', 'rank', 'user_define'];
-        $image_order_choice = 'default';
+        $image_order_choice = $elementSetRanksRequest->imageOrderChoice;
 
-        if (isset($_POST['submit'])) {
+        if ($elementSetRanksRequest->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
-            if (isset($_POST['rank_of_image']) && is_array($_POST['rank_of_image'])) {
-                $rank_of_image = array_filter($_POST['rank_of_image'], is_numeric(...));
-                asort($rank_of_image, SORT_NUMERIC);
-
+            if ($elementSetRanksRequest->rankOfImage !== []) {
                 \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
                     ->saveImagesOrder(
                         $category_id,
-                        array_map(intval(...), array_keys($rank_of_image))
+                        array_map(intval(...), array_keys($elementSetRanksRequest->rankOfImage))
                     );
-            }
-
-            if (! in_array($_POST['image_order_choice'] ?? null, [null, false, 0, '0', '', []], true)
-                && in_array($_POST['image_order_choice'], $image_order_choices, true)) {
-                $image_order_choice = $_POST['image_order_choice'];
             }
 
             $message = Lang::t('Album updated successfully');
 
             $image_order = null;
             if ($image_order_choice === 'user_define') {
-                $post_image_order = isset($_POST['image_order']) && is_array($_POST['image_order']) ? $_POST['image_order'] : [];
+                $post_image_order = $elementSetRanksRequest->imageOrderFields;
                 for ($i = 0; $i < 3; $i++) {
                     $order_value = $post_image_order[$i] ?? null;
                     if (is_string($order_value) && $order_value !== '' && in_array($order_value, array_keys($sort_fields), true)) {
@@ -124,7 +117,7 @@ final class ElementSetRanksPageRenderer
 
                 $message = Lang::t('Images manual order was saved');
             }
-            \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()->saveImageOrder($category_id, $image_order, isset($_POST['image_order_subcats']), $this->redirectService);
+            \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()->saveImageOrder($category_id, $image_order, $elementSetRanksRequest->isImageOrderSubcats, $this->redirectService);
 
             $template->assign(
                 [

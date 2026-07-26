@@ -115,11 +115,11 @@ final class InstallWizard
 
     /**
      * ExtensionScanner::scan()'s own declared return type is a generic
-     * array<string, array<string, mixed>> dispatch shape (by design -- see
-     * that method's own docblock), but every real entry for
-     * ExtensionType::Language is actually scanLanguage()'s own precise shape.
+     * array<string, array<string, mixed>> dispatch shape by design (see
+     * that method's own docblock) -- every real reader here follows its
+     * documented convention and reads specific keys defensively instead.
      *
-     * @var array<string, array{name: string, code: string, version: string, uri: string, author: string}>
+     * @var array<string, array<string, mixed>>
      */
     private array $fsLanguages;
 
@@ -131,6 +131,8 @@ final class InstallWizard
     private string $language = 'en_UK';
 
     private Template $template;
+
+    private Request\InstallWizardRequest $request;
 
     private int $step = 1;
 
@@ -156,11 +158,10 @@ final class InstallWizard
     public function boot(): void
     {
         // download database config file if exists
-        new \Piwigo\Validation\InputValidator()
-            ->validate('dl', $_GET, false, '/^[a-f0-9]{32}$/');
+        $this->request = Request\InstallWizardRequest::fromGlobals();
 
-        $dl_param = $_GET['dl'] ?? null;
-        if (is_string($dl_param) && $dl_param !== '' && file_exists($this->paths->root . $this->confDataLocation . 'pwg_' . $dl_param)) {
+        $dl_param = $this->request->dl;
+        if ($dl_param !== null && file_exists($this->paths->root . $this->confDataLocation . 'pwg_' . $dl_param)) {
             $filename = $this->paths->root . $this->confDataLocation . 'pwg_' . $dl_param;
             header('Cache-Control: no-cache, must-revalidate');
             header('Pragma: no-cache');
@@ -173,14 +174,10 @@ final class InstallWizard
         }
 
         // Obtain various vars
-        $dbhost_raw = $_POST['dbhost'] ?? null;
-        $this->dbhost = (is_string($dbhost_raw) && $dbhost_raw !== '') ? $dbhost_raw : 'localhost';
-        $dbuser_raw = $_POST['dbuser'] ?? null;
-        $this->dbuser = (is_string($dbuser_raw) && $dbuser_raw !== '') ? $dbuser_raw : '';
-        $dbpasswd_raw = $_POST['dbpasswd'] ?? null;
-        $this->dbpasswd = (is_string($dbpasswd_raw) && $dbpasswd_raw !== '') ? $dbpasswd_raw : '';
-        $dbname_raw = $_POST['dbname'] ?? null;
-        $this->dbname = (is_string($dbname_raw) && $dbname_raw !== '') ? $dbname_raw : '';
+        $this->dbhost = $this->request->dbhost;
+        $this->dbuser = $this->request->dbuser;
+        $this->dbpasswd = $this->request->dbpasswd;
+        $this->dbname = $this->request->dbname;
 
         // Same reasoning as the db_prefix seeding in the install.php entry
         // shell: any code reached later in this same request that resolves
@@ -251,18 +248,12 @@ final class InstallWizard
         }
         $this->dblayer = 'mysqli';
 
-        $admin_name_raw = $_POST['admin_name'] ?? null;
-        $this->adminName = (is_string($admin_name_raw) && $admin_name_raw !== '') ? $admin_name_raw : '';
-        $admin_pass1_raw = $_POST['admin_pass1'] ?? null;
-        $this->adminPass1 = (is_string($admin_pass1_raw) && $admin_pass1_raw !== '') ? $admin_pass1_raw : '';
-        $admin_pass2_raw = $_POST['admin_pass2'] ?? null;
-        $this->adminPass2 = (is_string($admin_pass2_raw) && $admin_pass2_raw !== '') ? $admin_pass2_raw : '';
-        $admin_mail_raw = $_POST['admin_mail'] ?? null;
-        $this->adminMail = (is_string($admin_mail_raw) && $admin_mail_raw !== '') ? $admin_mail_raw : '';
+        $this->adminName = $this->request->adminName;
+        $this->adminPass1 = $this->request->adminPass1;
+        $this->adminPass2 = $this->request->adminPass2;
+        $this->adminMail = $this->request->adminMail;
 
-        if (isset($_POST['install'])) {
-            $this->isNewsletterSubscribe = isset($_POST['newsletter_subscribe']);
-        }
+        $this->isNewsletterSubscribe = $this->request->isNewsletterSubscribe;
 
         // Is Piwigo already installed ?
         if (file_exists($this->paths->siteLocal . Env::testModeInstalledStamp())) {
@@ -273,8 +264,8 @@ final class InstallWizard
         $this->fsLanguages = new ExtensionScanner()
             ->scan(ExtensionType::Language, \Piwigo\Bootstrap\PresentationAccessor::urlService(), 'utf-8');
 
-        if (isset($_GET['language']) && is_string($_GET['language'])) {
-            $language = strip_tags($_GET['language']);
+        if ($this->request->languageParam !== null) {
+            $language = $this->request->languageParam;
 
             if (! in_array($language, array_keys($this->fsLanguages), true)) {
                 $language = AppInfo::DEFAULT_LANGUAGE;
@@ -586,7 +577,8 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             if ($this->language === $language_code) {
                 $template->assign('language_selection', $language_code);
             }
-            $languages_options[$language_code] = $fs_language['name'];
+            $fs_language_name = $fs_language['name'] ?? null;
+            $languages_options[$language_code] = is_string($fs_language_name) ? $fs_language_name : $language_code;
         }
         $template->assign('language_options', $languages_options);
 
@@ -715,7 +707,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
                 ->save();
 
             // email notification
-            if (isset($_POST['send_credentials_by_mail'])) {
+            if ($this->request->isSendCredentialsByMail) {
                 $keyargs_content = [
                     Lang::buildArgs('Hello %s,', $this->adminName),
                     Lang::buildArgs('Welcome to your new installation of Piwigo!', ''),

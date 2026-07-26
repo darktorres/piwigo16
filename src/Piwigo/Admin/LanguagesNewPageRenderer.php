@@ -79,18 +79,16 @@ final class LanguagesNewPageRenderer
         // |                       perform installation                            |
         // +-----------------------------------------------------------------------+
 
-        if (isset($_GET['revision'])) {
+        $languagesNewInstall = Request\LanguagesNewInstallRequest::fromGlobals();
+
+        if ($languagesNewInstall->revision !== null) {
             if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
                 \Piwigo\Core\PageState::current()->addError(Lang::t('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
                     ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
-                // $_GET values are always string|array; 'revision' is only ever
-                // built from $language['revision_id'] in this file's own template
-                // link below, so it's a plain numeric string in the normal case.
-                $revision = $_GET['revision'];
-                $revision = is_string($revision) ? $revision : '';
+                $revision = $languagesNewInstall->revision;
 
                 $extraction = $pem_catalog->extractArchive(ExtensionType::Language, 'install', $revision, '');
                 $install_status = $extraction['status'];
@@ -112,9 +110,8 @@ final class LanguagesNewPageRenderer
         // +-----------------------------------------------------------------------+
         // |                        installation result                            |
         // +-----------------------------------------------------------------------+
-        if (isset($_GET['installstatus'])) {
-            $installstatus = $_GET['installstatus'];
-            $installstatus = is_string($installstatus) ? $installstatus : '';
+        if ($languagesNewInstall->installStatus !== null) {
+            $installstatus = $languagesNewInstall->installStatus;
 
             match ($installstatus) {
                 'ok' => \Piwigo\Core\PageState::current()->addInfo(Lang::t('Language has been successfully installed')),

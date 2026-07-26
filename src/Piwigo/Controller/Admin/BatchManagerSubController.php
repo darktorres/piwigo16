@@ -87,10 +87,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('selection', $_POST, true, ValidationPattern::ID);
-        new \Piwigo\Validation\InputValidator()
-            ->validate('display', $_REQUEST, false, '/^(\d+|all)$/');
+        $batchManagerRequest = Request\BatchManagerRequest::fromGlobals();
 
         $user_id = \Piwigo\Users\CurrentUser::get()->id;
 
@@ -99,12 +96,11 @@ final class BatchManagerSubController implements AdminSubControllerInterface
 
         // used both for the action-specific redirects below and for the
         // "category no longer exists" redirect further down
-        $get_page_raw = $_GET['page'] ?? null;
-        $get_page = is_string($get_page_raw) ? $get_page_raw : '';
+        $get_page = $batchManagerRequest->page;
 
-        $this->handleGetActions($get_page, $user_id);
+        $this->handleGetActions($batchManagerRequest, $get_page, $user_id);
 
-        $this->resolveSessionFilter($available_permission_levels);
+        $this->resolveSessionFilter($batchManagerRequest, $available_permission_levels);
 
         /** @var array<string, mixed> $bulk_filter */
         $bulk_filter = is_array($_SESSION['bulk_manager_filter'] ?? null) ? $_SESSION['bulk_manager_filter'] : [];
@@ -129,26 +125,13 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         // For example, $start = 12 means we must show elements #12 and the
         // renderer's own nb_images next elements.
 
-        if (! isset($_REQUEST['start'])
-            or ! is_numeric($_REQUEST['start'])
-            or $_REQUEST['start'] < 0
-            or (isset($_REQUEST['display']) and $_REQUEST['display'] === 'all')) {
-            $start = 0;
-        } else {
-            $start = (int) $_REQUEST['start'];
-        }
+        $start = $batchManagerRequest->start;
 
         // +-------------------------------------------------------------------+
         // |                                 Tabs                                  |
         // +-------------------------------------------------------------------+
 
-        if (isset($_GET['mode'])) {
-            new \Piwigo\Validation\InputValidator()
-                ->validate('mode', $_GET, false, '/^(global|unit)$/');
-            $tab = is_string($_GET['mode']) ? $_GET['mode'] : 'global';
-        } else {
-            $tab = 'global';
-        }
+        $tab = $batchManagerRequest->tab;
 
         // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
         // bug -- nothing had ever called CoreTabs::setContext() with
@@ -186,13 +169,14 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         }
     }
 
-    private function handleGetActions(string $getPage, int $userId): void
+    private function handleGetActions(Request\BatchManagerRequest $batchManagerRequest, string $getPage, int $userId): void
     {
-        if (! isset($_GET['action'])) {
+        $action = $batchManagerRequest->action;
+        if ($action === null) {
             return;
         }
 
-        if ($_GET['action'] === 'empty_caddie') {
+        if ($action === 'empty_caddie') {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
@@ -209,10 +193,8 @@ DELETE FROM ' . Tables::caddie() . '
             $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=' . $getPage);
         }
 
-        if ($_GET['action'] === 'delete_orphans' and isset($_GET['nb_orphans_deleted'])) {
-            new \Piwigo\Validation\InputValidator()
-                ->validate('nb_orphans_deleted', $_GET, false, '/^\d+$/');
-            $nb_orphans_deleted = is_numeric($_GET['nb_orphans_deleted']) ? (int) $_GET['nb_orphans_deleted'] : 0;
+        if ($action === 'delete_orphans' and $batchManagerRequest->nbOrphansDeleted !== null) {
+            $nb_orphans_deleted = $batchManagerRequest->nbOrphansDeleted;
 
             if ($nb_orphans_deleted > 0) {
                 if (! isset($_SESSION['page_infos']) || ! is_array($_SESSION['page_infos'])) {
@@ -228,10 +210,8 @@ DELETE FROM ' . Tables::caddie() . '
             }
         }
 
-        if ($_GET['action'] === 'sync_md5sum' and isset($_GET['nb_md5sum_added'])) {
-            new \Piwigo\Validation\InputValidator()
-                ->validate('nb_md5sum_added', $_GET, false, '/^\d+$/');
-            $nb_md5sum_added = is_numeric($_GET['nb_md5sum_added']) ? (int) $_GET['nb_md5sum_added'] : 0;
+        if ($action === 'sync_md5sum' and $batchManagerRequest->nbMd5sumAdded !== null) {
+            $nb_md5sum_added = $batchManagerRequest->nbMd5sumAdded;
 
             if ($nb_md5sum_added > 0) {
                 if (! isset($_SESSION['page_infos']) || ! is_array($_SESSION['page_infos'])) {
@@ -253,54 +233,54 @@ DELETE FROM ' . Tables::caddie() . '
      *   CurrentConfig::availablePermissionLevels()'s own already-precise
      *   return type (this method's only real caller passes it straight through)
      */
-    private function resolveSessionFilter(array $availablePermissionLevels): void
+    private function resolveSessionFilter(Request\BatchManagerRequest $batchManagerRequest, array $availablePermissionLevels): void
     {
+        $post = $batchManagerRequest->post;
+
         // filters from form
-        if (isset($_POST['submitFilter'])) {
-            // echo '<pre>'; print_r($_POST); echo '</pre>';
-            unset($_REQUEST['start']); // new photo set must reset the page
+        if ($batchManagerRequest->isSubmitFilter) {
             $_SESSION['bulk_manager_filter'] = [];
 
-            if (isset($_POST['filter_prefilter_use'])) {
-                $_SESSION['bulk_manager_filter']['prefilter'] = $_POST['filter_prefilter'];
+            if (isset($post['filter_prefilter_use'])) {
+                $_SESSION['bulk_manager_filter']['prefilter'] = $post['filter_prefilter'];
 
-                if ($_POST['filter_prefilter'] === 'duplicates') {
+                if ($post['filter_prefilter'] === 'duplicates') {
                     $has_options = false;
 
-                    if (isset($_POST['filter_duplicates_checksum'])) {
+                    if (isset($post['filter_duplicates_checksum'])) {
                         $_SESSION['bulk_manager_filter']['duplicates_checksum'] = true;
                         $has_options = true;
                     }
 
-                    if (isset($_POST['filter_duplicates_date'])) {
+                    if (isset($post['filter_duplicates_date'])) {
                         $_SESSION['bulk_manager_filter']['duplicates_date'] = true;
                         $has_options = true;
                     }
 
-                    if (isset($_POST['filter_duplicates_dimensions'])) {
+                    if (isset($post['filter_duplicates_dimensions'])) {
                         $_SESSION['bulk_manager_filter']['duplicates_dimensions'] = true;
                         $has_options = true;
                     }
 
-                    if (! $has_options or isset($_POST['filter_duplicates_filename'])) {
+                    if (! $has_options or isset($post['filter_duplicates_filename'])) {
                         $_SESSION['bulk_manager_filter']['duplicates_filename'] = true;
                     }
                 }
             }
 
-            if (isset($_POST['filter_category_use'])) {
+            if (isset($post['filter_category_use'])) {
                 new \Piwigo\Validation\InputValidator()
-                    ->validate('filter_category', $_POST, false, ValidationPattern::ID);
+                    ->validate('filter_category', $post, false, ValidationPattern::ID);
 
-                $_SESSION['bulk_manager_filter']['category'] = $_POST['filter_category'];
+                $_SESSION['bulk_manager_filter']['category'] = $post['filter_category'];
 
-                if (isset($_POST['filter_category_recursive'])) {
+                if (isset($post['filter_category_recursive'])) {
                     $_SESSION['bulk_manager_filter']['category_recursive'] = true;
                 }
             }
 
-            if (isset($_POST['filter_tags_use'])) {
-                $raw_filter_tags = $_POST['filter_tags'] ?? '';
+            if (isset($post['filter_tags_use'])) {
+                $raw_filter_tags = $post['filter_tags'] ?? '';
                 if (is_array($raw_filter_tags)) {
                     $filter_tags = [];
                     foreach ($raw_filter_tags as $raw_filter_tag) {
@@ -314,66 +294,62 @@ DELETE FROM ' . Tables::caddie() . '
                 $_SESSION['bulk_manager_filter']['tags'] = self::tagService()
                     ->getTagIds($filter_tags, false);
 
-                if (isset($_POST['tag_mode']) and in_array($_POST['tag_mode'], ['AND', 'OR'], true)) {
-                    $_SESSION['bulk_manager_filter']['tag_mode'] = $_POST['tag_mode'];
+                if (isset($post['tag_mode']) and in_array($post['tag_mode'], ['AND', 'OR'], true)) {
+                    $_SESSION['bulk_manager_filter']['tag_mode'] = $post['tag_mode'];
                 }
             }
 
-            if (isset($_POST['filter_level_use'])) {
+            if (isset($post['filter_level_use'])) {
                 new \Piwigo\Validation\InputValidator()
-                    ->validate('filter_level', $_POST, false, '/^\d+$/');
+                    ->validate('filter_level', $post, false, '/^\d+$/');
 
                 // $_POST['filter_level'] is a numeric string (validated by
                 // check_input_parameter() above); $availablePermissionLevels holds
                 // real ints (config_default.inc.php seeds [0, 1, 2, 4, 8]) -- cast
                 // before the strict in_array() so a numeric-string match still
                 // succeeds, matching the original loose-comparison behavior.
-                $filter_level_raw = $_POST['filter_level'] ?? null;
+                $filter_level_raw = $post['filter_level'] ?? null;
                 if (is_numeric($filter_level_raw) && in_array((int) $filter_level_raw, $availablePermissionLevels, true)) {
-                    $_SESSION['bulk_manager_filter']['level'] = $_POST['filter_level'];
+                    $_SESSION['bulk_manager_filter']['level'] = $post['filter_level'];
 
-                    if (isset($_POST['filter_level_include_lower'])) {
+                    if (isset($post['filter_level_include_lower'])) {
                         $_SESSION['bulk_manager_filter']['level_include_lower'] = true;
                     }
                 }
             }
 
-            if (isset($_POST['filter_dimension_use'])) {
+            if (isset($post['filter_dimension_use'])) {
                 foreach (['min_width', 'max_width', 'min_height', 'max_height'] as $type) {
-                    if (filter_var($_POST['filter_dimension_' . $type], FILTER_VALIDATE_INT) !== false) {
-                        $_SESSION['bulk_manager_filter']['dimension'][$type] = $_POST['filter_dimension_' . $type];
+                    if (filter_var($post['filter_dimension_' . $type], FILTER_VALIDATE_INT) !== false) {
+                        $_SESSION['bulk_manager_filter']['dimension'][$type] = $post['filter_dimension_' . $type];
                     }
                 }
                 foreach (['min_ratio', 'max_ratio'] as $type) {
-                    if (filter_var($_POST['filter_dimension_' . $type], FILTER_VALIDATE_FLOAT) !== false) {
-                        $_SESSION['bulk_manager_filter']['dimension'][$type] = $_POST['filter_dimension_' . $type];
+                    if (filter_var($post['filter_dimension_' . $type], FILTER_VALIDATE_FLOAT) !== false) {
+                        $_SESSION['bulk_manager_filter']['dimension'][$type] = $post['filter_dimension_' . $type];
                     }
                 }
             }
 
-            if (isset($_POST['filter_filesize_use'])) {
+            if (isset($post['filter_filesize_use'])) {
                 foreach (['min', 'max'] as $type) {
-                    if (filter_var($_POST['filter_filesize_' . $type], FILTER_VALIDATE_FLOAT) !== false) {
-                        $_SESSION['bulk_manager_filter']['filesize'][$type] = $_POST['filter_filesize_' . $type];
+                    if (filter_var($post['filter_filesize_' . $type], FILTER_VALIDATE_FLOAT) !== false) {
+                        $_SESSION['bulk_manager_filter']['filesize'][$type] = $post['filter_filesize_' . $type];
                     }
                 }
             }
 
-            if (isset($_POST['filter_search_use'])) {
+            if (isset($post['filter_search_use'])) {
                 // $_SESSION['bulk_manager_filter'] was reset to [] at the top of
                 // this block, so 'search' can't already exist here.
                 $_SESSION['bulk_manager_filter']['search'] = [];
-                $_SESSION['bulk_manager_filter']['search']['q'] = $_POST['q'];
+                $_SESSION['bulk_manager_filter']['search']['q'] = $post['q'];
             }
 
             $_SESSION['bulk_manager_filter'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('batch_manager_register_filters', $_SESSION['bulk_manager_filter']);
         }
         // filters from url
-        elseif (isset($_GET['filter'])) {
-            if (! is_array($_GET['filter'])) {
-                $_GET['filter'] = explode(',', is_scalar($_GET['filter']) ? (string) $_GET['filter'] : '');
-            }
-
+        elseif ($batchManagerRequest->urlFilterPresent) {
             // Built up locally (instead of writing straight into
             // $_SESSION['bulk_manager_filter']) because PHPStan cannot keep a
             // precise array shape for a superglobal offset that is mutated with
@@ -382,8 +358,8 @@ DELETE FROM ' . Tables::caddie() . '
             /** @var array<string, mixed> $url_filter */
             $url_filter = [];
 
-            foreach ($_GET['filter'] as $filter) {
-                $filter_parts = explode('-', is_scalar($filter) ? (string) $filter : '', 2);
+            foreach ($batchManagerRequest->urlFilterTokens as $filter) {
+                $filter_parts = explode('-', $filter, 2);
                 $type = $filter_parts[0];
                 $value = $filter_parts[1] ?? '';
 

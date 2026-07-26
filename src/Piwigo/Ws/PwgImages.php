@@ -675,8 +675,10 @@ SELECT id, date, author, content
      * @param array{image_id: int, rate: float, ...} $params both mandatory
      *    (WsParamType::ID / WsParamType::FLOAT, no 'default') -- always plain scalars by
      *    the time this runs
+     * @return PwgError|array<string, mixed> matches
+     *   Rate\RateService::rate()'s own already-reviewed by-design shape
      */
-    public static function rate(array $params, PwgServer $service): mixed
+    public static function rate(array $params, PwgServer $service): PwgError|array
     {
         $conn = DbConnection::build();
         $query = '
@@ -1143,7 +1145,11 @@ UPDATE ' . Tables::images() . '
      *    ints. category_id: WsParamType::ID, mandatory. rank: WsParamType::INT|POSITIVE|
      *    NOTNULL with a null default -- int when the caller provides it, null
      *    otherwise
-     * @return array<string, mixed>|PwgError
+     * @return PwgError|array{image_id: list<int|string>, category_id: int}|array{image_id: int, category_id: int, rank: int}
+     *   the 2 real return sites have genuinely different shapes -- the
+     *   multi-image branch above returns the reordered id list (no rank),
+     *   the single-image branch below returns the one image_id plus its
+     *   new rank
      */
     public static function setRank(array $params, PwgServer $service): array|PwgError
     {
@@ -1163,7 +1169,12 @@ SELECT
   WHERE category_id = ' . $params['category_id'] . '
   ORDER BY `rank` ASC
 ;';
-            $image_ids = array_column($conn->fetchAllAssociative($query), 'image_id');
+            // image_id is Tables::imageCategory()'s NOT NULL FK column
+            // (int|string per driver).
+            $image_ids = array_values(array_filter(
+                array_column($conn->fetchAllAssociative($query), 'image_id'),
+                static fn (mixed $v): bool => is_int($v) || is_string($v)
+            ));
 
             // return data for client
             return [
@@ -1714,6 +1725,10 @@ SELECT id, name, permalink
      *    WsParamType::ID, null default -- int|null. update_mode: WsParamType::BOOL,
      *    default false (non-null) -- always bool. pwg_token: no WS_TYPE flag,
      *    mandatory -- always a plain string.
+     * The 2 real array-literal return sites have genuinely different shapes
+     * (a format_of upload returns image_id/src/square_src/name/add_status;
+     * a new-photo upload adds a 'category' sub-array on top) -- left as
+     * array<string, mixed> rather than an unverified 2-branch union.
      * @return PwgError|array<string, mixed>|null
      */
     public static function upload(array $params, PwgServer $service): PwgError|array|null
@@ -1938,6 +1953,11 @@ SELECT
      *    date_creation/tag_ids: no WS_TYPE flag, null default -- string|null.
      *    level: WsParamType::INT|POSITIVE, default 0 (non-null) -- always int.
      *    image_id: WsParamType::ID, null default -- int|null.
+     *
+     * Return type genuinely can't be narrower than mixed: the success path
+     * forwards $service->invoke('pwg.images.getInfo', ...)'s own result --
+     * same PwgServer::invoke() by-name-dispatcher rationale as
+     * Ws\PwgUsers::add()/setInfo().
      */
     public static function uploadAsync(array $params, PwgServer &$service): mixed
     {
@@ -2218,7 +2238,9 @@ SELECT COUNT(*)
      * Check if an image exists by it's name or md5 sum
      * @param array{md5sum_list: string|null, filename_list: string|null, ...} $params
      *    both: no WS_TYPE flag, null default -- string|null.
-     * @return mixed[]
+     * @return array<string, int|string|null> keyed by md5sum/filename;
+     *   id is Tables::images()'s NOT NULL primary key (int|string per
+     *   driver), or null when no matching photo was found
      */
     public static function exist(array $params, PwgServer $service): array
     {
@@ -2250,10 +2272,8 @@ SELECT id, md5sum
             $id_of_md5 = array_column($conn->fetchAllAssociative($query), 'id', 'md5sum');
 
             foreach ($md5sums as $md5sum) {
-                $result[$md5sum] = null;
-                if (isset($id_of_md5[$md5sum])) {
-                    $result[$md5sum] = $id_of_md5[$md5sum];
-                }
+                $id = $id_of_md5[$md5sum] ?? null;
+                $result[$md5sum] = (is_int($id) || is_string($id)) ? $id : null;
             }
         } elseif (\Piwigo\Config\CurrentConfig::uniquenessMode() === 'filename') {
             // search among photos the list of photos already added, based on
@@ -2276,10 +2296,8 @@ SELECT id, file
             $id_of_filename = array_column($conn->fetchAllAssociative($query), 'id', 'file');
 
             foreach ($filenames as $filename) {
-                $result[$filename] = null;
-                if (isset($id_of_filename[$filename])) {
-                    $result[$filename] = $id_of_filename[$filename];
-                }
+                $id = $id_of_filename[$filename] ?? null;
+                $result[$filename] = (is_int($id) || is_string($id)) ? $id : null;
             }
         }
 
@@ -2293,6 +2311,10 @@ SELECT id, file
      * @since 13
      * @param array{filename_list: string, ...} $params filename_list: no
      *    WS_TYPE flag, mandatory -- always a plain string.
+     * Result rows are genuinely polymorphic (status: 'not found'|'multiple'
+     * carry no other key, status: 'found' adds image_id/format_exist), and
+     * $candidates below is arbitrary client-supplied JSON -- flagged for
+     * Phase 4 (SEC-40/P27 Request DTOs).
      * @return array<int|string, array<string, mixed>>
      */
     public static function formatsSearchImage(array $params, PwgServer $service): array
@@ -2801,7 +2823,8 @@ SELECT path
      * Empties the lounge, where photos may wait before taking off.
      * @since 12
      * @param mixed[] $params
-     * @return array{rows: mixed}
+     * @return array{rows: list<array{image_id: int, category_id: int}>|null} matches
+     *   ImageService::emptyLounge()'s own already-precise return type
      */
     public static function emptyLounge(array $params, PwgServer $service): array
     {
@@ -2823,7 +2846,7 @@ SELECT path
      *    default -- string, array, or null. pwg_token: no WS_TYPE flag,
      *    mandatory -- always string. category_id: WsParamType::ID, mandatory --
      *    always int.
-     * @return PwgError|array<string, mixed>
+     * @return PwgError|array{moved_from_lounge: list<array{image_id: int, category_id: int}>|null, category: array{id: int, nb_photos: int, label: string}}
      */
     public static function uploadCompleted(array $params, PwgServer $service): PwgError|array
     {
@@ -2875,6 +2898,7 @@ SELECT
         }
         $category_name = \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->getCatDisplayNameFromId($params['category_id'], null);
+        $nb_photos = is_numeric($category_infos['nb_photos']) ? (int) $category_infos['nb_photos'] : 0;
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify(
             'ws_images_uploadCompleted',
@@ -2889,7 +2913,7 @@ SELECT
             'moved_from_lounge' => $moved_from_lounge,
             'category' => [
                 'id' => $params['category_id'],
-                'nb_photos' => $category_infos['nb_photos'],
+                'nb_photos' => $nb_photos,
                 'label' => $category_name,
             ],
         ];

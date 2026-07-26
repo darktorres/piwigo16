@@ -52,6 +52,14 @@ final class FilterService implements FilterUpdaterInterface
         // $filter;`) -- the final computed values are published once,
         // at each of this method's 2 real termination points, to
         // Piwigo\Core\FilterState, the new cross-file read target.
+        // Genuinely transient/heterogeneous (enabled: bool, recent_period:
+        // int, categories: the FilterState-typed rollup, visible_categories/
+        // visible_images: string|int, matches: preg_match() captures) --
+        // every field is re-extracted into its own precisely-typed local
+        // before being handed to FilterState::set(), so this scratch
+        // array's own blanket type is intentionally left loose rather than
+        // risk a mid-function retype this pass can't verify (composer
+        // analyse is deferred to the end).
         /** @var array<string, mixed> */
         $filter = [];
 

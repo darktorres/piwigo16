@@ -12,8 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use LogicException;
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionLifecycle;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
@@ -275,7 +273,7 @@ final class PwgExtensions
                 $activity_details['result'] = 'error';
             }
 
-            new ActivityService(new ActivityRepository(DbConnection::build()))->record('system', ActivitySystem::Theme, 'update', $activity_details);
+            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()->record('system', ActivitySystem::Theme, 'update', $activity_details);
         } elseif ($type === ExtensionType::Language) {
             $extraction = $pemCatalog->extractArchive(ExtensionType::Language, 'upgrade', $revision, $extension_id);
             $upgrade_status = $extraction['status'];

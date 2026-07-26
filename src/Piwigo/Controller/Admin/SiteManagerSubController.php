@@ -131,7 +131,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             switch ($_GET['action']) {
                 case 'delete':
 
-                    \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->deleteSite($site_id, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)), $this->urlService);
+                    \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->deleteSite($site_id, \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->urlService);
                     \Piwigo\Core\PageState::current()->addInfo($galleries_url . ' ' . Lang::t('deleted'));
                     break;
 

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Maintenance;
 
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
@@ -104,7 +102,7 @@ final class MaintenanceActionDispatcher
             case 'lock_gallery':
 
                 $this->configService->confUpdateParam('gallery_locked', true);
-                new ActivityService(new ActivityRepository($conn))
+                \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                     ->record('system', ActivitySystem::Core, 'maintenance', [
                         'maintenance_action' => $action,
                     ]);
@@ -115,7 +113,7 @@ final class MaintenanceActionDispatcher
 
                 $this->configService->confUpdateParam('gallery_locked', false);
                 $_SESSION['page_infos'] = [Lang::t('Gallery unlocked')];
-                new ActivityService(new ActivityRepository($conn))
+                \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                     ->record('system', ActivitySystem::Core, 'maintenance', [
                         'maintenance_action' => $action,
                     ]);
@@ -147,7 +145,7 @@ final class MaintenanceActionDispatcher
 
             case 'delete_orphan_tags':
 
-                new TagService(new TagRepository($conn), self::permissionService(), new ActivityService(new ActivityRepository($conn)))
+                new TagService(new TagRepository($conn), self::permissionService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService())
                     ->deleteOrphanTags();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Delete orphan tags'), Lang::t('action successfully performed.')));
                 break;
@@ -202,7 +200,7 @@ final class MaintenanceActionDispatcher
 
             case 'empty_lounge':
 
-                $rows = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)))
+                $rows = new ImageService(new ImageRepository($conn), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService())
                     ->emptyLounge();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
                 break;
@@ -290,7 +288,7 @@ final class MaintenanceActionDispatcher
         }
 
         if ($register_activity) {
-            new ActivityService(new ActivityRepository($conn))
+            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                 ->record('system', ActivitySystem::Core, 'maintenance', [
                     'maintenance_action' => $action,
                 ]);

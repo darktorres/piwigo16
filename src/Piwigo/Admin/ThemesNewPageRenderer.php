@@ -96,7 +96,7 @@ final class ThemesNewPageRenderer
                     $installed_theme_id = $_GET['theme_id'] ?? null;
                     $installed_fs_theme = is_string($installed_theme_id) ? ($extension_scanner->scan(ExtensionType::Theme, $this->urlService)[$installed_theme_id] ?? null) : null;
                     if ($installed_fs_theme !== null) {
-                        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Theme, 'install', [
+                        \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()->record('system', ActivitySystem::Theme, 'install', [
                             'theme_id' => $installed_theme_id,
                             'version' => $installed_fs_theme['version'],
                         ]);

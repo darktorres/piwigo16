@@ -120,7 +120,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
     private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
     {
-        return new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn));
+        return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
     }
 
     private static function userService(Connection $conn): \Piwigo\Users\UserService

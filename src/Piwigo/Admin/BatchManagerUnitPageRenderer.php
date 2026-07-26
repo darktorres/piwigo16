@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
@@ -349,7 +347,7 @@ SELECT
             }
 
             $tagService = self::tagService();
-            $imageService = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)));
+            $imageService = new ImageService(new ImageRepository($conn), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService());
 
             foreach ($images as $row) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this

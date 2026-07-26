@@ -355,7 +355,7 @@ final readonly class CoreUpdateService
         FilesystemHelper::deltree($this->paths->root . $dataLocation . 'update');
         PermissionCacheInvalidator::invalidate();
         $this->configService->confUpdateParam('piwigo_installed_version', $upgradeTo);
-        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Core, 'update', [
+        \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()->record('system', ActivitySystem::Core, 'update', [
             'from_version' => AppInfo::VERSION,
             'to_version' => $upgradeTo,
         ]);

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
@@ -33,7 +32,7 @@ final class CatOptionsPageRenderer
 
     private static function activityService(Connection $conn): ActivityService
     {
-        return new ActivityService(new ActivityRepository($conn));
+        return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
     }
 
     private static function categoryService(): CategoryService

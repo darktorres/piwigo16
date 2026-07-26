@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Upload;
 
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Cache\PermissionCacheInvalidator;
@@ -528,7 +526,7 @@ SELECT
                 ->singleInsert(Tables::images(), $insert);
 
             $image_id = $conn->lastInsertId();
-            new ActivityService(new ActivityRepository($conn))
+            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                 ->record('photo', $image_id, 'add');
         }
 
@@ -764,7 +762,7 @@ SELECT
             $add_status = 'add';
         }
 
-        new ActivityService(new ActivityRepository($conn))
+        \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
             ->record('photo', $format_of, 'edit', [
                 'action' => 'add format',
                 'format_ext' => $format_ext,

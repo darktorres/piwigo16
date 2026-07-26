@@ -167,7 +167,7 @@ SELECT
             ];
         }
 
-        $tagService = new TagService(new TagRepository($conn), self::permissionService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)));
+        $tagService = new TagService(new TagRepository($conn), self::permissionService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService());
 
         if (count($tagService->getAvailableTags()) > 0) {
             $tag_ids = [];

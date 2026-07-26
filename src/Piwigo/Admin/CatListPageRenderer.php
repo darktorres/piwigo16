@@ -119,7 +119,7 @@ SELECT COUNT(*)
             }
             $categoryService->deleteCategories(
                 [(int) $_GET['delete']],
-                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($categoryConn)),
+                \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
                 $this->urlService,
                 $photo_deletion_mode
             );
@@ -141,7 +141,7 @@ SELECT COUNT(*)
             $output_create = \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()
                 ->createVirtualCategory(
                     $virtual_name,
-                    new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($categoryConn)),
+                    \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
                     $parent_id
                 );
 

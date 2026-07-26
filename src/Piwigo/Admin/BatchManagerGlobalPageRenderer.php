@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
@@ -177,7 +175,7 @@ final class BatchManagerGlobalPageRenderer
             $redirect = false;
 
             $tagService = self::tagService();
-            $imageService = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)));
+            $imageService = new ImageService(new ImageRepository($conn), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService());
 
             if ($action === 'remove_from_caddie') {
                 $current_user_id = \Piwigo\Users\CurrentUser::get()->id;
@@ -343,7 +341,7 @@ DELETE
                         $datas
                     );
 
-                new ActivityService(new ActivityRepository($conn))
+                \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                     ->record('photo', $collection, 'edit', [
                         'action' => 'author',
                     ]);
@@ -373,7 +371,7 @@ DELETE
                         $datas
                     );
 
-                new ActivityService(new ActivityRepository($conn))
+                \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                     ->record('photo', $collection, 'edit', [
                         'action' => 'title',
                     ]);
@@ -405,7 +403,7 @@ DELETE
                         $datas
                     );
 
-                new ActivityService(new ActivityRepository($conn))
+                \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                     ->record('photo', $collection, 'edit', [
                         'action' => 'date_creation',
                     ]);
@@ -431,7 +429,7 @@ DELETE
                         $datas
                     );
 
-                new ActivityService(new ActivityRepository($conn))
+                \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                     ->record('photo', $collection, 'edit', [
                         'action' => 'privacy_level',
                     ]);

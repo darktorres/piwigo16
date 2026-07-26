@@ -169,7 +169,7 @@ final class PluginLoader
                 new PluginRepository($conn)
                     ->updateVersion($plugin_id, $fs_version);
 
-                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn))
+                \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                     ->record('system', ActivitySystem::Plugin, 'autoupdate', [
                         'plugin_id' => $plugin_id,
                         'from_version' => $old_version,

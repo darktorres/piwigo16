@@ -13,7 +13,6 @@ namespace Piwigo\Ws;
 
 use Doctrine\DBAL\Connection;
 use Exception;
-use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\CachePools;
 use Piwigo\Cache\PermissionCacheInvalidator;
@@ -82,7 +81,7 @@ final class PwgCategories
      */
     private static function activityService(): ActivityService
     {
-        return new ActivityService(new ActivityRepository(DbConnection::build()));
+        return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
     }
 
     /**
@@ -988,7 +987,7 @@ SELECT
         $categoryConn = DbConnection::build();
         $creation_output = self::categoryService()->createVirtualCategory(
             (! \Piwigo\Config\CurrentConfig::allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params['name']) : $params['name'],
-            new ActivityService(new ActivityRepository($categoryConn)),
+            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
             $params['parent'],
             $options
         );
@@ -1416,7 +1415,7 @@ SELECT id
         $categoryService = self::categoryService();
         $categoryService->deleteCategories(
             $category_ids,
-            new ActivityService(new ActivityRepository($categoryConn)),
+            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
             \Piwigo\Bootstrap\PresentationAccessor::urlService(),
             $params['photo_deletion_mode']
         );
@@ -1535,7 +1534,7 @@ SELECT id, name, dir, uppercats
 
         self::categoryService()->moveCategories(
             $category_ids,
-            new ActivityService(new ActivityRepository($categoryConn)),
+            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
             $params['parent']
         );
         PermissionCacheInvalidator::invalidate();

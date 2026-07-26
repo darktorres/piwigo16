@@ -13,7 +13,6 @@ namespace Piwigo\Ws;
 
 use Doctrine\DBAL\Connection;
 use Exception;
-use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\EphemeralKeyService;
@@ -98,7 +97,7 @@ final class PwgImages
      */
     private static function activityService(Connection $conn): ActivityService
     {
-        return new ActivityService(new ActivityRepository($conn));
+        return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
     }
 
     /**

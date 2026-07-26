@@ -33,8 +33,6 @@ use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
-use Piwigo\Section\SectionPopulator;
-use Piwigo\Section\SectionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
@@ -96,11 +94,6 @@ final class PictureController implements ControllerInterface
         return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
     }
 
-    private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
-    {
-        return new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn));
-    }
-
     private static function tagService(): TagService
     {
         return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
@@ -129,18 +122,8 @@ final class PictureController implements ControllerInterface
         // restores, and avoids the needless-reconnection pattern found
         // in earlier construction-chain debt (Phase 1d finding).
         $conn = DbConnection::build();
-        new SectionPopulator(
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-            \Piwigo\Template\CurrentTemplate::get(),
-            new SectionRepository($conn),
-            self::categoryService(),
-            self::permissionService(),
-            self::tagService(),
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::searchService(),
-            self::userService(),
-            $this->redirectService,
-            $this->urlService,
-        )->populate();
+        \Piwigo\Bootstrap\ExtendedDomainAccessor::sectionPopulator()
+            ->populate();
 
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -397,7 +380,7 @@ UPDATE ' . Tables::categories() . '
   WHERE id = ' . $representative_category_id . '
 ;';
                         $conn->executeStatement($query);
-                        self::activityService($conn)->record('album', $representative_category_id, 'edit', [
+                        \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()->record('album', $representative_category_id, 'edit', [
                             'action' => $_GET['action'],
                             'image_id' => $image_id,
                         ]);

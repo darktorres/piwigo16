@@ -4,30 +4,23 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Menu\MenubarRenderer;
-use Piwigo\Permission\PermissionService;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionPopulator;
-use Piwigo\Section\SectionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
-use Piwigo\Users\UserRepository;
-use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -66,19 +59,9 @@ final class GalleryController implements ControllerInterface
         private readonly ConfigService $configService,
     ) {}
 
-    private static function permissionService(): PermissionService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
-    }
-
     private static function categoryService(): CategoryService
     {
         return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
-    }
-
-    private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
-    {
-        return new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn));
     }
 
     private static function tagService(): TagService
@@ -91,23 +74,8 @@ final class GalleryController implements ControllerInterface
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        // A single connection for the whole request -- mirrors the
-        // legacy single-global-mysqli-connection model this migration
-        // restores, and avoids the needless-reconnection pattern found
-        // in earlier construction-chain debt (Phase 1d finding).
-        $conn = DbConnection::build();
-        new SectionPopulator(
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
-            $template,
-            new SectionRepository($conn),
-            self::categoryService(),
-            self::permissionService(),
-            self::tagService(),
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::searchService(),
-            new UserService(new UserRepository($conn), new GroupRepository($conn), \Piwigo\Bootstrap\PresentationAccessor::mailService(), self::activityService($conn), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn),
-            $this->redirectService,
-            $this->urlService,
-        )->populate();
+        \Piwigo\Bootstrap\ExtendedDomainAccessor::sectionPopulator()
+            ->populate();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 

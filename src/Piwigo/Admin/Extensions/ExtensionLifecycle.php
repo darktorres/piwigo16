@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Extensions;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\DummyPluginMaintain;
 use Piwigo\Admin\DummyThemeMaintain;
@@ -67,7 +66,7 @@ final readonly class ExtensionLifecycle
      */
     private static function activityService(Connection $conn): ActivityService
     {
-        return new ActivityService(new ActivityRepository($conn));
+        return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
     }
 
     /**

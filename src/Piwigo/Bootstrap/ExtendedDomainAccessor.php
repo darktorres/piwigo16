@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use Piwigo\Activity\ActivityService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Core\Kernel;
 use Piwigo\History\HistoryService;
@@ -14,6 +15,7 @@ use Piwigo\Permalink\PermalinkService;
 use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchFilterRenderer;
 use Piwigo\Search\SearchService;
+use Piwigo\Section\SectionPopulator;
 
 /**
  * DI-migration follow-on to gap-closure Stage 4: typed accessors to
@@ -24,6 +26,15 @@ use Piwigo\Search\SearchService;
  */
 final class ExtendedDomainAccessor
 {
+    public static function activityService(): ActivityService
+    {
+        $service = Kernel::container()->get(ActivityService::class);
+        if (! $service instanceof ActivityService) {
+            throw new \LogicException('Container returned an unexpected type for ' . ActivityService::class);
+        }
+        return $service;
+    }
+
     public static function commentService(): CommentService
     {
         $service = Kernel::container()->get(CommentService::class);
@@ -101,6 +112,15 @@ final class ExtendedDomainAccessor
         $service = Kernel::container()->get(PermalinkService::class);
         if (! $service instanceof PermalinkService) {
             throw new \LogicException('Container returned an unexpected type for ' . PermalinkService::class);
+        }
+        return $service;
+    }
+
+    public static function sectionPopulator(): SectionPopulator
+    {
+        $service = Kernel::container()->get(SectionPopulator::class);
+        if (! $service instanceof SectionPopulator) {
+            throw new \LogicException('Container returned an unexpected type for ' . SectionPopulator::class);
         }
         return $service;
     }

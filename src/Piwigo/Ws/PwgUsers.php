@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyRepository;
@@ -46,7 +45,7 @@ final class PwgUsers
 {
     private static function userService(): UserService
     {
-        return new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(new ActivityRepository(DbConnection::build())), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), DbConnection::build());
+        return new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), DbConnection::build());
     }
 
     /**

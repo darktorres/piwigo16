@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -50,7 +48,7 @@ final class UserActivityPageRenderer
         $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
         $conn = DbConnection::build();
-        $activity_service = new ActivityService(new ActivityRepository($conn));
+        $activity_service = \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
 
         if (isset($_GET['type']) && $_GET['type'] === 'download_logs') {
             $output_lines = [];

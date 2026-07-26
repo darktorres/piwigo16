@@ -98,7 +98,7 @@ final class PluginsNewPageRenderer
                     $installed_plugin_id = $_GET['plugin_id'] ?? null;
                     $installed_fs_plugin = is_string($installed_plugin_id) ? ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService)[$installed_plugin_id] ?? null) : null;
                     if ($installed_fs_plugin !== null) {
-                        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Plugin, 'install', [
+                        \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()->record('system', ActivitySystem::Plugin, 'install', [
                             'plugin_id' => $installed_plugin_id,
                             'version' => $installed_fs_plugin['version'],
                         ]);

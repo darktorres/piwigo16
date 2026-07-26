@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -77,7 +75,7 @@ final class PictureModifyPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $conn = DbConnection::build();
-        $imageService = new ImageService(new ImageRepository($conn), new ActivityService(new ActivityRepository($conn)));
+        $imageService = new ImageService(new ImageRepository($conn), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService());
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -285,7 +283,7 @@ UPDATE ' . Tables::categories() . '
                 ]
             );
 
-            new ActivityService(new ActivityRepository($conn))
+            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                 ->record('photo', $image_id, 'edit');
 
             // refresh page cache

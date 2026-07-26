@@ -29,6 +29,11 @@ final class WsHelper
      * Event handler for method invocation security check. Should return a PwgError
      * if the preconditions are not satifsied for method invocation.
      *
+     * $res/return genuinely mixed by design: this is a plugin-style
+     * EventDispatcher filter handler, so $res is whatever the previous
+     * filter-chain step produced -- same contract as
+     * PluginConfig\EventDispatcher's own triggerChange() handlers.
+     *
      * @param array<string, mixed> $params
      */
     public static function isInvokeAllowed(mixed $res, string $methodName, array $params): mixed
@@ -157,8 +162,12 @@ final class WsHelper
      * returns an array map of urls (thumb/element) for image_row - to be returned
      * in a standard way by different web service methods
      *
+     * $image_row is genuinely arbitrary by design (built into a SrcImage
+     * below, the same cross-domain generic-row-reader shape SrcImage's own
+     * docblock documents across its ~17 real construction sites).
+     *
      * @param array<string, mixed> $image_row
-     * @return array<string, mixed>
+     * @return array{page_url: string, element_url?: string, download_url: ?string, derivatives: array<string, array{url: string, width: int, height: int}>}
      */
     public static function stdGetUrls(array $image_row, UrlServiceInterface $urlService): array
     {
@@ -245,8 +254,14 @@ final class WsHelper
 
     /**
      * create a tree from a flat list of categories, no recursivity for high speed
+     *
+     * Each $categories row is genuinely arbitrary by design (a category
+     * row, dynamically augmented in place with a 'sub_categories'
+     * PwgNamedArray) -- same rationale as AlbumsPageRenderer's own
+     * dynamically-built tree.
+     *
      * @param array<int|string, array<string, mixed>> $categories
-     * @return mixed[]
+     * @return list<array<string, mixed>>
      */
     public static function categoriesFlatlistToTree(array $categories): array
     {

@@ -83,6 +83,14 @@ final class HtmlService implements HtmlRenderingInterface
      * of array(id=>?, name=>?, permalink=>?). If url input parameter is
      * null, returns only the categories name without links.
      *
+     * Cross-domain generic-row-reader rationale, same as
+     * Category\CategoryService::compareByGlobalRank() -- confirmed by
+     * tracing all 3 real call sites: CategoryService::getCategoryInfo()'s
+     * own 'upper_names' (clean id/name/permalink), a raw `SELECT id, name,
+     * permalink` query (name/permalink nullable there), and
+     * GalleryController's own qsearch 'matching_cats' rows (Search
+     * module's QResults::$all_cats, already mixed via EventDispatcher).
+     *
      * @param array<int, array<string, mixed>> $catInformations
      */
     #[\Override]
@@ -300,7 +308,10 @@ final class HtmlService implements HtmlRenderingInterface
     }
 
     /**
-     * Callback used for sorting by name.
+     * Callback used for sorting by name. Cross-domain generic-row-reader
+     * rationale, same as Category\CategoryService::compareByGlobalRank()
+     * -- real callers span Category/Tag/Search rows that merely share a
+     * 'name' key.
      *
      * @param array<string, mixed> $a
      * @param array<string, mixed> $b
@@ -315,7 +326,8 @@ final class HtmlService implements HtmlRenderingInterface
     }
 
     /**
-     * Callback used for sorting by name (slug) with cache.
+     * Callback used for sorting by name (slug) with cache. Same
+     * cross-domain generic-row-reader rationale as nameCompare() above.
      *
      * @param array<string, mixed> $a
      * @param array<string, mixed> $b
@@ -655,6 +667,10 @@ final class HtmlService implements HtmlRenderingInterface
      * Returns display name for an element.
      * Returns 'name' if exists of name from 'file'.
      *
+     * Cross-domain generic-row-reader rationale, same as
+     * getCatDisplayName() above -- called across image/comment/tag rows
+     * from many different modules, only 'name'/'file' read defensively.
+     *
      * @param array<string, mixed> $info at least file or name
      */
     #[\Override]
@@ -673,6 +689,9 @@ final class HtmlService implements HtmlRenderingInterface
 
     /**
      * Returns display description for an element.
+     *
+     * Same cross-domain generic-row-reader rationale as
+     * renderElementName() above.
      *
      * @param array<string, mixed> $info at least comment
      * @param string $param used to identify the trigger
@@ -693,6 +712,9 @@ final class HtmlService implements HtmlRenderingInterface
 
     /**
      * Add info to the title of the thumbnail based on photo properties.
+     *
+     * Same cross-domain generic-row-reader rationale as
+     * renderElementName() above.
      *
      * @param array<string, mixed> $info hit, rating_score, nb_comments
      */
@@ -743,6 +765,10 @@ final class HtmlService implements HtmlRenderingInterface
     /**
      * Event handler to protect element urls.
      *
+     * Same cross-domain generic-row-reader rationale as
+     * renderElementName() above (matches SrcImage::__construct()'s own
+     * shape for this 'id'/'path' pair).
+     *
      * @param array<string, mixed> $infos id, path
      */
     public function getElementUrlProtectionHandler(string $url, array $infos): string
@@ -788,6 +814,10 @@ final class HtmlService implements HtmlRenderingInterface
      * $_SESSION['page_errors'] flash channel as flushPageMessages(), so
      * calling both in the same request is safe.
      *
+     * $keyedErrors' values are genuinely arbitrary by design -- each
+     * controller (IdentificationController/RegisterController/
+     * PasswordController) defines its own field-keyed error messages.
+     *
      * @param array<string, mixed> $keyedErrors
      */
     public function flushKeyedErrors(array $keyedErrors): void
@@ -799,6 +829,10 @@ final class HtmlService implements HtmlRenderingInterface
     }
 
     /**
+     * $messages is either PageState's own list<string> (from
+     * flushPageMessages()) or flushKeyedErrors()'s own arbitrary-valued
+     * keyed bag -- genuinely dual-shaped, not narrowable to one.
+     *
      * @param array<int|string, mixed> $messages
      */
     private function flushMessageMode(string $mode, array $messages, Template $template): void
@@ -821,7 +855,11 @@ final class HtmlService implements HtmlRenderingInterface
     /**
      * pwgNl2br is useful for PHP 5.2 which doesn't accept more than 1
      * parameter on nl2br() (and anyway the second parameter of nl2br does not
-     * match what Piwigo gives.
+     * match what Piwigo gives. Registered as an EventDispatcher handler
+     * (render_comment_content/render_category_description) -- $string is
+     * genuinely arbitrary by design, matching EventDispatcher's own
+     * $data contract; the array<int|string, mixed> branch is an identity
+     * passthrough, never itself narrowed.
      *
      * @param array<int|string, mixed>|null|int|float|false|string $string
      * @return array<int|string, mixed>|null|int|float|false|string

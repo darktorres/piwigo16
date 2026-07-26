@@ -70,7 +70,11 @@ final readonly class ExtensionRepository
     }
 
     /**
-     * @return array<string, mixed>|null
+     * Same `SELECT *` shape as findAll() above (all 3 tables' columns are
+     * string|null -- no int/enum-as-int columns on any of plugins/themes/
+     * languages, confirmed via install/piwigo_structure-mysql.sql).
+     *
+     * @return array<string, string|null>|null
      */
     public function find(ExtensionType $type, string $id): ?array
     {
@@ -83,6 +87,7 @@ final readonly class ExtensionRepository
             ->executeQuery()
             ->fetchAssociative();
 
+        /** @var array<string, string|null>|false $row */
         return $row === false ? null : $row;
     }
 

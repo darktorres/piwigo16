@@ -46,6 +46,19 @@ use Piwigo\Users\UserService;
  *   public entry point, so the delete-disabled guard below -- which only
  *   ever gates a top-level 'delete' call -- doesn't re-run pointlessly).
  */
+/**
+ * `$fsEntry` throughout this class is `array<string, mixed>|null` even
+ * though {@see ExtensionScanner}'s own scanPlugin()/scanTheme()/
+ * scanLanguage() each return a real, precise, per-type array shape --
+ * {@see ExtensionScanner::scan()} (the only real producer reachable from
+ * here) deliberately returns the generic `array<string, array<string,
+ * mixed>>` dispatch shape rather than a 3-way conditional return type (see
+ * that method's own docblock), and this class's own `performAction()`
+ * dispatches on the SAME `ExtensionType` to 3 sibling methods that each
+ * only ever receive their own type's real entry. Every real read below
+ * already narrows defensively (`?? null` + an is_*() check or
+ * stringOrDefault()).
+ */
 final readonly class ExtensionLifecycle
 {
     public function __construct(
@@ -104,6 +117,9 @@ final readonly class ExtensionLifecycle
     {
         $dbRow = $this->repo->find(ExtensionType::Plugin, $id);
         $errors = [];
+        // Entity-agnostic accumulator handed to ActivityService::record()'s
+        // own genuinely-arbitrary $details param -- same rationale as
+        // Audit\AuditService's $before/$after.
         /** @var array<string, mixed> $activityDetails */
         $activityDetails = [
             'plugin_id' => $id,
@@ -258,6 +274,7 @@ final readonly class ExtensionLifecycle
 
         $dbRow = $this->repo->find(ExtensionType::Theme, $id);
         $errors = [];
+        // Same rationale as performPluginAction()'s own $activityDetails.
         /** @var array<string, mixed> $activityDetails */
         $activityDetails = [
             'theme_id' => $id,

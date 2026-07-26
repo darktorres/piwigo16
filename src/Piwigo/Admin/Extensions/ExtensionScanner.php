@@ -23,6 +23,14 @@ use Piwigo\Db\SqlDialect;
 final class ExtensionScanner
 {
     /**
+     * Each of the 3 real entry shapes (scanPlugin()/scanTheme()/
+     * scanLanguage()'s own precise return types) is genuinely different --
+     * a 3-way `$type is X ? ... : ...` conditional return type here would
+     * just repeat all 3 shapes a second time for no reader benefit; every
+     * real caller already reads specific keys defensively (`?? null` +
+     * an is_*() check), the same cross-domain generic-row-reader pattern
+     * used elsewhere for a dispatched-by-type heterogeneous return.
+     *
      * @return array<string, array<string, mixed>> keyed by extension id
      *   (directory name)
      */
@@ -138,7 +146,22 @@ final class ExtensionScanner
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @return array{
+     *   id: string,
+     *   name: string,
+     *   version: string,
+     *   uri: string,
+     *   description: string,
+     *   author: string,
+     *   mobile: bool,
+     *   screenshot: string,
+     *   'author uri'?: string,
+     *   extension?: string,
+     *   parent?: string,
+     *   activable?: bool,
+     *   use_standard_pages?: bool,
+     *   admin_uri?: string,
+     * }|null
      */
     private function scanTheme(string $themeId, UrlServiceInterface $urlService): ?array
     {
@@ -225,6 +248,26 @@ final class ExtensionScanner
             }
         }
 
+        // Same re-assertion as scanPlugin()'s own $plugin cast above -- the
+        // dynamic $key write above loses the precise shape from PHPStan's
+        // perspective even though every value stays the same type.
+        /** @var array{
+         *   id: string,
+         *   name: string,
+         *   version: string,
+         *   uri: string,
+         *   description: string,
+         *   author: string,
+         *   mobile: bool,
+         *   screenshot: string,
+         *   'author uri'?: string,
+         *   extension?: string,
+         *   parent?: string,
+         *   activable?: bool,
+         *   use_standard_pages?: bool,
+         *   admin_uri?: string,
+         * } $theme
+         */
         return $theme;
     }
 
@@ -242,7 +285,7 @@ final class ExtensionScanner
      * language as "outdated" the moment ExtensionUpdateChecker compares it
      * against any real PEM revision.
      *
-     * @return array<string, mixed>|null
+     * @return array{name: string, code: string, version: string, uri: string, author: string}|null
      */
     private function scanLanguage(string $languageId, ?string $targetCharset): ?array
     {
@@ -292,7 +335,13 @@ final class ExtensionScanner
         }
 
         // IMPORTANT SECURITY!
-        return array_map(htmlspecialchars(...), $language);
+        // Same re-assertion as scanPlugin()'s own $plugin cast above --
+        // array_map() doesn't preserve the precise shape from PHPStan's
+        // perspective even though every value stays a string.
+        /** @var array{name: string, code: string, version: string, uri: string, author: string} $result */
+        $result = array_map(htmlspecialchars(...), $language);
+
+        return $result;
     }
 
     private function extractExtensionId(string $uri): ?string

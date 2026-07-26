@@ -57,11 +57,14 @@ final readonly class CoreUpdateService
     }
 
     /**
-     * @return array<string, mixed> (
-     *   'piwigo.org-checked' => has piwigo.org been checked?,
-     *   'is_dev' => are we on a dev version?,
-     *   'minor'/'major' => new version available on that branch,
-     * )
+     * @return array{
+     *   'piwigo.org-checked': bool,
+     *   is_dev: bool,
+     *   minor?: string,
+     *   major?: string,
+     *   minor_php?: string,
+     *   major_php?: string,
+     * }
      */
     public function getPiwigoNewVersions(): array
     {

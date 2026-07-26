@@ -39,6 +39,12 @@ final readonly class ExtensionUpdateChecker
      * is older than the latest PEM revision compatible with $version, or
      * null if the PEM server couldn't be reached.
      *
+     * 'fs' is one entry from ExtensionScanner::scan()'s own by-design
+     * generic dispatch shape (real per-type precision documented on
+     * scanPlugin()/scanTheme()/scanLanguage() themselves); 'server' is one
+     * entry from PemCatalog::getServerExtensions()'s own genuinely
+     * arbitrary (unserialize()'d remote PEM response) row.
+     *
      * @return array<string, array{fs: array<string, mixed>, server: array<string, mixed>}>|null
      */
     public function getPendingUpdates(ExtensionType $type, string $version = AppInfo::VERSION): ?array
@@ -194,6 +200,9 @@ final readonly class ExtensionUpdateChecker
      * and extensions merged into core by $version (getMergedExtensions()) --
      * mirrors updates.class.php::check_missing_extensions(), only ever used
      * by the core-upgrade "different branch" step (updates_pwg.php step 3).
+     *
+     * Each entry is one row from ExtensionScanner::scan()'s own by-design
+     * generic dispatch shape -- see getPendingUpdates()'s own docblock.
      *
      * @return array<string, list<array<string, mixed>>> keyed by
      *   ExtensionType::value

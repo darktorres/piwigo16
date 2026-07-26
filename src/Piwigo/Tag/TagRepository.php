@@ -460,8 +460,10 @@ SELECT id
             return;
         }
 
-        new BatchWriter($this->getEntityManager()->getConnection())
+        $em = $this->getEntityManager();
+        new BatchWriter($em->getConnection())
             ->massInsert(Tables::imageTag(), array_keys($inserts[0]), $inserts);
+        $em->clear();
     }
 
     private static function toProjection(TagEntity $entity): Tag

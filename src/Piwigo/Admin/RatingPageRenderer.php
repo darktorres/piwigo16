@@ -7,7 +7,6 @@ namespace Piwigo\Admin;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeImage;
 
@@ -22,29 +21,16 @@ final class RatingPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('display', $_GET, false, ValidationPattern::ID);
+        $ratingRequest = Request\RatingRequest::fromGlobals();
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('rating');
         $tabsheet->select('rating');
         $tabsheet->assign();
 
-        if (isset($_GET['start']) and is_numeric($_GET['start'])) {
-            $start = (int) $_GET['start'];
-        } else {
-            $start = 0;
-        }
-
-        $elements_per_page = 10;
-        if (isset($_GET['display']) and is_numeric($_GET['display'])) {
-            $elements_per_page = (int) $_GET['display'];
-        }
-
-        $order_by_index = 0;
-        if (isset($_GET['order_by']) and is_numeric($_GET['order_by'])) {
-            $order_by_index = (int) $_GET['order_by'];
-        }
+        $start = $ratingRequest->start;
+        $elements_per_page = $ratingRequest->elementsPerPage;
+        $order_by_index = $ratingRequest->orderByIndex;
 
         // \Piwigo\Config\CurrentConfig::guestId() is set as a PHP int literal in
         // include/config_default.inc.php.
@@ -54,21 +40,19 @@ final class RatingPageRenderer
         $conn = DbConnection::build();
 
         $cat_ids = [];
-        if (isset($_GET['cat']) and is_numeric($_GET['cat'])) {
+        if ($ratingRequest->catId !== null) {
             $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
-            $cat_ids = array_values(array_map(intval(...), array_filter($categoryService->getSubcatIds([(int) $_GET['cat']]), is_numeric(...))));
+            $cat_ids = array_values(array_map(intval(...), array_filter($categoryService->getSubcatIds([$ratingRequest->catId]), is_numeric(...))));
         }
 
         $filter_user_id = null;
         $exclude_filter_user = false;
-        if (isset($_GET['users'])) {
-            if ($_GET['users'] === 'user') {
-                $filter_user_id = $guest_id;
-                $exclude_filter_user = true;
-            } elseif ($_GET['users'] === 'guest') {
-                $filter_user_id = $guest_id;
-                $exclude_filter_user = false;
-            }
+        if ($ratingRequest->isUsersUser) {
+            $filter_user_id = $guest_id;
+            $exclude_filter_user = true;
+        } elseif ($ratingRequest->isUsersGuest) {
+            $filter_user_id = $guest_id;
+            $exclude_filter_user = false;
         }
 
         /** @var array<string, string> $user_fields */
@@ -93,7 +77,7 @@ final class RatingPageRenderer
                 'F_ACTION' => $urlService->getRootUrl() . 'admin.php',
                 'DISPLAY' => $elements_per_page,
                 'NB_ELEMENTS' => $nb_elements,
-                'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []),
+                'category' => ($ratingRequest->catPresent ? [$ratingRequest->catRaw] : []),
                 'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($urlService, ['categories']),
             ]
         );
@@ -108,6 +92,10 @@ final class RatingPageRenderer
             [Lang::t('Creation date'), 'date_creation DESC'],
             [Lang::t('Post date'), 'date_available DESC'],
         ];
+
+        if ($order_by_index < 0 or $order_by_index >= count($available_order_by)) {
+            $order_by_index = 0;
+        }
 
         for ($i = 0; $i < count($available_order_by); $i++) {
             $template->append(
@@ -124,7 +112,7 @@ final class RatingPageRenderer
         ];
 
         $template->assign('user_options', $user_options);
-        $template->assign('user_options_selected', [$_GET['users'] ?? null]);
+        $template->assign('user_options_selected', [$ratingRequest->usersRaw]);
         $template->assign('ADMIN_PAGE_TITLE', Lang::t('Rating'));
 
         $images = $rate_repository->findRatingReport(

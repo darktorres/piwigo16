@@ -53,6 +53,12 @@ use Piwigo\Template\Template;
  * `\Piwigo\Db\MysqliDb::massUpdates()`/`::booleanToString()`/`::getBoolean()`
  * retargeted onto `Piwigo\Db\BatchWriter`/`Piwigo\Db\SqlDialect`
  * (Legacy Coupling Retirement: DI+DBAL migration, Phase 1b).
+ *
+ * Every `$checkKeyList` param below stays mixed by design -- see
+ * NotificationByMailService::getUserNotifications()'s own docblock: it
+ * may come straight from $_POST (admin/notification_by_mail.php), the
+ * real fix belongs to Phase 4's Request DTOs, not a retroactive narrow on
+ * this thin delegate.
  */
 final class NotificationByMailSender
 {
@@ -273,9 +279,10 @@ final class NotificationByMailSender
     {
         $this->urlService->setMakeFullUrl();
 
-        // getGalleryHomeUrl() is declared to return mixed; real callers
-        // always get back a string URL, but that isn't visible through its
-        // own signature.
+        // getGalleryHomeUrl() now declares a real string return (this
+        // mixed-elimination pass) -- the is_string() guard below is a
+        // leftover from before that narrow, left for the final cleanup
+        // pass rather than touched here.
         $galleryHomeUrl = $this->urlService->getGalleryHomeUrl();
         $galleryHomeUrlStr = is_string($galleryHomeUrl) ? $galleryHomeUrl : '';
 
@@ -307,7 +314,7 @@ final class NotificationByMailSender
      * Subscribe or unsubscribe notification by mail.
      *
      * @param array<int, mixed> $checkKeyList check_key list where action will be done
-     * @return mixed[] check_key list treated
+     * @return list<string> check_key list treated
      */
     public function doSubscribeUnsubscribeNotificationByMail(bool $isAdminRequest, bool $isSubscribe, array $checkKeyList): array
     {
@@ -450,10 +457,17 @@ final class NotificationByMailSender
      * Returns the list of "selected" users for 'list_to_send'.
      * Returns the list of "treated" check_key for 'send'.
      *
+     * $customizeMailContent: every real caller passes a string (or the
+     * default); it becomes mixed internally once the
+     * nbm_render_global_customize_mail_content hook runs (by-design, see
+     * EventDispatcher), flowing into another trigger_change() call and
+     * then Template::assign() -- both already-confirmed arbitrary-value
+     * boundaries.
+     *
      * @param array<int, mixed> $checkKeyList
-     * @return array<int, mixed>
+     * @return list<string|UserMailNotification>
      */
-    public function sendMailNotifications(string $action = 'list_to_send', array $checkKeyList = [], mixed $customizeMailContent = ''): array
+    public function sendMailNotifications(string $action = 'list_to_send', array $checkKeyList = [], string $customizeMailContent = ''): array
     {
         $returnList = [];
 
@@ -708,7 +722,7 @@ final class NotificationByMailSender
 
     /**
      * @param array<int, mixed> $checkKeyList check_key list where action will be done
-     * @return mixed[] check_key list treated
+     * @return list<string> check_key list treated
      */
     public function subscribeNotificationByMail(bool $isAdminRequest, array $checkKeyList = []): array
     {
@@ -717,7 +731,7 @@ final class NotificationByMailSender
 
     /**
      * @param array<int, mixed> $checkKeyList check_key list where action will be done
-     * @return mixed[] check_key list treated
+     * @return list<string> check_key list treated
      */
     public function unsubscribeNotificationByMail(bool $isAdminRequest, array $checkKeyList = []): array
     {

@@ -174,7 +174,7 @@ final class MailService implements MailerInterface
     private static array $switchLangStack = [];
 
     /**
-     * @var array<string, array{lang_info: array<string, mixed>, lang: array<string, string|array<int, string>>}>
+     * @var array<string, array{lang_info: array<string, string|bool>, lang: array<string, string|array<int, string>>}>
      */
     private static array $switchLangLanguages = [];
 
@@ -304,7 +304,10 @@ final class MailService implements MailerInterface
     /**
      * Returns a clean array of hashmaps (email, name), removing duplicates.
      * Accepts a comma-separated list, an array of emails, a single hashmap
-     * (email[, name]), or an array of incomplete hashmaps.
+     * (email[, name]), or an array of incomplete hashmaps -- $data stays
+     * mixed by design: it's a multi-shape dispatcher (see the accepted
+     * shapes above), not a single reusable contract, and every shape is
+     * validated internally before use.
      *
      * @return list<array{email: string, name: string}>
      */
@@ -540,7 +543,7 @@ final class MailService implements MailerInterface
      * Sends an email to all administrators. The current user (if admin) is
      * excluded.
      *
-     * @param array{from?: mixed, reply_to_mail_address?: string, reply_to_name?: string, Cc?: mixed, Bcc?: mixed, subject?: mixed, content?: mixed, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args as in mail()
+     * @param array{from?: array|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array|string, Bcc?: array|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args as in mail()
      * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl as in mail()
      */
     public function mailAdmins(array $args = [], array $tpl = [], bool $excludeCurrentUser = true, bool $onlyWebmasters = false, int|string|null $groupId = null): bool
@@ -587,7 +590,7 @@ final class MailService implements MailerInterface
     /**
      * Sends an email to a group.
      *
-     * @param array{language_selected?: string, from?: mixed, reply_to_mail_address?: string, reply_to_name?: string, Cc?: mixed, Bcc?: mixed, subject?: mixed, content?: mixed, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args as in mail() -- language_selected filters users of the group by language
+     * @param array{language_selected?: string, from?: array|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array|string, Bcc?: array|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args as in mail() -- language_selected filters users of the group by language
      * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl as in mail()
      */
     public function mailGroup(int $groupId, array $args = [], array $tpl = []): bool
@@ -993,9 +996,10 @@ final class MailService implements MailerInterface
     }
 
     /**
-     * Saves a copy of the mail in _data/tmp.
+     * Saves a copy of the mail in _data/tmp. $args is mail()'s own $args,
+     * passed through unchanged -- same shape as that method's own docblock.
      *
-     * @param array<string, mixed> $args
+     * @param array{from?: array|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array|string, Bcc?: array|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
      */
     public function sendMailTest(bool $success, Email $mail, array $args, ?string $errorMessage = null): void
     {

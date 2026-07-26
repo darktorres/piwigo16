@@ -49,36 +49,29 @@ final class RegisterController implements ControllerInterface
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_register');
 
-        if (isset($_POST['submit'])) {
-            $post_key = $_POST['key'] ?? null;
-            if (! is_string($post_key)) {
-                $post_key = '';
-            }
-            if (! new \Piwigo\Auth\EphemeralKeyService()->verify($post_key)) {
+        $registerSubmit = Request\RegisterSubmitRequest::fromGlobals();
+
+        if ($registerSubmit->isSubmitted) {
+            if (! new \Piwigo\Auth\EphemeralKeyService()->verify($registerSubmit->key)) {
                 \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->setStatusHeader(403);
                 $errors['register_page_error'] = Lang::t('Invalid/expired form key');
             }
 
-            $post_password_raw = $_POST['password'] ?? null;
-            $post_password_conf_raw = $_POST['password_conf'] ?? null;
+            $post_password_raw = $registerSubmit->password;
+            $post_password_conf_raw = $registerSubmit->passwordConf;
 
-            if ($post_password_raw === null || $post_password_raw === '' || $post_password_raw === '0') {
+            if ($post_password_raw === '' || $post_password_raw === '0') {
                 $errors['register_form_error'] = Lang::t('Password is missing. Please enter the password.');
-            } elseif ($post_password_conf_raw === null || $post_password_conf_raw === '' || $post_password_conf_raw === '0') {
+            } elseif ($post_password_conf_raw === '' || $post_password_conf_raw === '0') {
                 $errors['register_form_error'] = Lang::t('Password confirmation is missing. Please confirm the chosen password.');
-            } elseif (
-                (is_string($post_password_raw) ? $post_password_raw : '')
-                !== (is_string($post_password_conf_raw) ? $post_password_conf_raw : '')
-            ) {
+            } elseif ($post_password_raw !== $post_password_conf_raw) {
                 $errors['register_form_error'] = Lang::t('The passwords do not match');
             }
 
-            $post_login_raw = $_POST['login'] ?? null;
-            $post_login = is_string($post_login_raw) ? $post_login_raw : '';
-            $post_password = is_string($post_password_raw) ? $post_password_raw : '';
-            $post_mail_address_raw = $_POST['mail_address'] ?? null;
-            $post_mail_address = is_string($post_mail_address_raw) ? $post_mail_address_raw : null;
+            $post_login = $registerSubmit->login;
+            $post_password = $post_password_raw;
+            $post_mail_address = $registerSubmit->mailAddress;
 
             // UserService::registerUser()'s $registration_errors is a plain
             // list<string> of validation messages, a different shape than
@@ -106,7 +99,7 @@ final class RegisterController implements ControllerInterface
                     $post_mail_address,
                     $this->urlService,
                     true,
-                    isset($_POST['send_password_by_mail'])
+                    $registerSubmit->sendPasswordByMail
                 );
             $registration_errors = $registration_result['errors'];
             $new_user_id = $registration_result['userId'];
@@ -134,7 +127,7 @@ final class RegisterController implements ControllerInterface
 
             if (count($errors) === 0) {
                 // email notification
-                if (isset($_POST['send_password_by_mail']) and \Piwigo\Validation\InputValidator::checkEmailFormat($post_mail_address)) {
+                if ($registerSubmit->sendPasswordByMail and \Piwigo\Validation\InputValidator::checkEmailFormat($post_mail_address)) {
                     if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
                         $_SESSION['page_infos'] = [];
                     }
@@ -171,11 +164,9 @@ final class RegisterController implements ControllerInterface
                 ->generate(6);
         }
 
-        $login_raw = $_POST['login'] ?? null;
-        $login = is_string($login_raw) && $login_raw !== '' && $login_raw !== '0' ? htmlspecialchars(stripslashes($login_raw)) : '';
+        $login = $registerSubmit->login !== '' && $registerSubmit->login !== '0' ? htmlspecialchars(stripslashes($registerSubmit->login)) : '';
 
-        $mail_raw = $_POST['mail_address'] ?? null;
-        $email = is_string($mail_raw) && $mail_raw !== '' && $mail_raw !== '0' ? htmlspecialchars(stripslashes($mail_raw)) : '';
+        $email = $registerSubmit->mailAddress !== null && $registerSubmit->mailAddress !== '' && $registerSubmit->mailAddress !== '0' ? htmlspecialchars(stripslashes($registerSubmit->mailAddress)) : '';
 
         $urlService = $this->urlService;
 

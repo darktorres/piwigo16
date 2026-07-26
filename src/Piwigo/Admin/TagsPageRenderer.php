@@ -41,7 +41,7 @@ final class TagsPageRenderer
         $tagConn = DbConnection::build();
         $tagService = \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
 
-        if (($_GET['action'] ?? null) === 'delete_orphans') {
+        if (Request\TagsActionRequest::fromGlobals()->isDeleteOrphans) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 

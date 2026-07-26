@@ -2,34 +2,6 @@
 
 declare(strict_types=1);
 
-// MaintenanceActionDispatcher calls the real l10n() (unqualified, resolves
-// to the global namespace) for its own info messages -- a real,
-// already-migrated function, but one that needs full app bootstrap
-// (LangService/Translator) this isolated integration test deliberately
-// doesn't load. Same "minimal stub to load standalone" pattern as
-// tests/Integration/PermalinkServiceTest.php, just needing PHP's bracketed
-// namespace syntax here since this file's own test class must stay in
-// Piwigo\Tests\Integration for PSR-4 discovery.
-namespace {
-    if (! function_exists('l10n')) {
-        function l10n(string $key, mixed ...$args): string
-        {
-            return $args === [] ? $key : vsprintf($key, array_map(static fn (mixed $a): string => is_scalar($a) ? (string) $a : '', $args));
-        }
-    }
-
-    // pwg_activity() -- MaintenanceActionDispatcher now calls Piwigo\
-    // Activity\ActivityService::record() directly (P23 batch 8d), so no
-    // stub is needed; this Integration test's real DB connection exercises
-    // genuine activity-logging behavior (the whole point of
-    // test_a_real_action_is_logged_to_pwg_activity()) without a stub.
-
-    // script_basename() stub removed -- ActivityService::record() now
-    // calls Piwigo\Core\PageFilterHelper::scriptBasename() directly (P23
-    // batch 8d), a real class method a same-named bare-function stub can
-    // no longer intercept.
-}
-
 namespace Piwigo\Tests\Integration {
 
 use Doctrine\DBAL\Connection;

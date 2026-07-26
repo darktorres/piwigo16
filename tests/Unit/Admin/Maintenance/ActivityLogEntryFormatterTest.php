@@ -2,30 +2,6 @@
 
 declare(strict_types=1);
 
-// ActivityLogEntryFormatter calls the real l10n() (unqualified, resolves to
-// the global namespace) for its own icon labels -- a real, already-migrated
-// function, but one that needs full app bootstrap (LangService/Translator)
-// this isolated Unit test deliberately doesn't load. Same "minimal stub to
-// load standalone" pattern as tests/Unit/Admin/Upload/UploadServiceTest.php.
-if (! function_exists('l10n')) {
-    function l10n(string $key, mixed ...$args): string
-    {
-        return $args === [] ? $key : vsprintf($key, array_map(static fn (mixed $a): string => is_scalar($a) ? (string) $a : '', $args));
-    }
-}
-
-// Same reasoning as the l10n() stub above -- format_date() needs the real
-// $user['language']/$lang bootstrap this isolated Unit test doesn't load.
-// None of this suite's assertions check the formatted date string itself
-// (only date/hour splitting and the other passthrough fields), so a plain
-// passthrough is enough.
-if (! function_exists('format_date')) {
-    function format_date(mixed $original, mixed $show = null, mixed $format = null): string
-    {
-        return is_string($original) ? $original : '';
-    }
-}
-
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Admin\Maintenance\ActivityLogEntryFormatter;
 use Piwigo\Core\ActivitySystem;

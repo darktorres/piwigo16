@@ -2,19 +2,6 @@
 
 declare(strict_types=1);
 
-// UploadService calls the real l10n() (unqualified, resolves to the
-// global namespace) for its own validation/error messages -- a real,
-// stable, already-migrated function, but one that needs full app
-// bootstrap (LangService/Translator) this isolated Unit test deliberately
-// doesn't load. Same "minimal stub to load standalone" pattern as
-// tests/Integration/PermalinkServiceTest.php.
-if (! function_exists('l10n')) {
-    function l10n(string $key, mixed ...$args): string
-    {
-        return $args === [] ? $key : vsprintf($key, array_map(static fn (mixed $a): string => is_scalar($a) ? (string) $a : '', $args));
-    }
-}
-
 use Piwigo\Admin\Upload\UploadService;
 
 // Marker-based filesystem safety: this suite writes real files to verify

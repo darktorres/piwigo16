@@ -27,7 +27,7 @@ use Piwigo\Permission\PermissionService;
  */
 final class CategoryAdminServiceFakeActivityLogger implements ActivityLoggerInterface
 {
-    /** @var list<array{object: string, objectId: mixed, action: string, details: array<string, mixed>}> */
+    /** @var list<array{object: string, objectId: int|string|array<int, int|string>, action: string, details: array<string, mixed>}> */
     public array $calls = [];
 
     #[\Override]

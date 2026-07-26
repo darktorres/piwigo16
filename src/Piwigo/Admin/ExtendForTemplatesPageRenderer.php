@@ -128,12 +128,13 @@ SELECT permalink
             FilesystemHelper::getDirs(\Piwigo\Core\CurrentPaths::get()->themes)
         );
 
-        if (isset($_POST['submit'])) {
+        $extendSubmit = Request\ExtendForTemplatesSubmitRequest::fromGlobals();
+        if ($extendSubmit->isSubmitted) {
             $replacements = [];
-            $post_reptpl = isset($_POST['reptpl']) && is_array($_POST['reptpl']) ? $_POST['reptpl'] : [];
-            $post_original = isset($_POST['original']) && is_array($_POST['original']) ? $_POST['original'] : [];
-            $post_url = isset($_POST['url']) && is_array($_POST['url']) ? $_POST['url'] : [];
-            $post_bound = isset($_POST['bound']) && is_array($_POST['bound']) ? $_POST['bound'] : [];
+            $post_reptpl = $extendSubmit->reptpl;
+            $post_original = $extendSubmit->original;
+            $post_url = $extendSubmit->url;
+            $post_bound = $extendSubmit->bound;
             $i = 0;
             while (isset($post_reptpl[$i])) {
                 $newtpl = $post_reptpl[$i];

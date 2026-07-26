@@ -78,7 +78,7 @@ adoption:
 # deletes UserCacheRepository before this item's own repository
 # classification would otherwise have to account for it.
 remediation:
-  - {id: dbal-orm-migration, tier: T2, cuttable: false, depends_on: [P23], status: planned}
+  - {id: dbal-orm-migration, tier: T2, cuttable: false, depends_on: [P23], status: done}  # Executed 2026-07-26, c9b0ff0a8 + 3e3b61839 -- see PLAN-REPLAY.md's own "Remediation — DBAL→ORM migration" section
 
 sec:
   - {id: SEC-01, phase: P4,  threat: "Sensitive files served over HTTP", verified_by: ".htaccess deny E2E (P4); isolation gate (P32)", status: done}

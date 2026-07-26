@@ -32,7 +32,6 @@ use Piwigo\Core\ServerTiming;
 use Piwigo\Core\StringHelper;
 use Piwigo\Db\DbConnection;
 use Piwigo\Filter\FilterService;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
@@ -486,7 +485,7 @@ final class RequestBootstrap
         // language files
         Lang::setDefaultLanguageProvider(new UserService(
             new UserRepository($conn),
-            new GroupRepository($conn),
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
             new MailService(),
             self::activityService($conn),
             new HtmlService(),

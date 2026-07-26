@@ -153,7 +153,7 @@ final class MailService implements MailerInterface
     {
         return new \Piwigo\Users\UserService(
             new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()),
-            new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()),
+            \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class),
             new self(),
             new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())),
             new HtmlService(),

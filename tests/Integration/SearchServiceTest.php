@@ -167,10 +167,10 @@ final class SearchServiceTest extends IntegrationTestCase
 
         $this->service = new SearchService(
             $this->repo,
-            new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn)),
+            new PermissionService(new PermissionRepository($this->conn), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository($this->conn)),
             new CategoryService(
                 new CategoryRepository($this->conn),
-                new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn))
+                new PermissionService(new PermissionRepository($this->conn), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository($this->conn))
             ),
             new MailService(),
             new HtmlService(),

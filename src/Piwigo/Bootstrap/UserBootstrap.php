@@ -60,7 +60,7 @@ final class UserBootstrap
         );
         $userService = new \Piwigo\Users\UserService(
             new \Piwigo\Users\UserRepository($conn),
-            new \Piwigo\Group\GroupRepository($conn),
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
             new \Piwigo\Mail\MailService(),
             new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)),
             new HtmlService(),

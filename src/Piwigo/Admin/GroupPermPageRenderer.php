@@ -150,7 +150,7 @@ SELECT id
             [
                 'TITLE' => Lang::t(
                     'Manage permissions for group "%s"',
-                    new GroupRepository($conn)
+                    \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class)
                         ->findName($group_id) ?? false
                 ),
                 'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),

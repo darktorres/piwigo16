@@ -53,7 +53,7 @@ final class GroupServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $this->repo = new GroupRepository(DbConnection::build());
+        $this->repo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class);
         $auditRepo = EntityManagerFactory::build()->getRepository(AuditLogEntity::class);
         $this->service = new GroupService($this->repo, new ActivityService(new ActivityRepository(DbConnection::build())), new AuditService($auditRepo), new ConfigService($this->buildConfigRepository()));
     }

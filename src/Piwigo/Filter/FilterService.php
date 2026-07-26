@@ -11,7 +11,6 @@ use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -150,7 +149,7 @@ final class FilterService implements FilterUpdaterInterface
                 // value.
                 $computedCategories = new CategoryService(
                     new CategoryRepository($categoryConn),
-                    new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn), new CategoryRepository($categoryConn))
+                    new PermissionService(new PermissionRepository($categoryConn), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository($categoryConn))
                 )->getComputedCategories($currentUser->toUserArray(), $filter_recent_period);
                 $filter['categories'] = $computedCategories['categories'];
                 \Piwigo\Users\CurrentUser::set($currentUser->withRawAttribute('last_photo_date', $computedCategories['lastPhotoDate']));

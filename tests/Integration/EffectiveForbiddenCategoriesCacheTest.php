@@ -57,7 +57,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
 
         $permissionService = new PermissionService(
             new PermissionRepository($this->conn),
-            new GroupRepository($this->conn),
+            \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class),
             new CategoryRepository($this->conn),
         );
         $this->cache = new EffectiveForbiddenCategoriesCache(
@@ -120,8 +120,8 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
             // here is a genuinely fresh computation reflecting the new
             // forbidden category, not a per-user cache-entry distinction.
             $afterCache = new EffectiveForbiddenCategoriesCache(
-                new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn)),
-                new CategoryService(new CategoryRepository($this->conn), new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn))),
+                new PermissionService(new PermissionRepository($this->conn), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository($this->conn)),
+                new CategoryService(new CategoryRepository($this->conn), new PermissionService(new PermissionRepository($this->conn), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository($this->conn))),
                 $this->conn,
                 new ArrayAdapter(),
             );

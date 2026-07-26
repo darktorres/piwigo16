@@ -18,7 +18,6 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Group\GroupService;
 
 /**
@@ -46,7 +45,7 @@ final class PwgGroups
             return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter order');
         }
 
-        $groups = new GroupRepository(DbConnection::build())
+        $groups = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class)
             ->findWithMemberCounts(
                 $params['group_id'] ?? [],
                 isset($params['name']) && $params['name'] !== '' ? $params['name'] : null,

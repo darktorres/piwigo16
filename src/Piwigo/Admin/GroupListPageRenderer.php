@@ -9,7 +9,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Lang\Translator;
 
 /**
@@ -57,7 +56,7 @@ final class GroupListPageRenderer
             ]
         );
 
-        $group_repo = new GroupRepository(DbConnection::build());
+        $group_repo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class);
         $groups = $group_repo->findAllBasic();
 
         $admin_url = $this->urlService->getRootUrl() . 'admin.php?page=';

@@ -48,10 +48,10 @@ final class CalendarServiceTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->service = new CalendarService(
-            new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn)),
+            new PermissionService(new PermissionRepository($this->conn), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository($this->conn)),
             new CategoryService(
                 new CategoryRepository($this->conn),
-                new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn))
+                new PermissionService(new PermissionRepository($this->conn), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository($this->conn))
             )
         );
 

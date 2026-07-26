@@ -106,7 +106,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
             new CategoryRepository($this->conn),
             new PermissionService(
                 new PermissionRepository($this->conn),
-                new GroupRepository($this->conn),
+                \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class),
                 new CategoryRepository($this->conn)
             )
         );

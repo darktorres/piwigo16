@@ -53,7 +53,7 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
         $this->cache = new CategoryTreeCache(
             new CategoryService(
                 new CategoryRepository($this->conn),
-                new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn), new CategoryRepository($this->conn))
+                new PermissionService(new PermissionRepository($this->conn), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository($this->conn))
             ),
             new CategoryRepository($this->conn),
             $this->pool

@@ -30,7 +30,7 @@ function makeCalendarService(): CalendarService
     $conn = DbConnection::build();
     $permissionService = new PermissionService(
         new PermissionRepository($conn),
-        new GroupRepository($conn),
+        \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
         new CategoryRepository($conn),
     );
 

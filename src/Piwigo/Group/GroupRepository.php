@@ -4,18 +4,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Group;
 
-use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\ParameterType;
+use Doctrine\ORM\EntityRepository;
 use Piwigo\Core\Env;
-use Piwigo\Db\AbstractRepository;
-use Piwigo\Db\Tables;
 use Piwigo\Group\Projection\Group;
 
 /**
  * Persistence layer for the group domain: `groups`, `user_group` (group
  * membership), `group_access` (per-group category permissions).
+ *
+ * @extends EntityRepository<GroupEntity>
  */
-final class GroupRepository extends AbstractRepository
+final class GroupRepository extends EntityRepository
 {
     /**
      * Ids of every group marked is_default, ordered by id ascending.
@@ -25,16 +24,14 @@ final class GroupRepository extends AbstractRepository
      */
     public function findDefaultGroupIds(): array
     {
-        $ids = $this->conn->createQueryBuilder()
-            ->select('id')
-            ->from(Tables::groups())
-            ->where('is_default = :isDefault')
-            ->orderBy('id', 'ASC')
-            ->setParameter('isDefault', 1)
-            ->executeQuery()
-            ->fetchFirstColumn();
+        $entities = $this->createQueryBuilder('g')
+            ->where('g.isDefault = :isDefault')
+            ->orderBy('g.id', 'ASC')
+            ->setParameter('isDefault', true)
+            ->getQuery()
+            ->getResult();
 
-        return self::toIntList($ids);
+        return array_map(static fn (GroupEntity $g): int => $g->id ?? 0, $entities);
     }
 
     /**
@@ -44,21 +41,24 @@ final class GroupRepository extends AbstractRepository
      */
     public function findAllBasic(): array
     {
-        $rows = $this->conn->createQueryBuilder()
-            ->select('id', 'name', 'is_default')
-            ->from(Tables::groups())
-            ->orderBy('name', 'ASC')
-            ->executeQuery()
-            ->fetchAllAssociative();
+        $entities = $this->createQueryBuilder('g')
+            ->orderBy('g.name', 'ASC')
+            ->getQuery()
+            ->getResult();
 
-        return array_map(Group::fromRow(...), $rows);
+        return array_map(
+            static fn (GroupEntity $g): Group => new Group($g->id ?? 0, $g->name, $g->isDefault),
+            $entities,
+        );
     }
 
     /**
      * Groups matching the given filters, each augmented with its member
      * count (`nb_users`). $order is a pre-validated raw SQL fragment (see
      * ValidationPattern::ORDER at the ws_groups_getList call site) -- not
-     * user-controlled free text.
+     * user-controlled free text, but genuinely dynamic, same shape as
+     * Search/Calendar/Section's own documented DQL exceptions -- stays
+     * plain DBAL via the entity manager's own connection rather than DQL.
      *
      * @param array<int, int> $groupIds when non-empty, restricts to these ids
      * @return list<array<string, mixed>>
@@ -70,10 +70,12 @@ final class GroupRepository extends AbstractRepository
         int $perPage,
         int $page
     ): array {
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('g.*', 'COUNT(ug.user_id) AS nb_users')
-            ->from(Tables::groups(), 'g')
-            ->leftJoin('g', Tables::userGroup(), 'ug', 'ug.group_id = g.id')
+            ->from(\Piwigo\Db\Tables::groups(), 'g')
+            ->leftJoin('g', \Piwigo\Db\Tables::userGroup(), 'ug', 'ug.group_id = g.id')
             ->groupBy('g.id')
             ->orderBy($order)
             ->setMaxResults($perPage)
@@ -86,7 +88,7 @@ final class GroupRepository extends AbstractRepository
 
         if ($groupIds !== []) {
             $qb->andWhere('g.id IN (:groupIds)')
-                ->setParameter('groupIds', $groupIds, ArrayParameterType::INTEGER);
+                ->setParameter('groupIds', $groupIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
         }
 
         $rows = $qb->executeQuery()
@@ -109,34 +111,25 @@ final class GroupRepository extends AbstractRepository
 
     public function nameExists(string $name, ?int $excludeGroupId = null): bool
     {
-        $qb = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::groups())
-            ->where('name = :name')
+        $qb = $this->createQueryBuilder('g')
+            ->select('COUNT(g.id)')
+            ->where('g.name = :name')
             ->setParameter('name', $name);
 
         if ($excludeGroupId !== null) {
-            $qb->andWhere('id != :excludeGroupId')
+            $qb->andWhere('g.id != :excludeGroupId')
                 ->setParameter('excludeGroupId', $excludeGroupId);
         }
 
-        $value = $qb->executeQuery()
-            ->fetchOne();
+        $value = $qb->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) && (int) $value > 0;
     }
 
     public function exists(int $groupId): bool
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::groups())
-            ->where('id = :id')
-            ->setParameter('id', $groupId)
-            ->executeQuery()
-            ->fetchOne();
-
-        return is_numeric($value) && (int) $value > 0;
+        return $this->find($groupId) !== null;
     }
 
     /**
@@ -151,41 +144,25 @@ final class GroupRepository extends AbstractRepository
             return [];
         }
 
-        $ids = $this->conn->createQueryBuilder()
-            ->select('id')
-            ->from(Tables::groups())
-            ->where('id IN (:groupIds)')
-            ->setParameter('groupIds', $groupIds, ArrayParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchFirstColumn();
+        $entities = $this->createQueryBuilder('g')
+            ->where('g.id IN (:groupIds)')
+            ->setParameter('groupIds', $groupIds)
+            ->getQuery()
+            ->getResult();
 
-        return self::toIntList($ids);
+        return array_map(static fn (GroupEntity $g): int => $g->id ?? 0, $entities);
     }
 
     public function findName(int $groupId): ?string
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('name')
-            ->from(Tables::groups())
-            ->where('id = :id')
-            ->setParameter('id', $groupId)
-            ->executeQuery()
-            ->fetchOne();
-
-        return is_string($value) ? $value : null;
+        return $this->find($groupId)?->name;
     }
 
     public function isDefault(int $groupId): bool
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('is_default')
-            ->from(Tables::groups())
-            ->where('id = :id')
-            ->setParameter('id', $groupId)
-            ->executeQuery()
-            ->fetchOne();
+        $entity = $this->find($groupId);
 
-        return (bool) $value;
+        return $entity !== null && $entity->isDefault;
     }
 
     public function insert(string $name, bool $isDefault): int
@@ -193,19 +170,15 @@ final class GroupRepository extends AbstractRepository
         // lastmodified set explicitly rather than left to the schema's own
         // DEFAULT CURRENT_TIMESTAMP, which reads the real DB-server clock --
         // invisible to Env::now()'s PIWIGO_TEST_NOW freeze.
-        $this->conn->createQueryBuilder()
-            ->insert(Tables::groups())
-            ->values([
-                'name' => ':name',
-                'is_default' => ':isDefault',
-                'lastmodified' => ':lastmodified',
-            ])
-            ->setParameter('name', $name)
-            ->setParameter('isDefault', (int) $isDefault)
-            ->setParameter('lastmodified', Env::now()->format('Y-m-d H:i:s'))
-            ->executeStatement();
+        $entity = new GroupEntity($name, $isDefault, \DateTimeImmutable::createFromInterface(Env::now()));
 
-        return (int) $this->conn->lastInsertId();
+        $em = $this->getEntityManager();
+        $em->persist($entity);
+        $em->flush();
+
+        assert($entity->id !== null);
+
+        return $entity->id;
     }
 
     /**
@@ -217,22 +190,21 @@ final class GroupRepository extends AbstractRepository
             return;
         }
 
-        $qb = $this->conn->createQueryBuilder()
-            ->update(Tables::groups())
-            ->where('id = :id')
-            ->setParameter('id', $groupId);
+        $entity = $this->find($groupId);
+        if ($entity === null) {
+            return;
+        }
 
         if (isset($updates['name'])) {
-            $qb->set('name', ':name')
-                ->setParameter('name', $updates['name']);
+            $entity->name = $updates['name'];
         }
 
         if (isset($updates['is_default'])) {
-            $qb->set('is_default', ':isDefault')
-                ->setParameter('isDefault', (int) $updates['is_default']);
+            $entity->isDefault = $updates['is_default'];
         }
 
-        $qb->executeStatement();
+        $this->getEntityManager()
+            ->flush();
     }
 
     /**
@@ -240,29 +212,34 @@ final class GroupRepository extends AbstractRepository
      */
     public function findMemberUserIds(int $groupId): array
     {
-        $ids = $this->conn->createQueryBuilder()
-            ->select('user_id')
-            ->from(Tables::userGroup())
-            ->where('group_id = :groupId')
+        $entities = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('ug')
+            ->from(UserGroupEntity::class, 'ug')
+            ->where('ug.groupId = :groupId')
             ->setParameter('groupId', $groupId)
-            ->executeQuery()
-            ->fetchFirstColumn();
+            ->getQuery()
+            ->getResult();
 
-        return self::toIntList($ids);
+        return array_map(static fn (UserGroupEntity $ug): int => $ug->userId, $entities);
     }
 
     /**
      * Usernames of a group's members, via the configurable user-id/username
      * DB column names (see \Piwigo\Config\CurrentConfig::userFields()).
+     * `users` isn't ORM-mapped (Users\UserRepository's own domain) -- plain
+     * DBAL via the entity manager's own connection.
      *
      * @return list<string>
      */
     public function findMemberUsernames(int $groupId, string $usernameColumn, string $idColumn): array
     {
-        $names = $this->conn->createQueryBuilder()
+        $names = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('u.' . $usernameColumn . ' AS username')
-            ->from(Tables::users(), 'u')
-            ->innerJoin('u', Tables::userGroup(), 'ug', 'u.' . $idColumn . ' = ug.user_id')
+            ->from(\Piwigo\Db\Tables::users(), 'u')
+            ->innerJoin('u', \Piwigo\Db\Tables::userGroup(), 'ug', 'u.' . $idColumn . ' = ug.user_id')
             ->where('ug.group_id = :groupId')
             ->setParameter('groupId', $groupId)
             ->executeQuery()
@@ -279,22 +256,31 @@ final class GroupRepository extends AbstractRepository
      * silent no-op (INSERT IGNORE, matching the original \Piwigo\Db\MysqliDb::massInserts(...,
      * ['ignore' => true]) semantics) -- (group_id, user_id) is the table's
      * primary key, and callers (ws_groups_addUser, merge, duplicate) can
-     * legitimately pass an already-member user id. No query-builder
-     * equivalent for INSERT IGNORE in DBAL; raw SQL + bindings is safe here
-     * (no string concatenation of values), same precedent as
-     * SessionRepository::write()'s REPLACE INTO.
+     * legitimately pass an already-member user id. No query-builder/DQL
+     * equivalent for INSERT IGNORE; raw SQL + bindings on the entity
+     * manager's own connection is safe here (no string concatenation of
+     * values), same precedent as SessionRepository::write()'s REPLACE INTO.
      *
      * @param array<int, int> $userIds
      */
     public function addMembers(int $groupId, array $userIds): void
     {
+        $conn = $this->getEntityManager()
+            ->getConnection();
         foreach ($userIds as $userId) {
-            $this->conn->executeStatement(
-                'INSERT IGNORE INTO ' . Tables::userGroup() . ' (group_id, user_id) VALUES (?, ?)',
+            $conn->executeStatement(
+                'INSERT IGNORE INTO ' . \Piwigo\Db\Tables::userGroup() . ' (group_id, user_id) VALUES (?, ?)',
                 [$groupId, $userId],
-                [ParameterType::INTEGER, ParameterType::INTEGER],
+                [\Doctrine\DBAL\ParameterType::INTEGER, \Doctrine\DBAL\ParameterType::INTEGER],
             );
         }
+
+        // Bypasses the ORM entirely -- any UserGroupEntity this
+        // EntityManager already loaded for this group would otherwise
+        // stay stale (same identity-map reasoning as SessionRepository::
+        // gc()'s own comment).
+        $this->getEntityManager()
+            ->clear();
     }
 
     /**
@@ -306,13 +292,16 @@ final class GroupRepository extends AbstractRepository
             return;
         }
 
-        $this->conn->createQueryBuilder()
-            ->delete(Tables::userGroup())
-            ->where('group_id = :groupId')
-            ->andWhere('user_id IN (:userIds)')
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(UserGroupEntity::class, 'ug')
+            ->where('ug.groupId = :groupId')
+            ->andWhere('ug.userId IN (:userIds)')
             ->setParameter('groupId', $groupId)
-            ->setParameter('userIds', $userIds, ArrayParameterType::INTEGER)
-            ->executeStatement();
+            ->setParameter('userIds', $userIds)
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -329,21 +318,16 @@ final class GroupRepository extends AbstractRepository
             return [];
         }
 
-        $rows = $this->conn->createQueryBuilder()
-            ->select('id', 'name')
-            ->from(Tables::groups())
-            ->where('id IN (:groupIds)')
-            ->setParameter('groupIds', $groupIds, ArrayParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+        $entities = $this->createQueryBuilder('g')
+            ->where('g.id IN (:groupIds)')
+            ->setParameter('groupIds', $groupIds)
+            ->getQuery()
+            ->getResult();
 
         $deleted = [];
-        foreach ($rows as $row) {
-            if (! is_numeric($row['id']) || ! is_string($row['name'])) {
-                continue;
-            }
-
-            $deleted[(int) $row['id']] = $row['name'];
+        foreach ($entities as $entity) {
+            assert($entity->id !== null);
+            $deleted[$entity->id] = $entity->name;
         }
 
         if ($deleted === []) {
@@ -351,24 +335,30 @@ final class GroupRepository extends AbstractRepository
         }
 
         $ids = array_keys($deleted);
+        $em = $this->getEntityManager();
 
-        $this->conn->createQueryBuilder()
-            ->delete(Tables::groupAccess())
-            ->where('group_id IN (:groupIds)')
-            ->setParameter('groupIds', $ids, ArrayParameterType::INTEGER)
-            ->executeStatement();
+        $em->createQueryBuilder()
+            ->delete(GroupAccessEntity::class, 'ga')
+            ->where('ga.groupId IN (:groupIds)')
+            ->setParameter('groupIds', $ids)
+            ->getQuery()
+            ->execute();
 
-        $this->conn->createQueryBuilder()
-            ->delete(Tables::userGroup())
-            ->where('group_id IN (:groupIds)')
-            ->setParameter('groupIds', $ids, ArrayParameterType::INTEGER)
-            ->executeStatement();
+        $em->createQueryBuilder()
+            ->delete(UserGroupEntity::class, 'ug')
+            ->where('ug.groupId IN (:groupIds)')
+            ->setParameter('groupIds', $ids)
+            ->getQuery()
+            ->execute();
 
-        $this->conn->createQueryBuilder()
-            ->delete(Tables::groups())
-            ->where('id IN (:groupIds)')
-            ->setParameter('groupIds', $ids, ArrayParameterType::INTEGER)
-            ->executeStatement();
+        $em->createQueryBuilder()
+            ->delete(GroupEntity::class, 'g')
+            ->where('g.id IN (:groupIds)')
+            ->setParameter('groupIds', $ids)
+            ->getQuery()
+            ->execute();
+
+        $em->clear();
 
         return $deleted;
     }
@@ -378,15 +368,16 @@ final class GroupRepository extends AbstractRepository
      */
     public function getAuthorizedCategoryIds(int $groupId): array
     {
-        $ids = $this->conn->createQueryBuilder()
-            ->select('cat_id')
-            ->from(Tables::groupAccess())
-            ->where('group_id = :groupId')
+        $entities = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('ga')
+            ->from(GroupAccessEntity::class, 'ga')
+            ->where('ga.groupId = :groupId')
             ->setParameter('groupId', $groupId)
-            ->executeQuery()
-            ->fetchFirstColumn();
+            ->getQuery()
+            ->getResult();
 
-        return self::toIntList($ids);
+        return array_map(static fn (GroupAccessEntity $ga): int => $ga->catId, $entities);
     }
 
     /**
@@ -398,13 +389,16 @@ final class GroupRepository extends AbstractRepository
             return;
         }
 
-        $this->conn->createQueryBuilder()
-            ->delete(Tables::groupAccess())
-            ->where('group_id = :groupId')
-            ->andWhere('cat_id IN (:catIds)')
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(GroupAccessEntity::class, 'ga')
+            ->where('ga.groupId = :groupId')
+            ->andWhere('ga.catId IN (:catIds)')
             ->setParameter('groupId', $groupId)
-            ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
-            ->executeStatement();
+            ->setParameter('catIds', $catIds)
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -412,17 +406,12 @@ final class GroupRepository extends AbstractRepository
      */
     public function addAccess(int $groupId, array $catIds): void
     {
+        $em = $this->getEntityManager();
         foreach ($catIds as $catId) {
-            $this->conn->createQueryBuilder()
-                ->insert(Tables::groupAccess())
-                ->values([
-                    'group_id' => ':groupId',
-                    'cat_id' => ':catId',
-                ])
-                ->setParameter('groupId', $groupId)
-                ->setParameter('catId', $catId)
-                ->executeStatement();
+            $em->persist(new GroupAccessEntity($groupId, $catId));
         }
+
+        $em->flush();
     }
 
     /**
@@ -434,27 +423,16 @@ final class GroupRepository extends AbstractRepository
      */
     public function getAccessibleCategoryIdsForUser(int $userId): array
     {
-        $ids = $this->conn->createQueryBuilder()
-            ->select('ga.cat_id')
-            ->from(Tables::userGroup(), 'ug')
-            ->innerJoin('ug', Tables::groupAccess(), 'ga', 'ug.group_id = ga.group_id')
-            ->where('ug.user_id = :userId')
+        $rows = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('ga.catId')
+            ->from(UserGroupEntity::class, 'ug')
+            ->innerJoin(GroupAccessEntity::class, 'ga', \Doctrine\ORM\Query\Expr\Join::WITH, 'ug.groupId = ga.groupId')
+            ->where('ug.userId = :userId')
             ->setParameter('userId', $userId)
-            ->executeQuery()
-            ->fetchFirstColumn();
+            ->getQuery()
+            ->getResult();
 
-        return self::toIntList($ids);
-    }
-
-    /**
-     * @param list<mixed> $values
-     * @return list<int>
-     */
-    private static function toIntList(array $values): array
-    {
-        return array_map(
-            static fn (mixed $value): int => is_numeric($value) ? (int) $value : 0,
-            $values
-        );
+        return array_map(static fn (array $row): int => $row['catId'], $rows);
     }
 }

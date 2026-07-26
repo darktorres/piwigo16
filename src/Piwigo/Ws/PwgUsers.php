@@ -28,7 +28,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -45,7 +44,7 @@ final class PwgUsers
 {
     private static function userService(): UserService
     {
-        return new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), DbConnection::build());
+        return new UserService(new UserRepository(DbConnection::build()), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), DbConnection::build());
     }
 
     /**
@@ -866,7 +865,7 @@ SELECT
   FROM ' . Tables::favorites() . '
     INNER JOIN ' . Tables::images() . ' i ON image_id = i.id
   WHERE user_id = ' . $current_user_id . '
-' . new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new CategoryRepository(DbConnection::build()))->getSqlConditionFandF([
+' . new PermissionService(new PermissionRepository(DbConnection::build()), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository(DbConnection::build()))->getSqlConditionFandF([
             'visible_images' => 'id',
         ], 'AND') . '
     ' . $order_by . '

@@ -30,6 +30,8 @@ use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Filter\FilterService;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangRepository;
 use Piwigo\Lang\LanguageEntity;
@@ -223,4 +225,6 @@ return [
     AuditRepository::class => factory(static fn (EntityManagerInterface $em): AuditRepository => $em->getRepository(AuditLogEntity::class)),
 
     SessionRepository::class => factory(static fn (EntityManagerInterface $em): SessionRepository => $em->getRepository(SessionEntity::class)),
+
+    GroupRepository::class => factory(static fn (EntityManagerInterface $em): GroupRepository => $em->getRepository(GroupEntity::class)),
 ];

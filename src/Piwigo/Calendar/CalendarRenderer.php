@@ -18,7 +18,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 
@@ -74,7 +73,7 @@ final readonly class CalendarRenderer
 
         // ------------------ initialize the condition on items to take into account ---
         $conn = DbConnection::build();
-        $permissionService = new PermissionService(new PermissionRepository($conn), new GroupRepository($conn), new CategoryRepository($conn));
+        $permissionService = new PermissionService(new PermissionRepository($conn), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository($conn));
         $calendarService = new CalendarService(
             $permissionService,
             new CategoryService(new CategoryRepository($conn), $permissionService)

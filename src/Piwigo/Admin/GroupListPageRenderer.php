@@ -38,7 +38,7 @@ final class GroupListPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        if ($_POST !== [] or isset($_GET['delete']) or isset($_GET['toggle_is_default'])) {
+        if (Request\GroupListActionRequest::fromGlobals()->requiresCsrfCheck) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
         }

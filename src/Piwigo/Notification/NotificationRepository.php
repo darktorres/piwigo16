@@ -113,7 +113,7 @@ final class NotificationRepository extends AbstractRepository
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array{date_available: ?string, nb_elements: int, nb_cats: int}>
      */
     public function findRecentPostDates(string $whereSql, int $maxDates): array
     {
@@ -126,6 +126,10 @@ final class NotificationRepository extends AbstractRepository
     }
 
     /**
+     * `i.*` (a full images row) by design -- fed straight into
+     * DerivativeImage::thumb_url(), whose array<string, mixed>|SrcImage
+     * signature already documents why the array form stays generic.
+     *
      * @return list<array<string, mixed>>
      */
     public function findRecentElementsForDate(string $whereSql, string $dateAvailable, int $maxElements): array
@@ -140,7 +144,7 @@ final class NotificationRepository extends AbstractRepository
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array{uppercats: string, img_count: int}>
      */
     public function findRecentCategoriesForDate(string $whereSql, string $dateAvailable, int $maxCats): array
     {

@@ -162,7 +162,6 @@ final class FeedController implements ControllerInterface
             'max_cats' => $rss_config->maxCats,
         ];
 
-        /** @var array<int, array<string, mixed>> $dates */
         $dates = $notificationService->getRecentPostDatesArray($rss_recent_post_dates_args);
 
         foreach ($dates as $date_detail) { // for each recent post date we create a feed item

@@ -138,7 +138,7 @@ final readonly class NotificationService
     }
 
     /**
-     * @return array<int|string, mixed>
+     * @return list<array{date_available: ?string, nb_elements: int, nb_cats: int, elements?: list<array<string, mixed>>, categories?: list<array{uppercats: string, img_count: int}>}>
      */
     public function getRecentPostDates(int $maxDates, int $maxElements, int $maxCats): array
     {
@@ -150,7 +150,7 @@ final readonly class NotificationService
         if ($cacheItem->isHit()) {
             $cached = $cacheItem->get();
             if (is_array($cached)) {
-                /** @var array<int|string, mixed> $cached */
+                /** @var list<array{date_available: ?string, nb_elements: int, nb_cats: int, elements?: list<array<string, mixed>>, categories?: list<array{uppercats: string, img_count: int}>}> $cached */
                 return $cached;
             }
         }
@@ -183,7 +183,7 @@ final readonly class NotificationService
 
     /**
      * @param  array<string, int>  $args
-     * @return array<int|string, mixed>
+     * @return list<array{date_available: ?string, nb_elements: int, nb_cats: int, elements?: list<array<string, mixed>>, categories?: list<array{uppercats: string, img_count: int}>}>
      */
     public function getRecentPostDatesArray(array $args): array
     {
@@ -292,7 +292,7 @@ final readonly class NotificationService
      * Returns html description about recently published elements grouped
      * by post date.
      *
-     * @param array<string, mixed> $dateDetail returned value of getRecentPostDates()
+     * @param array{date_available: ?string, nb_elements: int, nb_cats: int, elements?: list<array<string, mixed>>, categories?: list<array{uppercats: string, img_count: int}>} $dateDetail one element of getRecentPostDates()'s own return
      */
     public function getHtmlDescriptionRecentPostDate(array $dateDetail, ?string $authKey = null): string
     {
@@ -376,7 +376,7 @@ final readonly class NotificationService
     /**
      * Returns title about recently published elements grouped by post date.
      *
-     * @param array<string, mixed> $dateDetail returned value of getRecentPostDates()
+     * @param array{date_available: ?string, nb_elements: int, nb_cats: int, elements?: list<array<string, mixed>>, categories?: list<array{uppercats: string, img_count: int}>} $dateDetail one element of getRecentPostDates()'s own return
      */
     public function getTitleRecentPostDate(array $dateDetail): string
     {

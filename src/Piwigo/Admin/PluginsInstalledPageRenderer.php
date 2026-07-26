@@ -75,6 +75,15 @@ final class PluginsInstalledPageRenderer
         $conn = DbConnection::build();
         $extension_repository = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
         $pem_catalog = new PemCatalog(new ZipExtractor());
+        // ExtensionScanner::scan()'s own declared return type is a generic
+        // array<string, array<string, mixed>> dispatch shape (by design --
+        // see that method's own docblock), but every real entry for
+        // ExtensionType::Plugin is actually scanPlugin()'s own precise
+        // shape; re-asserted here once so every $fs_plugin read below is real.
+        /** @var array<string, array{name: string, version: string, uri: string,
+         *   description: string, author: string, hasSettings: bool,
+         *   'author uri'?: string, extension?: string}> $fs_plugins
+         */
         $fs_plugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService);
         uasort($fs_plugins, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->nameCompare(...));
@@ -148,8 +157,7 @@ final class PluginsInstalledPageRenderer
             $incompatible_plugins_session = $_SESSION['incompatible_plugins'] ?? null;
             if (is_array($incompatible_plugins_session)
               and isset($incompatible_plugins_session[$plugin_id])) {
-                $fs_version = $fs_plugin['version'] ?? null;
-                $fs_version = is_scalar($fs_version) ? (string) $fs_version : '';
+                $fs_version = $fs_plugin['version'];
                 $session_version = $incompatible_plugins_session[$plugin_id];
                 $session_version = is_scalar($session_version) ? (string) $session_version : '';
 
@@ -174,11 +182,7 @@ final class PluginsInstalledPageRenderer
                 'http://piwigo.org/ext',
                 'https://piwigo.org/ext',
             ];
-            // fs_plugins is declared with a loose array<string, mixed> value type,
-            // but get_fs_plugin() (the only writer) always stores a real string
-            // under 'uri' (defaults to '', overwritten by a regex-extracted URI).
-            $fs_plugin_uri = $fs_plugin['uri'] ?? '';
-            $fs_plugin_uri = is_string($fs_plugin_uri) ? $fs_plugin_uri : '';
+            $fs_plugin_uri = $fs_plugin['uri'];
             $pem_url = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
             $visit_url = str_replace($url_to_replace, $pem_url, $fs_plugin_uri);
 
@@ -189,7 +193,7 @@ final class PluginsInstalledPageRenderer
                 'VERSION' => $fs_plugin['version'],
                 'DESC' => $fs_plugin['description'],
                 'AUTHOR' => $fs_plugin['author'],
-                'AUTHOR_URL' => @$fs_plugin['author uri'],
+                'AUTHOR_URL' => $fs_plugin['author uri'] ?? null,
                 'SETTINGS_URL' => $setting_url,
             ];
 

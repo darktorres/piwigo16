@@ -92,6 +92,17 @@ final class ThemesInstalledPageRenderer
         // |                     start template output                             |
         // +-----------------------------------------------------------------------+
 
+        // ExtensionScanner::scan()'s own declared return type is a generic
+        // array<string, array<string, mixed>> dispatch shape (by design --
+        // see that method's own docblock), but every real entry for
+        // ExtensionType::Theme is actually scanTheme()'s own precise shape;
+        // re-asserted here once so every $fs_theme read below is real.
+        /** @var array<string, array{id: string, name: string, version: string,
+         *   uri: string, description: string, author: string, mobile: bool,
+         *   screenshot: string, 'author uri'?: string, extension?: string,
+         *   parent?: string, activable?: bool, use_standard_pages?: bool,
+         *   admin_uri?: string}> $fs_themes
+         */
         $fs_themes = $extension_scanner->scan(ExtensionType::Theme, $this->urlService);
         uasort($fs_themes, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->nameCompare(...));
 
@@ -114,11 +125,11 @@ final class ThemesInstalledPageRenderer
                 'VERSION' => $fs_theme['version'],
                 'DESC' => $fs_theme['description'],
                 'AUTHOR' => $fs_theme['author'],
-                'AUTHOR_URL' => @$fs_theme['author uri'],
-                'PARENT' => @$fs_theme['parent'],
+                'AUTHOR_URL' => $fs_theme['author uri'] ?? null,
+                'PARENT' => $fs_theme['parent'] ?? null,
                 'SCREENSHOT' => $fs_theme['screenshot'],
                 'IS_MOBILE' => $fs_theme['mobile'],
-                'ADMIN_URI' => @$fs_theme['admin_uri'],
+                'ADMIN_URI' => $fs_theme['admin_uri'] ?? null,
             ];
 
             if (in_array($theme_id, $db_theme_ids, true)) {
@@ -212,10 +223,10 @@ final class ThemesInstalledPageRenderer
             'inactive' => 1,
         ];
 
-        if ((bool) @$a['IS_DEFAULT']) {
+        if ((bool) ($a['IS_DEFAULT'] ?? false)) {
             return -1;
         }
-        if ((bool) @$b['IS_DEFAULT']) {
+        if ((bool) ($b['IS_DEFAULT'] ?? false)) {
             return 1;
         }
 

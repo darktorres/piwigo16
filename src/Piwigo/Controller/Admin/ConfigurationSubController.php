@@ -148,18 +148,9 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         // -------------------------------------------------------- sections definitions
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('section', $_GET, false, '/^[a-z]+$/i');
+        $configurationRequest = Request\ConfigurationRequest::fromGlobals();
 
-        // check_input_parameter() above fatal_error()s unless $_GET['section'] is a
-        // scalar matching /^[a-z]+$/i, but that guarantee isn't visible to static
-        // analysis; re-derive it into a definite string (query string values from
-        // $_GET are always strings in practice, never int/float/bool).
-        if (! isset($_GET['section']) or ! is_string($_GET['section'])) {
-            $page_section = 'main';
-        } else {
-            $page_section = $_GET['section'];
-        }
+        $page_section = $configurationRequest->section;
         $page['section'] = $page_section;
 
         $main_checkboxes = [
@@ -272,8 +263,15 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             'dark' => 'Dark',
         ];
 
+        // A local working copy of post -- the per-tab submit handling below
+        // used to mutate several $_POST fields in place so the generic
+        // config-row UPDATE loop further down (which reads back whatever
+        // is in $_POST for each known config param name) saw the
+        // overridden values; both stay within this one handle() call.
+        $post = $configurationRequest->post;
+
         // ------------------------------ verification and registration of modifications
-        if (isset($_POST['submit'])) {
+        if ($configurationRequest->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
             $int_pattern = '/^\d+$/';
@@ -282,16 +280,16 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 case 'main':
 
                     if (\Piwigo\Config\CurrentConfig::orderByCustom() === null and \Piwigo\Config\CurrentConfig::orderByInsideCategoryCustom() === null) {
-                        if (! self::emptyValue($_POST['order_by'] ?? null)) {
+                        if (! self::emptyValue($post['order_by'] ?? null)) {
                             new \Piwigo\Validation\InputValidator()
-                                ->validate('order_by', $_POST, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
+                                ->validate('order_by', $post, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
 
                             // check_input_parameter() above fatal_error()s unless
                             // $_POST['order_by'] is an array of scalars matching
                             // $pattern, but that guarantee isn't visible to static
                             // analysis; re-derive it into a local, string-only copy
                             // (values from an HTTP request are always strings here).
-                            $post_order_by = $_POST['order_by'] ?? null;
+                            $post_order_by = $post['order_by'] ?? null;
                             $order_by_input = [];
                             if (is_array($post_order_by)) {
                                 foreach ($post_order_by as $raw_order_by_key => $raw_order_by_value) {
@@ -325,54 +323,54 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                                     $order_by = ['id ASC'];
                                 }
 
-                                $_POST['order_by'] = 'ORDER BY ' . implode(', ', $order_by);
-                                $_POST['order_by_inside_category'] = 'ORDER BY ' . implode(', ', $order_by_inside_category);
+                                $post['order_by'] = 'ORDER BY ' . implode(', ', $order_by);
+                                $post['order_by_inside_category'] = 'ORDER BY ' . implode(', ', $order_by_inside_category);
                             }
                         } else {
                             \Piwigo\Core\PageState::current()->addError(Lang::t('No order field selected'));
                         }
                     }
 
-                    if (self::emptyValue($_POST['email_admin_on_new_user'] ?? null)) {
-                        $_POST['email_admin_on_new_user'] = 'none';
-                    } elseif ($_POST['email_admin_on_new_user_filter'] === 'all') {
-                        $_POST['email_admin_on_new_user'] = 'all';
+                    if (self::emptyValue($post['email_admin_on_new_user'] ?? null)) {
+                        $post['email_admin_on_new_user'] = 'none';
+                    } elseif ($post['email_admin_on_new_user_filter'] === 'all') {
+                        $post['email_admin_on_new_user'] = 'all';
                     } else {
-                        if (self::emptyValue($_POST['email_admin_on_new_user_filter_group'] ?? null)) {
-                            $_POST['email_admin_on_new_user'] = 'all';
+                        if (self::emptyValue($post['email_admin_on_new_user_filter_group'] ?? null)) {
+                            $post['email_admin_on_new_user'] = 'all';
                         } else {
-                            $filter_group = $_POST['email_admin_on_new_user_filter_group'] ?? null;
-                            $_POST['email_admin_on_new_user'] = 'group:' . (is_string($filter_group) ? $filter_group : '');
+                            $filter_group = $post['email_admin_on_new_user_filter_group'] ?? null;
+                            $post['email_admin_on_new_user'] = 'group:' . (is_string($filter_group) ? $filter_group : '');
                         }
                     }
 
                     foreach ($main_checkboxes as $checkbox) {
-                        $_POST[$checkbox] = self::emptyValue($_POST[$checkbox] ?? null) ? 'false' : 'true';
+                        $post[$checkbox] = self::emptyValue($post[$checkbox] ?? null) ? 'false' : 'true';
                     }
                     break;
 
                 case 'watermark':
 
-                    self::processWatermark();
+                    self::processWatermark($post, $configurationRequest->files);
                     break;
 
                 case 'sizes':
 
-                    self::processSizes();
+                    self::processSizes($post);
                     break;
 
                 case 'comments':
 
                     // the number of comments per page must be an integer between 5 and 50
                     // included
-                    $nb_comment_page = $_POST['nb_comment_page'] ?? null;
+                    $nb_comment_page = $post['nb_comment_page'] ?? null;
                     if (! (bool) preg_match($int_pattern, is_string($nb_comment_page) ? $nb_comment_page : '')
                          or $nb_comment_page < 5
                          or $nb_comment_page > 50) {
                         \Piwigo\Core\PageState::current()->addError(Lang::t('The number of comments a page must be between 5 and 50 included.'));
                     }
                     foreach ($comments_checkboxes as $checkbox) {
-                        $_POST[$checkbox] = self::emptyValue($_POST[$checkbox] ?? null) ? 'false' : 'true';
+                        $post[$checkbox] = self::emptyValue($post[$checkbox] ?? null) ? 'false' : 'true';
                     }
                     break;
 
@@ -383,15 +381,15 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                 case 'display':
 
-                    $nb_categories_page = $_POST['nb_categories_page'] ?? null;
+                    $nb_categories_page = $post['nb_categories_page'] ?? null;
                     if (! (bool) preg_match($int_pattern, is_string($nb_categories_page) ? $nb_categories_page : '')
                           or $nb_categories_page < 4) {
                         \Piwigo\Core\PageState::current()->addError(Lang::t('The number of albums a page must be above 4.'));
                     }
                     foreach ($display_checkboxes as $checkbox) {
-                        $_POST[$checkbox] = self::emptyValue($_POST[$checkbox] ?? null) ? 'false' : 'true';
+                        $post[$checkbox] = self::emptyValue($post[$checkbox] ?? null) ? 'false' : 'true';
                     }
-                    $picture_informations_raw = is_array($_POST['picture_informations'] ?? null) ? $_POST['picture_informations'] : [];
+                    $picture_informations_raw = is_array($post['picture_informations'] ?? null) ? $post['picture_informations'] : [];
                     $picture_informations = array_fill_keys($display_info_checkboxes, false);
                     foreach ($display_info_checkboxes as $checkbox) {
                         $picture_informations[$checkbox] =
@@ -403,13 +401,13 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     // encode()) -- no more manual serialize() to match
                     // CurrentConfig::pictureInformations()'s own
                     // already-decoded-array expectation.
-                    $_POST['picture_informations'] = $picture_informations;
+                    $post['picture_informations'] = $picture_informations;
                     break;
 
                 case 'search':
 
-                    $filters_views_box = is_array($_POST['filters_views_box'] ?? null) ? $_POST['filters_views_box'] : [];
-                    $filters_views_raw = is_array($_POST['filters_views'] ?? null) ? $_POST['filters_views'] : [];
+                    $filters_views_box = is_array($post['filters_views_box'] ?? null) ? $post['filters_views_box'] : [];
+                    $filters_views_raw = is_array($post['filters_views'] ?? null) ? $post['filters_views'] : [];
 
                     $filters_views_post = [];
                     foreach ($filters_names_checkboxes as $checkbox) {
@@ -430,13 +428,12 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                       self::emptyValue($filters_views_raw['last_filters_conf'] ?? null) ? false : true;
                     // gap-closure Stage 1a-bis item 5 -- same reasoning as
                     // picture_informations above.
-                    $_POST['filters_views'] = $filters_views_post;
+                    $post['filters_views'] = $filters_views_post;
 
             }
 
             // updating configuration if no error found
             if (! in_array($page_section, ['sizes', 'watermark'], true) and ! \Piwigo\Core\PageState::current()->hasErrors() and \Piwigo\Auth\AccessControl::isWebmaster()) {
-                // echo '<pre>'; print_r($_POST); echo '</pre>';
                 foreach ($conn->fetchAllAssociative('SELECT param FROM ' . Tables::config()) as $row) {
                     if (! is_string($row['param']) || $row['param'] === '') {
                         // `param` is the config table's NOT NULL primary key; a
@@ -445,8 +442,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         continue;
                     }
 
-                    if (isset($_POST[$row['param']])) {
-                        $post_value = $_POST[$row['param']];
+                    if (isset($post[$row['param']])) {
+                        $post_value = $post[$row['param']];
                         $value = is_string($post_value) || is_array($post_value) ? $post_value : '';
 
                         if ($row['param'] === 'gallery_title' && is_string($value)) {
@@ -474,7 +471,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         }
 
         // restore default derivatives settings
-        if ($page['section'] === 'sizes' and isset($_GET['action']) and $_GET['action'] === 'restore_settings' and \Piwigo\Auth\AccessControl::isWebmaster()) {
+        if ($page['section'] === 'sizes' and $configurationRequest->restoreSettingsRequested and \Piwigo\Auth\AccessControl::isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
@@ -493,7 +490,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
             self::activityService($conn)->record('system', ActivitySystem::Core, 'config', [
                 'config_section' => $page['section'],
-                'config_action' => $_GET['action'],
+                'config_action' => 'restore_settings',
             ]);
         }
 
@@ -945,8 +942,14 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      * tab's write: the generic config-row UPDATE loop in handle() itself
      * explicitly excludes 'sizes'/'watermark' from its own is_webmaster()
      * check.
+     *
+     * @param array<int|string, mixed> $post handle()'s own local post
+     *   working copy (see Request\ConfigurationRequest) -- read-only here,
+     *   this tab persists through its own ImageStdParams::set_and_save()/
+     *   set_and_save_disabled() calls rather than the generic config-row
+     *   UPDATE loop, so nothing needs to flow back out.
      */
-    private static function processSizes(): void
+    private static function processSizes(array $post): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -967,7 +970,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $updates = [];
 
         foreach ($original_fields as $field) {
-            $value = ! self::emptyValue($_POST[$field] ?? null) ? $_POST[$field] : null;
+            $value = ! self::emptyValue($post[$field] ?? null) ? $post[$field] : null;
             $updates[$field] = $value;
         }
 
@@ -982,11 +985,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         \Piwigo\Core\PageState::current()->errors = array_values($page_errors);
 
-        if ($_POST['resize_quality'] < 50 or $_POST['resize_quality'] > 98) {
+        if ($post['resize_quality'] < 50 or $post['resize_quality'] > 98) {
             $errors['resize_quality'] = '[50..98]';
         }
 
-        $pderivatives_post = $_POST['d'] ?? null;
+        $pderivatives_post = $post['d'] ?? null;
 
         // The form posts a nested array keyed by derivative type, e.g.
         // d[square][w], d[square][enabled] — every leaf value therefore arrives as
@@ -1087,7 +1090,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         // step 3 - save data
         if (count($errors) === 0 && count($derivative_errors) === 0) {
-            $resize_quality_post = $_POST['resize_quality'] ?? null;
+            $resize_quality_post = $post['resize_quality'] ?? null;
             $resize_quality = is_numeric($resize_quality_post) ? intval($resize_quality_post) : 0;
             $quality_changed = ImageStdParams::$quality !== $resize_quality;
             ImageStdParams::$quality = $resize_quality;
@@ -1173,7 +1176,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             }
 
             foreach (array_keys(ImageStdParams::$custom) as $custom) {
-                if (isset($_POST['delete_custom_derivative_' . $custom])) {
+                if (isset($post['delete_custom_derivative_' . $custom])) {
                     $changed_types[] = $custom;
                     unset(ImageStdParams::$custom[$custom]);
                 }
@@ -1198,11 +1201,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             ]);
         } else {
             foreach ($original_fields as $field) {
-                if (isset($_POST[$field]) && is_string($_POST[$field])) {
+                if (isset($post[$field]) && is_string($post[$field])) {
                     $template->append(
                         'sizes',
                         [
-                            $field => strip_tags($_POST[$field]), // strip_tags prevents from XSS attempt
+                            $field => strip_tags($post[$field]), // strip_tags prevents from XSS attempt
                         ],
                         true
                     );
@@ -1211,7 +1214,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
             $template->assign('derivatives', $pderivatives);
             $template->assign('ferrors', $errors + $derivative_errors);
-            $template->assign('resize_quality', $_POST['resize_quality']);
+            $template->assign('resize_quality', $post['resize_quality']);
             self::$sizesLoadedInTpl = true;
         }
     }
@@ -1220,8 +1223,13 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      * Ported from admin/include/configuration_watermark_process.inc.php
      * (P23 sub-batch 8b-4) -- the "watermark" tab's POST handler. Same
      * is_webmaster()-is-the-only-gate shape as processSizes() above.
+     *
+     * @param array<int|string, mixed> $post handle()'s own local post
+     *   working copy -- see processSizes()'s own docblock.
+     * @param array<int|string, mixed> $files raw $_FILES bag (see
+     *   Request\ConfigurationRequest), for the watermarkImage upload below.
      */
-    private static function processWatermark(): void
+    private static function processWatermark(array $post, array $files): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -1230,7 +1238,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         }
 
         $errors = [];
-        $pwatermark_post = $_POST['w'] ?? null;
+        $pwatermark_post = $post['w'] ?? null;
 
         // The form posts a flat array w[key]=value (see configuration_watermark.tpl)
         // where every leaf arrives as a plain string; normalize into a concrete
@@ -1247,7 +1255,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         }
 
         // step 0 - manage upload if any
-        $watermark_upload = $_FILES['watermarkImage'] ?? null;
+        $watermark_upload = $files['watermarkImage'] ?? null;
         $watermark_tmp_name = null;
         $watermark_upload_name = null;
         if (is_array($watermark_upload)) {

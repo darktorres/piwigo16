@@ -98,7 +98,13 @@ final class ImageDerivativeController implements ControllerInterface
 
     private string $srcUrl = '';
 
-    private mixed $originalSize = null;
+    /**
+     * @var ?array{int, ?int} width is guaranteed int once set (see the
+     *   $row->width !== null guard in serve()'s own flow), but height can
+     *   still independently be null (both are separately-nullable DB
+     *   columns).
+     */
+    private ?array $originalSize = null;
 
     private int $rotationAngle = 0;
 
@@ -677,17 +683,13 @@ final class ImageDerivativeController implements ControllerInterface
             return false;
         }
 
-        // $this->originalSize is only ever set (see serve()'s flow) from a
-        // DB row's width/height columns (native ints under DBAL); guard the
-        // shape and coerce rather than trust it regardless.
-        $original_size = $this->originalSize;
-        if (! is_array($original_size)
-            || ! isset($original_size[0], $original_size[1])
-            || ! is_numeric($original_size[0])
-            || ! is_numeric($original_size[1])) {
+        // height alone can still be null (see $originalSize's own docblock);
+        // width is already guaranteed int by this point.
+        [$width, $height] = $this->originalSize;
+        if ($height === null) {
             return false;
         }
-        $original_size = [(int) $original_size[0], (int) $original_size[1]];
+        $original_size = [$width, $height];
 
         if ($this->rotationAngle === 90 || $this->rotationAngle === 270) {
             $tmp = $original_size[0];

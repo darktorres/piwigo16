@@ -88,7 +88,7 @@ final readonly class CommentService
      * trigger_change() from insertComment()/updateComment() themselves, not
      * directly by callers.
      *
-     * @param array<string, mixed> $comment
+     * @param array{author: string, content: string, image_id: int, website_url?: string, email?: string} $comment
      * @return string validate, moderate, reject
      */
     public function checkForSpam(string $action, array $comment): string
@@ -131,7 +131,7 @@ final readonly class CommentService
     /**
      * Tries to insert a user comment and returns the action to perform.
      *
-     * @param array<string, mixed> $comm in/out: augmented with ip/agent/
+     * @param array{author: string, content: string, image_id: int, website_url?: string, email?: string} $comm in/out: augmented with ip/agent/
      *   author_id and (on success) id
      * @param list<string> $infos out: user-facing validation messages
      * @return string validate, moderate, reject
@@ -354,6 +354,11 @@ final readonly class CommentService
      * restriction (for non-admins) is defense in depth, not the primary
      * access check.
      *
+     * $comment is raw request input -- CommentsController/PictureController
+     * build it straight from $_GET['edit']/$_POST['image_id'] with no
+     * defensive cast at the construction site, unlike insertComment()'s
+     * own callers; real fix belongs to Phase 4's Request DTOs.
+     *
      * @param array<string, mixed> $comment
      * @return string validate, moderate, reject
      */
@@ -451,6 +456,11 @@ final readonly class CommentService
      * Notifies admins about an updated or deleted comment. Only used when
      * no validation is needed, otherwise pwg_mail_notification_admins() is
      * called directly from insertComment()/updateComment().
+     *
+     * Same cross-domain generic-row-reader rationale as
+     * Category\CategoryService::compareByGlobalRank() -- called from both
+     * insertComment()'s (structured) and updateComment()'s (raw request
+     * input, see that method's own docblock) $comment locals.
      *
      * @param array<string, mixed> $comment
      */

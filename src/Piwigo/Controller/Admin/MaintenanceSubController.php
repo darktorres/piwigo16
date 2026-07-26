@@ -71,7 +71,9 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         // docblock).
         CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
 
-        if (isset($_GET['action'])) {
+        $maintenanceDispatch = Request\MaintenanceDispatchRequest::fromGlobals();
+
+        if ($maintenanceDispatch->requiresCsrfCheck) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
         }
@@ -151,18 +153,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         // | tabs                                                                  |
         // +-------------------------------------------------------------------+
 
-        if (isset($_GET['tab'])) {
-            new \Piwigo\Validation\InputValidator()
-                ->validate('tab', $_GET, false, '/^(actions|env|sys)$/');
-            // check_input_parameter() validates the raw value against the pattern
-            // above (fatal_error()-ing on anything else) but does not narrow its
-            // type for static analysis -- $_GET values are string|array<mixed> at
-            // best, so re-check it is a string before trusting it as the tab name.
-            $tab_raw = $_GET['tab'];
-            $tab = is_string($tab_raw) ? $tab_raw : 'actions';
-        } else {
-            $tab = 'actions';
-        }
+        $tab = $maintenanceDispatch->tab;
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('maintenance');

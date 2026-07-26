@@ -11,30 +11,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Html\HtmlService;
 use Piwigo\Url\UrlService;
 
-// convert_charset()/name_compare() are real, legacy free functions defined
-// in include/functions.inc.php / include/functions_html.inc.php -- this
-// Unit test's isolated bootstrap doesn't load those (a Unit test avoids
-// full app bootstrap by design), so stub them here. name_compare() just
-// delegates to the already-migrated Piwigo\Html\HtmlService::nameCompare()
-// (P17), so the stub calls the real class rather than reimplementing sort
-// logic.
-if (! function_exists('convert_charset')) {
-    function convert_charset(string $str, string $sourceCharset, string $destCharset): string|false
-    {
-        return $sourceCharset === $destCharset ? $str : mb_convert_encoding($str, $destCharset, $sourceCharset);
-    }
-}
-if (! function_exists('name_compare')) {
-    /**
-     * @param array<string, mixed> $a
-     * @param array<string, mixed> $b
-     */
-    function name_compare(array $a, array $b): int
-    {
-        return new HtmlService()->nameCompare($a, $b);
-    }
-}
-
 // ExtensionType::scanDirectory() hardcodes real app paths (PluginLoader::pluginsPath()/
 // CurrentConfig::themesPath()/CurrentPaths::get()->root.'language/') with no
 // injection point, so this can't safely redirect to a disposable temp

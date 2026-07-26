@@ -2,48 +2,6 @@
 
 declare(strict_types=1);
 
-// UserService calls several real, stable, already-migrated free functions
-// that need more bootstrap (Lang, plugin-event-system, full $_SERVER-driven
-// script_basename()) than this isolated integration test wants to depend
-// on. Same "minimal stub to load standalone" pattern as
-// tests/Unit/PasswordHashTest.php / tests/Integration/AuthServiceTest.php.
-namespace {
-    // validateMailAddress()/validateLoginCase() both gate their real
-    // DB-uniqueness check on Piwigo\Core\InstallationFlag::isActive() -- a
-    // genuine "skip during the install wizard, before there's even a DB"
-    // guard in the original code, faithfully preserved. Marked in this
-    // class's own setUp() (IntegrationTestCase::tearDown() already resets
-    // it) so the tests below exercise the real check.
-
-    if (! function_exists('l10n')) {
-        function l10n(string $key, mixed ...$args): string
-        {
-            return $args === [] ? $key : vsprintf($key, array_map(static fn (mixed $a): string => is_scalar($a) ? (string) $a : '', $args));
-        }
-    }
-
-    // email_check_format()/script_basename() stubs removed -- UserService's
-    // real call sites now retarget directly to Piwigo\Validation\
-    // InputValidator::checkEmailFormat()/Piwigo\Core\PageFilterHelper::
-    // scriptBasename() (P23 batch 8d), so a same-named bare-function stub
-    // is unreachable dead code, not a spy any real call site depends on.
-
-    // trigger_change() calls go directly through the real
-    // Piwigo\PluginConfig\EventDispatcher::get() singleton now, a pure
-    // passthrough with no handlers registered, so no local stub is needed.
-
-    // No get_browser_language() stub: CurrentConfig::browserLanguage() is
-    // overridden to false below, and registerUser()'s own `CurrentConfig::
-    // browserLanguage() && (... = get_browser_language()) !== false` check
-    // short-circuits on the left operand, so the real
-    // (unstubbed) function is never actually called by these tests. A
-    // stub here would only exist to satisfy PHPStan, and a same-named
-    // global-namespace redeclaration does the opposite: PHPStan's
-    // whole-project analysis conflates it with the real
-    // include/functions_user.inc.php definition, corrupting the inferred
-    // signature used when checking UserService.php itself.
-}
-
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;

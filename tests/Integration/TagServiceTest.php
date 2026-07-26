@@ -2,30 +2,6 @@
 
 declare(strict_types=1);
 
-// getAllTags() calls the real Piwigo\PluginConfig\EventDispatcher::get()->
-// triggerChange() directly, a pure passthrough with no handlers
-// registered, so no local stub is needed.
-namespace {
-    // Also stubbed: the real tag_alpha_compare() (functions_html.inc.php)
-    // delegates to Piwigo\Html\HtmlService::tagAlphaCompare(), which needs
-    // pwg_transliterate() (Lang domain) -- plain alphabetical comparison
-    // is a faithful-enough stand-in for these tests, which only assert on
-    // ordering between plain ASCII fixture tag names.
-    if (! function_exists('tag_alpha_compare')) {
-        /**
-         * @param array<string, mixed> $a
-         * @param array<string, mixed> $b
-         */
-        function tag_alpha_compare(array $a, array $b): int
-        {
-            $name_a = is_string($a['name'] ?? null) ? $a['name'] : '';
-            $name_b = is_string($b['name'] ?? null) ? $b['name'] : '';
-
-            return strcmp($name_a, $name_b);
-        }
-    }
-}
-
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;

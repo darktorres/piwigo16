@@ -44,6 +44,22 @@ final class InputValidator
     }
 
     /**
+     * Public entry point to the same safe-fallback fatal-error mechanism
+     * validate() itself uses, for Request DTOs (P27/SEC-40 --
+     * `{Module}/Request/{Name}`) whose own rejection reason doesn't fit
+     * validate()'s single-parameter-pattern model (a structural/cardinality
+     * check, e.g. "at least 2 path segments", rather than one value against
+     * one regex). Keeps every request-input rejection path -- whether
+     * pattern-based or structural -- unit-testable the same way (throws
+     * RuntimeException when no HtmlRenderingInterface is configured, same
+     * as every existing validate() call site's own test already relies on).
+     */
+    public static function fail(string $msg): never
+    {
+        self::fatalError($msg);
+    }
+
+    /**
      * @param array<int|string, mixed> $paramArray
      */
     public function validate(string $paramName, array $paramArray, bool $isArray, string $pattern, bool $mandatory = false): ?true

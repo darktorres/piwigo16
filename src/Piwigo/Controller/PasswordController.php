@@ -52,7 +52,7 @@ final class PasswordController implements ControllerInterface
      * list<string>. Shared across the private handler methods below via
      * this property since they're all called from the same __invoke().
      *
-     * @var array<string, mixed>
+     * @var array<string, string>
      */
     private array $errors = [];
 
@@ -492,9 +492,15 @@ final class PasswordController implements ControllerInterface
      * checks the activation key: does it match the expected pattern? is it
      * linked to a user? is this user allowed to reset his password?
      *
-     * @return mixed (user_id if OK, false otherwise)
+     * $reset_key stays mixed -- raw $_GET['key'] at both real call sites,
+     * flagged for Phase 4 (SEC-40/P27 Request DTOs). The return value is
+     * always false or $row['user_id'] (a NOT NULL int primary key,
+     * verified is_numeric() just before every return), never genuinely
+     * mixed -- matches resetPasswordKey()'s own already-real return type.
+     *
+     * @return false|int|string user_id if OK, false otherwise
      */
-    private function checkPasswordResetKey(mixed $reset_key): mixed
+    private function checkPasswordResetKey(mixed $reset_key): false|int|string
     {
         $key = is_string($reset_key) ? $reset_key : '';
         if (! (bool) preg_match('/^[a-z0-9]{20}$/i', $key)) {
@@ -636,13 +642,21 @@ SELECT
         return $user_id;
     }
 
-    private function resetPasswordCode(): mixed
+    /**
+     * $_SESSION['valid_reset_password_code']['user_id'] is only ever
+     * written as a real int (processPasswordRequest(), its sole writer) --
+     * narrowed defensively rather than trusted, since this is still a
+     * round-trip through session state.
+     */
+    private function resetPasswordCode(): false|int
     {
         $state = $_SESSION['valid_reset_password_code'] ?? null;
         if (! is_array($state)) {
             return false;
         }
 
-        return $state['user_id'] ?? false;
+        $user_id = $state['user_id'] ?? null;
+
+        return is_int($user_id) ? $user_id : false;
     }
 }

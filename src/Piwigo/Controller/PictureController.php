@@ -44,8 +44,8 @@ use Psr\Http\Message\ServerRequestInterface;
  * default_picture_content() becomes a private method registered via
  * add_event_handler()'s first-class-callable form ($this->
  * defaultPictureContent(...)) instead of the string-name form -- confirmed
- * add_event_handler() accepts `array<int, mixed>|object|string` (a Closure
- * is an object), same conversion precedent as
+ * add_event_handler() accepts `array{0: object|string, 1: string}|object|string`
+ * (a Closure is an object), same conversion precedent as
  * Piwigo\Admin\Integrity\C13yInternal.php's own handler registrations.
  *
  * The "actions" switch (favorite/caddie/rate/comment moderation, all

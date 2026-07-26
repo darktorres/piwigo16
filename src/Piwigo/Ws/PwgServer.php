@@ -245,6 +245,15 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         return $this->_methods[$methodName]['options'] ?? [];
     }
 
+    /**
+     * P27/SEC-40: a minimal, single-fact by-design reader (the current
+     * request's HTTP method), same shape as
+     * Piwigo\Http\RequestFactory::fromGlobals()'s own sole legitimate
+     * superglobal read -- reused by 2 real call sites
+     * (PwgRestRequestHandler::handleRequest()'s param-source choice,
+     * invoke()'s own post_only method gate), not a bag of request data
+     * that would benefit from a {Module}/Request/{Name} DTO wrapper.
+     */
     public static function isPost(): bool
     {
         return $_POST !== [];
@@ -356,7 +365,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             return new PwgError(401, 'Access denied');
         }
 
-        if (! $this->isAuthorizedMethodForAPIKEY()) {
+        if (! $this->isAuthorizedMethodForAPIKEY($methodName)) {
             return new PwgError(401, 'Access denied');
         }
 
@@ -524,7 +533,17 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         return $res;
     }
 
-    public function isAuthorizedMethodForAPIKEY(): bool
+    /**
+     * P27/SEC-40: $methodName used to be re-derived from $_REQUEST['method']
+     * instead of taking invoke()'s own already-known $methodName parameter
+     * -- a real bug for recursive invoke() calls (e.g.
+     * PwgPermissions::add()/remove() calling
+     * $service->invoke('pwg.permissions.getList', ...) after their own
+     * mutation): the forbidden-methods check would apply to whatever
+     * method the *original* HTTP request named, not the method actually
+     * being invoked in that recursive call.
+     */
+    public function isAuthorizedMethodForAPIKEY(string $methodName): bool
     {
 
         // if the request is made with an API key (via header or session API key),
@@ -537,9 +556,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         ) {
             $forbidden_methods = \Piwigo\Config\CurrentConfig::apiKeyForbiddenMethods();
 
-            $requested_method = $_REQUEST['method'] ?? null;
-            $requested_method = is_string($requested_method) ? $requested_method : '';
-            if (in_array($requested_method, array_map(strval(...), array_filter($forbidden_methods, is_scalar(...))), true)) {
+            if (in_array($methodName, array_map(strval(...), array_filter($forbidden_methods, is_scalar(...))), true)) {
                 return false;
             }
         }

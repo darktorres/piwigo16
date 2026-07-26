@@ -15,36 +15,22 @@ use Piwigo\Core\WsError;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgRequestHandler;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\Request\WsRawRequest;
 
 final class PwgRestRequestHandler extends PwgRequestHandler
 {
     #[\Override]
     public function handleRequest(PwgServer &$service): void
     {
-        $params = [];
+        $wsRequest = WsRawRequest::fromGlobals();
 
-        $param_array = PwgServer::isPost() ? $_POST : $_GET;
-        foreach ($param_array as $name => $value) {
-            if ($name === 'format') {
-                continue;
-            } // ignore - special keys
-            if ($name === 'method') {
-                $method = $value;
-            } else {
-                $params[(string) $name] = $value;
-            }
-        }
-        if ((! isset($method) || (is_string($method) && ($method === '' || $method === '0'))) && isset($_GET['method'])) {
-            $method = $_GET['method'];
-        }
-
-        if (! isset($method) || ! is_string($method) || $method === '' || $method === '0') {
+        if ($wsRequest->method === null) {
             $service->sendResponse(
                 new PwgError(WsError::INVALID_METHOD, 'Missing "method" name')
             );
             return;
         }
-        $resp = $service->invoke($method, $params);
+        $resp = $service->invoke($wsRequest->method, $wsRequest->params);
         $service->sendResponse($resp);
     }
 }

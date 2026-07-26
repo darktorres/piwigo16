@@ -27,15 +27,9 @@ final class RatingUserPageRenderer
         $tabsheet->select('rating_user');
         $tabsheet->assign();
 
-        $filter_min_rates = 2;
-        if (isset($_GET['f_min_rates']) && is_numeric($_GET['f_min_rates'])) {
-            $filter_min_rates = (int) $_GET['f_min_rates'];
-        }
-
-        $consensus_top_number = \Piwigo\Config\CurrentConfig::topNumber();
-        if (isset($_GET['consensus_top_number']) && is_numeric($_GET['consensus_top_number'])) {
-            $consensus_top_number = (int) $_GET['consensus_top_number'];
-        }
+        $ratingFilter = Request\RatingUserFilterRequest::fromGlobals(\Piwigo\Config\CurrentConfig::topNumber());
+        $filter_min_rates = $ratingFilter->minRates;
+        $consensus_top_number = $ratingFilter->consensusTopNumber;
 
         // build users
         /** @var array<string, string> $user_fields */
@@ -168,9 +162,6 @@ final class RatingUserPageRenderer
         }
 
         $order_by_index = 4;
-        if (isset($_GET['order_by']) and is_numeric($_GET['order_by'])) {
-            $order_by_index = (int) $_GET['order_by'];
-        }
 
         $available_order_by = [
             [Lang::t('Average rate'), self::avgCompare(...)],
@@ -179,6 +170,10 @@ final class RatingUserPageRenderer
             [Lang::t('Consensus deviation'), self::consensusDevCompare(...)],
             [Lang::t('Last'), self::lastRateCompare(...)],
         ];
+
+        if ($ratingFilter->orderBy !== null and $ratingFilter->orderBy >= 0 and $ratingFilter->orderBy < count($available_order_by)) {
+            $order_by_index = $ratingFilter->orderBy;
+        }
 
         for ($i = 0; $i < count($available_order_by); $i++) {
             $template->append(

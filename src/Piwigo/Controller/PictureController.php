@@ -15,7 +15,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Http\ControllerInterface;
@@ -262,8 +261,15 @@ SELECT id
             }
         }
 
+        $pictureRequest = Request\PictureRequest::fromGlobals();
+        // Mutated below (the edit_comment case's own successful-submission
+        // path) to reflect the original's unset($_POST['content']) --
+        // read again much further down to decide whether to increment the
+        // hit counter.
+        $content_present = $pictureRequest->contentPresent;
+
         // There is cookie, so we must handle it at the beginning
-        if (isset($_GET['metadata'])) {
+        if ($pictureRequest->metadataPresent) {
             if (SessionService::get()->getSessionVar('show_metadata') === null) {
                 SessionService::get()->setSessionVar('show_metadata', 1);
             } else {
@@ -336,8 +342,8 @@ SELECT id
          *
          * Actions finish by a redirection
          */
-        if (isset($_GET['action'])) {
-            switch ($_GET['action']) {
+        if ($pictureRequest->action !== null) {
+            switch ($pictureRequest->action) {
                 case 'add_to_favorites':
 
                     $query = '
@@ -380,7 +386,7 @@ UPDATE ' . Tables::categories() . '
                         $conn->executeStatement($query);
                         \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
                         \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()->record('album', $representative_category_id, 'edit', [
-                            'action' => $_GET['action'],
+                            'action' => $pictureRequest->action,
                             'image_id' => $image_id,
                         ]);
 
@@ -398,50 +404,39 @@ UPDATE ' . Tables::categories() . '
                     // no break
                 case 'rate':
 
-                    $rate = $_POST['rate'] ?? null;
-                    if (! is_string($rate)) {
-                        $rate = null;
-                    }
                     \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()
-                        ->rate($image_id, $rate);
+                        ->rate($image_id, $pictureRequest->rate);
                     $this->redirectService->redirect($url_self);
 
                     // no break
                 case 'edit_comment':
 
                     $commentService = self::commentService($conn, $this->urlService);
-                    new \Piwigo\Validation\InputValidator()
-                        ->validate('comment_to_edit', $_GET, false, ValidationPattern::ID);
-                    // check_input_parameter() validated this against
-                    // ValidationPattern::ID (/^\d+$/) above -- it would
-                    // have called fatal_error() otherwise.
-                    assert(is_numeric($_GET['comment_to_edit']));
+                    // check_input_parameter()-equivalent validation already ran
+                    // inside PictureRequest::fromArrays() (gated on action ===
+                    // 'edit_comment') -- it would have thrown otherwise.
+                    assert($pictureRequest->commentToEdit !== null && is_numeric($pictureRequest->commentToEdit));
                     // false is unreachable here: $die_on_error defaults to
                     // true, and getCommentAuthorId() calls
                     // fatal_error() (never) in that case instead of
                     // returning
-                    $author_id = $commentService->getCommentAuthorId((int) $_GET['comment_to_edit']);
+                    $author_id = $commentService->getCommentAuthorId((int) $pictureRequest->commentToEdit);
                     assert($author_id !== false);
 
                     if (\Piwigo\Auth\AccessControl::canManageComment('edit', $author_id)) {
-                        $edit_content_raw = $_POST['content'] ?? null;
                         // $_POST values are always strings (or arrays) --
                         // never a real PHP int/float/bool.
-                        if (is_string($edit_content_raw) && $edit_content_raw !== '' && $edit_content_raw !== '0') {
+                        if ($pictureRequest->content !== null && $pictureRequest->content !== '' && $pictureRequest->content !== '0') {
                             new \Piwigo\Csrf\CsrfService()
                                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
-                            $post_key = $_POST['key'] ?? null;
-                            if (! is_string($post_key)) {
-                                $post_key = '';
-                            }
                             $comment_action = $commentService->updateComment(
                                 [
-                                    'comment_id' => $_GET['comment_to_edit'],
+                                    'comment_id' => $pictureRequest->commentToEdit,
                                     'image_id' => $image_id,
-                                    'content' => $_POST['content'],
-                                    'website_url' => @$_POST['website_url'],
+                                    'content' => $pictureRequest->content,
+                                    'website_url' => $pictureRequest->websiteUrl,
                                 ],
-                                $post_key
+                                $pictureRequest->postKey
                             );
 
                             $perform_redirect = false;
@@ -472,12 +467,12 @@ UPDATE ' . Tables::categories() . '
                             if ($perform_redirect) {
                                 $this->redirectService->redirect($url_self);
                             }
-                            unset($_POST['content']);
+                            $content_present = false;
                         }
 
                         // check_input_parameter()/assert() above already
-                        // proved $_GET['comment_to_edit'] is numeric.
-                        $edit_comment = (int) $_GET['comment_to_edit'];
+                        // proved comment_to_edit is numeric.
+                        $edit_comment = (int) $pictureRequest->commentToEdit;
                     }
                     break;
 
@@ -488,20 +483,18 @@ UPDATE ' . Tables::categories() . '
 
                     $commentService = self::commentService($conn, $this->urlService);
 
-                    new \Piwigo\Validation\InputValidator()
-                        ->validate('comment_to_delete', $_GET, false, ValidationPattern::ID);
-                    // check_input_parameter() validated this against
-                    // ValidationPattern::ID (/^\d+$/) above -- it would
-                    // have called fatal_error() otherwise.
-                    assert(is_numeric($_GET['comment_to_delete']));
+                    // check_input_parameter()-equivalent validation already ran
+                    // inside PictureRequest::fromArrays() (gated on action ===
+                    // 'delete_comment') -- it would have thrown otherwise.
+                    assert($pictureRequest->commentToDelete !== null && is_numeric($pictureRequest->commentToDelete));
 
                     // false is unreachable here: see the edit_comment case
                     // above
-                    $author_id = $commentService->getCommentAuthorId((int) $_GET['comment_to_delete']);
+                    $author_id = $commentService->getCommentAuthorId((int) $pictureRequest->commentToDelete);
                     assert($author_id !== false);
 
                     if (\Piwigo\Auth\AccessControl::canManageComment('delete', $author_id)) {
-                        $commentService->deleteComment((int) $_GET['comment_to_delete']);
+                        $commentService->deleteComment((int) $pictureRequest->commentToDelete);
                     }
 
                     $this->redirectService->redirect($url_self);
@@ -514,20 +507,18 @@ UPDATE ' . Tables::categories() . '
 
                     $commentService = self::commentService($conn, $this->urlService);
 
-                    new \Piwigo\Validation\InputValidator()
-                        ->validate('comment_to_validate', $_GET, false, ValidationPattern::ID);
-                    // check_input_parameter() validated this against
-                    // ValidationPattern::ID (/^\d+$/) above -- it would
-                    // have called fatal_error() otherwise.
-                    assert(is_numeric($_GET['comment_to_validate']));
+                    // check_input_parameter()-equivalent validation already ran
+                    // inside PictureRequest::fromArrays() (gated on action ===
+                    // 'validate_comment') -- it would have thrown otherwise.
+                    assert($pictureRequest->commentToValidate !== null && is_numeric($pictureRequest->commentToValidate));
 
                     // false is unreachable here: see the edit_comment case
                     // above
-                    $author_id = $commentService->getCommentAuthorId((int) $_GET['comment_to_validate']);
+                    $author_id = $commentService->getCommentAuthorId((int) $pictureRequest->commentToValidate);
                     assert($author_id !== false);
 
                     if (\Piwigo\Auth\AccessControl::canManageComment('validate', $author_id)) {
-                        $commentService->validateComment((int) $_GET['comment_to_validate']);
+                        $commentService->validateComment((int) $pictureRequest->commentToValidate);
                     }
 
                     $this->redirectService->redirect($url_self);
@@ -551,7 +542,7 @@ UPDATE ' . Tables::categories() . '
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // ---------- incrementation of the number of hits
-        $inc_hit_count = ! isset($_POST['content']);
+        $inc_hit_count = ! $content_present;
         // don't increment counter if in the Mozilla Firefox prefetch
         $http_x_moz = $_SERVER['HTTP_X_MOZ'] ?? null;
         if (is_string($http_x_moz) and $http_x_moz === 'prefetch') {
@@ -667,16 +658,15 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         $slideshow_params = [];
         $slideshow_url_params = [];
 
-        if (isset($_GET['slideshow'])) {
+        if ($pictureRequest->slideshowPresent) {
             $slideshow = true;
             \Piwigo\Core\PageState::current()->setMetaRobots([
                 'noindex' => 1,
                 'nofollow' => 1,
             ]);
 
-            $get_slideshow = $_GET['slideshow'];
             $slideshow_params = self::imageService()
-                ->decodeSlideshowParams(is_string($get_slideshow) ? $get_slideshow : null);
+                ->decodeSlideshowParams($pictureRequest->slideshow);
             $slideshow_url_params['slideshow'] = self::imageService()->encodeSlideshowParams($slideshow_params);
 
             if ((bool) $slideshow_params['play']) {
@@ -737,7 +727,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             $picture['current']
         );
 
-        if (isset($_GET['metadata'])) {
+        if ($pictureRequest->metadataPresent) {
             \Piwigo\Core\PageState::current()->setMetaRobots([
                 'noindex' => 1,
                 'nofollow' => 1,

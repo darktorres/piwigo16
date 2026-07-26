@@ -98,10 +98,7 @@ final class AdminShell
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('page', $_GET, false, '/^[a-zA-Z\d_-]+$/');
-        new \Piwigo\Validation\InputValidator()
-            ->validate('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
+        $adminShellRequest = Request\AdminShellRequest::fromGlobals();
 
         // +-------------------------------------------------------------------+
         // | Filesystem checks                                                 |
@@ -136,13 +133,13 @@ final class AdminShell
         // +-------------------------------------------------------------------+
 
         // save plugins_new display order (AJAX action)
-        if (isset($_GET['plugins_new_order'])) {
-            SessionService::get()->setSessionVar('plugins_new_order', $_GET['plugins_new_order']);
+        if ($adminShellRequest->pluginsNewOrderPresent) {
+            SessionService::get()->setSessionVar('plugins_new_order', $adminShellRequest->pluginsNewOrder);
             exit;
         }
 
         // theme changer
-        if (isset($_GET['change_theme'])) {
+        if ($adminShellRequest->changeThemePresent) {
             $admin_themes = ['roma', 'clear'];
             $admin_theme_param = \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
                 ->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
@@ -160,10 +157,8 @@ final class AdminShell
                 ->updateParam('admin_theme', $new_admin_theme);
 
             $url_params = [];
-            foreach (['page', 'tab', 'section'] as $url_param) {
-                if (isset($_GET[$url_param]) and is_scalar($_GET[$url_param])) {
-                    $url_params[] = $url_param . '=' . $_GET[$url_param];
-                }
+            foreach ($adminShellRequest->changeThemeUrlParams as $url_param => $url_value) {
+                $url_params[] = $url_param . '=' . $url_value;
             }
 
             $redirect_url = 'admin.php';
@@ -188,10 +183,7 @@ final class AdminShell
         // +-------------------------------------------------------------------+
 
         $change_theme_url = $this->urlService->getRootUrl() . 'admin.php?';
-        $test_get = $_GET;
-        unset($test_get['page']);
-        unset($test_get['section']);
-        unset($test_get['tag']);
+        $test_get = $adminShellRequest->testGet;
         $query_string = $_SERVER['QUERY_STRING'] ?? null;
         if (count($test_get) === 0 and is_string($query_string) and $query_string !== '') {
             $change_theme_url .= str_replace('&', '&amp;', $query_string) . '&amp;';
@@ -403,7 +395,7 @@ SELECT COUNT(*)
                 ],
                 true
             )
-            or ($_POST !== [] and in_array(
+            or ($adminShellRequest->isPostNonEmpty and in_array(
                 $page_slug,
                 [
                     'album',        // public/private; lock/unlock, permissions

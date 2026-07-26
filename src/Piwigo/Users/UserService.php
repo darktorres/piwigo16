@@ -529,7 +529,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             Lang::buildArgs('Password: %s', str_repeat('*', $length)),
             Lang::buildArgs('Email: %s', $mailAddress),
             Lang::buildArgs('', ''),
-            Lang::buildArgs('If you think you\'ve received this email in error, please contact us at %s', new \Piwigo\Users\UserRepository($this->conn)->getWebmasterMailAddress()),
+            Lang::buildArgs('If you think you\'ve received this email in error, please contact us at %s', \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)->getWebmasterMailAddress()),
         ];
 
         $gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();

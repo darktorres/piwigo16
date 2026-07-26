@@ -16,7 +16,6 @@ use Piwigo\Search\Inflector\InflectorInterface;
 use Piwigo\Search\Projection\Search;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
@@ -1124,7 +1123,7 @@ final readonly class SearchService
         $expression = new QExpression($q, $scopes);
 
         $inflector = null;
-        $userService = $this->userService ?? new UserService(new UserRepository(DbConnection::build()), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $this->htmlRenderer, DbConnection::build());
+        $userService = $this->userService ?? new UserService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $this->htmlRenderer, DbConnection::build());
         $langCode = substr($userService->getDefaultLanguage(), 0, 2);
         $className = '\\Piwigo\\Search\\Inflector\\Inflector_' . $langCode;
         if (class_exists($className)) {
@@ -1313,7 +1312,7 @@ final readonly class SearchService
 
         if (! \Piwigo\Auth\AccessControl::isAGuest() && ! \Piwigo\Auth\AccessControl::isGeneric()) {
             $rulesFields = $rules['fields'] ?? [];
-            $preferencesService = $this->preferencesService ?? new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()));
+            $preferencesService = $this->preferencesService ?? new \Piwigo\Users\PreferencesService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class));
             $preferencesService->updateParam('gallery_search_filters', array_keys(is_array($rulesFields) ? $rulesFields : []));
         }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Users\Projection;
 
 use Piwigo\Core\ArrayHelper;
+use Piwigo\Users\UserInfoEntity;
 
 /**
  * Typed row shape for `piwigo_user_infos` (P17-23 Stage 1b, User domain --
@@ -87,6 +88,30 @@ final readonly class UserInfo
             preferences: is_string($preferencesRaw)
                 ? array_filter(ArrayHelper::safeJsonDecode($preferencesRaw), is_string(...), ARRAY_FILTER_USE_KEY)
                 : null,
+        );
+    }
+
+    public static function fromEntity(UserInfoEntity $entity): self
+    {
+        return new self(
+            userId: $entity->userId,
+            nbImagePage: $entity->nbImagePage,
+            status: $entity->status,
+            language: $entity->language,
+            expand: $entity->expand,
+            showNbComments: $entity->showNbComments,
+            showNbHits: $entity->showNbHits,
+            recentPeriod: $entity->recentPeriod,
+            theme: $entity->theme,
+            registrationDate: $entity->registrationDate,
+            enabledHigh: $entity->enabledHigh,
+            level: $entity->level,
+            activationKey: $entity->activationKey,
+            activationKeyExpire: $entity->activationKeyExpire,
+            lastVisit: $entity->lastVisit,
+            lastVisitFromHistory: $entity->lastVisitFromHistory,
+            lastmodified: $entity->lastmodified,
+            preferences: $entity->preferences,
         );
     }
 

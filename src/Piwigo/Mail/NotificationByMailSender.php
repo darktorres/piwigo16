@@ -162,7 +162,7 @@ final class NotificationByMailSender
                     ->getMailSenderName();
             $this->sendAsName = $sendAsName;
 
-            $sendAsMailAddress = new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())->getWebmasterMailAddress();
+            $sendAsMailAddress = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class)->getWebmasterMailAddress();
             $this->sendAsMailAddress = $sendAsMailAddress;
 
             $this->sendAsMailFormatted = new MailService()

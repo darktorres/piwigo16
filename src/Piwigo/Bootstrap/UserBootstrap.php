@@ -59,7 +59,7 @@ final class UserBootstrap
             new CookieService(),
         );
         $userService = new \Piwigo\Users\UserService(
-            new \Piwigo\Users\UserRepository($conn),
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
             new \Piwigo\Mail\MailService(),
             new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)),

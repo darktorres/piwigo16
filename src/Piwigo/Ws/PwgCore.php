@@ -597,7 +597,7 @@ DELETE FROM ' . Tables::rate() . '
             $where .= '
     AND action NOT IN (\'login\', \'logout\')';
         } elseif (\Piwigo\Config\CurrentConfig::activityDisplayConnections() === 'admins_only') {
-            $admin_ids = new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())->findAdminIds();
+            $admin_ids = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class)->findAdminIds();
             $where .= '
     AND NOT (action IN (\'login\', \'logout\') AND object_id NOT IN (' . implode(',', $admin_ids) . '))';
         }

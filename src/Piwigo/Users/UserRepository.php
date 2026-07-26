@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
-use Doctrine\DBAL\ArrayParameterType;
-use Piwigo\Db\AbstractRepository;
-use Piwigo\Db\SqlDialect;
+use Doctrine\ORM\EntityRepository;
 use Piwigo\Db\Tables;
 use Piwigo\Users\Projection\UserInfo;
 
@@ -15,13 +13,24 @@ use Piwigo\Users\Projection\UserInfo;
  * slice: `users` (login/password/email), `user_infos` (profile row,
  * preferences), `user_group` (default-group assignment on registration).
  *
+ * `user_infos` is ORM-mapped ({@see UserInfoEntity}). `users` is
+ * deliberately NOT mapped by any entity -- every method touching it takes
+ * its column names as caller-supplied parameters (\Piwigo\Config\
+ * CurrentConfig::userFields(), Piwigo's multi-auth column remapping),
+ * which Doctrine's compile-time column attributes cannot represent. Those
+ * methods stay plain DBAL via $this->getEntityManager()->getConnection(),
+ * same "not every table a repository touches gets an entity" principle
+ * Group/Tag's own conversions already established.
+ *
  * Scoped to what's genuinely self-contained: build_user()/getuserdata()'s
  * user_cache generation and check_user_favorites() stay procedural for now
  * -- both are deeply coupled to Category/Image domain internals
  * (get_computed_categories(), Tables::imageCategory(), image-count-based
  * cache invalidation) that don't exist as typed modules yet (P19).
+ *
+ * @extends EntityRepository<UserInfoEntity>
  */
-final class UserRepository extends AbstractRepository implements \Piwigo\Core\WebmasterMailProviderInterface
+final class UserRepository extends EntityRepository implements \Piwigo\Core\WebmasterMailProviderInterface
 {
     /**
      * Returns the webmaster's email address (the users row whose id
@@ -47,7 +56,9 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
         $id_field = $user_fields['id'];
         $webmaster_id = \Piwigo\Config\CurrentConfig::webmasterId();
 
-        $value = $this->conn->createQueryBuilder()
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select($email_field)
             ->from(Tables::users())
             ->where($id_field . ' = :webmasterId')
@@ -66,7 +77,9 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
 
     public function findIdByUsername(string $username, string $idColumn, string $usernameColumn): int|false
     {
-        $value = $this->conn->createQueryBuilder()
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select($idColumn)
             ->from(Tables::users())
             ->where($usernameColumn . ' = :username')
@@ -79,7 +92,9 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
 
     public function findIdByEmail(string $email, string $idColumn, string $emailColumn): int|false
     {
-        $value = $this->conn->createQueryBuilder()
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select($idColumn)
             ->from(Tables::users())
             ->where('UPPER(' . $emailColumn . ') = UPPER(:email)')
@@ -99,7 +114,9 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
      */
     public function findByUsernameCaseInsensitive(string $username, string $idColumn, string $usernameColumn, string $emailColumn): ?array
     {
-        $row = $this->conn->createQueryBuilder()
+        $row = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select($idColumn . ' AS id', $usernameColumn . ' AS username', $emailColumn . ' AS email')
             ->from(Tables::users())
             ->where('LOWER(' . $usernameColumn . ') = LOWER(:username)')
@@ -120,7 +137,9 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
 
     public function usernameExistsCaseInsensitive(string $username, string $usernameColumn): bool
     {
-        $value = $this->conn->createQueryBuilder()
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('COUNT(*)')
             ->from(Tables::users())
             ->where('LOWER(' . $usernameColumn . ') = LOWER(:username)')
@@ -133,7 +152,9 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
 
     public function emailExists(string $email, string $emailColumn, string $idColumn, ?int $excludeUserId): bool
     {
-        $qb = $this->conn->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('COUNT(*)')
             ->from(Tables::users())
             ->where('UPPER(' . $emailColumn . ') = UPPER(:email)')
@@ -152,7 +173,9 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
 
     public function findUsernameById(int $userId, string $idColumn, string $usernameColumn): ?string
     {
-        $value = $this->conn->createQueryBuilder()
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select($usernameColumn)
             ->from(Tables::users())
             ->where($idColumn . ' = :id')
@@ -168,7 +191,9 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
      */
     public function findAllUsernames(string $usernameColumn): array
     {
-        $names = $this->conn->createQueryBuilder()
+        $names = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select($usernameColumn . ' AS username')
             ->from(Tables::users())
             ->executeQuery()
@@ -187,7 +212,10 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
      */
     public function insertUser(array $columns): int
     {
-        $qb = $this->conn->createQueryBuilder()
+        $conn = $this->getEntityManager()
+            ->getConnection();
+
+        $qb = $conn->createQueryBuilder()
             ->insert(Tables::users());
         $values = [];
         foreach (array_keys($columns) as $i => $column) {
@@ -200,7 +228,7 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
         }
         $qb->executeStatement();
 
-        return (int) $this->conn->lastInsertId();
+        return (int) $conn->lastInsertId();
     }
 
     /**
@@ -208,7 +236,9 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
      * @param array<string, mixed> $row default column => value pairs,
      *   copied onto every inserted row (matches create_user_infos()'s own
      *   "start from get_default_user_info(), overlay per-row fields"
-     *   logic)
+     *   logic) -- keys the caller omits fall back to `user_infos`'s own
+     *   schema-declared column defaults, matching the original raw INSERT's
+     *   behavior when a column was left out of the value list entirely.
      */
     public function insertUserInfos(array $userIds, array $row): void
     {
@@ -216,46 +246,48 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
             return;
         }
 
+        $em = $this->getEntityManager();
         foreach ($userIds as $userId) {
-            $qb = $this->conn->createQueryBuilder()
-                ->insert(Tables::userInfos());
-            $values = [
-                'user_id' => ':userId',
-            ];
-            $qb->setParameter('userId', $userId);
-            $i = 0;
-            foreach ($row as $column => $value) {
-                $placeholder = ':c' . $i;
-                $values[$column] = $placeholder;
-                // setParameter() with no explicit type binds as a plain
-                // string (mysqli type 's') -- for a real PHP bool
-                // (expand/show_nb_comments/show_nb_hits/enabled_high,
-                // User domain Stage 1a's tinyint columns, now surfacing
-                // as real bool via UserInfo::toArray()), mysqli converts
-                // via PHP's own string-cast rule (`false` -> '', not
-                // '0'), which strict SQL mode then rejects as an invalid
-                // integer for the column. Confirmed by direct test
-                // against a real tinyint(1) column under
-                // STRICT_TRANS_TABLES.
-                $qb->setParameter('c' . $i, SqlDialect::booleanToInt($value));
-                $i++;
-            }
-            $qb->values($values)
-                ->executeStatement();
+            $em->persist($this->buildUserInfoEntity((int) $userId, $row));
         }
+
+        $em->flush();
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private function buildUserInfoEntity(int $userId, array $row): UserInfoEntity
+    {
+        $preferencesRaw = $row['preferences'] ?? null;
+
+        return new UserInfoEntity(
+            userId: $userId,
+            nbImagePage: is_numeric($row['nb_image_page'] ?? null) ? (int) $row['nb_image_page'] : 15,
+            status: is_string($row['status'] ?? null) ? $row['status'] : 'guest',
+            language: is_string($row['language'] ?? null) ? $row['language'] : 'en_UK',
+            expand: (bool) ($row['expand'] ?? false),
+            showNbComments: (bool) ($row['show_nb_comments'] ?? false),
+            showNbHits: (bool) ($row['show_nb_hits'] ?? false),
+            recentPeriod: is_numeric($row['recent_period'] ?? null) ? (int) $row['recent_period'] : 7,
+            theme: is_string($row['theme'] ?? null) ? $row['theme'] : 'modus',
+            registrationDate: is_string($row['registration_date'] ?? null) ? $row['registration_date'] : null,
+            enabledHigh: (bool) ($row['enabled_high'] ?? true),
+            level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
+            activationKey: is_string($row['activation_key'] ?? null) ? $row['activation_key'] : null,
+            activationKeyExpire: is_string($row['activation_key_expire'] ?? null) ? $row['activation_key_expire'] : null,
+            lastVisit: is_string($row['last_visit'] ?? null) ? $row['last_visit'] : null,
+            lastVisitFromHistory: (bool) ($row['last_visit_from_history'] ?? false),
+            lastmodified: is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : \Piwigo\Core\Env::now()->format('Y-m-d H:i:s'),
+            preferences: is_array($preferencesRaw) ? array_filter($preferencesRaw, is_string(...), ARRAY_FILTER_USE_KEY) : null,
+        );
     }
 
     public function findDefaultUserInfoRow(int $defaultUserId): ?UserInfo
     {
-        $row = $this->conn->createQueryBuilder()
-            ->select('*')
-            ->from(Tables::userInfos())
-            ->where('user_id = :id')
-            ->setParameter('id', $defaultUserId)
-            ->executeQuery()
-            ->fetchAssociative();
+        $entity = $this->find($defaultUserId);
 
-        return $row === false ? null : UserInfo::fromRow($row);
+        return $entity === null ? null : UserInfo::fromEntity($entity);
     }
 
     /**
@@ -263,13 +295,15 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
      */
     public function savePreferences(int|string $userId, array $preferences): void
     {
-        $this->conn->createQueryBuilder()
-            ->update(Tables::userInfos())
-            ->set('preferences', ':preferences')
-            ->where('user_id = :userId')
-            ->setParameter('preferences', json_encode($preferences))
-            ->setParameter('userId', $userId)
-            ->executeStatement();
+        $entity = $this->find((int) $userId);
+        if ($entity === null) {
+            return;
+        }
+
+        $entity->preferences = $preferences;
+
+        $this->getEntityManager()
+            ->flush();
     }
 
     /**
@@ -285,15 +319,14 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
             $statusList[] = 'webmaster';
         }
 
-        $ids = $this->conn->createQueryBuilder()
-            ->select('user_id')
-            ->from(Tables::userInfos())
-            ->where('status IN (:statuses)')
-            ->setParameter('statuses', $statusList, ArrayParameterType::STRING)
-            ->executeQuery()
-            ->fetchFirstColumn();
+        $rows = $this->createQueryBuilder('ui')
+            ->select('ui.userId')
+            ->where('ui.status IN (:statuses)')
+            ->setParameter('statuses', $statusList)
+            ->getQuery()
+            ->getResult();
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $ids);
+        return array_map(static fn (array $row): int => $row['userId'], $rows);
     }
 
     /**
@@ -317,17 +350,37 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
             Tables::userAuthKeys(),
         ];
 
+        $em = $this->getEntityManager();
+        $conn = $em->getConnection();
+
         foreach ($tables as $table) {
-            $this->conn->createQueryBuilder()
+            if ($table === Tables::userInfos()) {
+                $em->createQueryBuilder()
+                    ->delete(UserInfoEntity::class, 'ui')
+                    ->where('ui.userId = :userId')
+                    ->setParameter('userId', $userId)
+                    ->getQuery()
+                    ->execute();
+
+                continue;
+            }
+
+            $conn->createQueryBuilder()
                 ->delete($table)
                 ->where('user_id = :userId')
                 ->setParameter('userId', $userId)
                 ->executeStatement();
         }
 
+        // Bypassed the ORM for every table above except UserInfoEntity's own
+        // DQL delete -- any UserInfoEntity this EntityManager already loaded
+        // for this user would otherwise stay stale (same identity-map
+        // reasoning as GroupRepository::delete()'s own comment).
+        $em->clear();
+
         $userFields = \Piwigo\Config\CurrentConfig::userFields();
         $userIdField = $userFields['id'];
-        $this->conn->createQueryBuilder()
+        $conn->createQueryBuilder()
             ->delete(Tables::users())
             ->where($userIdField . ' = :userId')
             ->setParameter('userId', $userId)
@@ -344,7 +397,9 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
      */
     public function findAllUserIds(string $userIdColumn): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->createQueryBuilder()
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select($userIdColumn . ' AS id')
             ->from(Tables::users())
             ->executeQuery()
@@ -356,7 +411,9 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
      */
     public function findDistinctUserIdsInTable(string $table): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->createQueryBuilder()
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->select('DISTINCT user_id')
             ->from($table)
             ->executeQuery()
@@ -372,10 +429,18 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
             return;
         }
 
-        $this->conn->createQueryBuilder()
+        $em = $this->getEntityManager();
+        $em->getConnection()
+            ->createQueryBuilder()
             ->delete($table)
             ->where('user_id IN (:userIds)')
-            ->setParameter('userIds', $userIds, ArrayParameterType::INTEGER)
+            ->setParameter('userIds', $userIds, \Doctrine\DBAL\ArrayParameterType::INTEGER)
             ->executeStatement();
+
+        // $table may be user_infos -- bypasses the ORM, so any
+        // UserInfoEntity already in this EntityManager's identity map for
+        // one of these ids would otherwise stay stale (same reasoning as
+        // deleteUser()'s own comment).
+        $em->clear();
     }
 }

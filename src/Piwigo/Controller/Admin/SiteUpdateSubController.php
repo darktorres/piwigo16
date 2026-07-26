@@ -25,7 +25,6 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Site\LocalSiteReader;
 use Piwigo\Template\Template;
-use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -527,7 +526,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                             ->massInsert(Tables::userAccess(), ['user_id', 'cat_id'], $insert_granted_users);
                     } else {
                         self::permissionService()
-                            ->addPermissionOnCategory($category_ids, new UserRepository($conn)->findAdminIds());
+                            ->addPermissionOnCategory($category_ids, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)->findAdminIds());
                     }
                 }
 

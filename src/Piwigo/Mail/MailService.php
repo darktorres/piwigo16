@@ -83,7 +83,7 @@ final class MailService implements MailerInterface
     private function webmasterMailAddress(): string
     {
         $provider = $this->webmasterMailProvider
-            ?? new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build());
+            ?? \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class);
 
         return $provider->getWebmasterMailAddress();
     }
@@ -152,7 +152,7 @@ final class MailService implements MailerInterface
     private function userService(): \Piwigo\Users\UserService
     {
         return new \Piwigo\Users\UserService(
-            new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()),
+            \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class),
             \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class),
             new self(),
             new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())),

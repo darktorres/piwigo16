@@ -12,7 +12,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
-use Piwigo\Users\UserRepository;
 
 /**
  * Ported from admin/history.php (page slug "history") -- displays the
@@ -129,7 +128,7 @@ final class HistoryPageRenderer
             /** @var array<string, string> $user_fields */
             $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
-            $form_param['user_name'] = new UserRepository($conn)
+            $form_param['user_name'] = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)
                 ->findUsernameById($form_param['user_id'], $user_fields['id'], $user_fields['username']);
             $form_param['user_id'] = $form_param['user_name'] === null ? -1 : $form_param['user_id'];
         }

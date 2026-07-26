@@ -23,7 +23,6 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
@@ -393,7 +392,7 @@ SELECT
         $uf_username = $user_fields['username'];
         $uf_id = $user_fields['id'];
         $row_added_by = is_numeric($row['added_by']) ? (int) $row['added_by'] : 0;
-        $added_by_username = new UserRepository($conn)
+        $added_by_username = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)
             ->findUsernameById($row_added_by, $uf_id, $uf_username);
         if ($added_by_username !== null) {
             $row['added_by'] = $added_by_username;

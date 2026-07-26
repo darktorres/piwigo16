@@ -76,7 +76,7 @@ final readonly class CategoryService
 
     private function userRepository(): UserRepository
     {
-        return new UserRepository(DbConnection::build());
+        return \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class);
     }
 
     /**

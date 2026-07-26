@@ -332,7 +332,7 @@ final class InstallWizard
     private function userService(?Connection $conn = null): UserService
     {
         $conn ??= DbConnection::build();
-        return new UserService(new UserRepository($conn), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(new ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
+        return new UserService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(new ActivityRepository($conn)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn);
     }
 
     /**
@@ -706,7 +706,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             // moved onto CurrentUser.)
             \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
 
-            new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository($conn))
+            new \Piwigo\Users\PreferencesService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class))
                 ->save();
 
             // email notification

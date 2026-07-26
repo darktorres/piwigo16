@@ -43,6 +43,7 @@ use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\UserInfoEntity;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Cache\CacheItemPoolInterface;
@@ -231,4 +232,6 @@ return [
     GroupRepository::class => factory(static fn (EntityManagerInterface $em): GroupRepository => $em->getRepository(GroupEntity::class)),
 
     TagRepository::class => factory(static fn (EntityManagerInterface $em): TagRepository => $em->getRepository(TagEntity::class)),
+
+    UserRepository::class => factory(static fn (EntityManagerInterface $em): UserRepository => $em->getRepository(UserInfoEntity::class)),
 ];

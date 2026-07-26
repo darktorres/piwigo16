@@ -42,7 +42,6 @@ use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
@@ -484,7 +483,7 @@ final class RequestBootstrap
 
         // language files
         Lang::setDefaultLanguageProvider(new UserService(
-            new UserRepository($conn),
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
             new MailService(),
             self::activityService($conn),
@@ -555,7 +554,7 @@ final class RequestBootstrap
             // untyped array<string, mixed>), so its return is inferred as
             // mixed; narrow to the same CurrentConfig::adminTheme() fallback
             // already passed as the default value.
-            $admin_theme = new \Piwigo\Users\PreferencesService(new UserRepository($conn))
+            $admin_theme = new \Piwigo\Users\PreferencesService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class))
                 ->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
             $admin_theme = is_string($admin_theme) ? $admin_theme : \Piwigo\Config\CurrentConfig::adminTheme();
             $template = new Template(CurrentPaths::get()->root . 'themes/admin', $admin_theme);

@@ -206,7 +206,7 @@ final class ExtensionScanner
         if (file_exists($screenshotPath)) {
             $theme['screenshot'] = $screenshotPath;
         } else {
-            $adminTheme = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
+            $adminTheme = new \Piwigo\Users\PreferencesService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class))->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
             $theme['screenshot'] = $urlService->getRootUrl() . 'themes/admin/'
                 . (is_string($adminTheme) ? $adminTheme : \Piwigo\Config\CurrentConfig::adminTheme())
                 . '/images/missing_screenshot.png';

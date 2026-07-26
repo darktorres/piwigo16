@@ -2,48 +2,6 @@
 
 declare(strict_types=1);
 
-// CommentService calls several real, stable, already-migrated free
-// functions that need more bootstrap (the plugin-event system,
-// $user/$conf-driven access-level checks, HtmlService's Template-rendering
-// fatal_error()) than this isolated integration test wants to depend on.
-// Same "minimal stub to load standalone" pattern as
-// tests/Integration/UserServiceTest.php. No url_check_format()/
-// email_check_format() stubs: CommentService's real call sites now call
-// Piwigo\Validation\InputValidator::checkUrlFormat()/checkEmailFormat()
-// directly (P23 batch 8d), real class methods a same-named bare-function
-// stub can no longer intercept.
-//
-// No fatal_error() stub: only getCommentAuthorId()'s $dieOnError=true path
-// (never exercised below) would reach it, and it's `never`-typed (renders
-// a page and exits) -- unsafe to invoke from a test process, same reason
-// PasswordHashTest/AuthServiceTest never stub it either.
-//
-// pwg_mail_notification_admins()/get_l10n_args()/get_absolute_root_url()
-// are deliberately NOT stubbed either: every test below sets all four
-// `email_admin_on_comment*` config flags to false, so the branches that
-// would call them are never reached -- same "don't stub what's never
-// called" reasoning as TagServiceTest's PHPStan stub-collision lesson.
-// The real end-to-end admin-notification path is live-verified separately.
-namespace {
-    if (! function_exists('l10n')) {
-        function l10n(string $key, mixed ...$args): string
-        {
-            return $args === [] ? $key : vsprintf($key, array_map(static fn (mixed $a): string => is_scalar($a) ? (string) $a : '', $args));
-        }
-    }
-
-    // trigger_change()/trigger_notify() calls go directly through the real
-    // Piwigo\PluginConfig\EventDispatcher::get() singleton now, pure
-    // passthroughs with no handlers registered, so no local stubs are
-    // needed for them here.
-
-    // is_admin()/is_a_guest()/is_classic_user() -- CommentService now calls
-    // Piwigo\Auth\AccessControl::isAdmin()/isAGuest()/isClassicUser()
-    // directly (P23 batch 8d), which read Piwigo\Users\CurrentUser (Legacy
-    // Coupling Retirement Track A batch A3); tests below seed CurrentUser
-    // instead.
-}
-
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;

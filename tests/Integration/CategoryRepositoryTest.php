@@ -2,29 +2,6 @@
 
 declare(strict_types=1);
 
-// findComputedCategoriesRollup() calls the real, stable, dependency-free
-// \Piwigo\Db\MysqliDb::getRecentPeriodExpression() (include/dblayer/functions_mysqli.inc.php),
-// which this isolated integration test doesn't load. Copied verbatim --
-// pure string building, no bootstrap needed. function_exists() guard: same
-// "whichever Integration test file's stub loads first wins" reasoning as
-// every other free-function stub in this suite.
-namespace {
-    if (! function_exists('pwg_db_get_recent_period_expression')) {
-        function pwg_db_get_recent_period_expression(int|string $period, string $date = 'CURRENT_DATE'): string
-        {
-            if ($date === 'CURRENT_DATE' && \Piwigo\Core\Env::testModeIsActive()) {
-                $date = \Piwigo\Core\Env::now()->format('Y-m-d');
-            }
-
-            if ($date !== 'CURRENT_DATE') {
-                $date = '\'' . $date . '\'';
-            }
-
-            return 'SUBDATE(' . $date . ',INTERVAL ' . $period . ' DAY)';
-        }
-    }
-}
-
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;

@@ -5,18 +5,6 @@ declare(strict_types=1);
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Validation\InputValidator;
 
-// The real fatal_error() (functions_html.inc.php) renders a page and
-// exits the process -- unsafe to invoke from a test. Same "don't stub
-// what would kill the test process, throw instead" reasoning as
-// CommentServiceTest's own choice NOT to stub it; here we DO need to
-// exercise the failure path, so a throwing stub stands in.
-if (! function_exists('fatal_error')) {
-    function fatal_error(string $msg, ?string $title = null, bool $show_trace = true): never
-    {
-        throw new RuntimeException($msg);
-    }
-}
-
 test('validate accepts a scalar value matching the pattern', function (): void {
     $validator = new InputValidator();
 

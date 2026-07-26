@@ -4,21 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Html\HtmlService;
 
-// trigger_notify() calls go directly through the real
-// Piwigo\PluginConfig\EventDispatcher::get() singleton now, a pure no-op
-// with no handlers registered, so no local stub is needed for it here --
-// only get_name_from_file() (a separate not-yet-migrated free function)
-// still needs one, same "load standalone" pattern as PasswordHashTest.php's
-// own stubs.
-if (! function_exists('get_name_from_file')) {
-    function get_name_from_file(string $filename): string
-    {
-        $dot = strrpos($filename, '.');
-
-        return $dot !== false ? substr($filename, 0, $dot) : $filename;
-    }
-}
-
 test('renderCommentContent escapes html and linkifies bare URLs', function (): void {
     $service = new HtmlService();
 

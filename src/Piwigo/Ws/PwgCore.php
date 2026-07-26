@@ -876,11 +876,7 @@ SELECT
 
         /** @var array<string, mixed> $page */
         $page = [];
-        if (isset($_GET['start']) and is_numeric($_GET['start'])) {
-            $page['start'] = $_GET['start'];
-        } else {
-            $page['start'] = 0;
-        }
+        $page['start'] = Request\HistorySearchPageRequest::fromGlobals()->start;
 
         $types = array_merge(['none'], new DbInfo($conn)->getEnums(Tables::history(), 'image_type'));
 

@@ -114,7 +114,12 @@ final class InstallWizard
     private array $errors = [];
 
     /**
-     * @var array<string, array<string, mixed>>
+     * ExtensionScanner::scan()'s own declared return type is a generic
+     * array<string, array<string, mixed>> dispatch shape (by design -- see
+     * that method's own docblock), but every real entry for
+     * ExtensionType::Language is actually scanLanguage()'s own precise shape.
+     *
+     * @var array<string, array{name: string, code: string, version: string, uri: string, author: string}>
      */
     private array $fsLanguages;
 

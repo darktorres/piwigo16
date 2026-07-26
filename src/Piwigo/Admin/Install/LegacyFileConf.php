@@ -37,6 +37,12 @@ use Piwigo\Core\CurrentPaths;
 final class LegacyFileConf
 {
     /**
+     * Genuinely arbitrary by design, same residual as ConfigService's own
+     * confGetParam(): CurrentConfig::defaultsArray() alone spans ~280
+     * heterogeneously-typed keys, and the 2 raw `include`s below let a
+     * site's own config.inc.php overwrite any of them with anything
+     * (arbitrary PHP, not a schema-checked file).
+     *
      * @return array<string, mixed>
      */
     public static function read(): array

@@ -65,12 +65,7 @@ final class HistoryPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('filter_ip', $_GET, false, '/^[0-9.]+$/');
-        new \Piwigo\Validation\InputValidator()
-            ->validate('filter_image_id', $_GET, false, '/^\d+$/');
-        new \Piwigo\Validation\InputValidator()
-            ->validate('filter_user_id', $_GET, false, '/^\d+$/');
+        $historyFilter = Request\HistoryFilterRequest::fromGlobals();
 
         $template->set_filename('history', 'history.tpl');
 
@@ -104,18 +99,11 @@ final class HistoryPageRenderer
               ->getCookieVar('display_thumbnail', 'no_display_thumbnail');
 
         $form_param = [];
-        $form_param['ip'] = $_GET['filter_ip'] ?? null;
-        $form_param['image_id'] = $_GET['filter_image_id'] ?? null;
+        $form_param['ip'] = $historyFilter->ip;
+        $form_param['image_id'] = $historyFilter->imageId;
+        $form_param['user_id'] = $historyFilter->userId;
 
-        // check_input_parameter() above already validated filter_user_id to be
-        // digits-only (pattern '/^\d+$/') when present; is_numeric() here narrows
-        // the type for static analysis and falls back to the "no filter" sentinel
-        // -1 (matching the pre-existing '-1' convention below) for anything else.
-        $form_param['user_id'] = isset($_GET['filter_user_id']) && is_numeric($_GET['filter_user_id'])
-            ? (int) $_GET['filter_user_id']
-            : -1;
-
-        if (isset($_GET['filter_ip']) or isset($_GET['filter_image_id']) or isset($_GET['filter_user_id'])) {
+        if ($historyFilter->hasAnyFilter) {
             $form['start'] = '';
         }
 

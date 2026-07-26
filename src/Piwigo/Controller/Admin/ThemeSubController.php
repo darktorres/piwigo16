@@ -20,6 +20,9 @@ use Psr\Http\Message\ServerRequestInterface;
  * already gates this page behind check_status(AccessLevel::Administrator)
  * before dispatch, so the shell's own (redundant) copy of that check is
  * dropped here, same precedent as every prior sub-batch's shell fold.
+ *
+ * P27/SEC-40: $_GET['theme'] parsing/validation extracted into
+ * Request\ThemeIdRequest -- see that class's own docblock.
  */
 final class ThemeSubController implements AdminSubControllerInterface
 {
@@ -30,12 +33,7 @@ final class ThemeSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        $theme_raw = $_GET['theme'] ?? null;
-        if (! is_string($theme_raw) || $theme_raw === '') {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
-                ->fatalError('Invalid theme URL');
-        }
-        $theme = $theme_raw;
+        $theme = Request\ThemeIdRequest::fromGlobals()->themeId;
 
         $fs_themes = new ExtensionScanner()
             ->scan(ExtensionType::Theme, $this->urlService);

@@ -241,10 +241,10 @@ abstract class CalendarBase
      * Creates a calendar navigation bar.
      *
      * @param array<int, int|string> $date_components
-     * @param array<int|string, mixed> $items - hash of items to put in the bar (e.g. 2005,2006)
+     * @param array<int|string, int> $items - hash of items to put in the bar (e.g. 2005,2006), -1 sentinel means "no items"
      * @param bool $show_any - adds any link to the end of the bar
      * @param bool $show_empty - shows all labels even those without items
-     * @param array<int|string, mixed>|null $labels - optional labels for items (e.g. Jan,Feb,...)
+     * @param array<int|string, string>|null $labels - optional labels for items (e.g. Jan,Feb,...)
      * @return array<int, array<string, mixed>>
      */
     protected function get_nav_bar_from_items(
@@ -314,7 +314,7 @@ abstract class CalendarBase
      * Creates a calendar navigation bar for a given level.
      *
      * @param int $level - 0-year, 1-month/week, 2-day
-     * @param array<int|string, mixed>|null $labels
+     * @param array<int|string, string>|null $labels
      */
     protected function build_nav_bar($level, ?array $labels, \Piwigo\Core\TemplateInterface $template): void
     {
@@ -330,7 +330,10 @@ $this->get_date_where($level) . '
         foreach ($rows as $row) {
             $keyRaw = $row['period'] ?? null;
             $key = is_int($keyRaw) || is_string($keyRaw) ? $keyRaw : '';
-            $level_items[$key] = $row['nb_images'];
+            // nb_images is a COUNT(...) aggregate; DBAL row values are mixed
+            // (native int or numeric string depending on driver), guard
+            // either way, same idiom as CalendarMonthly's own build_*_calendar().
+            $level_items[$key] = is_numeric($row['nb_images']) ? (int) $row['nb_images'] : 0;
         }
 
         $page_chronology_date = $this->chronology_date;

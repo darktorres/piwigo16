@@ -208,6 +208,11 @@ final class CalendarMonthly extends CalendarBase
 
     /**
      * Build global calendar and assign the result in _$tpl_var_
+     * $tpl_var is a growing Smarty template-variable bag shared across this
+     * class's own build_*_calendar() methods, each assigning its own keys
+     * -- matches Template::assign()'s own by-design arbitrary-value
+     * contract, not a single reusable shape.
+     *
      * @param array<string, mixed> $tpl_var
      */
     protected function build_global_calendar(array &$tpl_var): bool
@@ -284,6 +289,11 @@ final class CalendarMonthly extends CalendarBase
 
     /**
      * Build year calendar and assign the result in _$tpl_var_
+     * $tpl_var is a growing Smarty template-variable bag shared across this
+     * class's own build_*_calendar() methods, each assigning its own keys
+     * -- matches Template::assign()'s own by-design arbitrary-value
+     * contract, not a single reusable shape.
+     *
      * @param array<string, mixed> $tpl_var
      */
     protected function build_year_calendar(array &$tpl_var): bool
@@ -360,6 +370,11 @@ final class CalendarMonthly extends CalendarBase
 
     /**
      * Build month calendar and assign the result in _$tpl_var_
+     * $tpl_var is a growing Smarty template-variable bag shared across this
+     * class's own build_*_calendar() methods, each assigning its own keys
+     * -- matches Template::assign()'s own by-design arbitrary-value
+     * contract, not a single reusable shape.
+     *
      * @param array<string, mixed> $tpl_var
      */
     protected function build_month_calendar(array &$tpl_var): bool

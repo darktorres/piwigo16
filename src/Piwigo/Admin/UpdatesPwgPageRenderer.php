@@ -53,27 +53,17 @@ final class UpdatesPwgPageRenderer
         2 = upgrade on same branch
         3 = upgrade on different branch
         */
-        $step_param = $_GET['step'] ?? 0;
-        $step = (is_string($step_param) || is_int($step_param)) ? (int) $step_param : 0;
-
         [$ct_env, $ct_build_version] = \Piwigo\Core\ContainerDetector::detect();
+
+        $updatesPwgRequest = Request\UpdatesPwgRequest::fromGlobals($ct_env);
+        $step = $updatesPwgRequest->step;
+        $upgrade_to = $updatesPwgRequest->upgradeTo;
 
         if ($ct_env === 'Official') {
             $template->assign([
                 'CONTAINER_VERSION' => $ct_build_version,
                 'DOCKER_UPDATE_GUIDE_URL' => AppInfo::URL . '/guide-update-docker',
             ]);
-            // Remove optional ? on [a-z]? since it will only be available on piwigo 16.3
-            // Docker images started to use letter suffix in 16.2
-            new \Piwigo\Validation\InputValidator()
-                ->validate('to', $_GET, false, '/^\d+\.\d+\.\d+[a-z]?$/');
-            $get_to = $_GET['to'] ?? null;
-            $upgrade_to = is_string($get_to) ? (preg_replace('/[a-z]$/', '', $get_to) ?? '') : '';
-        } else {
-            new \Piwigo\Validation\InputValidator()
-                ->validate('to', $_GET, false, '/^\d+\.\d+\.\d+$/');
-            $get_to = $_GET['to'] ?? '';
-            $upgrade_to = is_string($get_to) ? $get_to : '';
         }
 
         $core_update_service = \Piwigo\Bootstrap\AdminAccessor::coreUpdateService();
@@ -109,10 +99,10 @@ final class UpdatesPwgPageRenderer
         // |                                Step 2                                 |
         // +-----------------------------------------------------------------------+
         if ($step === 2 and \Piwigo\Auth\AccessControl::isWebmaster()) {
-            if (isset($_POST['submit']) and isset($_POST['upgrade_to']) and is_string($_POST['upgrade_to'])) {
+            if ($updatesPwgRequest->isUpgradeSubmitted) {
                 new \Piwigo\Csrf\CsrfService()
                     ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
-                $core_update_service->upgradeTo($_POST['upgrade_to'], $step);
+                $core_update_service->upgradeTo($updatesPwgRequest->upgradeToSubmitted, $step);
             }
         }
 
@@ -120,10 +110,10 @@ final class UpdatesPwgPageRenderer
         // |                                Step 3                                 |
         // +-----------------------------------------------------------------------+
         if ($step === 3 and \Piwigo\Auth\AccessControl::isWebmaster()) {
-            if (isset($_POST['submit']) and isset($_POST['upgrade_to']) and is_string($_POST['upgrade_to'])) {
+            if ($updatesPwgRequest->isUpgradeSubmitted) {
                 new \Piwigo\Csrf\CsrfService()
                     ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
-                $core_update_service->upgradeTo($_POST['upgrade_to'], $step);
+                $core_update_service->upgradeTo($updatesPwgRequest->upgradeToSubmitted, $step);
             }
 
             $extension_update_checker = \Piwigo\Bootstrap\AdminAccessor::extensionUpdateChecker();

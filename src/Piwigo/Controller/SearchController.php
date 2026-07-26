@@ -9,7 +9,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Http\ControllerInterface;
@@ -106,9 +105,11 @@ final class SearchController implements ControllerInterface
             $fields = is_array($raw_fields) ? $raw_fields : $default_fields;
         }
 
+        $searchQuery = Request\SearchQueryRequest::fromGlobals();
+
         $words = [];
-        $q = $_GET['q'] ?? null;
-        if (is_string($q) and $q !== '' and $q !== '0') {
+        $q = $searchQuery->q;
+        if ($q !== '' and $q !== '0') {
             $words = SearchService::splitAllwords($q) ?? [];
         }
 
@@ -121,11 +122,8 @@ final class SearchController implements ControllerInterface
         }
 
         $cat_ids = [];
-        if (isset($_GET['cat_id'])) {
-            new \Piwigo\Validation\InputValidator()
-                ->validate('cat_id', $_GET, false, ValidationPattern::ID);
-
-            $cat_id_value = $_GET['cat_id'];
+        if ($searchQuery->hasCatId) {
+            $cat_id_value = $searchQuery->catId;
             if (! is_string($cat_id_value)) {
                 \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('[Hacking attempt] the input parameter "cat_id" is not valid');
@@ -169,11 +167,8 @@ SELECT
 
         if (count($tagService->getAvailableTags()) > 0) {
             $tag_ids = [];
-            if (isset($_GET['tag_id'])) {
-                new \Piwigo\Validation\InputValidator()
-                    ->validate('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
-
-                $tag_id_value = $_GET['tag_id'];
+            if ($searchQuery->hasTagId) {
+                $tag_id_value = $searchQuery->tagId;
                 if (! is_string($tag_id_value)) {
                     \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                         ->fatalError('[Hacking attempt] the input parameter "tag_id" is not valid');

@@ -13,7 +13,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
@@ -149,11 +148,13 @@ SELECT IF(MAX(' . $column . ')+1 IS NULL, 1, MAX(' . $column . ')+1)
                 ->fatalError('synchronization is disabled');
         }
 
-        if (! is_numeric($_GET['site'])) {
+        $siteUpdateRequest = Request\SiteUpdateRequest::fromGlobals();
+
+        if (! is_numeric($siteUpdateRequest->siteRaw)) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('site param missing or invalid');
         }
-        $site_id = (int) $_GET['site'];
+        $site_id = (int) $siteUpdateRequest->siteRaw;
 
         // A single connection for the whole request -- mirrors the legacy
         // single-global-mysqli-connection model this migration restores,
@@ -240,22 +241,28 @@ SELECT galleries_url
         // | Quick sync                                                            |
         // +-----------------------------------------------------------------------+
 
-        if (isset($_GET['quick_sync'])) {
+        // A local working copy of post -- the quick_sync shortcut below
+        // used to write 8 $_POST keys in place to simulate a full form
+        // submission, so every later isset()/comparison read in this same
+        // handle() call saw the synthesized values.
+        $post = $siteUpdateRequest->post;
+
+        if ($siteUpdateRequest->quickSyncRequested) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
-            $_POST['sync'] = 'files';
-            $_POST['display_info'] = '1';
-            $_POST['add_to_caddie'] = '1';
-            $_POST['privacy_level'] = '0';
-            $_POST['sync_meta'] = '1';
-            $_POST['simulate'] = '0';
-            $_POST['subcats-included'] = '1';
-            $_POST['submit'] = 'Quick Local Synchronization';
+            $post['sync'] = 'files';
+            $post['display_info'] = '1';
+            $post['add_to_caddie'] = '1';
+            $post['privacy_level'] = '0';
+            $post['sync_meta'] = '1';
+            $post['simulate'] = '0';
+            $post['subcats-included'] = '1';
+            $post['submit'] = 'Quick Local Synchronization';
         }
 
         $general_failure = true;
-        if (isset($_POST['submit'])) {
+        if (isset($post['submit'])) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
@@ -264,7 +271,7 @@ SELECT galleries_url
             }
 
             // shall we simulate only
-            if (isset($_POST['simulate']) and $_POST['simulate'] === '1') {
+            if (isset($post['simulate']) and $post['simulate'] === '1') {
                 $simulate = true;
             } else {
                 $simulate = false;
@@ -274,8 +281,8 @@ SELECT galleries_url
         // +-----------------------------------------------------------------------+
         // |                      directories / categories                         |
         // +-----------------------------------------------------------------------+
-        if (isset($_POST['submit'])
-            and ($_POST['sync'] === 'dirs' or $_POST['sync'] === 'files')
+        if (isset($post['submit'])
+            and ($post['sync'] === 'dirs' or $post['sync'] === 'files')
             and ! $general_failure) {
             $start = \Piwigo\Core\TimingHelper::getMoment();
             // which categories to update ?
@@ -284,14 +291,14 @@ SELECT id, uppercats, global_rank, status, visible
   FROM ' . Tables::categories() . '
   WHERE dir IS NOT NULL
     AND site_id = ' . $site_id;
-            if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
-                if (isset($_POST['subcats-included']) and $_POST['subcats-included'] === '1') {
+            if (isset($post['cat']) and is_numeric($post['cat'])) {
+                if (isset($post['subcats-included']) and $post['subcats-included'] === '1') {
                     $query .= '
-    AND uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' \'(^|,)' . $_POST['cat'] . '(,|$)\'
+    AND uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' \'(^|,)' . $post['cat'] . '(,|$)\'
 ';
                 } else {
                     $query .= '
-    AND id = ' . $_POST['cat'] . '
+    AND id = ' . $post['cat'] . '
 ';
                 }
             }
@@ -311,8 +318,8 @@ SELECT id, uppercats, global_rank, status, visible
             $db_fulldirs = self::categoryService()->getFulldirs(array_map(intval(...), array_keys($db_categories)));
 
             // what is the base directory to search file system sub-directories ?
-            if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
-                $basedir = $db_fulldirs[(int) $_POST['cat']];
+            if (isset($post['cat']) and is_numeric($post['cat'])) {
+                $basedir = $db_fulldirs[(int) $post['cat']];
             } else {
                 // preg_replace() can return null on a regex engine error; the base
                 // directory is never allowed to be null downstream (LocalSiteReader
@@ -371,14 +378,14 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
 
             // get_full_directories doesn't include the base directory, so if it's a
             // category directory, we need to include it in our array
-            if (isset($_POST['cat'])) {
+            if (isset($post['cat'])) {
                 $fs_fulldirs[] = $basedir;
             }
             // If $_POST['subcats-included'] != 1 ("Search in sub-albums" is unchecked)
             // $db_fulldirs doesn't include any subdirectories and $fs_fulldirs does
             // So $fs_fulldirs will be limited to the selected basedir
             // (if that one is in $fs_fulldirs)
-            if (! isset($_POST['subcats-included']) or $_POST['subcats-included'] !== '1') {
+            if (! isset($post['subcats-included']) or $post['subcats-included'] !== '1') {
                 $fs_fulldirs = array_intersect($fs_fulldirs, array_keys($db_fulldirs));
             }
             $inserts = [];
@@ -571,7 +578,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
         // +-----------------------------------------------------------------------+
         // |                           files / elements                            |
         // +-----------------------------------------------------------------------+
-        if (isset($_POST['submit']) and $_POST['sync'] === 'files'
+        if (isset($post['submit']) and $post['sync'] === 'files'
               and ! $general_failure) {
             $start_files = \Piwigo\Core\TimingHelper::getMoment();
             $start = $start_files;
@@ -641,8 +648,8 @@ SELECT id, path
                     'added_by' => \Piwigo\Users\CurrentUser::get()->id,
                 ];
 
-                if ($_POST['privacy_level'] !== '0') {
-                    $insert['level'] = $_POST['privacy_level'];
+                if ($post['privacy_level'] !== '0') {
+                    $insert['level'] = $post['privacy_level'];
                 }
 
                 $inserts[] = $insert;
@@ -771,7 +778,7 @@ SELECT id, path
                     ]);
 
                     // add new photos to caddie
-                    if (isset($_POST['add_to_caddie']) and $_POST['add_to_caddie'] === '1') {
+                    if (isset($post['add_to_caddie']) and $post['add_to_caddie'] === '1') {
                         \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($caddiables);
                     }
                 }
@@ -828,8 +835,8 @@ DELETE
         // +-----------------------------------------------------------------------+
         // |                          synchronize files                            |
         // +-----------------------------------------------------------------------+
-        if (isset($_POST['submit'])
-            and ($_POST['sync'] === 'dirs' or $_POST['sync'] === 'files')
+        if (isset($post['submit'])
+            and ($post['sync'] === 'dirs' or $post['sync'] === 'files')
             and ! $general_failure) {
             if (! $simulate) {
                 $syncCategoryService = self::categoryService();
@@ -846,16 +853,16 @@ DELETE
                   . ' -->');
             }
 
-            if ($_POST['sync'] === 'files') {
+            if ($post['sync'] === 'files') {
                 $start = \Piwigo\Core\TimingHelper::getMoment();
                 $opts = [
                     'category_id' => '',
                     'recursive' => true,
                 ];
-                if (isset($_POST['cat'])) {
-                    $cat = $_POST['cat'];
+                if (isset($post['cat'])) {
+                    $cat = $post['cat'];
                     $opts['category_id'] = is_string($cat) ? $cat : '';
-                    if (! isset($_POST['subcats-included']) or $_POST['subcats-included'] !== '1') {
+                    if (! isset($post['subcats-included']) or $post['subcats-included'] !== '1') {
                         $opts['recursive'] = false;
                     }
                 }
@@ -901,8 +908,8 @@ DELETE
         // +-----------------------------------------------------------------------+
         // |                          synchronize files                            |
         // +-----------------------------------------------------------------------+
-        if (isset($_POST['submit'])
-            and ($_POST['sync'] === 'dirs' or $_POST['sync'] === 'files')) {
+        if (isset($post['submit'])
+            and ($post['sync'] === 'dirs' or $post['sync'] === 'files')) {
             $template->assign(
                 'update_result',
                 [
@@ -919,20 +926,20 @@ DELETE
         // +-----------------------------------------------------------------------+
         // |                          synchronize metadata                         |
         // +-----------------------------------------------------------------------+
-        if (isset($_POST['submit']) and isset($_POST['sync_meta'])
+        if (isset($post['submit']) and isset($post['sync_meta'])
                  and ! $general_failure) {
             // sync only never synchronized files ?
             $opts = [
-                'only_new' => isset($_POST['meta_all']) ? false : true,
+                'only_new' => isset($post['meta_all']) ? false : true,
                 'category_id' => '',
                 'recursive' => true,
             ];
 
-            if (isset($_POST['cat'])) {
-                $cat = $_POST['cat'];
+            if (isset($post['cat'])) {
+                $cat = $post['cat'];
                 $opts['category_id'] = is_string($cat) ? $cat : '';
                 // recursive ?
-                if (! isset($_POST['subcats-included']) or $_POST['subcats-included'] !== '1') {
+                if (! isset($post['subcats-included']) or $post['subcats-included'] !== '1') {
                     $opts['recursive'] = false;
                 }
             }
@@ -1002,7 +1009,7 @@ DELETE
                                 )),
                             ],
                             $datas,
-                            isset($_POST['meta_empty_overrides']) ? 0 : BatchWriter::SKIP_EMPTY
+                            isset($post['meta_empty_overrides']) ? 0 : BatchWriter::SKIP_EMPTY
                         );
                     \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
                 }
@@ -1055,25 +1062,25 @@ DELETE
         // +-----------------------------------------------------------------------+
         // |                        introduction : choices                         |
         // +-----------------------------------------------------------------------+
-        if (isset($_POST['submit'])) {
+        if (isset($post['submit'])) {
             $privacy_level_selected = 0;
-            if (isset($_POST['privacy_level']) and is_numeric($_POST['privacy_level'])) {
-                $privacy_level_selected = (int) $_POST['privacy_level'];
+            if (isset($post['privacy_level']) and is_numeric($post['privacy_level'])) {
+                $privacy_level_selected = (int) $post['privacy_level'];
             }
 
             $tpl_introduction = [
-                'sync' => $_POST['sync'],
-                'sync_meta' => isset($_POST['sync_meta']) ? true : false,
-                'display_info' => isset($_POST['display_info']) and $_POST['display_info'] === '1',
-                'add_to_caddie' => isset($_POST['add_to_caddie']) and $_POST['add_to_caddie'] === '1',
-                'subcats_included' => isset($_POST['subcats-included']) and $_POST['subcats-included'] === '1',
+                'sync' => $post['sync'],
+                'sync_meta' => isset($post['sync_meta']) ? true : false,
+                'display_info' => isset($post['display_info']) and $post['display_info'] === '1',
+                'add_to_caddie' => isset($post['add_to_caddie']) and $post['add_to_caddie'] === '1',
+                'subcats_included' => isset($post['subcats-included']) and $post['subcats-included'] === '1',
                 'privacy_level_selected' => $privacy_level_selected,
-                'meta_all' => isset($_POST['meta_all']) ? true : false,
-                'meta_empty_overrides' => isset($_POST['meta_empty_overrides']) ? true : false,
+                'meta_all' => isset($post['meta_all']) ? true : false,
+                'meta_empty_overrides' => isset($post['meta_empty_overrides']) ? true : false,
             ];
 
-            if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
-                $cat_selected = [$_POST['cat']];
+            if (isset($post['cat']) and is_numeric($post['cat'])) {
+                $cat_selected = [$post['cat']];
             } else {
                 $cat_selected = [];
             }
@@ -1091,11 +1098,8 @@ DELETE
 
             $cat_selected = [];
 
-            if (isset($_GET['cat_id'])) {
-                new \Piwigo\Validation\InputValidator()
-                    ->validate('cat_id', $_GET, false, ValidationPattern::ID);
-
-                $cat_selected = [$_GET['cat_id']];
+            if ($siteUpdateRequest->catId !== null) {
+                $cat_selected = [$siteUpdateRequest->catId];
                 $tpl_introduction['sync'] = 'files';
             }
         }
@@ -1140,8 +1144,8 @@ SELECT id,name,uppercats,global_rank
         }
 
         if (count($infos) > 0
-            and isset($_POST['display_info'])
-            and $_POST['display_info'] === '1') {
+            and isset($post['display_info'])
+            and $post['display_info'] === '1') {
             foreach ($infos as $info) {
                 $template->append(
                     'sync_infos',

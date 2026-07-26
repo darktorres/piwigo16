@@ -67,6 +67,11 @@ final class CategoryAdminService
      * Deduplicated from two byte-for-byte-identical copies in
      * admin/cat_list.php and admin/albums.php.
      *
+     * The mixed value here is a direct propagation of
+     * {@see \Piwigo\Category\CategoryRepository::findRefDatesByCategoryIds()}'s
+     * own by-design arbitrary value (its real type depends on which
+     * column $field names) -- already documented there, not re-derived.
+     *
      * @param list<int|string> $ids
      * @return array<int|string, mixed>
      */

@@ -22,7 +22,16 @@ use Piwigo\Core\Lang;
 final class ActivityLogEntryFormatter
 {
     /**
-     * @param array<string, mixed> $maintActions
+     * $details/the returned 'detail' key are genuinely polymorphic by
+     * design: $row->details is an entity-agnostic activity-log payload
+     * (same rationale as Audit\AuditService's own $before/$after), and
+     * 'detail' itself takes one of several different shapes below
+     * depending on $row->objectId/$row->action (config_section/
+     * maintenance_action/from_to/version/error/empty).
+     *
+     * @param array<string, array{icon: string, label: string}> $maintActions
+     *   matches MaintenanceSysPageRenderer::render()'s own already-precise
+     *   param shape (this method's only real caller passes it straight through)
      *
      * @return array<string, mixed>
      */
@@ -119,10 +128,9 @@ final class ActivityLogEntryFormatter
                             // to an empty-string key, which simply misses the lookup.
                             $action_detail_key = is_string($action_detail) || is_int($action_detail) ? $action_detail : '';
                             $maint_action_entry = $maintActions[$action_detail_key] ?? null;
-                            $maint_action_entry = is_array($maint_action_entry) ? $maint_action_entry : [];
                             $detail = [
                                 'type' => 'maintenance_action',
-                                'icon' => is_string($maint_action_entry['icon'] ?? null) ? $maint_action_entry['icon'] : 'icon-cone',
+                                'icon' => $maint_action_entry['icon'] ?? 'icon-cone',
                                 'text' => $maint_action_entry['label'] ?? $action_detail,
                             ];
                         }

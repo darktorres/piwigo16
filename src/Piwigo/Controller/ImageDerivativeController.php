@@ -221,7 +221,7 @@ final class ImageDerivativeController implements ControllerInterface
         // points below ends up building (was a bare header() call,
         // unconditionally queued regardless of which branch ran next).
         $noStoreCacheControl = false;
-        if (isset($_GET['b'])) {
+        if (Request\ImageDerivativeRequest::fromGlobals()->hasCacheBust) {
             $expires = $now + 100;
             $noStoreCacheControl = true;
         } elseif ($now > (max($src_mtime, $params->last_mod_time) + 24 * 3600)) {// somehow arbitrary - if derivative params or src didn't change for the last 24 hours, we send an expire header for several days
@@ -813,7 +813,7 @@ final class ImageDerivativeController implements ControllerInterface
     {
         $derivative_path = $this->derivativePath;
 
-        if (isset($_GET['ajaxload']) and $_GET['ajaxload'] === 'true') {
+        if (Request\ImageDerivativeRequest::fromGlobals()->isAjaxLoad) {
             $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
 
             return ResponseFactory::json([

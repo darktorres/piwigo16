@@ -54,8 +54,7 @@ final class IdentificationController implements ControllerInterface
         // but if the user is already identified, we redirect to gallery
         // home instead of displaying the log in form
         if (! \Piwigo\Auth\AccessControl::isAGuest()) {
-            $gallery_home_url = $this->urlService->getGalleryHomeUrl();
-            $this->redirectService->redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
+            $this->redirectService->redirect($this->urlService->getGalleryHomeUrl());
         }
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_identification');
@@ -116,7 +115,7 @@ final class IdentificationController implements ControllerInterface
 
                     $this->redirectService->redirect(
                         $redirect_to === ''
-                        ? (is_string($gallery_home_url) ? $gallery_home_url : '')
+                        ? $gallery_home_url
                         : substr($root_url, 0, strlen($root_url) - strlen(new CookieService()->cookiePath())) . $redirect_to
                     );
                 } else {

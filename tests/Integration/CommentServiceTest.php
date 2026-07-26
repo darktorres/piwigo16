@@ -121,14 +121,14 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_for_spam_returns_reject_unchanged(): void
         {
-            self::assertSame('reject', $this->service->checkForSpam('reject', ['content' => '', 'author' => '']));
+            self::assertSame('reject', $this->service->checkForSpam('reject', ['content' => '', 'author' => '', 'image_id' => 1]));
         }
 
         public function test_check_for_spam_leaves_action_alone_for_a_non_guest(): void
         {
             CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Normal));
 
-            self::assertSame('moderate', $this->service->checkForSpam('moderate', ['content' => 'hi', 'author' => 'a']));
+            self::assertSame('moderate', $this->service->checkForSpam('moderate', ['content' => 'hi', 'author' => 'a', 'image_id' => 1]));
         }
 
         public function test_check_for_spam_escalates_when_link_count_exceeds_the_max(): void
@@ -136,7 +136,7 @@ namespace Piwigo\Tests\Integration {
             CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Guest));
 
             $content = 'http://a.test http://b.test http://c.test http://d.test';
-            self::assertSame('reject', $this->service->checkForSpam('moderate', ['content' => $content, 'author' => 'a']));
+            self::assertSame('reject', $this->service->checkForSpam('moderate', ['content' => $content, 'author' => 'a', 'image_id' => 1]));
             self::assertContains('links', $this->postCr());
         }
 
@@ -144,7 +144,7 @@ namespace Piwigo\Tests\Integration {
         {
             CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Guest));
 
-            self::assertSame('moderate', $this->service->checkForSpam('moderate', ['content' => 'http://a.test', 'author' => 'a']));
+            self::assertSame('moderate', $this->service->checkForSpam('moderate', ['content' => 'http://a.test', 'author' => 'a', 'image_id' => 1]));
         }
 
         // --- insertComment() --------------------------------------------------
@@ -408,7 +408,7 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * @return array<string, mixed>
+         * @return array{author: string, content: string, website_url: string, email: string, image_id: int}
          */
         private function baseComm(int $imageId = 1): array
         {

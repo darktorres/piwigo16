@@ -279,12 +279,7 @@ final class NotificationByMailSender
     {
         $this->urlService->setMakeFullUrl();
 
-        // getGalleryHomeUrl() now declares a real string return (this
-        // mixed-elimination pass) -- the is_string() guard below is a
-        // leftover from before that narrow, left for the final cleanup
-        // pass rather than touched here.
-        $galleryHomeUrl = $this->urlService->getGalleryHomeUrl();
-        $galleryHomeUrlStr = is_string($galleryHomeUrl) ? $galleryHomeUrl : '';
+        $galleryHomeUrlStr = $this->urlService->getGalleryHomeUrl();
 
         $emailFormat = $this->emailFormat ?? new MailService()
             ->getStrEmailFormat(false);
@@ -465,7 +460,7 @@ final class NotificationByMailSender
      * boundaries.
      *
      * @param array<int, mixed> $checkKeyList
-     * @return list<string|UserMailNotification>
+     * @return ($action is 'send' ? list<string> : list<string|UserMailNotification>)
      */
     public function sendMailNotifications(string $action = 'list_to_send', array $checkKeyList = [], string $customizeMailContent = ''): array
     {
@@ -492,7 +487,7 @@ final class NotificationByMailSender
                 if (count($dataUsers) > 0) {
                     $datas = [];
 
-                    if (! isset($customizeMailContent)) {
+                    if ($customizeMailContent === '') {
                         $customizeMailContent = \Piwigo\Config\CurrentConfig::nbmComplementaryMailContent();
                     }
 
@@ -527,7 +522,7 @@ final class NotificationByMailSender
 
                             $authKey = $this->authService->createUserAuthKey($nbmUser->userId, $nbmUser->status);
 
-                            if ($authKey !== false and is_string($authKey['auth_key'])) {
+                            if ($authKey !== false) {
                                 $auth = $authKey['auth_key'];
                                 $addUrlParams['auth'] = $auth;
                             }
@@ -621,12 +616,6 @@ final class NotificationByMailSender
 
                                     $recentPostDates = $this->notificationService->getRecentPostDatesArray($nbmRecentPostDatesArgs);
                                     foreach ($recentPostDates as $dateDetail) {
-                                        // getRecentPostDatesArray() is typed to
-                                        // return array<int|string, mixed>; each
-                                        // element is really one getRecentPostDates()
-                                        // date-detail row (array<string, mixed>).
-                                        assert(is_array($dateDetail));
-                                        /** @var array<string, mixed> $dateDetail */
                                         $mailTemplate->append(
                                             'recent_posts',
                                             [
@@ -641,13 +630,13 @@ final class NotificationByMailSender
                                 $mailTemplate->assign(
                                     [
                                         'GOTO_GALLERY_TITLE' => $galleryTitle,
-                                        'GOTO_GALLERY_URL' => $this->urlService->addUrlParams(is_string($galleryHomeUrl) ? $galleryHomeUrl : '', $addUrlParams),
+                                        'GOTO_GALLERY_URL' => $this->urlService->addUrlParams($galleryHomeUrl, $addUrlParams),
                                         'SEND_AS_NAME' => $this->sendAsName,
                                     ]
                                 );
 
                                 $mailArgs = [
-                                    'from' => $this->sendAsMailFormatted,
+                                    'from' => $this->sendAsMailFormatted ?? '',
                                     'subject' => $subject,
                                     'email_format' => $mailEmailFormat,
                                     'content' => $mailTemplate->parse('notification_by_mail', true),

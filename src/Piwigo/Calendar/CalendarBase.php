@@ -244,7 +244,7 @@ abstract class CalendarBase
      * @param array<int|string, int> $items - hash of items to put in the bar (e.g. 2005,2006), -1 sentinel means "no items"
      * @param bool $show_any - adds any link to the end of the bar
      * @param bool $show_empty - shows all labels even those without items
-     * @param array<int|string, string>|null $labels - optional labels for items (e.g. Jan,Feb,...)
+     * @param array<int|string, int|string>|null $labels - optional labels for items (e.g. Jan,Feb,... or day numbers)
      * @return array<int, array<string, mixed>>
      */
     protected function get_nav_bar_from_items(
@@ -314,7 +314,10 @@ abstract class CalendarBase
      * Creates a calendar navigation bar for a given level.
      *
      * @param int $level - 0-year, 1-month/week, 2-day
-     * @param array<int|string, string>|null $labels
+     * @param array<int|string, int|string>|null $labels get_nav_bar_from_items()
+     *   only ever passes each label straight through to the template as a
+     *   display value -- CalendarMonthly's own day-number labels are ints,
+     *   not strings.
      */
     protected function build_nav_bar($level, ?array $labels, \Piwigo\Core\TemplateInterface $template): void
     {

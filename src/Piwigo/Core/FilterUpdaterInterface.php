@@ -18,8 +18,9 @@ interface FilterUpdaterInterface
 {
     /**
      * $cats' rows are CategoryTreeCache::getForUser()'s own row shape
-     * (see FilterState::categories()'s matching return type) further
-     * extended per call site with template-display fields (e.g.
+     * (FilterState::categories() itself stays deliberately loose -- see
+     * its own docblock) further extended per call site with
+     * template-display fields (e.g.
      * CategoryService::getCategoriesMenu()'s NAME/TITLE/URL/LEVEL/
      * SELECTED/IS_UPPERCAT/icon_ts, itself mixed via EventDispatcher) --
      * only date_last/max_date_last/count_images/count_categories/

@@ -73,13 +73,13 @@ final class UpdatesPwgPageRenderer
         // |                                Step 0                                 |
         // +-----------------------------------------------------------------------+
         if ($step === 0) {
-            if (isset($new_versions['minor']) and isset($new_versions['major']) and is_string($new_versions['major'])) {
+            if (isset($new_versions['minor']) and isset($new_versions['major'])) {
                 $step = 1;
                 $upgrade_to = $new_versions['major'];
-            } elseif (isset($new_versions['minor']) and is_string($new_versions['minor'])) {
+            } elseif (isset($new_versions['minor'])) {
                 $step = 2;
                 $upgrade_to = $new_versions['minor'];
-            } elseif (isset($new_versions['major']) and is_string($new_versions['major'])) {
+            } elseif (isset($new_versions['major'])) {
                 $step = 3;
                 $upgrade_to = $new_versions['major'];
             }
@@ -124,11 +124,11 @@ final class UpdatesPwgPageRenderer
         // | Check for requirements                                                |
         // +-----------------------------------------------------------------------+
 
-        if (isset($new_versions['minor_php']) and is_string($new_versions['minor_php']) and version_compare(PHP_VERSION, $new_versions['minor_php'], '<')) {
+        if (isset($new_versions['minor_php']) and version_compare(PHP_VERSION, $new_versions['minor_php'], '<')) {
             $template->assign('MINOR_RELEASE_PHP_REQUIRED', $new_versions['minor_php']);
         }
 
-        if (isset($new_versions['major_php']) and is_string($new_versions['major_php']) and version_compare(PHP_VERSION, $new_versions['major_php'], '<')) {
+        if (isset($new_versions['major_php']) and version_compare(PHP_VERSION, $new_versions['major_php'], '<')) {
             $template->assign('MAJOR_RELEASE_PHP_REQUIRED', $new_versions['major_php']);
         }
 
@@ -150,7 +150,7 @@ final class UpdatesPwgPageRenderer
             ]
         );
 
-        if (isset($new_versions['minor']) and is_string($new_versions['minor'])) {
+        if (isset($new_versions['minor'])) {
             $template->assign(
                 [
                     'MINOR_VERSION' => $new_versions['minor'],
@@ -163,7 +163,7 @@ final class UpdatesPwgPageRenderer
             );
         }
 
-        if (isset($new_versions['major']) and is_string($new_versions['major'])) {
+        if (isset($new_versions['major'])) {
             $template->assign(
                 [
                     'MAJOR_VERSION' => $new_versions['major'],

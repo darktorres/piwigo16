@@ -158,12 +158,7 @@ SELECT COUNT(*)
 
                 $formats_original_info['src'] = DerivativeImage::url(ImageStdParams::SQUARE, $src_image);
 
-                // getImageInfos() itself declares 'id' as a real int, but
-                // $formats_original_info started as [] above and gained a new
-                // 'src' key just above this line, so PHPStan only knows this
-                // variable as array<string, mixed> by this point -- narrow
-                // explicitly rather than trusting that blindly.
-                $formats_image_id = is_numeric($formats_original_info['id']) ? (int) $formats_original_info['id'] : 0;
+                $formats_image_id = $formats_original_info['id'];
 
                 $formats = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
                     ->findFormatsForImage($formats_image_id);
@@ -183,8 +178,7 @@ SELECT COUNT(*)
                     $formats_ext_info = json_encode($formats_exts);
                 }
 
-                $formats_file = $formats_original_info['file'];
-                $extTab = explode('.', is_string($formats_file) ? $formats_file : '');
+                $extTab = explode('.', $formats_original_info['file']);
 
                 $formats_original_info['ext'] = Lang::t('%s file type', strtoupper(end($extTab)));
 

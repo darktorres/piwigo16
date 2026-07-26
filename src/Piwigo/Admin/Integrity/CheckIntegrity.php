@@ -105,15 +105,9 @@ final class CheckIntegrity
 
             foreach ($this->retrieve_list as $i => $c13y) {
                 if (! in_array($c13y['correction_fct'] ?? null, [null, false, 0, '0', '', []], true) and
-                    (bool) $c13y['is_callable'] and
-                    in_array(is_string($c13y['id']) ? $c13y['id'] : '', $c13y_selection, true)) {
-                    if (is_array($c13y['correction_fct_args'])) {
-                        $args = $c13y['correction_fct_args'];
-                    } elseif ($c13y['correction_fct_args'] !== null) {
-                        $args = [$c13y['correction_fct_args']];
-                    } else {
-                        $args = [];
-                    }
+                    $c13y['is_callable'] and
+                    in_array($c13y['id'], $c13y_selection, true)) {
+                    $args = is_array($c13y['correction_fct_args']) ? $c13y['correction_fct_args'] : [];
                     $correction_fct = $c13y['correction_fct'];
                     if (is_callable($correction_fct)) {
                         $this->retrieve_list[$i]['corrected'] = call_user_func_array($correction_fct, $args);
@@ -147,7 +141,7 @@ final class CheckIntegrity
                 $ignored_count = 0;
 
                 foreach ($this->retrieve_list as $i => $c13y) {
-                    if (in_array(is_string($c13y['id']) ? $c13y['id'] : '', $c13y_selection, true)) {
+                    if (in_array($c13y['id'], $c13y_selection, true)) {
                         $this->build_ignore_list[] = $c13y['id'];
                         $this->retrieve_list[$i]['ignored'] = true;
                         ++$ignored_count;
@@ -208,7 +202,7 @@ final class CheckIntegrity
                 ];
 
                 if (isset($c13y['ignored'])) {
-                    if ((bool) $c13y['ignored']) {
+                    if ($c13y['ignored']) {
                         $c13y_display['show_ignore_msg'] = true;
                     } else {
                         throw new \LogicException('$c13y[\'ignored\'] cannot be false');
@@ -221,7 +215,7 @@ final class CheckIntegrity
                             } else {
                                 $c13y_display['correction_error_fct'] = $this->get_htlm_links_more_info();
                             }
-                        } elseif ((bool) $c13y['is_callable']) {
+                        } elseif ($c13y['is_callable']) {
                             $c13y_display['show_correction_fct'] = true;
                             $template->append('c13y_do_check', $c13y['id']);
                             $submit_automatic_correction = true;

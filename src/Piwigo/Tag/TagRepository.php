@@ -168,10 +168,21 @@ SELECT t.*, count(*) AS counter
             ? 'counter DESC LIMIT ' . $maxTags
             : 'NULL';
 
-        return $this->getEntityManager()
+        $rows = $this->getEntityManager()
             ->getConnection()
             ->executeQuery($query)
             ->fetchAllAssociative();
+
+        return array_map(
+            static fn (array $row): array => [
+                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                'name' => is_string($row['name']) ? $row['name'] : '',
+                'url_name' => is_string($row['url_name']) ? $row['url_name'] : '',
+                'lastmodified' => is_string($row['lastmodified']) ? $row['lastmodified'] : '',
+                'counter' => is_numeric($row['counter']) ? (int) $row['counter'] : 0,
+            ],
+            $rows
+        );
     }
 
     /**

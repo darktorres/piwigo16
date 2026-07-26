@@ -1177,7 +1177,7 @@ SELECT
             }
         }
 
-        $page_start = (int) $page['start'];
+        $page_start = $page['start'];
 
         $nb_logs_page = \Piwigo\Config\CurrentConfig::nbLogsPage();
 

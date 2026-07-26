@@ -492,7 +492,7 @@ final class MailService implements MailerInterface
     #[\Override]
     public function mailNotificationAdmins(string|array $subject, string|array $content, bool $sendTechnicalDetails = true, int|string|null $groupId = null): bool
     {
-        if ($subject === '' || $subject === [] || $content === '' || $content === []) {
+        if ($subject === '' || $content === '') {
             return false;
         }
 
@@ -543,7 +543,7 @@ final class MailService implements MailerInterface
      * Sends an email to all administrators. The current user (if admin) is
      * excluded.
      *
-     * @param array{from?: array|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array|string, Bcc?: array|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args as in mail()
+     * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args as in mail()
      * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl as in mail()
      */
     public function mailAdmins(array $args = [], array $tpl = [], bool $excludeCurrentUser = true, bool $onlyWebmasters = false, int|string|null $groupId = null): bool
@@ -590,7 +590,7 @@ final class MailService implements MailerInterface
     /**
      * Sends an email to a group.
      *
-     * @param array{language_selected?: string, from?: array|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array|string, Bcc?: array|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args as in mail() -- language_selected filters users of the group by language
+     * @param array{language_selected?: string, from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args as in mail() -- language_selected filters users of the group by language
      * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl as in mail()
      */
     public function mailGroup(int $groupId, array $args = [], array $tpl = []): bool
@@ -649,7 +649,7 @@ final class MailService implements MailerInterface
                 if ($authkey !== false) {
                     $link = $tpl['assign']['LINK'] ?? null;
                     $userTpl['assign']['LINK'] = $this->urlService()->addUrlParams(is_string($link) ? $link : '', [
-                        'auth' => $authkey['auth_key'] ?? null,
+                        'auth' => $authkey['auth_key'],
                     ]);
 
                     $img = $userTpl['assign']['IMG'] ?? null;
@@ -657,7 +657,7 @@ final class MailService implements MailerInterface
                         $img['link'] = $this->urlService()->addUrlParams(
                             $img['link'],
                             [
-                                'auth' => $authkey['auth_key'] ?? null,
+                                'auth' => $authkey['auth_key'],
                             ]
                         );
                         $userTpl['assign']['IMG'] = $img;
@@ -670,10 +670,7 @@ final class MailService implements MailerInterface
                 // doesn't accept it.
                 unset($userArgs['language_selected']);
                 if ($authkey !== false) {
-                    $authKey = $authkey['auth_key'] ?? null;
-                    if (is_string($authKey)) {
-                        $userArgs['auth_key'] = $authKey;
-                    }
+                    $userArgs['auth_key'] = $authkey['auth_key'];
                 }
 
                 $return = $this->mail($uEmail, $userArgs, $userTpl) && $return;
@@ -689,7 +686,7 @@ final class MailService implements MailerInterface
      * Sends an email, using Piwigo-specific information.
      *
      * @param string|array<int|string, mixed> $to
-     * @param array{from?: array|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array|string, Bcc?: array|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
+     * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
      *        from: sender [default value webmaster email]
      *        reply_to_mail_address/reply_to_name: reply-to can differ from "from"
      *        Cc/Bcc: carbon-copy/blind-carbon-copy receivers
@@ -727,11 +724,7 @@ final class MailService implements MailerInterface
                 'name' => is_string($confMail['name_webmaster']) ? $confMail['name_webmaster'] : '',
             ];
         } else {
-            $fromInput = $args['from'];
-            if (! is_array($fromInput) && ! is_string($fromInput)) {
-                $fromInput = is_scalar($fromInput) ? (string) $fromInput : '';
-            }
-            $from = $this->unformatEmail($fromInput);
+            $from = $this->unformatEmail($args['from']);
         }
         $email->from(new Address($from['email'], $from['name']));
         $replyToMail = $args['reply_to_mail_address'] ?? $from['email'];
@@ -742,8 +735,7 @@ final class MailService implements MailerInterface
         if (! isset($args['subject']) || self::emptyValue($args['subject'])) {
             $args['subject'] = 'Piwigo';
         }
-        $subjectInput = is_scalar($args['subject']) ? (string) $args['subject'] : '';
-        $args['subject'] = trim((string) preg_replace('#[\n\r]+#s', '', $subjectInput));
+        $args['subject'] = trim((string) preg_replace('#[\n\r]+#s', '', $args['subject']));
         $email->subject($args['subject']);
 
         // Cc.
@@ -828,7 +820,6 @@ final class MailService implements MailerInterface
 
                 $galleryHomeUrl = $this->urlService()
                     ->getGalleryHomeUrl();
-                $galleryHomeUrl = is_string($galleryHomeUrl) ? $galleryHomeUrl : '';
 
                 $template->assign(
                     [
@@ -868,7 +859,7 @@ final class MailService implements MailerInterface
 
             // Content -- stored in a temp variable; if a content template is
             // used it's assigned to CONTENT, otherwise appended to the mail.
-            $contentInput = is_scalar($args['content']) ? (string) $args['content'] : '';
+            $contentInput = $args['content'];
 
             if ($args['content_format'] === 'text/plain' && $contentType === 'text/html') {
                 // Convert plain text to HTML.
@@ -997,9 +988,11 @@ final class MailService implements MailerInterface
 
     /**
      * Saves a copy of the mail in _data/tmp. $args is mail()'s own $args,
-     * passed through unchanged -- same shape as that method's own docblock.
+     * passed through unchanged after mail()'s own normalization pass has
+     * already defaulted content_format -- so, unlike that method's own
+     * docblock, content_format is non-optional here.
      *
-     * @param array{from?: array|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array|string, Bcc?: array|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
+     * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
      */
     public function sendMailTest(bool $success, Email $mail, array $args, ?string $errorMessage = null): void
     {

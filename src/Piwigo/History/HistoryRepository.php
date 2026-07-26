@@ -368,8 +368,24 @@ final class HistoryRepository extends EntityRepository
                 ->setParameter('ip', $ip);
         }
 
-        return $qb->executeQuery()
+        $rows = $qb->executeQuery()
             ->fetchAllAssociative();
+
+        return array_map(
+            static fn (array $row): array => [
+                'date' => is_string($row['date'] ?? null) ? $row['date'] : null,
+                'time' => is_string($row['time']) ? $row['time'] : '',
+                'user_id' => is_numeric($row['user_id']) ? (int) $row['user_id'] : 0,
+                'IP' => is_string($row['IP']) ? $row['IP'] : '',
+                'section' => is_string($row['section'] ?? null) ? $row['section'] : null,
+                'category_id' => is_numeric($row['category_id'] ?? null) ? (int) $row['category_id'] : null,
+                'search_id' => is_numeric($row['search_id'] ?? null) ? (int) $row['search_id'] : null,
+                'tag_ids' => is_string($row['tag_ids'] ?? null) ? $row['tag_ids'] : null,
+                'image_id' => is_numeric($row['image_id'] ?? null) ? (int) $row['image_id'] : null,
+                'image_type' => is_string($row['image_type'] ?? null) ? $row['image_type'] : null,
+            ],
+            $rows
+        );
     }
 
     public function updateLastVisitNow(int $userId): void

@@ -255,12 +255,6 @@ final class HtmlService implements HtmlRenderingInterface
         // $catId isn't existence-validated by callers (WS/URL param) -- a
         // stale/forged id falls back to an empty breadcrumb.
         $upper_names = $cat_info['upper_names'] ?? [];
-        // get_cat_info()'s return type is the generic array<string, mixed>, but
-        // its 'upper_names' key (the only producer, verified in
-        // functions_category.inc.php) is always built as a list of category-row
-        // arrays with string keys (id, name, permalink) -- never anything else.
-        $upper_names = is_array($upper_names) ? $upper_names : [];
-        /** @var array<int, array<string, mixed>> $upper_names */
         return $this->getCatDisplayName($upper_names, $url);
     }
 

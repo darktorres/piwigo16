@@ -187,7 +187,7 @@ SELECT
                     }
 
                     $user_args = $args;
-                    if (isset($authkey['auth_key']) and is_string($authkey['auth_key'])) {
+                    if (isset($authkey['auth_key'])) {
                         $user_args['auth_key'] = $authkey['auth_key'];
                     }
 

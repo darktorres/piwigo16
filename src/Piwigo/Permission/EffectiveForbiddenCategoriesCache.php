@@ -152,12 +152,8 @@ SELECT COUNT(DISTINCT(image_id)) as total
         if (! AccessControl::isAdmin($userStatus)) { // for non admins we forbid categories with no image (feature 1053)
             $zeroImageIds = [];
             foreach ($computedCategories['categories'] as $cat) {
-                $countImages = $cat['count_images'] ?? null;
-                if ((is_numeric($countImages) ? (int) $countImages : 0) === 0) {
-                    $catId = $cat['cat_id'] ?? null;
-                    if (is_scalar($catId)) {
-                        $zeroImageIds[] = (string) $catId;
-                    }
+                if ($cat['count_images'] === 0) {
+                    $zeroImageIds[] = (string) $cat['cat_id'];
                 }
             }
 
@@ -169,7 +165,6 @@ SELECT COUNT(DISTINCT(image_id)) as total
         }
 
         $lastPhotoDate = $computedCategories['lastPhotoDate'];
-        $lastPhotoDate = $lastPhotoDate === null || is_string($lastPhotoDate) ? $lastPhotoDate : null;
 
         return [
             'forbiddenCategories' => $effectiveForbidden,

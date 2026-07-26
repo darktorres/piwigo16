@@ -162,7 +162,7 @@ final readonly class CoreUpdateService
         $newVersions = $this->getPiwigoNewVersions();
         $this->configService->confUpdateParam('update_notify_last_check', date('c'));
 
-        if ((bool) $newVersions['is_dev']) {
+        if ($newVersions['is_dev']) {
             return;
         }
 

@@ -209,7 +209,7 @@ final class WsHelper
             if ($size === null) {
                 $size = [null, null];
             }
-            $derivatives_arr[$type] = [
+            $derivatives_arr[(string) $type] = [
                 'url' => $derivative->get_url(),
                 'width' => (int) $size[0],
                 'height' => (int) $size[1],

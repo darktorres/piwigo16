@@ -667,7 +667,7 @@ final class UrlService implements UrlServiceInterface
 
             if ($category !== null) {
                 $result = $categoryService->getCategoryInfo((int) $category);
-                if ($result === null || $result === []) {
+                if ($result === null) {
                     $this->htmlRenderer->pageNotFound($redirectService, Lang::t('Requested album does not exist'));
                 }
                 $page['category'] = $result;
@@ -678,7 +678,7 @@ final class UrlService implements UrlServiceInterface
 
                 foreach ($combined_category_ids as $cat_id) {
                     $result = $categoryService->getCategoryInfo((int) $cat_id);
-                    if ($result === null || $result === []) {
+                    if ($result === null) {
                         $this->htmlRenderer->pageNotFound($redirectService, Lang::t('Requested album does not exist'));
                     }
 
@@ -986,6 +986,14 @@ SELECT
 
         $rows = ($this->conn ??= DbConnection::build())->fetchAllAssociative($query);
 
-        return array_column($rows, 'fake_value', 'image_id');
+        $favorites = [];
+        foreach ($rows as $row) {
+            $image_id = $row['image_id'];
+            if (is_numeric($image_id)) {
+                $favorites[(int) $image_id] = 1;
+            }
+        }
+
+        return $favorites;
     }
 }

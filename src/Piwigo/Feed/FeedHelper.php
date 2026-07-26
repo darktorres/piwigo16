@@ -49,11 +49,8 @@ final class FeedHelper
     public function generateRss2Feed(array $channel, array $items): string
     {
         $channel_encoding = $channel['encoding'] ?? '';
-        $channel_encoding = is_string($channel_encoding) ? $channel_encoding : '';
         $channel_title = $channel['title'] ?? '';
-        $channel_title = is_string($channel_title) ? $channel_title : '';
         $channel_link = $channel['link'] ?? '';
-        $channel_link = is_string($channel_link) ? $channel_link : '';
 
         $feed = '<?xml version="1.0" encoding="' . $channel_encoding . '"?>' . "\n";
         $feed .= "<rss version=\"2.0\">\n";
@@ -65,19 +62,12 @@ final class FeedHelper
 
         foreach ($items as $item) {
             $item_title = $item['title'] ?? '';
-            $item_title = is_string($item_title) ? $item_title : '';
             $item_link = $item['link'] ?? '';
-            $item_link = is_string($item_link) ? $item_link : '';
             $item_description = $item['description'] ?? '';
-            $item_description = is_string($item_description) ? $item_description : '';
             $item_author = $item['author'] ?? '';
-            $item_author = is_string($item_author) ? $item_author : '';
             $item_date = $item['date'] ?? '';
-            $item_date = is_string($item_date) ? $item_date : '';
             $item_guid = $item['guid'] ?? '';
-            $item_guid = is_string($item_guid) ? $item_guid : '';
             $item_html = $item['html'] ?? false;
-            $item_html = is_bool($item_html) ? $item_html : false;
 
             $feed .= "    <item>\n";
             $feed .= '      <title>' . htmlspecialchars(strip_tags($item_title)) . "</title>\n";

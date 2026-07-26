@@ -57,19 +57,13 @@ final class PwgTags
     {
         $tags = self::tagService()->getAvailableTags();
         if ($params['sort_by_counter']) {
-            usort($tags, function (array $a, array $b): int {
-                $a_counter = is_numeric($a['counter']) ? (float) $a['counter'] : 0.0;
-                $b_counter = is_numeric($b['counter']) ? (float) $b['counter'] : 0.0;
-                return $b_counter <=> $a_counter;
-            });
+            usort($tags, static fn (array $a, array $b): int => $b['counter'] <=> $a['counter']);
         } else {
             usort($tags, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->tagAlphaCompare(...));
         }
 
         $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         for ($i = 0; $i < count($tags); $i++) {
-            $tags[$i]['id'] = is_numeric($tags[$i]['id']) ? (int) $tags[$i]['id'] : 0;
-            $tags[$i]['counter'] = is_numeric($tags[$i]['counter']) ? (int) $tags[$i]['counter'] : 0;
             $tags[$i]['url'] = $urlService->makeIndexUrl(
                 [
                     'section' => 'tags',
@@ -133,9 +127,7 @@ final class PwgTags
         $tags = $tagService->findTags($params['tag_id'], $params['tag_url_name'], $params['tag_name']);
         $tags_by_id = [];
         foreach ($tags as $tag) {
-            $tag_id = isset($tag['id']) && is_numeric($tag['id']) ? (int) $tag['id'] : 0;
-            $tag['id'] = $tag_id;
-            $tags_by_id[$tag_id] = $tag;
+            $tags_by_id[$tag['id']] = $tag;
         }
         unset($tags);
         $tag_ids = array_keys($tags_by_id);

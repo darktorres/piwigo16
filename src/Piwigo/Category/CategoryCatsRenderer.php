@@ -95,7 +95,7 @@ final readonly class CategoryCatsRenderer
             $now = \DateTimeImmutable::createFromMutable(Env::now());
 
             $filtered = array_filter($tree, static function (array $row) use ($recentPeriod, $lastPhotoDate, $now): bool {
-                $countImages = is_numeric($row['count_images'] ?? null) ? (int) $row['count_images'] : 0;
+                $countImages = $row['count_images'];
                 if ($countImages <= 0) {
                     return false;
                 }
@@ -112,12 +112,12 @@ final readonly class CategoryCatsRenderer
             }
 
             $filtered = array_filter($tree, static function (array $row) use ($targetId): bool {
-                $countImages = is_numeric($row['count_images'] ?? null) ? (int) $row['count_images'] : 0;
+                $countImages = $row['count_images'];
                 if ($countImages <= 0) {
                     return false;
                 }
 
-                $rowUppercat = $row['id_uppercat'] ?? null;
+                $rowUppercat = $row['id_uppercat'];
 
                 return $targetId === null ? $rowUppercat === null : $rowUppercat === $targetId;
             });
@@ -137,10 +137,7 @@ final readonly class CategoryCatsRenderer
 
         $catIds = [];
         foreach ($pageRows as $row) {
-            $catId = $row['cat_id'] ?? null;
-            if (is_numeric($catId)) {
-                $catIds[] = (int) $catId;
-            }
+            $catIds[] = $row['cat_id'];
         }
 
         // findFullCategoriesByIds() (P17-23 Stage 1b) returns typed Category
@@ -158,8 +155,7 @@ final readonly class CategoryCatsRenderer
         $datesOfCategory = [];
 
         foreach ($pageRows as $row) {
-            $catId = $row['cat_id'] ?? null;
-            $catId = is_numeric($catId) ? (int) $catId : 0;
+            $catId = $row['cat_id'];
 
             // Category was deleted between the rollup and the full-row
             // fetch a moment later -- vanishingly rare (two queries, no
@@ -169,12 +165,12 @@ final readonly class CategoryCatsRenderer
             }
 
             $merged = array_merge($fullById[$catId], [
-                'nb_images' => $row['nb_images'] ?? 0,
-                'date_last' => $row['date_last'] ?? null,
-                'max_date_last' => $row['max_date_last'] ?? null,
-                'count_images' => $row['count_images'] ?? 0,
-                'nb_categories' => $row['nb_categories'] ?? 0,
-                'count_categories' => $row['count_categories'] ?? 0,
+                'nb_images' => $row['nb_images'],
+                'date_last' => $row['date_last'],
+                'max_date_last' => $row['max_date_last'],
+                'count_images' => $row['count_images'],
+                'nb_categories' => $row['nb_categories'],
+                'count_categories' => $row['count_categories'],
             ]);
 
             $maxDateLast = $merged['max_date_last'] ?? null;

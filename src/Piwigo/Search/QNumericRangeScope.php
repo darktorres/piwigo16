@@ -104,15 +104,15 @@ final class QNumericRangeScope extends QSearchScope
         $scope_data = $token->scope_data;
         $range = is_array($scope_data) && is_array($scope_data['range'] ?? null) ? $scope_data['range'] : ['', ''];
         $strict = is_array($scope_data) && is_array($scope_data['strict'] ?? null) ? $scope_data['strict'] : [0, 0];
-        $range_0 = $range[0] ?? '';
-        $range_1 = $range[1] ?? '';
+        $range_0 = $range[0];
+        $range_1 = $range[1];
 
         $clauses = [];
         if ($range_0 !== '') {
-            $clauses[] = $field . ' >' . ($strict[0] === 0 ? '=' : '') . (is_scalar($range_0) ? (string) $range_0 : '') . ' ';
+            $clauses[] = $field . ' >' . ($strict[0] === 0 ? '=' : '') . (string) $range_0 . ' ';
         }
         if ($range_1 !== '') {
-            $clauses[] = $field . ' <' . ($strict[1] === 0 ? '=' : '') . (is_scalar($range_1) ? (string) $range_1 : '') . ' ';
+            $clauses[] = $field . ' <' . ($strict[1] === 0 ? '=' : '') . (string) $range_1 . ' ';
         }
 
         if ($clauses === []) {

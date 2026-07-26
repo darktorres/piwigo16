@@ -26,8 +26,13 @@ test('createNavigationBar computes the current page and total page count', funct
 
     $navbar = $service->createNavigationBar('index.php', 100, 40, 20);
 
-    expect($navbar['CURRENT_PAGE'])->toBe(3.0);
-    expect($navbar['NB_PAGE'])->toBe(5);
+    $currentPage = $navbar['CURRENT_PAGE'] ?? null;
+    \PHPUnit\Framework\Assert::assertIsFloat($currentPage);
+    expect($currentPage)->toBe(3.0);
+
+    $nbPage = $navbar['NB_PAGE'] ?? null;
+    \PHPUnit\Framework\Assert::assertIsInt($nbPage);
+    expect($nbPage)->toBe(5);
 });
 
 test('createNavigationBar omits URL_FIRST/URL_PREV on the first page', function (): void {
@@ -57,7 +62,9 @@ test('createNavigationBar clamps a negative start to zero', function (): void {
 
     $navbar = $service->createNavigationBar('index.php', 100, -5, 20);
 
-    expect($navbar['CURRENT_PAGE'])->toBe(1.0);
+    $currentPage = $navbar['CURRENT_PAGE'] ?? null;
+    \PHPUnit\Framework\Assert::assertIsFloat($currentPage);
+    expect($currentPage)->toBe(1.0);
 });
 
 test('createNavigationBar accepts numeric strings for nbElement and start', function (): void {
@@ -65,7 +72,9 @@ test('createNavigationBar accepts numeric strings for nbElement and start', func
 
     $navbar = $service->createNavigationBar('index.php', '100', '40', 20);
 
-    expect($navbar['CURRENT_PAGE'])->toBe(3.0);
+    $currentPage = $navbar['CURRENT_PAGE'] ?? null;
+    \PHPUnit\Framework\Assert::assertIsFloat($currentPage);
+    expect($currentPage)->toBe(3.0);
 });
 
 test('createNavigationBar builds clean-url-style page links when requested', function (): void {
@@ -73,7 +82,9 @@ test('createNavigationBar builds clean-url-style page links when requested', fun
 
     $navbar = $service->createNavigationBar('index.php/category/1', 100, 40, 20, true);
 
-    expect($navbar['URL_NEXT'])->toBe('index.php/category/1/start-60');
+    $urlNext = $navbar['URL_NEXT'] ?? null;
+    \PHPUnit\Framework\Assert::assertIsString($urlNext);
+    expect($urlNext)->toBe('index.php/category/1/start-60');
 });
 
 test('createNavigationBar builds query-string-style page links by default', function (): void {
@@ -81,7 +92,9 @@ test('createNavigationBar builds query-string-style page links by default', func
 
     $navbar = $service->createNavigationBar('index.php', 100, 40, 20);
 
-    expect($navbar['URL_NEXT'])->toBe('index.php?start=60');
+    $urlNext = $navbar['URL_NEXT'] ?? null;
+    \PHPUnit\Framework\Assert::assertIsString($urlNext);
+    expect($urlNext)->toBe('index.php?start=60');
 });
 
 test('createNavigationBar respects a custom param name', function (): void {
@@ -89,5 +102,7 @@ test('createNavigationBar respects a custom param name', function (): void {
 
     $navbar = $service->createNavigationBar('index.php', 100, 40, 20, false, 'offset');
 
-    expect($navbar['URL_NEXT'])->toBe('index.php?offset=60');
+    $urlNext = $navbar['URL_NEXT'] ?? null;
+    \PHPUnit\Framework\Assert::assertIsString($urlNext);
+    expect($urlNext)->toBe('index.php?offset=60');
 });

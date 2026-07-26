@@ -278,7 +278,14 @@ SELECT
   GROUP BY category_id
 ;';
 
-        $nb_photos_in = array_column($conn->fetchAllAssociative($query), 'nb_photos', 'category_id');
+        $nb_photos_in = [];
+        foreach ($conn->fetchAllAssociative($query) as $photo_count_row) {
+            $category_id = $photo_count_row['category_id'];
+            $nb_photos = $photo_count_row['nb_photos'];
+            if (is_numeric($category_id) && (is_int($nb_photos) || is_string($nb_photos))) {
+                $nb_photos_in[(int) $category_id] = $nb_photos;
+            }
+        }
 
         $query = '
 SELECT
@@ -342,7 +349,10 @@ SELECT
     /**
      * Make an ordered tree.
      *
-     * @param array<string, mixed> $assocT see $associatedTree's own docblock above
+     * @param array<int|string, mixed> $assocT see $associatedTree's own docblock above
+     *   -- only ever iterated by value, so the exact key type (always a
+     *   strval()'d string in practice, but is_array()'s own narrowing can't
+     *   prove that specifically) doesn't matter here.
      * @param array<int, int|string> $nb_photos_in COUNT(*) values, never null
      * @param array<int|string, int> $nb_sub_photos
      * @param array<int|string, int> $is_forbidden

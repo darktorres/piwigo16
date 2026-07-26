@@ -35,18 +35,23 @@ final class FilterState
     private static string $visibleImages = '';
 
     /**
-     * Always CategoryService::getComputedCategories()'s own 'categories'
-     * shape -- FilterService::initializeFromRequest() (the sole writer)
-     * assigns it straight from that method's return value.
+     * Normally CategoryService::getComputedCategories()'s own 'categories'
+     * shape, keyed by cat_id -- but FilterService::initializeFromRequest()
+     * (the sole writer) may also restore this from a session-stored
+     * unserialize() result, which can't be statically verified to match
+     * that shape (a corrupted/stale session value deserializes to
+     * whatever it deserializes to). Deliberately loose here; the real
+     * per-row shape is only assumed by updateCatsWithFilteredData()'s own
+     * `?? null`-guarded per-field reads, never relied on wholesale.
      *
-     * @var array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}>
+     * @var array<int|string, array<int|string, mixed>>
      */
     private static array $categories = [];
 
     private static bool $initialized = false;
 
     /**
-     * @param array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}> $categories
+     * @param array<int|string, array<int|string, mixed>> $categories
      */
     public static function set(bool $enabled, string $visibleCategories = '', string $visibleImages = '', array $categories = []): void
     {
@@ -79,7 +84,7 @@ final class FilterState
     }
 
     /**
-     * @return array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}>
+     * @return array<int|string, array<int|string, mixed>>
      */
     public static function categories(): array
     {

@@ -79,12 +79,7 @@ final class UserBootstrap
         if ($session_cookie_name !== '' && isset($_COOKIE[$session_cookie_name])) {
             if (($_GET['act'] ?? null) === 'logout') { // logout
                 $authService->logoutUser();
-                // getGalleryHomeUrl() is declared to return `mixed`
-                // (Url\UrlService); every real branch of its body actually
-                // returns a string, so this narrows locally rather than
-                // widening redirect()'s $url parameter.
-                $gallery_home_url = $this->urlService->getGalleryHomeUrl();
-                $this->redirectService->redirect(is_string($gallery_home_url) ? $gallery_home_url : '/');
+                $this->redirectService->redirect($this->urlService->getGalleryHomeUrl());
             } else {
                 $session_pwg_uid = $_SESSION['pwg_uid'] ?? null;
                 if (! self::emptyValue($session_pwg_uid)) {

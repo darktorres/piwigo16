@@ -91,7 +91,7 @@ final class TagsController implements ControllerInterface
             foreach ($tags as $tag) {
                 $tag_name = $tag['name'];
                 if (! is_string($tag_name)) {
-                    $tag_name = is_string($tag['name_raw'] ?? null) ? $tag['name_raw'] : '';
+                    $tag_name = $tag['name_raw'];
                 }
                 $pwgCharset = \Piwigo\Core\CharsetHelper::getPwgCharset();
                 $tag_letter = mb_strtoupper(mb_substr(\Piwigo\Core\StringHelper::pwgTransliterate($tag_name), 0, 1, $pwgCharset), $pwgCharset);

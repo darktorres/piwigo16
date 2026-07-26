@@ -174,12 +174,9 @@ final class CategoryServiceTest extends IntegrationTestCase
 
         self::assertNotNull($info);
         $upperNames = $info['upper_names'];
-        self::assertIsArray($upperNames);
         self::assertCount(2, $upperNames);
         $first = $upperNames[0];
         $second = $upperNames[1];
-        self::assertIsArray($first);
-        self::assertIsArray($second);
         self::assertSame('Sample Album', $first['name']);
         self::assertSame('Nested Sub Album', $second['name']);
     }
@@ -189,7 +186,6 @@ final class CategoryServiceTest extends IntegrationTestCase
         $info = $this->service->getCategoryInfo(1);
 
         self::assertNotNull($info);
-        self::assertIsBool($info['visible']);
         self::assertTrue($info['visible']);
     }
 
@@ -307,8 +303,8 @@ final class CategoryServiceTest extends IntegrationTestCase
     public function test_remove_computed_category_decrements_parent_counters(): void
     {
         $cats = [
-            1 => ['cat_id' => 1, 'id_uppercat' => null, 'nb_categories' => 1, 'count_images' => 5, 'count_categories' => 1],
-            2 => ['cat_id' => 2, 'id_uppercat' => 1, 'nb_images' => 2, 'count_categories' => 0],
+            1 => ['cat_id' => 1, 'id_uppercat' => null, 'global_rank' => null, 'rank' => null, 'date_last' => null, 'nb_images' => 3, 'user_id' => 1, 'nb_categories' => 1, 'count_images' => 5, 'count_categories' => 1, 'max_date_last' => null],
+            2 => ['cat_id' => 2, 'id_uppercat' => 1, 'global_rank' => null, 'rank' => null, 'date_last' => null, 'nb_images' => 2, 'user_id' => 1, 'nb_categories' => 0, 'count_images' => 2, 'count_categories' => 0, 'max_date_last' => null],
         ];
 
         CategoryService::removeComputedCategory($cats, $cats[2]);

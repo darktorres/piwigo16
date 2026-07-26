@@ -49,7 +49,7 @@ final class RecentIconResolver
         }
 
         $icon = [
-            'TITLE' => $get_icon_cache['title'],
+            'TITLE' => is_string($get_icon_cache['title']) ? $get_icon_cache['title'] : '',
             'IS_CHILD_DATE' => $isChildDate,
         ];
 

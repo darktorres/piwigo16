@@ -55,16 +55,9 @@ final readonly class CategoryTreeCache
             }
         }
 
-        $rollup = $this->service->getComputedCategories($userdata, null)['categories'];
-
-        // Rekeyed by a real int (getComputedCategories()'s own docblock
-        // widens the key to int|string) -- both the findNamesByIds() call
-        // below and the merge loop need a reliable int key.
-        $rollupByCatId = [];
-        foreach ($rollup as $row) {
-            $catId = is_numeric($row['cat_id'] ?? null) ? (int) $row['cat_id'] : 0;
-            $rollupByCatId[$catId] = $row;
-        }
+        // Already keyed by cat_id -- getComputedCategories() builds its
+        // $cats array that way internally.
+        $rollupByCatId = $this->service->getComputedCategories($userdata, null)['categories'];
 
         $names = $this->repo->findNamesByIds(array_keys($rollupByCatId));
 

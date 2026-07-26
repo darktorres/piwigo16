@@ -240,12 +240,7 @@ final readonly class SectionPopulator
                 $combined_categories_for_title = is_array($page['combined_categories']) ? array_values(array_filter($page['combined_categories'], is_array(...))) : [];
                 $page['title'] = $this->htmlRenderer->getCombinedCategoriesContentTitle($page_category, $combined_categories_for_title);
             } elseif ($page_category !== null) {
-                $upper_names_raw = $page_category['upper_names'] ?? null;
-                if (! is_array($upper_names_raw)) {
-                    $upper_names_raw = [];
-                }
-                /** @var array<int, array<string, mixed>> $upper_names */
-                $upper_names = array_filter($upper_names_raw, is_array(...));
+                $upper_names = $page_category['upper_names'];
 
                 $page = array_merge(
                     $page,
@@ -267,11 +262,7 @@ final readonly class SectionPopulator
                 // combined_categories is only ever set (by parse_section_url() in
                 // functions_url.inc.php) after category has already been set
                 assert($page_category !== null);
-                $cat_ids = [];
-                $first_cat_id = $page_category['id'] ?? null;
-                if (is_numeric($first_cat_id)) {
-                    $cat_ids[] = (int) $first_cat_id;
-                }
+                $cat_ids = [$page_category['id']];
                 $combined_categories_raw = is_array($page['combined_categories']) ? $page['combined_categories'] : [];
                 foreach ($combined_categories_raw as $category) {
                     $combined_id = is_array($category) ? ($category['id'] ?? null) : null;
@@ -304,8 +295,7 @@ final readonly class SectionPopulator
                 if (isset($page['flat'])) {
                     // get all allowed sub-categories
                     if ($page_category !== null) {
-                        $uppercats = $page_category['uppercats'] ?? null;
-                        $uppercats = is_string($uppercats) ? $uppercats : '';
+                        $uppercats = $page_category['uppercats'];
                         $query = '
 SELECT id
   FROM ' . Tables::categories() . '
@@ -318,10 +308,7 @@ SELECT id
 
                         $subcat_ids_raw = $this->repo->queryColumn($query);
                         $subcat_ids = array_values(array_filter($subcat_ids_raw, is_string(...)));
-                        $cat_id = $page_category['id'] ?? null;
-                        if (is_scalar($cat_id)) {
-                            $subcat_ids[] = (string) $cat_id;
-                        }
+                        $subcat_ids[] = (string) $page_category['id'];
                         $where_sql = 'category_id IN (' . implode(',', $subcat_ids) . ')';
                         // remove categories from forbidden because just checked above
                         $forbidden = $this->permissionService->getSqlConditionFandF([
@@ -343,8 +330,7 @@ SELECT id
                     // (see the `if (isset($page['flat']))` above), so category
                     // must be the one that's set
                     assert($page_category !== null);
-                    $normal_mode_cat_id = $page_category['id'] ?? null;
-                    $where_sql = 'category_id = ' . (is_scalar($normal_mode_cat_id) ? (string) $normal_mode_cat_id : '0');
+                    $where_sql = 'category_id = ' . $page_category['id'];
                 }
 
                 // $cache_item is only ever assigned in the flat-mode/no-
@@ -724,12 +710,7 @@ SELECT id
 
         // title update
         if (isset($page['title'])) {
-            // getGalleryHomeUrl() now declares a real string return (this
-            // mixed-elimination pass) -- the is_string() guard below is a
-            // leftover from before that narrow, left for the final cleanup
-            // pass rather than touched here.
             $gallery_home_url = $this->urlService->getGalleryHomeUrl();
-            $gallery_home_url = is_string($gallery_home_url) ? $gallery_home_url : '';
             $page['section_title'] = '<a href="' . $gallery_home_url . '">' . Lang::t('Home') . '</a>';
             $title_value = is_string($page['title']) ? $page['title'] : '';
             if ($title_value !== '' && $title_value !== '0') {
@@ -757,13 +738,11 @@ SELECT id
             $hit_by_cat_permalink = is_string($hit_by_cat_permalink) ? $hit_by_cat_permalink : null;
             $category_url_style = \Piwigo\Config\CurrentConfig::categoryUrlStyle();
             $category_permalink = is_string($page_category['permalink'] ?? null) ? $page_category['permalink'] : null;
-            $category_name = $page_category['name'] ?? null;
-            $category_name = is_string($category_name) ? $category_name : '';
+            $category_name = $page_category['name'];
             $expected_cat_url_name = \Piwigo\Core\StringHelper::str2url($category_name);
 
             if (self::needsPermalinkRedirect($category_permalink, $category_url_style, $hit_by_cat_url_name, $hit_by_cat_permalink, $expected_cat_url_name)) {
-                $redirect_category_id = $page_category['id'] ?? null;
-                $this->categoryService->checkRestrictions(is_numeric($redirect_category_id) ? (int) $redirect_category_id : 0, $this->htmlRenderer, $this->redirectService);
+                $this->categoryService->checkRestrictions($page_category['id'], $this->htmlRenderer, $this->redirectService);
                 $redirect_url = \Piwigo\Core\PageFilterHelper::scriptBasename() === 'picture' ? $this->urlService->duplicatePictureUrl() : $this->urlService->duplicateIndexUrl();
 
                 if (! headers_sent()) { // this is a permanent redirection
@@ -782,8 +761,7 @@ SELECT id
         $body_data['section'] = $page['section'];
 
         if ($section === 'categories' && $page_category !== null) {
-            $body_category_id = $page_category['id'] ?? null;
-            $body_category_id = is_scalar($body_category_id) ? (string) $body_category_id : '';
+            $body_category_id = (string) $page_category['id'];
             array_push($body_classes, 'category-' . $body_category_id);
             $body_data['category_id'] = $body_category_id;
 

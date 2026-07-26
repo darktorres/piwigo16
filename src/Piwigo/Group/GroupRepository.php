@@ -101,12 +101,16 @@ final class GroupRepository extends EntityRepository
         // string|boolean, not the raw int a tinyint fetch would otherwise
         // produce. Normalized to real bool here, once, matching every
         // other domain's own retype convention.
-        foreach ($rows as &$row) {
-            $row['is_default'] = (bool) $row['is_default'];
-        }
-        unset($row);
-
-        return $rows;
+        return array_map(
+            static fn (array $row): array => [
+                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                'name' => is_string($row['name']) ? $row['name'] : '',
+                'is_default' => (bool) $row['is_default'],
+                'lastmodified' => is_string($row['lastmodified']) ? $row['lastmodified'] : '',
+                'nb_users' => is_numeric($row['nb_users']) ? (int) $row['nb_users'] : 0,
+            ],
+            $rows
+        );
     }
 
     public function nameExists(string $name, ?int $excludeGroupId = null): bool

@@ -236,7 +236,10 @@ final readonly class TagService
             $pool = \Piwigo\Cache\CachePools::tagCloud();
             $item = $pool->getItem('counts_' . \Piwigo\Users\CurrentUser::get()->id);
             $cached = $item->isHit() ? $item->get() : null;
-            $tagCounters = is_array($cached) ? $cached : null;
+            $tagCounters = is_array($cached) ? array_map(
+                static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+                array_filter($cached, is_int(...), ARRAY_FILTER_USE_KEY)
+            ) : null;
 
             if ($tagCounters === null) {
                 $tagCounters = $this->repo->countImagesPerTag($tagIds, $fandFSql);
@@ -577,10 +580,7 @@ final readonly class TagService
 
         $tagsOf = array_fill_keys($imageIds, []);
         foreach ($this->repo->findTagIdsByImageIds($imageIds) as $imageTag) {
-            $tagImageId = $imageTag['image_id'];
-            $tagId = $imageTag['tag_id'];
-            assert(is_numeric($tagImageId) && is_numeric($tagId));
-            $tagsOf[(int) $tagImageId][] = (int) $tagId;
+            $tagsOf[$imageTag['image_id']][] = $imageTag['tag_id'];
         }
 
         return $tagsOf;

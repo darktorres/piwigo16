@@ -189,10 +189,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
         $byId = [];
         foreach ($rows as $row) {
-            $catId = $row['cat_id'];
-            if (is_int($catId) || is_string($catId)) {
-                $byId[$catId] = $row;
-            }
+            $byId[$row['cat_id']] = $row;
         }
 
         // nb_images is a COUNT() aggregate -- comes back as native int under
@@ -220,10 +217,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
         $byId = [];
         foreach ($rows as $row) {
-            $catId = $row['cat_id'];
-            if (is_int($catId) || is_string($catId)) {
-                $byId[$catId] = $row;
-            }
+            $byId[$row['cat_id']] = $row;
         }
 
         self::assertArrayHasKey('1', $byId);
@@ -282,10 +276,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
         $byId = [];
         foreach ($rows as $row) {
-            $catId = $row['cat_id'];
-            if (is_int($catId) || is_string($catId)) {
-                $byId[$catId] = $row;
-            }
+            $byId[$row['cat_id']] = $row;
         }
 
         self::assertArrayHasKey('rank', $byId['1']);

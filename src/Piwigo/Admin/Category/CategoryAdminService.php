@@ -270,7 +270,7 @@ final class CategoryAdminService
         }
 
         $catInfo = $this->categoryService->getCategoryInfo($catId);
-        if (! is_array($catInfo) || ! is_string($catInfo['uppercats'] ?? null)) {
+        if ($catInfo === null) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->pageNotFound($redirectService, 'Requested album does not exist');
         }

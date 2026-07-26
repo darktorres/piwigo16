@@ -13,9 +13,9 @@ use Piwigo\Category\CategoryService;
 final class CategoryServiceFilterMenuRowsTest extends \PHPUnit\Framework\TestCase
 {
     private const array ALL_ROWS = [
-        1 => ['id' => 1, 'id_uppercat' => null, 'name' => 'Sample Album'],
-        2 => ['id' => 2, 'id_uppercat' => 1, 'name' => 'Nested Sub Album'],
-        3 => ['id' => 3, 'id_uppercat' => 1, 'name' => 'Sibling Album'],
+        1 => ['cat_id' => 1, 'id_uppercat' => null, 'global_rank' => '1', 'rank' => 1, 'date_last' => null, 'nb_images' => 0, 'user_id' => 1, 'nb_categories' => 2, 'count_categories' => 2, 'count_images' => 0, 'max_date_last' => null, 'name' => 'Sample Album', 'permalink' => null, 'id' => 1],
+        2 => ['cat_id' => 2, 'id_uppercat' => 1, 'global_rank' => '1.2', 'rank' => 1, 'date_last' => null, 'nb_images' => 0, 'user_id' => 1, 'nb_categories' => 0, 'count_categories' => 0, 'count_images' => 0, 'max_date_last' => null, 'name' => 'Nested Sub Album', 'permalink' => null, 'id' => 2],
+        3 => ['cat_id' => 3, 'id_uppercat' => 1, 'global_rank' => '1.3', 'rank' => 2, 'date_last' => null, 'nb_images' => 0, 'user_id' => 1, 'nb_categories' => 0, 'count_categories' => 0, 'count_images' => 0, 'max_date_last' => null, 'name' => 'Sibling Album', 'permalink' => null, 'id' => 3],
     ];
 
     public function test_collapsed_view_keeps_only_root_categories_when_no_category_is_viewed(): void

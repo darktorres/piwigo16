@@ -248,14 +248,14 @@ final class CategoryRepository extends EntityRepository
      * date -- {@see \Piwigo\Category\CategoryService::getComputedCategories()}
      * rolls these up into subtree totals.
      *
-     * cat_id/id_uppercat/global_rank/rank/date_last/nb_images -- returned
-     * loosely typed, same as every other row-map result in this project;
-     * CategoryService narrows each field explicitly (is_numeric()/is_string()
-     * checks) same as the original \Piwigo\Db\MysqliDb::fetchAssoc() loop did. `rank`
-     * (sibling order within a parent, distinct from `global_rank`) is
-     * carried through purely for P23 batch 4b's CategoryCatsRenderer
-     * (CategoryService::compareByRank()) -- CategoryService/CategoryTreeCache
-     * themselves never read it.
+     * cat_id/id_uppercat/global_rank/rank/date_last/nb_images -- narrowed
+     * below the same way {@see \Piwigo\Category\Projection\Category::fromRow()}
+     * narrows a full category row, so CategoryService::getComputedCategories()
+     * can consume the result directly instead of re-deriving each field's
+     * type itself. `rank` (sibling order within a parent, distinct from
+     * `global_rank`) is carried through purely for P23 batch 4b's
+     * CategoryCatsRenderer (CategoryService::compareByRank()) --
+     * CategoryService/CategoryTreeCache themselves never read it.
      *
      * @return list<array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int}>
      */
@@ -295,8 +295,18 @@ final class CategoryRepository extends EntityRepository
             $qb->andWhere('c.id NOT IN (' . $forbiddenCategoriesCsv . ')');
         }
 
-        return $qb->executeQuery()
-            ->fetchAllAssociative();
+        return array_map(
+            static fn (array $row): array => [
+                'cat_id' => is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0,
+                'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
+                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+                'rank' => is_numeric($row['rank'] ?? null) ? (int) $row['rank'] : null,
+                'date_last' => is_string($row['date_last'] ?? null) ? $row['date_last'] : null,
+                'nb_images' => is_numeric($row['nb_images']) ? (int) $row['nb_images'] : 0,
+            ],
+            $qb->executeQuery()
+                ->fetchAllAssociative()
+        );
     }
 
     /**
@@ -418,7 +428,7 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        return $this->getEntityManager()
+        $rows = $this->getEntityManager()
             ->getConnection()
             ->createQueryBuilder()
             ->select('id', 'name', 'permalink', 'id_uppercat', 'uppercats', 'global_rank')
@@ -427,6 +437,18 @@ final class CategoryRepository extends EntityRepository
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
             ->executeQuery()
             ->fetchAllAssociative();
+
+        return array_map(
+            static fn (array $row): array => [
+                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
+                'permalink' => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
+                'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
+                'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+            ],
+            $rows
+        );
     }
 
     /**
@@ -770,22 +792,32 @@ DELETE
     /**
      * id/id_uppercat/uppercats/rank/global_rank for every category, ordered
      * for {@see \Piwigo\Category\CategoryService::updateGlobalRank()}'s own
-     * per-parent rank-numbering pass. Types below match that method's own
-     * already-live assert(is_string($rowId) && is_string($rowUppercats) &&
-     * is_numeric($rowRank)) -- this raw query's id/uppercats come back as
-     * strings, not yet cast the way Category::fromRow() casts them.
+     * per-parent rank-numbering pass. `rank` (sibling order within a
+     * parent, distinct from `global_rank`) is carried through purely for
+     * that method's own rank-change detection.
      *
-     * @return list<array{id: string, id_uppercat: int|string|null, uppercats: string, rank: int|string|null, global_rank: ?string}>
+     * @return list<array{id: int, id_uppercat: ?int, uppercats: string, rank: ?int, global_rank: ?string}>
      */
     public function findCategoriesForRankUpdate(): array
     {
-        return $this->getEntityManager()
+        $rows = $this->getEntityManager()
             ->getConnection()
             ->executeQuery('
 SELECT id, id_uppercat, uppercats, `rank`, global_rank
   FROM ' . Tables::categories() . '
   ORDER BY id_uppercat, `rank`, name
 ;')->fetchAllAssociative();
+
+        return array_map(
+            static fn (array $row): array => [
+                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
+                'uppercats' => is_string($row['uppercats']) ? $row['uppercats'] : '',
+                'rank' => is_numeric($row['rank'] ?? null) ? (int) $row['rank'] : null,
+                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+            ],
+            $rows
+        );
     }
 
     /**
@@ -1153,7 +1185,7 @@ SELECT id, galleries_url
             return [];
         }
 
-        return $this->getEntityManager()
+        $rows = $this->getEntityManager()
             ->getConnection()
             ->executeQuery('
 SELECT id, uppercats, site_id
@@ -1162,6 +1194,15 @@ SELECT id, uppercats, site_id
     AND id IN (
 ' . wordwrap(implode(', ', $ids), 80, "\n") . ')
 ;')->fetchAllAssociative();
+
+        return array_map(
+            static fn (array $row): array => [
+                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                'site_id' => is_numeric($row['site_id'] ?? null) ? (int) $row['site_id'] : null,
+            ],
+            $rows
+        );
     }
 
     /**
@@ -1193,13 +1234,23 @@ UPDATE ' . Tables::images() . '
      */
     public function findCategoriesForMove(array $ids): array
     {
-        return $this->getEntityManager()
+        $rows = $this->getEntityManager()
             ->getConnection()
             ->executeQuery('
 SELECT id, id_uppercat, status, uppercats
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $ids) . ')
 ;')->fetchAllAssociative();
+
+        return array_map(
+            static fn (array $row): array => [
+                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
+                'status' => is_string($row['status'] ?? null) ? $row['status'] : '',
+                'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+            ],
+            $rows
+        );
     }
 
     public function findCategoryUppercatsById(int $id): ?string
@@ -1336,7 +1387,7 @@ SELECT id, uppercats, global_rank, visible, status
     }
 
     /**
-     * @param array<int, array{id: string, rank: int, global_rank: ?string}> $datas
+     * @param array<int, array{id: int, rank: int, global_rank: ?string}> $datas
      */
     public function massUpdateRanksAndGlobalRank(array $datas): void
     {
@@ -1372,7 +1423,7 @@ SELECT id, uppercats, global_rank, visible, status
     }
 
     /**
-     * @param array<int, array{id: string, uppercats: string}> $datas
+     * @param array<int, array{id: int, uppercats: string}> $datas
      */
     public function massUpdateUppercats(array $datas): void
     {

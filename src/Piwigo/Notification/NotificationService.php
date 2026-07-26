@@ -304,8 +304,7 @@ final readonly class NotificationService
 
         $description = '<ul>';
 
-        $nbElements = $dateDetail['nb_elements'] ?? null;
-        $nbElements = is_numeric($nbElements) ? (int) $nbElements : 0;
+        $nbElements = $dateDetail['nb_elements'];
 
         $description .=
               '<li>'
@@ -319,12 +318,7 @@ final readonly class NotificationService
               . '</li><br>';
 
         $elements = $dateDetail['elements'] ?? [];
-        $elements = is_array($elements) ? $elements : [];
         foreach ($elements as $element) {
-            if (! is_array($element)) {
-                continue;
-            }
-            /** @var array<string, mixed> $element */
             $tnSrc = DerivativeImage::thumb_url($element);
             $description .= '<a href="' .
               $this->urlService->addUrlParams(
@@ -340,8 +334,7 @@ final readonly class NotificationService
         }
         $description .= '...<br>';
 
-        $nbCats = $dateDetail['nb_cats'] ?? null;
-        $nbCats = is_numeric($nbCats) ? (int) $nbCats : 0;
+        $nbCats = $dateDetail['nb_cats'];
 
         $description .=
               '<li>'
@@ -350,15 +343,9 @@ final readonly class NotificationService
 
         $description .= '<ul>';
         $categories = $dateDetail['categories'] ?? [];
-        $categories = is_array($categories) ? $categories : [];
         foreach ($categories as $cat) {
-            if (! is_array($cat)) {
-                continue;
-            }
-            $uppercats = $cat['uppercats'] ?? null;
-            $uppercats = is_string($uppercats) ? $uppercats : '';
-            $imgCount = $cat['img_count'] ?? null;
-            $imgCount = is_numeric($imgCount) ? (int) $imgCount : 0;
+            $uppercats = $cat['uppercats'];
+            $imgCount = $cat['img_count'];
             $description .=
                   '<li>'
                   . $this->htmlRenderer->getCatDisplayNameCache($uppercats, '', false, null, $authKey)
@@ -380,12 +367,10 @@ final readonly class NotificationService
      */
     public function getTitleRecentPostDate(array $dateDetail): string
     {
-        $nbElements = $dateDetail['nb_elements'] ?? null;
-        $nbElements = is_numeric($nbElements) ? (int) $nbElements : 0;
+        $nbElements = $dateDetail['nb_elements'];
         $title = Translator::get()->plural('%d new photo', '%d new photos', $nbElements);
 
-        $dateAvailable = $dateDetail['date_available'] ?? null;
-        $dateAvailable = is_string($dateAvailable) ? $dateAvailable : '';
+        $dateAvailable = $dateDetail['date_available'] ?? '';
         if ((bool) preg_match('/^\d+-(\d+)-(\d+) /', $dateAvailable, $matches)) {
             $monthName = \Piwigo\Core\Lang::month((int) $matches[1]);
             $title .= ' (' . $monthName . ' ' . $matches[2] . ')';

@@ -205,8 +205,6 @@ final readonly class ImageService
         foreach ($this->repo->findPathsForFileDeletion($ids) as $row) {
             $rowId = $row['id'];
             $rowPath = $row['path'];
-            assert(is_numeric($rowId) && is_string($rowPath));
-            $rowId = (int) $rowId;
 
             if ($urlService->urlIsRemote($rowPath)) {
                 continue;
@@ -365,9 +363,6 @@ final readonly class ImageService
         foreach ($rows as $idx => $row) {
             $rowImageId = $row['image_id'];
             $rowCategoryId = $row['category_id'];
-            assert(is_numeric($rowImageId) && is_numeric($rowCategoryId));
-            $rowImageId = (int) $rowImageId;
-            $rowCategoryId = (int) $rowCategoryId;
 
             if ($rowImageId > $maxImageId) {
                 $maxImageId = $rowImageId;

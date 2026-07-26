@@ -1235,7 +1235,7 @@ SELECT
         // array<string, mixed> (getRegularSearchResults()'s return shape) — in
         // practice always image ids, but narrow to scalars here for implode().
         $otherFiltersItemStrings = array_map(
-            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
+            static fn (int|string $v): string => (string) $v,
             $otherFiltersItems
         );
 
@@ -1307,7 +1307,7 @@ SELECT
                 $otherFiltersItems = array_intersect($otherFiltersItems, $nextFilterItems);
             }
 
-            $otherFiltersItems = array_unique($otherFiltersItems);
+            $otherFiltersItems = array_values(array_unique($otherFiltersItems));
 
             $debugMsg = '[' . __METHOD__ . '] cache computed for ' . (count($otherFilters) + 1) . ' other filters';
             $debugMsg .= ' (' . count($otherFiltersItems) . ' items)';

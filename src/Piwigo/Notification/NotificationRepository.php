@@ -117,12 +117,21 @@ final class NotificationRepository extends AbstractRepository
      */
     public function findRecentPostDates(string $whereSql, int $maxDates): array
     {
-        return $this->conn->executeQuery(
+        $rows = $this->conn->executeQuery(
             'SELECT date_available, COUNT(DISTINCT id) AS nb_elements, COUNT(DISTINCT category_id) AS nb_cats'
             . ' FROM ' . Tables::images() . ' i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = image_id'
             . ' ' . $whereSql
             . ' GROUP BY date_available ORDER BY date_available DESC LIMIT ' . $maxDates
         )->fetchAllAssociative();
+
+        return array_map(
+            static fn (array $row): array => [
+                'date_available' => is_string($row['date_available'] ?? null) ? $row['date_available'] : null,
+                'nb_elements' => is_numeric($row['nb_elements']) ? (int) $row['nb_elements'] : 0,
+                'nb_cats' => is_numeric($row['nb_cats']) ? (int) $row['nb_cats'] : 0,
+            ],
+            $rows
+        );
     }
 
     /**
@@ -148,7 +157,7 @@ final class NotificationRepository extends AbstractRepository
      */
     public function findRecentCategoriesForDate(string $whereSql, string $dateAvailable, int $maxCats): array
     {
-        return $this->conn->executeQuery(
+        $rows = $this->conn->executeQuery(
             'SELECT DISTINCT c.uppercats, COUNT(DISTINCT i.id) AS img_count'
             . ' FROM ' . Tables::images() . ' i'
             . ' INNER JOIN ' . Tables::imageCategory() . ' AS ic ON i.id = image_id'
@@ -157,5 +166,13 @@ final class NotificationRepository extends AbstractRepository
             . ' AND date_available = ? GROUP BY category_id, c.uppercats ORDER BY img_count DESC LIMIT ' . $maxCats,
             [$dateAvailable]
         )->fetchAllAssociative();
+
+        return array_map(
+            static fn (array $row): array => [
+                'uppercats' => is_string($row['uppercats']) ? $row['uppercats'] : '',
+                'img_count' => is_numeric($row['img_count']) ? (int) $row['img_count'] : 0,
+            ],
+            $rows
+        );
     }
 }

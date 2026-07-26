@@ -873,8 +873,7 @@ DELETE
 
                 $datas = [];
                 foreach ($files as $id => $file) {
-                    $path = is_string($file['path'] ?? null) ? $file['path'] : '';
-                    $data = $site_reader->get_element_update_attributes($path);
+                    $data = $site_reader->get_element_update_attributes($file['path']);
                     $data['id'] = $id;
                     $datas[] = $data;
                 } // end foreach file

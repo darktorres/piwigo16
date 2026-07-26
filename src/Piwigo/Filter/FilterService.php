@@ -216,12 +216,16 @@ WHERE ';
 
             $filter_visible_categories = $filter['visible_categories'] ?? null;
             $filter_visible_images = $filter['visible_images'] ?? null;
-            $filter_categories = $filter['categories'] ?? null;
+            // Guards against a corrupted/stale session unserialize() result
+            // (see FilterState::$categories' own docblock) -- non-array
+            // rows are dropped rather than trusted.
+            $filter_categories_raw = $filter['categories'] ?? null;
+            $filter_categories = is_array($filter_categories_raw) ? array_filter($filter_categories_raw, is_array(...)) : [];
             \Piwigo\Core\FilterState::set(
                 true,
                 is_scalar($filter_visible_categories) ? (string) $filter_visible_categories : '',
                 is_scalar($filter_visible_images) ? (string) $filter_visible_images : '',
-                is_array($filter_categories) ? $filter_categories : []
+                $filter_categories
             );
         } else {
             if ((bool) SessionService::get()->getSessionVar('filter_enabled', false)) {

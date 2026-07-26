@@ -162,20 +162,16 @@ final class PasswordController implements ControllerInterface
 
         if ($this->action === 'reset') {
             if (($key === null and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric())) and ! isset($_SESSION['valid_reset_password_code'])) {
-                $gallery_home_url = $this->urlService->getGalleryHomeUrl();
-                $this->redirectService->redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
+                $this->redirectService->redirect($this->urlService->getGalleryHomeUrl());
             }
         }
 
         if ($this->action === 'lost' and ! \Piwigo\Auth\AccessControl::isAGuest()) {
-            $gallery_home_url = $this->urlService->getGalleryHomeUrl();
-            $this->redirectService->redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
+            $this->redirectService->redirect($this->urlService->getGalleryHomeUrl());
         }
 
         if ($this->action === 'lost_code' and ! isset($_SESSION['reset_password_code'])) {
-            $gallery_home_url = $this->urlService->getGalleryHomeUrl();
-            $gallery_home_url = is_string($gallery_home_url) ? $gallery_home_url : '';
-            $this->redirectService->redirect($gallery_home_url . 'identification.php');
+            $this->redirectService->redirect($this->urlService->getGalleryHomeUrl() . 'identification.php');
         }
 
         if ($this->action === 'lost' and isset($_SESSION['reset_password_code'])) {
@@ -536,7 +532,7 @@ SELECT
             }
         }
 
-        if (! is_numeric($user_id) || (int) $user_id === 0) {
+        if (! (is_int($user_id) || is_string($user_id)) || (int) $user_id === 0) {
             $this->errors['password_page_error'] = Lang::t('Invalid key');
             return false;
         }
@@ -621,7 +617,7 @@ SELECT
         return true;
     }
 
-    private function resetPasswordKey(): false|float|int|string
+    private function resetPasswordKey(): false|int|string
     {
         // Read directly from the request, not the guest-nulled $key:
         // this method is only ever reached via the submit-processing path

@@ -79,10 +79,8 @@ final class QDateRangeScope extends QSearchScope
         // union across both real writers.
         $scope_data = $token->scope_data;
         $date_range = is_array($scope_data) ? $scope_data : ['', ''];
-        $date_range_0_raw = $date_range[0] ?? '';
-        $date_range_0 = is_scalar($date_range_0_raw) ? (string) $date_range_0_raw : '';
-        $date_range_1_raw = $date_range[1] ?? '';
-        $date_range_1 = is_scalar($date_range_1_raw) ? (string) $date_range_1_raw : '';
+        $date_range_0 = $date_range[0] ?? '';
+        $date_range_1 = $date_range[1] ?? '';
 
         $clauses = [];
         if ($date_range_0 !== '') {

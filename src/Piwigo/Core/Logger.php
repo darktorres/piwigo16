@@ -109,27 +109,26 @@ final class Logger
     {
         $this->options = array_merge($this->options, $options);
 
-        if (is_string($this->options['severity'])) {
+        if (is_string($this->options['severity'] ?? null)) {
             $this->options['severity'] = self::codeToLevel($this->options['severity']);
         }
 
-        if ($this->options['severity'] === self::OFF) {
+        if (($this->options['severity'] ?? null) === self::OFF) {
             return;
         }
 
-        $directory = $this->options['directory'];
+        $directory = $this->options['directory'] ?? null;
         $this->options['directory'] = rtrim(is_string($directory) ? $directory : '', '\\/') . DIRECTORY_SEPARATOR;
 
-        $filename = $this->options['filename'];
-        if ($filename === null || ! is_string($filename) || $filename === '') {
+        $filename = $this->options['filename'] ?? null;
+        if ($filename === null || $filename === '') {
             $filename = 'log_' . date('Y-m-d') . '.txt';
         }
         $this->options['filename'] = $filename;
 
         $this->options['filePath'] = $this->options['directory'] . $this->options['filename'];
 
-        $archiveDaysOption = $this->options['archiveDays'];
-        $archiveDaysOption = is_numeric($archiveDaysOption) ? (int) $archiveDaysOption : self::ARCHIVE_NO_PURGE;
+        $archiveDaysOption = $this->options['archiveDays'] ?? self::ARCHIVE_NO_PURGE;
         if ($archiveDaysOption !== self::ARCHIVE_NO_PURGE && mt_rand() % 97 === 0) {
             $this->purge();
         }
@@ -141,14 +140,14 @@ final class Logger
     private function open(): void
     {
         if ($this->status() === self::STATUS_LOG_CLOSED) {
-            $directory = $this->options['directory'];
+            $directory = $this->options['directory'] ?? null;
             $directory = is_string($directory) ? $directory : '';
 
             if (! file_exists($directory)) {
                 \Piwigo\Core\FilesystemHelper::mkgetdir($directory, FilesystemHelper::MKGETDIR_DEFAULT | FilesystemHelper::MKGETDIR_PROTECT_HTACCESS);
             }
 
-            $filePath = $this->options['filePath'];
+            $filePath = $this->options['filePath'] ?? null;
             $filePath = is_string($filePath) ? $filePath : '';
 
             if (file_exists($filePath) && ! is_writable($filePath)) {
@@ -190,7 +189,7 @@ final class Logger
      */
     public function severity(): int
     {
-        $severity = $this->options['severity'];
+        $severity = $this->options['severity'] ?? null;
         return is_int($severity) ? $severity : self::DEBUG;
     }
 
@@ -360,9 +359,9 @@ final class Logger
      */
     public function purge(): void
     {
-        $directory = $this->options['directory'];
+        $directory = $this->options['directory'] ?? null;
         $directory = is_string($directory) ? $directory : '';
-        $globPattern = $this->options['globPattern'];
+        $globPattern = $this->options['globPattern'] ?? null;
         $globPattern = is_string($globPattern) ? $globPattern : '';
 
         $files = glob($directory . $globPattern);
@@ -370,8 +369,7 @@ final class Logger
             return;
         }
 
-        $archiveDays = $this->options['archiveDays'];
-        $archiveDays = is_numeric($archiveDays) ? (int) $archiveDays : self::ARCHIVE_NO_PURGE;
+        $archiveDays = $this->options['archiveDays'] ?? self::ARCHIVE_NO_PURGE;
         $limit = time() - $archiveDays * 86400;
 
         foreach ($files as $file) {
@@ -417,7 +415,7 @@ final class Logger
         $micro = sprintf('%06d', (int) (($originalTime - floor($originalTime)) * 1000000.0));
         $date = new \DateTime(date('Y-m-d H:i:s.' . $micro, intval($originalTime)));
 
-        $dateFormat = $this->options['dateFormat'];
+        $dateFormat = $this->options['dateFormat'] ?? null;
         $dateFormat = is_string($dateFormat) ? $dateFormat : 'Y-m-d G:i:s';
 
         return $date->format($dateFormat);

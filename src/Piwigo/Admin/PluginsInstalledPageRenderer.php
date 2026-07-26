@@ -78,14 +78,10 @@ final class PluginsInstalledPageRenderer
         $extension_repository = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
         $pem_catalog = new PemCatalog(new ZipExtractor());
         // ExtensionScanner::scan()'s own declared return type is a generic
-        // array<string, array<string, mixed>> dispatch shape (by design --
-        // see that method's own docblock), but every real entry for
-        // ExtensionType::Plugin is actually scanPlugin()'s own precise
-        // shape; re-asserted here once so every $fs_plugin read below is real.
-        /** @var array<string, array{name: string, version: string, uri: string,
-         *   description: string, author: string, hasSettings: bool,
-         *   'author uri'?: string, extension?: string}> $fs_plugins
-         */
+        // array<string, array<string, mixed>> dispatch shape by design (see
+        // that method's own docblock) -- every $fs_plugin read below
+        // follows its documented convention and reads specific keys
+        // defensively instead.
         $fs_plugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService);
         uasort($fs_plugins, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->nameCompare(...));
@@ -184,7 +180,7 @@ final class PluginsInstalledPageRenderer
                 'http://piwigo.org/ext',
                 'https://piwigo.org/ext',
             ];
-            $fs_plugin_uri = $fs_plugin['uri'];
+            $fs_plugin_uri = is_string($fs_plugin['uri'] ?? null) ? $fs_plugin['uri'] : '';
             $pem_url = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
             $visit_url = str_replace($url_to_replace, $pem_url, $fs_plugin_uri);
 

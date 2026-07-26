@@ -261,11 +261,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
 
         $byName = [];
         foreach ($rows as $row) {
-            $name = $row['name'];
-            $nbUsers = $row['nb_users'];
-            self::assertIsString($name);
-            self::assertIsNumeric($nbUsers);
-            $byName[$name] = (int) $nbUsers;
+            $byName[$row['name']] = $row['nb_users'];
         }
 
         self::assertSame(2, $byName['Editors']);

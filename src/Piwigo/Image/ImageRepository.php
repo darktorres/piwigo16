@@ -154,7 +154,7 @@ final class ImageRepository extends EntityRepository
      */
     public function findPathsForFileDeletion(array $imageIds): array
     {
-        return $this->getEntityManager()
+        $rows = $this->getEntityManager()
             ->getConnection()
             ->executeQuery('
 SELECT
@@ -164,6 +164,15 @@ SELECT
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $imageIds) . ')
 ;')->fetchAllAssociative();
+
+        return array_map(
+            static fn (array $row): array => [
+                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                'path' => is_string($row['path']) ? $row['path'] : '',
+                'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
+            ],
+            $rows
+        );
     }
 
     /**
@@ -247,7 +256,7 @@ SELECT
      */
     public function findLoungeRows(): array
     {
-        return $this->getEntityManager()
+        $rows = $this->getEntityManager()
             ->getConnection()
             ->executeQuery('
 SELECT
@@ -256,6 +265,14 @@ SELECT
   FROM ' . Tables::lounge() . '
   ORDER BY category_id ASC, image_id ASC
 ;')->fetchAllAssociative();
+
+        return array_map(
+            static fn (array $row): array => [
+                'image_id' => is_numeric($row['image_id']) ? (int) $row['image_id'] : 0,
+                'category_id' => is_numeric($row['category_id']) ? (int) $row['category_id'] : 0,
+            ],
+            $rows
+        );
     }
 
     public function deleteLoungeUpTo(int $maxImageId): void
@@ -510,7 +527,7 @@ SELECT
 
         if (count($loungedIds) > 0) {
             $query .= '
-    AND id NOT IN (' . implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $loungedIds)) . ')';
+    AND id NOT IN (' . implode(',', $loungedIds) . ')';
         }
 
         $query .= '

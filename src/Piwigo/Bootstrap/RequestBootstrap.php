@@ -532,12 +532,10 @@ final class RequestBootstrap
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
 
             if ($is_mail_send) {
-                $notify_dbnow = $notify_api_key_expiration['dbnow'];
-                $notify_auth_key = $notify_api_key_expiration['auth_key'];
                 $apiKeyRepo->updateLastNotifiedOn(
-                    is_string($notify_auth_key) ? $notify_auth_key : '',
+                    $notify_api_key_expiration['auth_key'],
                     CurrentUser::get()->id,
-                    is_string($notify_dbnow) ? $notify_dbnow : '',
+                    $notify_api_key_expiration['dbnow'],
                 );
             }
 

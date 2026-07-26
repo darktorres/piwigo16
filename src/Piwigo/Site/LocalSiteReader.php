@@ -202,7 +202,7 @@ final class LocalSiteReader
     }
 
     /**
-     * @return float[]
+     * @return array<string, float> keyed by format extension
      */
     public function get_formats(string $path, string $filename_wo_ext): array
     {

@@ -94,16 +94,10 @@ final class ThemesInstalledPageRenderer
         // +-----------------------------------------------------------------------+
 
         // ExtensionScanner::scan()'s own declared return type is a generic
-        // array<string, array<string, mixed>> dispatch shape (by design --
-        // see that method's own docblock), but every real entry for
-        // ExtensionType::Theme is actually scanTheme()'s own precise shape;
-        // re-asserted here once so every $fs_theme read below is real.
-        /** @var array<string, array{id: string, name: string, version: string,
-         *   uri: string, description: string, author: string, mobile: bool,
-         *   screenshot: string, 'author uri'?: string, extension?: string,
-         *   parent?: string, activable?: bool, use_standard_pages?: bool,
-         *   admin_uri?: string}> $fs_themes
-         */
+        // array<string, array<string, mixed>> dispatch shape by design (see
+        // that method's own docblock) -- every $fs_theme read below follows
+        // its documented convention and reads specific keys defensively
+        // instead.
         $fs_themes = $extension_scanner->scan(ExtensionType::Theme, $this->urlService);
         uasort($fs_themes, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->nameCompare(...));
 

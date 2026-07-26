@@ -107,12 +107,12 @@ final readonly class CommentService
             return $action;
         }
 
-        $content = is_string($comment['content'] ?? null) ? $comment['content'] : '';
+        $content = $comment['content'];
         $linkCount = preg_match_all('/https?:\/\//', $content, $matches);
         // the pattern above is a hardcoded, always-valid regex
         assert($linkCount !== false);
 
-        $author = is_string($comment['author'] ?? null) ? $comment['author'] : '';
+        $author = $comment['author'];
         if (str_contains($author, 'http://')) {
             $linkCount++;
         }
@@ -131,8 +131,8 @@ final readonly class CommentService
     /**
      * Tries to insert a user comment and returns the action to perform.
      *
-     * @param array{author: string, content: string, image_id: int, website_url?: string, email?: string} $comm in/out: augmented with ip/agent/
-     *   author_id and (on success) id
+     * @param array{author: string, content: string, image_id: int, website_url?: string, email?: string} $comm in: caller-supplied fields
+     * @param-out array{author: string, content: string, image_id: int, website_url?: string, email?: string, ip?: string, agent?: string, author_id?: int, id?: int} $comm out: augmented with ip/agent/author_id and (on success) id
      * @param list<string> $infos out: user-facing validation messages
      * @return string validate, moderate, reject
      */
@@ -148,7 +148,7 @@ final readonly class CommentService
         $commentAction = (! \Piwigo\Config\CurrentConfig::commentsValidation() || \Piwigo\Auth\AccessControl::isAdmin()) ? 'validate' : 'moderate';
 
         if (! \Piwigo\Auth\AccessControl::isClassicUser()) {
-            if (self::emptyValue($comm['author'] ?? null)) {
+            if (self::emptyValue($comm['author'])) {
                 if (\Piwigo\Config\CurrentConfig::commentsAuthorMandatory()) {
                     $infos[] = Lang::t('Username is mandatory');
                     $commentAction = 'reject';
@@ -162,8 +162,8 @@ final readonly class CommentService
 
             // if a guest tries to use the name of an already existing user,
             // they must be rejected
-            if (($comm['author'] ?? null) !== 'guest') {
-                $authorName = is_string($comm['author'] ?? null) ? $comm['author'] : '';
+            if ($comm['author'] !== 'guest') {
+                $authorName = $comm['author'];
                 $user_fields = \Piwigo\Config\CurrentConfig::userFields();
                 $usernameColumn = $user_fields['username'];
 
@@ -178,12 +178,12 @@ final readonly class CommentService
             $comm['author_id'] = $currentUser->id;
         }
 
-        if (self::emptyValue($comm['content'] ?? null)) {
+        if (self::emptyValue($comm['content'])) {
             $commentAction = 'reject';
         }
 
-        $imageIdRaw = is_scalar($comm['image_id'] ?? null) ? (string) $comm['image_id'] : '';
-        $imageId = is_numeric($imageIdRaw) ? (int) $imageIdRaw : 0;
+        $imageId = $comm['image_id'];
+        $imageIdRaw = (string) $imageId;
 
         if (! $this->ephemeralKeys->verify($key, $imageIdRaw)) {
             $commentAction = 'reject';
@@ -264,8 +264,8 @@ final readonly class CommentService
         $commentAction = is_string($result) ? $result : 'reject';
 
         if ($commentAction !== 'reject') {
-            $author = is_string($comm['author'] ?? null) ? $comm['author'] : '';
-            $content = is_string($comm['content'] ?? null) ? $comm['content'] : '';
+            $author = $comm['author'];
+            $content = $comm['content'];
             $websiteUrl = ! self::emptyValue($comm['website_url'] ?? null) && is_string($comm['website_url'] ?? null) ? $comm['website_url'] : null;
             $email = ! self::emptyValue($comm['email'] ?? null) && is_string($comm['email'] ?? null) ? $comm['email'] : null;
 

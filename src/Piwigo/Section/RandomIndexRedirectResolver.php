@@ -16,15 +16,18 @@ namespace Piwigo\Section;
 final class RandomIndexRedirectResolver
 {
     /**
-     * @param array<string, string> $redirectCandidates url => condition map,
-     *   as stored in \Piwigo\Config\CurrentConfig::randomIndexRedirect()
+     * @param array<int|string, string> $redirectCandidates url => condition
+     *   map, as stored in \Piwigo\Config\CurrentConfig::randomIndexRedirect()
+     *   -- PHP casts a purely-numeric string key to int, so a malformed
+     *   config entry can arrive int-keyed even though every real key is
+     *   meant to be a URL string; skipped defensively rather than trusted.
      * @return list<string> urls whose condition matched
      */
     public function resolveCandidates(array $redirectCandidates): array
     {
         $matches = [];
         foreach ($redirectCandidates as $url => $condition) {
-            if ($this->conditionMatches($condition)) {
+            if (is_string($url) && $this->conditionMatches($condition)) {
                 $matches[] = $url;
             }
         }

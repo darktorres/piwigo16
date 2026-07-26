@@ -406,7 +406,7 @@ SELECT DISTINCT image_id
             case 'validate':
             case 'moderate':
                 $ret = [
-                    'id' => $comm['id'],
+                    'id' => $comm['id'] ?? 0,
                     'validation' => $comment_action === 'validate',
                 ];
                 return [
@@ -545,8 +545,6 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
             );
 
             unset($tag['counter']);
-            assert(is_numeric($tag['id']));
-            $tag['id'] = (int) $tag['id'];
             $related_tags[$i] = $tag;
         }
 
@@ -787,7 +785,6 @@ SELECT DISTINCT id
                 $image['comment'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_description', $image['comment'], __FUNCTION__);
 
                 $image = array_merge($image, WsHelper::stdGetUrls($row, \Piwigo\Bootstrap\PresentationAccessor::urlService()));
-                assert(is_int($image['id'] ?? null));
                 $images[$image_ids[$image['id']]] = $image;
             }
             ksort($images, SORT_NUMERIC);
@@ -1185,6 +1182,10 @@ SELECT
 
         // turns image_id into a simple int instead of array
         $params['image_id'] = array_shift($params['image_id']);
+
+        if ($params['image_id'] === null) {
+            return new PwgError(WsError::MISSING_PARAM, 'image_id is missing');
+        }
 
         if ($params['rank'] === null || $params['rank'] === 0) {
             return new PwgError(WsError::MISSING_PARAM, 'rank is missing');

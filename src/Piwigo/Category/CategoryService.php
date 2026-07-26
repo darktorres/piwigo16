@@ -191,7 +191,7 @@ final readonly class CategoryService
 
         return array_filter(
             $allRows,
-            static fn (array $row): bool => in_array($row['id'] ?? null, $visibleIds, true)
+            static fn (array $row): bool => in_array($row['id'], $visibleIds, true)
         );
     }
 
@@ -396,10 +396,9 @@ final readonly class CategoryService
         $lastPhotoDate = null;
         $cats = [];
         foreach ($rows as $row) {
-            $catId = is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0;
-            $idUppercatRaw = $row['id_uppercat'];
-            $idUppercat = is_numeric($idUppercatRaw) ? (int) $idUppercatRaw : null;
-            $nbImages = is_numeric($row['nb_images']) ? (int) $row['nb_images'] : 0;
+            $catId = $row['cat_id'];
+            $idUppercat = $row['id_uppercat'];
+            $nbImages = $row['nb_images'];
             $dateLast = $row['date_last'];
 
             $row['cat_id'] = $catId;
@@ -474,26 +473,18 @@ final readonly class CategoryService
      */
     public static function removeComputedCategory(array &$cats, array $cat): void
     {
-        $idUppercat = $cat['id_uppercat'] ?? null;
-        if ((is_int($idUppercat) || is_string($idUppercat)) && isset($cats[$idUppercat])) {
+        $idUppercat = $cat['id_uppercat'];
+        if ($idUppercat !== null && isset($cats[$idUppercat])) {
             $parent = &$cats[$idUppercat];
 
-            $nbCategories = $parent['nb_categories'] ?? null;
-            $parent['nb_categories'] = (is_numeric($nbCategories) ? (int) $nbCategories : 0) - 1;
+            $parent['nb_categories']--;
 
             do {
-                $countImages = $parent['count_images'] ?? null;
-                $nbImages = $cat['nb_images'] ?? null;
-                $parent['count_images'] = (is_numeric($countImages) ? (int) $countImages : 0)
-                    - (is_numeric($nbImages) ? (int) $nbImages : 0);
+                $parent['count_images'] -= $cat['nb_images'];
+                $parent['count_categories'] -= 1 + $cat['count_categories'];
 
-                $countCategories = $parent['count_categories'] ?? null;
-                $catCountCategories = $cat['count_categories'] ?? null;
-                $parent['count_categories'] = (is_numeric($countCategories) ? (int) $countCategories : 0)
-                    - (1 + (is_numeric($catCountCategories) ? (int) $catCountCategories : 0));
-
-                $parentIdUppercat = $parent['id_uppercat'] ?? null;
-                if (! (is_int($parentIdUppercat) || is_string($parentIdUppercat)) || ! isset($cats[$parentIdUppercat])) {
+                $parentIdUppercat = $parent['id_uppercat'];
+                if ($parentIdUppercat === null || ! isset($cats[$parentIdUppercat])) {
                     break;
                 }
 
@@ -501,10 +492,7 @@ final readonly class CategoryService
             } while (true);
         }
 
-        $catIdKey = $cat['cat_id'] ?? null;
-        if (is_int($catIdKey) || is_string($catIdKey)) {
-            unset($cats[$catIdKey]);
-        }
+        unset($cats[$cat['cat_id']]);
     }
 
     /**
@@ -601,39 +589,29 @@ final readonly class CategoryService
         $indexOfCat = [];
 
         foreach ($cats as $idx => $cat) {
-            // 'id' comes back as a native int under this project's mysqli
-            // driver config (unlike varchar columns, which stay strings) --
-            // is_int()||is_string() here, not is_string() alone, otherwise
-            // this whole branch (and the subcategory-count propagation
-            // below, which depends on $indexOfCat) silently never runs.
             $catId = $cat['id'];
-            $catIdIsKeyable = is_int($catId) || is_string($catId);
-            if ($catIdIsKeyable) {
-                $indexOfCat[$catId] = $idx;
-            }
+            $indexOfCat[$catId] = $idx;
 
             $globalRank = $cat['global_rank'];
-            $cats[$idx]['LEVEL'] = substr_count(is_scalar($globalRank) ? (string) $globalRank : '', '.') + 1;
+            $cats[$idx]['LEVEL'] = substr_count(is_string($globalRank) ? $globalRank : '', '.') + 1;
             $cats[$idx]['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $cat['name'], $cat);
 
-            if ($catIdIsKeyable && isset($commonCats[$catId])) {
+            if (isset($commonCats[$catId])) {
                 $cats[$idx]['count_images'] = $commonCats[$catId]['counter'];
             }
 
-            $idUppercat = $cat['id_uppercat'] ?? null;
-            $hasIdUppercat = $idUppercat !== null && $idUppercat !== '' && $idUppercat !== '0' && $idUppercat !== 0;
+            $idUppercat = $cat['id_uppercat'];
+            $hasIdUppercat = $idUppercat !== null && $idUppercat !== 0;
             $countImages = $cats[$idx]['count_images'] ?? 0;
-            $countImages = is_numeric($countImages) ? (int) $countImages : 0;
             if ($hasIdUppercat && $countImages > 0) {
-                $uppercats = $cat['uppercats'];
-                foreach (array_slice(explode(',', is_scalar($uppercats) ? (string) $uppercats : ''), 0, -1) as $uppercatId) {
+                foreach (array_slice(explode(',', $cat['uppercats']), 0, -1) as $uppercatId) {
                     $parentIdx = $indexOfCat[$uppercatId] ?? null;
                     if (! is_int($parentIdx)) {
                         continue;
                     }
 
                     $countCategories = $cats[$parentIdx]['count_categories'] ?? null;
-                    $cats[$parentIdx]['count_categories'] = (is_numeric($countCategories) ? (int) $countCategories : 0) + 1;
+                    $cats[$parentIdx]['count_categories'] = (is_numeric($countCategories) ? $countCategories : 0) + 1;
                 }
             }
         }
@@ -748,8 +726,7 @@ final readonly class CategoryService
             // always a DB-fetch string, but $page['category']['id'] may already
             // be an int depending on how that array was populated -- matches
             // the original's loose ==, which PHPStan disallows outright.
-            $rowId = $row['id'] ?? null;
-            $rowIdStr = is_scalar($rowId) ? (string) $rowId : null;
+            $rowIdStr = (string) $row['id'];
             $rowGlobalRank = $row['global_rank'] ?? null;
             $childDateLast = @$row['max_date_last'] > @$row['date_last'];
             $selectedId = $selectedCategory['id'] ?? null;
@@ -765,16 +742,16 @@ final readonly class CategoryService
                         'get_categories_menu'
                     ),
                     'TITLE' => self::getDisplayImagesCount(
-                        is_numeric($row['nb_images']) ? (int) $row['nb_images'] : 0,
-                        is_numeric($row['count_images']) ? (int) $row['count_images'] : 0,
-                        is_numeric($row['count_categories']) ? (int) $row['count_categories'] : 0,
+                        $row['nb_images'],
+                        $row['count_images'],
+                        $row['count_categories'],
                         false,
                         ' / '
                     ),
                     'URL' => $urlService->makeIndexUrl([
                         'category' => $row,
                     ]),
-                    'LEVEL' => substr_count(is_scalar($rowGlobalRank) ? (string) $rowGlobalRank : '', '.') + 1,
+                    'LEVEL' => substr_count(is_string($rowGlobalRank) ? $rowGlobalRank : '', '.') + 1,
                     'SELECTED' => $selectedCategory !== null && $selectedIdStr !== null && $selectedIdStr === $rowIdStr,
                     'IS_UPPERCAT' => $selectedCategory !== null && $selectedIdUppercatStr !== null && $selectedIdUppercatStr === $rowIdStr,
                 ]
@@ -788,7 +765,7 @@ final readonly class CategoryService
             $categoryPageId = $categoryPage['id'] ?? null;
             $categoryPageIdStr = is_scalar($categoryPageId) ? (string) $categoryPageId : null;
             if ($categoryPage !== null && $categoryPageIdStr !== null && $categoryPageIdStr === $rowIdStr) { // save the number of subcats for later optim
-                $countCategories = $row['count_categories'] ?? null;
+                $countCategories = $row['count_categories'];
             }
         }
         usort($cats, self::compareByGlobalRank(...));
@@ -1154,13 +1131,13 @@ final readonly class CategoryService
             $rowId = $row['id'];
             $rowUppercats = $row['uppercats'];
             $rowRank = $row['rank'];
-            // id, uppercats, and rank are NOT NULL columns in the categories table.
-            assert(is_string($rowId) && is_string($rowUppercats) && is_numeric($rowRank));
+            // rank is a NOT NULL column in the categories table.
+            assert(is_int($rowRank));
 
             $cat =
               [
                   'rank' => $currentRank,
-                  'rank_changed' => $currentRank !== (int) $rowRank,
+                  'rank_changed' => $currentRank !== $rowRank,
                   'global_rank' => $row['global_rank'],
                   'uppercats' => $rowUppercats,
               ];
@@ -1320,9 +1297,8 @@ final readonly class CategoryService
                 $isTop = true;
 
                 $catIdUppercat = $cat['id_uppercat'];
-                $catHasParent = $catIdUppercat !== null && $catIdUppercat !== '' && $catIdUppercat !== '0' && $catIdUppercat !== 0;
+                $catHasParent = $catIdUppercat !== null && $catIdUppercat !== 0;
                 $catUppercats = $cat['uppercats'];
-                assert(is_string($catUppercats));
 
                 if ($catHasParent) {
                     foreach (explode(',', $catUppercats) as $idUppercat) {
@@ -1335,7 +1311,6 @@ final readonly class CategoryService
 
                 if ($isTop) {
                     $catId = $cat['id'];
-                    assert(is_string($catId) || is_int($catId));
                     $topCategories[$catId] = $cat;
 
                     if ($catHasParent) {
@@ -1350,7 +1325,7 @@ final readonly class CategoryService
             $parentCats = [];
 
             if (count($parentIds) > 0) {
-                $parentCats = $this->repo->findStatusByIds(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $parentIds));
+                $parentCats = $this->repo->findStatusByIds($parentIds);
             }
 
             $tables = [
@@ -1362,13 +1337,12 @@ final readonly class CategoryService
                 // what is the "reference" for list of permissions? The parent album
                 // if it is private, else the album itself
                 $topCategoryId = $topCategory['id'];
-                assert(is_string($topCategoryId) || is_int($topCategoryId));
-                $refCatId = (int) $topCategoryId;
+                $refCatId = $topCategoryId;
 
                 $topCategoryIdUppercat = $topCategory['id_uppercat'];
-                $topCategoryHasParent = $topCategoryIdUppercat !== null && $topCategoryIdUppercat !== '' && $topCategoryIdUppercat !== '0' && $topCategoryIdUppercat !== 0;
-                if ($topCategoryHasParent && is_numeric($topCategoryIdUppercat)) {
-                    $parentCatId = (int) $topCategoryIdUppercat;
+                $topCategoryHasParent = $topCategoryIdUppercat !== null && $topCategoryIdUppercat !== 0;
+                if ($topCategoryHasParent) {
+                    $parentCatId = $topCategoryIdUppercat;
                     if (isset($parentCats[$parentCatId]) && $parentCats[$parentCatId]['status'] === 'private') {
                         $refCatId = $parentCatId;
                     }
@@ -1548,11 +1522,9 @@ final readonly class CategoryService
             $catId = $category['id'];
             $siteId = $category['site_id'];
             $categoryUppercats = $category['uppercats'];
-            // id and uppercats are NOT NULL columns; site_id is always populated
-            // when a category is created (defaults to the local site).
-            assert(is_numeric($catId) && is_numeric($siteId) && is_string($categoryUppercats));
-            $catId = (int) $catId;
-            $siteId = (int) $siteId;
+            // site_id is always populated when a category is created
+            // (defaults to the local site).
+            assert(is_numeric($siteId));
 
             $uppercats = str_replace(',', '/', $categoryUppercats);
             $catFulldirs[$catId] = $galleriesUrl[$siteId];
@@ -1578,7 +1550,6 @@ final readonly class CategoryService
             // rather than adding a near-duplicate id/id_uppercat/uppercats-only
             // query.
             $id = $row['id'];
-            assert(is_string($id));
             $catMap[$id] = $row;
         }
 
@@ -1590,12 +1561,11 @@ final readonly class CategoryService
             while ((bool) $uppercat) {
                 $upperList[] = $uppercat;
                 $nextUppercat = $catMap[$uppercat]['id_uppercat'] ?? null;
-                $uppercat = is_string($nextUppercat) ? $nextUppercat : null;
+                $uppercat = is_int($nextUppercat) ? $nextUppercat : null;
             }
 
             $newUppercats = implode(',', array_reverse($upperList));
             $catUppercats = $cat['uppercats'];
-            assert(is_string($catUppercats));
             if ($newUppercats !== $catUppercats) {
                 $datas[] = [
                     'id' => $id,
@@ -1638,10 +1608,9 @@ final readonly class CategoryService
         foreach ($this->repo->findCategoriesForMove($categoryIds) as $row) {
             $rowId = $row['id'];
             $rowUppercats = $row['uppercats'];
-            assert(is_string($rowId) && is_string($rowUppercats));
 
             $rowIdUppercat = $row['id_uppercat'];
-            $rowHasParent = $rowIdUppercat !== null && $rowIdUppercat !== '' && $rowIdUppercat !== '0' && $rowIdUppercat !== 0;
+            $rowHasParent = $rowIdUppercat !== null && $rowIdUppercat !== 0;
 
             $categories[$rowId] =
               [
@@ -1817,7 +1786,7 @@ final readonly class CategoryService
             foreach ($grantedGrps as $grantedGrp) {
                 $inserts[] = [
                     'group_id' => $grantedGrp,
-                    'cat_id' => $insertedId,
+                    'cat_id' => (int) $insertedId,
                 ];
             }
             $this->repo->massInsertGroupAccess($inserts);

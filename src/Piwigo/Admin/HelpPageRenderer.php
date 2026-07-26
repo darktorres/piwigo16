@@ -19,12 +19,7 @@ final class HelpPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        $selected = null;
-        if (! isset($_GET['section']) || ! is_string($_GET['section'])) {
-            $selected = 'add_photos';
-        } else {
-            $selected = $_GET['section'];
-        }
+        $selected = Request\HelpSectionRequest::fromGlobals()->section;
 
         // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
         // bug -- nothing had ever called CoreTabs::setContext() with

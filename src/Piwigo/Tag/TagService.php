@@ -79,7 +79,7 @@ final readonly class TagService
     public function getAllTags(HtmlRenderingInterface $htmlRenderer): array
     {
         $tags = [];
-        foreach ($this->repo->findAll() as $tag) {
+        foreach ($this->repo->findAllTags() as $tag) {
             $row = $tag->toArray();
             $row['name_raw'] = $tag->name;
             $row['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $tag->name, $row);

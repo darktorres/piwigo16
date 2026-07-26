@@ -24,8 +24,6 @@ use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Site\LocalSiteReader;
-use Piwigo\Tag\TagRepository;
-use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ServerRequestInterface;
@@ -113,7 +111,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
     }
 
-    private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
+    private static function activityService(): \Piwigo\Activity\ActivityService
     {
         return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
     }
@@ -481,7 +479,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         }
                     }
 
-                    self::activityService($conn)->record('album', $category_ids, 'add', [
+                    self::activityService()->record('album', $category_ids, 'add', [
                         'sync' => true,
                     ]);
 
@@ -557,7 +555,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
 
             if (count($to_delete) > 0) {
                 if (! $simulate) {
-                    self::categoryService()->deleteCategories($to_delete, self::activityService($conn), $this->urlService);
+                    self::categoryService()->deleteCategories($to_delete, self::activityService(), $this->urlService);
                     foreach ($to_delete_derivative_dirs as $to_delete_dir) {
                         if (is_dir($to_delete_dir)) {
                             new DerivativeCacheService()
@@ -776,7 +774,7 @@ SELECT id, path
                             $insert_links
                         );
 
-                    self::activityService($conn)->record('photo', $caddiables, 'add', [
+                    self::activityService()->record('photo', $caddiables, 'add', [
                         'sync' => true,
                     ]);
 
@@ -823,7 +821,7 @@ DELETE
             }
             if (count($to_delete_elements) > 0) {
                 if (! $simulate) {
-                    new ImageService(new ImageRepository($conn), self::activityService($conn))
+                    new ImageService(new ImageRepository($conn), self::activityService())
                         ->deleteElements($to_delete_elements, $this->urlService);
                 }
                 $counts['del_elements'] = count($to_delete_elements);
@@ -962,7 +960,7 @@ DELETE
             $datas = [];
             $tags_of = [];
 
-            $tagService = new TagService(new TagRepository($conn), self::permissionService(), self::activityService($conn));
+            $tagService = \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
 
             foreach ($files as $id => $element_infos) {
                 $data = $site_reader->get_element_metadata($element_infos);

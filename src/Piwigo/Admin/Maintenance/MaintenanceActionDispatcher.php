@@ -18,10 +18,7 @@ use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
-use Piwigo\Permission\PermissionService;
 use Piwigo\Session\SessionService;
-use Piwigo\Tag\TagRepository;
-use Piwigo\Tag\TagService;
 use Piwigo\Template\FileCombiner;
 
 /**
@@ -63,15 +60,6 @@ final class MaintenanceActionDispatcher
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
     ) {}
-
-    /**
-     * DRY extraction (Phase 1k DI-chain audit): the same PermissionService
-     * recipe was repeated verbatim at 3 sites in this file.
-     */
-    private static function permissionService(): PermissionService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
-    }
 
     /**
      * DRY extraction (Phase 1k DI-chain audit): the same CategoryService
@@ -145,7 +133,7 @@ final class MaintenanceActionDispatcher
 
             case 'delete_orphan_tags':
 
-                new TagService(new TagRepository($conn), self::permissionService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService())
+                \Piwigo\Bootstrap\CoreDomainAccessor::tagService()
                     ->deleteOrphanTags();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Delete orphan tags'), Lang::t('action successfully performed.')));
                 break;

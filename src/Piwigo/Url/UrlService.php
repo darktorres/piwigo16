@@ -17,7 +17,6 @@ use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Section\SectionContextRegistry;
-use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 
 /**
@@ -720,7 +719,7 @@ final class UrlService implements UrlServiceInterface
             }
 
             $tagConn = DbConnection::build();
-            $page['tags'] = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+            $page['tags'] = new TagService(\Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository($tagConn), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
                 ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
                 $this->htmlRenderer->pageNotFound($redirectService, Lang::t('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');

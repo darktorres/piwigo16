@@ -15,7 +15,6 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Search\Inflector\InflectorInterface;
 use Piwigo\Search\Projection\Search;
 use Piwigo\Session\SessionService;
-use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -404,7 +403,7 @@ final readonly class SearchService
         $tagsMode = is_array($tagsField) && is_string($tagsField['mode'] ?? null) ? $tagsField['mode'] : 'AND';
         if (isset($searchFields['tags']) && $tagsWords !== [] && (bool) ($displayFilters['tags']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            $tagService = $this->tagService ?? new TagService(new TagRepository(DbConnection::build()), $this->permissionService, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())));
+            $tagService = $this->tagService ?? new TagService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Tag\TagEntity::class), $this->permissionService, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())));
             $imageIdsForFilter['tags'] = array_values(array_map(intval(...), array_filter($tagService->getImageIdsForTags($tagsWords, $tagsMode), is_numeric(...))));
         }
 

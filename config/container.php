@@ -39,6 +39,8 @@ use Piwigo\Mail\MailService;
 use Piwigo\Routing\Router;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
+use Piwigo\Tag\TagEntity;
+use Piwigo\Tag\TagRepository;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\UserRepository;
@@ -227,4 +229,6 @@ return [
     SessionRepository::class => factory(static fn (EntityManagerInterface $em): SessionRepository => $em->getRepository(SessionEntity::class)),
 
     GroupRepository::class => factory(static fn (EntityManagerInterface $em): GroupRepository => $em->getRepository(GroupEntity::class)),
+
+    TagRepository::class => factory(static fn (EntityManagerInterface $em): TagRepository => $em->getRepository(TagEntity::class)),
 ];

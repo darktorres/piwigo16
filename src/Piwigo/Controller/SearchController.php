@@ -15,8 +15,6 @@ use Piwigo\Db\Tables;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Search\SearchService;
-use Piwigo\Tag\TagRepository;
-use Piwigo\Tag\TagService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -167,7 +165,7 @@ SELECT
             ];
         }
 
-        $tagService = new TagService(new TagRepository($conn), self::permissionService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService());
+        $tagService = \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
 
         if (count($tagService->getAvailableTags()) > 0) {
             $tag_ids = [];

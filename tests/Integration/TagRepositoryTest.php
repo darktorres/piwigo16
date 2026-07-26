@@ -7,6 +7,8 @@ namespace Piwigo\Tests\Integration;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
 
 final class TagRepositoryTest extends IntegrationTestCase
@@ -31,12 +33,12 @@ final class TagRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $this->repo = new TagRepository(DbConnection::build());
+        $this->repo = EntityManagerFactory::build(DbConnection::build())->getRepository(TagEntity::class);
     }
 
     public function test_find_all_returns_every_fixture_tag(): void
     {
-        $names = array_column($this->repo->findAll(), 'name');
+        $names = array_column($this->repo->findAllTags(), 'name');
         sort($names);
 
         self::assertSame(['family', 'nature', 'travel'], $names);

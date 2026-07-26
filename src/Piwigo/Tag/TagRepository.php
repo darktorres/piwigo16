@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
+use Doctrine\ORM\EntityRepository;
 use Piwigo\Core\Env;
-use Piwigo\Db\AbstractRepository;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 use Piwigo\Tag\Projection\Tag;
 
@@ -15,21 +16,25 @@ use Piwigo\Tag\Projection\Tag;
  * ported out of `include/functions_tag.inc.php` -- the Category/Image
  * domain blocker this class's docblock used to cite (task #343) no longer
  * applies now that both exist as typed modules (P19).
+ *
+ * @extends EntityRepository<TagEntity>
  */
-final class TagRepository extends AbstractRepository
+final class TagRepository extends EntityRepository
 {
     /**
+     * Named findAllTags(), not findAll() -- EntityRepository::findAll()
+     * returns list<TagEntity>, an incompatible override this class's own
+     * projection-shape return can't satisfy.
+     *
      * @return list<Tag>
      */
-    public function findAll(): array
+    public function findAllTags(): array
     {
-        $rows = $this->conn->createQueryBuilder()
-            ->select('*')
-            ->from(Tables::tags())
-            ->executeQuery()
-            ->fetchAllAssociative();
+        $entities = $this->createQueryBuilder('t')
+            ->getQuery()
+            ->getResult();
 
-        return array_map(Tag::fromRow(...), $rows);
+        return array_map(self::toProjection(...), $entities);
     }
 
     /**
@@ -51,28 +56,28 @@ final class TagRepository extends AbstractRepository
             return [];
         }
 
-        $qb = $this->conn->createQueryBuilder()
-            ->select('*')
-            ->from(Tables::tags());
+        $qb = $this->createQueryBuilder('t');
+        $orExpr = $qb->expr()
+            ->orX();
 
-        $whereClauses = [];
         if ($ids !== []) {
-            $whereClauses[] = 'id IN (' . implode(',', array_map(strval(...), $ids)) . ')';
+            $orExpr->add($qb->expr()->in('t.id', ':ids'));
+            $qb->setParameter('ids', array_map(intval(...), $ids));
         }
         if ($urlNames !== []) {
-            $qb->setParameter('urlNames', $urlNames, \Doctrine\DBAL\ArrayParameterType::STRING);
-            $whereClauses[] = 'url_name IN (:urlNames)';
+            $orExpr->add($qb->expr()->in('t.urlName', ':urlNames'));
+            $qb->setParameter('urlNames', $urlNames);
         }
         if ($names !== []) {
-            $qb->setParameter('names', $names, \Doctrine\DBAL\ArrayParameterType::STRING);
-            $whereClauses[] = 'name IN (:names)';
+            $orExpr->add($qb->expr()->in('t.name', ':names'));
+            $qb->setParameter('names', $names);
         }
 
-        $rows = $qb->where(implode(' OR ', $whereClauses))
-            ->executeQuery()
-            ->fetchAllAssociative();
+        $entities = $qb->where($orExpr)
+            ->getQuery()
+            ->getResult();
 
-        return array_map(Tag::fromRow(...), $rows);
+        return array_map(self::toProjection(...), $entities);
     }
 
     /**
@@ -80,7 +85,9 @@ final class TagRepository extends AbstractRepository
      * images. $fandFSql is a raw, already-built SQL WHERE-continuation
      * fragment (PermissionService::getSqlConditionFandF()) -- same
      * "hand-written SQL on complex dynamic queries" allowance as
-     * CalendarRepository::findImageIds()'s own fragment params.
+     * CalendarRepository::findImageIds()'s own fragment params. Also
+     * cross-domain (image_category isn't Tag's own table) -- plain DBAL
+     * via the entity manager's own connection, not DQL.
      *
      * @param array<int, int|string> $tagIds empty means "no tag_id filter" (every tag counted)
      * @return array<int, int> [tag_id => counter]
@@ -105,7 +112,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
   GROUP BY tag_id';
 
         $counters = [];
-        foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
+        foreach ($this->getEntityManager()->getConnection()->executeQuery($query)->fetchAllAssociative() as $row) {
             $counters[is_numeric($row['tag_id']) ? (int) $row['tag_id'] : 0] = is_numeric($row['counter']) ? (int) $row['counter'] : 0;
         }
 
@@ -122,16 +129,17 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
      */
     public function findByIdsOrAll(array $ids): array
     {
-        $query = 'SELECT * FROM ' . Tables::tags();
+        $qb = $this->createQueryBuilder('t');
 
         if (count($ids) < 1000) {
-            $query .= ' WHERE id IN (' . implode(',', $ids) . ')';
+            $qb->where($qb->expr()->in('t.id', ':ids'))
+                ->setParameter('ids', $ids);
         }
 
-        $rows = $this->conn->executeQuery($query)
-            ->fetchAllAssociative();
+        $entities = $qb->getQuery()
+            ->getResult();
 
-        return array_map(Tag::fromRow(...), $rows);
+        return array_map(self::toProjection(...), $entities);
     }
 
     /**
@@ -160,7 +168,9 @@ SELECT t.*, count(*) AS counter
             ? 'counter DESC LIMIT ' . $maxTags
             : 'NULL';
 
-        return $this->conn->executeQuery($query)
+        return $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery($query)
             ->fetchAllAssociative();
     }
 
@@ -173,9 +183,11 @@ SELECT t.*, count(*) AS counter
      */
     public function findImageIdsForTags(string $joinSql, string $whereSql, string $groupHavingSql, string $orderBySql): array
     {
-        $ids = $this->conn->executeQuery(
-            'SELECT id FROM ' . Tables::images() . ' i ' . $joinSql . ' ' . $whereSql . ' ' . $groupHavingSql . ' ' . $orderBySql
-        )->fetchFirstColumn();
+        $ids = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery(
+                'SELECT id FROM ' . Tables::images() . ' i ' . $joinSql . ' ' . $whereSql . ' ' . $groupHavingSql . ' ' . $orderBySql
+            )->fetchFirstColumn();
 
         return array_values(array_map(intval(...), array_filter($ids, is_numeric(...))));
     }
@@ -199,7 +211,7 @@ SELECT
     AND lastmodified < SUBDATE(NOW(), INTERVAL 1 DAY)
 ;';
         $orphan_tags = [];
-        foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
+        foreach ($this->getEntityManager()->getConnection()->executeQuery($query)->fetchAllAssociative() as $row) {
             $orphan_tags[] = [
                 'id' => is_scalar($row['id']) ? (string) $row['id'] : '',
                 'name' => is_scalar($row['name']) ? (string) $row['name'] : '',
@@ -214,15 +226,26 @@ SELECT
      */
     public function findTagIdsByImageIds(array $imageIds): array
     {
-        $query = '
-SELECT
-    image_id,
-    tag_id
-  FROM ' . Tables::imageTag() . '
-  WHERE image_id IN (' . implode(',', $imageIds) . ')
-;';
-        return $this->conn->executeQuery($query)
-            ->fetchAllAssociative();
+        if ($imageIds === []) {
+            return [];
+        }
+
+        $entities = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('it')
+            ->from(ImageTagEntity::class, 'it')
+            ->where('it.imageId IN (:imageIds)')
+            ->setParameter('imageIds', array_map(intval(...), $imageIds))
+            ->getQuery()
+            ->getResult();
+
+        return array_map(
+            static fn (ImageTagEntity $it): array => [
+                'image_id' => $it->imageId,
+                'tag_id' => $it->tagId,
+            ],
+            $entities,
+        );
     }
 
     /**
@@ -231,14 +254,20 @@ SELECT
      */
     public function findImageIdsForTagIds(array $tagIds): array
     {
-        $query = '
-SELECT
-    image_id
-  FROM ' . Tables::imageTag() . '
-  WHERE tag_id IN (' . implode(',', $tagIds) . ')
-;';
-        // image_id is Tables::imageTag()'s NOT NULL foreign key.
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery($query)->fetchFirstColumn());
+        if ($tagIds === []) {
+            return [];
+        }
+
+        $entities = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('it')
+            ->from(ImageTagEntity::class, 'it')
+            ->where('it.tagId IN (:tagIds)')
+            ->setParameter('tagIds', array_map(intval(...), $tagIds))
+            ->getQuery()
+            ->getResult();
+
+        return array_map(static fn (ImageTagEntity $it): int => $it->imageId, $entities);
     }
 
     /**
@@ -246,11 +275,18 @@ SELECT
      */
     public function deleteImageTagByTagIds(array $tagIds): void
     {
-        $this->conn->executeStatement('
-DELETE
-  FROM ' . Tables::imageTag() . '
-  WHERE tag_id IN (' . implode(',', $tagIds) . ')
-;');
+        if ($tagIds === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(ImageTagEntity::class, 'it')
+            ->where('it.tagId IN (:tagIds)')
+            ->setParameter('tagIds', array_map(intval(...), $tagIds))
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -259,11 +295,18 @@ DELETE
      */
     public function deleteImageTagByImageIds(array $imageIds): void
     {
-        $this->conn->executeStatement('
-DELETE
-  FROM ' . Tables::imageTag() . '
-  WHERE image_id IN (' . implode(',', $imageIds) . ')
-;');
+        if ($imageIds === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(ImageTagEntity::class, 'it')
+            ->where('it.imageId IN (:imageIds)')
+            ->setParameter('imageIds', array_map(intval(...), $imageIds))
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -273,12 +316,20 @@ DELETE
      */
     public function deleteImageTagByImageAndTagIds(array $imageIds, array $tagIds): void
     {
-        $this->conn->executeStatement('
-DELETE
-  FROM ' . Tables::imageTag() . '
-  WHERE image_id IN (' . implode(',', $imageIds) . ')
-    AND tag_id IN (' . implode(',', $tagIds) . ')
-;');
+        if ($imageIds === [] || $tagIds === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(ImageTagEntity::class, 'it')
+            ->where('it.imageId IN (:imageIds)')
+            ->andWhere('it.tagId IN (:tagIds)')
+            ->setParameter('imageIds', array_values(array_map(intval(...), $imageIds)))
+            ->setParameter('tagIds', array_values(array_map(intval(...), $tagIds)))
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -286,37 +337,36 @@ DELETE
      */
     public function deleteByIds(array $tagIds): void
     {
-        $this->conn->executeStatement('
-DELETE
-  FROM ' . Tables::tags() . '
-  WHERE id IN (' . implode(',', $tagIds) . ')
-;');
+        if ($tagIds === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(TagEntity::class, 't')
+            ->where('t.id IN (:tagIds)')
+            ->setParameter('tagIds', array_map(intval(...), $tagIds))
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     public function findIdByName(string $name): ?int
     {
-        $id = $this->conn->createQueryBuilder()
-            ->select('id')
-            ->from(Tables::tags())
-            ->where('name = :name')
-            ->setParameter('name', $name)
-            ->executeQuery()
-            ->fetchOne();
+        $entity = $this->findOneBy([
+            'name' => $name,
+        ]);
 
-        return is_numeric($id) ? (int) $id : null;
+        return $entity?->id;
     }
 
     public function findIdByUrlName(string $urlName): ?int
     {
-        $id = $this->conn->createQueryBuilder()
-            ->select('id')
-            ->from(Tables::tags())
-            ->where('url_name = :urlName')
-            ->setParameter('urlName', $urlName)
-            ->executeQuery()
-            ->fetchOne();
+        $entity = $this->findOneBy([
+            'urlName' => $urlName,
+        ]);
 
-        return is_numeric($id) ? (int) $id : null;
+        return $entity?->id;
     }
 
     /**
@@ -326,7 +376,9 @@ DELETE
      */
     public function findIdByWhereFragment(string $whereSql): ?int
     {
-        $id = $this->conn->executeQuery('
+        $id = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery('
 SELECT id
   FROM ' . Tables::tags() . '
   WHERE ' . $whereSql . '
@@ -340,19 +392,15 @@ SELECT id
         // lastmodified set explicitly rather than left to the schema's own
         // DEFAULT CURRENT_TIMESTAMP, which reads the real DB-server clock --
         // invisible to Env::now()'s PIWIGO_TEST_NOW freeze.
-        $this->conn->createQueryBuilder()
-            ->insert(Tables::tags())
-            ->values([
-                'name' => ':name',
-                'url_name' => ':urlName',
-                'lastmodified' => ':lastmodified',
-            ])
-            ->setParameter('name', $name)
-            ->setParameter('urlName', $urlName)
-            ->setParameter('lastmodified', Env::now()->format('Y-m-d H:i:s'))
-            ->executeStatement();
+        $entity = new TagEntity($name, $urlName, Env::now()->format('Y-m-d H:i:s'));
 
-        return (int) $this->conn->lastInsertId();
+        $em = $this->getEntityManager();
+        $em->persist($entity);
+        $em->flush();
+
+        assert($entity->id !== null);
+
+        return $entity->id;
     }
 
     /**
@@ -362,11 +410,16 @@ SELECT id
      * `create_tag()`'s `\Piwigo\Db\MysqliDb::singleInsert()`) leaves it to the schema's DEFAULT
      * CURRENT_TIMESTAMP. Preserved as-is rather than unified with
      * `insert()`: a real behavioral difference between the two original
-     * functions, not an oversight to silently "fix" here.
+     * functions, not an oversight to silently "fix" here. Stays plain DBAL
+     * (bypassing the entity) -- a Doctrine persist() always writes every
+     * mapped column, so it can't leave lastmodified to the DB's own
+     * DEFAULT the way this raw INSERT does.
      */
     public function insertWithoutTimestamp(string $name, string $urlName): int
     {
-        $this->conn->createQueryBuilder()
+        $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
             ->insert(Tables::tags())
             ->values([
                 'name' => ':name',
@@ -376,7 +429,9 @@ SELECT id
             ->setParameter('urlName', $urlName)
             ->executeStatement();
 
-        return (int) $this->conn->lastInsertId();
+        return (int) $this->getEntityManager()
+            ->getConnection()
+            ->lastInsertId();
     }
 
     /**
@@ -390,7 +445,9 @@ SELECT id
      */
     public function fetchTagListRows(string $query): array
     {
-        return $this->conn->executeQuery($query)
+        return $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery($query)
             ->fetchAllAssociative();
     }
 
@@ -403,7 +460,14 @@ SELECT id
             return;
         }
 
-        $this->batchWriter()
+        new BatchWriter($this->getEntityManager()->getConnection())
             ->massInsert(Tables::imageTag(), array_keys($inserts[0]), $inserts);
+    }
+
+    private static function toProjection(TagEntity $entity): Tag
+    {
+        assert($entity->id !== null);
+
+        return new Tag($entity->id, $entity->name, $entity->urlName, $entity->lastmodified);
     }
 }

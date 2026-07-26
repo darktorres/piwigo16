@@ -13,7 +13,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Filter\FilterService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 
 /**
@@ -67,7 +66,7 @@ final class MenubarRenderer
         // Built once, reused below -- was the same PermissionService recipe
         // repeated verbatim at 2 sites in this method (Phase 1k DI-chain audit).
         $permissionService = new PermissionService(new PermissionRepository($conn), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), new CategoryRepository($conn));
-        $tagService = new TagService(new TagRepository($conn), $permissionService, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+        $tagService = new TagService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Tag\TagEntity::class), $permissionService, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
         $categoryService = new CategoryService(new CategoryRepository($conn), $permissionService);
 
         $menu = new BlockManager('menubar');

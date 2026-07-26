@@ -134,11 +134,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         ];
 
         // convert disk_usage from kB to mB
-        // InstallationStats::getGeneralStatistics() is typed
-        // array<string, mixed>, so 'disk_usage' comes back mixed even
-        // though it's always a numeric byte count in practice.
-        $diskUsageKb = $piwigoInfos['general_stats']['disk_usage'];
-        $diskUsageKb = is_numeric($diskUsageKb) ? (float) $diskUsageKb : 0.0;
+        $diskUsageKb = (float) $piwigoInfos['general_stats']['disk_usage'];
         $piwigoInfos['general_stats']['disk_usage'] = intval($diskUsageKb / 1024.0);
 
         $piwigoInfos['general_stats']['installed_on'] = InstallationStats::getInstallationDate();

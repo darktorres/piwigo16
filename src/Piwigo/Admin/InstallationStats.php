@@ -18,11 +18,13 @@ use Piwigo\Db\Tables;
 final class InstallationStats
 {
     /**
-     * @return array<string, mixed>
+     * @return array{nb_photos: int, nb_categories: int, nb_tags: int,
+     *   nb_image_tag: int, nb_users: int, nb_admins: int, nb_groups: int,
+     *   nb_rates: int, nb_views: int, disk_usage: int, nb_formats: int,
+     *   formats_disk_usage: int}
      */
     public static function getGeneralStatistics(): array
     {
-        $stats = [];
         $conn = DbConnection::build();
 
         $query = '
@@ -30,35 +32,35 @@ SELECT COUNT(*)
   FROM ' . Tables::images() . '
 ;';
         $row = $conn->fetchNumeric($query);
-        $stats['nb_photos'] = $row !== false ? $row[0] : 0;
+        $nb_photos = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
 
         $query = '
 SELECT COUNT(*)
   FROM ' . Tables::categories() . '
 ;';
         $row = $conn->fetchNumeric($query);
-        $stats['nb_categories'] = $row !== false ? $row[0] : 0;
+        $nb_categories = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
 
         $query = '
 SELECT COUNT(*)
   FROM ' . Tables::tags() . '
 ;';
         $row = $conn->fetchNumeric($query);
-        $stats['nb_tags'] = $row !== false ? $row[0] : 0;
+        $nb_tags = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
 
         $query = '
 SELECT COUNT(*)
   FROM ' . Tables::imageTag() . '
 ;';
         $row = $conn->fetchNumeric($query);
-        $stats['nb_image_tag'] = $row !== false ? $row[0] : 0;
+        $nb_image_tag = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
 
         $query = '
 SELECT COUNT(*)
   FROM ' . Tables::users() . '
 ;';
         $row = $conn->fetchNumeric($query);
-        $stats['nb_users'] = $row !== false ? $row[0] : 0;
+        $nb_users = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
 
         $query = '
 SELECT
@@ -67,22 +69,23 @@ SELECT
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
         $row = $conn->fetchNumeric($query);
-        $stats['nb_admins'] = $row !== false ? $row[0] : 0;
+        $nb_admins = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
 
         $query = '
 SELECT COUNT(*)
   FROM `' . Tables::groups() . '`
 ;';
         $row = $conn->fetchNumeric($query);
-        $stats['nb_groups'] = $row !== false ? $row[0] : 0;
+        $nb_groups = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
 
         $query = '
 SELECT COUNT(*)
   FROM ' . Tables::rate() . '
 ;';
         $row = $conn->fetchNumeric($query);
-        $stats['nb_rates'] = $row !== false ? $row[0] : 0;
+        $nb_rates = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
 
+        // SUM() returns NULL (not '0') when the table has no matching rows.
         $query = '
 SELECT
     SUM(nb_pages)
@@ -90,7 +93,7 @@ SELECT
   WHERE month IS NULL
 ;';
         $row = $conn->fetchNumeric($query);
-        $stats['nb_views'] = $row !== false ? $row[0] : 0;
+        $nb_views = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
 
         $query = '
 SELECT
@@ -98,7 +101,7 @@ SELECT
   FROM ' . Tables::images() . '
 ;';
         $row = $conn->fetchNumeric($query);
-        $stats['disk_usage'] = $row !== false ? $row[0] : 0;
+        $images_disk_usage = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
 
         $query = '
 SELECT
@@ -107,24 +110,34 @@ SELECT
   FROM ' . Tables::imageFormat() . '
 ;';
         $row = $conn->fetchNumeric($query);
-        if ($row !== false) {
-            $stats['nb_formats'] = $row[0] ?? null;
-            $stats['formats_disk_usage'] = $row[1] ?? null;
-        } else {
-            $stats['nb_formats'] = 0;
-            $stats['formats_disk_usage'] = 0;
-        }
+        $nb_formats = ($row !== false && is_numeric($row[0] ?? null)) ? (int) $row[0] : 0;
+        $formats_disk_usage = ($row !== false && is_numeric($row[1] ?? null)) ? (int) $row[1] : 0;
 
-        // SUM() returns NULL (not '0') when the table has no matching rows.
-        $disk_usage = $stats['disk_usage'];
-        $formats_disk_usage = $stats['formats_disk_usage'];
-        $stats['disk_usage'] = (is_numeric($disk_usage) ? (int) $disk_usage : 0)
-            + (is_numeric($formats_disk_usage) ? (int) $formats_disk_usage : 0);
-
-        return $stats;
+        return [
+            'nb_photos' => $nb_photos,
+            'nb_categories' => $nb_categories,
+            'nb_tags' => $nb_tags,
+            'nb_image_tag' => $nb_image_tag,
+            'nb_users' => $nb_users,
+            'nb_admins' => $nb_admins,
+            'nb_groups' => $nb_groups,
+            'nb_rates' => $nb_rates,
+            'nb_views' => $nb_views,
+            'disk_usage' => $images_disk_usage + $formats_disk_usage,
+            'nb_formats' => $nb_formats,
+            'formats_disk_usage' => $formats_disk_usage,
+        ];
     }
 
-    public static function getInstallationDate(): mixed
+    /**
+     * registration_date/min_registration_date/date_available are all
+     * DATETIME columns, so every real $candidate assignment below is
+     * string|null (this driver's fetch convention for a DATETIME column,
+     * same as e.g. Category\Projection\Category::$lastmodified) --
+     * narrowed to a real ?string at each assignment rather than trusting
+     * that blindly.
+     */
+    public static function getInstallationDate(): ?string
     {
         $candidate = null;
 
@@ -141,7 +154,8 @@ SELECT
 ;';
         $users = $conn->fetchAllAssociative($query);
         if (count($users) > 0) {
-            $candidate = $users[0]['registration_date'];
+            $registration_date = $users[0]['registration_date'];
+            $candidate = is_string($registration_date) ? $registration_date : null;
         }
 
         if (in_array($candidate, [null, false, 0, '0', '', []], true) or ! is_string($candidate) or strtotime($candidate) < strtotime($piwigo_origins)) {
@@ -153,7 +167,8 @@ SELECT
 ;';
             $users = $conn->fetchAllAssociative($query);
             if (count($users) > 0) {
-                $candidate = $users[0]['min_registration_date'];
+                $min_registration_date = $users[0]['min_registration_date'];
+                $candidate = is_string($min_registration_date) ? $min_registration_date : null;
             }
         }
 
@@ -168,7 +183,8 @@ SELECT
 ;';
             $images = $conn->fetchAllAssociative($query);
             if (count($images) > 0) {
-                $candidate = $images[0]['date_available'];
+                $date_available = $images[0]['date_available'];
+                $candidate = is_string($date_available) ? $date_available : null;
             }
         }
 

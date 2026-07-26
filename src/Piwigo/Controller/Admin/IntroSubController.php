@@ -208,15 +208,8 @@ SELECT COUNT(*)
 
         $stats = InstallationStats::getGeneralStatistics();
 
-        // InstallationStats::getGeneralStatistics() is declared to return
-        // array<string, mixed>, so PHPStan can't see that these two keys
-        // are already coerced from the SUM() DB values to int within that
-        // method; narrow locally.
-        $disk_usage = $stats['disk_usage'];
-        $disk_usage = is_numeric($disk_usage) ? (float) $disk_usage : 0.0;
-
-        $nb_views = $stats['nb_views'];
-        $nb_views = is_numeric($nb_views) ? (float) $nb_views : 0.0;
+        $disk_usage = (float) $stats['disk_usage'];
+        $nb_views = (float) $stats['nb_views'];
 
         $du_decimals = 1;
         $du_gb = $disk_usage / (1024.0 * 1024.0);

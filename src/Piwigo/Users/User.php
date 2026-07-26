@@ -27,6 +27,12 @@ namespace Piwigo\Users;
 final readonly class User
 {
     /**
+     * $internalStatus has zero real readers/writers outside this class
+     * today (reserved slot, same rationale as Core\PageState::$bodyData).
+     * $preferences' values are genuinely arbitrary by design -- see
+     * PreferencesService::updateParam()'s own docblock (real callers pass
+     * bool/int/array, not just strings).
+     *
      * @param array<string, mixed> $internalStatus
      * @param array<string, mixed> $preferences
      * @param array<string, mixed> $rawAttributes

@@ -416,7 +416,11 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     }
 
     /**
-     * @return array<string, mixed>|false false if the default user row
+     * UserInfo::toArray()'s own shape, minus the 5 keys unset below
+     * (user_id/status/registration_date/last_visit/last_visit_from_history
+     * -- caller-specific, re-added by createUserInfos() itself).
+     *
+     * @return array{nb_image_page: int, language: string, expand: bool, show_nb_comments: bool, show_nb_hits: bool, recent_period: int, theme: string, enabled_high: bool, level: int, activation_key: ?string, activation_key_expire: ?string, lastmodified: string, preferences: array<string, mixed>|null}|false false if the default user row
      *   doesn't exist
      */
     public function getDefaultUserInfo(): array|false
@@ -446,10 +450,17 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // {@see \Piwigo\Users\Projection\UserInfo::fromRow()} already
         // returns those 4 as real bool, once, before this array is even
         // cached, so there's nothing left to conditionally convert.
-        /** @var array<string, mixed> $defaultUserCached */
+        /** @var array{nb_image_page: int, language: string, expand: bool, show_nb_comments: bool, show_nb_hits: bool, recent_period: int, theme: string, enabled_high: bool, level: int, activation_key: ?string, activation_key_expire: ?string, lastmodified: string, preferences: array<string, mixed>|null} $defaultUserCached */
         return $defaultUserCached;
     }
 
+    /**
+     * Generic dynamic-key reader over getDefaultUserInfo()'s own now-typed
+     * shape -- $valueName is a runtime key name, so the real value type
+     * varies per call (both real callers request 'theme'/'language',
+     * always strings, but the method itself isn't limited to those 2
+     * keys), same rationale as ConfigService::confGetParam().
+     */
     public function getDefaultUserValue(string $valueName, mixed $default): mixed
     {
         $defaultUser = $this->getDefaultUserInfo();
@@ -556,6 +567,10 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     /**
      * Finds informations related to the user identifier. Same as
      * getUserData() but with additional guest-normalization + theme checks.
+     * Same "full user data bag" rationale as User::toUserArray()/
+     * $rawAttributes -- a growing merge of many heterogeneous sources
+     * (UserInfo row, computed theme/status fields, ...), not a single
+     * reusable domain shape.
      *
      * @return array<string, mixed>
      */
@@ -1027,6 +1042,12 @@ DELETE FROM ' . Tables::favorites() . '
      *    @option bool show_nb_comments (optional)
      *    @option bool show_nb_hits (optional)
      *    @option bool enabled_high (optional)
+     *
+     * $params is Ws-method-parameter-shaped raw input (see the assert()
+     * calls below already narrowing individual keys) -- the @option list
+     * above is exactly what a future Phase 4 Request DTO would formalize;
+     * not retyped here to stay in scope for that phase specifically.
+     *
      * @return mixed[]
      */
     public function checkAndSaveUserInfos(array $params): array

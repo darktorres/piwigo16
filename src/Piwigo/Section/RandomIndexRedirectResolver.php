@@ -16,7 +16,7 @@ namespace Piwigo\Section;
 final class RandomIndexRedirectResolver
 {
     /**
-     * @param array<mixed, mixed> $redirectCandidates url => condition map,
+     * @param array<string, string> $redirectCandidates url => condition map,
      *   as stored in \Piwigo\Config\CurrentConfig::randomIndexRedirect()
      * @return list<string> urls whose condition matched
      */
@@ -24,9 +24,6 @@ final class RandomIndexRedirectResolver
     {
         $matches = [];
         foreach ($redirectCandidates as $url => $condition) {
-            if (! is_string($url)) {
-                continue;
-            }
             if ($this->conditionMatches($condition)) {
                 $matches[] = $url;
             }
@@ -34,7 +31,7 @@ final class RandomIndexRedirectResolver
         return $matches;
     }
 
-    private function conditionMatches(mixed $condition): bool
+    private function conditionMatches(string $condition): bool
     {
         if ($condition === '' || $condition === 'return true;') {
             return true;

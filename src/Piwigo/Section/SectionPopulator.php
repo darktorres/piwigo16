@@ -214,7 +214,7 @@ final readonly class SectionPopulator
 
         // parse_section_url()'s own return type is the generic array<string, mixed>
         // (functions_url.inc.php), so $page['category'] loses the more precise
-        // array<string, mixed> shape that get_cat_info() actually returns;
+        // shape that CategoryService::getCategoryInfo() actually returns;
         // re-narrow it once here, unconditionally, so it stays defined (and
         // PHPStan-visible) for every later use in this method, not just inside
         // the 'categories' section branch below.
@@ -222,11 +222,12 @@ final readonly class SectionPopulator
         if (isset($page['category']) and is_array($page['category'])) {
             // same cross-file $page[...] false-narrowing as the tag_ids block below
             // -- PHPStan infers list<string> for $page['category'] from an
-            // unrelated write elsewhere in the codebase, but get_cat_info() (this
-            // key's real, original source) returns array<string, mixed>, which is
-            // what every downstream $page_category['...'] read in this method
-            // relies on (see the class-level comment above).
-            /** @var array<string, mixed> $page_category */
+            // unrelated write elsewhere in the codebase, but
+            // CategoryService::getCategoryInfo() (this key's real, original
+            // source) returns the shape below, which is what every downstream
+            // $page_category['...'] read in this method relies on (see the
+            // class-level comment above).
+            /** @var array{id: int, name: string, id_uppercat: ?int, comment: ?string, dir: ?string, rank: ?int, status: string, site_id: ?int, visible: bool, representative_picture_id: ?int, uppercats: string, commentable: bool, global_rank: ?string, image_order: ?string, permalink: ?string, lastmodified: string, upper_names: list<array{id: int, name: string, permalink: ?string}>} $page_category */
             $page_category = $page['category'];
         }
 
@@ -723,10 +724,10 @@ SELECT id
 
         // title update
         if (isset($page['title'])) {
-            // getGalleryHomeUrl() is declared to return `mixed`
-            // (Url\UrlService); every real branch of its body actually
-            // returns a string, so this narrows locally rather than
-            // widening this concatenation's context
+            // getGalleryHomeUrl() now declares a real string return (this
+            // mixed-elimination pass) -- the is_string() guard below is a
+            // leftover from before that narrow, left for the final cleanup
+            // pass rather than touched here.
             $gallery_home_url = $this->urlService->getGalleryHomeUrl();
             $gallery_home_url = is_string($gallery_home_url) ? $gallery_home_url : '';
             $page['section_title'] = '<a href="' . $gallery_home_url . '">' . Lang::t('Home') . '</a>';

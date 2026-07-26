@@ -63,33 +63,17 @@ final class CatPermPageRenderer
         // |                           form submission                         |
         // +-------------------------------------------------------------------+
 
-        if ($_POST !== []) {
+        $catPermSubmit = Request\CatPermSubmitRequest::fromGlobals();
+        if ($catPermSubmit->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
-            // the status <select> always submits this field; fall back to an empty
-            // string (never matches 'public'/'private') on malformed input
-            $post_status = isset($_POST['status']) && is_string($_POST['status']) ? $_POST['status'] : '';
+            $post_status = $catPermSubmit->status;
             $current_status = $category['status'];
-            $apply_on_sub = isset($_POST['apply_on_sub']);
+            $apply_on_sub = $catPermSubmit->applyOnSub;
 
-            $post_groups = [];
-            if (isset($_POST['groups']) && is_array($_POST['groups'])) {
-                foreach ($_POST['groups'] as $raw_group_id) {
-                    if (is_numeric($raw_group_id)) {
-                        $post_groups[] = (int) $raw_group_id;
-                    }
-                }
-            }
-
-            $post_users = [];
-            if (isset($_POST['users']) && is_array($_POST['users'])) {
-                foreach ($_POST['users'] as $raw_user_id) {
-                    if (is_numeric($raw_user_id)) {
-                        $post_users[] = (int) $raw_user_id;
-                    }
-                }
-            }
+            $post_groups = $catPermSubmit->groups;
+            $post_users = $catPermSubmit->users;
 
             \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()->setCategoryPermissions($page['cat'], $current_status, $post_status, $apply_on_sub, $post_groups, $post_users);
             $category['status'] = $post_status;

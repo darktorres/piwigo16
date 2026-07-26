@@ -41,12 +41,13 @@ final readonly class PermalinksRequest
     }
 
     /**
-     * @param array<string, mixed> $get
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $get
+     * @param array<int|string, mixed> $post
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()->validate('cat_id', $post, false, ValidationPattern::ID);
+        new InputValidator()
+            ->validate('cat_id', $post, false, ValidationPattern::ID);
 
         $post_cat_id = isset($post['cat_id']) && is_numeric($post['cat_id']) ? (int) $post['cat_id'] : 0;
 

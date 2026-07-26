@@ -38,15 +38,17 @@ final readonly class UserPermSubmitRequest
     }
 
     /**
-     * @param array<string, mixed> $get
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $get
+     * @param array<int|string, mixed> $post
      */
     public static function fromArrays(array $get, array $post): self
     {
         $isSubmitted = $post !== [];
         if ($isSubmitted) {
-            new InputValidator()->validate('cat_true', $post, true, ValidationPattern::ID);
-            new InputValidator()->validate('cat_false', $post, true, ValidationPattern::ID);
+            new InputValidator()
+                ->validate('cat_true', $post, true, ValidationPattern::ID);
+            new InputValidator()
+                ->validate('cat_false', $post, true, ValidationPattern::ID);
         }
 
         $post_cat_true = $post['cat_true'] ?? null;

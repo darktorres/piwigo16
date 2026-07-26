@@ -222,7 +222,7 @@ SELECT id,name,`rank`,status, visible, uppercats, lastmodified
          * `array<string, mixed>` rather than forced into a shape PHPStan
          * can't express without a named recursive type alias.
          *
-         * @var array<string, mixed> $associatedTree
+         * @var array<string, mixed>
          */
         $associatedTree = [];
 

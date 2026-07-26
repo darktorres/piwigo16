@@ -36,7 +36,7 @@ final readonly class PluginsNewRequest
     }
 
     /**
-     * @param array<string, mixed> $get
+     * @param array<int|string, mixed> $get
      */
     public static function fromArray(array $get): self
     {

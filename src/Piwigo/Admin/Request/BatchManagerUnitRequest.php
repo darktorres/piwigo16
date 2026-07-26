@@ -30,7 +30,8 @@ use Piwigo\Validation\InputValidator;
 final readonly class BatchManagerUnitRequest
 {
     /**
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $post
+     * @param array<int|string, mixed> $selection
      */
     private function __construct(
         public bool $isSubmitted,
@@ -52,15 +53,16 @@ final readonly class BatchManagerUnitRequest
     }
 
     /**
-     * @param array<string, mixed> $get
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $get
+     * @param array<int|string, mixed> $post
      */
     public static function fromArrays(array $get, array $post): self
     {
         $is_submitted = isset($post['submit']);
         $element_ids = '';
         if ($is_submitted) {
-            new InputValidator()->validate('element_ids', $post, false, '/^\d+(,\d+)*$/');
+            new InputValidator()
+                ->validate('element_ids', $post, false, '/^\d+(,\d+)*$/');
             $element_ids_raw = $post['element_ids'] ?? null;
             $element_ids = is_string($element_ids_raw) ? $element_ids_raw : '';
         }
@@ -68,7 +70,8 @@ final readonly class BatchManagerUnitRequest
         $nb_photos_deleted_present = isset($post['nb_photos_deleted']);
         $nb_photos_deleted = 0;
         if ($nb_photos_deleted_present) {
-            new InputValidator()->validate('nb_photos_deleted', $post, false, '/^\d+$/');
+            new InputValidator()
+                ->validate('nb_photos_deleted', $post, false, '/^\d+$/');
             $nb_photos_deleted = is_numeric($post['nb_photos_deleted']) ? (int) $post['nb_photos_deleted'] : 0;
         }
 
@@ -77,7 +80,7 @@ final readonly class BatchManagerUnitRequest
 
         $selection_raw = $post['selection'] ?? null;
         $selection_present = isset($post['selection']) && is_array($selection_raw);
-        $selection = $selection_present && is_array($selection_raw) ? $selection_raw : [];
+        $selection = $selection_present ? $selection_raw : [];
 
         $display_raw = $get['display'] ?? null;
         $display_requested = isset($get['display']) && $display_raw !== '' && $display_raw !== '0';

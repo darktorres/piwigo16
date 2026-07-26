@@ -36,7 +36,7 @@ final readonly class AlbumNotificationSubmitRequest
     }
 
     /**
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $post
      */
     public static function fromArray(array $post): self
     {
@@ -49,7 +49,8 @@ final readonly class AlbumNotificationSubmitRequest
         $post_users = $post['users'] ?? null;
         $users = [];
         if ($who === 'users' and is_array($post_users) and count($post_users) > 0) {
-            new InputValidator()->validate('users', $post, true, \Piwigo\Core\ValidationPattern::ID);
+            new InputValidator()
+                ->validate('users', $post, true, \Piwigo\Core\ValidationPattern::ID);
 
             foreach ($post_users as $post_user_id) {
                 if (is_string($post_user_id)) {
@@ -60,7 +61,8 @@ final readonly class AlbumNotificationSubmitRequest
 
         $group = $post['group'] ?? null;
         if ($who === 'group' and ! in_array($group, [null, false, 0, '0', '', []], true)) {
-            new InputValidator()->validate('group', $post, false, \Piwigo\Core\ValidationPattern::ID);
+            new InputValidator()
+                ->validate('group', $post, false, \Piwigo\Core\ValidationPattern::ID);
         }
 
         return new self(

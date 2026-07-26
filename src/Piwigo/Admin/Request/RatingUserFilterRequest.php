@@ -32,7 +32,7 @@ final readonly class RatingUserFilterRequest
     }
 
     /**
-     * @param array<string, mixed> $source
+     * @param array<int|string, mixed> $source
      */
     public static function fromArray(array $source, int $defaultConsensusTopNumber): self
     {

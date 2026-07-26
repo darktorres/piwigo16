@@ -28,12 +28,14 @@ final readonly class LanguagesInstalledActionRequest
     }
 
     /**
-     * @param array<string, mixed> $source
+     * @param array<int|string, mixed> $source
      */
     public static function fromArray(array $source, string $languageIdPattern): self
     {
-        new InputValidator()->validate('action', $source, false, '/^(activate|deactivate|set_default|delete)$/');
-        new InputValidator()->validate('language', $source, false, $languageIdPattern);
+        new InputValidator()
+            ->validate('action', $source, false, '/^(activate|deactivate|set_default|delete)$/');
+        new InputValidator()
+            ->validate('language', $source, false, $languageIdPattern);
 
         $action = $source['action'] ?? null;
         $language_id = $source['language'] ?? null;

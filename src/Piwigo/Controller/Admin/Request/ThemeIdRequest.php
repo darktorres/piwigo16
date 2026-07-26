@@ -42,7 +42,10 @@ final readonly class ThemeIdRequest
         $theme_raw = $source['theme'] ?? null;
         $theme = is_string($theme_raw) ? $theme_raw : '';
 
-        new InputValidator()->validate('theme', ['theme' => $theme], false, '/^[a-zA-Z0-9-_]+$/', true);
+        new InputValidator()
+            ->validate('theme', [
+                'theme' => $theme,
+            ], false, '/^[a-zA-Z0-9-_]+$/', true);
 
         return new self($theme);
     }

@@ -44,7 +44,7 @@ final readonly class RegisterSubmitRequest
     }
 
     /**
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $post
      */
     public static function fromArray(array $post): self
     {

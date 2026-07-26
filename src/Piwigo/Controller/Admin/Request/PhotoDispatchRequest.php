@@ -37,12 +37,13 @@ final readonly class PhotoDispatchRequest
     }
 
     /**
-     * @param array<string, mixed> $source
+     * @param array<int|string, mixed> $source
      * @param list<string> $knownTabs
      */
     public static function fromArray(array $source, array $knownTabs): self
     {
-        new InputValidator()->validate('image_id', $source, false, ValidationPattern::ID);
+        new InputValidator()
+            ->validate('image_id', $source, false, ValidationPattern::ID);
 
         $get_image_id_raw = $source['image_id'] ?? null;
         $get_image_id = is_string($get_image_id_raw) ? $get_image_id_raw : '';

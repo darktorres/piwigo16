@@ -47,12 +47,13 @@ final readonly class InstallWizardRequest
     }
 
     /**
-     * @param array<string, mixed> $get
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $get
+     * @param array<int|string, mixed> $post
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()->validate('dl', $get, false, '/^[a-f0-9]{32}$/');
+        new InputValidator()
+            ->validate('dl', $get, false, '/^[a-f0-9]{32}$/');
 
         $dl_raw = $get['dl'] ?? null;
         $dl = (is_string($dl_raw) && $dl_raw !== '') ? $dl_raw : null;

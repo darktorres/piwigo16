@@ -39,11 +39,12 @@ final readonly class RatingRequest
     }
 
     /**
-     * @param array<string, mixed> $get
+     * @param array<int|string, mixed> $get
      */
     public static function fromArray(array $get): self
     {
-        new InputValidator()->validate('display', $get, false, ValidationPattern::ID);
+        new InputValidator()
+            ->validate('display', $get, false, ValidationPattern::ID);
 
         $start = 0;
         if (isset($get['start']) and is_numeric($get['start'])) {

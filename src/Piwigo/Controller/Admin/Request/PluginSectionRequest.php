@@ -97,7 +97,9 @@ final readonly class PluginSectionRequest
             // would be rejected here even though it matches the pattern --
             // the original bare preg_match() had no such case. Not worth
             // special-casing for a segment name real plugins never use.
-            $validator->validate('segment', ['segment' => $section], false, '/^[a-zA-Z0-9_.-]+$/', true);
+            $validator->validate('segment', [
+                'segment' => $section,
+            ], false, '/^[a-zA-Z0-9_.-]+$/', true);
         }
 
         if (count($sections) < 2) {
@@ -107,7 +109,9 @@ final readonly class PluginSectionRequest
         $plugin_id = $sections[0];
         // plugin_id itself is stricter than a general segment (no dots),
         // matching PluginLoader's own plugin_id charset assumption.
-        $validator->validate('plugin_id', ['plugin_id' => $plugin_id], false, '/^[\w-]+$/', true);
+        $validator->validate('plugin_id', [
+            'plugin_id' => $plugin_id,
+        ], false, '/^[\w-]+$/', true);
 
         return new self($plugin_id, $sections);
     }

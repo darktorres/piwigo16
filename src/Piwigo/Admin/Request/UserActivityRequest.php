@@ -22,7 +22,7 @@ use Piwigo\Validation\InputValidator;
 final readonly class UserActivityRequest
 {
     /**
-     * @param array<string, mixed> $source
+     * @param array<int|string, mixed> $source
      */
     private function __construct(
         public bool $isDownloadLogs,
@@ -35,13 +35,16 @@ final readonly class UserActivityRequest
     }
 
     /**
-     * @param array<string, mixed> $source
+     * @param array<int|string, mixed> $source
      */
     public static function fromArray(array $source): self
     {
-        new InputValidator()->validate('photo', $source, false, ValidationPattern::ID);
-        new InputValidator()->validate('album', $source, false, ValidationPattern::ID);
-        new InputValidator()->validate('group', $source, false, ValidationPattern::ID);
+        new InputValidator()
+            ->validate('photo', $source, false, ValidationPattern::ID);
+        new InputValidator()
+            ->validate('album', $source, false, ValidationPattern::ID);
+        new InputValidator()
+            ->validate('group', $source, false, ValidationPattern::ID);
 
         return new self(($source['type'] ?? null) === 'download_logs', $source);
     }

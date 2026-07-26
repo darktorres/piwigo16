@@ -37,12 +37,13 @@ final readonly class AlbumsRequest
     }
 
     /**
-     * @param array<string, mixed> $get
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $get
+     * @param array<int|string, mixed> $post
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()->validate('parent_id', $get, false, ValidationPattern::ID);
+        new InputValidator()
+            ->validate('parent_id', $get, false, ValidationPattern::ID);
 
         $simpleAutoOrder = isset($post['simpleAutoOrder']);
         $recursiveAutoOrder = isset($post['recursiveAutoOrder']);
@@ -50,7 +51,8 @@ final readonly class AlbumsRequest
         $id = '';
         $rawId = null;
         if ($simpleAutoOrder || $recursiveAutoOrder) {
-            new InputValidator()->validate('id', $post, false, '/^-?\d+$/');
+            new InputValidator()
+                ->validate('id', $post, false, '/^-?\d+$/');
             $rawId = $post['id'] ?? null;
             $id = is_string($rawId) ? $rawId : '';
         }

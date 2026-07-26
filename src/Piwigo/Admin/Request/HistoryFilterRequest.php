@@ -29,13 +29,16 @@ final readonly class HistoryFilterRequest
     }
 
     /**
-     * @param array<string, mixed> $source
+     * @param array<int|string, mixed> $source
      */
     public static function fromArray(array $source): self
     {
-        new InputValidator()->validate('filter_ip', $source, false, '/^[0-9.]+$/');
-        new InputValidator()->validate('filter_image_id', $source, false, '/^\d+$/');
-        new InputValidator()->validate('filter_user_id', $source, false, '/^\d+$/');
+        new InputValidator()
+            ->validate('filter_ip', $source, false, '/^[0-9.]+$/');
+        new InputValidator()
+            ->validate('filter_image_id', $source, false, '/^\d+$/');
+        new InputValidator()
+            ->validate('filter_user_id', $source, false, '/^\d+$/');
 
         $ip = $source['filter_ip'] ?? null;
         $imageId = $source['filter_image_id'] ?? null;

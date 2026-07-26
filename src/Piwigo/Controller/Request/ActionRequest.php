@@ -48,7 +48,7 @@ final readonly class ActionRequest
     }
 
     /**
-     * @param array<string, mixed> $get
+     * @param array<int|string, mixed> $get
      */
     public static function fromArray(array $get, bool $isFormatsEnabled): self
     {
@@ -63,7 +63,8 @@ final readonly class ActionRequest
         $format_requested = $isFormatsEnabled && isset($get['format']);
         $format_id = null;
         if ($format_requested) {
-            new InputValidator()->validate('format', $get, false, ValidationPattern::ID);
+            new InputValidator()
+                ->validate('format', $get, false, ValidationPattern::ID);
             $format_id = is_numeric($get['format']) ? (int) $get['format'] : null;
         }
 

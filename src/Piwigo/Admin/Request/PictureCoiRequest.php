@@ -30,12 +30,13 @@ final readonly class PictureCoiRequest
     }
 
     /**
-     * @param array<string, mixed> $get
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $get
+     * @param array<int|string, mixed> $post
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()->validate('image_id', $get, false, ValidationPattern::ID);
+        new InputValidator()
+            ->validate('image_id', $get, false, ValidationPattern::ID);
 
         $image_id = 0;
         if (isset($get['image_id']) && is_numeric($get['image_id'])) {

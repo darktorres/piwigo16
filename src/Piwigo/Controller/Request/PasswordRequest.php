@@ -44,12 +44,13 @@ final readonly class PasswordRequest
     }
 
     /**
-     * @param array<string, mixed> $get
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $get
+     * @param array<int|string, mixed> $post
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()->validate('action', $get, false, '/^(lost|reset|lost_code|reset_end|none)$/');
+        new InputValidator()
+            ->validate('action', $get, false, '/^(lost|reset|lost_code|reset_end|none)$/');
         $action_raw = $get['action'] ?? null;
         $action = is_string($action_raw) ? $action_raw : null;
 

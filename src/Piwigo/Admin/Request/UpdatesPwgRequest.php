@@ -33,8 +33,8 @@ final readonly class UpdatesPwgRequest
     }
 
     /**
-     * @param array<string, mixed> $get
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $get
+     * @param array<int|string, mixed> $post
      */
     public static function fromArrays(array $get, array $post, string $ctEnv): self
     {
@@ -44,11 +44,13 @@ final readonly class UpdatesPwgRequest
         if ($ctEnv === 'Official') {
             // Remove optional ? on [a-z]? since it will only be available on piwigo 16.3
             // Docker images started to use letter suffix in 16.2
-            new InputValidator()->validate('to', $get, false, '/^\d+\.\d+\.\d+[a-z]?$/');
+            new InputValidator()
+                ->validate('to', $get, false, '/^\d+\.\d+\.\d+[a-z]?$/');
             $get_to = $get['to'] ?? null;
             $upgradeTo = is_string($get_to) ? (preg_replace('/[a-z]$/', '', $get_to) ?? '') : '';
         } else {
-            new InputValidator()->validate('to', $get, false, '/^\d+\.\d+\.\d+$/');
+            new InputValidator()
+                ->validate('to', $get, false, '/^\d+\.\d+\.\d+$/');
             $get_to = $get['to'] ?? '';
             $upgradeTo = is_string($get_to) ? $get_to : '';
         }

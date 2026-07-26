@@ -23,7 +23,7 @@ final readonly class ImageDerivativeRequest
     }
 
     /**
-     * @param array<string, mixed> $source
+     * @param array<int|string, mixed> $source
      */
     public static function fromArray(array $source): self
     {

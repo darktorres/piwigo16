@@ -96,7 +96,9 @@ final class CatModifyPageRenderer
   FROM ' . Tables::imageCategory() . '
   WHERE category_id = :category_id
   LIMIT 1';
-        $category['has_images'] = count($categoryConn->fetchAllAssociative($query, ['category_id' => $category_id])) > 0 ? true : false;
+        $category['has_images'] = count($categoryConn->fetchAllAssociative($query, [
+            'category_id' => $category_id,
+        ])) > 0 ? true : false;
 
         // number of sub-categories
         $subcat_ids = $categoryService->getSubcatIds([$category_id]);

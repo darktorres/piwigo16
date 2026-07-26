@@ -44,14 +44,15 @@ final readonly class PhotosAddDirectRequest
     }
 
     /**
-     * @param array<string, mixed> $get
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $get
+     * @param array<int|string, mixed> $post
      */
     public static function fromArrays(array $get, array $post, bool $isFormatsEnabled): self
     {
         $batch_present = isset($get['batch']);
         if ($batch_present) {
-            new InputValidator()->validate('batch', $get, false, '/^\d+(,\d+)*$/');
+            new InputValidator()
+                ->validate('batch', $get, false, '/^\d+(,\d+)*$/');
         }
         $batch_raw = $get['batch'] ?? null;
         $batch = is_string($batch_raw) ? $batch_raw : '';
@@ -60,7 +61,8 @@ final readonly class PhotosAddDirectRequest
         $formats_truthy = $display_formats && (bool) $get['formats'];
         $formats_id = '';
         if ($formats_truthy) {
-            new InputValidator()->validate('formats', $get, false, ValidationPattern::ID, false);
+            new InputValidator()
+                ->validate('formats', $get, false, ValidationPattern::ID, false);
             $formats_raw = $get['formats'] ?? null;
             $formats_id = is_string($formats_raw) ? $formats_raw : '';
         }
@@ -68,7 +70,8 @@ final readonly class PhotosAddDirectRequest
         $album_present = isset($get['album']);
         $album_id = null;
         if ($album_present) {
-            new InputValidator()->validate('album', $get, false, ValidationPattern::ID);
+            new InputValidator()
+                ->validate('album', $get, false, ValidationPattern::ID);
             $album_id = is_numeric($get['album']) ? (int) $get['album'] : null;
         }
 

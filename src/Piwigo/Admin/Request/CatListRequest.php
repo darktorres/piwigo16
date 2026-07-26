@@ -32,12 +32,13 @@ final readonly class CatListRequest
     }
 
     /**
-     * @param array<string, mixed> $get
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $get
+     * @param array<int|string, mixed> $post
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()->validate('parent_id', $get, false, ValidationPattern::ID);
+        new InputValidator()
+            ->validate('parent_id', $get, false, ValidationPattern::ID);
 
         $parent_id = null;
         if (isset($get['parent_id']) and is_numeric($get['parent_id'])) {

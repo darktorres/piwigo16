@@ -33,7 +33,7 @@ use Piwigo\Validation\InputValidator;
 final readonly class AdminShellRequest
 {
     /**
-     * @param array<string, mixed> $testGet
+     * @param array<int|string, mixed> $testGet
      * @param array<string, string> $changeThemeUrlParams
      */
     private function __construct(
@@ -51,13 +51,15 @@ final readonly class AdminShellRequest
     }
 
     /**
-     * @param array<string, mixed> $get
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $get
+     * @param array<int|string, mixed> $post
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()->validate('page', $get, false, '/^[a-zA-Z\d_-]+$/');
-        new InputValidator()->validate('section', $get, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
+        new InputValidator()
+            ->validate('page', $get, false, '/^[a-zA-Z\d_-]+$/');
+        new InputValidator()
+            ->validate('section', $get, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
 
         $change_theme_url_params = [];
         foreach (['page', 'tab', 'section'] as $url_param) {

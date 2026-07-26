@@ -34,7 +34,7 @@ final readonly class SearchQueryRequest
     }
 
     /**
-     * @param array<string, mixed> $source
+     * @param array<int|string, mixed> $source
      */
     public static function fromArray(array $source): self
     {
@@ -43,12 +43,14 @@ final readonly class SearchQueryRequest
 
         $hasCatId = isset($source['cat_id']);
         if ($hasCatId) {
-            new InputValidator()->validate('cat_id', $source, false, ValidationPattern::ID);
+            new InputValidator()
+                ->validate('cat_id', $source, false, ValidationPattern::ID);
         }
 
         $hasTagId = isset($source['tag_id']);
         if ($hasTagId) {
-            new InputValidator()->validate('tag_id', $source, false, '/^\d+(,\d+)*$/');
+            new InputValidator()
+                ->validate('tag_id', $source, false, '/^\d+(,\d+)*$/');
         }
 
         return new self($q, $hasCatId, $source['cat_id'] ?? null, $hasTagId, $source['tag_id'] ?? null);

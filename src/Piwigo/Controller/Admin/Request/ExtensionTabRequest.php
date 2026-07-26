@@ -27,12 +27,13 @@ final readonly class ExtensionTabRequest
     }
 
     /**
-     * @param array<string, mixed> $source
+     * @param array<int|string, mixed> $source
      */
     public static function fromArray(array $source, string $pattern): self
     {
         if (isset($source['tab'])) {
-            new InputValidator()->validate('tab', $source, false, $pattern);
+            new InputValidator()
+                ->validate('tab', $source, false, $pattern);
             $tab_raw = $source['tab'];
             $tab = is_string($tab_raw) ? $tab_raw : 'installed';
         } else {

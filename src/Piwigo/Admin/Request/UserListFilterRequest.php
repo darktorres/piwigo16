@@ -30,12 +30,14 @@ final readonly class UserListFilterRequest
     }
 
     /**
-     * @param array<string, mixed> $source
+     * @param array<int|string, mixed> $source
      */
     public static function fromArray(array $source): self
     {
-        new InputValidator()->validate('group', $source, false, ValidationPattern::ID);
-        new InputValidator()->validate('user_id', $source, false, ValidationPattern::ID);
+        new InputValidator()
+            ->validate('group', $source, false, ValidationPattern::ID);
+        new InputValidator()
+            ->validate('user_id', $source, false, ValidationPattern::ID);
 
         $group = $source['group'] ?? null;
         $user_id = $source['user_id'] ?? null;

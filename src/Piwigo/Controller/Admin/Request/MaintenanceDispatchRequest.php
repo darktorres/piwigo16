@@ -25,14 +25,15 @@ final readonly class MaintenanceDispatchRequest
     }
 
     /**
-     * @param array<string, mixed> $source
+     * @param array<int|string, mixed> $source
      */
     public static function fromArray(array $source): self
     {
         $requiresCsrfCheck = isset($source['action']);
 
         if (isset($source['tab'])) {
-            new InputValidator()->validate('tab', $source, false, '/^(actions|env|sys)$/');
+            new InputValidator()
+                ->validate('tab', $source, false, '/^(actions|env|sys)$/');
             $tab_raw = $source['tab'];
             $tab = is_string($tab_raw) ? $tab_raw : 'actions';
         } else {

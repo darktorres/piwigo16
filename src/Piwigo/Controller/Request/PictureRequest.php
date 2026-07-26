@@ -54,8 +54,8 @@ final readonly class PictureRequest
     }
 
     /**
-     * @param array<string, mixed> $get
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $get
+     * @param array<int|string, mixed> $post
      */
     public static function fromArrays(array $get, array $post): self
     {
@@ -67,21 +67,24 @@ final readonly class PictureRequest
 
         $comment_to_edit = null;
         if ($action === 'edit_comment') {
-            new InputValidator()->validate('comment_to_edit', $get, false, ValidationPattern::ID);
+            new InputValidator()
+                ->validate('comment_to_edit', $get, false, ValidationPattern::ID);
             $comment_to_edit_raw = $get['comment_to_edit'] ?? null;
             $comment_to_edit = is_string($comment_to_edit_raw) ? $comment_to_edit_raw : null;
         }
 
         $comment_to_delete = null;
         if ($action === 'delete_comment') {
-            new InputValidator()->validate('comment_to_delete', $get, false, ValidationPattern::ID);
+            new InputValidator()
+                ->validate('comment_to_delete', $get, false, ValidationPattern::ID);
             $comment_to_delete_raw = $get['comment_to_delete'] ?? null;
             $comment_to_delete = is_string($comment_to_delete_raw) ? $comment_to_delete_raw : null;
         }
 
         $comment_to_validate = null;
         if ($action === 'validate_comment') {
-            new InputValidator()->validate('comment_to_validate', $get, false, ValidationPattern::ID);
+            new InputValidator()
+                ->validate('comment_to_validate', $get, false, ValidationPattern::ID);
             $comment_to_validate_raw = $get['comment_to_validate'] ?? null;
             $comment_to_validate = is_string($comment_to_validate_raw) ? $comment_to_validate_raw : null;
         }

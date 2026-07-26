@@ -67,14 +67,17 @@ final readonly class PictureModifyRequest
     }
 
     /**
-     * @param array<string, mixed> $get
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $get
+     * @param array<int|string, mixed> $post
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()->validate('image_id', $get, false, ValidationPattern::ID);
-        new InputValidator()->validate('level', $post, false, '/^\d+$/');
-        new InputValidator()->validate('date_creation', $post, false, '/^\d\d\d\d-\d\d-\d\d( \d\d:\d\d:\d\d)?$/');
+        new InputValidator()
+            ->validate('image_id', $get, false, ValidationPattern::ID);
+        new InputValidator()
+            ->validate('level', $post, false, '/^\d+$/');
+        new InputValidator()
+            ->validate('date_creation', $post, false, '/^\d\d\d\d-\d\d-\d\d( \d\d:\d\d:\d\d)?$/');
 
         $image_id = 0;
         if (isset($get['image_id']) && is_numeric($get['image_id'])) {
@@ -94,7 +97,10 @@ final readonly class PictureModifyRequest
         $date_creation = is_string($date_creation_raw) ? $date_creation_raw : null;
 
         $post_associate = $post['associate'] ?? [];
-        new InputValidator()->validate('associate', ['associate' => $post_associate], true, ValidationPattern::ID);
+        new InputValidator()
+            ->validate('associate', [
+                'associate' => $post_associate,
+            ], true, ValidationPattern::ID);
         $associate = [];
         if (is_array($post_associate)) {
             foreach ($post_associate as $associate_value) {
@@ -105,7 +111,10 @@ final readonly class PictureModifyRequest
         }
 
         $post_represent = $post['represent'] ?? [];
-        new InputValidator()->validate('represent', ['represent' => $post_represent], true, ValidationPattern::ID);
+        new InputValidator()
+            ->validate('represent', [
+                'represent' => $post_represent,
+            ], true, ValidationPattern::ID);
         $represent = [];
         if (is_array($post_represent)) {
             foreach ($post_represent as $represent_value) {

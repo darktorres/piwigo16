@@ -123,9 +123,9 @@ SELECT id
     INNER JOIN ' . Tables::imageCategory() . ' ON category_id = id
   WHERE image_id = ' . $image_id . '
 ' . \Piwigo\Bootstrap\CoreDomainAccessor::permissionService()->getSqlConditionFandF([
-            'forbidden_categories' => 'category_id',
+    'forbidden_categories' => 'category_id',
             'forbidden_images' => 'image_id',
-        ], '    AND') . '
+], '    AND') . '
   LIMIT 1
 ;';
         if (! $is_admin_download and $conn->fetchOne($query) === false) {

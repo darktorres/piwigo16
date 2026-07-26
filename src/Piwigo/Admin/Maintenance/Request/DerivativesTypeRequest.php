@@ -42,7 +42,10 @@ final readonly class DerivativesTypeRequest
         $types_str = $source['type'] ?? '';
         $types_str = is_string($types_str) ? $types_str : '';
 
-        new InputValidator()->validate('type', ['type' => $types_str], false, '/^[a-zA-Z0-9_]+$/');
+        new InputValidator()
+            ->validate('type', [
+                'type' => $types_str,
+            ], false, '/^[a-zA-Z0-9_]+$/');
 
         return new self($types_str);
     }

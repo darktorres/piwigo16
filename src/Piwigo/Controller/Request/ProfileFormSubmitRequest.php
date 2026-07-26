@@ -23,7 +23,7 @@ namespace Piwigo\Controller\Request;
 final readonly class ProfileFormSubmitRequest
 {
     /**
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $post
      */
     private function __construct(
         public bool $isValidateSubmitted,
@@ -37,7 +37,7 @@ final readonly class ProfileFormSubmitRequest
     }
 
     /**
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $post
      */
     public static function fromArray(array $post): self
     {

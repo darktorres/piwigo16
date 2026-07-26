@@ -26,11 +26,12 @@ final readonly class UpdatesTabRequest
     }
 
     /**
-     * @param array<string, mixed> $source
+     * @param array<int|string, mixed> $source
      */
     public static function fromArray(array $source): self
     {
-        new InputValidator()->validate('tab', $source, false, '/^(pwg|ext)$/');
+        new InputValidator()
+            ->validate('tab', $source, false, '/^(pwg|ext)$/');
 
         $tab = $source['tab'] ?? null;
 

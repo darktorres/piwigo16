@@ -25,11 +25,12 @@ final readonly class FeedRequest
     }
 
     /**
-     * @param array<string, mixed> $source
+     * @param array<int|string, mixed> $source
      */
     public static function fromArray(array $source): self
     {
-        new InputValidator()->validate('feed', $source, false, '/^[0-9a-z]{50}$/i');
+        new InputValidator()
+            ->validate('feed', $source, false, '/^[0-9a-z]{50}$/i');
 
         $feed_id = $source['feed'] ?? '';
         $feed_id = is_string($feed_id) ? $feed_id : '';

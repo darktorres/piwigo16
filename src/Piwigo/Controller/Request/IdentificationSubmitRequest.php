@@ -40,8 +40,8 @@ final readonly class IdentificationSubmitRequest
     }
 
     /**
-     * @param array<string, mixed> $get
-     * @param array<string, mixed> $post
+     * @param array<int|string, mixed> $get
+     * @param array<int|string, mixed> $post
      */
     public static function fromArrays(array $get, array $post): self
     {
@@ -50,12 +50,15 @@ final readonly class IdentificationSubmitRequest
 
         // security (level 1): the redirect must occur within Piwigo, so the
         // redirect param must start with the relative home url
-        new InputValidator()->validate(
-            'redirect_decoded',
-            ['redirect_decoded' => $post_redirect_decoded],
-            false,
-            '{^' . preg_quote(new CookieService()->cookiePath()) . '}'
-        );
+        new InputValidator()
+            ->validate(
+                'redirect_decoded',
+                [
+                    'redirect_decoded' => $post_redirect_decoded,
+                ],
+                false,
+                '{^' . preg_quote(new CookieService()->cookiePath()) . '}'
+            );
 
         $get_redirect_raw = $get['redirect'] ?? null;
         $get_redirect = (is_string($get_redirect_raw) && $get_redirect_raw !== '') ? $get_redirect_raw : null;

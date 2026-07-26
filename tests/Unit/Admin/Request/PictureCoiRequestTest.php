@@ -50,6 +50,7 @@ test('fromArrays computes a 4-char coi code when l is a non-empty string', funct
         'b' => '1',
     ]);
 
+    \PHPUnit\Framework\Assert::assertIsString($request->coi);
     expect($request->coi)->toBeString()
         ->and(strlen($request->coi))->toBe(4);
 });
@@ -63,6 +64,7 @@ test('fromArrays treats a non-numeric t/r/b as a zero fraction', function (): vo
         'b' => 'not-a-number',
     ]);
 
+    \PHPUnit\Framework\Assert::assertIsString($request->coi);
     expect($request->coi)->toBeString()
         ->and(strlen($request->coi))->toBe(4);
 });

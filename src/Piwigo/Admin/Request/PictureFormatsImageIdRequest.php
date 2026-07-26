@@ -26,11 +26,12 @@ final readonly class PictureFormatsImageIdRequest
     }
 
     /**
-     * @param array<string, mixed> $source
+     * @param array<int|string, mixed> $source
      */
     public static function fromArray(array $source): self
     {
-        new InputValidator()->validate('image_id', $source, false, ValidationPattern::ID);
+        new InputValidator()
+            ->validate('image_id', $source, false, ValidationPattern::ID);
 
         $image_id_raw = $source['image_id'] ?? null;
 

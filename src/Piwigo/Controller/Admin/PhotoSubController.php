@@ -13,7 +13,6 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -58,16 +57,8 @@ final class PhotoSubController implements AdminSubControllerInterface
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('cat_id', $_GET, false, ValidationPattern::ID);
-        new \Piwigo\Validation\InputValidator()
-            ->validate('image_id', $_GET, false, ValidationPattern::ID);
-
-        // check_input_parameter() above already validated $_GET['image_id'] against
-        // ValidationPattern::ID (digits only) when present; $_GET values are always strings
-        // (or arrays, for foo[]=... params) so is_string() is the real narrowing.
-        $get_image_id_raw = $_GET['image_id'] ?? null;
-        $get_image_id = is_string($get_image_id_raw) ? $get_image_id_raw : '';
+        $photoDispatch = Request\PhotoDispatchRequest::fromGlobals(self::KNOWN_TABS);
+        $get_image_id = $photoDispatch->imageId;
 
         $adminPhotoBaseUrl = $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $get_image_id;
         CoreTabs::setContext(new CoreTabsContext(adminPhotoBaseUrl: $adminPhotoBaseUrl));
@@ -77,8 +68,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         $page['image'] = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
             ->getImageInfos($get_image_id, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), true);
 
-        $tab_param = $_GET['tab'] ?? null;
-        $tab = is_string($tab_param) && in_array($tab_param, self::KNOWN_TABS, true) ? $tab_param : 'properties';
+        $tab = $photoDispatch->tab;
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('photo');

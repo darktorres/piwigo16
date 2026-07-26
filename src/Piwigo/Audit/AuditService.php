@@ -30,6 +30,10 @@ final readonly class AuditService
     ) {}
 
     /**
+     * $before/$after are genuinely arbitrary by design -- entity-agnostic
+     * snapshots (a User row, a Group row, a permission diff, ...), same
+     * rationale as Core\ActivityLoggerInterface's own $details.
+     *
      * @param array<string, mixed>|null $before null when the action has no
      *   "prior state" (e.g. a creation)
      * @param array<string, mixed>|null $after null when the action leaves

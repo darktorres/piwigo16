@@ -29,6 +29,10 @@ final class DisplayBlock
     private $_title;
 
     /**
+     * Genuinely polymorphic by design -- MenubarRenderer sets this to a
+     * different shape per block type (categories/tags/links/...), matching
+     * the plugin-block-registration pattern.
+     *
      * @var mixed
      */
     public $data;
@@ -44,6 +48,9 @@ final class DisplayBlock
     public $raw_content;
 
     /**
+     * Zero real readers/writers anywhere in the codebase today -- reserved
+     * slot, same rationale as Core\PageState::$bodyData.
+     *
      * @var mixed
      */
     public $id;

@@ -47,9 +47,10 @@ use Psr\Http\Message\ServerRequestInterface;
  * LegacyRenderCapture's ob_start()/ob_get_contents() capture, same
  * pattern as AboutController -- see that class's own docblock for the
  * accumulator mechanics this relies on. $categoryCountCategories is the
- * one real caller of MenubarRenderer::render()'s `mixed` return value
- * among all the converted controllers -- preserved as a plain local
- * variable, no different from before.
+ * one real caller of MenubarRenderer::render()'s return value (narrowed
+ * to ?int in this mixed-elimination pass) among all the converted
+ * controllers -- preserved as a plain local variable, no different from
+ * before.
  */
 final class GalleryController implements ControllerInterface
 {

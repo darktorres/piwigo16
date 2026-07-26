@@ -56,7 +56,7 @@ final class MenubarRenderer
      * write to, this method returns that value instead; every caller but
      * GalleryController ignores it.
      */
-    public function render(UrlServiceInterface $urlService): mixed
+    public function render(UrlServiceInterface $urlService): ?int
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
         $section_context = \Piwigo\Section\SectionContextRegistry::current();

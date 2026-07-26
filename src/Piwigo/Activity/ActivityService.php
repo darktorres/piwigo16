@@ -34,7 +34,9 @@ final readonly class ActivityService implements ActivityLoggerInterface
     #[\Override]
     public function record(string $object, int|string|array $objectId, string $action, array $details = []): void
     {
-        $requestMethod = isset($_REQUEST['method']) && is_string($_REQUEST['method']) ? $_REQUEST['method'] : null;
+        $activityContextRequest = Request\ActivityContextRequest::fromGlobals();
+
+        $requestMethod = $activityContextRequest->requestMethod;
 
         // in case of uploadAsync, do not log the automatic login as an independant activity
         if ($requestMethod === 'pwg.images.uploadAsync' && $action === 'login') {
@@ -44,7 +46,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
         if ($requestMethod === 'pwg.plugins.performAction') {
             // for example, if you "restore" a plugin, the internal sequence will perform deactivate/uninstall/install/activate.
             // We only want to keep the last call to record() with the "restore" action.
-            $requestAction = isset($_REQUEST['action']) && is_string($_REQUEST['action']) ? $_REQUEST['action'] : null;
+            $requestAction = $activityContextRequest->requestAction;
             if ($requestAction !== $action) {
                 return;
             }
@@ -56,7 +58,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
             $details['method'] = $requestMethod;
         } else {
             $script = \Piwigo\Core\PageFilterHelper::scriptBasename();
-            $pageParam = isset($_GET['page']) && is_string($_GET['page']) ? $_GET['page'] : null;
+            $pageParam = $activityContextRequest->pageParam;
             $details['script'] = $script === 'admin' && $pageParam !== null ? $script . '/' . $pageParam : $script;
         }
 
@@ -97,13 +99,13 @@ final readonly class ActivityService implements ActivityLoggerInterface
             }
         }
 
-        if (in_array($object, ['album', 'photo'], true) && $action === 'delete' && ($_GET['page'] ?? null) === 'site_update') {
+        if (in_array($object, ['album', 'photo'], true) && $action === 'delete' && $activityContextRequest->pageParam === 'site_update') {
             $details['sync'] = true;
         }
 
-        if ($object === 'tag' && $action === 'delete' && isset($_POST['destination_tag'])) {
+        if ($object === 'tag' && $action === 'delete' && $activityContextRequest->destinationTagPresent) {
             $details['action'] = 'merge';
-            $details['destination_tag'] = $_POST['destination_tag'];
+            $details['destination_tag'] = $activityContextRequest->destinationTag;
         }
 
         $ipAddress = isset($_SERVER['REMOTE_ADDR']) && is_string($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null;

@@ -9,7 +9,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionService;
@@ -43,51 +42,29 @@ final class UserPermPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        if ($_POST !== []) {
+        $userPermSubmit = Request\UserPermSubmitRequest::fromGlobals();
+
+        if ($userPermSubmit->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail($htmlRenderer, $this->redirectService);
-            new \Piwigo\Validation\InputValidator()
-                ->validate('cat_true', $_POST, true, ValidationPattern::ID);
-            new \Piwigo\Validation\InputValidator()
-                ->validate('cat_false', $_POST, true, ValidationPattern::ID);
         }
 
-        // check_input_parameter() above already fatal_error()s out unless
-        // these are arrays of digit-only strings, but that guarantee isn't
-        // visible to static analysis across the call; re-derive real array
-        // types here.
-        $post_cat_true = $_POST['cat_true'] ?? null;
-        $cat_true = [];
-        if (is_array($post_cat_true)) {
-            foreach ($post_cat_true as $raw_cat_id) {
-                if (is_string($raw_cat_id)) {
-                    $cat_true[] = $raw_cat_id;
-                }
-            }
-        }
-        $post_cat_false = $_POST['cat_false'] ?? null;
-        $cat_false = [];
-        if (is_array($post_cat_false)) {
-            foreach ($post_cat_false as $raw_cat_id) {
-                if (is_numeric($raw_cat_id)) {
-                    $cat_false[] = (int) $raw_cat_id;
-                }
-            }
-        }
+        $cat_true = $userPermSubmit->catTrue;
+        $cat_false = $userPermSubmit->catFalse;
 
-        if (isset($_GET['user_id']) and is_numeric($_GET['user_id'])) {
-            $user_id = (int) $_GET['user_id'];
+        if (is_numeric($userPermSubmit->userId)) {
+            $user_id = (int) $userPermSubmit->userId;
         } else {
             $htmlRenderer->fatalError('user_id URL parameter is missing');
         }
 
-        if (isset($_POST['falsify'])
+        if ($userPermSubmit->isFalsify
             and count($cat_true) > 0) {
             // if you forbid access to a category, all sub-categories become
             // automatically forbidden
             $subcats = array_map(intval(...), $categoryService->getSubcatIds($cat_true));
             $permissionService->removeUserAccess($user_id, $subcats);
-        } elseif (isset($_POST['trueify'])
+        } elseif ($userPermSubmit->isTrueify
             and count($cat_false) > 0) {
             $permissionService->grantUserAccess($user_id, $cat_false);
         }

@@ -876,7 +876,14 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      * string-keyed surface contained to the one file that actually needs
      * it.
      */
-    private function checkboxValue(string $checkbox): mixed
+    /**
+     * Every branch is a real bool checkbox except 'index_search_in_set_action'
+     * (CurrentConfig::indexSearchInSetAction()), a 'results'|'filter' string
+     * config value grouped here anyway since this dispatcher only cares
+     * about the key set, not a strict boolean contract -- verified against
+     * every one of the ~48 delegate methods' own return types, not assumed.
+     */
+    private function checkboxValue(string $checkbox): bool|string
     {
         return match ($checkbox) {
             'allow_user_registration' => \Piwigo\Config\CurrentConfig::allowUserRegistration(),

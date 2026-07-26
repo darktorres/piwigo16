@@ -219,6 +219,19 @@ SELECT id,name,`rank`,status, visible, uppercats, lastmodified
         $allAlbum = $conn->fetchAllAssociative($query);
 
         // Make an id tree
+        /**
+         * Dynamically built recursive tree, keyed by successive category-id
+         * path segments (from `uppercats`) -- each node is either
+         * `array{cat: array<string, mixed>}` (a leaf/branch's own category
+         * row, set once the loop below reaches it) or
+         * `array{children: array<string, self>}` (an intermediate ancestor
+         * with no row of its own yet), or both once a later iteration fills
+         * in the other half. Genuinely self-referential, so kept as
+         * `array<string, mixed>` rather than forced into a shape PHPStan
+         * can't express without a named recursive type alias.
+         *
+         * @var array<string, mixed> $associatedTree
+         */
         $associatedTree = [];
 
         foreach ($allAlbum as $album) {
@@ -326,8 +339,8 @@ SELECT
     }
 
     /**
-     * @param array<string, mixed> $a
-     * @param array<string, mixed> $b
+     * @param array{rank: int|string|null, ...} $a
+     * @param array{rank: int|string|null, ...} $b
      */
     private static function cmpCat(array $a, array $b): int
     {
@@ -337,11 +350,26 @@ SELECT
     /**
      * Make an ordered tree.
      *
-     * @param array<int|string, mixed> $assocT
-     * @param array<int|string, mixed> $nb_photos_in
+     * @param array<string, mixed> $assocT see $associatedTree's own docblock above
+     * @param array<int, int|string> $nb_photos_in COUNT(*) values, never null
      * @param array<int|string, int> $nb_sub_photos
      * @param array<int|string, int> $is_forbidden
-     * @return array{rank: mixed, name: mixed, status: mixed, id: mixed, visible: mixed, uppercats: mixed, nb_images: mixed, last_updates: mixed, has_not_access: bool, nb_sub_photos: mixed}[]|array{rank: mixed, name: mixed, status: mixed, id: mixed, visible: mixed, uppercats: mixed, nb_images: mixed, last_updates: mixed, has_not_access: bool, nb_sub_photos: mixed, nb_subcats: int<0, max>, children: mixed}[]
+     * @return list<array{
+     *   rank: int|string|null,
+     *   name: string,
+     *   status: string,
+     *   id: string,
+     *   visible: string,
+     *   uppercats: string,
+     *   nb_images: int|string,
+     *   last_updates: string,
+     *   has_not_access: bool,
+     *   nb_sub_photos: int,
+     *   nb_subcats?: int<0, max>,
+     *   children?: mixed,
+     * }> `children` is recursively this same shape one level down -- left
+     *   `mixed` rather than forced into a self-referencing shape PHPStan
+     *   can't express without a named type alias, for this one field.
      */
     private static function assocToOrderedTree(array $assocT, array $nb_photos_in, array $nb_sub_photos, array $is_forbidden): array
     {
@@ -367,10 +395,22 @@ SELECT
             $cat_row_id = $cat_row['id'];
             $cat_id = (is_int($cat_row_id) || is_string($cat_row_id)) ? (string) $cat_row_id : '';
 
+            $cat_row_rank = $cat_row['rank'];
+            $cat_row_name = $cat_row['name'];
+            $cat_row_status = $cat_row['status'];
+            $cat_row_uppercats = $cat_row['uppercats'];
+
             $orderedCat = [];
-            $orderedCat['rank'] = $cat_row['rank'];
-            $orderedCat['name'] = $cat_row['name'];
-            $orderedCat['status'] = $cat_row['status'];
+            // 'rank' is nullable in the schema; a native int under DBAL's
+            // mysqli driver (MYSQLI_OPT_INT_AND_FLOAT_NATIVE), a numeric
+            // string under its pgsql driver -- see DbConnection::params().
+            $orderedCat['rank'] = is_int($cat_row_rank) || is_string($cat_row_rank) ? $cat_row_rank : null;
+            // 'name'/'status' are NOT NULL string columns; 'name' may also
+            // have been rewritten above by the render_category_name filter
+            // (EventDispatcher::triggerChange()'s genuinely arbitrary-by-design
+            // return), already narrowed there to string-or-original.
+            $orderedCat['name'] = is_scalar($cat_row_name) ? (string) $cat_row_name : '';
+            $orderedCat['status'] = is_scalar($cat_row_status) ? (string) $cat_row_status : '';
             // themes/admin/default/js/albums.js embeds this tree as JSON and
             // later compares node ids against the DOM's `data-id` attribute
             // (always a string, per jQuery's .attr()) via a strict-equality
@@ -384,9 +424,14 @@ SELECT
             // 'false' string this tree has always sent, not the tinyint
             // column's own real int|bool runtime type.
             $orderedCat['visible'] = SqlDialect::booleanToString((bool) $cat_row['visible']);
-            $orderedCat['uppercats'] = $cat_row['uppercats'];
+            $orderedCat['uppercats'] = is_scalar($cat_row_uppercats) ? (string) $cat_row_uppercats : '';
             $orderedCat['nb_images'] = $nb_photos_in[$cat_id] ?? 0;
-            $orderedCat['last_updates'] = $cat_row['lastmodified'];
+            // Always a DateHelper::timeSince() string by the time it reaches
+            // here (reassigned above, before $album was stored into the
+            // tree) -- re-narrow since $cat_row's own declared type is
+            // array<string, mixed>.
+            $cat_row_lastmodified = $cat_row['lastmodified'];
+            $orderedCat['last_updates'] = is_scalar($cat_row_lastmodified) ? (string) $cat_row_lastmodified : '';
             $orderedCat['has_not_access'] = isset($is_forbidden[$cat_id]);
             $orderedCat['nb_sub_photos'] = $nb_sub_photos[$cat_id] ?? 0;
             if (isset($cat['children']) && is_array($cat['children'])) {

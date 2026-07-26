@@ -85,6 +85,8 @@ final class SqlDialect
      * If the input is another type, it is not changed -- an identity
      * passthrough for any non-bool BatchWriter column value (int, string,
      * float, null), so the return type mirrors the param type by design.
+     *
+     * @phpstan-return ($var is bool ? string : mixed)
      */
     public static function booleanToString(mixed $var): mixed
     {
@@ -104,6 +106,8 @@ final class SqlDialect
      * against an int column. If the input is another type, it is not
      * changed -- same identity-passthrough-for-non-bool rationale as
      * booleanToString() above.
+     *
+     * @phpstan-return ($var is bool ? int : mixed)
      */
     public static function booleanToInt(mixed $var): mixed
     {

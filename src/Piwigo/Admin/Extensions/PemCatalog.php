@@ -22,6 +22,15 @@ use Piwigo\Http\HttpClientService;
  * extract_language_files() in the legacy classes) lives here too, since
  * it's fundamentally the same "talk to PEM, then handle what comes back"
  * concern, just followed by a local ZipExtractor call.
+ *
+ * `array<string, mixed>` rows throughout this class are genuinely arbitrary
+ * by design -- they're `unserialize()` output from a remote PEM server
+ * response we don't control the shape of (same residual category as
+ * ConfigService's own json_decode()/unserialize() params, see the
+ * mixed-elimination plan). The compare*() methods below read only the 1-2
+ * keys they need from that row, defensively (`?? null` + `is_scalar()`),
+ * the same "cross-domain generic-row-reader" pattern used for comparators
+ * elsewhere in the codebase.
  */
 final readonly class PemCatalog
 {

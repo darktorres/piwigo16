@@ -863,7 +863,7 @@ SELECT
   FROM ' . Tables::favorites() . '
     INNER JOIN ' . Tables::images() . ' i ON image_id = i.id
   WHERE user_id = ' . $current_user_id . '
-' . new PermissionService(new PermissionRepository(DbConnection::build()), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class))->getSqlConditionFandF([
+' . new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class))->getSqlConditionFandF([
             'visible_images' => 'id',
         ], 'AND') . '
     ' . $order_by . '

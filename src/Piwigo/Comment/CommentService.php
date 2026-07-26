@@ -66,7 +66,7 @@ final readonly class CommentService
             if (! AccessControl::isAdmin()) {
                 $where[] = 'validated=1';
             }
-            $where[] = new PermissionService(new PermissionRepository(DbConnection::build()), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class))
+            $where[] = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class))
                 ->getSqlConditionFandF([
                     'forbidden_categories' => 'category_id',
                     'forbidden_images' => 'ic.image_id',

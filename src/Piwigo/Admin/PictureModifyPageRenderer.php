@@ -198,6 +198,7 @@ SELECT id
                         'id' => $image_id,
                     ]
                 );
+            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
             // time to deal with tags
             $tagService = self::tagService();
@@ -270,6 +271,7 @@ UPDATE ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $new_thumbnail_for) . ')
 ;';
                 $conn->executeStatement($query);
+                \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
             }
 
             $represented_albums = $represent_categories;

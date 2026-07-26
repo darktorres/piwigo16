@@ -190,6 +190,7 @@ final class UploadService
                 ],
                 $updates
             );
+            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
             return true;
         }
 
@@ -529,6 +530,7 @@ SELECT
             \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                 ->record('photo', $image_id, 'add');
         }
+        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
         $this->addUploadedFileAddToCategories($image_id, $categories);
 
@@ -761,6 +763,7 @@ SELECT
             $format_id = $conn->lastInsertId();
             $add_status = 'add';
         }
+        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
         \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
             ->record('photo', $format_of, 'edit', [

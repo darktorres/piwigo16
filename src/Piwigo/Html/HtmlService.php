@@ -239,7 +239,7 @@ final class HtmlService implements HtmlRenderingInterface
         $cat_info = new CategoryService(
             $this->categoryRepo(),
             new \Piwigo\Permission\PermissionService(
-                new \Piwigo\Permission\PermissionRepository($categoryConn),
+                new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)),
                 \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class),
                 \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class)
             )

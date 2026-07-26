@@ -148,7 +148,7 @@ final class FilterService implements FilterUpdaterInterface
                 // value.
                 $computedCategories = new CategoryService(
                     \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class),
-                    new PermissionService(new PermissionRepository($categoryConn), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class))
+                    new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class))
                 )->getComputedCategories($currentUser->toUserArray(), $filter_recent_period);
                 $filter['categories'] = $computedCategories['categories'];
                 \Piwigo\Users\CurrentUser::set($currentUser->withRawAttribute('last_photo_date', $computedCategories['lastPhotoDate']));

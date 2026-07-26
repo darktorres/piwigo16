@@ -174,6 +174,7 @@ SELECT id, date_creation
                     ],
                     $datas
                 );
+            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
             \Piwigo\Core\PageState::current()->addInfo(Lang::t('Photo informations updated'));
             PermissionCacheInvalidator::invalidate();

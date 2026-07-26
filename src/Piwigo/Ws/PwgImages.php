@@ -1125,6 +1125,7 @@ UPDATE ' . Tables::images() . '
         // MysqliDb::changes() call (which only worked because this query,
         // unlike ratesDelete()'s dormant one, was actually executed).
         $affected_rows = $conn->executeStatement($query);
+        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
         self::activityService($conn)->record('photo', $params['image_id'], 'edit');
 
@@ -1506,6 +1507,7 @@ SELECT COUNT(*)
                         'id' => $image_id,
                     ]
                 );
+            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
         }
 
         $url_params = [
@@ -1647,6 +1649,7 @@ SELECT COUNT(*)
                     'id' => $image_id,
                 ]
             );
+        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
         if (isset($params['tags']) and $params['tags'] !== '' and $params['tags'] !== []) {
             $tagService = self::tagService();
@@ -2155,6 +2158,7 @@ SELECT COUNT(*)
                         'id' => $image_id,
                     ]
                 );
+            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
         }
 
         // final step, reset user cache
@@ -2658,6 +2662,7 @@ SELECT path
                         'id' => $update['id'],
                     ]
                 );
+            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
             self::activityService($conn)->record('photo', $update['id'], 'edit');
         }

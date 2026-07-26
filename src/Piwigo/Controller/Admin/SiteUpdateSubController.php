@@ -468,6 +468,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                     ];
                     new BatchWriter($conn)
                         ->massInsert(Tables::categories(), $dbfields, $inserts);
+                    \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
                     // add default permissions to categories
                     $category_ids = [];
@@ -485,9 +486,9 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
 
                     $category_up = array_values(array_unique($category_up));
                     if (\Piwigo\Config\CurrentConfig::inheritanceByDefault() and $category_up !== []) {
-                        $granted_grps = new PermissionRepository($conn)
+                        $granted_grps = new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn))
                             ->findGrantedGroupIdsByCategory($category_up);
-                        $granted_users = new PermissionRepository($conn)
+                        $granted_users = new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn))
                             ->findGrantedUserIdsByCategory($category_up);
                         $insert_granted_users = [];
                         $insert_granted_grps = [];
@@ -525,6 +526,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         $insert_granted_users = array_unique($insert_granted_users, SORT_REGULAR);
                         new BatchWriter($conn)
                             ->massInsert(Tables::userAccess(), ['user_id', 'cat_id'], $insert_granted_users);
+                        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
                     } else {
                         self::permissionService()
                             ->addPermissionOnCategory($category_ids, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)->findAdminIds());
@@ -773,6 +775,7 @@ SELECT id, path
                             array_keys($insert_links[0]),
                             $insert_links
                         );
+                    \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
                     self::activityService()->record('photo', $caddiables, 'add', [
                         'sync' => true,
@@ -792,6 +795,7 @@ SELECT id, path
                             array_keys($insert_formats[0]),
                             $insert_formats
                         );
+                    \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
                 }
 
                 if (count($formats_to_delete) > 0) {
@@ -898,6 +902,7 @@ DELETE
                             ],
                             $datas
                         );
+                    \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
                 }
                 $template->append('footer_elements', '<!-- update files : '
                   . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
@@ -1011,6 +1016,7 @@ DELETE
                             $datas,
                             isset($_POST['meta_empty_overrides']) ? 0 : BatchWriter::SKIP_EMPTY
                         );
+                    \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
                 }
                 $tagService->setTagsOf($tags_of);
             }

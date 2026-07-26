@@ -407,6 +407,7 @@ SELECT name
                     'id' => $tag_id,
                 ]
             );
+        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
         $query = '
 SELECT
@@ -475,6 +476,7 @@ SELECT COUNT(*)
                     'url_name' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_url', $copy_name),
                 ]
             );
+        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
         $destination_tag_id = (int) $conn->lastInsertId();
 
         self::activityService($conn)->record('tag', $destination_tag_id, 'add', [
@@ -509,6 +511,7 @@ SELECT image_id
                     array_keys($inserts[0]),
                     $inserts
                 );
+            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
         }
 
         return [
@@ -588,6 +591,7 @@ SELECT image_id
                     'ignore' => true,
                 ]
             );
+        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
         self::activityService($conn)->record('tag', $params['destination_tag_id'], 'edit');
         foreach ($image_to_add as $image_id) {

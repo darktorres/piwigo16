@@ -387,6 +387,7 @@ DELETE FROM ' . Tables::rate() . '
         // executeStatement() both runs the query for real and returns its
         // actual affected-row count.
         $changes = DbConnection::build()->executeStatement($query);
+        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
         if ($changes > 0) {
             \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()
                 ->updateRatingScore();

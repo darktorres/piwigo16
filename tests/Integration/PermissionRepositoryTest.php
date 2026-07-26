@@ -36,7 +36,7 @@ final class PermissionRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new PermissionRepository($this->conn);
+        $this->repo = new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
     }
 
     #[\Override]

@@ -305,6 +305,7 @@ final class ProfileFormHandler
                         ],
                         [$data]
                     );
+                \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
                 $activity_details_tables[] = 'user_infos';
             }

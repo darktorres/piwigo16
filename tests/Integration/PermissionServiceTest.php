@@ -48,7 +48,7 @@ use Piwigo\Category\CategoryRepository;
 
             $this->conn = DbConnection::build();
             $this->service = new PermissionService(
-                new PermissionRepository($this->conn),
+                new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
                 \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class)
             , \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class));
         }

@@ -52,7 +52,7 @@ $query = '
 SELECT id
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
-' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository($conn), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class))->getSqlConditionFandF([
+' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class))->getSqlConditionFandF([
     'forbidden_categories' => 'category_id',
     'visible_categories' => 'category_id',
     'visible_images' => 'id',

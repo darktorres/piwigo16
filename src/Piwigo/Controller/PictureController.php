@@ -378,6 +378,7 @@ UPDATE ' . Tables::categories() . '
   WHERE id = ' . $representative_category_id . '
 ;';
                         $conn->executeStatement($query);
+                        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
                         \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()->record('album', $representative_category_id, 'edit', [
                             'action' => $_GET['action'],
                             'image_id' => $image_id,

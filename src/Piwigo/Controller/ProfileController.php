@@ -181,6 +181,7 @@ SELECT ' . implode(',', $fields) . '
                     'user_id' => \Piwigo\Users\CurrentUser::get()->id,
                 ]
             );
+            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
             Lang::load('common.lang', '', [
                 'language' => $cookie_lang,

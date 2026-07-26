@@ -5,26 +5,42 @@ declare(strict_types=1);
 namespace Piwigo\Permission;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Piwigo\Db\AbstractRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Category\UserAccessEntity;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
 /**
  * Persistence layer for the permission domain's forbidden-categories
- * computation. Reads only -- category visibility/status are Category-
- * domain columns (Category itself doesn't exist as a typed module yet,
- * P19), but these two narrow, single-purpose reads are thin enough to stay
- * here rather than wait on a full CategoryRepository, matching the
- * "thin cross-domain touch stays inline" precedent already established for
- * History/Activity in this phase's own plan.
+ * computation, plus the `user_access` write methods below. Owns no table
+ * itself -- `categories`/`group_access` are read-only cross-domain
+ * touches (each owned elsewhere), and `user_access` is a shared join
+ * table with no single owner (see Category\UserAccessEntity's own
+ * docblock: CategoryRepository writes permission grants tied to a
+ * category's own lifecycle, this class writes/deletes them from the
+ * permission-management side) -- holds EntityManagerInterface directly
+ * rather than being resolved via getRepository(), same shape as
+ * Auth\AuthRepository.
+ *
+ * `deleteUserAccess()`/`massInsertUserAccess()` were originally classified
+ * "reads only" when Part B's DBAL->ORM migration first surveyed this
+ * class -- wrong; both are real writes into user_access, found via a
+ * later audit of raw/BatchWriter call sites outside the repository layer
+ * that turned up this same gap inside the repository layer too.
  */
-final class PermissionRepository extends AbstractRepository
+final readonly class PermissionRepository
 {
+    public function __construct(
+        private EntityManagerInterface $em,
+    ) {}
+
     /**
      * @return list<int>
      */
     public function findPrivateCategoryIds(): array
     {
-        $ids = $this->conn->createQueryBuilder()
+        $ids = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('id')
             ->from(Tables::categories())
             ->where('status = :status')
@@ -40,7 +56,8 @@ final class PermissionRepository extends AbstractRepository
      */
     public function findLockedCategoryIds(): array
     {
-        $ids = $this->conn->createQueryBuilder()
+        $ids = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('id')
             ->from(Tables::categories())
             ->where('visible = :visible')
@@ -56,7 +73,8 @@ final class PermissionRepository extends AbstractRepository
      */
     public function findDirectlyAuthorizedCategoryIds(int $userId): array
     {
-        $ids = $this->conn->createQueryBuilder()
+        $ids = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('cat_id')
             ->from(Tables::userAccess())
             ->where('user_id = :userId')
@@ -81,13 +99,15 @@ final class PermissionRepository extends AbstractRepository
             return;
         }
 
-        $this->conn->createQueryBuilder()
-            ->delete(Tables::userAccess())
-            ->where('user_id = :userId')
-            ->andWhere('cat_id IN (:catIds)')
+        $this->em->createQueryBuilder()
+            ->delete(UserAccessEntity::class, 'ua')
+            ->where('ua.userId = :userId')
+            ->andWhere('ua.catId IN (:catIds)')
             ->setParameter('userId', $userId)
-            ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
-            ->executeStatement();
+            ->setParameter('catIds', $catIds)
+            ->getQuery()
+            ->execute();
+        $this->em->clear();
     }
 
     /**
@@ -103,7 +123,8 @@ final class PermissionRepository extends AbstractRepository
             return [];
         }
 
-        $ids = $this->conn->createQueryBuilder()
+        $ids = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('id')
             ->from(Tables::categories())
             ->where('id IN (:catIds)')
@@ -117,6 +138,11 @@ final class PermissionRepository extends AbstractRepository
     }
 
     /**
+     * $ignore (always true here) matters for the same reason as
+     * Category\CategoryRepository::massInsertGroupAccess()'s own docblock
+     * -- stays raw DBAL (BatchWriter), persist()+flush() has no INSERT
+     * IGNORE equivalent.
+     *
      * @param  list<array{user_id: int, cat_id: int}>  $inserts
      */
     public function massInsertUserAccess(array $inserts): void
@@ -125,10 +151,11 @@ final class PermissionRepository extends AbstractRepository
             return;
         }
 
-        $this->batchWriter()
+        new BatchWriter($this->em->getConnection())
             ->massInsert(Tables::userAccess(), ['user_id', 'cat_id'], $inserts, [
                 'ignore' => true,
             ]);
+        $this->em->clear();
     }
 
     /**
@@ -145,7 +172,8 @@ final class PermissionRepository extends AbstractRepository
             return [];
         }
 
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('cat_id', 'group_id')
             ->from(Tables::groupAccess())
             ->where('cat_id IN (:catIds)')
@@ -178,7 +206,8 @@ final class PermissionRepository extends AbstractRepository
             return [];
         }
 
-        $rows = $this->conn->createQueryBuilder()
+        $rows = $this->em->getConnection()
+            ->createQueryBuilder()
             ->select('cat_id', 'user_id')
             ->from(Tables::userAccess())
             ->where('cat_id IN (:catIds)')

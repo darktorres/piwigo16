@@ -339,6 +339,7 @@ DELETE
                         ],
                         $datas
                     );
+                \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                     ->record('photo', $collection, 'edit', [
@@ -369,6 +370,7 @@ DELETE
                         ],
                         $datas
                     );
+                \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                     ->record('photo', $collection, 'edit', [
@@ -401,6 +403,7 @@ DELETE
                         ],
                         $datas
                     );
+                \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                     ->record('photo', $collection, 'edit', [
@@ -427,6 +430,7 @@ DELETE
                         ],
                         $datas
                     );
+                \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                     ->record('photo', $collection, 'edit', [

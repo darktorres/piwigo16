@@ -1168,6 +1168,7 @@ SELECT id
                         'id' => $update['id'],
                     ]
                 );
+            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
         }
 
         self::activityService()->record('album', $params['category_id'], 'edit', [
@@ -1220,6 +1221,7 @@ UPDATE ' . Tables::categories() . '
   WHERE id = ' . $params['category_id'] . '
 ;';
         $conn->executeStatement($query);
+        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
         // Gap-closure Stage 4h: was `UPDATE user_cache_categories SET
         // user_representative_picture_id = NULL WHERE cat_id = ...` --
@@ -1280,6 +1282,7 @@ UPDATE ' . Tables::categories() . '
   WHERE id = ' . $params['category_id'] . '
 ;';
         $conn->executeStatement($query);
+        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
         self::activityService()->record('album', $params['category_id'], 'edit');
 

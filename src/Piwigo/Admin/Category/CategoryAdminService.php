@@ -198,7 +198,7 @@ final class CategoryAdminService
         }
 
         $conn = DbConnection::build();
-        $permissionRepository = new PermissionRepository($conn);
+        $permissionRepository = new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
 
         // groups
         $groupsGranted = $this->categoryService->getAccessGroupIds($catId);

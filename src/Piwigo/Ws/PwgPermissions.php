@@ -205,6 +205,7 @@ SELECT id
                         'ignore' => true,
                     ]
                 );
+            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
         }
 
         if (isset($params['user_id']) && $params['user_id'] !== []) {

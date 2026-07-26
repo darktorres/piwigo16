@@ -55,10 +55,29 @@ final class CatModifyPageRenderer
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_cat_modify');
 
-        // ---------------------------------------------------------------- verification
-        if (! isset($_GET['cat_id']) || ! is_numeric($_GET['cat_id'])) {
-            trigger_error('missing cat_id param', E_USER_ERROR);
-        }
+        // 'id' is the categories table primary key (NOT NULL); AlbumSubController's
+        // own fetchAssociative() call (one file over the include boundary PHPStan
+        // can't see into) always returns it as numeric. Narrow once here and reuse
+        // throughout the rest of this method's many uses of the category id.
+        //
+        // P27/SEC-40: this replaces a real bug found while auditing raw
+        // superglobal reads -- the original `isset($_GET['cat_id']) &&
+        // is_numeric(...)` check called trigger_error(..., E_USER_ERROR)
+        // on failure without a following throw, but this codebase's own
+        // ErrorCollector intercepts E_USER_ERROR and lets execution
+        // continue (see HtmlService::fatalError()'s own comment on the
+        // same mechanism), so that check never actually halted anything.
+        // The very next line then concatenated raw $_GET['cat_id']
+        // directly into SQL with zero escaping -- a real, if
+        // Administrator-gated, SQL injection shape. $category['id'] (this
+        // method's own $category parameter, already the real DB row
+        // AlbumSubController loaded via a validated cat_id) is the actual
+        // source of truth for this same value, so this now derives
+        // $category_id once, up front, and uses it everywhere below --
+        // removing the redundant/broken $_GET re-read entirely rather
+        // than replacing it with a new validating DTO for data this
+        // method already had.
+        $category_id = is_numeric($category['id']) ? (int) $category['id'] : 0;
 
         // --------------------------------------------------------- form criteria check
 
@@ -75,16 +94,11 @@ final class CatModifyPageRenderer
 
         $query = 'SELECT DISTINCT category_id
   FROM ' . Tables::imageCategory() . '
-  WHERE category_id = ' . $_GET['cat_id'] . '
+  WHERE category_id = :category_id
   LIMIT 1';
-        $category['has_images'] = count($categoryConn->fetchAllAssociative($query)) > 0 ? true : false;
+        $category['has_images'] = count($categoryConn->fetchAllAssociative($query, ['category_id' => $category_id])) > 0 ? true : false;
 
         // number of sub-categories
-        // 'id' is the categories table primary key (NOT NULL); AlbumSubController's
-        // own fetchAssociative() call (one file over the include boundary PHPStan
-        // can't see into) always returns it as numeric. Narrow once here and reuse
-        // throughout the rest of this method's many uses of the category id.
-        $category_id = is_numeric($category['id']) ? (int) $category['id'] : 0;
         $subcat_ids = $categoryService->getSubcatIds([$category_id]);
 
         $category['nb_subcats'] = count($subcat_ids) - 1;
@@ -294,7 +308,7 @@ SELECT COUNT(*)
         ]);
 
         if (! (bool) $category['is_virtual']) {
-            $category['cat_full_dir'] = $this->getCompleteDir($categoryConn, (int) $_GET['cat_id']);
+            $category['cat_full_dir'] = $this->getCompleteDir($categoryConn, $category_id);
             $category_full_dir = preg_replace('/\/$/', '', $category['cat_full_dir']);
             $template->assign(
                 [

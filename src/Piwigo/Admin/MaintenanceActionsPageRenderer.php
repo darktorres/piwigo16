@@ -8,6 +8,7 @@ use Imagick;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
+use Piwigo\Admin\Maintenance\Request\MaintenanceActionRequest;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
@@ -54,8 +55,7 @@ final class MaintenanceActionsPageRenderer
 
         FilesystemIntegrityChecker::fsQuickCheck();
 
-        $action_raw = $_GET['action'] ?? null;
-        $action = is_string($action_raw) ? $action_raw : '';
+        $action = MaintenanceActionRequest::fromGlobals()->action;
         new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService)
             ->dispatch($action);
 

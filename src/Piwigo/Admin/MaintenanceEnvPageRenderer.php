@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
+use Piwigo\Admin\Maintenance\Request\MaintenanceActionRequest;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
@@ -49,8 +50,7 @@ final class MaintenanceEnvPageRenderer
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $action_raw = $_GET['action'] ?? null;
-        $action = is_string($action_raw) ? $action_raw : '';
+        $action = MaintenanceActionRequest::fromGlobals()->action;
         new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService)
             ->dispatch($action);
 

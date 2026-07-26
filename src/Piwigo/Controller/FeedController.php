@@ -51,12 +51,9 @@ final class FeedController implements ControllerInterface
         $feed_repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Feed\FeedEntity::class);
         $notificationService = \Piwigo\Bootstrap\ExtendedDomainAccessor::notificationService();
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
-
-        $feed_id = $_GET['feed'] ?? '';
-        $feed_id = is_string($feed_id) ? $feed_id : '';
-        $image_only = isset($_GET['image_only']);
+        $feedRequest = Request\FeedRequest::fromGlobals();
+        $feed_id = $feedRequest->feedId;
+        $image_only = $feedRequest->imageOnly;
         // Only read below when $image_only is false, which implies $feed_id
         // was non-empty and the branch below already populated it.
         $feed_last_check = null;

@@ -68,7 +68,7 @@ final class LocalSiteReader
 
     // retrieve file system sub-directories fulldirs
     /**
-     * @return mixed[]
+     * @return string[]
      */
     public function get_full_directories(string $basedir): array
     {
@@ -80,7 +80,7 @@ final class LocalSiteReader
      * Returns an array with all file system files according to
      * CurrentConfig::fileExtensions() and CurrentConfig::pictureExtensions()
      * @param string $path recurse in this directory
-     * @return array<string, array<string, mixed>> like "pic.jpg"=>array('representative_ext'=>'jpg' ... )
+     * @return array<string, array{representative_ext: ?string, formats?: array<string, float>}> like "pic.jpg"=>array('representative_ext'=>'jpg' ... )
      */
     public function get_elements($path): array
     {
@@ -176,6 +176,9 @@ final class LocalSiteReader
 
     // returns a hash of attributes (metadata+filesize+width,...) for file
     /**
+     * Thin delegate to MetadataService::getSyncMetadata() -- see that
+     * method's own docblock for why $infos/the return stay generic.
+     *
      * @param array<string, mixed> $infos
      * @return array<string, mixed>|false
      */

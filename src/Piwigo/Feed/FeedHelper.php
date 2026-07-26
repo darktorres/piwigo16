@@ -41,10 +41,10 @@ final class FeedHelper
      * enclosure/etc. -- feed.php never sets any of those), not a
      * general-purpose feed library.
      *
-     * @param array<string, mixed> $channel keys: title, link, encoding
-     * @param array<int, array<string, mixed>> $items each: title, link, description, html (bool -- wrap
-     *        description in CDATA instead of escaping it), date (ISO 8601
-     *        string), author, guid
+     * @param array{title?: string, link?: string, encoding?: string} $channel
+     * @param list<array{title?: string, link?: string, description?: string, html?: bool, date?: string, author?: string, guid?: string}> $items
+     *        html wraps description in CDATA instead of escaping it; date is
+     *        an ISO 8601 string
      */
     public function generateRss2Feed(array $channel, array $items): string
     {

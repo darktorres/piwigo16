@@ -7,6 +7,12 @@ namespace Piwigo\Routing;
 final readonly class RouteResult
 {
     /**
+     * $args' values are genuinely arbitrary by design -- Router::dispatch()
+     * builds this straight from Symfony UrlMatcher::match()'s own
+     * vendor-declared array<string, mixed> return (route param values,
+     * which route config can default to any type, not just strings); every
+     * real consumer reads its own params defensively.
+     *
      * @param array<string, mixed> $args
      */
     private function __construct(
@@ -16,6 +22,12 @@ final readonly class RouteResult
     ) {}
 
     /**
+     * $args' values are genuinely arbitrary by design -- Router::dispatch()
+     * builds this straight from Symfony UrlMatcher::match()'s own
+     * vendor-declared array<string, mixed> return (route param values,
+     * which route config can default to any type, not just strings); every
+     * real consumer reads its own params defensively.
+     *
      * @param array<string, mixed> $args
      */
     public static function found(string $handler, array $args): self

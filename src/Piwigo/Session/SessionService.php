@@ -167,7 +167,10 @@ final class SessionService
     }
 
     /**
-     * Persistently stores a variable for the current session.
+     * Persistently stores a variable for the current session. $value is
+     * genuinely arbitrary by design -- the app writes any serializable PHP
+     * value here deliberately, same generic-KV-bag rationale as
+     * Piwigo\Core\ProcessCache.
      */
     public function setSessionVar(string $var, mixed $value): bool
     {

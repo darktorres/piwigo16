@@ -59,7 +59,7 @@ final class Lang
      * $data above, nothing outside this class reads $GLOBALS['lang_info']
      * directly, so no $GLOBALS bridge is needed here.
      *
-     * @var array<string, mixed>
+     * @var array<string, string|bool>
      */
     private static array $langInfo = [];
 
@@ -200,7 +200,7 @@ final class Lang
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<string, string|bool>
      */
     public static function langInfo(): array
     {
@@ -216,7 +216,7 @@ final class Lang
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param array<string, string|bool> $data
      */
     public static function setLangInfo(array $data): void
     {
@@ -590,6 +590,12 @@ final class Lang
      * legacy $lang['day']/$lang['month'] reader, e.g. admin/configuration.
      * php, admin/intro.php's activity chart, format_date_legacy()) always
      * returning ''/empty.
+     *
+     * $value is genuinely arbitrary by design -- Translator's own $mirror is
+     * populated from legacy plugin-authored `.lang.php` files (plain PHP
+     * assigning arbitrary values to $lang[...]) as well as .po data; this
+     * method's whole job is normalizing that untrusted shape down to the
+     * precise return type below, so it can't itself assume a clean input.
      *
      * @param array<mixed, mixed> $value
      * @return array<string, string|array<int, string>>

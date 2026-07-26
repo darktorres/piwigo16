@@ -35,6 +35,15 @@ use Smarty\Smarty;
  * (RequestBootstrap::connect() resolves one before finalize() ever
  * constructs a Template; InstallWizard is only ever constructed after
  * InstallBootstrap::activateConfigService()).
+ *
+ * Every `mixed` below stays that way by design: assign()/append()/
+ * get_template_vars() mirror Smarty's own arbitrary-value assign()
+ * contract (see TemplateInterface's own rationale); every mod_*()/
+ * block_*()/func_*() modifier/block/function plugin's $param(s) is
+ * Smarty's own tag-attribute API -- genuinely template-author-supplied,
+ * already defensively is_string()/is_scalar()/is_numeric()-validated at
+ * each real use site (see func_define_derivative() for the fullest
+ * example), the same "parse, don't trust" boundary as InputValidator.
  */
 final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\TemplateInterface
 {

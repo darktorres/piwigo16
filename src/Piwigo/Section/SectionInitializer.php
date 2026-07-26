@@ -54,17 +54,14 @@ final readonly class SectionInitializer
             // entry file is never nested" -- see that class's own docblock.
             $root_path = str_repeat('../', RequestMountDepth::current() + $path_count - 1);
         } else {
-            $rewritten = '';
-            foreach (array_keys($_GET) as $key) {
-                // PHP auto-casts a purely-numeric query-string key (e.g.
-                // "?1") to a real int array key -- a bare numeric token
-                // (no id-name suffix) crashed the original mysqli-based
-                // escaping call with a TypeError (?string required), found
-                // live via picture.php?1. Cast back to the string this
-                // variable was always meant to hold.
-                $rewritten = (string) $key;
-                break;
-            }
+            // PHP auto-casts a purely-numeric query-string key (e.g. "?1")
+            // to a real int array key -- a bare numeric token (no id-name
+            // suffix) crashed the original mysqli-based escaping call with
+            // a TypeError (?string required), found live via
+            // picture.php?1. Cast back to the string this variable was
+            // always meant to hold (see Request\SectionUrlRequest's own
+            // docblock).
+            $rewritten = Request\SectionUrlRequest::fromGlobals()->firstGetKey;
 
             // the $_GET keys are not protected in include/common.inc.php, only the values
             $rewritten = $this->repo->escapeToken($rewritten);

@@ -499,6 +499,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         if (! is_array($filename_array)) {
             return false;
         }
+        $getKeysConcatenated = Request\TemplateExtentsRequest::fromGlobals()->keysConcatenated;
         foreach ($filename_array as $filename => $value) {
             if (is_array($value)) {
                 $handle = $value[0] ?? null;
@@ -516,7 +517,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
                 return false;
             }
 
-            if ((stripos(implode('', array_keys($_GET)), '/' . (string) $param) !== false or (is_string($param) and $param === 'N/A'))
+            if ((stripos($getKeysConcatenated, '/' . (string) $param) !== false or (is_string($param) and $param === 'N/A'))
               and ((is_string($thm) and $thm === $theme) or (is_string($thm) and $thm === 'N/A'))
               and (! isset($this->extents[$handle]) or $overwrite)
               and file_exists($dir . $filename)) {

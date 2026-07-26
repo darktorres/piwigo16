@@ -20,17 +20,36 @@ use Piwigo\Lang\Translator;
 final class CheckIntegrity
 {
     /**
+     * Round-trips through CurrentConfig::c13yIgnore()'s persisted config
+     * value (see check() below) -- genuinely of unknown origin/shape if
+     * that config value were ever corrupted or hand-edited, even though
+     * this class itself only ever writes it as a list<string> of
+     * add_anomaly()-generated md5 ids (via update_conf() -> build_ignore_list).
+     *
      * @var array<int, mixed>
      */
     public $ignore_list;
 
     /**
-     * @var array<int, array<string, mixed>>
+     * Every element is built exclusively by add_anomaly() below, or
+     * dynamically extended with 'corrected'/'ignored' by check(). See
+     * add_anomaly()'s own docblock for the precise element shape.
+     *
+     * @var list<array{
+     *   id: string,
+     *   anomaly: string,
+     *   correction_fct: ?string,
+     *   correction_fct_args: ?array<string, mixed>,
+     *   correction_msg: ?string,
+     *   is_callable: bool,
+     *   corrected?: mixed,
+     *   ignored?: bool,
+     * }>
      */
     public $retrieve_list;
 
     /**
-     * @var array<int, mixed>
+     * @var list<string> add_anomaly()-generated md5 ids
      */
     public $build_ignore_list;
 
@@ -236,14 +255,19 @@ final class CheckIntegrity
     }
 
     /**
-     * Add anomaly data
+     * Add anomaly data.
      *
-     * @param string $anomaly arguments
-     * @param ?string $correction_fct
+     * $correction_fct is a callable-string looked up dynamically (see
+     * is_callable() below) -- the sole in-tree caller
+     * (C13yInternal::c13y_user()) passes the literal string
+     * 'c13y_correction_user', which is actually a C13yInternal instance
+     * method, not a bare global function; is_callable() on that bare
+     * string is therefore false and this correction path silently never
+     * fires today. Pre-existing, out of this pass's scope to fix.
+     *
      * @param ?array<string, mixed> $correction_fct_args
-     * @param ?string $correction_msg
      */
-    public function add_anomaly($anomaly, $correction_fct = null, $correction_fct_args = null, $correction_msg = null): void
+    public function add_anomaly(string $anomaly, ?string $correction_fct = null, ?array $correction_fct_args = null, ?string $correction_msg = null): void
     {
         $id = md5($anomaly . $correction_fct . serialize($correction_fct_args) . $correction_msg);
 
@@ -265,9 +289,9 @@ final class CheckIntegrity
     /**
      * Update table config
      *
-     * @param array<int, mixed> $conf_ignore_list list array
+     * @param list<string> $conf_ignore_list add_anomaly()-generated md5 ids
      */
-    public function update_conf($conf_ignore_list = []): void
+    public function update_conf(array $conf_ignore_list = []): void
     {
         $conf_c13y_ignore = [];
         $conf_c13y_ignore['version'] = AppInfo::VERSION;

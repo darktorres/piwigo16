@@ -102,7 +102,7 @@ foreach (array_slice($argv ?? [], 1) as $cliDumpPath) {
 }
 
 echo count($webFiles) . " web request dump(s) merged.\n\n";
-echo (new Text(Thresholds::default(), showUncoveredFiles: false))->process($coverage);
+echo (new Text(Thresholds::default(), showUncoveredFiles: true))->process($coverage);
 
 (new HtmlReport())->process($coverage, $htmlDir);
 echo "\nHTML report written to {$htmlDir}\n";

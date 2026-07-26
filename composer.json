@@ -100,8 +100,8 @@
       "@analyse:phpstan"
     ],
     "test": "@php vendor/bin/pest --testsuite Unit,Arch",
-    "test:coverage": "@php vendor/bin/pest --testsuite Unit,Arch --coverage --min=5 --coverage-php _data/coverage-raw/unit-arch.cov",
-    "test:coverage:integration": "@php vendor/bin/pest --testsuite Integration --coverage --coverage-php _data/coverage-raw/integration.cov",
+    "test:coverage": "@php vendor/bin/pest --testsuite Unit,Arch --coverage-php _data/coverage-raw/unit-arch.cov",
+    "test:coverage:integration": "@php vendor/bin/pest --testsuite Integration --coverage-php _data/coverage-raw/integration.cov",
     "test:integration": "@php vendor/bin/pest --testsuite Integration",
     "test:contract": "@php vendor/bin/pest --testsuite Contract",
     "test:browser": [

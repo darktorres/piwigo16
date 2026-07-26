@@ -93,7 +93,7 @@ final readonly class CommentsRequest
         if (! is_numeric($items_number_value) and $items_number_value !== 'all') {
             $items_number_value = 10;
         }
-        $items_number = is_numeric($items_number_value) ? $items_number_value : 'all';
+        $items_number = is_numeric($items_number_value) ? (int) $items_number_value : 'all';
 
         $cat_raw = $get['cat'] ?? null;
         $cat_display = is_string($cat_raw) ? $cat_raw : null;

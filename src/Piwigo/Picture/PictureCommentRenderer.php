@@ -80,6 +80,8 @@ final class PictureCommentRenderer
 
         $commentAction = null;
 
+        $pictureCommentSubmitRequest = Request\PictureCommentSubmitRequest::fromGlobals();
+
         // the picture is commentable if it belongs at least to one category
         // which is commentable
         $showComments = false;
@@ -90,32 +92,31 @@ final class PictureCommentRenderer
             }
         }
 
-        if ($showComments and isset($_POST['content'])) {
+        if ($showComments and $pictureCommentSubmitRequest->contentPresent) {
             if (\Piwigo\Auth\AccessControl::isAGuest() and ! \Piwigo\Config\CurrentConfig::commentsForall()) {
                 throw new ResponseReadyException(ResponseFactory::text('Session expired'));
             }
 
-            $postAuthor = $_POST['author'] ?? null;
-            // isset($_POST['content']) was already checked by the enclosing if().
-            $postContent = $_POST['content'];
-            $postWebsiteUrl = $_POST['website_url'] ?? null;
-            $postEmail = $_POST['email'] ?? null;
+            $postAuthor = $pictureCommentSubmitRequest->author;
+            $postContent = $pictureCommentSubmitRequest->content;
+            $postWebsiteUrl = $pictureCommentSubmitRequest->websiteUrl;
+            $postEmail = $pictureCommentSubmitRequest->email;
 
             $comm = [
-                'author' => is_string($postAuthor) && $postAuthor !== '' && $postAuthor !== '0' ? trim($postAuthor) : '',
-                'content' => is_string($postContent) && $postContent !== '' && $postContent !== '0' ? trim($postContent) : '',
-                'website_url' => is_string($postWebsiteUrl) && $postWebsiteUrl !== '' && $postWebsiteUrl !== '0' ? trim($postWebsiteUrl) : '',
-                'email' => is_string($postEmail) && $postEmail !== '' && $postEmail !== '0' ? trim($postEmail) : '',
+                'author' => $postAuthor !== null && $postAuthor !== '' && $postAuthor !== '0' ? trim($postAuthor) : '',
+                'content' => $postContent !== null && $postContent !== '' && $postContent !== '0' ? trim($postContent) : '',
+                'website_url' => $postWebsiteUrl !== null && $postWebsiteUrl !== '' && $postWebsiteUrl !== '0' ? trim($postWebsiteUrl) : '',
+                'email' => $postEmail !== null && $postEmail !== '' && $postEmail !== '0' ? trim($postEmail) : '',
                 'image_id' => $imageId,
             ];
 
-            $postKey = $_POST['key'] ?? null;
+            $postKey = $pictureCommentSubmitRequest->key;
             // insertComment() overwrites $commentErrors unconditionally as its
             // very first statement, so whatever was previously there is
             // never actually read by it; a fresh array is passed and the
             // result is written back below.
             $commentErrors = [];
-            $commentAction = $commentService->insertComment($comm, is_string($postKey) ? $postKey : '', $commentErrors);
+            $commentAction = $commentService->insertComment($comm, $postKey ?? '', $commentErrors);
             \Piwigo\Core\PageState::current()->errors = $commentErrors;
 
             // Narrowed once into local variables and written back after the
@@ -150,7 +151,7 @@ final class PictureCommentRenderer
                     'action' => $commentAction,
                 ])
             );
-        } elseif (isset($_POST['content'])) {
+        } elseif ($pictureCommentSubmitRequest->contentPresent) {
             throw new ResponseReadyException(ResponseFactory::text('ugly spammer', 403));
         }
 
@@ -179,8 +180,8 @@ final class PictureCommentRenderer
 
         if ($nbComments > 0) {
             // comments order (get, session, conf)
-            $getCommentsOrder = $_GET['comments_order'] ?? null;
-            if (is_string($getCommentsOrder) && $getCommentsOrder !== '' && $getCommentsOrder !== '0' && in_array(strtoupper($getCommentsOrder), ['ASC', 'DESC'], true)) {
+            $getCommentsOrder = $pictureCommentSubmitRequest->commentsOrderRaw;
+            if ($getCommentsOrder !== null && $getCommentsOrder !== '' && $getCommentsOrder !== '0' && in_array(strtoupper($getCommentsOrder), ['ASC', 'DESC'], true)) {
                 SessionService::get()->setSessionVar('comments_order', $getCommentsOrder);
             }
             $commentsOrder = SessionService::get()->getSessionVar('comments_order', \Piwigo\Config\CurrentConfig::commentsOrder());
@@ -318,9 +319,14 @@ final class PictureCommentRenderer
             ];
 
             if ($commentAction === 'reject') {
-                foreach (['content', 'author', 'website_url', 'email'] as $k) {
-                    $postValue = $_POST[$k] ?? null;
-                    $tplVar[strtoupper($k)] = is_string($postValue) ? htmlspecialchars(stripslashes($postValue)) : '';
+                $postValues = [
+                    'content' => $pictureCommentSubmitRequest->content,
+                    'author' => $pictureCommentSubmitRequest->author,
+                    'website_url' => $pictureCommentSubmitRequest->websiteUrl,
+                    'email' => $pictureCommentSubmitRequest->email,
+                ];
+                foreach ($postValues as $k => $postValue) {
+                    $tplVar[strtoupper($k)] = $postValue !== null ? htmlspecialchars(stripslashes($postValue)) : '';
                 }
             }
             $template->assign('comment_add', $tplVar);

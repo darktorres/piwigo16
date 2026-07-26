@@ -367,11 +367,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             $next_id = self::nextval($conn, 'id', Tables::categories());
 
             // retrieve sub-directories fulldirs from the site reader
-            // get_full_directories() is declared to return mixed[], but in practice
-            // it always forwards FilesystemHelper::getFsDirectories()'s string[]
-            // result; filter defensively so this array's element type is a real
-            // string.
-            $fs_fulldirs = array_filter($site_reader->get_full_directories($basedir), is_string(...));
+            $fs_fulldirs = $site_reader->get_full_directories($basedir);
 
             // get_full_directories doesn't include the base directory, so if it's a
             // category directory, we need to include it in our array
@@ -662,11 +658,8 @@ SELECT id, path
                 ];
 
                 if (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
-                    // 'formats' is only known as mixed here (get_elements()'s
-                    // declared value type is array<string, mixed>), but it's always
-                    // the get_formats() float[] result when set.
                     $element_formats = $fs[$path]['formats'] ?? null;
-                    if (is_array($element_formats)) {
+                    if ($element_formats !== null) {
                         foreach ($element_formats as $ext => $filesize) {
                             $insert_formats[] = [
                                 'image_id' => $insert['id'],
@@ -713,10 +706,8 @@ SELECT id, path
 
                     // first we search the formats that were removed
                     foreach ($db_formats as $image_id => $formats) {
-                        // 'formats' is only known as mixed here (get_elements()'s
-                        // declared value type is array<string, mixed>).
-                        $element_formats = $fs[$db_elements[$image_id]]['formats'] ?? null;
-                        $image_formats_to_delete = array_diff_key($formats, is_array($element_formats) ? $element_formats : []);
+                        $element_formats = $fs[$db_elements[$image_id]]['formats'] ?? [];
+                        $image_formats_to_delete = array_diff_key($formats, $element_formats);
                         $logger->debug('image_formats_to_delete', 'sync', $image_formats_to_delete);
                         foreach ($image_formats_to_delete as $ext => $format_id) {
                             $formats_to_delete[] = $format_id;
@@ -737,10 +728,8 @@ SELECT id, path
                             $formats = $db_formats[$image_id];
                         }
 
-                        // 'formats' is only known as mixed here (get_elements()'s
-                        // declared value type is array<string, mixed>).
-                        $element_formats = $fs[$path]['formats'] ?? null;
-                        $image_formats_to_insert = array_diff_key(is_array($element_formats) ? $element_formats : [], $formats);
+                        $element_formats = $fs[$path]['formats'] ?? [];
+                        $image_formats_to_insert = array_diff_key($element_formats, $formats);
                         $logger->debug('image_formats_to_insert', 'sync', $image_formats_to_insert);
                         foreach ($image_formats_to_insert as $ext => $filesize) {
                             $insert_formats[] = [

@@ -2,27 +2,6 @@
 
 declare(strict_types=1);
 
-// \Piwigo\Db\MysqliDb::booleanToString() is a real, pure, dependency-free function -- copied
-// verbatim (same body as SearchServiceTest.php/ImageServiceTest.php;
-// function_exists() guards mean whichever Integration test file's stub
-// loads first wins for the whole run, so every file declaring it must
-// keep the body identical). generate_key()'s own stub was removed (P23
-// batch 8c) -- NotificationByMailService now calls the real
-// Piwigo\Session\SessionService::get()->generateKey() directly, which
-// this Integration test's real DB connection satisfies without a stub.
-namespace {
-    if (! function_exists('boolean_to_string')) {
-        function boolean_to_string(mixed $var): mixed
-        {
-            if (is_bool($var)) {
-                return $var ? 'true' : 'false';
-            }
-
-            return $var;
-        }
-    }
-}
-
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;

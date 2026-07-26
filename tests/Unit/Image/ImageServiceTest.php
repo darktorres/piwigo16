@@ -7,32 +7,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 
-// \Piwigo\Db\MysqliDb::getBoolean()/\Piwigo\Db\MysqliDb::booleanToString() are real, pure, dependency-free
-// functions (include/dblayer/functions_mysqli.inc.php) -- copied verbatim
-// rather than requiring that file (which pulls in the whole legacy mysqli
-// driver bootstrap this isolated unit test doesn't want).
-if (! function_exists('get_boolean')) {
-    function get_boolean(mixed $input): bool
-    {
-        if (is_string($input) && strtolower($input) === 'false') {
-            return false;
-        }
-
-        return (bool) $input;
-    }
-}
-
-if (! function_exists('boolean_to_string')) {
-    function boolean_to_string(mixed $var): mixed
-    {
-        if (is_bool($var)) {
-            return $var ? 'true' : 'false';
-        }
-
-        return $var;
-    }
-}
-
 beforeEach(function (): void {
     CurrentConfig::setSlideshowPeriod(4);
     CurrentConfig::setSlideshowPeriodMin(1);

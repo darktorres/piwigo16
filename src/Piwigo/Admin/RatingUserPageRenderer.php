@@ -207,8 +207,21 @@ final class RatingUserPageRenderer
         $template->assign_var_from_handle('ADMIN_CONTENT', 'rating');
     }
 
-    /** @param array<string, mixed> $a
-     *  @param array<string, mixed> $b */
+    /**
+     * The 5 compare*() methods below all sort the same $by_user_ratings
+     * row, incrementally built up by render() across 3 separate mutation
+     * points (the initial $by_user_rating_model copy, the per-rate 'rates'
+     * bucket appends, and the final by-user-stats `$rating += [...]`) --
+     * a real static shape for it is derivable but would tie every
+     * comparator to render()'s own internal accumulation order, for no
+     * safety gain: each comparator already reads only its own 1-2 keys
+     * defensively (is_numeric()/is_string() + a default), the same
+     * cross-domain generic-row-reader pattern used for comparators
+     * elsewhere (e.g. {@see \Piwigo\Category\CategoryService::compareByGlobalRank()}).
+     *
+     * @param array<string, mixed> $a
+     * @param array<string, mixed> $b
+     */
     public static function avgCompare(array $a, array $b): int
     {
         $a_avg = is_numeric($a['avg'] ?? null) ? (float) $a['avg'] : 0.0;
@@ -217,8 +230,10 @@ final class RatingUserPageRenderer
         return $d === 0.0 ? 0 : ($d < 0 ? -1 : 1);
     }
 
-    /** @param array<string, mixed> $a
-     *  @param array<string, mixed> $b */
+    /**
+     * @param array<string, mixed> $a see {@see avgCompare()}'s own docblock
+     * @param array<string, mixed> $b
+     */
     public static function countCompare(array $a, array $b): int
     {
         $a_count = is_numeric($a['count'] ?? null) ? (float) $a['count'] : 0.0;
@@ -227,8 +242,10 @@ final class RatingUserPageRenderer
         return $d === 0.0 ? 0 : ($d < 0 ? -1 : 1);
     }
 
-    /** @param array<string, mixed> $a
-     *  @param array<string, mixed> $b */
+    /**
+     * @param array<string, mixed> $a see {@see avgCompare()}'s own docblock
+     * @param array<string, mixed> $b
+     */
     public static function cvCompare(array $a, array $b): int
     {
         $a_cv = is_numeric($a['cv'] ?? null) ? (float) $a['cv'] : 0.0;
@@ -237,8 +254,10 @@ final class RatingUserPageRenderer
         return $d === 0.0 ? 0 : ($d < 0 ? -1 : 1);
     }
 
-    /** @param array<string, mixed> $a
-     *  @param array<string, mixed> $b */
+    /**
+     * @param array<string, mixed> $a see {@see avgCompare()}'s own docblock
+     * @param array<string, mixed> $b
+     */
     public static function consensusDevCompare(array $a, array $b): int
     {
         $a_cd = is_numeric($a['cd'] ?? null) ? (float) $a['cd'] : 0.0;
@@ -247,8 +266,10 @@ final class RatingUserPageRenderer
         return $d === 0.0 ? 0 : ($d < 0 ? -1 : 1);
     }
 
-    /** @param array<string, mixed> $a
-     *  @param array<string, mixed> $b */
+    /**
+     * @param array<string, mixed> $a see {@see avgCompare()}'s own docblock
+     * @param array<string, mixed> $b
+     */
     public static function lastRateCompare(array $a, array $b): int
     {
         $a_date = is_string($a['last_date'] ?? null) ? $a['last_date'] : '';

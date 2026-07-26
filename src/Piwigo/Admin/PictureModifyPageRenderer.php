@@ -67,6 +67,16 @@ final class PictureModifyPageRenderer
         // for this method's own body only (no longer `global $page;`),
         // same shape as Section\SectionPopulator::populate()'s own
         // equivalent fix (Track A5.2e).
+        //
+        // $page['image'] starts as ImageService::getImageInfos()'s own
+        // precisely-shaped return, but $row (derived from it below) later
+        // has 'added_by' widened from ?int to a resolved username string
+        // (line ~398) and a brand new 'nb_rates' key added (line ~428) --
+        // genuinely outgrows that fixed shape as this method progresses,
+        // same "risk of untested retype" call as FilterService::
+        // initializeFromRequest()'s own scratch array. Left as
+        // array<string, mixed>, each read still narrowed defensively at
+        // its own use site (is_scalar()/is_numeric() + a default).
         /** @var array<string, mixed> $page */
         $page = [];
         $template = \Piwigo\Template\CurrentTemplate::get();
@@ -303,7 +313,9 @@ SELECT
 
         // getImageInfos($image_id, $htmlRenderer, true) fatal_errors (never returns) when the
         // photo doesn't exist, so $page['image'] is guaranteed to be a real
-        // array<string, mixed> row by this point.
+        // array<string, mixed> row by this point -- see $page's own
+        // docblock above for why this stays a loose bag rather than
+        // getImageInfos()'s own precise return shape.
         /** @var array<string, mixed> $row */
         $row = $page['image'];
 

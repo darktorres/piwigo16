@@ -83,30 +83,18 @@ final class LanguagesInstalledPageRenderer
         $db_languages = $extension_repository->findAll(ExtensionType::Language);
 
         // --------------------------------------------------perform requested actions
-        new \Piwigo\Validation\InputValidator()
-            ->validate('action', $_GET, false, '/^(activate|deactivate|set_default|delete)$/');
-        new \Piwigo\Validation\InputValidator()
-            ->validate('language', $_GET, false, '/^(' . join('|', array_keys($fs_languages)) . ')$/');
+        $languagesAction = Request\LanguagesInstalledActionRequest::fromGlobals('/^(' . join('|', array_keys($fs_languages)) . ')$/');
 
-        if (isset($_GET['action']) and isset($_GET['language']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
+        if ($languagesAction->action !== null and $languagesAction->languageId !== null and \Piwigo\Auth\AccessControl::isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
-            // check_input_parameter() above already fatal_error()s if either value
-            // is non-scalar or doesn't match the expected pattern; query string
-            // values reaching this point are always plain strings in practice, but
-            // narrow explicitly for perform_action()'s string parameters.
-            $action = $_GET['action'];
-            $language_id = $_GET['language'];
+            $fs_language_entry = $fs_languages[$languagesAction->languageId] ?? null;
+            $action_errors = $extension_lifecycle->performAction(ExtensionType::Language, $languagesAction->action, $languagesAction->languageId, $fs_language_entry);
+            \Piwigo\Core\PageState::current()->errors = array_values(array_filter($action_errors, is_string(...)));
 
-            if (is_string($action) and is_string($language_id)) {
-                $fs_language_entry = $fs_languages[$language_id] ?? null;
-                $action_errors = $extension_lifecycle->performAction(ExtensionType::Language, $action, $language_id, $fs_language_entry);
-                \Piwigo\Core\PageState::current()->errors = array_values(array_filter($action_errors, is_string(...)));
-
-                if ($action_errors === []) {
-                    $this->redirectService->redirect($base_url);
-                }
+            if ($action_errors === []) {
+                $this->redirectService->redirect($base_url);
             }
         }
 

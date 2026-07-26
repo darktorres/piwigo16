@@ -61,7 +61,7 @@ final class GroupRepository extends EntityRepository
      * plain DBAL via the entity manager's own connection rather than DQL.
      *
      * @param array<int, int> $groupIds when non-empty, restricts to these ids
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, name: string, is_default: bool, lastmodified: string, nb_users: int}>
      */
     public function findWithMemberCounts(
         array $groupIds,

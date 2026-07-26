@@ -103,6 +103,12 @@ final readonly class RateService
      * rate), and clears rating_score for images that no longer have any
      * rate at all.
      *
+     * Stays a generic bag by design: the update_rating_score plugin hook
+     * can widen/replace the whole return value with arbitrary plugin data
+     * (same "not narrowable further" rationale as
+     * SearchService::getQuickSearchResultsNoCache()'s own qsearch_results
+     * hook).
+     *
      * @return array<string, mixed> (score, average, count); values are
      *   null/0 if $elementId is false or has no rates of its own
      */

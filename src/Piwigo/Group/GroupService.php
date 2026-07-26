@@ -50,7 +50,7 @@ final readonly class GroupService
 
     /**
      * @param array<int, int> $groupIds
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, name: string, is_default: bool, lastmodified: string, nb_users: int}>
      */
     public function getListWithMemberCounts(
         array $groupIds = [],

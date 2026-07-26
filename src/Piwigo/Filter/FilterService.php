@@ -229,7 +229,8 @@ WHERE ';
     }
 
     /**
-     * Updates data of categories with filtered values.
+     * Updates data of categories with filtered values. See
+     * FilterUpdaterInterface's own docblock for $cats' real shape.
      *
      * @param array<int, array<string, mixed>> $cats
      */

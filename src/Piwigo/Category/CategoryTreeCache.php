@@ -39,7 +39,7 @@ final readonly class CategoryTreeCache
     /**
      * @param array<string, mixed> $userdata same shape getuserdata() returns
      *   -- must at least have 'id', 'level', 'forbidden_categories'.
-     * @return array<int, array<string, mixed>> keyed by category id
+     * @return array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string, name: string, permalink: ?string, id: int}> keyed by category id
      */
     public function getForUser(array $userdata): array
     {
@@ -50,7 +50,7 @@ final readonly class CategoryTreeCache
         if ($item->isHit()) {
             $cached = $item->get();
             if (is_array($cached)) {
-                /** @var array<int, array<string, mixed>> $cached */
+                /** @var array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string, name: string, permalink: ?string, id: int}> $cached */
                 return $cached;
             }
         }

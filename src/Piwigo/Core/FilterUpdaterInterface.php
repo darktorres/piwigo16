@@ -17,6 +17,15 @@ namespace Piwigo\Core;
 interface FilterUpdaterInterface
 {
     /**
+     * $cats' rows are CategoryTreeCache::getForUser()'s own row shape
+     * (see FilterState::categories()'s matching return type) further
+     * extended per call site with template-display fields (e.g.
+     * CategoryService::getCategoriesMenu()'s NAME/TITLE/URL/LEVEL/
+     * SELECTED/IS_UPPERCAT/icon_ts, itself mixed via EventDispatcher) --
+     * only date_last/max_date_last/count_images/count_categories/
+     * nb_images are ever read or written here, but the container can't be
+     * narrowed to one single shape across every real per-site extension.
+     *
      * @param array<int, array<string, mixed>> $cats
      */
     public function updateCatsWithFilteredData(array &$cats): void;

@@ -770,9 +770,12 @@ DELETE
     /**
      * id/id_uppercat/uppercats/rank/global_rank for every category, ordered
      * for {@see \Piwigo\Category\CategoryService::updateGlobalRank()}'s own
-     * per-parent rank-numbering pass.
+     * per-parent rank-numbering pass. Types below match that method's own
+     * already-live assert(is_string($rowId) && is_string($rowUppercats) &&
+     * is_numeric($rowRank)) -- this raw query's id/uppercats come back as
+     * strings, not yet cast the way Category::fromRow() casts them.
      *
-     * @return list<array<string, mixed>>
+     * @return list<array{id: string, id_uppercat: int|string|null, uppercats: string, rank: int|string|null, global_rank: ?string}>
      */
     public function findCategoriesForRankUpdate(): array
     {
@@ -1025,6 +1028,10 @@ SELECT id, uppercats
      * one real caller (AlbumsPageRenderer) only reaches them after
      * validating $_POST['order'] against a fixed whitelist.
      *
+     * The value's real type depends on which column $field names (a date
+     * string for a date column, a number for a numeric one) -- genuinely
+     * arbitrary by design, not just unnarrowed.
+     *
      * @param  list<int>  $categoryIds
      * @return array<int, mixed> keyed by category_id
      */
@@ -1138,7 +1145,7 @@ SELECT id, galleries_url
 
     /**
      * @param  array<int>  $ids  real callers don't guarantee a list
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, uppercats: string, site_id: ?int}>
      */
     public function findCategoriesForFulldirs(array $ids): array
     {
@@ -1182,7 +1189,7 @@ UPDATE ' . Tables::images() . '
 
     /**
      * @param  array<int>  $ids  real callers don't guarantee a list
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, id_uppercat: ?int, status: string, uppercats: string}>
      */
     public function findCategoriesForMove(array $ids): array
     {
@@ -1307,7 +1314,11 @@ SELECT id, uppercats, global_rank, visible, status
     }
 
     /**
-     * @param array<int, array{id: mixed, rank: mixed}> $datas
+     * id stays mixed -- CategoryService::saveCategoriesOrder()'s own
+     * $categories is raw request input (see that method's own docblock),
+     * so id traces back to an unvalidated request element.
+     *
+     * @param array<int, array{id: mixed, rank: int}> $datas
      */
     public function massUpdateRanks(array $datas): void
     {
@@ -1325,7 +1336,7 @@ SELECT id, uppercats, global_rank, visible, status
     }
 
     /**
-     * @param array<int, array{id: mixed, rank: mixed, global_rank: mixed}> $datas
+     * @param array<int, array{id: string, rank: int, global_rank: ?string}> $datas
      */
     public function massUpdateRanksAndGlobalRank(array $datas): void
     {
@@ -1343,7 +1354,7 @@ SELECT id, uppercats, global_rank, visible, status
     }
 
     /**
-     * @param array<int, array{id: mixed, representative_picture_id: mixed}> $datas
+     * @param array<int, array{id: int, representative_picture_id: ?int}> $datas
      */
     public function massUpdateRepresentativePictures(array $datas): void
     {
@@ -1361,7 +1372,7 @@ SELECT id, uppercats, global_rank, visible, status
     }
 
     /**
-     * @param array<int, array{id: mixed, uppercats: mixed}> $datas
+     * @param array<int, array{id: string, uppercats: string}> $datas
      */
     public function massUpdateUppercats(array $datas): void
     {
@@ -1423,7 +1434,7 @@ SELECT id, uppercats, global_rank, visible, status
      * IGNORE equivalent, same reasoning as Group\GroupRepository::
      * addMembers().
      *
-     * @param array<int, array{group_id: mixed, cat_id: mixed}> $inserts
+     * @param array<int, array{group_id: int, cat_id: int}> $inserts
      */
     public function massInsertGroupAccess(array $inserts, bool $ignore = false): void
     {

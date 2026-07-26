@@ -79,6 +79,13 @@ final readonly class CategoryService
     }
 
     /**
+     * Generic cross-domain sort comparator -- 16 real call sites across
+     * Category/Ws/Admin/Controller/Picture pass wildly different row
+     * shapes (category rows, picture rows, image rows, ...) that merely
+     * happen to share a 'global_rank' key; only that one key is read, and
+     * defensively (is_scalar()-checked), so $a/$b can't be narrowed to any
+     * single domain's row shape without being wrong for the other 15.
+     *
      * @param  array<string, mixed>  $a
      * @param  array<string, mixed>  $b
      */
@@ -94,6 +101,9 @@ final readonly class CategoryService
     }
 
     /**
+     * Same generic cross-domain comparator rationale as
+     * compareByGlobalRank() above -- only reads 'rank', defensively.
+     *
      * @param  array<string, mixed>  $a
      * @param  array<string, mixed>  $b
      */
@@ -141,11 +151,13 @@ final readonly class CategoryService
      * PHP-side equivalent, applied to `CategoryTreeCache`'s cached,
      * permission-filtered row set.
      *
-     * @param array<int, array<string, mixed>> $allRows keyed by category id,
+     * @param array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string, name: string, permalink: ?string, id: int}> $allRows keyed by category id,
      *   already permission-filtered (CategoryTreeCache::getForUser())
      * @param array<string, mixed>|null $categoryPage the currently-viewed
-     *   category ($page['category']), if any
-     * @return array<int, array<string, mixed>>
+     *   category ($page['category']/SectionContext::$category), if any --
+     *   only 'uppercats' is read here, defensively, matching that
+     *   property's own already-declared array<string,mixed>|null type
+     * @return array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: mixed, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string, name: string, permalink: ?string, id: int}>
      */
     public static function filterMenuRows(
         array $allRows,
@@ -184,7 +196,11 @@ final readonly class CategoryService
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @return array{id: int, name: string, id_uppercat: ?int, comment: ?string,
+     *   dir: ?string, rank: ?int, status: string, site_id: ?int, visible: bool,
+     *   representative_picture_id: ?int, uppercats: string, commentable: bool,
+     *   global_rank: ?string, image_order: ?string, permalink: ?string, lastmodified: string,
+     *   upper_names: list<array{id: int, name: string, permalink: ?string}>}|null
      */
     public function getCategoryInfo(int $id): ?array
     {
@@ -334,6 +350,12 @@ final readonly class CategoryService
     }
 
     /**
+     * Same cross-domain generic-row-reader rationale as
+     * compareByGlobalRank() -- 4 real call sites across CategoryCatsRenderer
+     * and Ws\PwgCategories pass differently-sourced category rows (tree-
+     * cache rows, WS param arrays); only id/uppercats/count_images are
+     * read, defensively.
+     *
      * @param  array<string, mixed>  $category  (at least id, uppercats, count_images)
      */
     public function getRandomImageInCategory(array $category, bool $recursive = true): ?int
@@ -679,8 +701,14 @@ final readonly class CategoryService
      * global left to mutate, that value comes back through the return
      * shape instead.
      *
+     * 'menu' rows extend CategoryTreeCache::getForUser()'s own row shape
+     * with template-display fields (NAME/TITLE/URL/LEVEL/SELECTED/
+     * IS_UPPERCAT/icon_ts) built inside this method's own loop; NAME stays
+     * mixed since it's EventDispatcher::triggerChange()'s own by-design
+     * arbitrary return value.
+     *
      * @param array<string, mixed>|null $category
-     * @return array{menu: array<int, array<string, mixed>>, categoryCountCategories: mixed}
+     * @return array{menu: array<int, array<string, mixed>>, categoryCountCategories: ?int}
      */
     public function getCategoriesMenu(?array $category, FilterUpdaterInterface $filterUpdater, UrlServiceInterface $urlService): array
     {
@@ -778,6 +806,11 @@ final readonly class CategoryService
      * Assign a template var useable with {html_options} from a list of
      * categories.
      *
+     * Same cross-domain generic-row-reader rationale as
+     * compareByGlobalRank() for $categories; $selecteds is passed straight
+     * to Template::assign(), matching that method's own by-design
+     * arbitrary-value contract.
+     *
      * @param array<int, array<string, mixed>> $categories (at least id,name,global_rank,uppercats for each)
      * @param array<int, mixed> $selecteds
      * @param string $blockname variable name in template
@@ -865,6 +898,11 @@ final readonly class CategoryService
      * Legacy Coupling Retirement Track A batch A5.2e: $category/
      * $combinedCategories are explicit params instead of
      * `global $page['category']`/`['combined_categories']`.
+     *
+     * $category/$combinedCategories are SectionContext::$category-shaped
+     * (only used wholesale as UrlService params here, never read by key);
+     * the return rows inherit getRelatedCategoriesMenu()'s own 'name'
+     * field, mixed via EventDispatcher::triggerChange().
      *
      * @param  array<int, int|string>  $items
      * @param  array<int, int|string>  $excludedCatIds
@@ -1048,6 +1086,12 @@ final readonly class CategoryService
      *
      * The list of ordered categories id is supposed to be in the same parent
      * category
+     *
+     * $categories is raw request input (Admin\AlbumsPageRenderer's $_POST-
+     * derived array, Ws\PwgCategories' $order_new WS param) -- already
+     * defensively is_array()/is_int()/is_string()-checked per element; a
+     * real validating shape belongs to Phase 4's Request DTOs, not a
+     * retroactive narrow here.
      *
      * @param array<int, mixed> $categories
      */
@@ -1397,7 +1441,7 @@ final readonly class CategoryService
     }
 
     /**
-     * @param array<int, array{group_id: mixed, cat_id: mixed}> $inserts
+     * @param array<int, array{group_id: int, cat_id: int}> $inserts
      */
     public function grantGroupAccess(array $inserts): void
     {

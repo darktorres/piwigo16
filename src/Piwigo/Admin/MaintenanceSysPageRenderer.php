@@ -38,7 +38,7 @@ final class MaintenanceSysPageRenderer
 
         if (\Piwigo\Auth\AccessControl::isWebmaster()) {
             // Get system activities data
-            if (isset($_GET['method']) && $_GET['method'] === 'pwg.activity_sys.getList') {
+            if (Request\MaintenanceSysMethodRequest::fromGlobals()->isActivitySysGetList) {
                 $data = [];
 
                 $user_fields = \Piwigo\Config\CurrentConfig::userFields();

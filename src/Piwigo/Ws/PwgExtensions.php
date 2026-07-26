@@ -43,11 +43,19 @@ final class PwgExtensions
      * @param array<string, mixed> $params this method is registered with a
      *   null signature (zero registered params) -- $params is the raw,
      *   entirely unvalidated request array, but the body doesn't read it.
-     * @return array{id: mixed, name: mixed, version: mixed, state: mixed, description: mixed}[]
+     * @return list<array{id: string, name: string, version: string, state: string, description: string}>
      */
     public static function pluginsGetList(array $params, PwgServer &$service): array
     {
         $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
+        // ExtensionScanner::scan()'s own declared return type is a generic
+        // array<string, array<string, mixed>> dispatch shape (by design --
+        // see that method's own docblock), but every real entry for
+        // ExtensionType::Plugin is actually scanPlugin()'s own precise shape.
+        /** @var array<string, array{name: string, version: string, uri: string,
+         *   description: string, author: string, hasSettings: bool,
+         *   'author uri'?: string, extension?: string}> $fs_plugins
+         */
         $fs_plugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService);
         uasort($fs_plugins, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->nameCompare(...));
@@ -55,7 +63,7 @@ final class PwgExtensions
         $plugin_list = [];
 
         foreach ($fs_plugins as $plugin_id => $fs_plugin) {
-            if (isset($db_plugins_by_id[$plugin_id])) {
+            if (isset($db_plugins_by_id[$plugin_id]) && is_string($db_plugins_by_id[$plugin_id]['state'])) {
                 $state = $db_plugins_by_id[$plugin_id]['state'];
             } else {
                 $state = 'uninstalled';
@@ -370,7 +378,7 @@ final class PwgExtensions
      * @param array<string, mixed> $params this method is registered with a
      *   null signature (zero registered params) -- $params is the raw,
      *   entirely unvalidated request array, but the body doesn't read it.
-     * @return array{piwigo_need_update: mixed, ext_need_update: bool|null}
+     * @return array{piwigo_need_update: bool|null, ext_need_update: bool|null}
      */
     public static function checkUpdates(array $params, PwgServer &$service): array
     {
@@ -383,7 +391,12 @@ final class PwgExtensions
             $coreUpdateService->checkPiwigoUpgrade();
         }
 
-        $result['piwigo_need_update'] = $_SESSION['need_update' . AppInfo::VERSION] ?? null;
+        // CoreUpdateService::checkPiwigoUpgrade() only ever writes this
+        // session key as null or a real bool (version_compare() result);
+        // narrowed defensively since it's still a round-trip through
+        // session state.
+        $piwigo_need_update = $_SESSION['need_update' . AppInfo::VERSION] ?? null;
+        $result['piwigo_need_update'] = is_bool($piwigo_need_update) ? $piwigo_need_update : null;
 
         if (! isset($_SESSION['extensions_need_update'])) {
             $updateChecker->checkExtensions();

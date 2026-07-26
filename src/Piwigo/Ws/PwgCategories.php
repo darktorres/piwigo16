@@ -373,6 +373,9 @@ SELECT
      *   is a real possible runtime value since they have no non-null-forcing
      *   type flag beyond INT|POSITIVE (which still allows the null default
      *   through unchanged).
+     * Genuinely dynamic response shape: tree_output controls whether
+     * categories nest recursively or come back flat, same rationale as
+     * Ws\PwgUsers::getList()'s own client-controlled response shape.
      * @return PwgError|array<int|string, mixed>
      */
     public static function getList(array $params, PwgServer &$service): PwgError|array
@@ -1296,7 +1299,9 @@ UPDATE ' . Tables::categories() . '
      *
      * @param array{category_id: int, ...} $params no 'default' key -- mandatory,
      *   always present, WsParamType::ID guarantees a plain int.
-     * @return PwgError|array<string, mixed>
+     * @return PwgError|array{src: string|array<int|string, mixed>, url: string} matches
+     *   CategoryService::getCategoryRepresentantProperties()'s own
+     *   already-precise return type (this method's only real array return)
      */
     public static function refreshRepresentative(array $params, PwgServer &$service): PwgError|array
     {

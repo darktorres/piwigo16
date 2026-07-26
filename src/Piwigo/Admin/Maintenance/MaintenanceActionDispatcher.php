@@ -212,8 +212,7 @@ final class MaintenanceActionDispatcher
 
             case 'derivatives':
 
-                $types_str = $_GET['type'] ?? '';
-                $types_str = is_string($types_str) ? $types_str : '';
+                $types_str = Request\DerivativesTypeRequest::fromGlobals()->typesStr;
                 if ($types_str === 'all') {
                     new DerivativeCacheService()
                         ->clearDerivativeCache($types_str);

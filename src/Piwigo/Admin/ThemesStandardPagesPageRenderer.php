@@ -82,39 +82,28 @@ final class ThemesStandardPagesPageRenderer
             'teal',
         ];
 
-        if (isset($_POST['submit']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
+        $stdPagesSubmit = Request\ThemesStandardPagesSubmitRequest::fromGlobals($std_pgs_logo_options, $std_pgs_skin_options);
+
+        if ($stdPagesSubmit->isSubmitted and \Piwigo\Auth\AccessControl::isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
-            // use_standard_pages or not -- a checkbox POST value, so "not
-            // set"/''/'0' are all "unchecked", matching empty()'s own
-            // semantics for this input without using empty() itself.
-            $use_standard_pages_raw = $_POST['use_standard_pages'] ?? null;
-            $use_standard_pages_checked = $use_standard_pages_raw !== null
-                && $use_standard_pages_raw !== ''
-                && $use_standard_pages_raw !== '0';
-            $this->configService->confUpdateParam('use_standard_pages', $use_standard_pages_checked, true);
+            $this->configService->confUpdateParam('use_standard_pages', $stdPagesSubmit->useStandardPages, true);
 
             // save selected logo
-            if (isset($_POST['std_pgs_display_logo']) and in_array($_POST['std_pgs_display_logo'], $std_pgs_logo_options, true)) {
-                $this->configService->confUpdateParam('standard_pages_selected_logo', $_POST['std_pgs_display_logo'], true);
+            if ($stdPagesSubmit->selectedLogo !== null) {
+                $this->configService->confUpdateParam('standard_pages_selected_logo', $stdPagesSubmit->selectedLogo, true);
             }
 
             // save selected skin
-            if (isset($_POST['std_pgs_selected_skin']) and in_array($_POST['std_pgs_selected_skin'], $std_pgs_skin_options, true)) {
-                $this->configService->confUpdateParam('standard_pages_selected_skin', $_POST['std_pgs_selected_skin'], true);
+            if ($stdPagesSubmit->selectedSkin !== null) {
+                $this->configService->confUpdateParam('standard_pages_selected_skin', $stdPagesSubmit->selectedSkin, true);
             }
         }
 
         // Handle logo upload, allow png, jpg and svg
-        $std_pgs_logo_upload = $_FILES['std_pgs_logo'] ?? null;
-        if (
-            is_array($std_pgs_logo_upload)
-            and isset($std_pgs_logo_upload['tmp_name'])
-            and is_string($std_pgs_logo_upload['tmp_name'])
-            and $std_pgs_logo_upload['tmp_name'] !== ''
-        ) {
-            $std_pgs_logo_tmp_name = $std_pgs_logo_upload['tmp_name'];
+        if ($stdPagesSubmit->logoTmpName !== null) {
+            $std_pgs_logo_tmp_name = $stdPagesSubmit->logoTmpName;
 
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             $mime_type = $finfo === false ? false : finfo_file($finfo, $std_pgs_logo_tmp_name);
@@ -137,10 +126,7 @@ final class ThemesStandardPagesPageRenderer
             } else {
                 $upload_dir = \Piwigo\Core\CurrentPaths::get()->siteLocal . 'logo';
                 if (\Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
-                    $std_pgs_logo_name = isset($std_pgs_logo_upload['name']) && is_string($std_pgs_logo_upload['name'])
-                        ? $std_pgs_logo_upload['name']
-                        : '';
-                    $pathinfo = pathinfo($std_pgs_logo_name);
+                    $pathinfo = pathinfo($stdPagesSubmit->logoName);
 
                     $logo_filename = \Piwigo\Core\StringHelper::str2url($pathinfo['filename']) . '.' . $allowed_mimes[$mime_type];
 

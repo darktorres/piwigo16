@@ -433,7 +433,11 @@ SELECT
      * @param array{tag_id: int, copy_name: string, pwg_token: string, ...} $params
      *   none has a 'default' key -- all mandatory, always present, WsParamType::ID
      *   guarantees a plain int for tag_id.
-     * @return PwgError|array{id: int|string, name: string, url_name: mixed, count: int}
+     * url_name is EventDispatcher::triggerChange('render_tag_url', ...)'s
+     * own genuinely-mixed plugin-filter return; id/name/count are real
+     * (id is explicitly (int)-cast from lastInsertId(), name is the
+     * mandatory string $params['copy_name'], count is count($inserts)).
+     * @return PwgError|array{id: int, name: string, url_name: mixed, count: int}
      */
     public static function duplicate(array $params, PwgServer &$service): PwgError|array
     {
@@ -530,7 +534,7 @@ SELECT image_id
      *   none has a 'default' key -- all mandatory, always present;
      *   destination_tag_id: WsParamType::ID guarantees a plain int; merge_tag_id:
      *   FORCE_ARRAY always coerces to a list of positive ints.
-     * @return PwgError|array{destination_tag: int, deleted_tag: array<int, int>, images_in_merged_tag: array<int, mixed>}
+     * @return PwgError|array{destination_tag: int, deleted_tag: array<int, int>, images_in_merged_tag: list<int>}
      */
     public static function merge(array $params, PwgServer &$service): PwgError|array
     {

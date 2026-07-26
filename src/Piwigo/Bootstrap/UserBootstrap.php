@@ -50,6 +50,8 @@ final class UserBootstrap
 
     public function initialize(): void
     {
+        $userBootstrapRequest = Request\UserBootstrapRequest::fromGlobals();
+
         $conn = DbConnection::build();
         $authService = new AuthService(
             new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
@@ -77,7 +79,7 @@ final class UserBootstrap
         $session_cookie_name = is_string($session_cookie_name) ? $session_cookie_name : '';
 
         if ($session_cookie_name !== '' && isset($_COOKIE[$session_cookie_name])) {
-            if (($_GET['act'] ?? null) === 'logout') { // logout
+            if ($userBootstrapRequest->logoutRequested) { // logout
                 $authService->logoutUser();
                 $this->redirectService->redirect($this->urlService->getGalleryHomeUrl());
             } else {
@@ -107,8 +109,8 @@ final class UserBootstrap
         }
 
         // automatic login by authentication key
-        if (isset($_GET['auth'])) {
-            $authService->authKeyLogin($_GET['auth']);
+        if ($userBootstrapRequest->authKeyPresent) {
+            $authService->authKeyLogin($userBootstrapRequest->authKey);
         }
 
         // HTTP_AUTHORIZATION api_key
@@ -117,8 +119,7 @@ final class UserBootstrap
             and isset($_SERVER['HTTP_X_PIWIGO_API'])
             and is_string($_SERVER['HTTP_X_PIWIGO_API'])
             and ! self::emptyValue($_SERVER['HTTP_X_PIWIGO_API'])
-            and isset($_REQUEST['method'])
-            and is_string($_REQUEST['method'])
+            and $userBootstrapRequest->wsMethod !== null
         ) {
             // $_SERVER['HTTP_X_PIWIGO_API'] is already known non-empty by the
             // enclosing condition; AuthRepository::findAuthKeyDetails() (what
@@ -143,29 +144,30 @@ final class UserBootstrap
                 }
                 ApiKeyRequestFlag::activate();
 
-                // set pwg_token for api_key request
+                // set pwg_token for api_key request -- load-bearing write, not
+                // covered by Request\UserBootstrapRequest (see its own
+                // docblock): must stay visible to later $_POST/$_GET reads
+                // in this same request (Ws\Request\WsRawRequest::fromGlobals()
+                // and any downstream CSRF check).
                 $_POST['pwg_token'] = $_GET['pwg_token'] = new \Piwigo\Csrf\CsrfService()->getToken();
 
                 // logger
                 $logger = \Piwigo\Core\CurrentLogger::get();
-                $logger->info('[api_key][pkid=' . explode(':', $auth_header)[0] . '][method=' . $_REQUEST['method'] . ']');
+                $logger->info('[api_key][pkid=' . explode(':', $auth_header)[0] . '][method=' . $userBootstrapRequest->wsMethod . ']');
             }
         }
 
-        $post_username = $_POST['username'] ?? null;
-        $post_password = $_POST['password'] ?? null;
         if (
             \Piwigo\Core\WsContext::isActive()
-            and is_string($_REQUEST['method'] ?? null)
-            and $_REQUEST['method'] === 'pwg.images.uploadAsync'
-            and is_string($post_username)
-            and is_string($post_password)
+            and $userBootstrapRequest->wsMethod === 'pwg.images.uploadAsync'
+            and $userBootstrapRequest->username !== null
+            and $userBootstrapRequest->password !== null
         ) {
             $service = \Piwigo\Ws\WsInitializer::init();
 
             $credentials = [
-                'username' => $post_username,
-                'password' => $post_password,
+                'username' => $userBootstrapRequest->username,
+                'password' => $userBootstrapRequest->password,
             ];
 
             $login = PwgCore::sessionLogin($credentials, $service);

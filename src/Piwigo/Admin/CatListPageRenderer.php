@@ -8,7 +8,6 @@ use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
@@ -48,7 +47,9 @@ final class CatListPageRenderer
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_cat_list');
 
-        if ($_POST !== [] or isset($_GET['delete'])) {
+        $catListRequest = Request\CatListRequest::fromGlobals();
+
+        if ($catListRequest->isCsrfCheckRequired) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
         }
@@ -66,17 +67,7 @@ final class CatListPageRenderer
         // |                            initialization                          |
         // +-------------------------------------------------------------------+
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('parent_id', $_GET, false, ValidationPattern::ID);
-
-        // check_input_parameter() already validated (or killed the request) that
-        // $_GET['parent_id'], when present, matches ValidationPattern::ID (digits only) -- but
-        // it doesn't retype the superglobal, so we still narrow it once here and
-        // reuse this variable everywhere below instead of the raw mixed value.
-        $parent_id = null;
-        if (isset($_GET['parent_id']) and is_numeric($_GET['parent_id'])) {
-            $parent_id = (int) $_GET['parent_id'];
-        }
+        $parent_id = $catListRequest->parentId;
 
         $categories = [];
 
@@ -112,16 +103,12 @@ SELECT COUNT(*)
         // |                    virtual categories management                  |
         // +-------------------------------------------------------------------+
         // request to delete a virtual category
-        if (isset($_GET['delete']) and is_numeric($_GET['delete'])) {
-            $photo_deletion_mode = 'no_delete';
-            if (isset($_GET['photo_deletion_mode']) and is_string($_GET['photo_deletion_mode'])) {
-                $photo_deletion_mode = $_GET['photo_deletion_mode'];
-            }
+        if ($catListRequest->deleteId !== null) {
             $categoryService->deleteCategories(
-                [(int) $_GET['delete']],
+                [$catListRequest->deleteId],
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
                 $this->urlService,
-                $photo_deletion_mode
+                $catListRequest->photoDeletionMode
             );
 
             $_SESSION['page_infos'] = [Lang::t('Virtual album deleted')];
@@ -135,9 +122,8 @@ SELECT COUNT(*)
             $this->redirectService->redirect($redirect_url);
         }
         // request to add a virtual category
-        elseif (isset($_POST['submitAdd'])) {
-            $virtual_name_raw = $_POST['virtual_name'] ?? null;
-            $virtual_name = is_string($virtual_name_raw) ? $virtual_name_raw : '';
+        elseif ($catListRequest->isSubmitAdd) {
+            $virtual_name = $catListRequest->virtualName;
             $output_create = \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()
                 ->createVirtualCategory(
                     $virtual_name,

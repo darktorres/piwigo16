@@ -31,8 +31,18 @@ use Piwigo\Template\Template;
 final class FilterPanelRenderer
 {
     /**
+     * $collection is genuinely heterogeneous across its 3 producing
+     * branches in the 2 real callers (an all-null placeholder array sized
+     * by a photo count, a narrowed list<string> of ids, or a raw
+     * $_POST['selection']/session array) -- this method never reads its
+     * elements, only hands the whole thing to `$template->assign()` as the
+     * 'selection' Smarty variable, so there's no real narrowing to do
+     * beyond array<mixed>.
+     *
      * @param array<mixed> $collection
-     * @param array<mixed> $catElementsId
+     * @param array<array-key, int|string|float|bool> $catElementsId a
+     *   scalar-filtered image id set -- see
+     *   {@see \Piwigo\Controller\Admin\BatchManagerSubController::computeCurrentSet()}
      */
     public function render(
         Template $template,
@@ -215,10 +225,13 @@ SELECT
     }
 
     /**
-     * usort()'s callable contract requires accepting any array key type (not
-     * just string), even though $prefilters entries are always string-keyed
-     * in practice -- narrowing the @param here would make this incompatible
-     * with usort's expected callable(array<mixed>, array<mixed>): int shape.
+     * $prefilters is only reliably list<array{ID: string, NAME: string}>
+     * for this class's own 7-9 built-in entries -- the
+     * 'get_batch_manager_prefilters' filter above lets plugins splice in
+     * their own entries, only checked for is_array() (not this specific
+     * shape), so a real plugin-injected row could carry any array
+     * structure. Read defensively, same as any other plugin-extensible
+     * list.
      *
      * @param array<mixed> $a
      * @param array<mixed> $b

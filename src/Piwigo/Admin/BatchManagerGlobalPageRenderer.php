@@ -67,7 +67,9 @@ final class BatchManagerGlobalPageRenderer
     }
 
     /**
-     * @param array<mixed> $catElementsId
+     * @param array<array-key, int|string|float|bool> $catElementsId a
+     *   scalar-filtered image id set -- see
+     *   {@see \Piwigo\Controller\Admin\BatchManagerSubController::computeCurrentSet()}
      * @param ?list<string> $duplicatesOnFields
      */
     public function render(array $catElementsId, int $pageStart, ?array $duplicatesOnFields = null): void

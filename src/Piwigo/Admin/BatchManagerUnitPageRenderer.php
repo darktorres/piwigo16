@@ -82,7 +82,9 @@ final class BatchManagerUnitPageRenderer
     }
 
     /**
-     * @param array<mixed> $catElementsId
+     * @param array<array-key, int|string|float|bool> $catElementsId a
+     *   scalar-filtered image id set -- see
+     *   {@see \Piwigo\Controller\Admin\BatchManagerSubController::computeCurrentSet()}
      */
     public function render(array $catElementsId, int $pageStart): void
     {

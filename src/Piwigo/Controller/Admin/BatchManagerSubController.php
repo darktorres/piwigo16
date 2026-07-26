@@ -517,7 +517,11 @@ DELETE FROM ' . Tables::caddie() . '
      *   was ported onto in P23 batch 6g doesn't survive FrankenPHP worker
      *   mode either).
      *
-     * @return array<mixed>
+     * @return array<array-key, int|string|float|bool> a scalar-filtered
+     *   image id set -- see the array_filter(..., is_scalar(...)) calls
+     *   below, the same "filter sets are always image id lists" contract
+     *   BatchManagerUnitPageRenderer/BatchManagerGlobalPageRenderer/
+     *   FilterPanelRenderer's own $catElementsId already documents
      */
     private function computeCurrentSet(
         FilterResolver $filterResolver,

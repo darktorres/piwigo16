@@ -145,7 +145,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
     /**
      * @param list<int> $items
      * @param list<int> $excludedTagIds
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, name: string, url_name: string, lastmodified: string, counter: int}>
      */
     public function findCommonTags(array $items, int $maxTags, array $excludedTagIds): array
     {
@@ -222,7 +222,7 @@ SELECT
 
     /**
      * @param array<int, int|string> $imageIds
-     * @return list<array<string, mixed>> [image_id, tag_id]
+     * @return list<array{image_id: int, tag_id: int}>
      */
     public function findTagIdsByImageIds(array $imageIds): array
     {
@@ -440,6 +440,11 @@ SELECT id
      * BatchManagerUnitPageRenderer/FilterPanelRenderer) each build their own
      * WHERE clause against Tables::tags()/Tables::imageTag() and hand the
      * complete query in, matching the original get_taglist()'s own shape.
+     *
+     * 'name' is read straight into TagService::getTagList()'s own
+     * EventDispatcher::triggerChange() call (by-design mixed), so a
+     * precise column-name shape wouldn't buy much beyond what's already
+     * documented.
      *
      * @return list<array<string, mixed>>
      */

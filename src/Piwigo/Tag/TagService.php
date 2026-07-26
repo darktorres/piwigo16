@@ -71,9 +71,12 @@ final readonly class TagService
     }
 
     /**
-     * Returns all tags even associated to no image.
+     * Returns all tags even associated to no image. Row = Tag::toArray()'s
+     * shape plus name_raw (the pre-render_tag_name-hook value); 'name'
+     * itself is overwritten to EventDispatcher::triggerChange()'s own
+     * by-design mixed return.
      *
-     * @return list<array<string, mixed>> [id, name, url_name]
+     * @return list<array{id: int, name: mixed, url_name: string, lastmodified: string, name_raw: string}>
      */
     public function getAllTags(HtmlRenderingInterface $htmlRenderer): array
     {
@@ -97,7 +100,7 @@ final readonly class TagService
      * @param array<int|string, int|string> $ids
      * @param array<int|string, string> $urlNames
      * @param array<int|string, string> $names
-     * @return list<array<string, mixed>> [id, name, url_name]
+     * @return list<array{id: int, name: string, url_name: string, lastmodified: string}>
      */
     public function findTags(array $ids = [], array $urlNames = [], array $names = []): array
     {
@@ -116,6 +119,11 @@ final readonly class TagService
      * The level of each tag depends on the average count of tags. This
      * calculation method avoid having very different levels for tags
      * having nearly the same count when set are small.
+     *
+     * $tags is cross-shape generic by design -- real callers pass either
+     * getAvailableTags()'s row shape or findCommonTags()'s, which share
+     * 'counter' but otherwise differ; only 'counter' is read (defensively),
+     * 'level' is the only key added.
      *
      * @param array<int, array<string, mixed>> $tags at least [id, counter]
      * @return array<int, array<string, mixed>> [..., level]
@@ -160,6 +168,9 @@ final readonly class TagService
     }
 
     /**
+     * Same cross-domain generic-row-reader rationale as
+     * Category\CategoryService::compareByGlobalRank().
+     *
      * @param array<string, mixed> $a
      * @param array<string, mixed> $b
      */
@@ -169,6 +180,8 @@ final readonly class TagService
     }
 
     /**
+     * Same cross-domain generic-row-reader rationale as tagsIdCompare().
+     *
      * @param array<string, mixed> $a
      * @param array<string, mixed> $b
      */
@@ -189,8 +202,12 @@ final readonly class TagService
      * returned list can be a subset of all existing tags due to
      * permissions, also tags with no images are not returned.
      *
+     * Row = Tag::toArray()'s shape plus counter (from countImagesPerTag()'s
+     * own array<int, int>) and name_raw; 'name' is overwritten to
+     * EventDispatcher::triggerChange()'s own by-design mixed return.
+     *
      * @param array<int, int|string> $tagIds empty means "no tag_id filter"
-     * @return list<array<string, mixed>> [id, name, counter, url_name]
+     * @return list<array{id: int, name: mixed, url_name: string, lastmodified: string, counter: int, name_raw: string}>
      */
     public function getAvailableTags(array $tagIds = []): array
     {
@@ -322,9 +339,13 @@ final readonly class TagService
     /**
      * Return a list of tags corresponding to given items.
      *
+     * Row = TagRepository::findCommonTags()'s own shape with 'name'
+     * overwritten to EventDispatcher::triggerChange()'s by-design mixed
+     * return.
+     *
      * @param int[] $items
      * @param int[] $excludedTagIds
-     * @return list<array<string, mixed>> [id, name, counter, url_name]
+     * @return list<array{id: int, name: mixed, url_name: string, lastmodified: string, counter: int}>
      */
     public function getCommonTags(array $items, int $maxTags, HtmlRenderingInterface $htmlRenderer, array $excludedTagIds = []): array
     {

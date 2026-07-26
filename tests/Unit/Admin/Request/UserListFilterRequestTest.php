@@ -8,7 +8,14 @@ test('fromArray returns null groupId and userSearchInput when absent', function 
     $request = UserListFilterRequest::fromArray([]);
 
     expect($request->groupId)->toBeNull()
-        ->and($request->userSearchInput)->toBeNull();
+        ->and($request->userSearchInput)->toBeNull()
+        ->and($request->showAddUser)->toBeFalse();
+});
+
+test('fromArray reports showAddUser when show_add_user is present', function (): void {
+    $request = UserListFilterRequest::fromArray(['show_add_user' => '1']);
+
+    expect($request->showAddUser)->toBeTrue();
 });
 
 test('fromArray returns the group id verbatim', function (): void {

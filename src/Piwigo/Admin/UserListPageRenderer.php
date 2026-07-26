@@ -190,7 +190,7 @@ SELECT
             ]
         );
 
-        if (isset($_GET['show_add_user'])) {
+        if ($userListFilter->showAddUser) {
             $template->assign('show_add_user', true);
         }
 

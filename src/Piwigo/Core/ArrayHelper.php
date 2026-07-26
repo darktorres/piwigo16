@@ -11,7 +11,9 @@ namespace Piwigo\Core;
 final class ArrayHelper
 {
     /**
-     * Apply unserialize() on a value only if it is a string
+     * Apply unserialize() on a value only if it is a string. Return type
+     * mirrors PHP's own unserialize(): genuinely any PHP value, by design --
+     * no narrower contract is possible without knowing what was serialized.
      *
      * @param array<int|string, mixed>|string $value
      * @return mixed the unserialized value, false if $value is a malformed

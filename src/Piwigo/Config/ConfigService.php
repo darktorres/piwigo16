@@ -371,12 +371,14 @@ final readonly class ConfigService
      * (reads the live property), just isn't the preferred surface.
      *
      * @param array<mixed>|string|int|float|bool|null $defaultValue
+     * @return array<mixed>|string|int|float|bool|NotificationConfig|null
      */
-    public function confGetParam(string $param, array|string|int|float|bool|null $defaultValue = null): mixed
+    public function confGetParam(string $param, array|string|int|float|bool|null $defaultValue = null): array|string|int|float|bool|NotificationConfig|null
     {
         $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
         if ($propertyName !== null) {
             $value = new \ReflectionMethod(CurrentConfig::class, $propertyName)->invoke(null);
+            /** @var array<mixed>|string|int|float|bool|NotificationConfig|null $value every mapped property getter's declared return type */
 
             return $value ?? $defaultValue;
         }
@@ -386,7 +388,10 @@ final readonly class ConfigService
             return $defaultValue;
         }
 
-        return json_decode($entry->value, true) ?? $defaultValue;
+        $decoded = json_decode($entry->value, true);
+        /** @var array<mixed>|string|int|float|bool|null $decoded json_decode(..., true) of a value only ever json_encode()'d from that same union by confUpdateParam() */
+
+        return $decoded ?? $defaultValue;
     }
 
     /**

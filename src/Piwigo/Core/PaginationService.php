@@ -29,7 +29,13 @@ final class PaginationService
      *   (include/functions_url.inc.php), and admin/rating.php/
      *   admin/batch_manager.php pass $_GET/$_REQUEST directly after only
      *   an is_numeric() check
-     * @return array<string, mixed>
+     * Assigned wholesale into Smarty templates at every real call site (never
+     * read key-by-key in PHP) -- an empty return means "single page, no
+     * navigation needed"; each key below is independently optional rather
+     * than a value object, matching the .tpl files' own per-key isset()
+     * checks.
+     *
+     * @return array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int}
      */
     public function createNavigationBar(
         string $url,

@@ -4519,12 +4519,12 @@ final class CurrentConfig
 
     /**
      * Pages on which the tag/date filter UI is displayed.
-     * @var array<mixed>
+     * @var array<string, array<string, bool>>
      */
     private static array $filterPages = self::DEFAULT_FILTER_PAGES;
 
     /**
-     * @return array<mixed>
+     * @return array<string, array<string, bool>>
      */
     public static function filterPages(): array
     {
@@ -4532,7 +4532,7 @@ final class CurrentConfig
     }
 
     /**
-     * @param array<mixed> $value
+     * @param array<string, array<string, bool>> $value
      */
     public static function setFilterPages(array $value): void
     {

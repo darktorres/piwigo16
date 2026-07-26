@@ -28,7 +28,7 @@ final class RecentIconResolver
     /**
      * return an array which will be sent to template to display recent icon
      *
-     * @return false|array<string, mixed>
+     * @return false|array{}|array{TITLE: string, IS_CHILD_DATE: bool}
      */
     public static function getIcon(string $date, int $recentPeriod, bool $isChildDate = false): false|array
     {

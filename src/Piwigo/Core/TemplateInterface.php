@@ -27,6 +27,11 @@ namespace Piwigo\Core;
 interface TemplateInterface
 {
     /**
+     * $value/$tpl_var's hashmap values are genuinely arbitrary by design --
+     * matches Smarty's own `assign($tpl_var, $value = null)` signature,
+     * the same category as PwgResponseEncoder's generic serialization
+     * boundary: any PHP value a caller wants a template to render.
+     *
      * @param string|array<string, mixed> $tpl_var can be a var name or a hashmap of variables
      *    (in this case, do not use the _$value_ parameter)
      */
@@ -46,5 +51,9 @@ interface TemplateInterface
 
     public function clear_assign(string $tpl_var): void;
 
+    /**
+     * Mirrors assign()'s own arbitrary-value contract -- returns whatever
+     * was previously assigned, unmodified.
+     */
     public function get_template_vars(?string $tpl_var = null): mixed;
 }

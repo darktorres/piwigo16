@@ -29,7 +29,7 @@ final class EventDispatcher
     // was silently harmless. Preserving that laziness here, rather than
     // "fixing" pwg_image_resize (out of this phase's scope).
     /**
-     * @var array<string, array<int, list<array{function: string|array<int, mixed>|object, include_path: string|null}>>>
+     * @var array<string, array<int, list<EventHandler>>>
      */
     private array $handlers = [];
 
@@ -52,7 +52,7 @@ final class EventDispatcher
     }
 
     /**
-     * @param array<int, mixed>|object|string $func
+     * @param array{0: object|string, 1: string}|object|string $func
      */
     public function addEventHandler(
         string $event,
@@ -62,17 +62,14 @@ final class EventDispatcher
     ): bool {
         if (isset($this->handlers[$event][$priority])) {
             foreach ($this->handlers[$event][$priority] as $handler) {
-                if (self::callablesEqual($handler['function'], $func)) {
+                if (self::callablesEqual($handler->function, $func)) {
                     return false;
                 }
             }
         }
 
         $handlersAtPriority = $this->handlers[$event][$priority] ?? [];
-        $handlersAtPriority[] = [
-            'function' => $func,
-            'include_path' => $includePath,
-        ];
+        $handlersAtPriority[] = new EventHandler($func, $includePath);
         $this->handlers[$event][$priority] = $handlersAtPriority;
 
         ksort($this->handlers[$event]);
@@ -80,7 +77,7 @@ final class EventDispatcher
     }
 
     /**
-     * @param array<int, mixed>|object|string $func
+     * @param array{0: object|string, 1: string}|object|string $func
      */
     public function removeEventHandler(string $event, string|array|object $func, int $priority = 50): bool
     {
@@ -91,7 +88,7 @@ final class EventDispatcher
         $handlersAtPriority = $this->handlers[$event][$priority];
 
         foreach ($handlersAtPriority as $i => $handler) {
-            if (! self::callablesEqual($handler['function'], $func)) {
+            if (! self::callablesEqual($handler->function, $func)) {
                 continue;
             }
 
@@ -124,8 +121,8 @@ final class EventDispatcher
      * src/Piwigo/Admin/Integrity/C13yInternal.php) needs the loose,
      * same-binding comparison `==` gives, not `===` identity.
      *
-     * @param array<int, mixed>|object|string $a
-     * @param array<int, mixed>|object|string $b
+     * @param array{0: object|string, 1: string}|object|string $a
+     * @param array{0: object|string, 1: string}|object|string $b
      */
     private static function callablesEqual(string|array|object $a, string|array|object $b): bool
     {
@@ -171,11 +168,11 @@ final class EventDispatcher
             foreach ($handlersAtPriority as $handler) {
                 $args[0] = $data;
 
-                if ($handler['include_path'] !== null && $handler['include_path'] !== '') {
-                    include_once $handler['include_path'];
+                if ($handler->includePath !== null && $handler->includePath !== '') {
+                    include_once $handler->includePath;
                 }
 
-                if (! is_callable($handler['function'])) {
+                if (! is_callable($handler->function)) {
                     // Matches the original's un-guarded call_user_func_array()
                     // fatalling on a genuinely dead registration (see the
                     // $handlers docblock) -- never reached by any handler
@@ -183,7 +180,7 @@ final class EventDispatcher
                     throw new \Error("Event handler for '{$event}' is not callable.");
                 }
 
-                $data = call_user_func_array($handler['function'], $args);
+                $data = call_user_func_array($handler->function, $args);
             }
         }
 
@@ -217,15 +214,15 @@ final class EventDispatcher
 
         foreach ($this->handlers[$event] as $handlersAtPriority) {
             foreach ($handlersAtPriority as $handler) {
-                if ($handler['include_path'] !== null && $handler['include_path'] !== '') {
-                    include_once $handler['include_path'];
+                if ($handler->includePath !== null && $handler->includePath !== '') {
+                    include_once $handler->includePath;
                 }
 
-                if (! is_callable($handler['function'])) {
+                if (! is_callable($handler->function)) {
                     throw new \Error("Event handler for '{$event}' is not callable.");
                 }
 
-                call_user_func_array($handler['function'], $args);
+                call_user_func_array($handler->function, $args);
             }
         }
     }

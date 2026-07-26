@@ -17,6 +17,13 @@ namespace Piwigo\Core;
 interface ActivityLoggerInterface
 {
     /**
+     * $details is a genuinely heterogeneous per-action log payload (config
+     * diffs, batch-edit field lists, install metadata, permission grants,
+     * ...) -- 40+ real call sites across Admin/Ws/Controller/domain
+     * services each build their own one-off shape, matching PSR-3
+     * LoggerInterface's own `$context` parameter, not a single reusable
+     * domain concept.
+     *
      * @param int|string|array<int, int|string> $objectId
      * @param array<string, mixed> $details
      */

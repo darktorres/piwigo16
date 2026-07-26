@@ -854,10 +854,19 @@ final class UrlService implements UrlServiceInterface
      * from db; at least 'id', 'path' should be present
      */
     #[\Override]
-    public function getElementUrl(array $elementInfo): mixed
+    public function getElementUrl(array $elementInfo): string
     {
-        $url = $elementInfo['path'];
-        if (is_string($url) && ! $this->urlIsRemote($url)) {
+        $path = $elementInfo['path'] ?? null;
+        if (! is_string($path)) {
+            // Never reached with a real image row (ImageEntity::$path is a
+            // non-nullable string column) -- mirrors this file's own
+            // is_scalar()-cast-or-empty fallback used elsewhere for a
+            // declared-mixed value that's always scalar in practice.
+            return is_scalar($path) ? (string) $path : '';
+        }
+
+        $url = $path;
+        if (! $this->urlIsRemote($url)) {
             $url = $this->embellishUrl($this->getRootUrl() . $url);
         }
 
@@ -905,7 +914,7 @@ final class UrlService implements UrlServiceInterface
      * Returns the 'home page' of this gallery.
      */
     #[\Override]
-    public function getGalleryHomeUrl(): mixed
+    public function getGalleryHomeUrl(): string
     {
         $gallery_url = \Piwigo\Config\CurrentConfig::galleryUrl() ?? null;
         if (is_string($gallery_url) && $gallery_url !== '') {
@@ -951,10 +960,12 @@ final class UrlService implements UrlServiceInterface
     }
 
     /**
-     * List favorite image_ids of the current user.
+     * List favorite image_ids of the current user. Every real caller only
+     * checks key existence (isset($favorites[$id])) -- the value is always
+     * the query's own literal `1`, never read for its own sake.
      * @since 13
      *
-     * @return array<int|string, mixed>
+     * @return array<int, int>
      */
     #[\Override]
     public function getUserFavorites(): array

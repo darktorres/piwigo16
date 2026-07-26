@@ -41,7 +41,7 @@ final class PageFilterHelper
     /**
      * Return \Piwigo\Config\CurrentConfig::filterPages() value for the current page
      */
-    public static function getFilterPageValue(string $valueName): mixed
+    public static function getFilterPageValue(string $valueName): ?bool
     {
 
         $page_name = self::scriptBasename();
@@ -49,11 +49,11 @@ final class PageFilterHelper
         $filter_pages = \Piwigo\Config\CurrentConfig::filterPages();
 
         $page_filters = $filter_pages[$page_name] ?? null;
-        if (is_array($page_filters) && isset($page_filters[$valueName])) {
+        if (isset($page_filters[$valueName])) {
             return $page_filters[$valueName];
         }
         $default_filters = $filter_pages['default'] ?? null;
-        if (is_array($default_filters) && isset($default_filters[$valueName])) {
+        if (isset($default_filters[$valueName])) {
             return $default_filters[$valueName];
         } else {
             return null;

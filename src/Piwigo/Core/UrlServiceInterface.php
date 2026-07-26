@@ -37,12 +37,20 @@ interface UrlServiceInterface
     public function getAbsoluteRootUrl(bool $withScheme = true): string;
 
     /**
+     * $params' values are genuinely arbitrary by design -- matches PHP's own
+     * http_build_query(array|object $data) contract; every real value is
+     * scalar-checked at its own use site (is_scalar()/is_array()/
+     * is_string()) rather than assumed.
+     *
      * @param array<int|string, mixed> $params
      */
     public function addUrlParams(string $url, array $params, string $argSeparator = '&amp;'): string;
 
     /**
-     * Build an index URL for a specific section.
+     * Build an index URL for a specific section. Same arbitrary-value
+     * rationale as addUrlParams() -- $params spans gallery-navigation keys
+     * (section, category, tags, chronology_*, start, flat, root_path, ...),
+     * each independently scalar/array-checked where read.
      *
      * @param array<string, mixed> $params
      */
@@ -62,6 +70,7 @@ interface UrlServiceInterface
 
     /**
      * Create a picture URL on a specific section for a specific picture.
+     * Same arbitrary-value rationale as makeIndexUrl().
      *
      * @param array<string, mixed> $params
      */
@@ -90,7 +99,7 @@ interface UrlServiceInterface
      * @param array<string, mixed> $elementInfo containing element information
      * from db; at least 'id', 'path' should be present
      */
-    public function getElementUrl(array $elementInfo): mixed;
+    public function getElementUrl(array $elementInfo): string;
 
     /**
      * Indicate to build url with full path.
@@ -110,7 +119,7 @@ interface UrlServiceInterface
     /**
      * Returns the 'home page' of this gallery.
      */
-    public function getGalleryHomeUrl(): mixed;
+    public function getGalleryHomeUrl(): string;
 
     /**
      * Returns $_SERVER['QUERY_STRING'] whithout keys given in parameters.
@@ -126,10 +135,12 @@ interface UrlServiceInterface
     public function urlIsRemote(string $url): bool;
 
     /**
-     * List favorite image_ids of the current user.
+     * List favorite image_ids of the current user. Every real caller only
+     * checks key existence -- the value is always the query's own literal
+     * `1`.
      * @since 13
      *
-     * @return array<int|string, mixed>
+     * @return array<int, int>
      */
     public function getUserFavorites(): array;
 }

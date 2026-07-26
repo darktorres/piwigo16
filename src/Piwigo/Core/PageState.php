@@ -101,6 +101,12 @@ final class PageState
     public array $bodyClasses = [];
 
     /**
+     * Plain unstructured key/value bag, same by-design shape as
+     * Piwigo\Core\ProcessCache -- no real caller sets one today, kept as
+     * a generic escape hatch for whichever future controller needs to
+     * stash a one-off value under its own key for PageHeaderRenderer/
+     * PageTailRenderer to read back.
+     *
      * @var array<string, mixed>
      */
     public array $bodyData = [];
@@ -166,7 +172,7 @@ final class PageState
     public bool $authKeyInvalid = false;
 
     /**
-     * @var array{days_left: int, dbnow: mixed, auth_key: mixed}|null
+     * @var array{days_left: int, dbnow: string, auth_key: string}|null
      */
     public ?array $notifyApiKeyExpiration = null;
 
@@ -322,7 +328,7 @@ final class PageState
     }
 
     /**
-     * @param array{days_left: int, dbnow: mixed, auth_key: mixed} $data
+     * @param array{days_left: int, dbnow: string, auth_key: string} $data
      */
     public function setNotifyApiKeyExpiration(array $data): void
     {

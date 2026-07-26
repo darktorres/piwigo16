@@ -15,6 +15,10 @@ namespace Piwigo\Ws;
  * Simple wrapper around a "struct" (php array whose keys are not consecutive
  * integers starting at 0). Provides naming clues for xml output (what is xml
  * attributes and what is element)
+ *
+ * $_content is genuinely arbitrary by design -- this wraps any WS method's
+ * own response content generically for encoding, same rationale as
+ * PwgNamedArray/Encoder\PwgResponseEncoder.
  */
 final class PwgNamedStruct
 {

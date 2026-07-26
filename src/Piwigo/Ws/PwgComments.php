@@ -43,6 +43,10 @@ final class PwgComments
      *   flag, default is \Piwigo\Config\CurrentConfig::commentsPageNbComments() (a real int,
      *   confirmed 10 in config_default.inc.php) -- always present, always
      *   int.
+     * A composite, multi-query response (raw summary/nb_authors aggregate
+     * rows, a built-up comment list, computed paging) -- genuinely complex
+     * enough that forcing one precise shape risked getting it wrong
+     * unverified; left as array<string, mixed>.
      * @return PwgError|array<string, mixed>
      */
     public static function getList(array $params, PwgServer &$service): PwgError|array

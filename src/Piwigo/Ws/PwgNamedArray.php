@@ -15,6 +15,10 @@ namespace Piwigo\Ws;
  * Simple wrapper around an array (keys are consecutive integers starting at 0).
  * Provides naming clues for xml output (xml attributes vs. xml child elements?)
  * Usually returned by web service function implementation.
+ *
+ * $_content is genuinely arbitrary by design -- this wraps any WS method's
+ * own response content generically for encoding, same rationale as
+ * PwgNamedStruct/Encoder\PwgResponseEncoder.
  */
 final class PwgNamedArray
 {

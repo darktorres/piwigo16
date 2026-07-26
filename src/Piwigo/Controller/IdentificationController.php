@@ -62,24 +62,17 @@ final class IdentificationController implements ControllerInterface
 
         unset($_SESSION['reset_password_code']);
 
-        // security (level 1): the redirect must occur within Piwigo, so the
-        // redirect param must start with the relative home url
-        if (isset($_POST['redirect']) && is_string($_POST['redirect'])) {
-            $_POST['redirect_decoded'] = urldecode($_POST['redirect']);
-        }
-        new \Piwigo\Validation\InputValidator()
-            ->validate('redirect_decoded', $_POST, false, '{^' . preg_quote(new CookieService()->cookiePath()) . '}');
+        $identificationSubmit = Request\IdentificationSubmitRequest::fromGlobals();
 
         $redirect_to = '';
-        $get_redirect = $_GET['redirect'] ?? null;
-        if (is_string($get_redirect) && $get_redirect !== '') {
-            $redirect_to = urldecode($get_redirect);
-            if (\Piwigo\Config\CurrentConfig::guestAccess() and ! isset($_GET['hide_redirect_error'])) {
+        if ($identificationSubmit->getRedirect !== null) {
+            $redirect_to = urldecode($identificationSubmit->getRedirect);
+            if (\Piwigo\Config\CurrentConfig::guestAccess() and ! $identificationSubmit->hideRedirectErrorPresent) {
                 $errors['login_page_error'] = Lang::t('You are not authorized to access the requested page');
             }
         }
 
-        if (isset($_POST['login'])) {
+        if ($identificationSubmit->isLoginSubmitted) {
             $session_cookie_name = session_name();
             $has_session_cookie = $session_cookie_name !== false && isset($_COOKIE[$session_cookie_name]);
             if (! $has_session_cookie) {
@@ -91,10 +84,8 @@ final class IdentificationController implements ControllerInterface
                 // $_POST['password'] is allowed to be null (both this and
                 // ws_session_login() are try_log_user()'s only real
                 // callers, and both can genuinely omit the field).
-                $username_raw = $_POST['username'] ?? null;
-                $username = is_string($username_raw) ? $username_raw : '';
-                $password_raw = $_POST['password'] ?? null;
-                $password = is_string($password_raw) ? $password_raw : null;
+                $username = $identificationSubmit->username;
+                $password = $identificationSubmit->password;
 
                 $conn = \Piwigo\Db\DbConnection::build();
                 if (\Piwigo\Config\CurrentConfig::insensitiveCaseLogon()) {
@@ -102,10 +93,8 @@ final class IdentificationController implements ControllerInterface
                         ->searchCaseUsername($username);
                 }
 
-                $redirect_raw = $_POST['redirect'] ?? null;
-                $redirect_to = is_string($redirect_raw) ? urldecode($redirect_raw) : '';
-                $remember_me_raw = $_POST['remember_me'] ?? null;
-                $remember_me = isset($_POST['remember_me']) && is_string($remember_me_raw) && $remember_me_raw === '1';
+                $redirect_to = $identificationSubmit->postRedirectDecoded ?? '';
+                $remember_me = $identificationSubmit->isRememberMe;
 
                 if (\Piwigo\Bootstrap\CoreDomainAccessor::authService()->tryLogUser($username, $password, $remember_me)) {
                     // security (level 2): force redirect within Piwigo. We

@@ -68,9 +68,18 @@ final class ProfileFormHandler
     {
         $errors = [];
 
-        if (! isset($_POST['validate'])) {
+        $profileFormSubmitRequest = Request\ProfileFormSubmitRequest::fromGlobals();
+
+        if (! $profileFormSubmitRequest->isValidateSubmitted) {
             return false;
         }
+
+        // A local working copy of $_POST -- the special-user/not-admin-context
+        // branches below used to unset()/overwrite several $_POST keys in
+        // place so every later read in this same method saw the overridden
+        // state; that stays entirely within this one method call, so it's
+        // mutated here instead of the real superglobal.
+        $post = $profileFormSubmitRequest->post;
 
         $conn = DbConnection::build();
 
@@ -90,20 +99,20 @@ final class ProfileFormHandler
         $special_user = in_array($userdata['id'], [\Piwigo\Config\CurrentConfig::guestId(), \Piwigo\Config\CurrentConfig::defaultUserId()], true);
         if ($special_user) {
             unset(
-                $_POST['username'],
-                $_POST['mail_address'],
-                $_POST['password'],
-                $_POST['use_new_pwd'],
-                $_POST['passwordConf'],
-                $_POST['theme'],
-                $_POST['language']
+                $post['username'],
+                $post['mail_address'],
+                $post['password'],
+                $post['use_new_pwd'],
+                $post['passwordConf'],
+                $post['theme'],
+                $post['language']
             );
-            $_POST['theme'] = self::userService()->getDefaultTheme();
-            $_POST['language'] = self::userService()->getDefaultLanguage();
+            $post['theme'] = self::userService()->getDefaultTheme();
+            $post['language'] = self::userService()->getDefaultLanguage();
         }
 
         if (! \Piwigo\Core\AdminContext::isActive()) {
-            unset($_POST['username']);
+            unset($post['username']);
         }
 
         if (\Piwigo\Config\CurrentConfig::allowUserCustomization() or \Piwigo\Core\AdminContext::isActive()) {
@@ -111,7 +120,7 @@ final class ProfileFormHandler
             // $_POST values are always strings or arrays -- never a real
             // PHP int/float/bool -- so only the null/string/array-emptiness
             // checks are reachable here.
-            $nb_image_page = $_POST['nb_image_page'] ?? null;
+            $nb_image_page = $post['nb_image_page'] ?? null;
             $nb_image_page_is_empty = $nb_image_page === null || $nb_image_page === '' || $nb_image_page === '0'
                 || $nb_image_page === [];
             if ($nb_image_page_is_empty
@@ -121,28 +130,28 @@ final class ProfileFormHandler
             }
 
             // periods must be integer values, they represents number of days
-            $recent_period = $_POST['recent_period'] ?? null;
+            $recent_period = $post['recent_period'] ?? null;
             if (! is_scalar($recent_period)
                 or ! (bool) preg_match($int_pattern, (string) $recent_period)
                 or $recent_period < 0) {
                 $errors[] = Lang::t('Recent period must be a positive integer value');
             }
 
-            if (! in_array($_POST['language'] ?? null, array_keys(\Piwigo\Lang\LangService::getLanguages()), true)) {
+            if (! in_array($post['language'] ?? null, array_keys(\Piwigo\Lang\LangService::getLanguages()), true)) {
                 \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('Hacking attempt, incorrect language value');
             }
 
-            if (! in_array($_POST['theme'] ?? null, array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes()), true)) {
+            if (! in_array($post['theme'] ?? null, array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes()), true)) {
                 \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('Hacking attempt, incorrect theme value');
             }
         }
 
-        if (isset($_POST['mail_address'])) {
+        if (isset($post['mail_address'])) {
             // if $_POST and $userdata have are same email
             // validate_mail_address allows, however, to check email
-            $mail_address_input = is_string($_POST['mail_address']) ? $_POST['mail_address'] : null;
+            $mail_address_input = is_string($post['mail_address']) ? $post['mail_address'] : null;
             $mail_error = self::userService()->validateMailAddress($user_id, $mail_address_input);
             if ($mail_error !== '' && $mail_error !== '0') {
                 $errors[] = $mail_error;
@@ -151,13 +160,13 @@ final class ProfileFormHandler
 
         // $_POST values are always strings or arrays -- see
         // $nb_image_page_is_empty's own comment above.
-        $new_pwd_present_raw = $_POST['use_new_pwd'] ?? null;
+        $new_pwd_present_raw = $post['use_new_pwd'] ?? null;
         $new_pwd_present = $new_pwd_present_raw !== null && $new_pwd_present_raw !== '' && $new_pwd_present_raw !== '0'
             && $new_pwd_present_raw !== [];
         if ($new_pwd_present) {
             // password must be the same as its confirmation
-            $new_pwd_raw = $_POST['use_new_pwd'] ?? null;
-            $pwd_conf_raw = $_POST['passwordConf'] ?? null;
+            $new_pwd_raw = $post['use_new_pwd'] ?? null;
+            $pwd_conf_raw = $post['passwordConf'] ?? null;
             if (
                 (is_string($new_pwd_raw) ? $new_pwd_raw : '')
                 !== (is_string($pwd_conf_raw) ? $pwd_conf_raw : '')
@@ -176,7 +185,7 @@ final class ProfileFormHandler
                 // the password column allows NULL (external-authentication
                 // accounts with no local password set); such an account can
                 // never verify against a supplied old password
-                $password_input = $_POST['password'] ?? null;
+                $password_input = $post['password'] ?? null;
                 if (! is_string($current_password)
                     or ! is_string($password_input)
                     or ! self::passwordService()->verify($password_input, $current_password)) {
@@ -188,17 +197,17 @@ final class ProfileFormHandler
         if (count($errors) === 0) {
             $activity_details_tables = [];
 
-            if (isset($_POST['mail_address'])) {
+            if (isset($post['mail_address'])) {
                 // update common user informations
                 $fields = [$user_fields['email']];
-                $mail_address = is_string($_POST['mail_address']) ? $_POST['mail_address'] : '';
+                $mail_address = is_string($post['mail_address']) ? $post['mail_address'] : '';
 
                 $data = [];
                 $data[$user_fields['id']] = $userdata['id'];
                 $data[$user_fields['email']] = $mail_address;
 
                 // password is updated only if filled
-                $new_pwd_for_update = $_POST['use_new_pwd'] ?? null;
+                $new_pwd_for_update = $post['use_new_pwd'] ?? null;
                 if (is_string($new_pwd_for_update) and $new_pwd_for_update !== '' and $new_pwd_for_update !== '0') {
                     $fields[] = $user_fields['password'];
                     $data[$user_fields['password']] = self::passwordService()->hash($new_pwd_for_update);
@@ -207,12 +216,12 @@ final class ProfileFormHandler
                 }
 
                 // username is updated only if allowed
-                $username_for_update = $_POST['username'] ?? null;
+                $username_for_update = $post['username'] ?? null;
                 if (is_string($username_for_update) and $username_for_update !== '' and $username_for_update !== '0') {
                     $username = $username_for_update;
                     if ($username !== $userdata['username'] and (bool) self::userService()->getUserId($username)) {
                         \Piwigo\Core\PageState::current()->addError(Lang::t('this login is already used'));
-                        unset($_POST['redirect']);
+                        unset($post['redirect']);
                     } else {
                         $fields[] = $user_fields['username'];
                         $data[$user_fields['username']] = $username;
@@ -285,11 +294,11 @@ final class ProfileFormHandler
                 // $fields is untouched.
                 $boolFields = ['expand', 'show_nb_hits', 'show_nb_comments'];
                 foreach ($fields as $field) {
-                    if (! isset($_POST[$field])) {
+                    if (! isset($post[$field])) {
                         continue;
                     }
 
-                    $value = $_POST[$field];
+                    $value = $post[$field];
                     if (in_array($field, $boolFields, true) and is_string($value)) {
                         $value = SqlDialect::getBoolean($value) ? '1' : '0';
                     }
@@ -315,7 +324,7 @@ final class ProfileFormHandler
                 'tables' => implode(',', $activity_details_tables),
             ]);
 
-            $redirect_target = $_POST['redirect'] ?? null;
+            $redirect_target = $post['redirect'] ?? null;
             if (is_string($redirect_target) and $redirect_target !== '' and $redirect_target !== '0') {
                 $this->redirectService->redirect($redirect_target);
             }
@@ -362,9 +371,11 @@ final class ProfileFormHandler
         $template->assign('template_selection', $userdata['theme']);
         $template->assign('template_options', \Piwigo\Core\ThemeCatalog::getPwgThemes());
 
+        $profileFormSubmitRequest = Request\ProfileFormSubmitRequest::fromGlobals();
+
         $language_options = [];
         foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
-            if (isset($_POST['submit']) or (is_string($userdata['language']) and $userdata['language'] === $language_code)) {
+            if ($profileFormSubmitRequest->isSubmitPresent or (is_string($userdata['language']) and $userdata['language'] === $language_code)) {
                 $template->assign('language_selection', $language_code);
             }
             $language_options[$language_code] = $language_name;

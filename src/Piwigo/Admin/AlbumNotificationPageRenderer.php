@@ -7,7 +7,6 @@ namespace Piwigo\Admin;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
@@ -73,7 +72,9 @@ final class AlbumNotificationPageRenderer
         // +-------------------------------------------------------------------+
 
         // info by email to an access granted group of category informations
-        if (isset($_POST['submitEmail'])) {
+        $albumNotificationSubmit = Request\AlbumNotificationSubmitRequest::fromGlobals();
+
+        if ($albumNotificationSubmit->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
             $this->urlService->setMakeFullUrl();
@@ -113,8 +114,7 @@ SELECT id, file, path, representative_ext
                 'subject' => Lang::t('[%s] Visit album %s', \Piwigo\Config\CurrentConfig::galleryTitle(), \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $category['name'], 'admin_cat_list')),
             ];
 
-            $mail_content = $_POST['mail_content'] ?? null;
-            $mail_content = is_string($mail_content) ? $mail_content : '';
+            $mail_content = $albumNotificationSubmit->mailContent;
 
             $tpl = [
                 'filename' => 'cat_group_info',
@@ -134,26 +134,11 @@ SELECT id, file, path, representative_ext
                 ],
             ];
 
-            $post_users = $_POST['users'] ?? null;
-            if ($_POST['who'] === 'users' and is_array($post_users) and count($post_users) > 0) {
-                new \Piwigo\Validation\InputValidator()
-                    ->validate('users', $_POST, true, ValidationPattern::ID);
-
+            if ($albumNotificationSubmit->who === 'users' and $albumNotificationSubmit->users !== []) {
                 // No real privacy issue sending this notification to a user
                 // without access to the album: the email itself carries no
                 // private content beyond a public category name/link.
-
-                // check_input_parameter() above already validated that every item
-                // matches ValidationPattern::ID (digits only); this loop (rather than
-                // array_filter(..., is_string(...))) exists because Psalm doesn't narrow
-                // the callback's effect on $_POST's mixed nested-array union type, so a
-                // bare array_filter() result is still not provably string-only to implode().
-                $post_user_ids = [];
-                foreach ($post_users as $post_user_id) {
-                    if (is_string($post_user_id)) {
-                        $post_user_ids[] = $post_user_id;
-                    }
-                }
+                $post_user_ids = $albumNotificationSubmit->users;
 
                 $query = '
 SELECT
@@ -225,14 +210,13 @@ SELECT
                         'save_success' => $message,
                     ]
                 );
-            } elseif ($_POST['who'] === 'group' and ! in_array($_POST['group'] ?? null, [null, false, 0, '0', '', []], true)) {
-                new \Piwigo\Validation\InputValidator()
-                    ->validate('group', $_POST, false, ValidationPattern::ID);
-
-                // check_input_parameter() above fatal_errors (never returns) unless
-                // $_POST['group'] matches ValidationPattern::ID (digits only); the is_numeric()
-                // check here only narrows the type for what follows.
-                $group_id = is_numeric($_POST['group']) ? (int) $_POST['group'] : 0;
+            } elseif ($albumNotificationSubmit->who === 'group' and ! in_array($albumNotificationSubmit->group, [null, false, 0, '0', '', []], true)) {
+                // AlbumNotificationSubmitRequest::fromArray() already validated
+                // (fatal_errors, never returns) that group matches
+                // ValidationPattern::ID (digits only) when this branch is
+                // reachable; the is_numeric() check here only narrows the type
+                // for what follows.
+                $group_id = is_numeric($albumNotificationSubmit->group) ? (int) $albumNotificationSubmit->group : 0;
 
                 \Piwigo\Bootstrap\PresentationAccessor::mailService()
                     ->mailGroup($group_id, $args, $tpl);

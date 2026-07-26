@@ -124,6 +124,10 @@ final readonly class MetadataService
     }
 
     /**
+     * $result's values are genuinely arbitrary by design -- each configured
+     * field's real type depends on which EXIF tag $map requests (string,
+     * numeric, or a GPS coordinate's own array-of-rationals shape).
+     *
      * @param  array<string, string>  $map
      * @return array<string, mixed>
      */
@@ -357,6 +361,11 @@ final readonly class MetadataService
     }
 
     /**
+     * $infos is a cross-domain generic image row, same rationale as
+     * SrcImage::__construct(); the return widens it with computed
+     * filesize/width/height plus getExifData()/getIptcData()'s own
+     * by-design arbitrary metadata values.
+     *
      * @param  array<string, mixed>  $infos  (path[, representative_ext])
      * @return array<string, mixed>|false includes data provided in
      *   $infos, or false if the file's size can't be read
@@ -575,7 +584,7 @@ final readonly class MetadataService
      * Returns an array associating element id (images.id) with its
      * complete path in the filesystem.
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<int, array{id: int, path: string, representative_ext: ?string}>
      */
     public function getFilelist(int|string $categoryId = '', int $siteId = 1, bool $recursive = false, bool $onlyNew = false): array
     {
@@ -616,6 +625,11 @@ final readonly class MetadataService
     }
 
     /**
+     * $raw is an admin-configurable IPTC/EXIF mapping value (arbitrary
+     * JSON by design, same rationale as ConfigService's own dynamic-key
+     * config values) -- this method's whole job is defensively normalizing
+     * it, so it can't itself assume a clean input.
+     *
      * @return array<string, string>
      */
     private function stringMap(mixed $raw): array

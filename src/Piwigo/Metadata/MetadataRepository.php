@@ -119,6 +119,11 @@ final readonly class MetadataRepository
     }
 
     /**
+     * $datas' values are genuinely arbitrary by design -- EXIF/IPTC
+     * metadata spans strings, dates, and floats (GPS coordinates), and
+     * $updateFields (the actual column set) varies per call; same
+     * rationale as BatchWriter's own already-documented column=>value bag.
+     *
      * @param  list<string>  $updateFields
      * @param  list<array<string, mixed>>  $datas
      */

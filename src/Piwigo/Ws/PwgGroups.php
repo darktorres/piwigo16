@@ -191,6 +191,8 @@ final class PwgGroups
      *   destination_group_id: WsParamType::ID guarantees a plain int;
      *   merge_group_id: FORCE_ARRAY always coerces to a list of positive
      *   ints.
+     * Both values are $service->invoke('pwg.groups.getList', ...)'s own
+     * result -- same by-name-dispatcher rationale as add()/setInfo() above.
      * @return PwgError|array{destination_group: mixed, deleted_group: mixed}
      */
     public static function merge(array $params, PwgServer &$service): PwgError|array

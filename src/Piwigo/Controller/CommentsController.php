@@ -12,7 +12,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
@@ -141,57 +140,24 @@ final class CommentsController implements ControllerInterface
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_comments');
 
-        $since_raw = $_GET['since'] ?? null;
-        // $_GET values are always strings (or arrays, for foo[]=... params) --
-        // never a real PHP int/float/bool -- so only the string-emptiness
-        // checks are reachable here.
-        $since_present = is_string($since_raw) && $since_raw !== '' && $since_raw !== '0';
-        if ($since_present) {
-            $since = intval($since_raw);
-        } else {
-            $since = 4;
-        }
+        $commentsRequest = Request\CommentsRequest::fromGlobals($comments_page_nb_comments);
+
+        $since = $commentsRequest->since !== null ? intval($commentsRequest->since) : 4;
 
         // on which field sorting
-        //
-        $sort_by_value = 'date';
-        // if the form was submitted, it overloads default behaviour
-        if (isset($_GET['sort_by']) and is_string($_GET['sort_by']) and isset($sort_by[$_GET['sort_by']])) {
-            $sort_by_value = $_GET['sort_by'];
-        }
+        $sort_by_value = $commentsRequest->sortBy;
 
         // order to sort
-        //
-        $sort_order_value = 'DESC';
-        // if the form was submitted, it overloads default behaviour
-        if (isset($_GET['sort_order']) and is_string($_GET['sort_order']) and isset($sort_order[$_GET['sort_order']])) {
-            $sort_order_value = $_GET['sort_order'];
-        }
+        $sort_order_value = $commentsRequest->sortOrder;
 
         // number of items to display
-        //
-        $items_number_value = $comments_page_nb_comments;
-        if (isset($_GET['items_number'])) {
-            $items_number_value = $_GET['items_number'];
-        }
-        if (! is_numeric($items_number_value) and $items_number_value !== 'all') {
-            $items_number_value = 10;
-        }
-        // after the checks above, items_number_value is guaranteed to be
-        // either numeric or the literal string 'all'.
-        $selected_items_number = is_numeric($items_number_value) ? $items_number_value : 'all';
+        $selected_items_number = $commentsRequest->itemsNumber;
 
         $whereClauses = [];
 
         // which category to filter on ?
-        $cat_param = $_GET['cat'] ?? null;
-        if (isset($_GET['cat']) and ! (is_numeric($cat_param) and (int) $cat_param === 0)) {
-            new \Piwigo\Validation\InputValidator()
-                ->validate('cat', $_GET, false, ValidationPattern::ID);
-
-            $cat_id = $_GET['cat'];
-            $cat_id = is_string($cat_id) ? $cat_id : '0';
-
+        $cat_id = $commentsRequest->catId;
+        if ($cat_id !== null) {
             $category_ids = self::categoryService()->getSubcatIds([$cat_id]);
             if ($category_ids === []) {
                 $category_ids = [-1];
@@ -207,29 +173,17 @@ final class CommentsController implements ControllerInterface
         $id_field = $user_fields['id'];
 
         // search a particular author
-        $author_raw = $_GET['author'] ?? null;
-        // $_GET values are always strings (or arrays) -- see $since_present's
-        // own comment above.
-        if (is_string($author_raw) && $author_raw !== '' && $author_raw !== '0') {
-            $author_search = $author_raw;
+        $author_filter = $commentsRequest->authorFilter;
+        if ($author_filter !== null) {
+            $author_search = $author_filter;
             $whereClauses[] =
               '(u.' . $username_field . ' = \'' . $author_search . '\' OR author = \'' . $author_search . '\')';
         }
 
         // search a specific comment (if you're coming directly from an
         // admin notification email)
-        $comment_id_raw = $_GET['comment_id'] ?? null;
-        // $_GET values are always strings (or arrays) -- see $since_present's
-        // own comment above.
-        if (is_string($comment_id_raw) && $comment_id_raw !== '' && $comment_id_raw !== '0') {
-            new \Piwigo\Validation\InputValidator()
-                ->validate('comment_id', $_GET, false, ValidationPattern::ID);
-            // check_input_parameter() validated this against
-            // ValidationPattern::ID (/^\d+$/) above -- it would have called
-            // fatal_error() otherwise.
-            assert(is_numeric($_GET['comment_id']));
-            $get_comment_id = $_GET['comment_id'];
-
+        $get_comment_id = $commentsRequest->commentId;
+        if ($get_comment_id !== null) {
             // currently, the $_GET['comment_id'] is only used by admins
             // from email for management purpose (validate/delete)
             if (! \Piwigo\Auth\AccessControl::isAdmin()) {
@@ -246,11 +200,9 @@ final class CommentsController implements ControllerInterface
         }
 
         // search a substring among comments content
-        $keyword_raw = $_GET['keyword'] ?? null;
-        // $_GET values are always strings (or arrays) -- see $since_present's
-        // own comment above.
-        if (is_string($keyword_raw) && $keyword_raw !== '' && $keyword_raw !== '0') {
-            $keyword_search = $keyword_raw;
+        $keyword_filter = $commentsRequest->keywordFilter;
+        if ($keyword_filter !== null) {
+            $keyword_search = $keyword_filter;
             $keywords = preg_split('/[\s,;]+/', $keyword_search);
             // the pattern above is a hardcoded, always-valid regex
             assert($keywords !== false);
@@ -283,27 +235,11 @@ final class CommentsController implements ControllerInterface
         // |                   comments management                     |
         // +-----------------------------------------------------------+
 
-        $comment_id = null;
-        $action = null;
+        $action = $commentsRequest->action;
+        $comment_id = $commentsRequest->actionCommentId;
         $edit_comment = null;
 
         $commentService = new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->urlService);
-
-        $actions = ['delete', 'validate', 'edit'];
-        foreach ($actions as $loop_action) {
-            if (isset($_GET[$loop_action])) {
-                $action = $loop_action;
-                new \Piwigo\Validation\InputValidator()
-                    ->validate($action, $_GET, false, ValidationPattern::ID);
-                // check_input_parameter() validated this against
-                // ValidationPattern::ID (/^\d+$/) above -- it would have
-                // called fatal_error() otherwise.
-                $action_id_raw = $_GET[$action] ?? null;
-                assert(is_numeric($action_id_raw));
-                $comment_id = (int) $action_id_raw;
-                break;
-            }
-        }
 
         if (isset($action) and $comment_id !== null) {
             $comment_author_id = $commentService->getCommentAuthorId($comment_id);
@@ -328,24 +264,18 @@ final class CommentsController implements ControllerInterface
                 }
 
                 if ($action === 'edit') {
-                    $content_raw = $_POST['content'] ?? null;
-                    // $_POST values are always strings (or arrays) -- see
-                    // $since_present's own comment above.
-                    if (is_string($content_raw) && $content_raw !== '' && $content_raw !== '0') {
+                    $content = $commentsRequest->content;
+                    if ($content !== null) {
                         new \Piwigo\Csrf\CsrfService()
                             ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
-                        $post_key = $_POST['key'] ?? null;
-                        if (! is_string($post_key)) {
-                            $post_key = '';
-                        }
                         $comment_action = $commentService->updateComment(
                             [
-                                'comment_id' => $_GET['edit'],
-                                'image_id' => $_POST['image_id'],
-                                'content' => $_POST['content'],
-                                'website_url' => @$_POST['website_url'],
+                                'comment_id' => $comment_id,
+                                'image_id' => $commentsRequest->imageId,
+                                'content' => $content,
+                                'website_url' => $commentsRequest->websiteUrl,
                             ],
-                            $post_key
+                            $commentsRequest->key
                         );
 
                         switch ($comment_action) {
@@ -373,7 +303,7 @@ final class CommentsController implements ControllerInterface
                         }
                     }
 
-                    $edit_comment = $_GET['edit'];
+                    $edit_comment = $comment_id;
                 }
 
                 if ($perform_redirect) {
@@ -399,10 +329,8 @@ final class CommentsController implements ControllerInterface
             'comments' => 'comments.tpl',
             'comment_list' => 'comment_list.tpl',
         ]);
-        $keyword_param_raw = $_GET['keyword'] ?? null;
-        $keyword_param = is_string($keyword_param_raw) ? $keyword_param_raw : null;
-        $author_param_raw = $_GET['author'] ?? null;
-        $author_param = is_string($author_param_raw) ? $author_param_raw : null;
+        $keyword_param = $commentsRequest->keywordDisplay;
+        $author_param = $commentsRequest->authorDisplay;
 
         $template->assign(
             [
@@ -428,7 +356,7 @@ SELECT id, name, uppercats, global_rank
         ], 'WHERE') . '
 ;';
         self::categoryService()
-            ->displaySelectCatWrapper($query, [@$_GET['cat']], $blockname, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template, true);
+            ->displaySelectCatWrapper($query, [$commentsRequest->catDisplay], $blockname, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template, true);
 
         // Filter on recent comments...
         $tpl_var = [];
@@ -459,11 +387,7 @@ SELECT id, name, uppercats, global_rank
         // |                        navigation bar                         |
         // +---------------------------------------------------------------+
 
-        if (isset($_GET['start']) and is_scalar($_GET['start'])) {
-            $start = intval($_GET['start']);
-        } else {
-            $start = 0;
-        }
+        $start = $commentsRequest->start;
 
         // +---------------------------------------------------------------+
         // |                     last comments display                     |
@@ -651,7 +575,7 @@ AND ', $where_clauses) . '
                     );
 
                     $comment_id_str = is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '';
-                    if ($edit_comment !== null and is_numeric($edit_comment) and $comment_id_str === $edit_comment) {
+                    if ($edit_comment !== null and $comment_id_str === (string) $edit_comment) {
                         $tpl_comment['IN_EDIT'] = true;
                         $key = new \Piwigo\Auth\EphemeralKeyService()
                             ->generate(2, $image_id);

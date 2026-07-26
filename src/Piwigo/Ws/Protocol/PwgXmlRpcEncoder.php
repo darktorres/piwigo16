@@ -14,6 +14,10 @@ namespace Piwigo\Ws\Protocol;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 use Piwigo\Ws\PwgError;
 
+/**
+ * mixed values/params throughout are by design -- see the parent class's
+ * own docblock.
+ */
 final class PwgXmlRpcEncoder extends PwgResponseEncoder
 {
     #[\Override]

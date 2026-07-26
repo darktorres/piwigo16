@@ -16,6 +16,10 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 
+/**
+ * mixed values/params throughout are by design -- see the parent class's
+ * own docblock.
+ */
 final class PwgRestEncoder extends PwgResponseEncoder
 {
     private ?PwgXmlWriter $_writer = null;

@@ -15,7 +15,11 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 
 /**
- * Base class for web service response encoder.
+ * Base class for web service response encoder. Every `mixed` here is
+ * genuinely by-design: this walks/encodes an arbitrary WS method's
+ * arbitrary, arbitrarily-nested response value (PwgNamedArray/
+ * PwgNamedStruct themselves wrap arbitrary content) -- same rationale as
+ * PwgServer's own generic method dispatcher.
  */
 abstract class PwgResponseEncoder
 {

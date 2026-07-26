@@ -18,6 +18,17 @@ use Piwigo\Core\WsParamFlag;
 use Piwigo\Core\WsParamType;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 
+/**
+ * The WS framework's own generic method registry/dispatcher -- every
+ * `mixed` in this class is genuinely by-design, not unnarrowed: `$_methods`
+ * holds arbitrarily-shaped per-method registrations (each WS method defines
+ * its own param `signature`/`options`), `sendResponse()`/`invoke()` handle
+ * an arbitrary WS method's arbitrary return value, and
+ * `makeArrayParam()`/`checkType()` coerce an arbitrary WS param's
+ * arbitrary value by reference (the param's real type varies per WS
+ * method's own registration, same rationale as PluginConfig\EventDispatcher's
+ * own pub-sub methods).
+ */
 final class PwgServer
 {
     public ?PwgRequestHandler $_requestHandler = null;

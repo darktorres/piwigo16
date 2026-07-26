@@ -6,7 +6,6 @@ namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
@@ -22,14 +21,7 @@ final class PictureFormatsPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('image_id', $_GET, false, ValidationPattern::ID);
-
-        // $_GET['image_id'], when present, matches ValidationPattern::ID (digits only), but
-        // that guarantee isn't visible to static analysis, hence the explicit
-        // narrowing before it's used in SQL/URL concatenation below.
-        $image_id_raw = $_GET['image_id'] ?? null;
-        $image_id = is_numeric($image_id_raw) ? (int) $image_id_raw : 0;
+        $image_id = Request\PictureFormatsImageIdRequest::fromGlobals()->imageId;
 
         $conn = DbConnection::build();
         $imageRow = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)

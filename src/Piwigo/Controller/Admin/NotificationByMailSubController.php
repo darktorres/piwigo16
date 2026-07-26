@@ -99,8 +99,9 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         $conn = DbConnection::build();
         $nbmSender = \Piwigo\Bootstrap\PresentationAccessor::notificationByMailSender();
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('mode', $_GET, false, '/^(param|subscribe|send)$/');
+        $notificationByMailRequest = Request\NotificationByMailRequest::fromGlobals();
+        $page_mode = $notificationByMailRequest->pageMode;
+        $post = $notificationByMailRequest->post;
 
         // +-----------------------------------------------------------------------+
         // | Initialization                                                        |
@@ -113,16 +114,6 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         CoreTabs::setContext(new CoreTabsContext(baseUrl: $base_url));
         $must_repost = false;
 
-        // +-----------------------------------------------------------------------+
-        // | Main                                                                  |
-        // +-----------------------------------------------------------------------+
-        if (! isset($_GET['mode']) or ! is_string($_GET['mode'])) {
-            // check_input_parameter() above already fatal_error()s on a non-scalar
-            // or non-matching value; $_GET entries are always strings in practice.
-            $page_mode = 'send';
-        } else {
-            $page_mode = $_GET['mode'];
-        }
         // +-----------------------------------------------------------------------+
         // | Check Access and exit when user status is not ok                      |
         // +-----------------------------------------------------------------------+
@@ -137,7 +128,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         // | Insert new users with mails                                           |
         // +-----------------------------------------------------------------------+
-        if (count($_POST) === 0) {
+        if (count($post) === 0) {
             // No insert data in post mode
             self::insertNewDataUserMailNotification($nbmSender, $this->redirectService, $this->urlService);
         }
@@ -146,7 +137,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // | Treatment of tab post                                                 |
         // +-----------------------------------------------------------------------+
 
-        if ($_POST !== []) {
+        if ($post !== []) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail($htmlRenderer, $this->redirectService);
         }
@@ -154,16 +145,16 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         switch ($page_mode) {
             case 'param':
 
-                if (isset($_POST['param_submit'])) {
-                    $nbm_send_mail_as = $_POST['nbm_send_mail_as'] ?? null;
-                    $_POST['nbm_send_mail_as'] = strip_tags(is_string($nbm_send_mail_as) ? $nbm_send_mail_as : '');
+                if (isset($post['param_submit'])) {
+                    $nbm_send_mail_as = $post['nbm_send_mail_as'] ?? null;
+                    $post['nbm_send_mail_as'] = strip_tags(is_string($nbm_send_mail_as) ? $nbm_send_mail_as : '');
 
                     new \Piwigo\Validation\InputValidator()
-                        ->validate('nbm_send_html_mail', $_POST, false, '/^(true|false)$/');
+                        ->validate('nbm_send_html_mail', $post, false, '/^(true|false)$/');
                     new \Piwigo\Validation\InputValidator()
-                        ->validate('nbm_send_detailed_content', $_POST, false, '/^(true|false)$/');
+                        ->validate('nbm_send_detailed_content', $post, false, '/^(true|false)$/');
                     new \Piwigo\Validation\InputValidator()
-                        ->validate('nbm_send_recent_post_dates', $_POST, false, '/^(true|false)$/');
+                        ->validate('nbm_send_recent_post_dates', $post, false, '/^(true|false)$/');
 
                     $updated_param_count = 0;
                     // Update param
@@ -172,8 +163,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                         if (! is_string($nbm_user['param']) || $nbm_user['param'] === '') {
                             continue;
                         }
-                        if (isset($_POST[$nbm_user['param']])) {
-                            $post_value = $_POST[$nbm_user['param']];
+                        if (isset($post[$nbm_user['param']])) {
+                            $post_value = $post[$nbm_user['param']];
                             $value = is_string($post_value) ? $post_value : '';
                             $this->configService->confUpdateParam($nbm_user['param'], $value, true);
                             $updated_param_count++;
@@ -194,28 +185,28 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 // no break
             case 'subscribe':
 
-                if (isset($_POST['falsify']) and isset($_POST['cat_true']) and is_array($_POST['cat_true'])) {
-                    $check_key_treated = $nbmSender->unsubscribeNotificationByMail(true, array_values($_POST['cat_true']));
-                    $must_repost = self::doTimeoutTreatment($nbmSender, 'cat_true', $check_key_treated);
-                } elseif (isset($_POST['trueify']) and isset($_POST['cat_false']) and is_array($_POST['cat_false'])) {
-                    $check_key_treated = $nbmSender->subscribeNotificationByMail(true, array_values($_POST['cat_false']));
-                    $must_repost = self::doTimeoutTreatment($nbmSender, 'cat_false', $check_key_treated);
+                if (isset($post['falsify']) and isset($post['cat_true']) and is_array($post['cat_true'])) {
+                    $check_key_treated = $nbmSender->unsubscribeNotificationByMail(true, array_values($post['cat_true']));
+                    $must_repost = self::doTimeoutTreatment($nbmSender, 'cat_true', $post, $check_key_treated);
+                } elseif (isset($post['trueify']) and isset($post['cat_false']) and is_array($post['cat_false'])) {
+                    $check_key_treated = $nbmSender->subscribeNotificationByMail(true, array_values($post['cat_false']));
+                    $must_repost = self::doTimeoutTreatment($nbmSender, 'cat_false', $post, $check_key_treated);
                 }
                 break;
 
             case 'send':
 
                 if (
-                    isset($_POST['send_submit'])
-                    and isset($_POST['send_selection']) and is_array($_POST['send_selection'])
-                    and isset($_POST['send_customize_mail_content']) and is_string($_POST['send_customize_mail_content'])
+                    isset($post['send_submit'])
+                    and isset($post['send_selection']) and is_array($post['send_selection'])
+                    and isset($post['send_customize_mail_content']) and is_string($post['send_customize_mail_content'])
                 ) {
                     $check_key_treated = $nbmSender->sendMailNotifications(
                         'send',
-                        array_values($_POST['send_selection']),
-                        stripslashes($_POST['send_customize_mail_content'])
+                        array_values($post['send_selection']),
+                        stripslashes($post['send_customize_mail_content'])
                     );
-                    $must_repost = self::doTimeoutTreatment($nbmSender, 'send_selection', $check_key_treated);
+                    $must_repost = self::doTimeoutTreatment($nbmSender, 'send_selection', $post, $check_key_treated);
                 }
 
         }
@@ -250,11 +241,11 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         if ($must_repost) {
             // Get name of submit button
             $repost_submit_name = '';
-            if (isset($_POST['falsify'])) {
+            if (isset($post['falsify'])) {
                 $repost_submit_name = 'falsify';
-            } elseif (isset($_POST['trueify'])) {
+            } elseif (isset($post['trueify'])) {
                 $repost_submit_name = 'trueify';
-            } elseif (isset($_POST['send_submit'])) {
+            } elseif (isset($post['send_submit'])) {
                 $repost_submit_name = 'send_submit';
             }
 
@@ -296,12 +287,12 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 foreach ($data_users as $nbm_user) {
                     if (SqlDialect::getBoolean($nbm_user->enabled)) {
                         $opt_true[$nbm_user->checkKey] = stripslashes($nbm_user->username) . '[' . $nbm_user->mailAddress . ']';
-                        if (isset($_POST['falsify']) and isset($_POST['cat_true']) and is_array($_POST['cat_true']) and in_array($nbm_user->checkKey, $_POST['cat_true'], true)) {
+                        if (isset($post['falsify']) and isset($post['cat_true']) and is_array($post['cat_true']) and in_array($nbm_user->checkKey, $post['cat_true'], true)) {
                             $opt_true_selected[] = $nbm_user->checkKey;
                         }
                     } else {
                         $opt_false[$nbm_user->checkKey] = stripslashes($nbm_user->username) . '[' . $nbm_user->mailAddress . ']';
-                        if (isset($_POST['trueify']) and isset($_POST['cat_false']) and is_array($_POST['cat_false']) and in_array($nbm_user->checkKey, $_POST['cat_false'], true)) {
+                        if (isset($post['trueify']) and isset($post['cat_false']) and is_array($post['cat_false']) and in_array($nbm_user->checkKey, $post['cat_false'], true)) {
                             $opt_false_selected[] = $nbm_user->checkKey;
                         }
                     }
@@ -326,12 +317,12 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 $data_users = $nbmSender->sendMailNotifications('list_to_send');
 
                 $tpl_var['CUSTOMIZE_MAIL_CONTENT'] =
-                  (isset($_POST['send_customize_mail_content']) and is_string($_POST['send_customize_mail_content']))
-                    ? stripslashes($_POST['send_customize_mail_content'])
+                  (isset($post['send_customize_mail_content']) and is_string($post['send_customize_mail_content']))
+                    ? stripslashes($post['send_customize_mail_content'])
                     : \Piwigo\Config\CurrentConfig::nbmComplementaryMailContent();
 
-                $post_send_selection = (isset($_POST['send_selection']) and is_array($_POST['send_selection']))
-                    ? $_POST['send_selection']
+                $post_send_selection = (isset($post['send_selection']) and is_array($post['send_selection']))
+                    ? $post['send_selection']
                     : [];
 
                 if ((bool) count($data_users)) {
@@ -347,7 +338,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                               [
                                   'ID' => $nbm_user->checkKey,
                                   'CHECKED' => ( // not check if not selected,  on init select<all
-                                      isset($_POST['send_selection']) and // not init
+                                      isset($post['send_selection']) and // not init
                                       ! in_array($nbm_user->checkKey, $post_send_selection, true) // not selected
                                   ) ? '' : 'checked="checked"',
                                   'USERNAME' => stripslashes($nbm_user->username),
@@ -387,21 +378,24 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
     /**
      * Do timeout treatment in order to finish to send mails
+     * @param array<int|string, mixed> $post: handle()'s own local post working
+     *   copy, by reference -- the filtered-down selection must still be
+     *   visible to handle()'s later display-section reads of the same key.
      * @param list<string> $check_key_treated: array of check_key treated
      * @return bool whether treatment timed out and must be reposted
      */
-    private static function doTimeoutTreatment(NotificationByMailSender $nbmSender, string $post_keyname, array $check_key_treated = []): bool
+    private static function doTimeoutTreatment(NotificationByMailSender $nbmSender, string $post_keyname, array &$post, array $check_key_treated = []): bool
     {
         if ($nbmSender->isSendmailTimeout()) {
-            if (isset($_POST[$post_keyname]) and is_array($_POST[$post_keyname])) {
-                $post_count = count($_POST[$post_keyname]);
+            if (isset($post[$post_keyname]) and is_array($post[$post_keyname])) {
+                $post_count = count($post[$post_keyname]);
                 $treated_count = count($check_key_treated);
                 if ($treated_count !== 0) {
                     $time_refresh = (int) ceil((\Piwigo\Core\TimingHelper::getMoment() - $nbmSender->startTime()) * (float) $post_count / (float) $treated_count);
                 } else {
                     $time_refresh = 0;
                 }
-                $_POST[$post_keyname] = array_diff(array_filter($_POST[$post_keyname], is_string(...)), $check_key_treated);
+                $post[$post_keyname] = array_diff(array_filter($post[$post_keyname], is_string(...)), $check_key_treated);
 
                 \Piwigo\Core\PageState::current()->addError(Translator::get()->plural(
                     'Execution time is out, treatment must be continue [Estimated time: %d second].',

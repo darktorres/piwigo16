@@ -11,7 +11,6 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Permalink\PermalinkRepository;
@@ -65,32 +64,26 @@ final class PermalinksSubController implements AdminSubControllerInterface
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
         $conn = DbConnection::build();
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('cat_id', $_POST, false, ValidationPattern::ID);
+        $permalinksRequest = Request\PermalinksRequest::fromGlobals();
 
         $selected_cat = [];
-        // check_input_parameter() above only validates the format when 'cat_id' is
-        // present; narrow to a real int here rather than risk building an invalid
-        // query from a missing/non-numeric value.
-        $post_cat_id = isset($_POST['cat_id']) && is_numeric($_POST['cat_id']) ? (int) $_POST['cat_id'] : 0;
-        if (isset($_POST['set_permalink']) and $post_cat_id > 0) {
+        $post_cat_id = $permalinksRequest->catId;
+        if ($permalinksRequest->isSetPermalink and $post_cat_id > 0) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail($htmlRenderer, $this->redirectService);
-            $permalink = $_POST['permalink'] ?? null;
-            $permalink = is_string($permalink) ? $permalink : '';
+            $permalink = $permalinksRequest->permalink;
             $permalink_service = \Piwigo\Bootstrap\ExtendedDomainAccessor::permalinkService();
             if ($permalink === '') {
-                $permalink_service->deleteCatPermalink($post_cat_id, isset($_POST['save']));
+                $permalink_service->deleteCatPermalink($post_cat_id, $permalinksRequest->isSave);
             } else {
-                $permalink_service->setCatPermalink($post_cat_id, $permalink, isset($_POST['save']));
+                $permalink_service->setCatPermalink($post_cat_id, $permalink, $permalinksRequest->isSave);
             }
             $selected_cat = [$post_cat_id];
-        } elseif (isset($_GET['delete_permanent'])) {
+        } elseif ($permalinksRequest->deletePermanentPresent) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail($htmlRenderer, $this->redirectService);
-            $delete_permanent = is_string($_GET['delete_permanent']) ? $_GET['delete_permanent'] : '';
             \Piwigo\Bootstrap\ExtendedDomainAccessor::permalinkService()
-                ->deleteOldPermalinkByValue($delete_permanent);
+                ->deleteOldPermalinkByValue($permalinksRequest->deletePermanent);
         }
 
         $template->set_filename('permalinks', 'permalinks.tpl');
@@ -135,7 +128,9 @@ FROM ' . Tables::categories();
             'name',
             'psf',
             ['delete_permanent'],
-            'SORT_'
+            'SORT_',
+            $permalinksRequest->psfPresent,
+            $permalinksRequest->psf
         );
 
         $query = '
@@ -169,6 +164,8 @@ SELECT id, permalink, uppercats, global_rank
             'dpsf',
             ['delete_permanent'],
             'SORT_OLD_',
+            $permalinksRequest->dpsfPresent,
+            $permalinksRequest->dpsf,
             '#old_permalinks'
         );
 
@@ -210,6 +207,8 @@ SELECT id, permalink, uppercats, global_rank
         string $get_param,
         array $get_rejects,
         string $template_var,
+        bool $sort_param_present,
+        ?string $sort_param_value,
         string $anchor = ''
     ): array {
         $template = \Piwigo\Template\CurrentTemplate::get();
@@ -243,12 +242,12 @@ SELECT id, permalink, uppercats, global_rank
             $url = $base_url;
             $disp = '↓';
 
-            if ($field !== @$_GET[$get_param]) {
+            if ($field !== $sort_param_value) {
                 if (($default_field ?? '') !== $field) { // the first should be the default
                     $url = $this->urlService->addUrlParams($url, [
                         $get_param => $field,
                     ]);
-                } elseif (! isset($_GET[$get_param])) {
+                } elseif (! $sort_param_present) {
                     $ret[] = $field;
                     $disp = '<em>' . $disp . '</em>';
                 }

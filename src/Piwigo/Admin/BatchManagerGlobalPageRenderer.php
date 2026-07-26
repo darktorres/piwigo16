@@ -10,7 +10,6 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -77,6 +76,11 @@ final class BatchManagerGlobalPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
         $conn = DbConnection::build();
 
+        // Runs before Request\BatchManagerGlobalRequest::fromGlobals() below
+        // (matching the original's own ordering exactly, CSRF check before
+        // any field validation), so it can't read the DTO's own post bag
+        // yet -- a minimal, single-fact existence check, same shape as
+        // Ws\PwgServer::isPost()'s own already-reviewed raw $_POST read.
         if (count($_POST) > 0) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
@@ -84,49 +88,36 @@ final class BatchManagerGlobalPageRenderer
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_element_set_global');
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('del_tags', $_POST, true, ValidationPattern::ID);
-        new \Piwigo\Validation\InputValidator()
-            ->validate('associate', $_POST, true, ValidationPattern::ID);
-        new \Piwigo\Validation\InputValidator()
-            ->validate('move', $_POST, false, ValidationPattern::ID);
-        new \Piwigo\Validation\InputValidator()
-            ->validate('dissociate', $_POST, false, ValidationPattern::ID);
+        $batchManagerGlobalRequest = Request\BatchManagerGlobalRequest::fromGlobals();
 
         // +-------------------------------------------------------------------+
         // |                            current selection                          |
         // +-------------------------------------------------------------------+
 
         $collection = [];
-        if (isset($_POST['nb_photos_deleted'])) {
-            new \Piwigo\Validation\InputValidator()
-                ->validate('nb_photos_deleted', $_POST, false, '/^\d+$/');
-
+        if ($batchManagerGlobalRequest->nbPhotosDeletedPresent) {
             // let's fake a collection (we don't know the image_ids so we use 0 as a
             // placeholder, we only care about the number of items here): this
             // branch is reached only after an ajax-driven "delete" action (see
             // batchManagerGlobal.js), whose photos are already gone, so no
             // downstream code in the 'delete' action below needs real ids
-            $nb_photos_deleted = is_numeric($_POST['nb_photos_deleted']) ? (int) $_POST['nb_photos_deleted'] : 0;
-            $collection = array_fill(0, $nb_photos_deleted, 0);
-        } elseif (isset($_POST['setSelected'])) {
+            $collection = array_fill(0, $batchManagerGlobalRequest->nbPhotosDeleted, 0);
+        } elseif ($batchManagerGlobalRequest->isSetSelected) {
             // Here we don't use check_input_parameter because preg_match has a limit in
             // the repetitive pattern. Found a limit to 3276 but may depend on memory.
             //
             // check_input_parameter('whole_set', $_POST, false, '/^\d+(,\d+)*$/');
             //
             // Instead, let's break the input parameter into pieces and check pieces one by one.
-            $whole_set = isset($_POST['whole_set']) && is_string($_POST['whole_set']) ? $_POST['whole_set'] : '';
-
-            foreach (explode(',', $whole_set) as $id) {
+            foreach (explode(',', $batchManagerGlobalRequest->wholeSet) as $id) {
                 if (! (bool) preg_match('/^\d+$/', $id)) {
                     \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                         ->fatalError('[Hacking attempt] the input parameter "whole_set" is not valid');
                 }
                 $collection[] = (int) $id;
             }
-        } elseif (isset($_POST['selection']) && is_array($_POST['selection'])) {
-            foreach ($_POST['selection'] as $selected_id) {
+        } elseif ($batchManagerGlobalRequest->selectionPresent) {
+            foreach ($batchManagerGlobalRequest->selection as $selected_id) {
                 if (is_numeric($selected_id)) {
                     $collection[] = (int) $selected_id;
                 }
@@ -153,7 +144,7 @@ final class BatchManagerGlobalPageRenderer
             $prefilter = $bulk_manager_filter['prefilter'];
         }
 
-        $get_page = isset($_GET['page']) && is_string($_GET['page']) ? $_GET['page'] : '';
+        $get_page = $batchManagerGlobalRequest->page;
         $redirect_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $get_page;
 
         // $prefilter never changes after the assignment above; narrowed once
@@ -162,17 +153,20 @@ final class BatchManagerGlobalPageRenderer
         // `mixed` even though it's provably a string at this point).
         $prefilter_value = is_string($prefilter) ? $prefilter : 'none';
 
-        if (isset($_POST['submit'])) {
+        // A local working copy of post -- the author/title branches below
+        // used to null $_POST['author']/$_POST['title'] in place when their
+        // remove_author/remove_title companion checkbox was set, so every
+        // later read in this same method call saw the override.
+        $post = $batchManagerGlobalRequest->post;
+
+        if ($batchManagerGlobalRequest->isSubmitted) {
             // if the user tries to apply an action, it means that there is at least 1
             // photo in the selection
             if (count($collection) === 0) {
                 \Piwigo\Core\PageState::current()->addError(Lang::t('Select at least one photo'));
             }
 
-            // $_POST values are always strings for a plain <select>/hidden
-            // input like selectAction; narrowed once here and reused for
-            // every `== 'xxx'` comparison below.
-            $action = is_string($_POST['selectAction'] ?? null) ? $_POST['selectAction'] : '';
+            $action = $batchManagerGlobalRequest->selectAction;
             $redirect = false;
 
             $tagService = self::tagService();
@@ -191,7 +185,7 @@ DELETE
                 // remove from caddie action available only in caddie so reload content
                 $redirect = true;
             } elseif ($action === 'add_tags') {
-                $post_add_tags = $_POST['add_tags'] ?? null;
+                $post_add_tags = $post['add_tags'] ?? null;
                 if (! is_array($post_add_tags) || count($post_add_tags) === 0) {
                     \Piwigo\Core\PageState::current()->addError(Lang::t('Select at least one tag'));
                 } else {
@@ -210,7 +204,7 @@ DELETE
                     }
                 }
             } elseif ($action === 'del_tags') {
-                $post_del_tags = $_POST['del_tags'] ?? null;
+                $post_del_tags = $post['del_tags'] ?? null;
                 $del_tags = [];
                 if (is_array($post_del_tags)) {
                     foreach ($post_del_tags as $raw_del_tag) {
@@ -244,7 +238,7 @@ DELETE
             }
 
             if ($action === 'associate') {
-                $post_associate = $_POST['associate'] ?? null;
+                $post_associate = $post['associate'] ?? null;
                 if (! is_array($post_associate) || count($post_associate) === 0) {
                     \Piwigo\Core\PageState::current()->addError(Lang::t('Select at least one album'));
                 } else {
@@ -283,7 +277,7 @@ DELETE
                     }
                 }
             } elseif ($action === 'move') {
-                $move_category = isset($_POST['move']) && is_numeric($_POST['move']) ? (int) $_POST['move'] : null;
+                $move_category = isset($post['move']) && is_numeric($post['move']) ? (int) $post['move'] : null;
                 $imageService->moveImagesToCategories($collection, $move_category !== null ? [$move_category] : []);
 
                 $_SESSION['page_infos'] = [
@@ -305,7 +299,7 @@ DELETE
                     $redirect = true;
                 }
             } elseif ($action === 'dissociate') {
-                $dissociate_category = isset($_POST['dissociate']) && is_numeric($_POST['dissociate']) ? (int) $_POST['dissociate'] : 0;
+                $dissociate_category = isset($post['dissociate']) && is_numeric($post['dissociate']) ? (int) $post['dissociate'] : 0;
                 $nb_dissociated = $imageService->dissociateImagesFromCategory($collection, $dissociate_category);
 
                 if ($nb_dissociated > 0) {
@@ -320,15 +314,15 @@ DELETE
 
             // author
             elseif ($action === 'author') {
-                if (isset($_POST['remove_author'])) {
-                    $_POST['author'] = null;
+                if (isset($post['remove_author'])) {
+                    $post['author'] = null;
                 }
 
                 $datas = [];
                 foreach ($collection as $image_id) {
                     $datas[] = [
                         'id' => $image_id,
-                        'author' => $_POST['author'] ?? null,
+                        'author' => $post['author'] ?? null,
                     ];
                 }
 
@@ -351,15 +345,15 @@ DELETE
 
             // title
             elseif ($action === 'title') {
-                if (isset($_POST['remove_title'])) {
-                    $_POST['title'] = null;
+                if (isset($post['remove_title'])) {
+                    $post['title'] = null;
                 }
 
                 $datas = [];
                 foreach ($collection as $image_id) {
                     $datas[] = [
                         'id' => $image_id,
-                        'name' => $_POST['title'] ?? null,
+                        'name' => $post['title'] ?? null,
                     ];
                 }
 
@@ -382,10 +376,10 @@ DELETE
 
             // date_creation
             elseif ($action === 'date_creation') {
-                if (isset($_POST['remove_date_creation']) || ($_POST['date_creation'] ?? '') === '') {
+                if (isset($post['remove_date_creation']) || ($post['date_creation'] ?? '') === '') {
                     $date_creation = null;
                 } else {
-                    $date_creation = $_POST['date_creation'] ?? null;
+                    $date_creation = $post['date_creation'] ?? null;
                 }
 
                 $datas = [];
@@ -419,7 +413,7 @@ DELETE
                 foreach ($collection as $image_id) {
                     $datas[] = [
                         'id' => $image_id,
-                        'level' => $_POST['level'],
+                        'level' => $post['level'],
                     ];
                 }
 
@@ -440,7 +434,7 @@ DELETE
                     ]);
 
                 if (isset($bulk_manager_filter['level'])) {
-                    if ($_POST['level'] < $bulk_manager_filter['level']) {
+                    if ($post['level'] < $bulk_manager_filter['level']) {
                         $redirect = true;
                     }
                 }
@@ -453,7 +447,7 @@ DELETE
 
             // delete
             elseif ($action === 'delete') {
-                if (isset($_POST['confirm_deletion']) and $_POST['confirm_deletion'] === '1') {
+                if (isset($post['confirm_deletion']) and $post['confirm_deletion'] === '1') {
                     // now done with ajax calls, with blocks
                     // $deleted_count = delete_elements($collection, true);
                     if (count($collection) > 0) {
@@ -479,7 +473,7 @@ DELETE
             // synchronize metadata
             elseif ($action === 'metadata') {
                 \Piwigo\Core\PageState::current()->addInfo(Lang::t('Metadata synchronized from file') . ' <span class="badge">' . count($collection) . '</span>');
-            } elseif ($action === 'delete_derivatives' && isset($_POST['del_derivatives_type']) && is_array($_POST['del_derivatives_type']) && count($_POST['del_derivatives_type']) > 0) {
+            } elseif ($action === 'delete_derivatives' && isset($post['del_derivatives_type']) && is_array($post['del_derivatives_type']) && count($post['del_derivatives_type']) > 0) {
                 $query = 'SELECT path,representative_ext FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $collection) . ')';
                 foreach ($conn->fetchAllAssociative($query) as $info) {
@@ -490,7 +484,7 @@ DELETE
                     if (is_string($info['representative_ext'] ?? null) && $info['representative_ext'] !== '') {
                         $derivative_infos['representative_ext'] = $info['representative_ext'];
                     }
-                    foreach ($_POST['del_derivatives_type'] as $type) {
+                    foreach ($post['del_derivatives_type'] as $type) {
                         if (is_string($type)) {
                             new DerivativeCacheService()
                                 ->deleteElementDerivatives($derivative_infos, $type);
@@ -498,11 +492,11 @@ DELETE
                     }
                 }
             } elseif ($action === 'generate_derivatives') {
-                if (($_POST['regenerateSuccess'] ?? '0') !== '0') {
-                    \Piwigo\Core\PageState::current()->addInfo(Lang::t('%s photos have been regenerated', $_POST['regenerateSuccess'] ?? '0'));
+                if (($post['regenerateSuccess'] ?? '0') !== '0') {
+                    \Piwigo\Core\PageState::current()->addInfo(Lang::t('%s photos have been regenerated', $post['regenerateSuccess'] ?? '0'));
                 }
-                if (($_POST['regenerateError'] ?? '0') !== '0') {
-                    \Piwigo\Core\PageState::current()->addWarning(Lang::t('%s photos can not be regenerated', $_POST['regenerateError'] ?? '0'));
+                if (($post['regenerateError'] ?? '0') !== '0') {
+                    \Piwigo\Core\PageState::current()->addWarning(Lang::t('%s photos can not be regenerated', $post['regenerateError'] ?? '0'));
                 }
             }
 
@@ -552,7 +546,7 @@ DELETE
         // creation date
         $template->assign(
             'DATE_CREATION',
-            ($_POST['date_creation'] ?? '') === '' ? date('Y-m-d') . ' 00:00:00' : $_POST['date_creation']
+            ($post['date_creation'] ?? '') === '' ? date('Y-m-d') . ' 00:00:00' : $post['date_creation']
         );
 
         // image level options
@@ -592,11 +586,11 @@ DELETE
         // +-------------------------------------------------------------------+
 
         // how many items to display on this page
-        if (isset($_GET['display']) && $_GET['display'] !== '' && $_GET['display'] !== '0') {
-            if ($_GET['display'] === 'all') {
+        if ($batchManagerGlobalRequest->displayRequested) {
+            if ($batchManagerGlobalRequest->displayRaw === 'all') {
                 $nb_images = count($cat_elements_id);
             } else {
-                $nb_images = is_numeric($_GET['display']) ? intval($_GET['display']) : 0;
+                $nb_images = is_numeric($batchManagerGlobalRequest->displayRaw) ? intval($batchManagerGlobalRequest->displayRaw) : 0;
             }
         } elseif (in_array(\Piwigo\Config\CurrentConfig::batchManagerImagesPerPageGlobal(), [20, 50, 100], true)) {
             $nb_images = \Piwigo\Config\CurrentConfig::batchManagerImagesPerPageGlobal();

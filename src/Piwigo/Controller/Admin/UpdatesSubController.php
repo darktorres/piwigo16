@@ -76,13 +76,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
         // docblock).
         CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page=updates'));
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('tab', $_GET, false, '/^(pwg|ext)$/');
-        if (isset($_GET['tab']) && is_string($_GET['tab'])) {
-            $tab = $_GET['tab'];
-        } else {
-            $tab = 'pwg';
-        }
+        $tab = Request\UpdatesTabRequest::fromGlobals()->tab;
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('updates');

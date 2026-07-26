@@ -78,6 +78,11 @@ final class PwgImage
 
     // Unknow methods will be redirected to image object
     /**
+     * PHP's own __call() magic-method contract requires this signature
+     * (arbitrary $arguments forwarded to an arbitrary backend method,
+     * arbitrary return) -- genuinely arbitrary by design, same as
+     * EventDispatcher's own addEventHandler()/triggerChange().
+     *
      * @param array<int, mixed> $arguments
      */
     public function __call(string $method, array $arguments): mixed

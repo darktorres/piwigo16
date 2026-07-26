@@ -26,12 +26,15 @@ namespace Piwigo\Admin;
 final class LoadedPlugins
 {
     /**
-     * @var array<string, array<string, mixed>>|null
+     * Element shape matches PluginLoader::loadPlugin()'s own $plugin param
+     * (Projection\Plugin::toArray()'s shape) -- its only real writer.
+     *
+     * @var array<string, array{id: string, state: string, version: string}>|null
      */
     private static ?array $plugins = null;
 
     /**
-     * @return array<string, array<string, mixed>>
+     * @return array<string, array{id: string, state: string, version: string}>
      */
     public static function get(): array
     {
@@ -43,7 +46,7 @@ final class LoadedPlugins
     }
 
     /**
-     * @param array<string, array<string, mixed>> $plugins
+     * @param array<string, array{id: string, state: string, version: string}> $plugins
      */
     public static function set(array $plugins): void
     {
@@ -51,7 +54,7 @@ final class LoadedPlugins
     }
 
     /**
-     * @param array<string, mixed> $plugin
+     * @param array{id: string, state: string, version: string} $plugin
      */
     public static function add(string $pluginId, array $plugin): void
     {

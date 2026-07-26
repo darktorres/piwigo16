@@ -52,6 +52,13 @@ use Psr\Http\Message\ServerRequestInterface;
  * already-token-protected ws.php calls (pwg.images.deleteOrphans/
  * pwg.images.setMd5sum, confirmed in batchManagerGlobal.js) -- so no fix
  * needed there.
+ *
+ * `array<string, mixed> $bulkFilter`/`$bulk_filter`/`$url_filter`
+ * throughout this class are all `$_SESSION['bulk_manager_filter']` (or a
+ * sub-array of it), itself built from raw `$_GET`/`$_POST` a few lines
+ * above -- same "flagged for Phase 4 (SEC-40/P27 Request DTOs)" call as
+ * FilterResolver's own identical param. Every real read below already
+ * narrows defensively (`isset()`/`is_array()` + an is_*() check).
  */
 final class BatchManagerSubController implements AdminSubControllerInterface
 {
@@ -242,7 +249,9 @@ DELETE FROM ' . Tables::caddie() . '
     }
 
     /**
-     * @param array<int|string, mixed> $availablePermissionLevels
+     * @param list<int> $availablePermissionLevels matches
+     *   CurrentConfig::availablePermissionLevels()'s own already-precise
+     *   return type (this method's only real caller passes it straight through)
      */
     private function resolveSessionFilter(array $availablePermissionLevels): void
     {

@@ -86,14 +86,19 @@ final readonly class CommentsRequest
         $sort_order_raw = $get['sort_order'] ?? null;
         $sort_order = (is_string($sort_order_raw) && in_array($sort_order_raw, ['DESC', 'ASC'], true)) ? $sort_order_raw : 'DESC';
 
+        // No (int) cast on the GET-provided branch: the original kept
+        // $_GET['items_number'] as its native string in $page['items_number']
+        // and used it straight in the LIMIT clause and the option-list
+        // lookup, so a numeric-string GET value must stay a string here too.
         $items_number_value = $commentsPageNbComments;
         if (isset($get['items_number'])) {
-            $items_number_value = $get['items_number'];
+            $items_number_raw = $get['items_number'];
+            $items_number_value = (is_int($items_number_raw) || is_string($items_number_raw)) ? $items_number_raw : 10;
         }
         if (! is_numeric($items_number_value) and $items_number_value !== 'all') {
             $items_number_value = 10;
         }
-        $items_number = is_numeric($items_number_value) ? (int) $items_number_value : 'all';
+        $items_number = $items_number_value;
 
         $cat_raw = $get['cat'] ?? null;
         $cat_display = is_string($cat_raw) ? $cat_raw : null;

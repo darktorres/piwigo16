@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
 
 /**
@@ -43,7 +45,7 @@ final class AuditRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new AuditRepository($this->conn);
+        $this->repo = EntityManagerFactory::build($this->conn)->getRepository(AuditLogEntity::class);
         $this->conn->executeStatement('DELETE FROM ' . Tables::auditLog());
     }
 

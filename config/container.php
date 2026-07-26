@@ -3,15 +3,14 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Events;
-use Doctrine\ORM\ORMSetup;
 use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger as MonologLogger;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\PiwigoInfosSender;
+use Piwigo\Audit\AuditLogEntity;
+use Piwigo\Audit\AuditRepository;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Comment\CommentRepository;
@@ -29,11 +28,15 @@ use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\TablePrefixListener;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
+use Piwigo\Lang\LangRepository;
+use Piwigo\Lang\LanguageEntity;
 use Piwigo\Mail\MailService;
 use Piwigo\Routing\Router;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\UserRepository;
@@ -198,42 +201,26 @@ return [
     // implementation's equivalent.
     Connection::class => factory(static fn (): Connection => DbConnection::build()),
 
-    // ORMSetup::createAttributeMetadataConfig() (not the deprecated
-    // ...Configuration() variant -- PHP 8.4+ triggers a deprecation
-    // notice for that one, confirmed by reading the installed
-    // doctrine/orm source). enableNativeLazyObjects(true): PHP 8.4+
-    // lazy objects instead of generated proxy classes -- no proxyDir,
-    // nothing for cache:clear to purge. isDevMode: true -- no
-    // environment-detection mechanism exists yet to key this on
-    // (revisit once one does; only affects metadata/query/result cache
-    // behavior, not correctness). TablePrefixListener applies
-    // Config::dbPrefix() to every entity's bare table name at metadata
-    // load time (PHP attributes can't embed a runtime value directly).
-    EntityManagerInterface::class => factory(static function (Connection $conn): EntityManagerInterface {
-        $config = ORMSetup::createAttributeMetadataConfig(
-            paths: [dirname(__DIR__) . '/src/Piwigo'],
-            isDevMode: true,
-        );
-        $config->enableNativeLazyObjects(true);
-
-        $em = new EntityManager($conn, $config);
-        $em->getEventManager()
-            ->addEventListener(Events::loadClassMetadata, new TablePrefixListener());
-
-        return $em;
-    }),
+    // Delegates to EntityManagerFactory -- the same construction recipe
+    // (metadata paths, enableNativeLazyObjects, TablePrefixListener) is
+    // also needed by callers that can't participate in constructor
+    // injection at all (a static L1Infrastructure method, a self-managed
+    // singleton's fallback branch) -- see that factory's own docblock.
+    EntityManagerInterface::class => factory(static fn (Connection $conn): EntityManagerInterface => EntityManagerFactory::build($conn)),
 
     // Not constructor-autowired -- EntityRepository's real constructor
     // takes ClassMetadata, which PHP-DI can't autowire. Resolved the
     // standard Doctrine way: EntityManager::getRepository() reads the
     // #[ORM\Entity(repositoryClass: ...)] attribute and instantiates the
-    // custom repository class correctly.
-    ConfigRepository::class => factory(static function (EntityManagerInterface $em): ConfigRepository {
-        $repo = $em->getRepository(ConfigEntry::class);
-        if (! $repo instanceof ConfigRepository) {
-            throw new \LogicException('Container returned an unexpected type for ' . ConfigRepository::class);
-        }
+    // custom repository class correctly -- guaranteed by that same
+    // attribute, so the declared return type is enough (PHP itself throws
+    // a TypeError if it's ever wrong; phpstan-doctrine's own generic
+    // tracking confirms it statically too, once installed).
+    ConfigRepository::class => factory(static fn (EntityManagerInterface $em): ConfigRepository => $em->getRepository(ConfigEntry::class)),
 
-        return $repo;
-    }),
+    LangRepository::class => factory(static fn (EntityManagerInterface $em): LangRepository => $em->getRepository(LanguageEntity::class)),
+
+    AuditRepository::class => factory(static fn (EntityManagerInterface $em): AuditRepository => $em->getRepository(AuditLogEntity::class)),
+
+    SessionRepository::class => factory(static fn (EntityManagerInterface $em): SessionRepository => $em->getRepository(SessionEntity::class)),
 ];

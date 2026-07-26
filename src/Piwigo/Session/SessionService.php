@@ -6,7 +6,7 @@ namespace Piwigo\Session;
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
-use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 
 final class SessionService
 {
@@ -22,10 +22,20 @@ final class SessionService
      * free-function delegates, PwgSession's own default) share one
      * SessionRepository/Connection per request instead of opening a fresh
      * DB connection on every session-var access.
+     *
+     * Part B: SessionRepository is now ORM-backed (EntityRepository can't
+     * be `new`'d), so this fallback resolves it via
+     * EntityManagerFactory::build() directly rather than the DI container
+     * -- same reasoning as DbConnection::build() being callable from
+     * anywhere, no DI ceremony.
      */
     public static function get(): self
     {
-        return self::$instance ??= new self(new SessionRepository(DbConnection::build()));
+        if (self::$instance instanceof self) {
+            return self::$instance;
+        }
+
+        return self::$instance = new self(EntityManagerFactory::build()->getRepository(SessionEntity::class));
     }
 
     public static function set(self $service): void

@@ -4,53 +4,57 @@ declare(strict_types=1);
 
 namespace Piwigo\Session;
 
-use Doctrine\DBAL\ParameterType;
-use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\EntityRepository;
 use Piwigo\Core\Env;
-use Piwigo\Db\AbstractRepository;
-use Piwigo\Db\Tables;
 
 /**
  * Persistence layer for the DB-backed PHP session store.
+ *
+ * @extends EntityRepository<SessionEntity>
  */
-final class SessionRepository extends AbstractRepository
+final class SessionRepository extends EntityRepository
 {
     public function read(string $compositeId): string
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('data')
-            ->from(Tables::sessions())
-            ->where('id = :id')
-            ->setParameter('id', $compositeId)
-            ->executeQuery()
-            ->fetchOne();
+        $entity = $this->find($compositeId);
+        if ($entity === null) {
+            return '';
+        }
 
-        return is_string($value) ? $value : '';
+        return $entity->data;
     }
 
     public function write(string $compositeId, string $data): void
     {
-        // REPLACE INTO has no query-builder equivalent in DBAL; raw SQL +
-        // bindings is safe here (no string concatenation of $data).
-        //
         // Env::now() rather than a bare `new \DateTimeImmutable()`, which
         // reads the real system clock -- invisible to Env::now()'s
         // PIWIGO_TEST_NOW freeze, so every login during a fixture
         // regeneration wrote a fresh, non-reproducible expiration.
-        $this->conn->executeStatement(
-            'REPLACE INTO ' . Tables::sessions() . ' (id, data, expiration) VALUES (?, ?, ?)',
-            [$compositeId, $data, \DateTimeImmutable::createFromInterface(Env::now())],
-            [ParameterType::STRING, ParameterType::STRING, Types::DATETIME_IMMUTABLE],
-        );
+        $expiration = \DateTimeImmutable::createFromInterface(Env::now());
+
+        $em = $this->getEntityManager();
+        $entity = $this->find($compositeId);
+        if ($entity === null) {
+            $entity = new SessionEntity($compositeId, $data, $expiration);
+            $em->persist($entity);
+        } else {
+            $entity->data = $data;
+            $entity->expiration = $expiration;
+        }
+
+        $em->flush();
     }
 
     public function destroy(string $compositeId): void
     {
-        $this->conn->createQueryBuilder()
-            ->delete(Tables::sessions())
-            ->where('id = :id')
-            ->setParameter('id', $compositeId)
-            ->executeStatement();
+        $entity = $this->find($compositeId);
+        if ($entity === null) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $em->remove($entity);
+        $em->flush();
     }
 
     /**
@@ -67,13 +71,26 @@ final class SessionRepository extends AbstractRepository
     {
         $cutoff = new \DateTimeImmutable('-' . $sessionLength . ' seconds');
 
-        $affected = $this->conn->createQueryBuilder()
-            ->delete(Tables::sessions())
-            ->where('expiration < :cutoff')
-            ->setParameter('cutoff', $cutoff, Types::DATETIME_IMMUTABLE)
-            ->executeStatement();
+        $em = $this->getEntityManager();
+        $affected = $em->createQueryBuilder()
+            ->delete(SessionEntity::class, 's')
+            ->where('s.expiration < :cutoff')
+            ->setParameter('cutoff', $cutoff, 'datetime_immutable')
+            ->getQuery()
+            ->execute();
 
-        return (int) $affected;
+        // A DQL DELETE bypasses the identity map -- any SessionEntity this
+        // EntityManager already loaded this request (e.g. the request's
+        // own active session, via read()/write() above) stays cached as
+        // if it still existed, so a later find() for a row this just
+        // deleted would return stale data. clear() (no longer scopable to
+        // one entity class in ORM 3.x, see EntityManager::clear()'s own
+        // signature) is safe here: gc() is a standalone, infrequent
+        // background sweep, never interleaved with other entities this
+        // EntityManager needs to keep attached mid-flush.
+        $em->clear();
+
+        return $affected;
     }
 
     /**
@@ -81,9 +98,15 @@ final class SessionRepository extends AbstractRepository
      */
     public function deleteByUserId(int $userId): void
     {
-        $this->conn->executeStatement(
-            'DELETE FROM ' . Tables::sessions() . ' WHERE data LIKE ?',
-            ['%pwg_uid|i:' . $userId . ';%'],
-        );
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(SessionEntity::class, 's')
+            ->where('s.data LIKE :pattern')
+            ->setParameter('pattern', '%pwg_uid|i:' . $userId . ';%')
+            ->getQuery()
+            ->execute();
+
+        // Same identity-map staleness reasoning as gc() above.
+        $em->clear();
     }
 }

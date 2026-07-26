@@ -2,18 +2,14 @@
 
 declare(strict_types=1);
 
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Events;
-use Doctrine\ORM\ORMSetup;
 use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\ConfigEntry;
-use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\TablePrefixListener;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Html\HtmlService;
 use Piwigo\Url\UrlService;
 
@@ -32,15 +28,7 @@ use Piwigo\Url\UrlService;
 // test DB.
 function core_update_service(): CoreUpdateService
 {
-    $conn = DbConnection::build();
-    $ormConfig = ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 4) . '/src/Piwigo'], isDevMode: true);
-    $ormConfig->enableNativeLazyObjects(true);
-    $em = new EntityManager($conn, $ormConfig);
-    $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener());
-    $repo = $em->getRepository(ConfigEntry::class);
-    if (! $repo instanceof ConfigRepository) {
-        throw new \LogicException('Container returned an unexpected type for ' . ConfigRepository::class);
-    }
+    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
 
     return new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService()), new ConfigService($repo), Paths::fromRoot(dirname(__DIR__, 4)));
 }

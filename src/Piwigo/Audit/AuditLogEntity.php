@@ -1,0 +1,55 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Audit;
+
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * Maps the `audit_log` table (`piwigo_audit_log` once
+ * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
+ * `before_json`/`after_json` map as plain `text`, not Doctrine's `json`
+ * type -- AuditService::record()/verifyChain() already do their own
+ * json_encode()/json_decode() (the hash chain needs the exact raw bytes
+ * MySQL's JSON column gives back, see AuditService::canonicalJson()'s own
+ * docblock); Doctrine's `json` type would decode on read and re-encode a
+ * PHP value on write, corrupting an already-encoded string handed to it.
+ * `created_at` stays a plain string (`Y-m-d H:i:s`, `Env::now()`-derived)
+ * for the same reason `Config\ConfigEntry::$value` stays raw -- retyping
+ * a column is its own decision, out of scope for this migration.
+ * Insert-only (only `Audit\Projection\AuditLogEntry`, a separate readonly
+ * DTO, is used for reads) -- no update method needed on the entity.
+ */
+#[ORM\Entity(repositoryClass: AuditRepository::class)]
+#[ORM\Table(name: 'audit_log')]
+final class AuditLogEntity
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    public ?int $id = null;
+
+    public function __construct(
+        #[ORM\Column(name: 'actor_id', type: 'integer', nullable: true)]
+        public ?int $actorId,
+        #[ORM\Column(type: 'string', length: 64)]
+        public string $action,
+        #[ORM\Column(name: 'entity_type', type: 'string', length: 64)]
+        public string $entityType,
+        #[ORM\Column(name: 'entity_id', type: 'integer', nullable: true)]
+        public ?int $entityId,
+        #[ORM\Column(name: 'before_json', type: 'text', nullable: true)]
+        public ?string $beforeJson,
+        #[ORM\Column(name: 'after_json', type: 'text', nullable: true)]
+        public ?string $afterJson,
+        #[ORM\Column(name: 'ip_address', type: 'string', length: 45, nullable: true)]
+        public ?string $ipAddress,
+        #[ORM\Column(name: 'created_at', type: 'string', length: 19)]
+        public string $createdAt,
+        #[ORM\Column(name: 'prev_hash', type: 'string', length: 64, nullable: true)]
+        public ?string $prevHash,
+        #[ORM\Column(name: 'row_hash', type: 'string', length: 64)]
+        public string $rowHash,
+    ) {}
+}

@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Audit;
 
+use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query;
 use Piwigo\Audit\Projection\AuditLogEntry;
-use Piwigo\Db\AbstractRepository;
-use Piwigo\Db\Tables;
 
 /**
  * Persistence layer for the audit domain: `audit_log` [SEC-57]. Only ever
  * appends -- no update/delete method exists here, by design (tamper
  * evidence relies on rows never changing after being written).
+ *
+ * @extends EntityRepository<AuditLogEntity>
  */
-final class AuditRepository extends AbstractRepository
+final class AuditRepository extends EntityRepository
 {
     public function insert(
         ?int $actorId,
@@ -27,33 +29,27 @@ final class AuditRepository extends AbstractRepository
         ?string $prevHash,
         string $rowHash,
     ): int {
-        $this->conn->createQueryBuilder()
-            ->insert(Tables::auditLog())
-            ->values([
-                'actor_id' => ':actorId',
-                'action' => ':action',
-                'entity_type' => ':entityType',
-                'entity_id' => ':entityId',
-                'before_json' => ':beforeJson',
-                'after_json' => ':afterJson',
-                'ip_address' => ':ipAddress',
-                'created_at' => ':createdAt',
-                'prev_hash' => ':prevHash',
-                'row_hash' => ':rowHash',
-            ])
-            ->setParameter('actorId', $actorId)
-            ->setParameter('action', $action)
-            ->setParameter('entityType', $entityType)
-            ->setParameter('entityId', $entityId)
-            ->setParameter('beforeJson', $beforeJson)
-            ->setParameter('afterJson', $afterJson)
-            ->setParameter('ipAddress', $ipAddress)
-            ->setParameter('createdAt', $createdAt)
-            ->setParameter('prevHash', $prevHash)
-            ->setParameter('rowHash', $rowHash)
-            ->executeStatement();
+        $entity = new AuditLogEntity(
+            actorId: $actorId,
+            action: $action,
+            entityType: $entityType,
+            entityId: $entityId,
+            beforeJson: $beforeJson,
+            afterJson: $afterJson,
+            ipAddress: $ipAddress,
+            createdAt: $createdAt,
+            prevHash: $prevHash,
+            rowHash: $rowHash,
+        );
 
-        return (int) $this->conn->lastInsertId();
+        $em = $this->getEntityManager();
+        $em->persist($entity);
+        $em->flush();
+
+        // Populated by flush() above -- GeneratedValue auto-increment PK.
+        assert($entity->id !== null);
+
+        return $entity->id;
     }
 
     /**
@@ -63,15 +59,23 @@ final class AuditRepository extends AbstractRepository
      */
     public function findLatestRowHash(): ?string
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('row_hash')
-            ->from(Tables::auditLog())
-            ->orderBy('id', 'DESC')
+        $entities = $this->createQueryBuilder('a')
+            ->orderBy('a.id', 'DESC')
             ->setMaxResults(1)
-            ->executeQuery()
-            ->fetchOne();
+            ->getQuery()
+            // HINT_REFRESH -- this table is only ever appended to (never
+            // updated in normal operation), but chain verification
+            // (findAllInOrder() below) specifically exists to detect
+            // tampering that bypasses this repository entirely (a raw
+            // UPDATE). Without this hint, a row this same EntityManager
+            // already loaded (e.g. the one insert() above just persisted)
+            // would hydrate from Doctrine's identity map instead of the
+            // real current row -- silently hiding exactly the kind of
+            // out-of-band mutation this method exists to catch.
+            ->setHint(Query::HINT_REFRESH, true)
+            ->getResult();
 
-        return is_string($value) ? $value : null;
+        return $entities[0]->rowHash ?? null;
     }
 
     /**
@@ -82,13 +86,32 @@ final class AuditRepository extends AbstractRepository
      */
     public function findAllInOrder(): array
     {
-        $rows = $this->conn->createQueryBuilder()
-            ->select('id', 'actor_id', 'action', 'entity_type', 'entity_id', 'before_json', 'after_json', 'ip_address', 'created_at', 'prev_hash', 'row_hash')
-            ->from(Tables::auditLog())
-            ->orderBy('id', 'ASC')
-            ->executeQuery()
-            ->fetchAllAssociative();
+        $entities = $this->createQueryBuilder('a')
+            ->orderBy('a.id', 'ASC')
+            ->getQuery()
+            // HINT_REFRESH -- see findLatestRowHash()'s own comment above.
+            ->setHint(Query::HINT_REFRESH, true)
+            ->getResult();
 
-        return array_map(AuditLogEntry::fromRow(...), $rows);
+        return array_map(
+            static function (AuditLogEntity $entity): AuditLogEntry {
+                assert($entity->id !== null);
+
+                return new AuditLogEntry(
+                    id: $entity->id,
+                    actorId: $entity->actorId,
+                    action: $entity->action,
+                    entityType: $entity->entityType,
+                    entityId: $entity->entityId,
+                    beforeJson: $entity->beforeJson,
+                    afterJson: $entity->afterJson,
+                    ipAddress: $entity->ipAddress,
+                    createdAt: $entity->createdAt,
+                    prevHash: $entity->prevHash,
+                    rowHash: $entity->rowHash,
+                );
+            },
+            $entities,
+        );
     }
 }

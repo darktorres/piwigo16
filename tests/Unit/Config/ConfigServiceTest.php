@@ -2,12 +2,10 @@
 
 declare(strict_types=1);
 
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\ORMSetup;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigEntry;
-use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
+use Piwigo\Db\EntityManagerFactory;
 
 // confGetParam() for a property-backed key reads via reflection on
 // CurrentConfig's own getter and never touches $repo at all -- constructing
@@ -26,13 +24,7 @@ function unconnectedConfigService(): ConfigService
         'dbname' => '',
         'host' => 'localhost',
     ]);
-    $config = ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 3) . '/src/Piwigo'], isDevMode: true);
-    $config->enableNativeLazyObjects(true);
-    $em = new EntityManager($connection, $config);
-    $repo = $em->getRepository(ConfigEntry::class);
-    if (! $repo instanceof ConfigRepository) {
-        throw new \LogicException('getRepository() returned an unexpected type.');
-    }
+    $repo = EntityManagerFactory::build($connection)->getRepository(ConfigEntry::class);
 
     return new ConfigService($repo);
 }

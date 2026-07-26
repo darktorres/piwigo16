@@ -6,7 +6,7 @@ namespace Piwigo\Lang;
 
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
-use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 
 /**
  * Thin object-oriented facade over Lang/Translator for constructor
@@ -62,12 +62,19 @@ final readonly class LangService
      * precedent; reads Paths via CurrentPaths::get() rather than $this->paths
      * since a static method can't reach constructor-injected state.
      *
+     * Part B: LangRepository is now ORM-backed (EntityRepository can't be
+     * `new`'d), so this resolves it via EntityManagerFactory::build()
+     * directly rather than the DI container -- same reasoning as
+     * DbConnection::build() being callable from anywhere, no DI ceremony.
+     *
      * @return string[]
      */
     public static function getLanguages(): array
     {
+        $repo = EntityManagerFactory::build()->getRepository(LanguageEntity::class);
+
         $languages = [];
-        foreach (new LangRepository(DbConnection::build())->findAll() as $row) {
+        foreach ($repo->findAllRows() as $row) {
             if (is_dir(\Piwigo\Core\CurrentPaths::get()->root . 'language/' . $row['id'])) {
                 $languages[$row['id']] = $row['name'];
             }

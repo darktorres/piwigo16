@@ -6,12 +6,14 @@ namespace Piwigo\Tests\Integration;
 
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Group\GroupService;
 
@@ -52,7 +54,8 @@ final class GroupServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->repo = new GroupRepository(DbConnection::build());
-        $this->service = new GroupService($this->repo, new ActivityService(new ActivityRepository(DbConnection::build())), new AuditService(new AuditRepository(DbConnection::build())), new ConfigService($this->buildConfigRepository()));
+        $auditRepo = EntityManagerFactory::build()->getRepository(AuditLogEntity::class);
+        $this->service = new GroupService($this->repo, new ActivityService(new ActivityRepository(DbConnection::build())), new AuditService($auditRepo), new ConfigService($this->buildConfigRepository()));
     }
 
     public function test_create_rejects_an_already_used_name(): void

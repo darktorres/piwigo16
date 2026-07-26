@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 
-// Doctrine DBAL connections are lazy -- they don't actually connect until
-// the first query runs. Every test below only exercises SessionService
-// methods that never touch the repository's DB-backed methods, so a real
-// SessionRepository/Connection pair can be constructed here without a live
-// database (confirmed empirically: an unreachable db_host never triggers a
-// connection attempt for these specific call paths).
+// Doctrine ORM EntityManagers/repositories are lazy -- they don't actually
+// connect until the first query runs. Every test below only exercises
+// SessionService methods that never touch the repository's DB-backed
+// methods, so a real SessionRepository/EntityManager pair can be
+// constructed here without a live database (confirmed empirically: an
+// unreachable db_host never triggers a connection attempt for these
+// specific call paths).
 function makeSessionService(): SessionService
 {
     CurrentConfig::reset();
@@ -22,7 +24,7 @@ function makeSessionService(): SessionService
     putenv('PIWIGO_DB_HOST=unit-test-should-never-connect.invalid');
     DbCredentials::reset();
 
-    return new SessionService(new SessionRepository(DbConnection::build()));
+    return new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class));
 }
 
 // tests/bootstrap.php loads real PIWIGO_DB_* vars for the whole Pest

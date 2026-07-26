@@ -9,7 +9,9 @@ use Doctrine\DBAL\Types\Types;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
+use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
 
 final class SessionRepositoryTest extends IntegrationTestCase
@@ -34,7 +36,7 @@ final class SessionRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $this->repo = new SessionRepository(DbConnection::build());
+        $this->repo = EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class);
     }
 
     public function test_write_then_read_round_trips_real_data(): void

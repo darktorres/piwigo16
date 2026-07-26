@@ -57,9 +57,11 @@ final class PluginsInstalledPageRenderer
             'plugins' => 'plugins_installed.tpl',
         ]);
 
+        $pluginsDisplay = Request\PluginsInstalledDisplayRequest::fromGlobals();
+
         // should we display details on plugins?
-        if (isset($_GET['show_details'])) {
-            $show_details = is_string($_GET['show_details']) && $_GET['show_details'] === '1';
+        if ($pluginsDisplay->showDetails !== null) {
+            $show_details = $pluginsDisplay->showDetails;
 
             SessionService::get()->setSessionVar('plugins_show_details', $show_details);
         } elseif (SessionService::get()->getSessionVar('plugins_show_details') !== null) {
@@ -90,7 +92,7 @@ final class PluginsInstalledPageRenderer
         $db_plugins_by_id = $extension_repository->findAll(ExtensionType::Plugin);
 
         // --------------------------------------------------------Incompatible Plugins
-        if (isset($_GET['incompatible_plugins'])) {
+        if ($pluginsDisplay->isIncompatiblePluginsRequest) {
             $incompatible_plugins_raw = $pem_catalog->getIncompatibleExtensions(ExtensionType::Plugin, $fs_plugins, ExtensionType::Plugin->defaultIds());
 
             if ($incompatible_plugins_raw === false) {
@@ -254,7 +256,7 @@ final class PluginsInstalledPageRenderer
                 'PWG_TOKEN' => $pwg_token,
                 'base_url' => $base_url,
                 'show_details' => $show_details,
-                'max_inactive_before_hide' => isset($_GET['show_inactive']) ? 999 : 8,
+                'max_inactive_before_hide' => $pluginsDisplay->showInactive ? 999 : 8,
                 'isWebmaster' => (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0,
                 'ADMIN_PAGE_TITLE' => Lang::t('Plugins'),
                 'view_selector' => \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()

@@ -11,7 +11,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
@@ -47,45 +46,19 @@ final class CatOptionsPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        if ($_POST !== []) {
+        $catOptionsRequest = Request\CatOptionsRequest::fromGlobals();
+
+        if ($catOptionsRequest->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
-            new \Piwigo\Validation\InputValidator()
-                ->validate('cat_true', $_POST, true, ValidationPattern::ID);
-            new \Piwigo\Validation\InputValidator()
-                ->validate('cat_false', $_POST, true, ValidationPattern::ID);
-            new \Piwigo\Validation\InputValidator()
-                ->validate('section', $_GET, false, '/^[a-z0-9_-]+$/i');
         }
 
-        if (isset($_POST['falsify'])
-            and isset($_POST['cat_true'])
-            and is_array($_POST['cat_true'])
-            and count($_POST['cat_true']) > 0) {
-            $cat_true = [];
-            foreach ($_POST['cat_true'] as $raw_cat_id) {
-                if (is_numeric($raw_cat_id)) {
-                    $cat_true[] = (int) $raw_cat_id;
-                }
-            }
-
-            $section_param = $_GET['section'] ?? '';
+        if ($catOptionsRequest->isFalsify and $catOptionsRequest->catTrue !== []) {
             \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()
-                ->setCategoryOption($cat_true, is_string($section_param) ? $section_param : '', false, self::activityService($conn));
-        } elseif (isset($_POST['trueify'])
-                 and isset($_POST['cat_false'])
-                 and is_array($_POST['cat_false'])
-                 and count($_POST['cat_false']) > 0) {
-            $cat_false = [];
-            foreach ($_POST['cat_false'] as $raw_cat_id) {
-                if (is_numeric($raw_cat_id)) {
-                    $cat_false[] = (int) $raw_cat_id;
-                }
-            }
-
-            $section_param = $_GET['section'] ?? '';
+                ->setCategoryOption($catOptionsRequest->catTrue, $catOptionsRequest->sectionRaw, false, self::activityService($conn));
+        } elseif ($catOptionsRequest->isTrueify and $catOptionsRequest->catFalse !== []) {
             \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()
-                ->setCategoryOption($cat_false, is_string($section_param) ? $section_param : '', true, self::activityService($conn));
+                ->setCategoryOption($catOptionsRequest->catFalse, $catOptionsRequest->sectionRaw, true, self::activityService($conn));
         }
 
         $template->set_filenames(
@@ -95,10 +68,7 @@ final class CatOptionsPageRenderer
             ]
         );
 
-        $section = $_GET['section'] ?? 'status';
-        if (! is_string($section) or ! in_array($section, ['comments', 'visible', 'status', 'representative'], true)) {
-            $section = 'status';
-        }
+        $section = $catOptionsRequest->section;
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_options&amp;section=';
 
         $template->assign(

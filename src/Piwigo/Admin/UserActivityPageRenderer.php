@@ -7,7 +7,6 @@ namespace Piwigo\Admin;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
@@ -28,12 +27,7 @@ final class UserActivityPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('photo', $_GET, false, ValidationPattern::ID);
-        new \Piwigo\Validation\InputValidator()
-            ->validate('album', $_GET, false, ValidationPattern::ID);
-        new \Piwigo\Validation\InputValidator()
-            ->validate('group', $_GET, false, ValidationPattern::ID);
+        $userActivityRequest = Request\UserActivityRequest::fromGlobals();
 
         CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
 
@@ -50,7 +44,7 @@ final class UserActivityPageRenderer
         $conn = DbConnection::build();
         $activity_service = \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
 
-        if (isset($_GET['type']) && $_GET['type'] === 'download_logs') {
+        if ($userActivityRequest->isDownloadLogs) {
             $output_lines = [];
 
             $rows = $activity_service->getUserObjectLogWithUsernames($user_fields['username'], $user_fields['id']);
@@ -161,8 +155,8 @@ SELECT COUNT(*)
         ];
 
         foreach ($additional_filters as $filter_key => $filter_table) {
-            if (isset($_GET[$filter_key])) {
-                $filter_value = $_GET[$filter_key];
+            if ($userActivityRequest->hasFilter($filter_key)) {
+                $filter_value = $userActivityRequest->filterValue($filter_key);
                 if (! is_string($filter_value)) {
                     \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                         ->fatalError('[Hacking attempt] the input parameter "' . $filter_key . '" is not valid');

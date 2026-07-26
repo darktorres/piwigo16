@@ -64,18 +64,7 @@ final class PluginsSubController implements AdminSubControllerInterface
         // docblock).
         CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page=plugins'));
 
-        if (isset($_GET['tab'])) {
-            new \Piwigo\Validation\InputValidator()
-                ->validate('tab', $_GET, false, '/^(installed|update|new)$/');
-            // check_input_parameter() validates the raw value against the pattern
-            // above (fatal_error()-ing on anything else) but does not narrow its
-            // type for static analysis -- $_GET values are string|array<mixed> at
-            // best, so re-check it is a string before trusting it as the tab name.
-            $tab_raw = $_GET['tab'];
-            $tab = is_string($tab_raw) ? $tab_raw : 'installed';
-        } else {
-            $tab = 'installed';
-        }
+        $tab = Request\ExtensionTabRequest::fromGlobals('/^(installed|update|new)$/')->tab;
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('plugins');

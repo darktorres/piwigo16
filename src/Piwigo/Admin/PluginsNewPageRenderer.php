@@ -23,10 +23,10 @@ use Piwigo\Template\Template;
  * install a new plugin.
  *
  * Already correctly protected before this port (confirmed by direct read):
- * its one real mutation (isset($_GET['revision']) and
- * isset($_GET['extension']), install) already gates on is_webmaster() and
- * check_pwg_token() -- no CSRF fix needed here, unlike
- * PluginsInstalledPageRenderer's own dead-code cleanup.
+ * its one real mutation (revision and extension both present, install)
+ * already gates on is_webmaster() and check_pwg_token() -- no CSRF fix
+ * needed here, unlike PluginsInstalledPageRenderer's own dead-code
+ * cleanup.
  */
 final class PluginsNewPageRenderer
 {
@@ -64,17 +64,17 @@ final class PluginsNewPageRenderer
         $pem_catalog = new PemCatalog(new ZipExtractor());
         $extension_scanner = new ExtensionScanner();
 
+        $pluginsNewRequest = Request\PluginsNewRequest::fromGlobals();
+
         // ------------------------------------------------------automatic installation
-        if (isset($_GET['revision']) and isset($_GET['extension'])
-            and is_string($_GET['revision']) and is_string($_GET['extension'])
-        ) {
+        if ($pluginsNewRequest->revision !== null and $pluginsNewRequest->extension !== null) {
             if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
                 \Piwigo\Core\PageState::current()->addError(Lang::t('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
                     ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
-                $extraction = $pem_catalog->extractArchive(ExtensionType::Plugin, 'install', $_GET['revision'], $_GET['extension']);
+                $extraction = $pem_catalog->extractArchive(ExtensionType::Plugin, 'install', $pluginsNewRequest->revision, $pluginsNewRequest->extension);
                 $install_status = $extraction['status'];
                 $plugin_id = $extraction['id'];
 
@@ -83,8 +83,8 @@ final class PluginsNewPageRenderer
         }
 
         // --------------------------------------------------------------install result
-        if (isset($_GET['installstatus'])) {
-            switch ($_GET['installstatus']) {
+        if ($pluginsNewRequest->installStatusPresent) {
+            switch ($pluginsNewRequest->installStatus) {
                 case 'ok':
                     // since Piwigo 12, you need to be on the page of installed plugins to active a plugin with
                     // a JS action, no need to provide plugin_id in URL, just link to the page of installed
@@ -95,8 +95,8 @@ final class PluginsNewPageRenderer
                     \Piwigo\Core\PageState::current()->addInfo(Lang::t('Plugin has been successfully copied'));
                     \Piwigo\Core\PageState::current()->addInfo('<a href="' . $activate_url . '">' . Lang::t('Activate it now') . '</a>');
 
-                    $installed_plugin_id = $_GET['plugin_id'] ?? null;
-                    $installed_fs_plugin = is_string($installed_plugin_id) ? ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService)[$installed_plugin_id] ?? null) : null;
+                    $installed_plugin_id = $pluginsNewRequest->pluginId;
+                    $installed_fs_plugin = $installed_plugin_id !== null ? ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService)[$installed_plugin_id] ?? null) : null;
                     if ($installed_fs_plugin !== null) {
                         \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()->record('system', ActivitySystem::Plugin, 'install', [
                             'plugin_id' => $installed_plugin_id,
@@ -118,9 +118,7 @@ final class PluginsNewPageRenderer
                     break;
 
                 default:
-                    $installstatus_raw = $_GET['installstatus'];
-                    $installstatus_str = is_string($installstatus_raw) ? $installstatus_raw : '';
-                    \Piwigo\Core\PageState::current()->addError(Lang::t('An error occured during extraction (%s).', htmlspecialchars($installstatus_str)));
+                    \Piwigo\Core\PageState::current()->addError(Lang::t('An error occured during extraction (%s).', htmlspecialchars($pluginsNewRequest->installStatus)));
                     \Piwigo\Core\PageState::current()->addError(Lang::t('Please check "plugins" folder and sub-folders permissions (CHMOD).'));
             }
         }
@@ -143,11 +141,7 @@ final class PluginsNewPageRenderer
 
         // Beta test : show plugins of last version on PEM if the current version isn't present
         // If the current version in known, give the current and last version's compatible plugins
-        $beta_test = false;
-
-        if (isset($_GET['beta-test']) && is_string($_GET['beta-test']) && $_GET['beta-test'] === 'true') {
-            $beta_test = true;
-        }
+        $beta_test = $pluginsNewRequest->betaTest;
 
         $pem_base_url = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
 

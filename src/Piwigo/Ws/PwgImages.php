@@ -1581,13 +1581,13 @@ SELECT id, name, permalink
     {
         $logger = \Piwigo\Core\CurrentLogger::get();
 
-        if (! isset($_FILES['image']) || ! is_array($_FILES['image'])) {
+        $uploaded_image = \Piwigo\Ws\Request\UploadedFileRequest::fromFilesKey('image');
+        if (! $uploaded_image->present) {
             return new PwgError(405, 'The image (file) is missing');
         }
-        $uploaded_image = $_FILES['image'];
 
-        if (isset($uploaded_image['error']) && $uploaded_image['error'] !== 0) {
-            $upload_error = $uploaded_image['error'];
+        if ($uploaded_image->error !== null && $uploaded_image->error !== 0) {
+            $upload_error = $uploaded_image->error;
             $message = match ($upload_error) {
                 UPLOAD_ERR_INI_SIZE => 'The uploaded file exceeds the upload_max_filesize directive in php.ini.',
                 UPLOAD_ERR_FORM_SIZE => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
@@ -1598,7 +1598,7 @@ SELECT id, name, permalink
                 UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload. ' .
                 'PHP does not provide a way to ascertain which extension caused the file ' .
                 'upload to stop; examining the list of loaded extensions with phpinfo() may help.',
-                default => 'Error number ' . (is_scalar($upload_error) ? $upload_error : 'unknown') . ' occurred while uploading a file.',
+                default => 'Error number ' . $upload_error . ' occurred while uploading a file.',
             };
 
             $logger->error(__FUNCTION__ . ' ' . $message);
@@ -1620,17 +1620,16 @@ SELECT COUNT(*)
             }
         }
 
-        $uploaded_tmp_name = $uploaded_image['tmp_name'] ?? null;
-        if (! is_string($uploaded_tmp_name)) {
+        $uploaded_tmp_name = $uploaded_image->tmpName;
+        if ($uploaded_tmp_name === null) {
             return new PwgError(500, '[ws_images_addSimple] missing uploaded file temp name');
         }
-        $uploaded_name = $uploaded_image['name'] ?? null;
 
         $image_id = new UploadService()
             ->addUploadedFile(
                 $uploaded_tmp_name,
                 \Piwigo\Bootstrap\PresentationAccessor::urlService(),
-                is_string($uploaded_name) ? $uploaded_name : null,
+                $uploaded_image->name,
                 $params['category'],
                 8,
                 $params['image_id'] > 0 ? $params['image_id'] : null,
@@ -1768,11 +1767,14 @@ SELECT id, name, permalink
             return new PwgError(500, 'error during buffer directory creation');
         }
 
+        $chunkedUploadRequest = \Piwigo\Ws\Request\ChunkedUploadRequest::fromGlobals();
+        $uploaded_file = \Piwigo\Ws\Request\UploadedFileRequest::fromFilesKey('file');
+
         // Get a file name
-        if (isset($_REQUEST['name'])) {
-            $fileName = $_REQUEST['name'];
-        } elseif ($_FILES !== [] && isset($_FILES['file']) && is_array($_FILES['file'])) {
-            $fileName = $_FILES['file']['name'];
+        if ($chunkedUploadRequest->requestNamePresent) {
+            $fileName = $chunkedUploadRequest->requestName;
+        } elseif ($uploaded_file->present) {
+            $fileName = $uploaded_file->name;
         } else {
             $fileName = uniqid('file_');
         }
@@ -1784,22 +1786,27 @@ SELECT id, name, permalink
         $filePath = $upload_dir . DIRECTORY_SEPARATOR . $fileName;
 
         // Chunking might be enabled
-        $chunk = isset($_REQUEST['chunk']) && is_scalar($_REQUEST['chunk']) ? intval($_REQUEST['chunk']) : 0;
-        $chunks = isset($_REQUEST['chunks']) && is_scalar($_REQUEST['chunks']) ? intval($_REQUEST['chunks']) : 0;
+        $chunk = $chunkedUploadRequest->chunk;
+        $chunks = $chunkedUploadRequest->chunks;
 
         // Open temp file
         if (! (bool) ($out = @fopen("{$filePath}.part", ((bool) $chunks) ? 'ab' : 'wb'))) {
             return new PwgError(102, 'Failed to open output stream.');
         }
 
+        // Matches the original's own 2-level check: $_FILES having ANY
+        // entry at all (even one not named 'file') already commits to the
+        // "move an uploaded file" path below, rather than silently falling
+        // through to the php://input branch -- a minimal, single-fact
+        // existence check, same shape as Ws\PwgServer::isPost()'s own raw
+        // $_POST read.
         if ($_FILES !== []) {
-            if (! isset($_FILES['file']) || ! is_array($_FILES['file'])) {
+            if (! $uploaded_file->present) {
                 return new PwgError(103, 'Failed to move uploaded file.');
             }
-            $uploaded_file = $_FILES['file'];
-            $uploaded_file_tmp_name = $uploaded_file['tmp_name'] ?? null;
+            $uploaded_file_tmp_name = $uploaded_file->tmpName;
 
-            if (! in_array($uploaded_file['error'] ?? null, [null, false, 0, '0', ''], true) || ! is_string($uploaded_file_tmp_name) || ! is_uploaded_file($uploaded_file_tmp_name)) {
+            if (($uploaded_file->error !== null && $uploaded_file->error !== 0) || $uploaded_file_tmp_name === null || ! is_uploaded_file($uploaded_file_tmp_name)) {
                 return new PwgError(103, 'Failed to move uploaded file.');
             }
 
@@ -2000,9 +2007,8 @@ SELECT COUNT(*)
         \Piwigo\Core\FilesystemHelper::secureDirectory(dirname($chunkfile_path));
 
         // move uploaded file
-        $uploaded_chunk = $_FILES['file'] ?? null;
-        $uploaded_chunk_tmp_name = is_array($uploaded_chunk) ? ($uploaded_chunk['tmp_name'] ?? null) : null;
-        if (! is_string($uploaded_chunk_tmp_name)) {
+        $uploaded_chunk_tmp_name = \Piwigo\Ws\Request\UploadedFileRequest::fromFilesKey('file')->tmpName;
+        if ($uploaded_chunk_tmp_name === null) {
             return new PwgError(500, 'missing uploaded chunk file');
         }
         // $chunkfile_path is already absolute ($upload_dir_conf above
@@ -2735,7 +2741,8 @@ SELECT path
         // Temporary use of the batch manager's unit mode,
         // not to be used by an external application,
         // as this code bellow will be deleted when a tag selector is added.
-        if (isset($_REQUEST['tag_list']) && is_array($_REQUEST['tag_list'])) {
+        $tagListRequest = \Piwigo\Ws\Request\TagListRequest::fromGlobals();
+        if ($tagListRequest->present) {
             if (isset($params['tag_ids'])) {
                 return new PwgError(WsError::INVALID_PARAM, 'Do not use tag_list and tag_ids at the same time.');
             }
@@ -2745,7 +2752,7 @@ SELECT path
             // DBAL queries, same "dead pre-escaping" rationale as this
             // plan's other occurrences.
             $cleaned_tag_list = [];
-            foreach ($_REQUEST['tag_list'] as $tag_candidate) {
+            foreach ($tagListRequest->items as $tag_candidate) {
                 $cleaned_tag_list[] = strip_tags(stripslashes(is_string($tag_candidate) ? $tag_candidate : ''));
             }
 

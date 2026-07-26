@@ -166,7 +166,7 @@ function install_piwigo(array $option): void
 /**
  * @param array<string, mixed> $option
  */
-function test_log_user(array $option, string $cookies): mixed
+function test_log_user(array $option, string $cookies): ?string
 {
     // the only real caller passes dirname(__DIR__) . '/cookies.txt', always non-empty
     assert($cookies !== '');
@@ -229,7 +229,9 @@ function test_log_user(array $option, string $cookies): mixed
         echo "Login KO!\n";
     }
     $sessionResult = $result['result'] ?? null;
-    return is_array($sessionResult) ? ($sessionResult['pwg_token'] ?? null) : null;
+    $pwgToken = is_array($sessionResult) ? ($sessionResult['pwg_token'] ?? null) : null;
+
+    return is_string($pwgToken) ? $pwgToken : null;
 }
 
 // +-----------------------+
@@ -290,7 +292,7 @@ function create_album(array $option, string $cookies): void
 /**
  * @param array<string, mixed> $option
  */
-function add_picture(array $option, string $cookies, mixed $pwg_token, \mysqli $mysqli): void
+function add_picture(array $option, string $cookies, ?string $pwg_token, \mysqli $mysqli): void
 {
     $url = $option['url'];
     if (! is_string($url)) {

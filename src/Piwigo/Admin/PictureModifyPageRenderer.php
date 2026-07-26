@@ -10,7 +10,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -87,20 +86,9 @@ final class PictureModifyPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        new \Piwigo\Validation\InputValidator()
-            ->validate('image_id', $_GET, false, ValidationPattern::ID);
-        new \Piwigo\Validation\InputValidator()
-            ->validate('level', $_POST, false, '/^\d+$/');
-        new \Piwigo\Validation\InputValidator()
-            ->validate('date_creation', $_POST, false, '/^\d\d\d\d-\d\d-\d\d( \d\d:\d\d:\d\d)?$/');
+        $pictureModifyRequest = Request\PictureModifyRequest::fromGlobals();
 
-        // check_input_parameter() only validates the raw $_GET value against
-        // ValidationPattern::ID (or dies); it does not narrow $_GET's type for PHPStan, so
-        // re-derive a real int here for every later use.
-        $image_id = 0;
-        if (isset($_GET['image_id']) && is_numeric($_GET['image_id'])) {
-            $image_id = (int) $_GET['image_id'];
-        }
+        $image_id = $pictureModifyRequest->imageId;
 
         // retrieving direct information about picture. This may have been
         // already done by PhotoSubController but this renderer can also be
@@ -127,7 +115,7 @@ SELECT id
         // |                             delete photo                          |
         // +-------------------------------------------------------------------+
 
-        if (isset($_GET['delete'])) {
+        if ($pictureModifyRequest->deletePresent) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
@@ -155,7 +143,7 @@ SELECT id
         // |                          synchronize metadata                     |
         // +-------------------------------------------------------------------+
 
-        if (isset($_GET['sync_metadata'])) {
+        if ($pictureModifyRequest->syncMetadataPresent) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
@@ -167,26 +155,24 @@ SELECT id
         // --------------------------------------------------------- update informations
         /** @var array<string, mixed> $data */
         $data = [];
-        if (isset($_POST['submit'])) {
+        if ($pictureModifyRequest->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
             $data = [];
             $data['id'] = $image_id;
-            $data['level'] = $_POST['level'];
+            $data['level'] = $pictureModifyRequest->postLevel;
 
-            $to_sanitize_fields = ['name', 'author', 'comment'];
-            foreach ($to_sanitize_fields as $field) {
-                $raw_field_value = $_POST[$field] ?? null;
-                $field_value = is_string($raw_field_value) ? $raw_field_value : '';
+            $to_sanitize_fields = [
+                'name' => $pictureModifyRequest->nameField ?? '',
+                'author' => $pictureModifyRequest->authorField ?? '',
+                'comment' => $pictureModifyRequest->commentField ?? '',
+            ];
+            foreach ($to_sanitize_fields as $field => $field_value) {
                 $data[$field] = (\Piwigo\Config\CurrentConfig::allowHtmlDescriptions()) ? $field_value : strip_tags($field_value);
             }
 
-            if (! in_array($_POST['date_creation'] ?? null, [null, false, 0, '0', '', []], true)) {
-                $data['date_creation'] = $_POST['date_creation'];
-            } else {
-                $data['date_creation'] = null;
-            }
+            $data['date_creation'] = $pictureModifyRequest->dateCreation;
 
             $pre_hook_data = $data;
             $data = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('picture_modify_before_update', $data);
@@ -214,7 +200,7 @@ SELECT id
             $tagService = self::tagService();
 
             $tag_ids = [];
-            $raw_tags_post = $_POST['tags'] ?? null;
+            $raw_tags_post = $pictureModifyRequest->tagsRaw;
             if (! in_array($raw_tags_post, [null, false, 0, '0', '', []], true)) {
                 if (is_array($raw_tags_post)) {
                     $raw_tags_post_strings = [];
@@ -231,39 +217,13 @@ SELECT id
             $tagService->setTags($tag_ids, $image_id);
 
             // association to albums
-            if (! isset($_POST['associate'])) {
-                $_POST['associate'] = [];
-            }
-            new \Piwigo\Validation\InputValidator()
-                ->validate('associate', $_POST, true, ValidationPattern::ID);
-
-            $associate_categories = [];
-            if (is_array($_POST['associate'])) {
-                foreach ($_POST['associate'] as $associate_value) {
-                    if (is_numeric($associate_value)) {
-                        $associate_categories[] = (int) $associate_value;
-                    }
-                }
-            }
+            $associate_categories = $pictureModifyRequest->associate;
             $imageService->moveImagesToCategories([$image_id], $associate_categories);
 
             PermissionCacheInvalidator::invalidate();
 
             // thumbnail for albums
-            if (! isset($_POST['represent'])) {
-                $_POST['represent'] = [];
-            }
-            new \Piwigo\Validation\InputValidator()
-                ->validate('represent', $_POST, true, ValidationPattern::ID);
-
-            $represent_categories = [];
-            if (is_array($_POST['represent'])) {
-                foreach ($_POST['represent'] as $represent_value) {
-                    if (is_numeric($represent_value)) {
-                        $represent_categories[] = (int) $represent_value;
-                    }
-                }
-            }
+            $represent_categories = $pictureModifyRequest->represent;
 
             $no_longer_thumbnail_for = array_diff($represented_albums, $represent_categories);
             if (count($no_longer_thumbnail_for) > 0) {
@@ -350,17 +310,14 @@ SELECT
             [$row['width'], $row['height']] = [$row['height'], $row['width']];
         }
 
-        // $_POST['name']/['author']/['comment'] are mixed (raw superglobal reads);
-        // re-derive real strings here, falling back to the stored row value when the
-        // field wasn't (validly) resubmitted.
-        $post_name = $_POST['name'] ?? null;
-        $name_value = is_string($post_name) ? stripslashes($post_name) : (is_string($row['name'] ?? null) ? $row['name'] : '');
+        $post_name = $pictureModifyRequest->nameField;
+        $name_value = $post_name !== null ? stripslashes($post_name) : (is_string($row['name'] ?? null) ? $row['name'] : '');
 
-        $post_author = $_POST['author'] ?? null;
-        $author_value = is_string($post_author) ? stripslashes($post_author) : (is_string($row['author'] ?? null) && $row['author'] !== '' ? $row['author'] : '');
+        $post_author = $pictureModifyRequest->authorField;
+        $author_value = $post_author !== null ? stripslashes($post_author) : (is_string($row['author'] ?? null) && $row['author'] !== '' ? $row['author'] : '');
 
-        $post_comment = $_POST['comment'] ?? null;
-        $comment_value = is_string($post_comment) ? stripslashes($post_comment) : (is_string($row['comment'] ?? null) && $row['comment'] !== '' ? $row['comment'] : '');
+        $post_comment = $pictureModifyRequest->commentField;
+        $comment_value = $post_comment !== null ? stripslashes($post_comment) : (is_string($row['comment'] ?? null) && $row['comment'] !== '' ? $row['comment'] : '');
 
         $template->assign(
             [
@@ -465,7 +422,7 @@ SELECT
         }
 
         // image level options
-        $selected_level = $_POST['level'] ?? $row['level'];
+        $selected_level = $pictureModifyRequest->postLevel ?? $row['level'];
         $template->assign(
             [
                 'level_options' => \Piwigo\Permission\PermissionService::getPrivacyLevelOptions(),

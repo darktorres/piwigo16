@@ -30,6 +30,13 @@ final class PictureRateRenderer
      * of a shared registry.
      */
     /**
+     * $picture is PictureController's own growing per-request display bag
+     * (PictureController::$picture['current'] mixes a real SrcImage object
+     * with dozens of incrementally-added scalar template fields, e.g.
+     * TITLE/download_url/id/file/filesize/url) -- same "$page-shaped
+     * accumulator" rationale as Search\SearchFilterRenderer's own $page,
+     * not a single reusable domain shape.
+     *
      * @param array<string, array<string, mixed>> $picture
      */
     public function render(int $imageId, UrlServiceInterface $urlService, array $picture, string $url_self): void

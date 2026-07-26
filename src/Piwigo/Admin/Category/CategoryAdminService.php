@@ -253,7 +253,7 @@ final class CategoryAdminService
 
         if (count($userIds) > 0) {
             \Piwigo\Bootstrap\CoreDomainAccessor::permissionService()
-                ->addPermissionOnCategory($catId, $userIds);
+                ->addPermissionOnCategory($catId, $userIds, $applyOnSub);
         }
     }
 

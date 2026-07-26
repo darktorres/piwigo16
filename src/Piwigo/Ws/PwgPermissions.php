@@ -163,6 +163,13 @@ SELECT group_id, cat_id
      *   default, WsParamType::BOOL -- always present. pwg_token: no 'default'
      *   key -- mandatory, always present.
      * @return mixed PwgError, or the result of the pwg.permissions.getList invocation
+     *
+     * P27/SEC-40: previously passed `recursive` to
+     * PermissionService::addPermissionOnCategory() by mutating
+     * `$_POST['apply_on_sub']` (that method used to read it as ambient
+     * request state) -- addPermissionOnCategory() now takes `$applyOnSub`
+     * as a real parameter, so this WS method (which has no `$_POST` of its
+     * own) passes `recursive` straight through instead.
      */
     public static function add(array $params, PwgServer &$service): mixed
     {
@@ -209,11 +216,8 @@ SELECT id
         }
 
         if (isset($params['user_id']) && $params['user_id'] !== []) {
-            if ($params['recursive']) {
-                $_POST['apply_on_sub'] = true;
-            }
             self::permissionService()
-                ->addPermissionOnCategory($params['cat_id'], $params['user_id']);
+                ->addPermissionOnCategory($params['cat_id'], $params['user_id'], $params['recursive']);
         }
 
         return $service->invoke('pwg.permissions.getList', [

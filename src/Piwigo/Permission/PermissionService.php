@@ -260,7 +260,7 @@ final readonly class PermissionService
      *   `list`
      * @param int|array<int, int> $userIds
      */
-    public function addPermissionOnCategory(int|array $categoryIds, int|array $userIds): void
+    public function addPermissionOnCategory(int|array $categoryIds, int|array $userIds, bool $applyOnSub = false): void
     {
         if (! is_array($categoryIds)) {
             $categoryIds = [$categoryIds];
@@ -279,7 +279,7 @@ final readonly class PermissionService
 
         // make sure categories are private and select uppercats or subcats
         $catIds = $this->categoryRepo->findUppercatIds($categoryIds);
-        if (isset($_POST['apply_on_sub'])) {
+        if ($applyOnSub) {
             $catIds = array_merge($catIds, $this->categoryRepo->findSubcategoryIds($categoryIds));
         }
 

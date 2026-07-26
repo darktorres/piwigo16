@@ -354,10 +354,14 @@ final readonly class CommentService
      * restriction (for non-admins) is defense in depth, not the primary
      * access check.
      *
-     * $comment is raw request input -- CommentsController/PictureController
-     * build it straight from $_GET['edit']/$_POST['image_id'] with no
-     * defensive cast at the construction site, unlike insertComment()'s
-     * own callers; real fix belongs to Phase 4's Request DTOs.
+     * $comment is still only known as array<string, mixed> here even
+     * though both real callers (CommentsController/PictureController) now
+     * build it from their own validated Request\CommentsRequest/
+     * Request\PictureRequest DTO fields (P27/SEC-40) rather than raw
+     * $_GET/$_POST -- kept a generic array (matching insertComment()'s
+     * own $comm shape) since this method's own defensive is_scalar()/
+     * is_string() narrowing below already treats every field as
+     * untrusted, same as any other external-boundary array.
      *
      * @param array<string, mixed> $comment
      * @return string validate, moderate, reject
@@ -536,11 +540,7 @@ final readonly class CommentService
 
     private static function pushCrReason(string $reason): void
     {
-        if (! isset($_POST['cr']) || ! is_array($_POST['cr'])) {
-            $_POST['cr'] = [];
-        }
-
-        $_POST['cr'][] = $reason;
+        \Piwigo\Core\PageState::current()->addCommentRejectionReason($reason);
     }
 
     /**

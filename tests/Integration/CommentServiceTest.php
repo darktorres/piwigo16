@@ -111,7 +111,6 @@ namespace Piwigo\Tests\Integration {
             CurrentConfig::setEmailAdminOnCommentDeletion(false);
             CurrentUser::set(User::fromUserArray(['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin', 'email' => 'fixture_admin@example.test']));
             \Piwigo\Core\PageState::reset();
-            $_POST['cr'] = [];
 
             $this->conn = DbConnection::build();
             $this->service = new CommentService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()));
@@ -385,10 +384,7 @@ namespace Piwigo\Tests\Integration {
          */
         private function postCr(): array
         {
-            /** @var list<string> $cr */
-            $cr = $_POST['cr'];
-
-            return $cr;
+            return \Piwigo\Core\PageState::current()->commentRejectionReasons;
         }
 
         /**

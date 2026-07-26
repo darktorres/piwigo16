@@ -176,6 +176,19 @@ final class PageState
      */
     public ?array $notifyApiKeyExpiration = null;
 
+    /**
+     * Comment domain's own anti-spam rejection reasons (P27/SEC-40:
+     * CommentService::pushCrReason() used to accumulate these into
+     * `$_POST['cr']`, an undocumented debugging side-channel with no real
+     * reader anywhere in the app -- "rvelices: I use this outside to see
+     * how spam robots work", per that method's own original comment --
+     * moved here, the established per-request accumulator home, instead
+     * of a request superglobal.
+     *
+     * @var list<string>
+     */
+    public array $commentRejectionReasons = [];
+
     private function __construct() {}
 
     /**
@@ -219,6 +232,11 @@ final class PageState
     public function addInfo(string $message): void
     {
         $this->infos[] = $message;
+    }
+
+    public function addCommentRejectionReason(string $reason): void
+    {
+        $this->commentRejectionReasons[] = $reason;
     }
 
     public function addHeaderMessage(string $message): void

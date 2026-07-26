@@ -19,6 +19,7 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\CoverageCollector;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Env;
 use Piwigo\Core\ErrorCollector;
@@ -134,6 +135,7 @@ final class RequestBootstrap
      */
     public static function bootEntryPoint(Paths $paths): void
     {
+        CoverageCollector::registerIfActive($paths);
         SentryBootstrap::init();
         ServerTiming::start('boot');
 

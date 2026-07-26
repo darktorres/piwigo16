@@ -100,12 +100,25 @@
       "@analyse:phpstan"
     ],
     "test": "@php vendor/bin/pest --testsuite Unit,Arch",
-    "test:coverage": "@php vendor/bin/pest --testsuite Unit,Arch --coverage --min=5",
+    "test:coverage": "@php vendor/bin/pest --testsuite Unit,Arch --coverage --min=5 --coverage-php _data/coverage-raw/unit-arch.cov",
+    "test:coverage:integration": "@php vendor/bin/pest --testsuite Integration --coverage --coverage-php _data/coverage-raw/integration.cov",
     "test:integration": "@php vendor/bin/pest --testsuite Integration",
     "test:contract": "@php vendor/bin/pest --testsuite Contract",
     "test:browser": [
       "bash tools/reimport-fixture.sh",
       "bash tools/pest-cleanup.sh --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=install-flow"
+    ],
+    "test:coverage:web": [
+      "rm -rf _data/coverage-raw/web",
+      "PIWIGO_COVERAGE=1 php vendor/bin/pest --testsuite Contract",
+      "bash tools/reimport-fixture.sh",
+      "PIWIGO_COVERAGE=1 bash tools/pest-cleanup.sh --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=install-flow"
+    ],
+    "test:coverage:all": [
+      "@test:coverage",
+      "@test:coverage:integration",
+      "@test:coverage:web",
+      "@php tools/coverage-merge.php _data/coverage-raw/unit-arch.cov _data/coverage-raw/integration.cov"
     ],
     "test:fixture-regen": "bash tools/pest-cleanup.sh --testsuite Browser --group=fixture-regen",
     "test:visual": [

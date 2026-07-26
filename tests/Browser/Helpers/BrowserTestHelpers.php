@@ -73,10 +73,15 @@ final class BrowserTestHelpers
     /** @return array<string, mixed> */
     public static function testModeOptions(): array
     {
+        $headers = [
+            ['name' => 'X-Piwigo-Env', 'value' => 'test'],
+        ];
+        if (getenv('PIWIGO_COVERAGE') === '1') {
+            $headers[] = ['name' => 'X-Piwigo-Coverage', 'value' => '1'];
+        }
+
         return [
-            'extraHTTPHeaders' => [
-                ['name' => 'X-Piwigo-Env', 'value' => 'test'],
-            ],
+            'extraHTTPHeaders' => $headers,
         ];
     }
 

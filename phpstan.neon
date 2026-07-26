@@ -107,3 +107,19 @@ parameters:
         -
             identifier: classConstant.internalClass
             path: tests/Unit/SmokeTest.php
+        # RawCodeCoverageData is entirely @internal upstream, but its
+        # fromXdebugWithoutPathCoverage() static factory is the only way
+        # (public or otherwise) to turn a raw pcov/xdebug-format coverage
+        # array into what CodeCoverage::append() requires -- it's exactly
+        # how the library's own PcovDriver::stop()/XdebugDriver::stop()
+        # build one, just called from outside the package because our raw
+        # array was captured by a *separate* PHP process (a live web
+        # request, via Piwigo\Core\CoverageCollector's own pcov\collect()
+        # call) and handed to this merge script as a serialized .raw dump
+        # rather than produced by a driver running in-process. Same
+        # tooling/visibility mismatch as the Pest entries above -- not
+        # fixable in application code since we don't control the
+        # library's docblocks.
+        -
+            identifier: staticMethod.internalClass
+            path: tools/coverage-merge.php

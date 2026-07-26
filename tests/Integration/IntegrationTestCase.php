@@ -202,7 +202,12 @@ abstract class IntegrationTestCase extends TestCase
     {
         $value = $_SERVER['HTTP_X_PIWIGO_ENV'] ?? null;
 
-        return ['X-Piwigo-Env: ' . (is_string($value) ? $value : 'test')];
+        $headers = ['X-Piwigo-Env: ' . (is_string($value) ? $value : 'test')];
+        if (getenv('PIWIGO_COVERAGE') === '1') {
+            $headers[] = 'X-Piwigo-Coverage: 1';
+        }
+
+        return $headers;
     }
 
     protected function resetDatabase(): void

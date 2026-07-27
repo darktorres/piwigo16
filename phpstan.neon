@@ -92,6 +92,7 @@ parameters:
                 - tests/Unit/Bootstrap/CliBootstrapTest.php
                 - tests/Unit/Lang/LangServiceTest.php
                 - tests/Unit/Lang/TranslatorTest.php
+                - tests/Unit/Search/Inflector/Inflector_frTest.php
                 - tests/Unit/Session/SessionServiceTest.php
         -
             identifier: method.nonObject
@@ -100,6 +101,7 @@ parameters:
                 - tests/Unit/Admin/Maintenance/ServerInfoServiceTest.php
                 - tests/Unit/Bootstrap/CliBootstrapTest.php
                 - tests/Unit/Lang/LangServiceTest.php
+                - tests/Unit/Search/Inflector/Inflector_frTest.php
                 - tests/Unit/Session/SessionServiceTest.php
         -
             identifier: method.notFound

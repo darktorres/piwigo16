@@ -1,0 +1,702 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Tests\Integration {
+
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception\DriverException;
+use Piwigo\Calendar\CalendarBase;
+use Piwigo\Calendar\CalendarMonthly;
+use Piwigo\Calendar\CalendarRepository;
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Lang;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\SrcImage;
+use Piwigo\Lang\Translator;
+use Piwigo\Template\Template;
+
+/**
+ * Covers CalendarBase's own shared logic (initialize()/get_date_where()'s
+ * shared shape/get_display_name()/build_nav_bar()/build_next_prev(), all
+ * `protected`/abstract on the base class) through CalendarMonthly, its
+ * only sibling-tested concrete subclass alongside CalendarWeeklyTest --
+ * CalendarBase itself is abstract and has no other real construction
+ * site, exactly as this batch's own instructions describe.
+ *
+ * The fixture's 5 images all share one `date_available`/`date_creation`
+ * (see CalendarRepositoryTest's own docblock) -- deliberately too little
+ * spread to exercise multi-year/month/day grouping, so this file moves 4
+ * of them to distinct, real dates via a scoped UPDATE (same technique as
+ * CalendarRepositoryTest::test_find_image_ids_applies_the_date_where_continuation()):
+ *
+ *   id 1: date_available 2024-03-10 (Sunday)
+ *   id 2: date_available 2024-03-15 (Friday)
+ *   id 3: date_available 2024-07-04 (Thursday)
+ *   id 4: date_available 2025-01-20 (Monday)
+ *   id 5: date_available 2025-01-25 (Saturday)
+ *
+ * `date_creation` is left untouched -- the fixture's own dump sets it to
+ * NULL for all 5 images (verified directly against the loaded fixture,
+ * not assumed), so `chronology_field='created'` always resolves to
+ * `AND date_creation IS NOT NULL` matching zero rows. That's still enough
+ * to exercise `initialize()`'s field-selection branch and the
+ * data-independent ONLY_FULL_GROUP_BY bug below (a SQL-level rejection
+ * that fires before any row is ever read, regardless of how many rows
+ * would have matched) -- see
+ * test_created_field_uses_date_creation_and_still_hits_the_only_full_group_by_bug().
+ *
+ * Lang::reset()/Translator::reset() pin this process's translation state
+ * to "nothing loaded" -- IntegrationTestCase's own setUp() doesn't manage
+ * Lang at all (confirmed via a full grep), so leaving it alone would make
+ * get_date_component_label()'s month/day-name lookups depend on whichever
+ * earlier test file in the same PHPUnit/Pest process happened to load a
+ * language file first. With nothing loaded, Piwigo\Core\Lang::t() (used
+ * for the week-number/"All" labels) still returns its own literal,
+ * untranslated fallback text (Piwigo\Lang\Translator::translate()'s own
+ * documented behaviour) -- Piwigo\Core\Lang::months()/days() (a
+ * different, untranslated-by-default array) come back empty, so
+ * get_date_component_label() falls through to the raw numeric component
+ * every time. Both are asserted on below, not routed around.
+ */
+final class CalendarMonthlyTest extends IntegrationTestCase
+{
+    private static bool $fixtureReady = false;
+
+    private Connection $conn;
+
+    private CalendarMonthlyTestFakeUrlService $urlService;
+
+    #[\Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->setUpConnectionFromEnv();
+
+        if (! self::$fixtureReady) {
+            $this->resetDatabase();
+            $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
+            self::$fixtureReady = true;
+        }
+
+        CurrentConfig::reset();
+        ConfigLoader::applyDefaults();
+        ConfigLoader::applyEnvOverrides();
+        Lang::reset();
+        Translator::reset();
+
+        $this->conn = DbConnection::build();
+
+        // Idempotent: safe to re-run before every test method even though
+        // the DB itself is only reset/reloaded once per class (see
+        // $fixtureReady above).
+        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-03-10 00:00:00' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-03-15 00:00:00' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-07-04 00:00:00' WHERE id = 3");
+        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2025-01-20 00:00:00' WHERE id = 4");
+        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2025-01-25 00:00:00' WHERE id = 5");
+
+        $this->urlService = new CalendarMonthlyTestFakeUrlService();
+
+        $configService = new ConfigService($this->buildConfigRepository());
+        $configService->loadConfFromDb();
+        ImageStdParams::load_from_db();
+        DerivativeImage::setUrlService($this->urlService);
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        Lang::reset();
+        Translator::reset();
+        parent::tearDown();
+    }
+
+    private function makeCalendar(): CalendarMonthly
+    {
+        $calendar = new CalendarMonthly(new CalendarRepository($this->conn), $this->urlService);
+        $calendar->chronology_field = 'posted';
+        $calendar->initialize(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3,4,5)');
+
+        return $calendar;
+    }
+
+    /**
+     * Narrows through a chain of array offsets on a Smarty template var --
+     * TemplateInterface::get_template_vars() is declared `mixed` by design
+     * (mirrors Smarty's own arbitrary-value assign() contract, see that
+     * interface's own docblock), so every hop needs an explicit is_array()
+     * check for PHPStan (level 10, project-wide, tests included) rather
+     * than trusting the chain.
+     *
+     * @param list<int|string> $path
+     */
+    private function dig(mixed $value, array $path): mixed
+    {
+        foreach ($path as $key) {
+            $value = is_array($value) && array_key_exists($key, $value) ? $value[$key] : null;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Same as dig(), narrowed to array<int|string, mixed> for callers that
+     * need to keep indexing (e.g. assertCount()/assertArrayNotHasKey(), or
+     * to read several sibling keys off the same resolved row without
+     * re-walking the whole path each time).
+     *
+     * @param list<int|string> $path
+     * @return array<int|string, mixed>
+     */
+    private function digArray(mixed $value, array $path): array
+    {
+        $result = $this->dig($value, $path);
+
+        return is_array($result) ? $result : [];
+    }
+
+    public function test_initialize_selects_date_available_for_posted_and_date_creation_for_created(): void
+    {
+        $posted = new CalendarMonthly(new CalendarRepository($this->conn), $this->urlService);
+        $posted->chronology_field = 'posted';
+        $posted->initialize(' FROM ' . Tables::images());
+        self::assertSame('date_available', $posted->date_field);
+
+        $created = new CalendarMonthly(new CalendarRepository($this->conn), $this->urlService);
+        $created->chronology_field = 'created';
+        $created->initialize(' FROM ' . Tables::images());
+        self::assertSame('date_creation', $created->date_field);
+    }
+
+    public function test_get_date_where_with_a_full_year_month_day_selects_a_single_day(): void
+    {
+        $calendar = $this->makeCalendar();
+        $calendar->chronology_date = [2024, 3, 10];
+
+        self::assertSame(
+            " AND date_available BETWEEN '2024-03-10' AND '2024-03-10 23:59:59'",
+            $calendar->get_date_where()
+        );
+    }
+
+    /**
+     * get_all_days_in_month()'s leap-year branch (Feb 29 vs Feb 28) is
+     * `protected` -- exercised here through the public get_date_where(),
+     * which calls it to compute the month's last day when only
+     * year+month are selected, exactly like real production traffic.
+     */
+    public function test_get_date_where_respects_leap_years_when_only_year_and_month_are_selected(): void
+    {
+        $calendar = $this->makeCalendar();
+
+        $calendar->chronology_date = [2024, 2]; // 2024 is a leap year
+        self::assertSame(
+            " AND date_available BETWEEN '2024-02-01' AND '2024-02-29 23:59:59'",
+            $calendar->get_date_where()
+        );
+
+        $calendar->chronology_date = [2023, 2]; // 2023 is not a leap year
+        self::assertSame(
+            " AND date_available BETWEEN '2023-02-01' AND '2023-02-28 23:59:59'",
+            $calendar->get_date_where()
+        );
+    }
+
+    public function test_get_date_where_treats_any_as_a_wildcard_for_year_or_month(): void
+    {
+        $calendar = $this->makeCalendar();
+
+        // year 'any', month given: skips the year BETWEEN bound entirely,
+        // filters only by month.
+        $calendar->chronology_date = ['any', 3];
+        self::assertSame(
+            ' AND date_available IS NOT NULL AND MONTH(date_available)=3',
+            $calendar->get_date_where()
+        );
+
+        // year given, month 'any': the whole year, no month/day narrowing.
+        $calendar->chronology_date = [2024, 'any'];
+        self::assertSame(
+            " AND date_available BETWEEN '2024-01-01' AND '2024-12-31 23:59:59'",
+            $calendar->get_date_where()
+        );
+    }
+
+    public function test_get_date_where_with_nothing_selected_falls_back_to_is_not_null(): void
+    {
+        $calendar = $this->makeCalendar();
+        $calendar->chronology_date = [];
+
+        self::assertSame(' AND date_available IS NOT NULL', $calendar->get_date_where());
+    }
+
+    /**
+     * REAL BUG found while writing this test (reproducible against a real
+     * MySQL/MariaDB connection with the standard ONLY_FULL_GROUP_BY
+     * sql_mode, which this project's own DbConnection deliberately never
+     * strips -- see CalendarRepository's own docblock): build_global_calendar()'s
+     * `ORDER BY YEAR(date_field) DESC, MONTH(date_field) ASC` references
+     * the raw date column directly while the query only `GROUP BY period`
+     * (a DATE_FORMAT(...) alias) -- MySQL can't prove YEAR()/MONTH() are
+     * functionally dependent on that alias, so this ORDER BY is rejected
+     * outright. This is CAL_VIEW_CALENDAR + monthly style (the default
+     * style) + no year selected yet -- i.e. the very first calendar page a
+     * real visitor lands on -- so every real request down this path 500s.
+     * Reproduced two ways: directly here, and end-to-end through the real
+     * CalendarRenderer::render() entry point in CalendarRendererTest.
+     */
+    public function test_build_global_calendar_fails_under_only_full_group_by(): void
+    {
+        $calendar = $this->makeCalendar();
+        $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
+        $calendar->chronology_date = [];
+        $template = new Template();
+
+        try {
+            $calendar->generate_category_content($template);
+            self::fail('Expected a Doctrine\DBAL\Exception\DriverException from the ORDER BY/GROUP BY mismatch.');
+        } catch (DriverException $e) {
+            self::assertStringContainsString('only_full_group_by', strtolower($e->getMessage()));
+        }
+    }
+
+    public function test_generate_category_content_case_b_groups_days_by_month_within_a_selected_year(): void
+    {
+        $calendar = $this->makeCalendar();
+        $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
+        $calendar->chronology_date = [2024];
+        $template = new Template();
+
+        $ret = $calendar->generate_category_content($template);
+
+        self::assertTrue($ret);
+        // 2 distinct months exist in 2024, so build_year_calendar() does
+        // NOT bail out to the single-month view -- chronology_date stays
+        // exactly as given.
+        self::assertSame([2024], $calendar->chronology_date);
+
+        $calendarVars = $template->get_template_vars('chronology_calendar');
+        $month3 = $this->digArray($calendarVars, ['calendar_bars', 0]);
+        $month7 = $this->digArray($calendarVars, ['calendar_bars', 1]);
+
+        // Month 3 (March): 2 images, on days 10 and 15.
+        self::assertSame(2, $month3['NB_IMAGES']);
+        self::assertSame(3, $month3['HEAD_LABEL']);
+        self::assertSame(10, $this->dig($month3, ['items', 0, 'LABEL']));
+        self::assertSame(1, $this->dig($month3, ['items', 0, 'NB_IMAGES']));
+        self::assertSame(15, $this->dig($month3, ['items', 1, 'LABEL']));
+        self::assertSame(1, $this->dig($month3, ['items', 1, 'NB_IMAGES']));
+
+        // Month 7 (July): 1 image, on day 4 -- build_year_calendar() keeps
+        // the day component as a raw substr() slice ('04'), not an
+        // int-cast value, unlike the month key itself (real, observed
+        // behaviour: a leading-zero day never survives PHP's numeric-string
+        // array-key coercion the way '10'/'15' silently do).
+        self::assertSame(1, $month7['NB_IMAGES']);
+        self::assertSame(7, $month7['HEAD_LABEL']);
+        self::assertSame('04', $this->dig($month7, ['items', 0, 'LABEL']));
+        self::assertSame(1, $this->dig($month7, ['items', 0, 'NB_IMAGES']));
+
+        // build_nav_bar(CYEAR) also ran (case B always calls it) -- 2024
+        // has 3 images total, 2025 has 2, plus the "All" link.
+        $navVars = $template->get_template_vars('chronology_navigation_bars');
+        self::assertSame(2024, $this->dig($navVars, [0, 'items', 0, 'LABEL']));
+        self::assertSame(3, $this->dig($navVars, [0, 'items', 0, 'NB_IMAGES']));
+        self::assertSame(2025, $this->dig($navVars, [0, 'items', 1, 'LABEL']));
+        self::assertSame(2, $this->dig($navVars, [0, 'items', 1, 'NB_IMAGES']));
+        self::assertSame('All', $this->dig($navVars, [0, 'items', 2, 'LABEL']));
+    }
+
+    public function test_generate_category_content_case_c_builds_the_month_grid_picking_the_single_image_per_day(): void
+    {
+        $calendar = $this->makeCalendar();
+        $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
+        $calendar->chronology_date = [2024, 3];
+        $template = new Template();
+
+        $ret = $calendar->generate_category_content($template);
+
+        self::assertTrue($ret);
+
+        $calendarVars = $template->get_template_vars('chronology_calendar');
+
+        // March 2024: day 10 is week-row 1 (0-indexed) column 6 (Sunday,
+        // Monday-start grid), day 15 is week-row 2 column 4 (Friday) --
+        // both real calendar facts, not guesses.
+        $day10 = $this->digArray($calendarVars, ['month_view', 'weeks', 1, 6]);
+        self::assertSame(10, $day10['DAY']);
+        self::assertSame(6, $day10['DOW']);
+        self::assertSame(1, $day10['NB_ELEMENTS']);
+        self::assertSame('fixture-photo-1.jpg', $day10['IMAGE_ALT']);
+        self::assertSame(
+            '/fake-index?' . json_encode(['chronology_date' => [2024, 3, 10]]) . '|removed=[]',
+            $day10['U_IMG_LINK']
+        );
+
+        $day15 = $this->digArray($calendarVars, ['month_view', 'weeks', 2, 4]);
+        self::assertSame(15, $day15['DAY']);
+        self::assertSame(4, $day15['DOW']);
+        self::assertSame(1, $day15['NB_ELEMENTS']);
+        self::assertSame('fixture-photo-2.jpg', $day15['IMAGE_ALT']);
+
+        // The picked-image derivative URL is the real DerivativeImage
+        // algorithm's own output for image 1's known, real fixture row --
+        // reconstructing it independently (rather than hardcoding the
+        // hashed filename) proves generate_category_content() picked
+        // *that* image, without duplicating DerivativeImage's own
+        // internal path-building logic as a guess.
+        $row1 = $this->conn->createQueryBuilder()
+            ->select('id', 'file', 'representative_ext', 'path', 'width', 'height', 'rotation')
+            ->from(Tables::images())
+            ->where('id = 1')
+            ->executeQuery()
+            ->fetchAssociative();
+        self::assertIsArray($row1);
+        $expectedDerivative = new DerivativeImage(ImageStdParams::SQUARE, new SrcImage($row1));
+        self::assertSame($expectedDerivative->get_url(), $day10['IMAGE']);
+
+        // Empty grid cells (no images) carry only DAY, no DOW/IMAGE/etc.
+        self::assertSame(['DAY' => 1], $this->dig($calendarVars, ['month_view', 'weeks', 0, 4]));
+
+        self::assertSame(
+            " AND date_available BETWEEN '2024-03-01' AND '2024-03-31 23:59:59'",
+            $calendar->get_date_where()
+        );
+
+        self::assertSame(
+            ' / <a href="/fake-index?' . json_encode(['chronology_date' => [2024]]) . '|removed=' . json_encode(['start']) . '">2024</a>'
+            . ' / <span class="calInHere">3</span>',
+            $calendar->get_display_name()
+        );
+    }
+
+    /**
+     * REAL BUG found while writing this test: CalendarBase::build_next_prev()
+     * computes its own "current period" marker as
+     * `implode('-', array_filter($this->chronology_date, is_string(...)))`
+     * -- silently dropping every *int*-typed component. But
+     * CalendarRenderer::render() (the only real caller) always sanitizes
+     * non-'any', non-empty chronology_date tokens into real ints before
+     * ever setting $calendar->chronology_date (see its own sanitization
+     * loop). So on every real request, $current ends up '' (empty), never
+     * matching any of the query's own real period strings -- the "just in
+     * case" fallback then ranks '' *before* every real period, making
+     * "next" always point at the *currently viewed* period instead of
+     * genuinely advancing, and "previous" never appears at all.
+     *
+     * Demonstrated here with both chronology_date shapes on the exact
+     * same underlying data to isolate the cause: string components (what
+     * build_next_prev() actually needs) navigate correctly; int
+     * components (what the real, unmodified CalendarRenderer actually
+     * produces) do not. See CalendarRendererTest for the same bug
+     * reproduced end-to-end through the unmodified production entry point.
+     */
+    public function test_build_next_prev_only_navigates_correctly_with_string_typed_chronology_date(): void
+    {
+        $withStrings = $this->makeCalendar();
+        $withStrings->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
+        $withStrings->chronology_date = ['2024', '3'];
+        $templateStrings = new Template();
+        $withStrings->generate_category_content($templateStrings);
+
+        $navStrings = $this->digArray($templateStrings->get_template_vars('chronology_navigation_bars'), [0]);
+        self::assertArrayNotHasKey('previous', $navStrings);
+        self::assertSame('7 2024', $this->dig($navStrings, ['next', 'LABEL']));
+
+        $withInts = $this->makeCalendar();
+        $withInts->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
+        $withInts->chronology_date = [2024, 3];
+        $templateInts = new Template();
+        $withInts->generate_category_content($templateInts);
+
+        $navInts = $this->digArray($templateInts->get_template_vars('chronology_navigation_bars'), [0]);
+        self::assertArrayNotHasKey('previous', $navInts);
+        // Bug: "next" points at the exact period already being viewed
+        // (2024-3) instead of the real next period (2024-7).
+        self::assertSame('3 2024', $this->dig($navInts, ['next', 'LABEL']));
+        self::assertSame(
+            '/fake-index?' . json_encode(['chronology_date' => ['2024', '3']]) . '|removed=' . json_encode(['start']),
+            $this->dig($navInts, ['next', 'URL'])
+        );
+    }
+
+    public function test_generate_category_content_list_view_builds_year_then_month_then_day_nav_bars(): void
+    {
+        // nb_date_parts=0 -> year nav bar.
+        $yearLevel = $this->makeCalendar();
+        $yearLevel->chronology_view = CalendarBase::CAL_VIEW_LIST;
+        $yearLevel->chronology_date = [];
+        $yearTemplate = new Template();
+        self::assertFalse($yearLevel->generate_category_content($yearTemplate));
+        $yearNav = $yearTemplate->get_template_vars('chronology_navigation_bars');
+        self::assertSame(2024, $this->dig($yearNav, [0, 'items', 0, 'LABEL']));
+        self::assertSame(3, $this->dig($yearNav, [0, 'items', 0, 'NB_IMAGES']));
+
+        // nb_date_parts=1 -> month nav bar (2 months in 2024).
+        $monthLevel = $this->makeCalendar();
+        $monthLevel->chronology_view = CalendarBase::CAL_VIEW_LIST;
+        $monthLevel->chronology_date = [2024];
+        $monthTemplate = new Template();
+        self::assertFalse($monthLevel->generate_category_content($monthTemplate));
+        $monthNav = $monthTemplate->get_template_vars('chronology_navigation_bars');
+        self::assertSame(3, $this->dig($monthNav, [0, 'items', 0, 'LABEL']));
+        self::assertSame(2, $this->dig($monthNav, [0, 'items', 0, 'NB_IMAGES']));
+        self::assertSame(7, $this->dig($monthNav, [0, 'items', 1, 'LABEL']));
+        self::assertSame(1, $this->dig($monthNav, [0, 'items', 1, 'NB_IMAGES']));
+
+        // nb_date_parts=2 -> day nav bar. Unlike the year/month levels
+        // above, this call passes an explicit, non-empty $day_labels
+        // array (1..31, built from get_all_days_in_month(), not from
+        // Lang::days()) rather than null/[] -- which flips on
+        // get_nav_bar_from_items()'s "show_empty" synthesis (calendarShowEmpty()
+        // defaults true): every day 1..31 gets a real entry, with a -1
+        // sentinel (no URL/NB_IMAGES key at all) for the 29 days with no
+        // image, not just the 2 real ones.
+        $dayLevel = $this->makeCalendar();
+        $dayLevel->chronology_view = CalendarBase::CAL_VIEW_LIST;
+        $dayLevel->chronology_date = [2024, 3];
+        $dayTemplate = new Template();
+        self::assertFalse($dayLevel->generate_category_content($dayTemplate));
+        $dayItems = $this->digArray($dayTemplate->get_template_vars('chronology_navigation_bars'), [0, 'items']);
+        self::assertCount(31, $dayItems);
+        self::assertSame(['LABEL' => 1], $dayItems[0]);
+        self::assertSame(10, $this->dig($dayItems, [9, 'LABEL']));
+        self::assertSame(1, $this->dig($dayItems, [9, 'NB_IMAGES']));
+        self::assertSame(15, $this->dig($dayItems, [14, 'LABEL']));
+        self::assertSame(1, $this->dig($dayItems, [14, 'NB_IMAGES']));
+        self::assertSame(['LABEL' => 31], $dayItems[30]);
+    }
+
+    public function test_get_display_name_renders_the_any_wildcard_with_a_translated_label(): void
+    {
+        $calendar = $this->makeCalendar();
+        $calendar->chronology_date = [2024, 'any'];
+
+        self::assertSame(
+            ' / <a href="/fake-index?' . json_encode(['chronology_date' => [2024]]) . '|removed=' . json_encode(['start']) . '">2024</a>'
+            . ' / <span class="calInHere">All</span>',
+            $calendar->get_display_name()
+        );
+    }
+
+    /**
+     * chronology_field='created' points every image at date_creation,
+     * which is NULL for all 5 fixture images (this file's own UPDATEs
+     * only ever touch date_available) -- get_date_where() with nothing
+     * selected falls back to `AND date_creation IS NOT NULL`, matching
+     * zero rows.
+     *
+     * This still hits the very same ONLY_FULL_GROUP_BY bug documented
+     * above: the ORDER BY/GROUP BY mismatch is a SQL-level rejection that
+     * fires before the query result set is ever read, so it fails
+     * identically here even though zero rows would ultimately have
+     * matched -- confirming the bug isn't data-dependent at all.
+     */
+    public function test_created_field_uses_date_creation_and_still_hits_the_only_full_group_by_bug(): void
+    {
+        $calendar = new CalendarMonthly(new CalendarRepository($this->conn), $this->urlService);
+        $calendar->chronology_field = 'created';
+        $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
+        $calendar->chronology_date = [];
+        $calendar->initialize(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3,4,5)');
+
+        self::assertSame('date_creation', $calendar->date_field);
+
+        $template = new Template();
+        try {
+            $calendar->generate_category_content($template);
+            self::fail('Expected the same ONLY_FULL_GROUP_BY DriverException as the posted-field case.');
+        } catch (DriverException $e) {
+            self::assertStringContainsString('only_full_group_by', strtolower($e->getMessage()));
+        }
+    }
+
+    /**
+     * Branch coverage gap closed: CalendarBase::build_nav_bar()'s own
+     * "only one value exists at this level" auto-narrow
+     * (`count($level_items) === 1 and count($page_chronology_date) <
+     * count($this->calendar_levels) - 1`) silently sets
+     * chronology_date[level] and returns *before* ever appending anything
+     * to 'chronology_navigation_bars' -- a distinct branch from
+     * build_global_calendar()'s own single-year bail-out, which every test
+     * above can only reach via the ONLY_FULL_GROUP_BY bug (that query
+     * fails outright before it ever runs, regardless of data -- see
+     * test_build_global_calendar_fails_under_only_full_group_by()).
+     * build_nav_bar()'s own query never has an ORDER BY, so it has no such
+     * bug blocking it -- this is the one real way in this suite to
+     * observe the auto-narrow-and-return behaviour directly.
+     *
+     * Forces a single-month bucket by restricting inner_sql to id IN
+     * (4,5) -- both 2025-01-* (see this file's own date UPDATEs above) --
+     * so at CMONTH level, with year 2025 already selected, only one
+     * distinct month (January) exists.
+     *
+     * build_next_prev() still runs immediately afterwards (unconditional,
+     * see generate_category_content()) and -- same real bug as
+     * test_build_next_prev_only_navigates_correctly_with_string_typed_chronology_date()
+     * above -- treats the newly-int-narrowed chronology_date the same way
+     * it treats CalendarRenderer's real int-sanitized input: $current
+     * comes back '' (both components are ints, filtered out by
+     * array_filter(..., is_string(...))), so it still finds and appends
+     * its own (buggy) 'next' entry even though build_nav_bar() itself
+     * appended nothing.
+     */
+    public function test_build_nav_bar_auto_narrows_chronology_date_and_skips_the_bar_for_a_single_value(): void
+    {
+        $calendar = new CalendarMonthly(new CalendarRepository($this->conn), $this->urlService);
+        $calendar->chronology_field = 'posted';
+        $calendar->chronology_view = CalendarBase::CAL_VIEW_LIST;
+        $calendar->chronology_date = [2025];
+        $calendar->initialize(' FROM ' . Tables::images() . ' WHERE id IN (4,5)');
+
+        $template = new Template();
+        $ret = $calendar->generate_category_content($template);
+
+        self::assertFalse($ret);
+        // Auto-narrowed from [2025] to [2025, 1]: build_nav_bar(CMONTH)
+        // found a single distinct month (January) across id 4 and 5.
+        self::assertSame([2025, 1], $calendar->chronology_date);
+        // build_nav_bar() itself returned early, before appending anything
+        // for the month level -- the only entry present comes from
+        // build_next_prev()'s own separate (buggy) 'next' link, not from
+        // a real nav bar of month choices.
+        $navVars = $this->digArray($template->get_template_vars('chronology_navigation_bars'), [0]);
+        self::assertSame(['next'], array_keys($navVars));
+        self::assertArrayNotHasKey('previous', $navVars);
+        // Bug (same mechanism as the other build_next_prev() tests above):
+        // "next" points at the exact 2025-1 period already selected,
+        // instead of there being no next period at all (id 4/5 are the
+        // only images in scope and both fall in that single month).
+        self::assertSame('1 2025', $this->dig($navVars, ['next', 'LABEL']));
+    }
+}
+
+/**
+ * Real fake for UrlServiceInterface -- CalendarBase/CalendarMonthly only
+ * ever call duplicateIndexUrl() (see CalendarBase's own code); the real
+ * Piwigo\Url\UrlService's own duplicateIndexUrl() falls through to
+ * getAbsoluteRootUrl(), whose output depends on $_SERVER['SCRIPT_NAME']/
+ * $_SERVER['HTTP_HOST'] (confirmed live: it echoed back this test
+ * process's own invoking script path, not a gallery URL) -- entirely an
+ * artifact of how the test binary happens to be invoked, not of anything
+ * CalendarMonthly itself computes. This fake instead returns a
+ * deterministic, exact encoding of the real $redefined/$removed params it
+ * was called with, so assertions below verify the actual chronology_date/
+ * removed-keys values CalendarMonthly's own grouping logic computed.
+ */
+final class CalendarMonthlyTestFakeUrlService implements \Piwigo\Core\UrlServiceInterface
+{
+    /** @var list<array{redefined: array<string, mixed>, removed: array<int, string>}> */
+    public array $calls = [];
+
+    #[\Override]
+    public function getRootUrl(): string
+    {
+        return '/fake-root/';
+    }
+
+    #[\Override]
+    public function getAbsoluteRootUrl(bool $withScheme = true): string
+    {
+        return 'https://fake.test/';
+    }
+
+    #[\Override]
+    public function addUrlParams(string $url, array $params, string $argSeparator = '&amp;'): string
+    {
+        return $url;
+    }
+
+    #[\Override]
+    public function makeIndexUrl(array $params = []): string
+    {
+        return '/fake-index?' . json_encode($params);
+    }
+
+    #[\Override]
+    public function duplicateIndexUrl(array $redefined = [], array $removed = []): string
+    {
+        $this->calls[] = ['redefined' => $redefined, 'removed' => $removed];
+
+        return '/fake-index?' . json_encode($redefined) . '|removed=' . json_encode($removed);
+    }
+
+    #[\Override]
+    public function duplicatePictureUrl(array $redefined = [], array $removed = []): string
+    {
+        return '/fake-picture';
+    }
+
+    #[\Override]
+    public function makePictureUrl(array $params): string
+    {
+        return '/fake-picture';
+    }
+
+    #[\Override]
+    public function parseSectionUrl(array $tokens, &$nextToken, \Piwigo\Core\RedirectServiceInterface $redirectService): array
+    {
+        throw new \LogicException('not used by CalendarMonthly');
+    }
+
+    #[\Override]
+    public function parseWellKnownParamsUrl(array $tokens, int &$i): array
+    {
+        throw new \LogicException('not used by CalendarMonthly');
+    }
+
+    #[\Override]
+    public function getActionUrl($id, $whatPart, bool $download): string
+    {
+        throw new \LogicException('not used by CalendarMonthly');
+    }
+
+    #[\Override]
+    public function getElementUrl(array $elementInfo): string
+    {
+        throw new \LogicException('not used by CalendarMonthly');
+    }
+
+    #[\Override]
+    public function setMakeFullUrl(): void {}
+
+    #[\Override]
+    public function unsetMakeFullUrl(): void {}
+
+    #[\Override]
+    public function embellishUrl(string $url): string
+    {
+        return $url;
+    }
+
+    #[\Override]
+    public function getGalleryHomeUrl(): string
+    {
+        throw new \LogicException('not used by CalendarMonthly');
+    }
+
+    #[\Override]
+    public function getQueryStringDiff(array $rejects = [], bool $escape = true): string
+    {
+        throw new \LogicException('not used by CalendarMonthly');
+    }
+
+    #[\Override]
+    public function urlIsRemote(string $url): bool
+    {
+        return false;
+    }
+
+    #[\Override]
+    public function getUserFavorites(): array
+    {
+        return [];
+    }
+}
+}

@@ -117,21 +117,30 @@ final class PwgBase32
                 return false;
             }
         }
-        $input = str_replace('=', '', $input);
-        $input = str_split($input);
+        // Padding only ever occurs in the final block (validated above),
+        // and encode(..., padding: false) can also produce a final block
+        // shorter than 8 characters with no padding at all -- str_split()'s
+        // own shorter-final-chunk behavior handles both uniformly.
+        // Decoding block-by-block against chunks of the ORIGINAL (not
+        // padding-pre-stripped) input keeps every block's characters
+        // aligned to their real position. Stripping '=' from the whole
+        // string up front (the previous approach) desynced the old fixed
+        // 8-char stride from the real data whenever the final block
+        // needed padding, reading past the end of the character array.
         $binaryString = '';
-        for ($i = 0; $i < count($input); $i += 8) {
-            $x = '';
-            if (! in_array($input[$i], self::$map, true)) {
-                return false;
+        foreach (str_split($input, 8) as $block) {
+            $realChars = rtrim($block, self::$map[32]);
+            $bits = '';
+            foreach (str_split($realChars) as $char) {
+                if (! isset(self::$flippedMap[$char])) {
+                    return false;
+                }
+                $bits .= str_pad(base_convert(self::$flippedMap[$char], 10, 2), 5, '0', STR_PAD_LEFT);
             }
-            for ($j = 0; $j < 8; $j++) {
-                $x .= str_pad(base_convert(@self::$flippedMap[@$input[$i + $j]], 10, 2), 5, '0', STR_PAD_LEFT);
-            }
-            $eightBits = str_split($x, 8);
-            for ($z = 0; $z < count($eightBits); $z++) {
-                $codepoint = max(0, min(255, (int) base_convert($eightBits[$z], 2, 10)));
-                $binaryString .= ((bool) ($y = chr($codepoint)) || ord($y[0]) === 48) ? $y : '';
+            $byteCount = intdiv(strlen($bits), 8);
+            for ($b = 0; $b < $byteCount; $b++) {
+                $codepoint = max(0, min(255, (int) base_convert(substr($bits, $b * 8, 8), 2, 10)));
+                $binaryString .= chr($codepoint);
             }
         }
         return $binaryString;

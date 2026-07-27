@@ -80,16 +80,37 @@ test('encode/decode round-trip correctly for a 5-byte input needing no padding',
         ->and(PwgBase32::decode('O5XXE3DE'))->toBe('world');
 });
 
-test('decode crashes on a padded value instead of decoding it (real bug)', function (): void {
-    // decode() strips the '=' characters before iterating in fixed
-    // 8-character strides. For 'foo' (encoded 'MZXW6==='), stripping
-    // padding leaves only 5 characters, so the inner loop reads past
-    // the end of the character array for the missing 3 positions.
-    // Under this file's declare(strict_types=1), the resulting
-    // undefined-index null is passed to base_convert()'s non-nullable
-    // string parameter, which throws instead of silently coercing --
-    // so ANY encode() output that actually needed padding cannot be
-    // decoded back via this method. Documented here rather than
-    // silently asserted around.
-    expect(fn (): string|false|null => PwgBase32::decode('MZXW6==='))->toThrow(\TypeError::class);
+test('decode correctly decodes a padded value (regression test for a fixed bug)', function (): void {
+    // decode() used to strip the '=' characters before iterating in
+    // fixed 8-character strides, desyncing that stride from the real
+    // data and reading past the end of the character array for any
+    // input that actually needed padding (a real TypeError under
+    // declare(strict_types=1)) -- fixed to decode block-by-block
+    // against the un-stripped input instead. Covers all 4 non-zero
+    // padding levels RFC 4648 defines, plus the zero-padding case.
+    expect(PwgBase32::decode('MY======'))->toBe('f')
+        ->and(PwgBase32::decode('MZXQ===='))->toBe('fo')
+        ->and(PwgBase32::decode('MZXW6==='))->toBe('foo')
+        ->and(PwgBase32::decode('MZXW6YQ='))->toBe('foob')
+        ->and(PwgBase32::decode('MZXW6YTBOI======'))->toBe('foobar');
+});
+
+test('encode/decode round-trips for every input length from 1 to 8 bytes', function (): void {
+    // Exercises every padding level (6/4/3/1/0 trailing '=' chars) plus
+    // a 2-block input (6 bytes needs a full unpadded block followed by
+    // a padded one), proving the fix generalizes beyond the single-block
+    // RFC 4648 vectors above.
+    foreach (['a', 'ab', 'abc', 'abcd', 'abcde', 'abcdef', 'abcdefg', 'abcdefgh'] as $plaintext) {
+        expect(PwgBase32::decode(PwgBase32::encode($plaintext)))->toBe($plaintext);
+    }
+});
+
+test('encode/decode round-trips without padding too', function (): void {
+    // encode(..., padding: false) produces a final block shorter than 8
+    // characters with no trailing '=' at all -- a different shape than
+    // the padded cases above, also handled by decode()'s per-block
+    // chunking (str_split()'s own shorter-final-chunk behavior).
+    foreach (['a', 'ab', 'abc', 'abcd', 'abcde', 'abcdef'] as $plaintext) {
+        expect(PwgBase32::decode(PwgBase32::encode($plaintext, false)))->toBe($plaintext);
+    }
 });

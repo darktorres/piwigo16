@@ -209,7 +209,7 @@ final readonly class CategoryService
             return null;
         }
 
-        // Docs/PLAN-REPLAY-AUDIT.md gap-closure, Stage 1b: commentable/
+        // Docs/PLAN.md gap-closure, Stage 1b: commentable/
         // visible are real `bool` on {@see \Piwigo\Category\Projection\Category}
         // itself now -- the repository's own fromRow() does this cast once,
         // so the manual per-key loop that used to live here is retired

@@ -3,7 +3,7 @@ deptrac:
     - ./src/Piwigo
   layers:
     # L0 Data — no first-party classes yet (P6 doesn't create any); enumerated
-    # ahead of time per docs/PLAN-REPLAY.md's P6 6-layer model, populated by
+    # ahead of time per docs/PLAN.md's P6 6-layer model, populated by
     # later phases.
     - name: L0Data
       collectors:
@@ -205,7 +205,7 @@ deptrac:
   ruleset:
     # Each layer may depend only on layers below it — standard layered
     # architecture. Violations are recorded as a baseline (P6 wrap-up) and
-    # ratchet down over subsequent phases, per docs/PLAN-REPLAY.md's P6
+    # ratchet down over subsequent phases, per docs/PLAN.md's P6
     # section.
     L4Integration:
       - L3Presentation

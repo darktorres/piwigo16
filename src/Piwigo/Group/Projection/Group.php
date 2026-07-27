@@ -6,7 +6,7 @@ namespace Piwigo\Group\Projection;
 
 /**
  * Typed row shape for `piwigo_groups` (P17-23 Stage 1b, Group domain --
- * `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection shapes"
+ * `docs/PLAN.md`'s own "7 Entity types, 73 projection shapes"
  * reference). `fromRow()` centralises the `is_string($row['x']) ? ... :
  * default` narrowing {@see \Piwigo\Group\GroupRepository::findAllBasic()}
  * used to do inline, same shape as {@see \Piwigo\Tag\Projection\Tag}.

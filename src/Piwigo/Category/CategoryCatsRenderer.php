@@ -265,7 +265,7 @@ final readonly class CategoryCatsRenderer
 
                     foreach ($categories as &$category) {
                         $categoryRepresentativePictureId = $category['representative_picture_id'] ?? null;
-                        // Docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: found live
+                        // Docs/PLAN.md gap-closure, 2026-07-23: found live
                         // while retyping ImageRepository::findByIds() -- PHP
                         // canonicalises a numeric string array key ('5') back to an
                         // int key (5), so $imageRowId (this foreach's key) is always

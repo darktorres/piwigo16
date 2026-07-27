@@ -15,8 +15,9 @@ use Piwigo\Rate\Projection\Rate;
  * `images.rating_score` single-column bulk update -- a thin cross-domain
  * touch that stays inline here rather than becoming a new `ImageRepository`
  * dependency, same "thin cross-domain touch" precedent as History/
- * Activity's own single-column reads (see docs/plan/manifest.yaml's P18
- * entry). Owns `rate` ({@see RateEntity}, composite PK) -- only the
+ * Activity's own single-column reads (see docs/PLAN.md's Epoch E section,
+ * P17-P20 domain tiers).
+ * Owns `rate` ({@see RateEntity}, composite PK) -- only the
  * single/simple-condition write methods against it go through DQL; every
  * read here (including bulk list/aggregate reads of `rate` itself) stays
  * plain DBAL via $this->getEntityManager()->getConnection(), same "mixed

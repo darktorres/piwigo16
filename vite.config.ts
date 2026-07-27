@@ -31,7 +31,7 @@ export default defineConfig({
       input: {
         // Placeholder only — 68 real entries land in P24.
         noop: r("build/noop.ts"),
-        // Real entry (docs/PLAN-REPLAY.md P1 gap, remediated post-P22) — web
+        // Real entry (docs/PLAN.md P1 gap, remediated post-P22) — web
         // Vitals RUM beacon, loaded on every page via footer.tpl.
         vitals: r("build/vitals.ts"),
       },

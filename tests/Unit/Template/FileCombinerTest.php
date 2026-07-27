@@ -13,7 +13,7 @@ use Piwigo\Users\CurrentUser;
 // combine()'s multi-item merge path (mkgetdir()+file_put_contents() under
 // PHPWG_ROOT_PATH) and its is_template path (needs a real Smarty $template
 // global) are Smarty-rendering/file-I/O integration, already covered
-// indirectly by the Browser suite (see docs/PLAN-REPLAY.md's P16 audit
+// indirectly by the Browser suite (see docs/PLAN.md's P16 audit
 // note) -- not re-tested here. What's under test: combine()'s behavior for
 // 0-1 non-template items and remote items, which never touch the
 // filesystem (confirmed by reading flush_pending()/process_combinable()'s

@@ -9,7 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-// web-vitals RUM beacon endpoint (docs/PLAN-REPLAY.md P1, item 11b). Bare
+// web-vitals RUM beacon endpoint (docs/PLAN.md P1, item 11b). Bare
 // bootstrap + dispatch, matching every other root controller's own shape
 // (e.g. about.php) — .htaccess rewrites the clean /analytics/vitals URL
 // here; config/routes.php's own route matches that clean path, not this

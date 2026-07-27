@@ -9,7 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-// Test-mode-only error drain (docs/PLAN-REPLAY-AUDIT.md finding #7). Bare
+// Test-mode-only error drain (docs/PLAN.md finding #7). Bare
 // bootstrap + dispatch, matching every other clean-URL root controller's own
 // shape (e.g. analytics_vitals.php) — public/.htaccess rewrites the clean
 // /__test/errors URL here; config/routes.php's own route matches that clean

@@ -24,7 +24,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * legacy) is what actually closes the "anonymous reads a private album's
  * original" attack surface for this direct-download entry point (i.php's
  * own derivative-serving surface is separately, and only partially,
- * closed -- see docs/plan/manifest.yaml's own SEC-33 note).
+ * closed -- see docs/PLAN.md's SEC master checklist, SEC-33).
  *
  * Workstream C3b: doError()/the 304 early-return used to call exit()
  * directly (never return) -- simpler than the ResponseReadyException

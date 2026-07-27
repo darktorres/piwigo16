@@ -19,10 +19,14 @@ use Piwigo\Command\UserListCommand;
 // all 4 maintenance:* commands but none were ever built) autowire
 // DbMaintenanceRepository (built P21, had zero real callers until now)
 // with zero new container.php entries.
-// maintenance:repair-db is deliberately still not here -- its backing
-// logic lives in include/dblayer/functions_mysqli.inc.php, which P23's own
-// legacy-absorption work already has to touch; building an interim wrapper
-// now would mean touching that file twice.
+// maintenance:repair-db still isn't here -- not because of a blocker
+// anymore (the legacy include/dblayer/functions_mysqli.inc.php file this
+// comment used to cite is long gone, and the backing logic now lives in
+// a real typed method, DbMaintenanceRepository::repairOptimizeAllTables(),
+// reachable from the admin web UI's MaintenanceActionDispatcher). Nobody
+// has circled back to add the CLI wrapper. See docs/PLAN.md's Epoch C
+// section (P12) and Security master checklist for the full history --
+// this is a real, still-open gap, not a deliberate deferral anymore.
 
 /**
  * @return list<class-string<\Symfony\Component\Console\Command\Command>>

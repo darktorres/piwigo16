@@ -6,7 +6,7 @@ namespace Piwigo\Audit\Projection;
 
 /**
  * Typed row shape for `piwigo_audit_log` (P17-23 Stage 1b, Audit domain --
- * `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection shapes"
+ * `docs/PLAN.md`'s own "7 Entity types, 73 projection shapes"
  * reference). `fromRow()` centralises the `is_numeric($row['x']) ? ... :
  * default` narrowing a raw DBAL row read of this table would need -- unlike
  * {@see \Piwigo\Audit\AuditRepository::findAllInOrder()}'s own inline

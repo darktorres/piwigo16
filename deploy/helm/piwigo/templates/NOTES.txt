@@ -12,4 +12,4 @@ No Ingress is enabled (values.ingress.enabled=false). Port-forward to reach it:
 Set the DB password via an existing Secret, never inline:
   --set db.existingSecret=my-piwigo-db-secret
 
-See docs/DEPLOYMENT.md for the full deployment guide.
+See docs/REFERENCE.md for the full deployment guide.

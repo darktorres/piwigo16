@@ -50,7 +50,7 @@ final class CategoryAdminServiceFakeActivityLogger implements ActivityLoggerInte
  * function-shadowing stub technique the old Unit test used can no
  * longer intercept these calls (that technique only works against a
  * bare, unqualified function call, not a method call on a concrete
- * object). Docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: the
+ * object). Docs/PLAN.md gap-closure, 2026-07-23: the
  * remaining bare pwg_query()/query2array()/mass_inserts() calls this
  * file used to shadow (getCategoriesRefDate()/setCategoryPermissions()/
  * saveImageOrder(), none of which ever had a real production

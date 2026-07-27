@@ -47,7 +47,7 @@ jobs:
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
       # ECS checks whole files, not diffs, so pre-existing legacy violations
       # would block unrelated commits — not a real gate until P5 applies --fix
-      # (see docs/PLAN-REPLAY.md P0 step 4 and lefthook.yml's matching `|| true`).
+      # (see docs/PLAN.md P0 step 4 and lefthook.yml's matching `|| true`).
       - run: composer lint:php
         continue-on-error: true
 
@@ -74,7 +74,7 @@ jobs:
           restore-keys: ${{ runner.os }}-phpstan-
       - run: vendor/bin/phpstan analyse --no-progress
 
-  # Psalm is not gated in CI (see docs/adr/0026-pause-psalm-gating.md) —
+  # Psalm is not gated in CI (see docs/REFERENCE.md's ADR-0026) —
   # its global-function-resolution scanner doesn't hold up at this
   # codebase's current scale/style (non-namespaced procedural legacy
   # code); resumes once P6+ typed/namespaced refactoring lands.
@@ -91,7 +91,7 @@ jobs:
           coverage: none
           extensions: ${{ env.PHP_EXTENSIONS }}
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
-      # Not applied until P5 — see docs/PLAN-REPLAY.md's Rector strategy.
+      # Not applied until P5 — see docs/PLAN.md's Rector strategy.
       - run: vendor/bin/rector --dry-run
         continue-on-error: true
 
@@ -203,20 +203,6 @@ jobs:
           path: phpbench-report.txt
           retention-days: 30
 
-  plan-lint:
-    name: plan-lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
-        with:
-          php-version: "8.5"
-          coverage: none
-          extensions: ${{ env.PHP_EXTENSIONS }}
-      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
-      - run: composer plan-lint
-
   # ── JS/TS/CSS ────────────────────────────────────────────────────────────
 
   vitest:
@@ -303,7 +289,7 @@ jobs:
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       # tests/Load/*.js doesn't exist until P29 — non-blocking (warning) per
-      # docs/PLAN-REPLAY.md, no-op until then.
+      # docs/PLAN.md, no-op until then.
       - if: hashFiles('tests/Load/**') != ''
         run: echo "k6 load surface not present yet (P29)"
 
@@ -560,7 +546,7 @@ jobs:
           PIWIGO_DB_PREFIX=piwigo_
           PIWIGO_BASE_URL=http://localhost:8080
           ENVEOF
-      # docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: deliberately
+      # docs/PLAN.md gap-closure, 2026-07-23: deliberately
       # skips the 2 steps every other Browser-suite job above has --
       # "Provision piwigo_test from the committed fixture" and `touch
       # local/.installed.test` -- both exist specifically so the *other*
@@ -573,7 +559,7 @@ jobs:
       # permanent, silent skip.
       - name: Start PHP built-in server
         run: |
-          # docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: -t public,
+          # docs/PLAN.md gap-closure, 2026-07-23: -t public,
           # not -t . like the other Browser-suite jobs above -- verified
           # directly (a real `php -S -t .` + `curl /index.php` locally)
           # that `-t .` 404s immediately at the PHP dev server's own
@@ -694,7 +680,7 @@ jobs:
       # Restores tests/Fixtures/piwigo-17.0.sql into a scratch DB (never
       # piwigo_test itself) and asserts row counts + a join query — proves
       # the restore mechanism actually works on every run, not just that
-      # tools/restore-drill.sh exists. See docs/RUNBOOK.md's Restore section.
+      # tools/restore-drill.sh exists. See docs/REFERENCE.md's Restore section.
       - run: bash tools/restore-drill.sh
 
   lighthouse:
@@ -810,7 +796,7 @@ jobs:
   # deny rules actually work on every server this project ships, which
   # `php -S` can't exercise at all (it has no .htaccess support and isn't
   # the container image). nginx isn't tested here — it's docs-only
-  # (docs/DEPLOYMENT.md), since this project doesn't ship an nginx image.
+  # (docs/REFERENCE.md), since this project doesn't ship an nginx image.
 
   apache-deny-rules:
     name: Apache .htaccess deny rules + web-root isolation (SEC-01, SEC-33/35/38/47)
@@ -861,7 +847,7 @@ jobs:
           # move doesn't change anything for this category; it's re-asserted
           # here only as a regression guard on the rule itself.
           for path in tools/index.php install/config.sql tests/Fixtures/piwigo-17.0.sql \
-              vendor/autoload.php node_modules/.bin/vite docs/PLAN-REPLAY.md deploy/helm/piwigo/values.yaml \
+              vendor/autoload.php node_modules/.bin/vite docs/PLAN.md deploy/helm/piwigo/values.yaml \
               composer.json composer.lock package.json bun.lock phpstan.neon psalm.xml rector.php ecs.php \
               knip.json lefthook.yml tsconfig.json .stylelintrc.json .prettierrc.json lighthouserc.json .size-limit.json \
               renovate.json release-please-config.json .release-please-manifest.json eslint-suppressions.json \
@@ -876,7 +862,7 @@ jobs:
           done
       - name: Assert vendor/ nested under themes/ stays reachable (SEC-01 gap-closure)
         run: |
-          # docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: the SEC-01
+          # docs/PLAN.md gap-closure, 2026-07-23: the SEC-01
           # vendor/ deny rule used to be unanchored across the *whole*
           # combined regex, matching /vendor/ anywhere in the path --
           # including themes/default/vendor/fontello/, the theme's own

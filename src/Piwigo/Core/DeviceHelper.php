@@ -22,7 +22,7 @@ final class DeviceHelper
 
         if (! is_string($device)) {
             // No UA-sniffing library (removed, no replacement — see
-            // docs/adr/0021-native-platform-first-library-policy.md): the v17
+            // docs/REFERENCE.md's ADR-0021): the v17
             // responsive CSS (P30) removes the need for a separate mobile theme
             // via device detection. mobileTheme() still honors an explicit
             // ?mobile=1/0 override independent of this default.

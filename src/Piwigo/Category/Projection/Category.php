@@ -8,7 +8,7 @@ use Piwigo\Category\CategoryEntity;
 
 /**
  * Typed row shape for `piwigo_categories` (P17-23 Stage 1b, Category domain
- * -- `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection shapes"
+ * -- `docs/PLAN.md`'s own "7 Entity types, 73 projection shapes"
  * reference). `fromRow()` centralises the `is_string($row['x']) ? ... :
  * default` narrowing every {@see \Piwigo\Category\CategoryRepository}
  * caller used to duplicate for itself; `toArray()` hands that

@@ -967,7 +967,7 @@ SELECT
             \Piwigo\Config\CurrentConfig::setNewcatDefaultPosition($params['position']);
         }
 
-        // Docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: $params['visible']/
+        // Docs/PLAN.md gap-closure, 2026-07-23: $params['visible']/
         // ['commentable'] (both WsParamType::BOOL, real bools by the time
         // they reach this handler) were validated by the WS param schema
         // but never actually read here -- a real, standalone bug (not

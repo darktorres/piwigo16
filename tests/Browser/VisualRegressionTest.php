@@ -18,7 +18,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *   vendor/bin/pest tests/Browser/VisualRegressionTest.php --update-snapshots
  *
  * Determinism (fixed in this same commit, not a later cleanup pass — see
- * docs/PLAN-REPLAY.md's additive-only rule and this repo's own VR
+ * docs/PLAN.md's additive-only rule and this repo's own VR
  * discipline):
  *   - $conf['show_gt'] (page-generation-time footer) defaults to false in
  *     this codebase — verified empirically, not rendered — so no template

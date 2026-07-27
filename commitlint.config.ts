@@ -1,7 +1,7 @@
 export default {
   extends: ["@commitlint/config-conventional"],
   rules: {
-    // docs/plan/manifest.yaml traceability: every commit maps to a phase.
+    // docs/PLAN.md traceability: every commit maps to a phase.
     "scope-enum": [
       2,
       "always",

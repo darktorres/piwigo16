@@ -21,8 +21,7 @@ use Piwigo\Core\Kernel;
  * only a real HTTP request through Apache -- or
  * RequestBootstrap::bootEntryPoint() itself -- provides; live-curl
  * verification against the real instance is
- * the actual end-to-end proof for that (see docs/plan/manifest.yaml's P22
- * wrap-up memory).
+ * the actual end-to-end proof for that (see docs/PLAN.md's P22 section).
  */
 final class RequestPipelineTest extends TestCase
 {

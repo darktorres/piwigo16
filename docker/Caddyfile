@@ -1,6 +1,6 @@
-# FrankenPHP/Caddy config for the production image (docs/PLAN-REPLAY.md P4).
+# FrankenPHP/Caddy config for the production image (docs/PLAN.md P4).
 # Mirrors the Apache .htaccess rules at the repo root + per-directory —
-# see docs/DEPLOYMENT.md for the nginx equivalent.
+# see docs/REFERENCE.md for the nginx equivalent.
 #
 # Listens on :80 as the non-root www-data user — verified empirically that
 # Caddy/FrankenPHP wants CAP_NET_BIND_SERVICE at startup regardless of which
@@ -15,7 +15,7 @@
 }
 
 :80 {
-	# Part II (web-root isolation, docs/PLAN-REPLAY.md P32's pulled-forward
+	# Part II (web-root isolation, docs/PLAN.md P32's pulled-forward
 	# entry-file-relocation slice): DocumentRoot is now /app/public, not
 	# /app itself. config/tools/dev/src/tests/install/vendor/node_modules/
 	# docs/deploy/.git -- and now also upload/galleries/local/language/
@@ -40,7 +40,7 @@
 	# here too, matching .htaccess, as a defense-in-depth guard against a
 	# future .dockerignore change silently reintroducing them.
 	#
-	# docs/PLAN-REPLAY-AUDIT.md gap-closure: /vendor/* here is safe from the
+	# docs/PLAN.md gap-closure: /vendor/* here is safe from the
 	# bug found in .htaccess's own unanchored equivalent (which matched ANY
 	# `/vendor/` occurrence anywhere in the path, 403ing
 	# themes/default/vendor/fontello/'s icon font) -- Caddy's `path` matcher

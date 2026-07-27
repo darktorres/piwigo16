@@ -691,7 +691,7 @@ SELECT
         }
         unset($value);
 
-        // Docs/PLAN-REPLAY-AUDIT.md gap-closure, User domain Stage 1a:
+        // Docs/PLAN.md gap-closure, User domain Stage 1a:
         // enabled_high/expand/last_visit_from_history/show_nb_comments/
         // show_nb_hits (user_infos) are all real tinyint columns now -- the
         // generic true/false-string scan above only ever matched the

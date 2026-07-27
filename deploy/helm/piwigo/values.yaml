@@ -58,7 +58,7 @@ probes:
     timeoutSeconds: 5
     failureThreshold: 3
 
-# Rootless runtime — mirrors docker-compose.yml (docs/PLAN-REPLAY.md P4).
+# Rootless runtime — mirrors docker-compose.yml (docs/PLAN.md P4).
 # capabilities.add: verified empirically that FrankenPHP/Caddy wants
 # CAP_NET_BIND_SERVICE at startup regardless of which port it binds — not
 # just for ports below 1024 as usual — so this narrow exception is

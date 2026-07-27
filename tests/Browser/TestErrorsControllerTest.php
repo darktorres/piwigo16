@@ -7,7 +7,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 /**
  * Piwigo\Controller\TestErrorsController (`GET /__test/errors`,
  * public/__test_errors.php) -- test-mode-only error-drain route
- * (docs/PLAN-REPLAY-AUDIT.md finding #7). tests/Unit only exercises
+ * (docs/PLAN.md finding #7). tests/Unit only exercises
  * Piwigo\Core\ErrorCollector::drain() directly (tests/Unit/Core/
  * ErrorCollectorTest.php); this controller class itself has no existing
  * Unit/Integration/Browser reference anywhere in the repo (confirmed via a

@@ -151,7 +151,7 @@ $routes->add('derivative_image', new Route('/i.php{tail}', [
     'tail' => '.*',
 ]));
 
-// Test-mode-only error drain (docs/PLAN-REPLAY-AUDIT.md finding #7) --
+// Test-mode-only error drain (docs/PLAN.md finding #7) --
 // TestErrorsController itself 404s outside test mode; this route is safe
 // to register unconditionally.
 $routes->add('test_errors', new Route('/__test/errors', [

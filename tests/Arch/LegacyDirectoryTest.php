@@ -114,7 +114,7 @@ test('admin/ does not exist -- its only remaining content (themes/) moved to the
 });
 
 test('public/ contains exactly the relocated entry points, robots.txt, and the sanctioned asset symlinks', function (): void {
-    // Part II (web-root isolation, docs/PLAN-REPLAY.md P32's pulled-forward
+    // Part II (web-root isolation, docs/PLAN.md P32's pulled-forward
     // slice): DocumentRoot is public/, not the repo root -- every PHP entry
     // point lives here now, plus symlinks back to the 3 static asset
     // directories real requests need (themes/, dist/, _data/combined/).
@@ -125,7 +125,7 @@ test('public/ contains exactly the relocated entry points, robots.txt, and the s
     // upload/galleries/local/language/plugins and every other _data/
     // subdirectory are deliberately NOT bridged here -- being directly,
     // statically reachable was a live SEC-33/35/38/47 gap this phase
-    // closes, not a feature to preserve (see docs/DEPLOYMENT.md's "Web
+    // closes, not a feature to preserve (see docs/REFERENCE.md's "Web
     // root" section).
     expect(listDirectoryEntries(dirname(__DIR__, 2) . '/public'))->toBe([
         '.htaccess',

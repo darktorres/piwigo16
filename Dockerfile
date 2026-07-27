@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Multi-stage build — see docs/PLAN-REPLAY.md P4 and docs/DEPLOYMENT.md.
+# Multi-stage build — see docs/PLAN.md P4 and docs/REFERENCE.md.
 #
 # Writable at runtime (mount as volumes / tmpfs, everything else stays
 # read-only — see docker-compose.yml): _data/ (cache), local/ (config +
@@ -16,7 +16,7 @@ RUN composer install --no-dev --no-scripts --no-autoloader --no-interaction \
         --prefer-dist --ignore-platform-reqs
 COPY . .
 # --classmap-authoritative comes back once P6 gives the autoloader a real
-# PSR-4 map to be authoritative about (see docs/RUNBOOK.md) — nothing is
+# PSR-4 map to be authoritative about (see docs/REFERENCE.md) — nothing is
 # namespaced yet, so a plain optimized dump-autoload matches today's dev flow.
 RUN composer dump-autoload --no-dev --optimize
 
@@ -91,7 +91,7 @@ USER www-data
 # DB+webserver (Integration/Contract) or a browser/Chromium stack
 # (Browser/VR); wiring a second containerized app+DB pair to support those
 # is real, separate scope — they stay on bare-metal CI for now (see
-# docs/PLAN-REPLAY.md P4's explicit decision not to migrate that pipeline).
+# docs/PLAN.md P4's explicit decision not to migrate that pipeline).
 FROM frontend AS test
 ENTRYPOINT ["bun", "run", "test"]
 

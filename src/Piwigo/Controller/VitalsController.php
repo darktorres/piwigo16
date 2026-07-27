@@ -12,7 +12,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * web-vitals RUM beacon sink (docs/PLAN-REPLAY.md P1, item 11b) --
+ * web-vitals RUM beacon sink (docs/PLAN.md P1, item 11b) --
  * build/vitals.ts POSTs one JSON body per Core Web Vitals metric via
  * navigator.sendBeacon(), this logs it as structured JSON on the Monolog
  * "app" channel ($logger resolves there per config/container.php, same

@@ -13,8 +13,10 @@ use Symfony\Component\Process\Process;
  * mysqldump/mysql/tar via env-var credentials (Piwigo\Db\DbCredentials) --
  * the same CLI-safe mechanism tools/restore-drill.sh and
  * tools/reimport-fixture.sh already use, deliberately not the legacy
- * include/common.inc.php bootstrap chain (untested under CLI SAPI, see
- * docs/PLAN-REPLAY.md P12's scope-decision section).
+ * include/common.inc.php bootstrap chain (untested under CLI SAPI --
+ * that chain no longer exists at all today, see docs/REFERENCE.md's
+ * Architecture section for the real CliBootstrap-based path this class
+ * uses instead).
  *
  * `local/config/config.inc.php` is included when present (production
  * deployments) but this dev checkout has none -- confirmed empirically,

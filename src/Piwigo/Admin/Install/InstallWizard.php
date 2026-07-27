@@ -427,7 +427,7 @@ final class InstallWizard
         \Piwigo\Db\DbCredentials::reset();
 
         // Also write legacy database.inc.php in prod mode so upgrade.php and other
-        // not-yet-migrated scripts keep working (see docs/PLAN-REPLAY.md P13).
+        // not-yet-migrated scripts keep working (see docs/PLAN.md P13).
         if (! Env::testModeIsActive() && count($this->errors) === 0) {
             $file_content = '<?php
 $conf[\'dblayer\'] = \'' . $this->dblayer . '\';

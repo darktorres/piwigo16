@@ -1,5 +1,5 @@
 # Local/staging orchestration for the image built by ./Dockerfile.
-# See docs/DEPLOYMENT.md. Not used by CI (CI builds/runs the image directly
+# See docs/REFERENCE.md. Not used by CI (CI builds/runs the image directly
 # — see .github/workflows/ci.yml's container-deny-rules job).
 
 services:
@@ -75,8 +75,12 @@ services:
       timeout: 5s
       retries: 5
 
-  # Provisioned now, genuinely unused by the app until P11 wires in
-  # cache/session — not a gap, just ahead of its own dependency.
+  # P11 landed since this comment was first written: Piwigo\Cache\CacheFactory
+  # has a real redis adapter (PIWIGO_CACHE_ADAPTER=redis), not the default
+  # (apcu-if-available, else filesystem) — this service is provisioned for
+  # whoever opts into it, not a stub ahead of its own dependency anymore.
+  # Sessions still stay DB-backed regardless of PIWIGO_CACHE_ADAPTER — see
+  # docs/REFERENCE.md's Cache section.
   redis:
     image: redis:7-alpine
     volumes:

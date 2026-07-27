@@ -1,13 +1,14 @@
 #!/bin/bash
 
-# Placeholder restore drill (docs/PLAN-REPLAY.md P4). "Restore drills" per
+# Placeholder restore drill (docs/PLAN.md P4). "Restore drills" per
 # the plan means restoring a real backup — but the actual backup/restore CLI
 # is P12, three phases away, and doesn't exist yet. This proves the honest
 # subset available today: restoring the tracked tests/Fixtures/piwigo-17.0.sql
 # mysqldump into a scratch DB, then asserting row counts + a schema smoke
 # query, so the drill mechanism and assertions are proven correct now.
-# Rewire onto the real `bin/piwigo backup:restore` once P12 lands — see
-# docs/RUNBOOK.md's Restore section.
+# Deliberately not rewired onto `bin/piwigo backup:restore` even though
+# P12 has long since landed — see docs/REFERENCE.md's Restore section for
+# why this stays a lean, PHP-dependency-free script.
 #
 # Reads DB credentials from .env.test, same convention as
 # tools/reimport-fixture.sh. Never touches PIWIGO_DB_BASE itself — creates

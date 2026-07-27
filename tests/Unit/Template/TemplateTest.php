@@ -9,7 +9,7 @@ use Piwigo\Template\Template;
 
 // Constructing a real Template instance needs a booted Smarty engine +
 // global $conf/$lang_info -- Smarty-rendering integration, already covered
-// indirectly by the Browser suite (see docs/PLAN-REPLAY.md's P16 audit
+// indirectly by the Browser suite (see docs/PLAN.md's P16 audit
 // note). These tests cover the class's static, instance-free logic
 // instead: the Smarty template-compiler modifier callbacks
 // (modcompiler_translate*(), referenced during the SEC-15 eval() audit --

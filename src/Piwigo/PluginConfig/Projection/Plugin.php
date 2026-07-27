@@ -6,7 +6,7 @@ namespace Piwigo\PluginConfig\Projection;
 
 /**
  * Typed row shape for `piwigo_plugins` (P17-23 Stage 1b, PluginConfig
- * domain -- `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection
+ * domain -- `docs/PLAN.md`'s own "7 Entity types, 73 projection
  * shapes" reference). `fromRow()` is unused since the DBAL->ORM migration
  * (c9b0ff0a8): {@see \Piwigo\PluginConfig\PluginRepository}'s
  * `getDbPlugins()` now builds this straight from `PluginEntity`'s

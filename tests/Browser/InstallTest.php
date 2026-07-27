@@ -11,7 +11,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * construction, and that job deliberately skips the fixture-provisioning
  * + `touch local/.installed.test` steps every other Browser-suite job
  * runs) specifically so this runs for real instead of permanently
- * self-skipping -- docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23:
+ * self-skipping -- docs/PLAN.md gap-closure, 2026-07-23:
  * every other job (and this test, run via plain composer test:browser)
  * pre-marks the app as installed so the ~70 *other* tests (which assume
  * an already-installed, fixture-loaded app) work, which meant this test
@@ -75,7 +75,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *    delivery is slow or the checkbox is left checked (the default) --
  *    that's an application-level synchronous-mail-on-request-thread
  *    problem, not a test problem, and needs its own decision (e.g. an
- *    async transport once Messenger exists -- see docs/DEVELOPMENT.md's
+ *    async transport once Messenger exists -- see docs/REFERENCE.md's
  *    own note that Messenger isn't built yet).
  */
 it('completes a fresh install end-to-end', function (): void {

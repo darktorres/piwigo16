@@ -8,7 +8,7 @@ use Piwigo\Image\ImageFormatEntity;
 
 /**
  * Typed row shape for `piwigo_image_format` (P17-23 Stage 1b, Image domain
- * -- `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection shapes"
+ * -- `docs/PLAN.md`'s own "7 Entity types, 73 projection shapes"
  * reference). `fromRow()` centralises the `is_scalar($row['x']) ? ... :
  * default` narrowing for any raw `SELECT *` reader of this table, same
  * shape as {@see \Piwigo\Category\Projection\Category} -- current real

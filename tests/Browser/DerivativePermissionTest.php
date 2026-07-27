@@ -27,7 +27,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 // the date-based directory portion is stable, from Env::now()'s frozen
 // test clock).
 //
-// docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: both tests below used
+// docs/PLAN.md gap-closure, 2026-07-23: both tests below used
 // to 404 with "Db file path not found" against any freshly-uploaded image
 // (visibly confirmed as a broken next/previous-photo thumbnail on a real
 // picture page, not just here) -- a real, pre-existing bug (also present in

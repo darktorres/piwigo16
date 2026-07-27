@@ -1,6 +1,6 @@
 name: Release image
 
-# SEC-54 (docs/PLAN-REPLAY.md P4): sign container images + release artifacts.
+# SEC-54 (docs/PLAN.md P4): sign container images + release artifacts.
 # Runs only on a published GitHub Release (release-please's output, see
 # release-please.yml) — never on every push, so untrusted PR builds can't
 # get a signature. Keyless: no long-lived signing key, Fulcio/Rekor bind

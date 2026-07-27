@@ -10,7 +10,7 @@ namespace Piwigo\Auth;
  * accepted for pre-P5 installs -- rehashed to bcrypt on successful verify.
  * The old MD5/$conf['pass_convert'] tier (bridging from *upstream* Piwigo's
  * pre-2.5 format) is removed outright: this fork has no in-place upgrade
- * from upstream (docs/adr/0002-clean-fork-no-inplace-upgrade.md).
+ * from upstream (docs/REFERENCE.md's ADR-0002).
  *
  * Constructor-injects PasswordRepository, plain constructor injection (same
  * shape as PermalinkService/GroupService).

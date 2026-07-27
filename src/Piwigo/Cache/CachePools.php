@@ -48,7 +48,7 @@ final class CachePools
     }
 
     /**
-     * 30s TTL -- matches docs/PLAN-REPLAY.md P23's stated design for the
+     * 30s TTL -- matches docs/PLAN.md P23's stated design for the
      * `user_cache.forbidden_categories` replacement (batch 3): short enough
      * that a permission change (revoking a category, editing a group)
      * becomes visible well within one user session, long enough to avoid
@@ -75,7 +75,7 @@ final class CachePools
     }
 
     /**
-     * 300s TTL -- matches docs/PLAN-REPLAY.md P23's stated design for the
+     * 300s TTL -- matches docs/PLAN.md P23's stated design for the
      * `user_cache_categories` replacement (batch 3): per-user per-album
      * counts, cheaper to hold slightly stale than to recompute the
      * `COUNT(*) ... GROUP BY category_id` rollup on every category listing.

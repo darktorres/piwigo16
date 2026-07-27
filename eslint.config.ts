@@ -12,7 +12,7 @@ export default tseslint.config(
       "node_modules/**",
       "_data/**",
       "vendor/**",
-      // Bundled third-party JS (verified per-file — docs/PLAN-REPLAY.md P1).
+      // Bundled third-party JS (verified per-file — docs/PLAN.md P1).
       "themes/default/js/ui/**",
       "themes/default/js/plugins/**",
       "themes/default/js/jquery.js",

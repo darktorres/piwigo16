@@ -8,7 +8,7 @@ use Piwigo\Auth\UserAuthKeyEntity;
 
 /**
  * Typed row shape for `piwigo_user_auth_keys` (P17-23 Stage 1b, Auth
- * domain -- `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection
+ * domain -- `docs/PLAN.md`'s own "7 Entity types, 73 projection
  * shapes" reference). `fromRow()` centralises the `is_string($row['x']) ?
  * ... : default` narrowing {@see \Piwigo\Auth\ApiKeyRepository}'s own
  * caller ({@see \Piwigo\Auth\ApiKeyService::get()}) used to do inline,

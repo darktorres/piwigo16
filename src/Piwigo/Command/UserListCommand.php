@@ -15,7 +15,7 @@ use Symfony\Component\Process\Process;
 /**
  * New CLI-only capability (no web equivalent). Reads via a raw `mysql`
  * client shell-out (env-var credentials, Piwigo\Db\DbCredentials) rather
- * than a Users domain service. docs/PLAN-REPLAY.md's P12 audit note
+ * than a Users domain service. docs/PLAN.md's P12 audit note
  * (2026-07-13) records that this docblock used to point at a
  * "scope-decision section" that never existed. Doctrine DBAL (P14) and a
  * real Users domain service (Piwigo\Users\UserRepository/UserService) have

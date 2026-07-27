@@ -9,7 +9,7 @@ use Piwigo\Users\UserInfoEntity;
 
 /**
  * Typed row shape for `piwigo_user_infos` (P17-23 Stage 1b, User domain --
- * `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection shapes"
+ * `docs/PLAN.md`'s own "7 Entity types, 73 projection shapes"
  * reference). `fromRow()` centralises the `is_string($row['x']) ? ... :
  * default` narrowing every {@see \Piwigo\Users\UserRepository} caller used
  * to duplicate for itself, same shape as

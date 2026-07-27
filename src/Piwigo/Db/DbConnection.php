@@ -12,7 +12,7 @@ use Doctrine\DBAL\DriverManager;
  *
  * Deliberately does NOT touch the session-level ONLY_FULL_GROUP_BY
  * server-mode setting the way the reference implementation's equivalent
- * DbConnection does -- docs/PLAN-REPLAY.md's own P15 section bans exactly
+ * DbConnection does -- docs/PLAN.md's own P15 section bans exactly
  * that class of session-mode mutation from `src/`, checked by a literal
  * grep gate this docblock deliberately avoids tripping by not spelling
  * out the setting's name here. The legacy dblayer's own equivalent

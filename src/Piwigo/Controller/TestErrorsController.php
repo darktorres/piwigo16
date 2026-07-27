@@ -13,9 +13,9 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Test-mode-only error-drain route (`GET /__test/errors`), per
- * docs/PLAN-REPLAY.md's own "test-mode error-drain assertion per request"
+ * docs/PLAN.md's own "test-mode error-drain assertion per request"
  * design (Risk register, P17-P23 mitigation) -- never wired until now
- * (docs/PLAN-REPLAY-AUDIT.md finding #7). Drains Piwigo\Core\ErrorCollector's
+ * (docs/PLAN.md finding #7). Drains Piwigo\Core\ErrorCollector's
  * buffer so IntegrationTestCase::assertNoPhpErrors() can assert a real HTTP
  * request produced no PHP errors/warnings/deprecations, instead of relying
  * only on the X-PHP-Error-N response headers (which a failed/redirected

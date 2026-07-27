@@ -18,10 +18,10 @@ dev:
 
 # ─── Test ───────────────────────────────────────────────────────────────
 
-# Full local gate — mirrors CI + docs/DEVELOPMENT.md's documented suite
+# Full local gate — mirrors CI + docs/REFERENCE.md's documented suite
 # list. Needs a provisioned piwigo_test DB + Apache vhost + Chromium for
 # the DB-backed suites; each self-provisions its own DB state (see
-# docs/DEVELOPMENT.md's Tests section), so the dependency order below
+# docs/REFERENCE.md's Tests section), so the dependency order below
 # doesn't matter functionally. ECS runs last, non-blocking (`-` prefix) —
 # just's prerequisite lists can't mark a step fallible, and this matches
 # ci.yml's ecs job + lefthook's pre-commit hook, both non-blocking until
@@ -49,7 +49,7 @@ test-contract:
 test-browser:
     composer test:browser
 
-# Visual regression baselines — run in isolation, see docs/DEVELOPMENT.md
+# Visual regression baselines — run in isolation, see docs/REFERENCE.md
 test-visual:
     composer test:visual
 
@@ -102,10 +102,6 @@ require-checker:
 unused:
     composer unused
     bun run knip
-
-# Validate docs/plan/manifest.yaml
-plan-lint:
-    composer plan-lint
 
 # ─── Database ───────────────────────────────────────────────────────────
 

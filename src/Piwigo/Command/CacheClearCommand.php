@@ -15,11 +15,13 @@ use Symfony\Component\Console\Output\OutputInterface;
  * cache dir and the CacheFactory-created PSR-6 pool. Deliberately does NOT
  * touch the legacy Smarty _data/templates_c/*.tpl.php compiled files or the
  * legacy _data/cache/*.cache PersistentCache files -- those are owned by
- * admin/maintenance_actions.php's 'compiled-templates' action, which needs
- * the full legacy include/common.inc.php bootstrap (see docs/PLAN-REPLAY.md
- * P12's scope-decision section). Grows to cover them once whichever phase
- * either retires that legacy bootstrap requirement or gives this command a
- * verified-safe way to reach it.
+ * MaintenanceActionDispatcher's 'compiled-templates' case
+ * (CurrentTemplate::get()->delete_compiled_templates()), reachable from the
+ * admin web UI only. Originally deferred here because that whole path
+ * needed the legacy include/common.inc.php bootstrap chain -- that
+ * constraint is gone (the legacy bootstrap chain doesn't exist anymore,
+ * CurrentTemplate::get() is a plain static facade), so this command could
+ * cover it too now; nobody has circled back to wire it in.
  */
 #[AsCommand(name: 'cache:clear', description: 'Purge the Latte compiled-template cache and the PSR-6 cache pool')]
 final class CacheClearCommand extends Command

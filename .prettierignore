@@ -8,20 +8,20 @@ dist/
 # Piwigo specific directories
 _data/
 
-# Legacy CSS — excluded until P30 (docs/PLAN-REPLAY.md's additive-only rule)
+# Legacy CSS — excluded until P30 (docs/PLAN.md's additive-only rule)
 themes/
 template-extension/
 tools/ws/
 
-# Pre-existing project docs, not authored/reformatted in this phase
-README.md
-SECURITY.md
-docs/CONTRIBUTING.md
-docs/PLAN-REPLAY.md
+# Large hand-formatted docs (tables, deliberate line breaks) — excluded
+# from auto-reformatting, not from review. README.md/SECURITY.md/
+# docs/CONTRIBUTING.md (the previous entries here) were deleted outright
+# during the docs/ consolidation, not reformatted -- removed from this
+# list along with them.
+docs/PLAN.md
+docs/REFERENCE.md
 
 # Generated/vendored, not hand-formatted
 composer.lock
 bun.lock
-phpstan-baseline.neon
-psalm-baseline.xml
 eslint-suppressions.json

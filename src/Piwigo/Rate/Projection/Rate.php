@@ -6,7 +6,7 @@ namespace Piwigo\Rate\Projection;
 
 /**
  * Typed row shape for `piwigo_rate` (P17-23 Stage 1b, Rate domain --
- * `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection shapes"
+ * `docs/PLAN.md`'s own "7 Entity types, 73 projection shapes"
  * reference). `fromRow()` centralises the `is_string($row['x']) ? ... :
  * default` narrowing {@see \Piwigo\Rate\RateRepository}'s own private
  * `toRateRow()` array-shape helper used to provide, same shape as

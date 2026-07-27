@@ -6,7 +6,7 @@ namespace Piwigo\Permalink\Projection;
 
 /**
  * Typed row shape for `piwigo_old_permalinks` (P17-23 Stage 1b, Permalink
- * domain -- `docs/PLAN-REPLAY.md`'s own "7 Entity types, 73 projection
+ * domain -- `docs/PLAN.md`'s own "7 Entity types, 73 projection
  * shapes" reference). `fromRow()` centralises the narrowing
  * {@see \Piwigo\Controller\Admin\PermalinksSubController}'s own caller used
  * to do inline, same shape as {@see \Piwigo\Category\Projection\Category}.

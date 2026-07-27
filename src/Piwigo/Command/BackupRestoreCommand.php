@@ -16,13 +16,15 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Destructive by design: drops/recreates the target database and overwrites
  * galleries/. --force is required so this can never run by accident (e.g. a
- * mistyped `bin/piwigo backup:restore` with no other args). The doc's
- * "stops the app"/"runs pending migrations" restore steps are still not
- * implemented -- no live traffic is routed through the new pipeline yet
- * (nothing to stop), and while Doctrine Migrations now exist (P14), wiring
- * a post-restore migration run here is a separate, not-yet-made decision,
- * not a missing-infrastructure gap anymore. See docs/PLAN-REPLAY.md P12's
- * scope-decision section.
+ * mistyped `bin/piwigo backup:restore` with no other args). Deliberately
+ * does not "stop the app" or "run pending migrations": real traffic does
+ * route through the full request pipeline now (there'd be something to
+ * stop), but this command still doesn't attempt it -- an in-place
+ * stop/restore/restart sequence is a separate, not-yet-made design
+ * decision, not a missing-infrastructure gap. Doctrine Migrations
+ * themselves were removed from the project entirely (the schema comes
+ * from a static SQL file now, see docs/PLAN.md's Migration path section)
+ * -- "runs pending migrations" is moot regardless.
  */
 #[AsCommand(name: 'backup:restore', description: 'Restore the database and galleries/ from a backup archive (destructive)')]
 final class BackupRestoreCommand extends Command

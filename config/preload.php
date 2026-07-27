@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// opcache.preload directive -- see docs/DEVELOPMENT.md. Preloads hot
+// opcache.preload directive -- see docs/REFERENCE.md. Preloads hot
 // classes into shared memory at Apache start, eliminating file reads +
 // autoloader lookups per request. Documented but NOT enabled in any
 // php.ini here (a deployment-config step); CI runs without preload (tests

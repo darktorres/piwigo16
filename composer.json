@@ -126,7 +126,6 @@
       "bash tools/pest-cleanup.sh --testsuite Browser --group=visual-regression"
     ],
     "test:install": "bash tools/pest-cleanup.sh --testsuite Browser --group=install-flow",
-    "plan-lint": "@php tools/plan-lint.php",
     "require-checker": "@php vendor/bin/composer-require-checker check --config-file=composer-require-checker.json composer.json",
     "unused": "@php vendor/bin/composer-unused --configuration=composer-unused.php",
     "bench": "@php vendor/bin/phpbench run",

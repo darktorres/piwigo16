@@ -1,5 +1,5 @@
-# See docs/PLAN-REPLAY.md P4 (SEC-01, SEC-04, SEC-05, SEC-06). Mirrors
-# docker/Caddyfile (FrankenPHP) — see docs/DEPLOYMENT.md for the nginx
+# See docs/PLAN.md P4 (SEC-01, SEC-04, SEC-05, SEC-06). Mirrors
+# docker/Caddyfile (FrankenPHP) — see docs/REFERENCE.md for the nginx
 # equivalent. Not anchored to the root: REQUEST_URI includes any subdirectory
 # the app is mounted under (e.g. /piwigo17/...), so these match anywhere.
 
@@ -17,7 +17,7 @@
     RewriteCond %{REQUEST_URI} /(config|tools|dev|src|tests|install|node_modules|docs|deploy|\.git)/ [NC]
     RewriteRule ^ - [F,L]
 
-    # SEC-01 gap-closure, docs/PLAN-REPLAY-AUDIT.md: the Composer vendor/
+    # SEC-01 gap-closure, docs/PLAN.md: the Composer vendor/
     # dir needs its own rule, same unanchored reasoning as above (REQUEST_URI
     # includes any mount-point subdirectory) -- but excluding vendor/ nested
     # under themes/*/ or plugins/*/, which are real, publicly-servable
@@ -48,14 +48,14 @@
     RewriteRule ^health$ health.php [L]
     RewriteRule ^ready$ ready.php [L]
 
-    # web-vitals RUM beacon (docs/PLAN-REPLAY.md P1, item 11b). Clean-URL
+    # web-vitals RUM beacon (docs/PLAN.md P1, item 11b). Clean-URL
     # target for build/vitals.ts's navigator.sendBeacon() call; the real
     # entry point is analytics_vitals.php (Piwigo\Controller\VitalsController
     # via config/routes.php), which needs the full bootstrap unlike
     # health.php/ready.php above.
     RewriteRule ^analytics/vitals$ analytics_vitals.php [L]
 
-    # Test-mode-only error drain (docs/PLAN-REPLAY-AUDIT.md finding #7) --
+    # Test-mode-only error drain (docs/PLAN.md finding #7) --
     # Piwigo\Controller\TestErrorsController itself 404s outside test mode,
     # so no extra guard is needed here.
     RewriteRule ^__test/errors$ __test_errors.php [L]

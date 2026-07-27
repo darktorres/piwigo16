@@ -154,7 +154,7 @@ final class CategoryAdminService
         }
 
         match ($section) {
-            // Docs/PLAN-REPLAY-AUDIT.md gap-closure, 2026-07-23: this whole
+            // Docs/PLAN.md gap-closure, 2026-07-23: this whole
             // match used to call the bare global pwg_query()/query2array()
             // free functions for 2 of its 4 branches -- neither has ever
             // had a real production definition (only a namespace-shadowing

@@ -1,4 +1,4 @@
-// Real User Monitoring (docs/PLAN-REPLAY.md P1, item 11b): reports real
+// Real User Monitoring (docs/PLAN.md P1, item 11b): reports real
 // Core Web Vitals from actual visitors to /analytics/vitals, which logs
 // them as structured JSON on the Monolog "app" channel (Piwigo\Controller\
 // VitalsController). Lab-data equivalent (Lighthouse CI) already exists;

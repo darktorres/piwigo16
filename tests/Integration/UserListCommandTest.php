@@ -10,7 +10,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 /**
  * New CLI-only capability (no web equivalent) -- see
- * docs/PLAN-REPLAY.md's P12 section ("CLI tool + backup/restore +
+ * docs/PLAN.md's P12 section ("CLI tool + backup/restore +
  * graceful shutdown"). Reads via a raw `mysql` client shell-out, so this
  * needs a real DB, hence Integration tier rather than Unit.
  */

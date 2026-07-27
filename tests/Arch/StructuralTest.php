@@ -115,7 +115,7 @@ test('every Piwigo\ class under src/Piwigo/ has #[\Override] on every overriding
 // dependencies via constructor injection instead. It exists only to let
 // Bootstrap/ reach into the container before injection is possible; every
 // root entry script (index.php included) reaches it only indirectly,
-// through a Bootstrap/ class. docs/PLAN-REPLAY.md: "Gate: arch test
+// through a Bootstrap/ class. docs/PLAN.md: "Gate: arch test
 // enforcing this boundary from P7 onward, not deferred to P32."
 
 /**
@@ -1442,7 +1442,7 @@ test('RequestFactory, ResponseEmitter, and the P9 middleware/pipeline/routing cl
 });
 
 test('every tools/*.php script guards against non-CLI execution (SEC-02)', function (): void {
-    // docs/PLAN-REPLAY-AUDIT.md finding #16: tools/build-config-accessors.php
+    // docs/PLAN.md finding #16: tools/build-config-accessors.php
     // had no PHP_SAPI guard and would run its logic (regenerating
     // src/Piwigo/Config/Config.php) under any calling context -- not
     // web-reachable today (tools/ isn't among public/'s symlinks), but a

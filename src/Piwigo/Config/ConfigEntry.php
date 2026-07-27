@@ -12,7 +12,7 @@ use Doctrine\ORM\Mapping as ORM;
  * the table name below is bare, not prefixed, same convention every
  * future entity uses). Real shape: param varchar(40) PK, value text,
  * comment varchar(255). P15 gives the table InnoDB+utf8mb4, but --
- * per docs/PLAN-REPLAY.md's own P15 section -- `value`'s text->JSON
+ * per docs/PLAN.md's own P15 section -- `value`'s text->JSON
  * conversion is one of the 43 deferred column-type changes, co-migrating
  * with its consuming service code in P17-23, not P14 or P15 (the
  * reference's own ConfigRepository already treats `value` as native

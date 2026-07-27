@@ -710,17 +710,23 @@ SELECT
         $format_path .= \Piwigo\Core\StringHelper::getFilenameWoExtension(basename($image_0_path));
         $format_path .= '.' . $format_ext;
 
-        $this->prepareDirectory(dirname($format_path));
-
         // Same StorageRegistry-routed migration as addUploadedFile()'s own
         // move_uploaded_file()/rename() pair above -- $format_path here (built
         // from the DB-stored images.path column) is relative, not yet an
         // absolute path, so it needs normalizing before stripRoot() can
-        // compute the disk-relative path.
+        // compute the disk-relative path. prepareDirectory() below must use
+        // that same normalized absolute path too: mkdir() on the bare
+        // relative $format_path resolves against the PHP process's cwd
+        // (the document root, public/, on a real request), silently
+        // creating a stray "public/upload/..." directory tree instead of
+        // the real one -- a real, previously-shipped bug fixed here.
         $paths = \Piwigo\Core\CurrentPaths::get();
         $format_root = $paths->root . CurrentConfig::uploadDir();
         $format_abs_path = $paths->root . ltrim(str_replace(['\\', '/./'], ['/', '/'], $format_path), '/');
         $format_rel_path = StorageRegistry::stripRoot($format_root, $format_abs_path);
+
+        $this->prepareDirectory(dirname($format_abs_path));
+
         $format_stream = fopen($source_filepath, 'rb');
         if ($format_stream !== false) {
             StorageRegistry::disk('uploads')->writeStream($format_rel_path, $format_stream);

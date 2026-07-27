@@ -225,8 +225,18 @@ final class CalendarMonthly extends CalendarBase
     COUNT(distinct id) as count';
         $query .= $this->inner_sql;
         $query .= $this->get_date_where();
+        // GROUP BY also lists the exact YEAR()/MONTH() expressions ORDER BY
+        // uses (not just the DATE_FORMAT()-derived `period` alias) -- under
+        // standard SQL mode (ONLY_FULL_GROUP_BY, never stripped by this
+        // project's DbConnection), MySQL doesn't infer that YEAR(x)/MONTH(x)
+        // are functionally dependent on DATE_FORMAT(x, '%Y%m') just because
+        // both derive from the same column; it only recognizes an ORDER BY
+        // expression as valid when it's a literal GROUP BY member. Grouping
+        // by all three doesn't change the partitioning (period and
+        // year+month already identify the same buckets), only satisfies the
+        // SQL-mode requirement.
         $query .= '
-    GROUP BY period
+    GROUP BY period, ' . \Piwigo\Db\SqlDialect::getYear($this->date_field) . ', ' . \Piwigo\Db\SqlDialect::getMonth($this->date_field) . '
     ORDER BY ' . \Piwigo\Db\SqlDialect::getYear($this->date_field) . ' DESC, ' . \Piwigo\Db\SqlDialect::getMonth($this->date_field) . ' ASC';
 
         $rows = $this->calendarRepository->findRows($query);

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Exception\DriverException;
 use Piwigo\Calendar\CalendarBase;
 use Piwigo\Calendar\CalendarMonthly;
 use Piwigo\Calendar\CalendarRepository;
@@ -45,11 +44,9 @@ use Piwigo\Template\Template;
  * NULL for all 5 images (verified directly against the loaded fixture,
  * not assumed), so `chronology_field='created'` always resolves to
  * `AND date_creation IS NOT NULL` matching zero rows. That's still enough
- * to exercise `initialize()`'s field-selection branch and the
- * data-independent ONLY_FULL_GROUP_BY bug below (a SQL-level rejection
- * that fires before any row is ever read, regardless of how many rows
- * would have matched) -- see
- * test_created_field_uses_date_creation_and_still_hits_the_only_full_group_by_bug().
+ * to exercise `initialize()`'s field-selection branch and the zero-row
+ * empty-calendar path -- see
+ * test_created_field_uses_date_creation_and_returns_an_empty_calendar_for_zero_matching_rows().
  *
  * Lang::reset()/Translator::reset() pin this process's translation state
  * to "nothing loaded" -- IntegrationTestCase's own setUp() doesn't manage
@@ -251,19 +248,56 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      * Reproduced two ways: directly here, and end-to-end through the real
      * CalendarRenderer::render() entry point in CalendarRendererTest.
      */
-    public function test_build_global_calendar_fails_under_only_full_group_by(): void
+    /**
+     * Regression test for a fixed bug: build_global_calendar()'s
+     * `ORDER BY YEAR(date_field) DESC, MONTH(date_field) ASC` used to
+     * reference the raw date column directly while the query only
+     * `GROUP BY period` (a DATE_FORMAT(...) alias) -- MySQL couldn't prove
+     * YEAR()/MONTH() were functionally dependent on that alias under
+     * standard SQL mode (ONLY_FULL_GROUP_BY, never stripped by this
+     * project's own DbConnection), so the query was rejected outright.
+     * This was CAL_VIEW_CALENDAR + monthly style (the default style) + no
+     * year selected yet -- i.e. the very first calendar page a real
+     * visitor lands on -- so every real request down this path 500d.
+     * Fixed by also grouping by the exact YEAR()/MONTH() expressions used
+     * in ORDER BY. Verifies the real, now-working two-year/three-month
+     * grouping (real values captured from a live run, not guessed).
+     */
+    public function test_build_global_calendar_groups_multiple_years_and_months_correctly(): void
     {
         $calendar = $this->makeCalendar();
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [];
         $template = new Template();
 
-        try {
-            $calendar->generate_category_content($template);
-            self::fail('Expected a Doctrine\DBAL\Exception\DriverException from the ORDER BY/GROUP BY mismatch.');
-        } catch (DriverException $e) {
-            self::assertStringContainsString('only_full_group_by', strtolower($e->getMessage()));
-        }
+        $ret = $calendar->generate_category_content($template);
+
+        self::assertTrue($ret);
+        // 2 distinct years exist (2024, 2025), so no single-year bail-out --
+        // chronology_date stays empty.
+        self::assertSame([], $calendar->chronology_date);
+
+        $calendarVars = $template->get_template_vars('chronology_calendar');
+        // ORDER BY YEAR(date_field) DESC -- 2025 sorts before 2024.
+        $year2025 = $this->digArray($calendarVars, ['calendar_bars', 0]);
+        $year2024 = $this->digArray($calendarVars, ['calendar_bars', 1]);
+
+        self::assertSame(2025, $year2025['HEAD_LABEL']);
+        self::assertSame(2, $year2025['NB_IMAGES']);
+        self::assertSame(1, $this->dig($year2025, ['items', 0, 'LABEL']));
+        self::assertSame(2, $this->dig($year2025, ['items', 0, 'NB_IMAGES']));
+        self::assertCount(1, $this->digArray($year2025, ['items']));
+
+        self::assertSame(2024, $year2024['HEAD_LABEL']);
+        self::assertSame(3, $year2024['NB_IMAGES']);
+        // ORDER BY MONTH(date_field) ASC within the year -- month 3 before
+        // month 7 (a renderer that swapped the sort direction, or grouped
+        // by the wrong expression, would show these out of order or merge
+        // them into the wrong year).
+        self::assertSame(3, $this->dig($year2024, ['items', 0, 'LABEL']));
+        self::assertSame(2, $this->dig($year2024, ['items', 0, 'NB_IMAGES']));
+        self::assertSame(7, $this->dig($year2024, ['items', 1, 'LABEL']));
+        self::assertSame(1, $this->dig($year2024, ['items', 1, 'NB_IMAGES']));
     }
 
     public function test_generate_category_content_case_b_groups_days_by_month_within_a_selected_year(): void
@@ -377,27 +411,30 @@ final class CalendarMonthlyTest extends IntegrationTestCase
     }
 
     /**
-     * REAL BUG found while writing this test: CalendarBase::build_next_prev()
-     * computes its own "current period" marker as
+     * Regression test for a fixed bug: CalendarBase::build_next_prev()
+     * used to compute its own "current period" marker as
      * `implode('-', array_filter($this->chronology_date, is_string(...)))`
      * -- silently dropping every *int*-typed component. But
      * CalendarRenderer::render() (the only real caller) always sanitizes
      * non-'any', non-empty chronology_date tokens into real ints before
      * ever setting $calendar->chronology_date (see its own sanitization
-     * loop). So on every real request, $current ends up '' (empty), never
-     * matching any of the query's own real period strings -- the "just in
-     * case" fallback then ranks '' *before* every real period, making
-     * "next" always point at the *currently viewed* period instead of
-     * genuinely advancing, and "previous" never appears at all.
+     * loop). So on every real request, $current ended up '' (empty),
+     * never matching any of the query's own real period strings -- the
+     * "just in case" fallback then ranked '' *before* every real period,
+     * making "next" always point at the *currently viewed* period instead
+     * of genuinely advancing, and "previous" never appearing at all. Fixed
+     * by dropping the is_string() filter entirely -- implode() already
+     * string-casts int elements correctly on its own, exactly like
+     * SqlDialect::castToText() does for the SQL side of the same value.
      *
      * Demonstrated here with both chronology_date shapes on the exact
-     * same underlying data to isolate the cause: string components (what
-     * build_next_prev() actually needs) navigate correctly; int
+     * same underlying data to prove the fix: string components and int
      * components (what the real, unmodified CalendarRenderer actually
-     * produces) do not. See CalendarRendererTest for the same bug
-     * reproduced end-to-end through the unmodified production entry point.
+     * produces) now navigate identically. See CalendarRendererTest for
+     * the same fix verified end-to-end through the unmodified production
+     * entry point.
      */
-    public function test_build_next_prev_only_navigates_correctly_with_string_typed_chronology_date(): void
+    public function test_build_next_prev_navigates_correctly_regardless_of_chronology_date_element_type(): void
     {
         $withStrings = $this->makeCalendar();
         $withStrings->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
@@ -417,11 +454,12 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
         $navInts = $this->digArray($templateInts->get_template_vars('chronology_navigation_bars'), [0]);
         self::assertArrayNotHasKey('previous', $navInts);
-        // Bug: "next" points at the exact period already being viewed
-        // (2024-3) instead of the real next period (2024-7).
-        self::assertSame('3 2024', $this->dig($navInts, ['next', 'LABEL']));
+        // Fixed: "next" now correctly points at the real next period
+        // (2024-7), identically to the string-typed case above, instead of
+        // the bug's old '3 2024' (the period already being viewed).
+        self::assertSame('7 2024', $this->dig($navInts, ['next', 'LABEL']));
         self::assertSame(
-            '/fake-index?' . json_encode(['chronology_date' => ['2024', '3']]) . '|removed=' . json_encode(['start']),
+            '/fake-index?' . json_encode(['chronology_date' => ['2024', '7']]) . '|removed=' . json_encode(['start']),
             $this->dig($navInts, ['next', 'URL'])
         );
     }
@@ -492,13 +530,14 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      * selected falls back to `AND date_creation IS NOT NULL`, matching
      * zero rows.
      *
-     * This still hits the very same ONLY_FULL_GROUP_BY bug documented
-     * above: the ORDER BY/GROUP BY mismatch is a SQL-level rejection that
-     * fires before the query result set is ever read, so it fails
-     * identically here even though zero rows would ultimately have
-     * matched -- confirming the bug isn't data-dependent at all.
+     * Regression test for the same fixed ONLY_FULL_GROUP_BY bug documented
+     * above (test_build_global_calendar_groups_multiple_years_and_months_correctly()):
+     * confirms the query now runs to completion (rather than being
+     * rejected at the SQL level before any row is ever read) even when
+     * zero rows actually match -- an empty result set is a real, distinct
+     * scenario from "the query never even ran".
      */
-    public function test_created_field_uses_date_creation_and_still_hits_the_only_full_group_by_bug(): void
+    public function test_created_field_uses_date_creation_and_returns_an_empty_calendar_for_zero_matching_rows(): void
     {
         $calendar = new CalendarMonthly(new CalendarRepository($this->conn), $this->urlService);
         $calendar->chronology_field = 'created';
@@ -509,12 +548,10 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         self::assertSame('date_creation', $calendar->date_field);
 
         $template = new Template();
-        try {
-            $calendar->generate_category_content($template);
-            self::fail('Expected the same ONLY_FULL_GROUP_BY DriverException as the posted-field case.');
-        } catch (DriverException $e) {
-            self::assertStringContainsString('only_full_group_by', strtolower($e->getMessage()));
-        }
+        $ret = $calendar->generate_category_content($template);
+
+        self::assertTrue($ret);
+        self::assertSame([], $this->digArray($template->get_template_vars('chronology_calendar'), ['calendar_bars']));
     }
 
     /**
@@ -524,28 +561,17 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      * count($this->calendar_levels) - 1`) silently sets
      * chronology_date[level] and returns *before* ever appending anything
      * to 'chronology_navigation_bars' -- a distinct branch from
-     * build_global_calendar()'s own single-year bail-out, which every test
-     * above can only reach via the ONLY_FULL_GROUP_BY bug (that query
-     * fails outright before it ever runs, regardless of data -- see
-     * test_build_global_calendar_fails_under_only_full_group_by()).
-     * build_nav_bar()'s own query never has an ORDER BY, so it has no such
-     * bug blocking it -- this is the one real way in this suite to
-     * observe the auto-narrow-and-return behaviour directly.
+     * build_global_calendar()'s own single-year bail-out (see
+     * test_build_global_calendar_groups_multiple_years_and_months_correctly()).
+     * build_nav_bar()'s own query never has an ORDER BY, so it was never
+     * affected by the (now-fixed) ONLY_FULL_GROUP_BY bug either -- this is
+     * the one real way in this suite to observe the auto-narrow-and-return
+     * behaviour directly.
      *
      * Forces a single-month bucket by restricting inner_sql to id IN
      * (4,5) -- both 2025-01-* (see this file's own date UPDATEs above) --
      * so at CMONTH level, with year 2025 already selected, only one
      * distinct month (January) exists.
-     *
-     * build_next_prev() still runs immediately afterwards (unconditional,
-     * see generate_category_content()) and -- same real bug as
-     * test_build_next_prev_only_navigates_correctly_with_string_typed_chronology_date()
-     * above -- treats the newly-int-narrowed chronology_date the same way
-     * it treats CalendarRenderer's real int-sanitized input: $current
-     * comes back '' (both components are ints, filtered out by
-     * array_filter(..., is_string(...))), so it still finds and appends
-     * its own (buggy) 'next' entry even though build_nav_bar() itself
-     * appended nothing.
      */
     public function test_build_nav_bar_auto_narrows_chronology_date_and_skips_the_bar_for_a_single_value(): void
     {
@@ -566,14 +592,14 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         // for the month level -- the only entry present comes from
         // build_next_prev()'s own separate (buggy) 'next' link, not from
         // a real nav bar of month choices.
+        // build_nav_bar() itself returned early, before appending anything
+        // for the month level. build_next_prev() still runs immediately
+        // afterwards (unconditional, see generate_category_content()) --
+        // now that it's fixed, it correctly finds that 2025-1 is the only
+        // period id 4/5 (the only images in scope) ever fall into, so
+        // there is genuinely no next or previous period at all.
         $navVars = $this->digArray($template->get_template_vars('chronology_navigation_bars'), [0]);
-        self::assertSame(['next'], array_keys($navVars));
-        self::assertArrayNotHasKey('previous', $navVars);
-        // Bug (same mechanism as the other build_next_prev() tests above):
-        // "next" points at the exact 2025-1 period already selected,
-        // instead of there being no next period at all (id 4/5 are the
-        // only images in scope and both fall in that single month).
-        self::assertSame('1 2025', $this->dig($navVars, ['next', 'LABEL']));
+        self::assertSame([], $navVars);
     }
 }
 

@@ -403,7 +403,17 @@ $this->get_date_where($level) . '
 AND ' . $this->date_field . ' IS NOT NULL
 GROUP BY period';
 
-        $current = implode('-', array_filter($page_chronology_date, is_string(...)));
+        // $current must mirror the SQL side's own per-element treatment
+        // above (every component included, whether 'any' or a real date
+        // part) to ever match a real row's 'period' value -- filtering to
+        // is_string() only silently dropped every int-typed component,
+        // and CalendarRenderer::render() (the only real caller) always
+        // sanitizes non-'any', non-empty chronology_date tokens into real
+        // ints before setting this property, so $current came back ''
+        // (empty string, matching no real period) on every real request.
+        // implode() itself already string-casts int elements correctly,
+        // just like SqlDialect::castToText() does on the SQL side.
+        $current = implode('-', $page_chronology_date);
         // period is a concatenation of non-null date parts (enforced by the
         // "date_field IS NOT NULL" clause above), but the row's value is
         // still typed as mixed under DBAL, so filter for real.

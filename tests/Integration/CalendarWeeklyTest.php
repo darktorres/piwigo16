@@ -238,14 +238,14 @@ final class CalendarWeeklyTest extends IntegrationTestCase
     }
 
     /**
-     * Same real bug as CalendarMonthlyTest::
-     * test_build_next_prev_only_navigates_correctly_with_string_typed_chronology_date()
+     * Regression test for the same fixed bug as CalendarMonthlyTest::
+     * test_build_next_prev_navigates_correctly_regardless_of_chronology_date_element_type()
      * -- build_next_prev() is shared, unmodified CalendarBase code. With
      * chronology_date holding the ints CalendarRenderer actually produces,
-     * "next" points at the currently-viewed year instead of genuinely
-     * advancing to 2025.
+     * "next" used to point at the currently-viewed year instead of
+     * genuinely advancing to 2025.
      */
-    public function test_build_next_prev_breaks_with_int_typed_chronology_date(): void
+    public function test_build_next_prev_navigates_correctly_with_int_typed_chronology_date(): void
     {
         $calendar = $this->makeCalendar();
         $calendar->chronology_date = [2024];
@@ -255,8 +255,9 @@ final class CalendarWeeklyTest extends IntegrationTestCase
 
         $nav = $this->digArray($template->get_template_vars('chronology_navigation_bars'), [0]);
         self::assertArrayNotHasKey('previous', $nav);
-        // Bug: should be '2025', not '2024' (the period already being viewed).
-        self::assertSame('2024', $this->dig($nav, ['next', 'LABEL']));
+        // Fixed: correctly advances to '2025', not '2024' (the period
+        // already being viewed).
+        self::assertSame('2025', $this->dig($nav, ['next', 'LABEL']));
     }
 }
 

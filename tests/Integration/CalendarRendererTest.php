@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Exception\DriverException;
 use Piwigo\Calendar\CalendarBase;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Config\ConfigLoader;
@@ -211,48 +210,66 @@ final class CalendarRendererTest extends IntegrationTestCase
     }
 
     /**
-     * REAL BUG, reproduced end-to-end through the real, unmodified
-     * CalendarRenderer::render() entry point (see
-     * CalendarMonthlyTest::test_build_global_calendar_fails_under_only_full_group_by()
-     * for the root cause): the DEFAULT style (monthly) with the calendar
-     * view and no year selected yet -- i.e. the very first click on a
-     * real gallery's "browse by date" link -- 500s under the standard
-     * ONLY_FULL_GROUP_BY sql_mode this project's own DbConnection never
-     * strips.
+     * Regression test for a fixed bug, reproduced end-to-end through the
+     * real, unmodified CalendarRenderer::render() entry point (see
+     * CalendarMonthlyTest::test_build_global_calendar_groups_multiple_years_and_months_correctly()
+     * for the root cause and fix): the DEFAULT style (monthly) with the
+     * calendar view and no year selected yet -- i.e. the very first click
+     * on a real gallery's "browse by date" link -- used to 500 under the
+     * standard ONLY_FULL_GROUP_BY sql_mode this project's own DbConnection
+     * never strips. Verifies the real, now-working year/month grouping
+     * survives the full render() entry point, not just the calendar
+     * class's own method in isolation.
      */
-    public function test_render_reproduces_the_only_full_group_by_bug_for_the_default_monthly_calendar_view(): void
+    public function test_render_groups_multiple_years_and_months_for_the_default_monthly_calendar_view(): void
     {
-        $renderer = $this->makeRenderer();
+        $template = new Template();
+        $renderer = new CalendarRenderer($this->htmlService, $template, $this->urlService);
 
-        try {
-            $renderer->render(
-                section: 'items',
-                category: null,
-                items: [1, 2, 3, 4, 5],
-                chronologyField: 'posted',
-                chronologyStyle: null, // defaults to 'monthly'
-                chronologyView: CalendarBase::CAL_VIEW_CALENDAR,
-                chronologyDate: [],
-                superOrderBy: false,
-            );
-            self::fail('Expected a Doctrine\DBAL\Exception\DriverException from the ORDER BY/GROUP BY mismatch.');
-        } catch (DriverException $e) {
-            self::assertStringContainsString('only_full_group_by', strtolower($e->getMessage()));
-        }
+        $result = $renderer->render(
+            section: 'items',
+            category: null,
+            items: [1, 2, 3, 4, 5],
+            chronologyField: 'posted',
+            chronologyStyle: null, // defaults to 'monthly'
+            chronologyView: CalendarBase::CAL_VIEW_CALENDAR,
+            chronologyDate: [],
+            superOrderBy: false,
+        );
+
+        self::assertSame('monthly', $result->chronologyStyle);
+        self::assertSame('calendar', $result->chronologyView);
+        self::assertSame([], $result->chronologyDate);
+
+        $calendarVars = $template->get_template_vars('chronology_calendar');
+        // ORDER BY YEAR(date_field) DESC -- 2025 sorts before 2024.
+        $year2025 = $this->digArray($calendarVars, ['calendar_bars', 0]);
+        $year2024 = $this->digArray($calendarVars, ['calendar_bars', 1]);
+
+        self::assertSame(2025, $year2025['HEAD_LABEL']);
+        self::assertSame(2, $year2025['NB_IMAGES']);
+        self::assertSame(1, $this->dig($year2025, ['items', 0, 'LABEL']));
+
+        self::assertSame(2024, $year2024['HEAD_LABEL']);
+        self::assertSame(3, $year2024['NB_IMAGES']);
+        // ORDER BY MONTH(date_field) ASC within the year -- month 3 before
+        // month 7.
+        self::assertSame(3, $this->dig($year2024, ['items', 0, 'LABEL']));
+        self::assertSame(7, $this->dig($year2024, ['items', 1, 'LABEL']));
     }
 
     /**
-     * REAL BUG, reproduced end-to-end with realistic input: a real
-     * gallery URL parses chronology_date tokens as strings
-     * (Piwigo\Url\UrlService::parseWellKnownParamsUrl() returns
-     * list<string>) -- render() sanitizes each non-'any', non-empty token
-     * into a real int before ever handing it to the calendar object (see
-     * its own sanitization loop), which silently breaks
-     * CalendarBase::build_next_prev()'s own is_string()-based "current
-     * period" filter. See CalendarMonthlyTest's own matching test for the
-     * isolated cause.
+     * Regression test for a fixed bug, reproduced end-to-end with
+     * realistic input: a real gallery URL parses chronology_date tokens
+     * as strings (Piwigo\Url\UrlService::parseWellKnownParamsUrl()
+     * returns list<string>) -- render() sanitizes each non-'any',
+     * non-empty token into a real int before ever handing it to the
+     * calendar object (see its own sanitization loop), which used to
+     * silently break CalendarBase::build_next_prev()'s own
+     * is_string()-based "current period" filter. See CalendarMonthlyTest's
+     * own matching test for the isolated cause and fix.
      */
-    public function test_render_normalizes_chronology_date_to_ints_which_breaks_next_prev_navigation(): void
+    public function test_render_normalizes_chronology_date_to_ints_and_next_prev_navigation_still_works(): void
     {
         $template = new Template();
         $renderer = new CalendarRenderer($this->htmlService, $template, $this->urlService);
@@ -276,9 +293,14 @@ final class CalendarRendererTest extends IntegrationTestCase
 
         $nav = $this->digArray($template->get_template_vars('chronology_navigation_bars'), [0]);
         self::assertArrayNotHasKey('previous', $nav);
-        // Bug: "next" points at the exact period already being viewed
-        // (2024-3) instead of the real next period (2024-7).
-        self::assertSame('3 2024', $this->dig($nav, ['next', 'LABEL']));
+        // Fixed: "next" now correctly points at the real next period
+        // (2024-7), not the bug's old '3 2024' (the period already being
+        // viewed).
+        self::assertSame('7 2024', $this->dig($nav, ['next', 'LABEL']));
+        self::assertSame(
+            '/fake-index?' . json_encode(['chronology_date' => ['2024', '7']]) . '|removed=' . json_encode(['start']),
+            $this->dig($nav, ['next', 'URL'])
+        );
     }
 
     /**

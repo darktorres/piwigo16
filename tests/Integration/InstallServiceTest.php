@@ -10,6 +10,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
@@ -238,15 +239,29 @@ final class InstallServiceTest extends IntegrationTestCase
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
     }
 
-    public function test_activateCoreThemes_activates_a_real_modus_theme_found_on_disk(): void
+    /**
+     * AppInfo::DEFAULT_TEMPLATE ('default') is the only entry
+     * activateCoreThemes() ever allowlists, but 'default' is the
+     * placeholder/fallback theme, deliberately not selectable/activatable
+     * -- ExtensionLifecycle::performThemeAction()'s own `$id === 'default'`
+     * no-op guard (see ExtensionLifecycleTest's own
+     * test_theme_activate_default_is_a_silent_noop) exempts it even when
+     * the scan finds a real matching directory on disk. The real,
+     * selectable core themes (e.g. modus, see ExtensionType::defaultIds())
+     * aren't bundled in this repo yet, so activateCoreThemes() is
+     * currently a no-op end to end -- this locks in that real, current
+     * behavior rather than a hypothetical future one.
+     */
+    public function test_activateCoreThemes_does_not_activate_the_non_selectable_default_placeholder_theme(): void
     {
         $this->bootKernelAndConfigService();
 
+        $themeId = AppInfo::DEFAULT_TEMPLATE;
         $themesDir = sys_get_temp_dir() . '/piwigo-install-service-themes-' . bin2hex(random_bytes(6)) . '/';
-        mkdir($themesDir . 'modus', 0777, true);
+        mkdir($themesDir . $themeId, 0777, true);
         file_put_contents(
-            $themesDir . 'modus/themeconf.inc.php',
-            "<?php\n/*\nTheme Name: Modus Test Fixture\nVersion: 3.1.4\nDescription: synthetic fixture for InstallServiceTest\nAuthor: p17-test\n*/\n"
+            $themesDir . $themeId . '/themeconf.inc.php',
+            "<?php\n/*\nTheme Name: Default Template Test Fixture\nVersion: 3.1.4\nDescription: synthetic fixture for InstallServiceTest\nAuthor: p17-test\n*/\n"
         );
         CurrentConfig::setThemesDir($themesDir);
 
@@ -255,30 +270,25 @@ final class InstallServiceTest extends IntegrationTestCase
 
             InstallService::activateCoreThemes();
 
-            $row = $this->conn->fetchAssociative('SELECT id, name, version FROM ' . Tables::themes() . " WHERE id = 'modus'");
-            self::assertIsArray($row);
-            self::assertSame('modus', $row['id']);
-            self::assertSame('Modus Test Fixture', $row['name']);
-            self::assertSame('3.1.4', $row['version']);
-            self::assertSame(1, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::themes())));
+            self::assertFalse($this->conn->fetchAssociative('SELECT id FROM ' . Tables::themes() . ' WHERE id = ' . $this->conn->quote($themeId)));
+            self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::themes())));
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
-            unlink($themesDir . 'modus/themeconf.inc.php');
-            rmdir($themesDir . 'modus');
+            unlink($themesDir . $themeId . '/themeconf.inc.php');
+            rmdir($themesDir . $themeId);
             rmdir($themesDir);
         }
     }
 
-    public function test_activateCoreThemes_activates_nothing_when_no_modus_theme_directory_is_found(): void
+    public function test_activateCoreThemes_activates_nothing_when_no_default_template_theme_directory_is_found(): void
     {
         $this->bootKernelAndConfigService();
 
         $emptyThemesDir = sys_get_temp_dir() . '/piwigo-install-service-empty-themes-' . bin2hex(random_bytes(6)) . '/';
         mkdir($emptyThemesDir, 0777, true);
-        // Real, current state of this repo's own themes/ directory too
-        // (confirmed by direct read: no 'modus' theme is bundled here), but
-        // this test doesn't depend on that -- an explicitly empty scan
-        // directory proves the "nothing found on disk" branch directly.
+        // An explicitly empty scan directory proves the "nothing found on
+        // disk" branch directly, regardless of what this repo's own real
+        // themes/ directory currently contains.
         CurrentConfig::setThemesDir($emptyThemesDir);
 
         try {

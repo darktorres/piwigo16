@@ -165,13 +165,13 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
 
     public function test_find_any_theme_id_excluding_returns_null_when_none_other_exists(): void
     {
-        self::assertNull($this->repo->findAnyThemeIdExcluding('modus'));
+        self::assertNull($this->repo->findAnyThemeIdExcluding('default'));
     }
 
     public function test_find_user_ids_by_theme_returns_users_on_that_theme(): void
     {
-        // fixture: all 4 users default to theme 'modus'
-        $ids = $this->repo->findUserIdsByTheme('modus');
+        // fixture: all 4 users default to theme 'default' (AppInfo::DEFAULT_TEMPLATE)
+        $ids = $this->repo->findUserIdsByTheme('default');
 
         sort($ids);
         self::assertSame(['1', '2', '3', '4'], $ids);
@@ -188,9 +188,9 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
             $this->repo->setThemeForUsers('elegant', ['3']);
 
             self::assertSame('elegant', $this->fetchUserInfoColumn(3, 'theme'));
-            self::assertSame('modus', $this->fetchUserInfoColumn(1, 'theme'));
+            self::assertSame('default', $this->fetchUserInfoColumn(1, 'theme'));
         } finally {
-            $this->repo->setThemeForUsers('modus', ['3']);
+            $this->repo->setThemeForUsers('default', ['3']);
         }
     }
 
@@ -198,7 +198,7 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
     {
         $this->repo->setThemeForUsers('elegant', []);
 
-        self::assertSame('modus', $this->fetchUserInfoColumn(1, 'theme'));
+        self::assertSame('default', $this->fetchUserInfoColumn(1, 'theme'));
     }
 
     public function test_reassign_users_from_language_updates_matching_rows(): void

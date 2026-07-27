@@ -456,9 +456,16 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertSame('English (Great Britain)', $language['name']);
         self::assertSame(1, $this->queryOneCount($freshDb, 'SELECT COUNT(*) AS c FROM itest_languages'));
 
-        // ---- themes/plugins: real current state of this repo has no bundled
-        // 'modus' theme and auto-activates zero plugins by design (see
-        // InstallServiceTest's own equivalent assertions) -------------------
+        // ---- themes/plugins: this repo's real themes/ (symlinked in above)
+        // only bundles the 'default' placeholder theme so far (the real
+        // selectable core themes, e.g. modus, aren't ported into this repo
+        // yet -- see ExtensionType::defaultIds()) -- and 'default' is
+        // deliberately not selectable/activatable (ExtensionLifecycle::
+        // performThemeAction()'s own `$id === 'default'` no-op guard, see
+        // ExtensionLifecycleTest's test_theme_activate_default_is_a_silent_noop),
+        // so activateCoreThemes() activates zero themes; zero plugins are
+        // auto-activated by design too (see InstallServiceTest's own
+        // equivalent assertions) -------------------
         self::assertSame(0, $this->queryOneCount($freshDb, 'SELECT COUNT(*) AS c FROM itest_themes'));
         self::assertSame(0, $this->queryOneCount($freshDb, 'SELECT COUNT(*) AS c FROM itest_plugins'));
 
@@ -505,11 +512,12 @@ final class InstallWizardTest extends IntegrationTestCase
         // this CLI process.
         $savedHeader = $_SERVER['HTTP_X_PIWIGO_ENV'] ?? null;
         unset($_SERVER['HTTP_X_PIWIGO_ENV']);
-        // Real bug found via this exact test, confirmed live (not assumed):
-        // performInstall()'s own legacy-config-file branch calls a bare
-        // `@umask(0111);` and never restores the process's original umask
-        // afterwards -- since umask() is process-wide, that leaks into every
-        // later mkdir()/fopen() for the rest of this PHP process (or, in
+        // Regression test for a fixed bug, found via this exact test,
+        // confirmed live (not assumed): performInstall()'s own
+        // legacy-config-file branch used to call a bare `@umask(0111);`
+        // and never restore the process's original umask afterwards --
+        // since umask() is process-wide, that leaked into every later
+        // mkdir()/fopen() for the rest of this PHP process (or, in
         // production, the rest of that worker's lifetime under FrankenPHP/
         // PHP-FPM). Confirmed concretely: running this one test before
         // LegacyFileConfTest in the same process made every one of that
@@ -518,15 +526,17 @@ final class InstallWizardTest extends IntegrationTestCase
         // which then made every `file_put_contents()` into them fail
         // silently (no exception -- just a `false` return nobody checked),
         // so LegacyFileConf::read()'s own `@include` had nothing to include
-        // and kept returning unmodified defaults. Snapshotting and
-        // restoring the real process umask around this one call is this
-        // test's own guard against leaking that same corruption into every
-        // other test that runs after it in this shared process; it does
-        // NOT change the real, confirmed bug in the source class, which is
-        // reported as-is rather than silently worked around there too.
+        // and kept returning unmodified defaults. Fixed by saving/restoring
+        // the umask around just the config-file-write block in the source
+        // itself -- asserted directly below, not just guarded against here.
         $originalUmask = umask();
         try {
             $wizard->performInstall();
+            self::assertSame(
+                $originalUmask,
+                umask(),
+                'performInstall() must restore the process umask it temporarily changes for the legacy config-file write'
+            );
         } finally {
             umask($originalUmask);
             if ($savedHeader !== null) {

@@ -445,7 +445,16 @@ define(\'DB_COLLATE\', \'\');
 
 ?>';
 
-            @umask(0111);
+            // umask() returns the PREVIOUS mask, so this both saves and
+            // sets it in one call -- restored below once the config-file
+            // write is done. Never restoring it (the original bug) leaks
+            // 0111 into every later mkdir()/fopen() call for the rest of
+            // this process's lifetime; unlike fopen()-created regular
+            // files (which default to mode 0666, no execute bits for
+            // 0111 to strip), mkdir()-created directories DO carry
+            // execute bits by default, and losing them makes the
+            // directory untraversable.
+            $originalUmask = @umask(0111);
             // writing the configuration file
             if (! (bool) ($fp = @fopen($this->configFile, 'w'))) {
                 // make sure nobody can list files of _data directory
@@ -469,6 +478,7 @@ define(\'DB_COLLATE\', \'\');
                 @fputs($fp, $file_content, strlen($file_content));
                 @fclose($fp);
             }
+            @umask($originalUmask);
         }
 
         // Create install sentinel stamp file.

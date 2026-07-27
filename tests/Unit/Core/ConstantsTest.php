@@ -10,7 +10,10 @@ use Piwigo\Core\ValidationPattern;
 test('AppInfo carries the 4 retired PHPWG_* constants', function (): void {
     expect(AppInfo::VERSION)->toBe('16.3.0')
         ->and(AppInfo::DEFAULT_LANGUAGE)->toBe('en_UK')
-        ->and(AppInfo::DEFAULT_TEMPLATE)->toBe('modus')
+        // Not real upstream Piwigo's own 'modus' -- this project's actual
+        // bundled theme (themes/default/themeconf.inc.php) is 'default',
+        // see AppInfo's own docblock for the fixed bug this used to cause.
+        ->and(AppInfo::DEFAULT_TEMPLATE)->toBe('default')
         ->and(AppInfo::REQUIRED_PHP_VERSION)->toBe('8.5.0');
 });
 

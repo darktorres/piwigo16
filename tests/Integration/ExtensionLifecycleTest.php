@@ -89,7 +89,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn->executeStatement('DELETE FROM ' . Tables::plugins());
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
             $this->conn->executeStatement('DELETE FROM ' . Tables::languages() . " WHERE id != 'en_UK'");
-            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET theme = 'modus' WHERE user_id IN (1, 2)");
+            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET theme = 'default' WHERE user_id IN (1, 2)");
             $this->conn->executeStatement('DELETE FROM ' . Tables::activity());
             Kernel::reset();
             parent::tearDown();

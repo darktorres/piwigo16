@@ -20,6 +20,7 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use RuntimeException;
@@ -87,7 +88,7 @@ final class InstallService
         $fs_themes = new ExtensionScanner()
             ->scan(ExtensionType::Theme, $urlService);
         foreach ($fs_themes as $theme_id => $fs_theme) {
-            if (in_array($theme_id, ['modus'], true)) {
+            if (in_array($theme_id, [AppInfo::DEFAULT_TEMPLATE], true)) {
                 $lifecycle->performAction(ExtensionType::Theme, 'activate', $theme_id, $fs_theme);
             }
         }

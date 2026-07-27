@@ -654,17 +654,14 @@ final class BrowserTestHelpers
     }
 
     /**
-     * Sets the anonymous guest user's (user_id 2) active theme. The fixture
-     * defaults it to 'modus' -- a theme directory that doesn't exist in
-     * this repo (only 'default' and 'standard_pages' do), which
-     * Template::set_theme() silently falls back to 'default' for, meaning
-     * the standard_pages theme's own identification/register/password/
-     * profile templates are never actually exercised by a plain guest
-     * visit as fixtured. Setting this to 'standard_pages' directly is the
-     * minimal, restorable fixture mutation needed to exercise those
-     * templates for real (confirmed live: an anonymous identification.php
-     * request only renders id="piwigo-logo"/"logo-section" once this is
-     * set).
+     * Sets the anonymous guest user's (user_id 2) active theme. The
+     * fixture defaults it to 'default' (AppInfo::DEFAULT_TEMPLATE), so the
+     * standard_pages theme's own identification/register/password/profile
+     * templates are never actually exercised by a plain guest visit as
+     * fixtured. Setting this to 'standard_pages' directly is the minimal,
+     * restorable fixture mutation needed to exercise those templates for
+     * real (confirmed live: an anonymous identification.php request only
+     * renders id="piwigo-logo"/"logo-section" once this is set).
      */
     public static function setGuestTheme(string $theme): void
     {

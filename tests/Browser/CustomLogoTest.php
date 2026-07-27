@@ -15,7 +15,7 @@ const CUSTOM_LOGO_RELATIVE_PATH = 'logo/browser-test-logo.png';
 
 afterEach(function (): void {
     H::clearCustomLogo(CUSTOM_LOGO_RELATIVE_PATH);
-    H::setGuestTheme('modus');
+    H::setGuestTheme('default');
 });
 
 it('serves the configured custom logo through logo.php and 404s when none is configured', function (): void {

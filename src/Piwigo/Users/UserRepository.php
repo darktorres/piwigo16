@@ -273,7 +273,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             showNbComments: (bool) ($row['show_nb_comments'] ?? false),
             showNbHits: (bool) ($row['show_nb_hits'] ?? false),
             recentPeriod: is_numeric($row['recent_period'] ?? null) ? (int) $row['recent_period'] : 7,
-            theme: is_string($row['theme'] ?? null) ? $row['theme'] : 'modus',
+            theme: is_string($row['theme'] ?? null) ? $row['theme'] : 'default',
             registrationDate: is_string($row['registration_date'] ?? null) ? $row['registration_date'] : null,
             enabledHigh: (bool) ($row['enabled_high'] ?? true),
             level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,

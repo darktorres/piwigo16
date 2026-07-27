@@ -386,7 +386,13 @@ Visual 34/34 (unchanged).
 **Stage 2 — FrankenPHP worker mode: NOT STARTED.** `docker/Caddyfile` still has no `worker`
 directive; `public/index.php` has no `bootMinimal`/`frankenphp_handle_request` references.
 Correctly sequenced after Stage 1f per the plan (worker-mode correctness depends on every
-request-scoped static having a tested `reset()`).
+request-scoped static having a tested `reset()`). **Re-confirmed 2026-07-26**, independently,
+via an adversarial audit of `~/.claude/plans/p23/` (not a rerun of this doc's own check — a
+separate pass cross-checking that planning folder's own Step 6 against live code): identical
+result. `reset()` coverage has grown past Stage 1f's 31 classes since, and every single one
+is still arch-tested "only callable from `tests/`" — none relaxed for a sanctioned
+worker-loop call site — confirming zero progress on Stage 2 since Stage 1f closed, not just
+doc staleness.
 
 **Stage 3 — Legacy import tool: NOT STARTED.** Still no `import:legacy`/`ImportLegacy`
 reference anywhere. **Drift from the plan's own inventory:** it describes "8 existing
@@ -394,6 +400,31 @@ Symfony Console commands" including `SchemaDump` — that command no longer exis
 along with the whole Doctrine Migrations mechanism, same `212628d46` change that affects
 Stage 1a). Only 7 commands exist today: `BackupCreate`, `BackupRestore`, `CacheClear`,
 `MaintenanceOrphanTags`, `MaintenancePurgeHistory`, `MaintenancePurgeSessions`, `UserList`.
+
+**Stage 5 — `maintenance:repair-db` CLI command: NOT BUILT.** New finding, 2026-07-26, from
+an adversarial audit of `~/.claude/plans/p23/` (the pre-P23 remediation plan, a different
+source than this doc's own original 2026-07-13 findings list — not a renumbering of
+anything above). That plan's Step 3.2 built 3 of the 4 planned `maintenance:*` commands,
+deliberately deferring `maintenance:repair-db` until P23's own legacy-absorption work
+touched `include/dblayer/functions_mysqli.inc.php` (the repair/optimize logic's original
+home) — "building an interim wrapper now would mean touching that file twice." That file is
+long gone (deleted along with the rest of `MysqliDb.php`, a separate earlier gap-closure),
+and its logic now lives in a real typed method,
+`DbMaintenanceRepository::repairOptimizeAllTables()` (`REPAIR TABLE`/`OPTIMIZE TABLE` across
+every table) — but nothing ever circled back once the deferred blocker resolved.
+`repairOptimizeAllTables()` has exactly one caller today, `MaintenanceActionDispatcher`
+(the admin web UI's maintenance page) — the feature works, just not from the CLI.
+`config/commands.php`'s own comment explaining the original deferral is now stale, still
+citing the deleted file as a reason to wait.
+
+**Fix is small, no design work needed** — the backing method and the exact pattern to copy
+both already exist: a new `MaintenanceRepairDbCommand` wrapping
+`repairOptimizeAllTables()`, matching `MaintenancePurgeHistoryCommand`'s shape exactly
+(constructor-injected `DbMaintenanceRepository`, `#[AsCommand]` attribute, single `execute()`
+call, `Command::SUCCESS`), registered in `config/commands.php`'s return array with the stale
+comment corrected. Test the same way as its 3 siblings — an `IntegrationTestCase` using
+`Symfony\Component\Console\Tester\CommandTester` against a real fixture-loaded DB, not a
+mocked repository (see `MaintenancePurgeHistoryCommandTest` for the exact shape to copy).
 
 ---
 

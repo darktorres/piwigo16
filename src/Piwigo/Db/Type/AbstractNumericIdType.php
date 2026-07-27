@@ -31,6 +31,7 @@ abstract class AbstractNumericIdType extends Type
      */
     abstract protected function voClass(): string;
 
+    #[\Override]
     public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?NumericId
     {
         if ($value === null) {
@@ -46,6 +47,7 @@ abstract class AbstractNumericIdType extends Type
         return $class::from((int) $value);
     }
 
+    #[\Override]
     public function convertToDatabaseValue(mixed $value, AbstractPlatform $platform): ?int
     {
         if ($value === null) {
@@ -68,11 +70,13 @@ abstract class AbstractNumericIdType extends Type
         return (int) (string) $value;
     }
 
+    #[\Override]
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
         return $platform->getIntegerTypeDeclarationSQL($column);
     }
 
+    #[\Override]
     public function getBindingType(): ParameterType
     {
         return ParameterType::INTEGER;

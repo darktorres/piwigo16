@@ -117,7 +117,7 @@ final class AccessControl
         return self::isAuthorizeStatus(AccessLevel::Webmaster, $userStatus);
     }
 
-    public static function canManageComment(string $action, int|string $commentAuthorId): bool
+    public static function canManageComment(string $action, int|string|null $commentAuthorId): bool
     {
 
         if (self::isAGuest()) {
@@ -130,6 +130,12 @@ final class AccessControl
 
         if (self::isAdmin()) {
             return true;
+        }
+
+        // null means the comment is anonymous (no owner to compare
+        // against) -- only an admin, already handled above, can manage it.
+        if ($commentAuthorId === null) {
+            return false;
         }
 
         $currentUserId = \Piwigo\Users\CurrentUser::get()->id;

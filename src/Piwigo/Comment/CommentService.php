@@ -498,11 +498,12 @@ final readonly class CommentService
     /**
      * Returns the author id of a comment.
      *
-     * @return int|false false if $dieOnError is false and the comment
-     *   doesn't exist, or if it exists but has no owner (anonymous/guest
-     *   comment)
+     * @return int|null|false false if $dieOnError is false and the comment
+     *   doesn't exist; null if it exists but has no owner (anonymous/guest
+     *   comment) -- these are distinct states, see
+     *   CommentRepository::findAuthorId()
      */
-    public function getCommentAuthorId(int $commentId, bool $dieOnError = true): int|false
+    public function getCommentAuthorId(int $commentId, bool $dieOnError = true): int|null|false
     {
         $value = $this->repo->findAuthorId($commentId);
 
@@ -512,6 +513,10 @@ final readonly class CommentService
             }
 
             return false;
+        }
+
+        if ($value === null) {
+            return null;
         }
 
         return is_numeric($value) ? (int) $value : false;

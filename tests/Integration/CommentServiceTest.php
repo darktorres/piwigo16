@@ -319,6 +319,32 @@ namespace Piwigo\Tests\Integration {
             self::assertFalse($this->service->getCommentAuthorId(999999, false));
         }
 
+        /**
+         * author_id is nullable in schema (anonymous/guest comment with no
+         * owner) -- this is a distinct state from "comment doesn't exist",
+         * see CommentRepository::findAuthorId(). A prior version of
+         * getCommentAuthorId() collapsed both states down to `false`,
+         * which then flowed into AccessControl::canManageComment()'s
+         * strictly-typed `int|string` parameter and crashed with a
+         * TypeError as soon as assert() (a no-op under this project's
+         * zend.assertions=-1) failed to catch it.
+         */
+        public function test_get_comment_author_id_returns_null_for_an_anonymous_comment(): void
+        {
+            $id = $this->insertAnonymousComment();
+
+            self::assertNull($this->service->getCommentAuthorId($id));
+        }
+
+        public function test_get_comment_author_id_null_flows_safely_into_can_manage_comment(): void
+        {
+            $id = $this->insertAnonymousComment();
+            $authorId = $this->service->getCommentAuthorId($id);
+            self::assertNotFalse($authorId); // dieOnError defaults to true; see getCommentAuthorId()'s docblock
+
+            self::assertFalse(\Piwigo\Auth\AccessControl::canManageComment('edit', $authorId));
+        }
+
         // --- invalidateNbCommentsCache() -------------------------------------
 
         /**
@@ -359,6 +385,30 @@ namespace Piwigo\Tests\Integration {
             self::assertIsInt($comm['id'] ?? null);
 
             return $comm['id'];
+        }
+
+        /**
+         * insertComment() always assigns a real author_id (a registered
+         * user's id, or CurrentConfig::guestId() for anonymous posters) --
+         * a genuinely NULL author_id only ever occurs for legacy/imported
+         * data or a directly-owned user row later deleted, which the
+         * schema (`author_id` nullable) and CommentRepository::
+         * findAuthorId() both explicitly support. Insert directly to
+         * reproduce that state.
+         */
+        private function insertAnonymousComment(int $imageId = 1): int
+        {
+            $this->conn->insert(Tables::comments(), [
+                'image_id' => $imageId,
+                'date' => '2026-08-01 00:00:00',
+                'author' => 'anonymous',
+                'author_id' => null,
+                'anonymous_id' => '127.0.0.4',
+                'content' => 'Anonymous comment with no owner.',
+                'validated' => 1,
+            ]);
+
+            return (int) $this->conn->lastInsertId();
         }
 
         /**

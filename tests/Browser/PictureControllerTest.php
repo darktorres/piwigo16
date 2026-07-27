@@ -205,9 +205,8 @@ it('lets an admin delete and validate comments directly from picture.php\'s own 
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Comment Moderation Photo');
     @unlink($image);
 
-    // author_id=3 (regular_user, a real registered account) -- see this
-    // test file's own bug-confirmation test below for why a NULL author_id
-    // (an anonymous/guest-authored comment) can't be used here.
+    // author_id=3 (regular_user, a real registered account); the
+    // anonymous (NULL author_id) case is covered separately below.
     $toDeleteId = pictureInsertComment($imageId, 'delete-me-' . uniqid(), 'This one gets deleted.', true, 3);
     $toValidateId = pictureInsertComment($imageId, 'validate-me-' . uniqid(), 'This one gets validated.', false, 3);
 
@@ -234,23 +233,21 @@ it('lets an admin delete and validate comments directly from picture.php\'s own 
     expect($row['validated'])->toBe(1);
 });
 
-it('CONFIRMED BUG: delete_comment 500s instead of deleting for an anonymous (NULL author_id) comment', function (): void {
-    // CommentService::getCommentAuthorId() returns `false` (its
-    // "not found"/"die_on_error" sentinel type, `int|false`) whenever the
-    // comment's own `author_id` column is NULL -- true for any real guest/
-    // anonymous-authored comment, not an edge case. PictureController's own
-    // `assert($author_id !== false)` right after that call is meant to rule
-    // this out, but zend.assertions=-1 in this environment (confirmed
-    // elsewhere in this codebase) makes assert() a genuine runtime no-op --
-    // so `$author_id` stays `false` and is passed straight into
-    // `AccessControl::canManageComment(string $action, int|string
-    // $commentAuthorId)`, whose 2nd parameter's declared type does NOT
-    // include bool. Under this project's `declare(strict_types=1)`, that is
-    // a real, uncaught TypeError, not a soft coercion -- reproduced here
-    // via a raw authenticated curl request (independent of Playwright)
-    // before writing this assertion. Any real admin who tries to
-    // delete/validate/edit a genuine anonymous visitor's comment from
-    // picture.php hits this every time.
+it('delete_comment succeeds for an anonymous (NULL author_id) comment', function (): void {
+    // Regression test for a fixed bug: CommentService::getCommentAuthorId()
+    // used to collapse "comment not found" and "comment has NULL author_id"
+    // (a real, common state for any guest/anonymous-authored comment) down
+    // to the same `false` sentinel. That `false` then flowed into
+    // AccessControl::canManageComment(string $action, int|string
+    // $commentAuthorId), whose 2nd parameter's declared type did NOT
+    // include bool, and under this project's `declare(strict_types=1)`
+    // triggered a real, uncaught TypeError -- reproduced via a raw
+    // authenticated curl request (independent of Playwright) before the
+    // fix. getCommentAuthorId() now returns `null` for this case (see
+    // CommentRepository::findAuthorId()'s 3-state contract) and
+    // canManageComment() now accepts `int|string|null`, treating a null
+    // author as "no owner to compare against" (admins can still manage it,
+    // as verified here; a non-admin never can).
     $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_browser_bug_');
     if ($cookieJar === false) {
         throw new RuntimeException('tempnam failed');
@@ -310,8 +307,6 @@ it('CONFIRMED BUG: delete_comment 500s instead of deleting for an anonymous (NUL
 
     @unlink($cookieJar);
 
-    expect($result['status'])->toBe(500);
-    // The comment was never actually deleted -- the TypeError fires before
-    // deleteComment() is ever reached.
-    expect(pictureCommentRow($anonCommentId))->not->toBeNull();
+    expect($result['status'])->toBe(302);
+    expect(pictureCommentRow($anonCommentId))->toBeNull();
 });

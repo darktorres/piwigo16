@@ -158,3 +158,19 @@ test('canManageComment compares the string-typed author id numerically', functio
 
     expect(AccessControl::canManageComment('edit', '7'))->toBeTrue();
 });
+
+test('canManageComment denies a normal user on a null (anonymous) author id without throwing', function (): void {
+    seedAccessControlUser(UserStatus::Normal, id: 7);
+    CurrentConfig::setUserCanEditComment(true);
+    CurrentConfig::setUserCanDeleteComment(true);
+
+    expect(AccessControl::canManageComment('edit', null))->toBeFalse()
+        ->and(AccessControl::canManageComment('delete', null))->toBeFalse()
+        ->and(AccessControl::canManageComment('validate', null))->toBeFalse();
+});
+
+test('canManageComment lets an admin manage a comment with a null (anonymous) author id', function (): void {
+    seedAccessControlUser(UserStatus::Admin);
+
+    expect(AccessControl::canManageComment('delete', null))->toBeTrue();
+});

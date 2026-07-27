@@ -140,15 +140,7 @@ it('lets an admin validate and delete a comment via comments.php\'s own moderati
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Comments Moderation Photo');
     @unlink($image);
 
-    // author_id=3 (regular_user, a real registered account) -- comments.php's
-    // own moderation-action path (unlike its plain listing path, which
-    // narrows a NULL author_id to a safe -1 sentinel) calls
-    // CommentService::getCommentAuthorId(), which returns `false` for a
-    // NULL author_id and then hits a real uncaught TypeError against
-    // AccessControl::canManageComment()'s `int|string` parameter -- see
-    // PictureControllerTest.php's own "CONFIRMED BUG" test for the full
-    // trace of this same underlying issue, reproduced there instead since
-    // that's a real, standalone action switch of its own.
+    // author_id=3 (regular_user, a real registered account).
     $author = 'browser-comments-mod-' . uniqid();
     $toValidateId = commentsInsert($imageId, $author, 'Please validate me.', false, 3);
     $toDeleteId = commentsInsert($imageId, $author, 'Please delete me.', true, 3);
@@ -167,4 +159,35 @@ it('lets an admin validate and delete a comment via comments.php\'s own moderati
     $page = H::navigateOk($page, '/comments.php?author=' . urlencode($author));
     $html = H::rawWebpage($page)->content();
     expect(substr_count($html, 'class="commentElement'))->toBe(1);
+});
+
+it('lets an admin delete an anonymous (NULL author_id) comment via comments.php\'s moderation action', function (): void {
+    // Regression test for a fixed bug: comments.php's own moderation-action
+    // path (unlike its plain listing path, which narrows a NULL author_id
+    // to a safe -1 sentinel) calls CommentService::getCommentAuthorId(),
+    // which used to collapse a NULL author_id down to the same `false`
+    // sentinel as "comment not found" and crash with an uncaught TypeError
+    // against AccessControl::canManageComment()'s then-`int|string`
+    // parameter -- see PictureControllerTest.php's own regression test for
+    // the full trace of this same underlying issue. getCommentAuthorId()
+    // now returns `null` for this case and canManageComment() now accepts
+    // it explicitly.
+    $page = H::loginAsAdmin($this);
+    $pwgToken = H::pwgToken($page);
+
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Comments Anon Mod Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage('Comments Anon Mod Photo');
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Comments Anon Mod Photo');
+    @unlink($image);
+
+    $toDeleteId = commentsInsert($imageId, 'guest', 'Anonymous comment to delete.', true, null);
+
+    expect(commentsRowCount($toDeleteId))->toBe(1);
+    $page = H::navigateOk($page, '/comments.php?delete=' . $toDeleteId . '&pwg_token=' . $pwgToken);
+    expect(commentsRowCount($toDeleteId))->toBe(0);
 });

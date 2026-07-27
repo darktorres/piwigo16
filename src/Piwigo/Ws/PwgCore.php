@@ -1021,25 +1021,32 @@ SELECT
         // throughout this loop (and the rest of this method) are the real
         // narrowing, not just defensive boilerplate.
         foreach ($data as $row) {
+            // user_id/category_id/image_id/search_id are int/mediumint/
+            // smallint columns -- HistoryRepository::search()'s DBAL
+            // fetchAllAssociative() returns these as native PHP int, not
+            // the mysqli-era guaranteed string; an is_string()-only guard
+            // here silently dropped every real row (found via a Contract
+            // test asserting a logged visit's IMAGEID/username/category
+            // enrichment actually appears in pwg.history.search's results).
             $row_user_id = $row['user_id'] ?? null;
-            if (is_string($row_user_id)) {
-                $user_ids[$row_user_id] = 1;
+            if (is_int($row_user_id) || is_string($row_user_id)) {
+                $user_ids[(string) $row_user_id] = 1;
             }
 
-            if (isset($row['category_id']) and is_string($row['category_id'])) {
-                array_push($category_ids, $row['category_id']);
+            if (isset($row['category_id']) and (is_int($row['category_id']) || is_string($row['category_id']))) {
+                array_push($category_ids, (string) $row['category_id']);
             }
 
-            if (isset($row['image_id']) and is_string($row['image_id'])) {
-                $image_ids[$row['image_id']] = 1;
+            if (isset($row['image_id']) and (is_int($row['image_id']) || is_string($row['image_id']))) {
+                $image_ids[(string) $row['image_id']] = 1;
             }
 
             if (isset($row['tag_ids'])) {
                 $has_tags = true;
             }
 
-            if (isset($row['search_id']) and is_string($row['search_id'])) {
-                array_push($search_ids, $row['search_id']);
+            if (isset($row['search_id']) and (is_int($row['search_id']) || is_string($row['search_id']))) {
+                array_push($search_ids, (string) $row['search_id']);
             }
 
             $history_lines[] = $row;
@@ -1196,20 +1203,24 @@ SELECT
         foreach ($history_lines as $line) {
             // every field of $line comes straight from historyGet()'s
             // HistoryRepository::search() rows (DBAL fetchAllAssociative()),
-            // so it is really mixed -- the is_string() narrowing below is
-            // the real guard, not just defensive boilerplate.
+            // so it is really mixed -- the is_string()/is_int() narrowing
+            // below is the real guard, not just defensive boilerplate.
+            // user_id/category_id/image_id/search_id are int columns --
+            // DBAL returns native int, not the mysqli-era guaranteed
+            // string, so these 4 need the wider int|string check the
+            // genuinely-string columns below don't.
             $line_image_type = $line['image_type'] ?? null;
             $line_image_type = is_string($line_image_type) ? $line_image_type : null;
             $line_image_id = $line['image_id'] ?? null;
-            $line_image_id = is_string($line_image_id) ? $line_image_id : null;
+            $line_image_id = (is_int($line_image_id) || is_string($line_image_id)) ? (string) $line_image_id : null;
             $line_user_id = $line['user_id'] ?? null;
-            $line_user_id = is_string($line_user_id) ? $line_user_id : null;
+            $line_user_id = (is_int($line_user_id) || is_string($line_user_id)) ? (string) $line_user_id : null;
             $line_ip = $line['IP'] ?? null;
             $line_ip = is_string($line_ip) ? $line_ip : null;
             $line_tag_ids = $line['tag_ids'] ?? null;
             $line_tag_ids = is_string($line_tag_ids) ? $line_tag_ids : null;
             $line_search_id = $line['search_id'] ?? null;
-            $line_search_id = is_string($line_search_id) ? $line_search_id : null;
+            $line_search_id = (is_int($line_search_id) || is_string($line_search_id)) ? (string) $line_search_id : null;
             $line_date = $line['date'] ?? null;
             $line_date = is_string($line_date) ? $line_date : null;
             $line_time = $line['time'] ?? null;
@@ -1217,7 +1228,7 @@ SELECT
             $line_section = $line['section'] ?? null;
             $line_section = is_string($line_section) ? $line_section : null;
             $line_category_id = $line['category_id'] ?? null;
-            $line_category_id = is_string($line_category_id) ? $line_category_id : null;
+            $line_category_id = (is_int($line_category_id) || is_string($line_category_id)) ? (string) $line_category_id : null;
 
             if ($line_image_type === 'high' and $line_image_id !== null) {
                 // 'total_filesize' is only ever set to int by this same loop

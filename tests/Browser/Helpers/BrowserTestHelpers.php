@@ -86,6 +86,30 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Same conditional coverage-header logic as testModeOptions(), for the
+     * raw-curl requests in this suite that don't go through Playwright's
+     * visit() (and so never see testModeOptions() at all) -- matches
+     * Piwigo\Tests\Integration\IntegrationTestCase::testHeader()'s own
+     * CURLOPT_HTTPHEADER-shaped return. Without this, a raw-curl test's
+     * real, passing coverage is invisible to composer test:coverage:all --
+     * confirmed live for RegisterController/TestErrorsController/
+     * VitalsController/CustomLogoController, all of which showed 0% despite
+     * real tests existing, purely because their curl calls never sent this
+     * header.
+     *
+     * @return list<string>
+     */
+    public static function testHeaders(): array
+    {
+        $headers = ['X-Piwigo-Env: test'];
+        if (getenv('PIWIGO_COVERAGE') === '1') {
+            $headers[] = 'X-Piwigo-Coverage: 1';
+        }
+
+        return $headers;
+    }
+
+    /**
      * Visits a path against the configured base URL, in test mode.
      *
      * $test is the Pest test case ($this from inside a test() closure).
@@ -897,7 +921,7 @@ final class BrowserTestHelpers
             throw new ExpectationFailedException('curl_init failed');
         }
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Piwigo-Env: test']);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, self::testHeaders());
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
         curl_exec($ch);
@@ -919,7 +943,7 @@ final class BrowserTestHelpers
             throw new ExpectationFailedException('curl_init failed');
         }
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Piwigo-Env: test']);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, self::testHeaders());
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
         $body = curl_exec($ch);
@@ -941,7 +965,7 @@ final class BrowserTestHelpers
         curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
         curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
         curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Piwigo-Env: test']);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, self::testHeaders());
         $body = curl_exec($ch);
         unset($ch);
 

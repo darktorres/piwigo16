@@ -53,7 +53,6 @@ function imageImagickTestMakeJpeg(string $path, int $width, int $height, int $r,
     }
     imagefill($im, 0, 0, $color);
     imagejpeg($im, $path);
-    imagedestroy($im);
 }
 
 function imageImagickTestSkipIfUnavailable(): void

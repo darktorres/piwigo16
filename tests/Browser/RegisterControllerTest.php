@@ -60,7 +60,7 @@ function registerCurl(string $cookieJar, string $path, array $fields = [], ?int 
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
     curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Piwigo-Env: test']);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     if ($timeoutSeconds !== null) {
         curl_setopt($ch, CURLOPT_TIMEOUT, $timeoutSeconds);

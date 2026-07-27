@@ -4,10 +4,26 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
+
 final class WsImagesTest extends ContractTestCase
 {
     /** Image ID 1 is the first photo seeded by the fixture. */
     private const int FIXTURE_IMAGE_ID = 1;
+
+    /** Fixture image 1's real md5sum (tests/Fixtures/piwigo-17.0.sql). */
+    private const string FIXTURE_IMAGE_MD5 = '2e7ee450c4a4cffe42945205029782b9';
+
+    private Connection $conn;
+
+    #[\Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->conn = DbConnection::build();
+    }
 
     public function test_getInfo_response_matches_schema(): void
     {
@@ -73,6 +89,49 @@ final class WsImagesTest extends ContractTestCase
         $result = $response['result'];
         self::assertIsArray($result);
         self::assertNull($result['nonexistentmd5sumvalue0000000000']);
+    }
+
+    public function test_exist_returns_id_for_a_known_md5(): void
+    {
+        // CurrentConfig::uniquenessMode()'s default ('md5sum') is what's in
+        // effect here -- no config row override needed.
+        $response = $this->wsAdmin('pwg.images.exist', [
+            'md5sum_list' => self::FIXTURE_IMAGE_MD5,
+        ]);
+
+        $result = $response['result'];
+        self::assertIsArray($result);
+        self::assertSame(self::FIXTURE_IMAGE_ID, $result[self::FIXTURE_IMAGE_MD5]);
+    }
+
+    public function test_exist_in_filename_mode_returns_id_for_a_known_filename(): void
+    {
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('uniqueness_mode', '\"filename\"')
+             ON DUPLICATE KEY UPDATE value = VALUES(value)"
+        );
+        // Raw SQL bypasses ConfigService::confUpdateParam()'s own cache
+        // clear -- CachePools::config() is a real FilesystemAdapter (no
+        // ext-apcu here), files under _data/cache/ visible to both this
+        // process and the Apache worker serving the WS call below, so a
+        // stale cached row would otherwise survive the write.
+        \Piwigo\Cache\CachePools::config()->clear();
+
+        try {
+            $response = $this->wsAdmin('pwg.images.exist', [
+                'filename_list' => 'fixture-photo-1.jpg,nonexistent-file.jpg',
+            ]);
+
+            $result = $response['result'];
+            self::assertIsArray($result);
+            self::assertSame(self::FIXTURE_IMAGE_ID, $result['fixture-photo-1.jpg']);
+            self::assertNull($result['nonexistent-file.jpg']);
+        } finally {
+            $this->conn->executeStatement(
+                "DELETE FROM " . Tables::config() . " WHERE param = 'uniqueness_mode'"
+            );
+            \Piwigo\Cache\CachePools::config()->clear();
+        }
     }
 
     public function test_checkUpload_response_matches_schema(): void

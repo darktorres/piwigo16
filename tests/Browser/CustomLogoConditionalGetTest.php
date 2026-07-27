@@ -26,7 +26,7 @@ function customLogoRawGet(?string $ifModifiedSince = null): array
     if ($ch === false) {
         throw new RuntimeException('curl_init failed');
     }
-    $requestHeaders = ['X-Piwigo-Env: test'];
+    $requestHeaders = H::testHeaders();
     if ($ifModifiedSince !== null) {
         $requestHeaders[] = 'If-Modified-Since: ' . $ifModifiedSince;
     }

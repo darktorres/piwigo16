@@ -2566,6 +2566,18 @@ SELECT path
             return new PwgError(404, 'image_id not found');
         }
         assert(is_string($path));
+        // `path` is stored root-relative (e.g. "upload/2026/.../foo.jpg") --
+        // resolve it to a real filesystem path the same way
+        // formatsDelete()/DerivativeImage do (ImagePathHelper::
+        // getElementPath()), rather than handing the bare DB value straight
+        // to md5_file() below, which silently fails (false, never equal to
+        // any real hash) for every non-remote photo.
+        $path = \Piwigo\Image\ImagePathHelper::getElementPath(
+            [
+                'path' => $path,
+            ],
+            \Piwigo\Bootstrap\PresentationAccessor::urlService()
+        );
 
         $ret = [];
 

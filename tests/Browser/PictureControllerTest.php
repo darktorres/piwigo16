@@ -261,7 +261,7 @@ it('delete_comment succeeds for an anonymous (NULL author_id) comment', function
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
         curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Piwigo-Env: test']);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
         if ($fields !== []) {
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));

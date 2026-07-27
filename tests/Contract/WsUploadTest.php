@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
+
 final class WsUploadTest extends ContractTestCase
 {
     /** 1×1 white PNG, base64-decoded at runtime to avoid binary in source. */
@@ -11,10 +15,13 @@ final class WsUploadTest extends ContractTestCase
 
     private ?int $uploadedImageId = null;
 
+    private Connection $conn;
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
+        $this->conn = DbConnection::build();
         $this->loginAsAdmin();
     }
 
@@ -31,6 +38,58 @@ final class WsUploadTest extends ContractTestCase
         }
 
         parent::tearDown();
+    }
+
+    private function pngBytes(): string
+    {
+        $bytes = base64_decode(self::TINY_PNG_B64, true);
+        self::assertNotFalse($bytes);
+
+        return $bytes;
+    }
+
+    /**
+     * Multipart POST for pwg.images.upload -- $_FILES['file'] is mandatory,
+     * so http_build_query()-based callWs() can't express this request.
+     * @param array<string, mixed> $fields
+     * @return array<string, mixed>
+     */
+    private function uploadMultipart(array $fields): array
+    {
+        $tmpName = tempnam(sys_get_temp_dir(), 'pwg_ct_upload_');
+        self::assertNotFalse($tmpName);
+        $tmpFile = $tmpName . '.png';
+        file_put_contents($tmpFile, $this->pngBytes());
+
+        try {
+            $url = $this->baseUrl . '/ws.php?format=json';
+            $ch  = curl_init($url);
+            self::assertNotFalse($ch);
+
+            $cookieJar = $this->cookieJar();
+            assert($cookieJar !== '');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, array_merge(
+                ['method' => 'pwg.images.upload', 'file' => new \CURLFile($tmpFile, 'image/png', 'upload.png')],
+                $fields
+            ));
+            curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+            curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
+
+            $body = curl_exec($ch);
+            unset($ch);
+        } finally {
+            @unlink($tmpFile);
+        }
+
+        self::assertIsString($body);
+        $decoded = json_decode($body, true);
+        self::assertIsArray($decoded);
+        /** @var array<string, mixed> $decoded */
+        return $decoded;
     }
 
     public function test_addSimple_uploads_image_and_returns_image_id(): void
@@ -153,6 +212,123 @@ final class WsUploadTest extends ContractTestCase
             }
         } finally {
             @unlink($tmpName);
+        }
+    }
+
+    public function test_upload_invalid_token_returns_error(): void
+    {
+        $response = $this->uploadMultipart([
+            'pwg_token' => 'wrong',
+            'category' => 1,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+    }
+
+    public function test_upload_creates_a_new_photo_in_the_category(): void
+    {
+        $response = $this->uploadMultipart([
+            'pwg_token' => $this->getPwgToken(),
+            'category' => 1,
+            'name' => 'Contract Test upload() ' . uniqid(),
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        self::assertSame('add', $result['add_status']);
+        $imageId = $result['image_id'];
+        self::assertIsNumeric($imageId);
+        $this->uploadedImageId = (int) $imageId;
+
+        $category = $result['category'];
+        self::assertIsArray($category);
+        self::assertSame(1, $category['id']);
+        self::assertIsInt($category['nb_photos']);
+        self::assertGreaterThanOrEqual(1, $category['nb_photos']);
+    }
+
+    public function test_upload_format_of_disabled_returns_error(): void
+    {
+        // CurrentConfig::isFormatsEnabled()'s default (false, no 'enable_formats'
+        // row in the fixture) is what's in effect for this WS request.
+        $response = $this->uploadMultipart([
+            'pwg_token' => $this->getPwgToken(),
+            'format_of' => 1,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(401, $response['err']);
+        self::assertSame('formats are disabled', $response['message']);
+    }
+
+    public function test_upload_format_of_with_an_unauthorized_extension_returns_error(): void
+    {
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('enable_formats', 'true')
+             ON DUPLICATE KEY UPDATE value = VALUES(value)"
+        );
+        \Piwigo\Cache\CachePools::config()->clear();
+
+        try {
+            // CurrentConfig::formatExtensions()'s default doesn't include
+            // 'png' -- the extension pulled from the (fake) upload filename
+            // below via $params['name'].
+            $response = $this->uploadMultipart([
+                'pwg_token' => $this->getPwgToken(),
+                'format_of' => 1,
+                'name' => 'photo.png',
+            ]);
+
+            self::assertSame('fail', $response['stat']);
+            self::assertSame(401, $response['err']);
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'enable_formats'");
+            \Piwigo\Cache\CachePools::config()->clear();
+        }
+    }
+
+    public function test_upload_format_of_adds_a_format_to_an_existing_photo(): void
+    {
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('enable_formats', 'true')
+             ON DUPLICATE KEY UPDATE value = VALUES(value)"
+        );
+        \Piwigo\Cache\CachePools::config()->clear();
+
+        $formatId = null;
+        try {
+            $response = $this->uploadMultipart([
+                'pwg_token' => $this->getPwgToken(),
+                'format_of' => 1,
+                'name' => 'photo.tif',
+            ]);
+
+            self::assertSame('ok', $response['stat']);
+            $result = $response['result'];
+            self::assertIsArray($result);
+            self::assertSame(1, $result['image_id']);
+            self::assertSame('add', $result['add_status']);
+
+            $formatId = $this->conn->fetchOne(
+                'SELECT format_id FROM ' . Tables::imageFormat() . ' WHERE image_id = 1 AND ext = ?',
+                ['tif']
+            );
+            self::assertIsNumeric($formatId);
+        } finally {
+            if (is_numeric($formatId)) {
+                // formats.delete (running as the same Apache/www-data process
+                // that wrote the format file) unlinks the real pwg_format/
+                // file on disk too -- a raw SQL DELETE would leave it behind,
+                // owned by www-data and unremovable by this CLI test process.
+                $this->callWs('pwg.images.formats.delete', [
+                    'format_id' => (int) $formatId,
+                    'pwg_token' => $this->getPwgToken(),
+                ]);
+            }
+            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'enable_formats'");
+            \Piwigo\Cache\CachePools::config()->clear();
         }
     }
 }

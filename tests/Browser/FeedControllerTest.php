@@ -74,7 +74,7 @@ function feedRawGet(string $query = ''): array
     }
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HEADER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Piwigo-Env: test']);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     $response = curl_exec($ch);
     if (! is_string($response)) {

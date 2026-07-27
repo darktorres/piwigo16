@@ -30,7 +30,7 @@ function vitalsPostJson(array $payload): int
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload, JSON_THROW_ON_ERROR));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Piwigo-Env: test', 'Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [...H::testHeaders(), 'Content-Type: application/json']);
     curl_exec($ch);
     $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     unset($ch);
@@ -114,7 +114,7 @@ it('silently drops a malformed (non-JSON) body -- still 204, nothing logged', fu
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, 'this is not json{{{');
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Piwigo-Env: test', 'Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [...H::testHeaders(), 'Content-Type: application/json']);
     curl_exec($ch);
     $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     unset($ch);

@@ -54,7 +54,7 @@ it('returns a real JSON content-type header', function (): void {
     expect($ch)->not->toBeFalse();
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HEADER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Piwigo-Env: test']);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
     $response = curl_exec($ch);
     unset($ch);
     expect($response)->toBeString();

@@ -735,9 +735,9 @@ SELECT
                 @unlink($source_filepath);
             }
         }
-        @chmod($format_path, 0644);
+        @chmod($format_abs_path, 0644);
 
-        $file_infos = $this->pwgImageInfos($format_path);
+        $file_infos = $this->pwgImageInfos($format_abs_path);
 
         $insert = [
             'image_id' => $format_of,

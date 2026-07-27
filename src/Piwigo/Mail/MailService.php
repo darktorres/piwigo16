@@ -1066,7 +1066,7 @@ final class MailService implements MailerInterface
             ->setMakeFullUrl();
 
         $message = '<p style="margin: 20px 0">';
-        $message = Lang::t('Someone requested that the password be reset for the following user account:') . ' ' . $username . '</p>';
+        $message .= Lang::t('Someone requested that the password be reset for the following user account:') . ' ' . $username . '</p>';
         $message .= '<p style="margin: 20px 0">' . Lang::t('To reset your password, visit the following address:');
         $message .= ' <a href="' . $passwordLink . '">' . Lang::t('Change my password') . '</a></p>';
         $message .= '<p style="text-align: center; font-size: 70%;">' . $passwordLink . '</p>';

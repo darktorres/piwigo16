@@ -464,6 +464,51 @@ final class BrowserTestHelpers
     }
 
     /**
+     * POSTs to an arbitrary admin.php-style path through the SAME
+     * authenticated browser session, via a same-origin fetch() executed in
+     * the page — same rationale as wsCall(), but for admin form-submission
+     * controllers whose response is a rendered HTML page, not a WS JSON
+     * envelope, and where driving real DOM form fields one at a time would
+     * be slow/brittle for a form with dozens of fields. `redirect: manual`
+     * so a controller's own post-save redirect is reported as a 30x status
+     * with an empty body instead of being silently followed and losing the
+     * real status code — matching what PageState-driven redirects actually
+     * do server-side.
+     *
+     * @param  array<string, mixed>  $fields
+     * @return array{status: int, body: string}
+     */
+    public static function adminPost(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $path, array $fields): array
+    {
+        $body = http_build_query($fields);
+        $url = self::baseUrl() . '/' . ltrim($path, '/');
+        $js = <<<JS
+        fetch('{$url}', {
+            method: 'POST',
+            redirect: 'manual',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: '{$body}'
+        }).then(async r => JSON.stringify({status: r.status, body: await r.text()}))
+        JS;
+
+        $result = $page->script($js);
+        if (!is_string($result)) {
+            throw new ExpectationFailedException(
+                "adminPost to {$path} did not return a string result: " . var_export($result, true)
+            );
+        }
+
+        $decoded = json_decode($result, true);
+        if (!is_array($decoded) || !is_int($decoded['status'] ?? null) || !is_string($decoded['body'] ?? null)) {
+            throw new ExpectationFailedException(
+                "adminPost to {$path} did not return the expected {status, body} shape: " . var_export($result, true)
+            );
+        }
+
+        return ['status' => $decoded['status'], 'body' => $decoded['body']];
+    }
+
+    /**
      * Polls in-browser (via script(), which awaits the returned promise —
      * see wsCall()) until $selector is absent or hidden, instead of racing a
      * single check against an async request. Neither assertSee() nor
@@ -599,6 +644,102 @@ final class BrowserTestHelpers
         $prefix = $prefix !== false ? $prefix : 'piwigo_';
         $db->query(sprintf('UPDATE %simages SET hit = %d WHERE id = %d', $prefix, $value, $imageId));
         $db->close();
+    }
+
+    /**
+     * Reads a single `config`.`value` cell (the raw JSON-encoded string
+     * ConfigService::confUpdateParam() stores, not the decoded value) --
+     * for asserting a real DB write happened after an adminPost()-driven
+     * admin form save, same rationale/mysqli shape as freezeImageHits().
+     */
+    public static function configValue(string $param): ?string
+    {
+        $db = new \mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $prefix = getenv('PIWIGO_DB_PREFIX');
+        $prefix = $prefix !== false ? $prefix : 'piwigo_';
+        $result = $db->query(sprintf(
+            "SELECT value FROM %sconfig WHERE param = '%s'",
+            $prefix,
+            $db->real_escape_string($param)
+        ));
+        $value = null;
+        if ($result instanceof \mysqli_result) {
+            $row = $result->fetch_assoc();
+            if (is_array($row) && is_string($row['value'] ?? null)) {
+                $value = $row['value'];
+            }
+        }
+        $db->close();
+
+        return $value;
+    }
+
+    /**
+     * Writes (or clears, when $rawJsonValue is null) a single `config`.
+     * `value` cell directly, and clears the config cache pool -- the
+     * counterpart to configValue(), for restoring a config param an
+     * adminPost()-driven test mutated back to its pre-test value. `config`
+     * is shared, global state across the whole Browser suite run (unlike
+     * Contract's per-test-file fixture reset), so any test that saves a
+     * real admin form must snapshot + restore whatever it touches.
+     */
+    public static function setConfigValue(string $param, ?string $rawJsonValue): void
+    {
+        $db = new \mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $prefix = getenv('PIWIGO_DB_PREFIX');
+        $prefix = $prefix !== false ? $prefix : 'piwigo_';
+        if ($rawJsonValue === null) {
+            $db->query(sprintf(
+                "UPDATE %sconfig SET value = NULL WHERE param = '%s'",
+                $prefix,
+                $db->real_escape_string($param)
+            ));
+        } else {
+            $db->query(sprintf(
+                "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON DUPLICATE KEY UPDATE value = VALUES(value)",
+                $prefix,
+                $db->real_escape_string($param),
+                $db->real_escape_string($rawJsonValue)
+            ));
+        }
+        $db->close();
+        CachePools::config()->clear();
+    }
+
+    /**
+     * Captures the current value of each given config param, for restoring
+     * via restoreConfig() after a test that saves a real admin form --
+     * config is shared, global state across the whole Browser suite run.
+     *
+     * @param  list<string>  $params
+     * @return array<string, ?string>
+     */
+    public static function snapshotConfig(array $params): array
+    {
+        $snapshot = [];
+        foreach ($params as $param) {
+            $snapshot[$param] = self::configValue($param);
+        }
+
+        return $snapshot;
+    }
+
+    /** @param array<string, ?string> $snapshot */
+    public static function restoreConfig(array $snapshot): void
+    {
+        foreach ($snapshot as $param => $value) {
+            self::setConfigValue($param, $value);
+        }
     }
 
     /**

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Comment\Projection\Comment;
+use Piwigo\Common\ValueObject\CommentId;
 
 /**
  * @return array<string, mixed>
@@ -26,7 +27,7 @@ function fullCommentRow(): array
 test('fromRow narrows every column to its real type', function (): void {
     $comment = Comment::fromRow(fullCommentRow());
 
-    expect($comment->id)->toBe(2)
+    expect($comment->id)->toEqual(CommentId::from(2))
         ->and($comment->author)->toBe('regular_user')
         ->and($comment->authorId)->toBe(3)
         ->and($comment->userEmail)->toBe('regular@example.test')
@@ -54,12 +55,29 @@ test('fromRow defaults every nullable column to null when absent, and validated 
         ->and($comment->email)->toBeNull()
         ->and($comment->content)->toBeNull()
         ->and($comment->validated)->toBeFalse();
-    // The NOT NULL columns (id/image_id) fall back to their type's zero
-    // value instead, matching every other narrowing helper in this codebase
-    // (is_numeric(...) ? (int) ... : 0, etc.) -- never actually null for a
-    // real fetched row, since these are NOT NULL DB columns; this only
-    // guards a malformed/partial row.
+    // image_id (still plain int) falls back to its type's zero value,
+    // matching every other narrowing helper in this codebase -- never
+    // actually null for a real fetched row, since it's a NOT NULL DB
+    // column; this only guards a malformed/partial row. id is CommentId
+    // now and can't silently default to zero -- see the dedicated
+    // "throws when id is invalid" test below.
 });
+
+test('fromRow throws when id is missing', function (): void {
+    // Behavior change, deliberate: id is a CommentId now, and
+    // CommentId::from(0) always throws (0 was never a valid id) -- the
+    // previous "silently default id to 0" contract is structurally
+    // impossible to keep once the field is really typed. Unlike Group's
+    // own fromRow(), this one has exactly one real, production caller
+    // (CommentRepository::findForImage()), whose `com.id` column is
+    // always the table's own NOT NULL primary key -- a missing id can't
+    // actually occur for a real fetched row, so a loud failure here is
+    // safe and correct, not a behavior change any real caller could hit.
+    $row = fullCommentRow();
+    $row['id'] = null;
+
+    Comment::fromRow($row);
+})->throws(InvalidArgumentException::class);
 
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = Comment::fromRow(fullCommentRow())->toArray();

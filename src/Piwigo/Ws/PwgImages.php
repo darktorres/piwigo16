@@ -19,6 +19,7 @@ use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
+use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
@@ -595,10 +596,10 @@ SELECT id, date, author, content
   LIMIT ' . $params['comments_per_page'] . '
   OFFSET ' . ($params['comments_per_page'] * $params['comments_page']) . '
 ;';
-            foreach ($conn->fetchAllAssociative($query) as $row) {
-                $row['id'] = is_numeric($row['id']) ? (int) $row['id'] : 0;
-                $related_comments[] = $row;
-            }
+            $related_comments = array_map(
+                static fn (CommentSummary $summary): array => $summary->toArray(),
+                array_map(CommentSummary::fromRow(...), $conn->fetchAllAssociative($query))
+            );
         }
 
         $comment_post_data = null;

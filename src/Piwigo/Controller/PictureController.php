@@ -10,6 +10,7 @@ use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
+use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -423,7 +424,7 @@ UPDATE ' . Tables::categories() . '
                     // true, and getCommentAuthorId() calls
                     // fatal_error() (never) in that case instead of
                     // returning
-                    $author_id = $commentService->getCommentAuthorId((int) $pictureRequest->commentToEdit);
+                    $author_id = $commentService->getCommentAuthorId(CommentId::from((int) $pictureRequest->commentToEdit));
                     assert($author_id !== false);
 
                     if (\Piwigo\Auth\AccessControl::canManageComment('edit', $author_id)) {
@@ -475,7 +476,7 @@ UPDATE ' . Tables::categories() . '
 
                         // check_input_parameter()/assert() above already
                         // proved comment_to_edit is numeric.
-                        $edit_comment = (int) $pictureRequest->commentToEdit;
+                        $edit_comment = CommentId::from((int) $pictureRequest->commentToEdit);
                     }
                     break;
 
@@ -493,11 +494,11 @@ UPDATE ' . Tables::categories() . '
 
                     // false is unreachable here: see the edit_comment case
                     // above
-                    $author_id = $commentService->getCommentAuthorId((int) $pictureRequest->commentToDelete);
+                    $author_id = $commentService->getCommentAuthorId(CommentId::from((int) $pictureRequest->commentToDelete));
                     assert($author_id !== false);
 
                     if (\Piwigo\Auth\AccessControl::canManageComment('delete', $author_id)) {
-                        $commentService->deleteComment((int) $pictureRequest->commentToDelete);
+                        $commentService->deleteComment(CommentId::from((int) $pictureRequest->commentToDelete));
                     }
 
                     $this->redirectService->redirect($url_self);
@@ -517,11 +518,11 @@ UPDATE ' . Tables::categories() . '
 
                     // false is unreachable here: see the edit_comment case
                     // above
-                    $author_id = $commentService->getCommentAuthorId((int) $pictureRequest->commentToValidate);
+                    $author_id = $commentService->getCommentAuthorId(CommentId::from((int) $pictureRequest->commentToValidate));
                     assert($author_id !== false);
 
                     if (\Piwigo\Auth\AccessControl::canManageComment('validate', $author_id)) {
-                        $commentService->validateComment((int) $pictureRequest->commentToValidate);
+                        $commentService->validateComment(CommentId::from((int) $pictureRequest->commentToValidate));
                     }
 
                     $this->redirectService->redirect($url_self);

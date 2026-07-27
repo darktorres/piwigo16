@@ -5,13 +5,24 @@ declare(strict_types=1);
 namespace Piwigo\Comment;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\CommentId;
 
 /**
  * Maps the `comments` table (`piwigo_comments` once
  * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
  * `date`/`validationDate` stay plain ?string, not \DateTimeImmutable --
  * every real consumer wants the raw DB DATETIME string form. `validated`
- * is a real boolean column (Comment domain Stage 1a).
+ * is a real boolean column (Comment domain Stage 1a). `author_id` stays
+ * plain ?int -- Stage A1 only types this domain's own CommentId; UserId
+ * propagation across every other domain's foreign-key-shaped column
+ * (this one, Audit\AuditLogEntity::$actorId, Activity\ActivityEntity::
+ * $performedBy, ...) is deliberately out of scope here, same call made
+ * for those two in Stage A-IP.
+ *
+ * `id`'s `comment_id` column type is a custom Doctrine Type
+ * ({@see \Piwigo\Db\Type\CommentIdType}, registered in
+ * EntityManagerFactory::build()) -- same underlying `INT` SQL, but
+ * hydrates straight into a real CommentId VO instead of a raw int.
  */
 #[ORM\Entity(repositoryClass: CommentRepository::class)]
 #[ORM\Table(name: 'comments')]
@@ -19,8 +30,8 @@ final class CommentEntity
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
-    public ?int $id = null;
+    #[ORM\Column(type: 'comment_id')]
+    public ?CommentId $id = null;
 
     public function __construct(
         #[ORM\Column(name: 'image_id', type: 'integer')]

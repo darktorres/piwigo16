@@ -7,6 +7,7 @@ namespace Piwigo\Comment;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Comment\Projection\Comment;
+use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\Env;
 use Piwigo\Db\Tables;
@@ -39,7 +40,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      *   email: ?string,
      * } $data
      */
-    public function insert(array $data): int
+    public function insert(array $data): CommentId
     {
         // Env::now() rather than SQL's NOW() -- see countRecentComments()'s
         // own docblock; date/validation_date must share the same time
@@ -76,7 +77,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * delete_user_comment()'s non-admin restriction). Returns the number of
      * rows actually deleted.
      *
-     * @param array<int, int> $ids
+     * @param list<CommentId> $ids
      */
     public function delete(array $ids, ?int $authorId): int
     {
@@ -84,11 +85,13 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             return 0;
         }
 
+        $rawIds = array_map(static fn (CommentId $id): int => $id->value, $ids);
+
         $qb = $this->getEntityManager()
             ->createQueryBuilder()
             ->delete(CommentEntity::class, 'c')
             ->where('c.id IN (:ids)')
-            ->setParameter('ids', $ids);
+            ->setParameter('ids', $rawIds, ArrayParameterType::INTEGER);
 
         if ($authorId !== null) {
             $qb->andWhere('c.authorId = :authorId')
@@ -111,7 +114,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      *
      * @param array{content: string, websiteUrl: ?string, validated: bool} $data
      */
-    public function update(int $id, array $data, ?int $authorId): bool
+    public function update(CommentId $id, array $data, ?int $authorId): bool
     {
         $qb = $this->getEntityManager()
             ->createQueryBuilder()
@@ -145,7 +148,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * `null` when the comment exists but has no owner (anonymous/guest
      * comment -- author_id allows NULL), otherwise the numeric-string id.
      */
-    public function findAuthorId(int $id): string|null|false
+    public function findAuthorId(CommentId $id): string|null|false
     {
         $entity = $this->find($id);
         if ($entity === null) {
@@ -156,13 +159,15 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * @param array<int, int> $ids
+     * @param list<CommentId> $ids
      */
     public function validate(array $ids): void
     {
         if ($ids === []) {
             return;
         }
+
+        $rawIds = array_map(static fn (CommentId $id): int => $id->value, $ids);
 
         $em = $this->getEntityManager();
         $em->createQueryBuilder()
@@ -172,7 +177,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ->where('c.id IN (:ids)')
             ->setParameter('validated', true)
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
-            ->setParameter('ids', $ids)
+            ->setParameter('ids', $rawIds, ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();

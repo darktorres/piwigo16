@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Comment\Projection;
 
+use Piwigo\Common\ValueObject\CommentId;
+
 /**
  * Typed row shape for `piwigo_comments` (P17-23 Stage 1b, Comment domain --
  * `docs/PLAN.md`'s own "7 Entity types, 73 projection shapes"
@@ -27,11 +29,20 @@ namespace Piwigo\Comment\Projection;
  * nullable, matching the column's own real DEFAULT NULL (or, for
  * `userEmail`, the LEFT JOIN's own "no matching user row" case) --
  * `validated` is the one NOT NULL column, so it isn't.
+ *
+ * `id` is `CommentId`, not `?CommentId` -- unlike Group's own `fromRow()`
+ * (zero real callers when it was typed), this one has exactly one, real,
+ * production caller ({@see \Piwigo\Comment\CommentRepository::findForImage()}),
+ * whose `com.id` column is always the table's own NOT NULL primary key --
+ * a missing/invalid id can't actually occur for a real fetched row, so
+ * `CommentId::from()` throwing on that (structurally impossible) case is
+ * safe. `authorId` stays plain `?int`, not `UserId` -- see CommentEntity's
+ * own docblock.
  */
 final readonly class Comment
 {
     public function __construct(
-        public int $id,
+        public CommentId $id,
         public ?string $author,
         public ?int $authorId,
         public ?string $userEmail,
@@ -48,8 +59,13 @@ final readonly class Comment
      */
     public static function fromRow(array $row): self
     {
+        $id = CommentId::tryFrom($row['id'] ?? null);
+        if ($id === null) {
+            throw new \InvalidArgumentException(sprintf('Expected a positive comment id, got %s', get_debug_type($row['id'] ?? null)));
+        }
+
         return new self(
-            id: is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+            id: $id,
             author: is_string($row['author'] ?? null) ? $row['author'] : null,
             authorId: is_numeric($row['author_id'] ?? null) ? (int) $row['author_id'] : null,
             userEmail: is_string($row['user_email'] ?? null) ? $row['user_email'] : null,
@@ -70,7 +86,7 @@ final readonly class Comment
     public function toArray(): array
     {
         return [
-            'id' => $this->id,
+            'id' => $this->id->value,
             'author' => $this->author,
             'author_id' => $this->authorId,
             'user_email' => $this->userEmail,

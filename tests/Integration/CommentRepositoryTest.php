@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Piwigo\Comment\CommentRepository;
+use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
@@ -51,7 +52,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
             'email' => 'new@example.test',
         ]);
 
-        self::assertGreaterThan(0, $id);
+        self::assertGreaterThan(0, $id->value);
         self::assertSame('A brand new comment.', $this->fetchContent($id));
     }
 
@@ -119,12 +120,12 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
     public function test_find_author_id_returns_false_for_a_missing_comment(): void
     {
-        self::assertFalse($this->repo->findAuthorId(999999));
+        self::assertFalse($this->repo->findAuthorId(CommentId::from(999999)));
     }
 
     public function test_find_author_id_returns_the_numeric_author_id_as_string(): void
     {
-        self::assertSame('1', $this->repo->findAuthorId(1));
+        self::assertSame('1', $this->repo->findAuthorId(CommentId::from(1)));
     }
 
     public function test_validate_marks_the_given_comments_validated(): void
@@ -238,7 +239,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findForImage(2, true, 'id', 'mail_address', 'ASC', 10, 0);
 
         self::assertCount(1, $rows);
-        self::assertSame(2, $rows[0]->id);
+        self::assertEquals(CommentId::from(2), $rows[0]->id);
         self::assertSame(3, $rows[0]->authorId);
         self::assertNull($rows[0]->userEmail);
     }
@@ -254,7 +255,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findForImage(4, false, 'id', 'mail_address', 'ASC', 10, 0);
 
         self::assertCount(1, $rows);
-        self::assertSame(5, $rows[0]->id);
+        self::assertEquals(CommentId::from(5), $rows[0]->id);
     }
 
     public function test_find_for_image_respects_limit_and_offset(): void
@@ -274,7 +275,10 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
         self::assertCount(2, $firstPage);
         self::assertCount(1, $secondPage);
-        $allIds = array_merge(array_column($firstPage, 'id'), array_column($secondPage, 'id'));
+        $allIds = array_map(
+            static fn (CommentId $id): int => $id->value,
+            array_merge(array_column($firstPage, 'id'), array_column($secondPage, 'id'))
+        );
         self::assertCount(3, array_unique($allIds));
     }
 
@@ -291,7 +295,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
      *
      * @param array{authorId?: int, validated?: bool} $overrides
      */
-    private function insertFixtureComment(array $overrides = []): int
+    private function insertFixtureComment(array $overrides = []): CommentId
     {
         return $this->repo->insert([
             'author' => 'disposable_author',
@@ -305,26 +309,26 @@ final class CommentRepositoryTest extends IntegrationTestCase
         ]);
     }
 
-    private function fetchContent(int $commentId): ?string
+    private function fetchContent(CommentId $commentId): ?string
     {
         $value = $this->conn->createQueryBuilder()
             ->select('content')
             ->from(Tables::comments())
             ->where('id = :id')
-            ->setParameter('id', $commentId)
+            ->setParameter('id', $commentId->value)
             ->executeQuery()
             ->fetchOne();
 
         return is_string($value) ? $value : null;
     }
 
-    private function fetchValidated(int $commentId): ?int
+    private function fetchValidated(CommentId $commentId): ?int
     {
         $value = $this->conn->createQueryBuilder()
             ->select('validated')
             ->from(Tables::comments())
             ->where('id = :id')
-            ->setParameter('id', $commentId)
+            ->setParameter('id', $commentId->value)
             ->executeQuery()
             ->fetchOne();
 

@@ -8,6 +8,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Auth\EphemeralKeyService;
     use Piwigo\Comment\CommentRepository;
     use Piwigo\Comment\CommentService;
+    use Piwigo\Common\ValueObject\CommentId;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
@@ -270,14 +271,14 @@ namespace Piwigo\Tests\Integration {
         {
             CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Admin));
 
-            self::assertFalse($this->service->deleteComment(999999));
+            self::assertFalse($this->service->deleteComment(CommentId::from(999999)));
         }
 
         public function test_delete_comment_removes_as_admin(): void
         {
             CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Admin));
 
-            self::assertTrue($this->service->deleteComment(3));
+            self::assertTrue($this->service->deleteComment(CommentId::from(3)));
             self::assertNull($this->fetchColumn(3, 'content'));
         }
 
@@ -285,7 +286,7 @@ namespace Piwigo\Tests\Integration {
         {
             CurrentUser::set(User::fromUserArray(['id' => 999, 'status' => 'normal', 'username' => 'someone-else']));
 
-            self::assertFalse($this->service->deleteComment(4)); // owned by author_id 4
+            self::assertFalse($this->service->deleteComment(CommentId::from(4))); // owned by author_id 4
             self::assertNotNull($this->fetchColumn(4, 'content'));
         }
 
@@ -293,7 +294,7 @@ namespace Piwigo\Tests\Integration {
         {
             CurrentUser::set(User::fromUserArray(['id' => 4, 'status' => 'normal', 'username' => 'power_user']));
 
-            self::assertTrue($this->service->deleteComment(4));
+            self::assertTrue($this->service->deleteComment(CommentId::from(4)));
         }
 
         // --- validateComment() ----------------------------------------------
@@ -302,7 +303,7 @@ namespace Piwigo\Tests\Integration {
         {
             self::assertSame(0, $this->fetchValidated(5));
 
-            $this->service->validateComment(5);
+            $this->service->validateComment(CommentId::from(5));
 
             self::assertSame(1, $this->fetchValidated(5));
         }
@@ -311,12 +312,12 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_comment_author_id_returns_the_owner(): void
         {
-            self::assertSame(1, $this->service->getCommentAuthorId(1));
+            self::assertSame(1, $this->service->getCommentAuthorId(CommentId::from(1)));
         }
 
         public function test_get_comment_author_id_returns_false_without_dying_when_missing(): void
         {
-            self::assertFalse($this->service->getCommentAuthorId(999999, false));
+            self::assertFalse($this->service->getCommentAuthorId(CommentId::from(999999), false));
         }
 
         /**
@@ -333,13 +334,13 @@ namespace Piwigo\Tests\Integration {
         {
             $id = $this->insertAnonymousComment();
 
-            self::assertNull($this->service->getCommentAuthorId($id));
+            self::assertNull($this->service->getCommentAuthorId(CommentId::from($id)));
         }
 
         public function test_get_comment_author_id_null_flows_safely_into_can_manage_comment(): void
         {
             $id = $this->insertAnonymousComment();
-            $authorId = $this->service->getCommentAuthorId($id);
+            $authorId = $this->service->getCommentAuthorId(CommentId::from($id));
             self::assertNotFalse($authorId); // dieOnError defaults to true; see getCommentAuthorId()'s docblock
 
             self::assertFalse(\Piwigo\Auth\AccessControl::canManageComment('edit', $authorId));

@@ -6,6 +6,7 @@ namespace Piwigo\Comment;
 
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -280,14 +281,14 @@ final readonly class CommentService
                 'websiteUrl' => $websiteUrl,
                 'email' => $email,
             ]);
-            $comm['id'] = $id;
+            $comm['id'] = $id->value;
 
             $this->invalidateNbCommentsCache();
 
             $emailAdminOnComment = \Piwigo\Config\CurrentConfig::emailAdminOnComment() && $commentAction === 'validate';
             $emailAdminOnValidation = \Piwigo\Config\CurrentConfig::emailAdminOnCommentValidation() && $commentAction === 'moderate';
             if ($emailAdminOnComment || $emailAdminOnValidation) {
-                $commentUrl = $this->urlService->getAbsoluteRootUrl() . 'comments.php?comment_id=' . $id;
+                $commentUrl = $this->urlService->getAbsoluteRootUrl() . 'comments.php?comment_id=' . $id->value;
 
                 $keyargsContent = [
                     Lang::buildArgs('Author: %s', stripslashes($author)),
@@ -316,12 +317,12 @@ final readonly class CommentService
      *   only admin can delete all comments
      *   other users can delete their own comments
      *
-     * @param int|array<int, int> $commentId
+     * @param CommentId|list<CommentId> $commentId
      * @return bool false if nothing deleted
      */
-    public function deleteComment(int|array $commentId): bool
+    public function deleteComment(CommentId|array $commentId): bool
     {
-        $ids = is_array($commentId) ? array_values(array_map(intval(...), $commentId)) : [$commentId];
+        $ids = is_array($commentId) ? $commentId : [$commentId];
 
         $authorId = null;
         if (! \Piwigo\Auth\AccessControl::isAdmin()) {
@@ -334,13 +335,21 @@ final readonly class CommentService
 
         $this->invalidateNbCommentsCache();
 
+        // EventDispatcher/emailAdmin() are cross-boundary sinks (plugin
+        // events, a generic untyped $comment array) -- unwrap ->value
+        // explicitly rather than rely on Stringable, same rule as every
+        // other Smarty/JSON/plugin-event boundary in this codebase.
+        $rawCommentId = is_array($commentId)
+            ? array_map(static fn (CommentId $id): int => $id->value, $commentId)
+            : $commentId->value;
+
         $username = \Piwigo\Users\CurrentUser::get()->username;
         $this->emailAdmin('delete', [
             'author' => $username,
-            'comment_id' => $commentId,
+            'comment_id' => $rawCommentId,
         ]);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('user_comment_deletion', $commentId);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('user_comment_deletion', $rawCommentId);
 
         return true;
     }
@@ -417,9 +426,13 @@ final readonly class CommentService
 
             $content = is_string($comment['content']) ? $comment['content'] : '';
             $websiteUrl = ! self::emptyValue($comment['website_url'] ?? null) && is_string($comment['website_url']) ? $comment['website_url'] : null;
-            $commentId = is_numeric($comment['comment_id'] ?? null) ? (int) $comment['comment_id'] : 0;
+            $commentId = CommentId::tryFrom($comment['comment_id'] ?? null);
 
-            $updated = $this->repo->update(
+            // A missing/invalid comment_id never matches a real row anyway
+            // (ids start at 1) -- skip the query entirely rather than
+            // calling update() with a sentinel, same outcome ($updated ===
+            // false) the original's own `?? 0` default produced.
+            $updated = $commentId !== null && $this->repo->update(
                 $commentId,
                 [
                     'content' => $content,
@@ -431,7 +444,9 @@ final readonly class CommentService
 
             // mail admin and ask to validate the comment
             if ($updated && \Piwigo\Config\CurrentConfig::emailAdminOnCommentValidation() && $commentAction === 'moderate') {
-                $commentUrl = $this->urlService->getAbsoluteRootUrl() . 'comments.php?comment_id=' . $commentId;
+                // $updated === true only when $commentId !== null (short-circuit above) --
+                // PHPStan already narrows this without an assert().
+                $commentUrl = $this->urlService->getAbsoluteRootUrl() . 'comments.php?comment_id=' . $commentId->value;
 
                 $keyargsContent = [
                     Lang::buildArgs('Author: %s', stripslashes($username)),
@@ -503,7 +518,7 @@ final readonly class CommentService
      *   comment) -- these are distinct states, see
      *   CommentRepository::findAuthorId()
      */
-    public function getCommentAuthorId(int $commentId, bool $dieOnError = true): int|null|false
+    public function getCommentAuthorId(CommentId $commentId, bool $dieOnError = true): int|null|false
     {
         $value = $this->repo->findAuthorId($commentId);
 
@@ -525,15 +540,21 @@ final readonly class CommentService
     /**
      * Tries to validate a user comment.
      *
-     * @param int|array<int, int> $commentId
+     * @param CommentId|list<CommentId> $commentId
      */
-    public function validateComment(int|array $commentId): void
+    public function validateComment(CommentId|array $commentId): void
     {
-        $ids = is_array($commentId) ? array_values(array_map(intval(...), $commentId)) : [$commentId];
+        $ids = is_array($commentId) ? $commentId : [$commentId];
 
         $this->repo->validate($ids);
         $this->invalidateNbCommentsCache();
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('user_comment_validation', $commentId);
+
+        // EventDispatcher is a plugin-event boundary -- unwrap ->value
+        // explicitly, same rule as deleteComment()'s own identical case.
+        $rawCommentId = is_array($commentId)
+            ? array_map(static fn (CommentId $id): int => $id->value, $commentId)
+            : $commentId->value;
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('user_comment_validation', $rawCommentId);
     }
 
     /**

@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Comment\CommentRepository;
+use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
@@ -198,7 +199,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         ));
     }
 
-    private function insertComment(int $imageId, int $authorId, string $content): int
+    private function insertComment(int $imageId, int $authorId, string $content): CommentId
     {
         return $this->commentRepo->insert([
             'author' => 'fixture_user_' . $authorId,
@@ -226,14 +227,14 @@ final class PictureCommentRendererTest extends IntegrationTestCase
      * @param list<mixed> $rows
      * @return array<int|string, mixed>
      */
-    private function findRenderedRow(array $rows, int $commentId): array
+    private function findRenderedRow(array $rows, CommentId $commentId): array
     {
         foreach ($rows as $row) {
-            if (is_array($row) && ($row['ID'] ?? null) === $commentId) {
+            if (is_array($row) && ($row['ID'] ?? null) === $commentId->value) {
                 return $row;
             }
         }
 
-        self::fail("no rendered row found for comment id {$commentId}");
+        self::fail("no rendered row found for comment id {$commentId->value}");
     }
 }

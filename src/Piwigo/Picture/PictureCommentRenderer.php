@@ -7,6 +7,7 @@ namespace Piwigo\Picture;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
+use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -71,7 +72,7 @@ final class PictureCommentRenderer
      *   native DBAL int -- only `uppercats`/`status`/`global_rank` are
      *   genuinely string|null.
      */
-    public function render(?int $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self): void
+    public function render(?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -229,7 +230,7 @@ final class PictureCommentRenderer
 
                 $tplComment =
                   [
-                      'ID' => $row->id,
+                      'ID' => $row->id->value,
                       'AUTHOR' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_author', $author),
                       'DATE' => \Piwigo\Core\DateHelper::formatDate($rowDate, ['day_name', 'day', 'month', 'year', 'time']),
                       'CONTENT' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_content', $row->content),
@@ -246,7 +247,7 @@ final class PictureCommentRenderer
                         $url_self,
                         [
                             'action' => 'delete_comment',
-                            'comment_to_delete' => $row->id,
+                            'comment_to_delete' => $row->id->value,
                             'pwg_token' => new \Piwigo\Csrf\CsrfService()
                                 ->getToken(),
                         ]
@@ -257,10 +258,10 @@ final class PictureCommentRenderer
                         $url_self,
                         [
                             'action' => 'edit_comment',
-                            'comment_to_edit' => $row->id,
+                            'comment_to_edit' => $row->id->value,
                         ]
                     );
-                    if ($editCommentId !== null and $row->id === $editCommentId) {
+                    if ($editCommentId !== null and $row->id->equals($editCommentId)) {
                         $tplComment['IN_EDIT'] = true;
                         $key = new \Piwigo\Auth\EphemeralKeyService()
                             ->generate(2, (string) $imageId);
@@ -278,7 +279,7 @@ final class PictureCommentRenderer
                             $url_self,
                             [
                                 'action' => 'validate_comment',
-                                'comment_to_validate' => $row->id,
+                                'comment_to_validate' => $row->id->value,
                                 'pwg_token' => new \Piwigo\Csrf\CsrfService()
                                     ->getToken(),
                             ]

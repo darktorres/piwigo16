@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
+use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -242,7 +243,8 @@ final class CommentsController implements ControllerInterface
         $commentService = new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->urlService);
 
         if (isset($action) and $comment_id !== null) {
-            $comment_author_id = $commentService->getCommentAuthorId($comment_id);
+            $commentIdVo = CommentId::from($comment_id);
+            $comment_author_id = $commentService->getCommentAuthorId($commentIdVo);
             // die_on_error defaults to true, so false is unreachable here
             assert($comment_author_id !== false);
 
@@ -252,14 +254,14 @@ final class CommentsController implements ControllerInterface
                 if ($action === 'delete') {
                     new \Piwigo\Csrf\CsrfService()
                         ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
-                    $commentService->deleteComment($comment_id);
+                    $commentService->deleteComment($commentIdVo);
                     $perform_redirect = true;
                 }
 
                 if ($action === 'validate') {
                     new \Piwigo\Csrf\CsrfService()
                         ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
-                    $commentService->validateComment($comment_id);
+                    $commentService->validateComment($commentIdVo);
                     $perform_redirect = true;
                 }
 

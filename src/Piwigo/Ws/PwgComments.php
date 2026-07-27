@@ -13,6 +13,7 @@ namespace Piwigo\Ws;
 
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentService;
+use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Core\Lang;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
@@ -292,8 +293,8 @@ GROUP BY author_id
             return new PwgError(403, Lang::t('Invalid security token'));
         }
 
-        $params['comment_id'] = array_unique($params['comment_id']);
-        self::commentService()->deleteComment($params['comment_id']);
+        $commentIds = array_values(array_map(CommentId::from(...), array_unique($params['comment_id'])));
+        self::commentService()->deleteComment($commentIds);
         return 'Comment successfully deleted';
     }
 
@@ -312,8 +313,8 @@ GROUP BY author_id
             return new PwgError(403, Lang::t('Invalid security token'));
         }
 
-        $params['comment_id'] = array_unique($params['comment_id']);
-        self::commentService()->validateComment($params['comment_id']);
+        $commentIds = array_values(array_map(CommentId::from(...), array_unique($params['comment_id'])));
+        self::commentService()->validateComment($commentIds);
         return 'Comment successfully validated';
     }
 

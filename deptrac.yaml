@@ -48,13 +48,20 @@ deptrac:
     # layer -- same "technical, cross-cutting capability, injected INTO
     # L2a/L2b, never the reverse" shape as Cache/Session/Storage/Audit
     # above, so L1Infrastructure is both the lowest layer that covers
-    # every real caller and the architecturally correct fit.
+    # every real caller and the architecturally correct fit. EventHandler
+    # (EventDispatcher's own handler-registration DTO, constructed only by
+    # EventDispatcher itself) rides along in the same collector -- without
+    # it, this one class in the namespace has no layer at all and every
+    # dependency touching it goes unchecked (confirmed via `deptrac analyse
+    # --report-uncovered`: this was the entire first-party coverage gap in
+    # this file before being closed here). Any future class added to this
+    # namespace needs the same deliberate placement, not a silent gap.
     - name: L1Infrastructure
       collectors:
         - type: classLike
           value: ^Piwigo\\(Config|Core|Db|Cache|Session|Backup|Lang|Storage|Audit|Validation)\\.*
         - type: classLike
-          value: ^Piwigo\\PluginConfig\\EventDispatcher$
+          value: ^Piwigo\\PluginConfig\\(EventDispatcher|EventHandler)$
     # L2a Core Domain — Auth/Image land here in P6; Users/Permission/Category/
     # Tag are later-phase additions. Group lands in P18 (Piwigo\Group\
     # GroupRepository/GroupService) -- must sit at this layer, not the more
@@ -133,13 +140,19 @@ deptrac:
     # comment there; PluginRepository stays here since its only real
     # caller (Admin\PluginLoader; the legacy Admin\plugins.php god-class
     # was retired in Legacy Coupling Retirement Phase 8, 8j) is
-    # L4Integration, already legally above L2b.
+    # L4Integration, already legally above L2b. PluginEntity (the ORM
+    # entity Admin\PluginLoader actually fetches via the EntityManager) and
+    # Projection\Plugin (PluginRepository's own read-shape DTO) ride along
+    # in the same collector, same reasoning as EventHandler riding with
+    # EventDispatcher above -- left unassigned, these two had zero layer
+    # at all and every dependency touching them went unchecked (confirmed
+    # via `deptrac analyse --report-uncovered`).
     - name: L2bExtendedDomain
       collectors:
         - type: classLike
           value: ^Piwigo\\(Search|Calendar|Site|Url|Csrf|Permalink|Feed|Filter|Comment|Rate|Caddie|History|Activity|Notification|Metadata|Telemetry|Section)\\.*
         - type: classLike
-          value: ^Piwigo\\PluginConfig\\PluginRepository$
+          value: ^Piwigo\\PluginConfig\\(PluginRepository|PluginEntity|Projection\\Plugin)$
     # L3 Presentation — Menu/Template land here in P6; Http (incl.
     # Http\Middleware) and Routing land here in P9 -- Routing wasn't
     # pre-anticipated in P6's list, but Http\RoutingMiddleware depends on

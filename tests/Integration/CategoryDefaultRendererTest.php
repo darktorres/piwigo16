@@ -235,24 +235,10 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // just that some prefix is absent.
         $this->setImageHit(3, 17);
 
-        // show_nb_hits=true makes thumbnails.tpl assign+display NB_HITS,
-        // which the real (unmigrated) template renders via
-        // `$pwg->l10n_dec(...)` -- a genuinely pre-existing deprecation in
-        // that theme template/PwgTemplateAdapter (outside this test's
-        // assigned files: it calls the deprecated method directly instead
-        // of the "translate_dec" modifier its own #[\Deprecated] attribute
-        // points to), not anything in CategoryDefaultRenderer's own logic.
-        // Same "swallow a real, expected, unrelated diagnostic for the
-        // duration of one call" technique as
-        // tests/Unit/Admin/Image/ImageGdTest.php's own set_error_handler()
-        // use, since a plain `@` doesn't suppress it under this suite's
-        // failOnDeprecation="true".
-        set_error_handler(static fn (): bool => true, E_DEPRECATED);
-        try {
-            $this->renderer->render([3], 0, 1, 'most_visited');
-        } finally {
-            restore_error_handler();
-        }
+        // show_nb_hits=true makes thumbnails.tpl assign+display NB_HITS via
+        // the "translate_dec" modifier (fixed bug: it used to call the
+        // deprecated $pwg->l10n_dec() method directly).
+        $this->renderer->render([3], 0, 1, 'most_visited');
 
         $html = $this->renderedThumbnailsHtml();
         self::assertStringNotContainsString('(17) Photo 3', $html);
@@ -260,5 +246,23 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // Confirms NB_HITS actually reached the template with the real,
         // distinct per-image value (not just that no prefix rendered).
         self::assertStringContainsString('17 hits', $html);
+    }
+
+    public function test_render_shows_the_validated_comment_count_when_show_nb_comments_is_enabled(): void
+    {
+        $this->seedUser(showNbHits: false, showNbComments: true);
+
+        // fixture: image id 3 has exactly one comment (id 3), already
+        // validated -- activate_comments is 'true' in the fixture config,
+        // so countValidatedByImageIds() reaches this real row.
+        $this->renderer->render([3], 0, 1, '');
+
+        $html = $this->renderedThumbnailsHtml();
+        // thumbnails.tpl renders NB_COMMENTS via the "translate_dec"
+        // modifier (fixed bug: it used to call the deprecated
+        // $pwg->l10n_dec() method directly) -- exercises the other of the
+        // 2 call sites that bug touched (NB_HITS is covered above).
+        self::assertStringContainsString('1 comment', $html);
+        self::assertStringNotContainsString('1 comments', $html);
     }
 }

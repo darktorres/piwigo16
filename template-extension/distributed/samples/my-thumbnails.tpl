@@ -17,14 +17,14 @@
 		{if isset($thumbnail.NB_COMMENTS)}
 		<span class="{if 0==$thumbnail.NB_COMMENTS}zero {/if}nb-comments">
 		<br>
-		{$pwg->l10n_dec('%d comment', '%d comments',$thumbnail.NB_COMMENTS)}
+		{$thumbnail.NB_COMMENTS|translate_dec:'%d comment':'%d comments'}
 		</span>
 		{/if}
 
 		{if isset($thumbnail.NB_HITS)}
 		<span class="{if 0==$thumbnail.NB_HITS}zero {/if}nb-hits">
 		<br>
-		{$pwg->l10n_dec('%d hit', '%d hits',$thumbnail.NB_HITS)}
+		{$thumbnail.NB_HITS|translate_dec:'%d hit':'%d hits'}
 		</span>
 		{/if}
 		</span>

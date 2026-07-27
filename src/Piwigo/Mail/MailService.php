@@ -62,6 +62,14 @@ use Symfony\Component\Mime\Email;
 final class MailService implements MailerInterface
 {
     /**
+     * A real visitor's synchronous HTTP request (e.g. RegisterController's
+     * "email me my connection settings" registration option) must never
+     * hang indefinitely on a slow/unreachable mail transport -- see
+     * buildMailer()'s own docblock.
+     */
+    private const MAIL_TRANSPORT_TIMEOUT_SECONDS = 10.0;
+
+    /**
      * P23 batch 8f-4: replaces the 2 deliberately-bare
      * get_webmaster_mail_address() calls (free function deleted with
      * include/functions.inc.php). Optional-with-lazy-default rather than
@@ -944,7 +952,7 @@ final class MailService implements MailerInterface
             $dsn = 'native://default';
         }
 
-        $mailer = new Mailer(Transport::fromDsn($dsn));
+        $mailer = $this->buildMailer($dsn);
 
         $ret = true;
         $errorMessage = null;
@@ -967,6 +975,34 @@ final class MailService implements MailerInterface
         }
 
         return $ret;
+    }
+
+    /**
+     * Transport::fromDsn('native://default') (used whenever no SMTP host
+     * is configured, PHPMailer's own former default too) resolves to
+     * Symfony's own SendmailTransport whenever `sendmail_path` is set --
+     * which shells out via a raw proc_open() with NO timeout mechanism at
+     * all, and can block the entire synchronous HTTP request indefinitely
+     * if the local MTA hangs trying to actually deliver (rather than
+     * failing fast) -- see BoundedSendmailTransport's own docblock for the
+     * confirmed reproduction. Swapped for that bounded replacement here.
+     *
+     * The `smtp://` DSN path (a real, explicitly admin-configured SMTP
+     * host) is unaffected -- Symfony's own SocketStream already has an
+     * implicit connect/read timeout (`default_socket_timeout`) and, unlike
+     * SendmailTransport, is `@internal` upstream with no supported way to
+     * tighten that bound from outside the Mailer component.
+     */
+    private function buildMailer(string $dsn): Mailer
+    {
+        if ($dsn === 'native://default') {
+            $sendmailPath = (string) ini_get('sendmail_path');
+            if ($sendmailPath !== '') {
+                return new Mailer(new BoundedSendmailTransport($sendmailPath, self::MAIL_TRANSPORT_TIMEOUT_SECONDS));
+            }
+        }
+
+        return new Mailer(Transport::fromDsn($dsn));
     }
 
     /**

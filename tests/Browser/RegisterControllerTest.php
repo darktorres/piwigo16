@@ -22,31 +22,32 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * reproduction) unambiguous and independent of any browser-tooling
  * behavior.
  *
- * CONFIRMED REAL BUG, found while writing this file (reproduced directly
- * with a bare curl request, independent of Pest/Playwright entirely, before
- * writing any assertion around it): submitting the register form with
- * `send_password_by_mail` checked -- register.tpl's own checkbox is
- * `checked="checked"` UNCONDITIONALLY, so this is what every real browser
- * submission sends by default, not an edge case -- makes the request hang
- * for minutes (observed >2 minutes before being killed; never confirmed to
- * resolve on its own) instead of responding. UserService::registerUser()'s
- * mail-sending path has no timeout of its own around MailService::mail()'s
- * underlying transport in this environment, so a slow/unreachable mail
- * transport blocks the entire HTTP response indefinitely -- a real visitor
- * submitting the default registration form would see their browser hang,
- * not a slow-but-completing request. Every POST below deliberately omits
- * `send_password_by_mail` to stay fast and reliable, which is itself the
- * workaround for this bug, not a coverage gap: the checked-by-default
- * branch is real and worth fixing (e.g. a bounded transport timeout, or
- * dispatching the welcome email asynchronously) but is out of scope for a
- * Browser-test-only change.
+ * Regression coverage for a fixed bug, found while writing this file
+ * (reproduced directly with a bare curl request, independent of Pest/
+ * Playwright entirely, before writing any assertion around it): submitting
+ * the register form with `send_password_by_mail` checked -- register.tpl's
+ * own checkbox is `checked="checked"` UNCONDITIONALLY, so this is what
+ * every real browser submission sends by default, not an edge case -- used
+ * to make the request hang for minutes (observed >2 minutes before being
+ * killed; never confirmed to resolve on its own) instead of responding.
+ * UserService::registerUser()'s mail-sending path went through
+ * MailService::mail()'s underlying transport with no timeout of its own in
+ * this environment (no smtp_host configured -> Symfony Mailer's own
+ * SendmailTransport, an unbounded proc_open() around the local `sendmail`
+ * binary), so a slow/unreachable local MTA blocked the entire HTTP
+ * response indefinitely. Fixed by Piwigo\Mail\BoundedSendmailTransport
+ * (see its own docblock) -- MailService::mail() now always completes (or
+ * fails) within a bounded ~10s regardless of transport health. Most POSTs
+ * below still omit `send_password_by_mail` to stay fast when they're
+ * testing something else entirely; the one dedicated test below exercises
+ * the checked-by-default path itself.
  */
 
 /**
  * @param array<string, string> $fields
  * @return array{status: int, body: string}
  */
-function registerCurl(string $cookieJar, string $path, array $fields = []): array
+function registerCurl(string $cookieJar, string $path, array $fields = [], ?int $timeoutSeconds = null): array
 {
     if ($cookieJar === '') {
         throw new RuntimeException('registerCurl(): cookieJar must not be empty');
@@ -61,6 +62,9 @@ function registerCurl(string $cookieJar, string $path, array $fields = []): arra
     curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Piwigo-Env: test']);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    if ($timeoutSeconds !== null) {
+        curl_setopt($ch, CURLOPT_TIMEOUT, $timeoutSeconds);
+    }
     if ($fields !== []) {
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
@@ -131,8 +135,9 @@ it('registers a brand-new user, auto-logs them in, and creates the real DB row',
 
     expect(registerUserExists($username))->toBeFalse();
 
-    // send_password_by_mail deliberately omitted -- see this file's own
-    // docblock (CONFIRMED REAL BUG: it hangs the request for minutes).
+    // send_password_by_mail omitted here -- this test isn't about mail,
+    // see the dedicated regression test below for that checked-by-default
+    // path specifically.
     $result = registerCurl($jar, '/register.php', [
         'login' => $username,
         'password' => $password,
@@ -153,23 +158,54 @@ it('registers a brand-new user, auto-logs them in, and creates the real DB row',
     @unlink($jar);
 });
 
-it('CONFIRMED BUG: shows "passwords do not match" but STILL creates the account with the first password', function (): void {
-    // RegisterController's own password-mismatch check
-    // (`$post_password_raw !== $post_password_conf_raw`) only ever appends
-    // to $errors['register_form_error'] -- it never gates the very next,
-    // unconditional call to `$userService->registerUser($post_login,
-    // $post_password, ...)` a few lines later. Only the FINAL redirect
-    // (`if (count($errors) === 0) { redirect(...); }`) is gated on $errors
-    // being empty -- by which point registerUser() has already run and
-    // created the real account (using $post_password, the FIRST password
-    // field, ignoring the confirmation entirely). A real user who mistypes
-    // their password confirmation sees "The passwords do not match" and
-    // reasonably assumes registration didn't happen -- but it did, silently,
-    // with the password they typed into the first field. Reproduced live
-    // (both via a real Pest run and independently confirmed by reading the
-    // exact call order in RegisterController::__invoke()) before writing
-    // this assertion -- this documents the real, current, buggy behavior
-    // rather than the obviously-intended one.
+it('registers successfully within a bounded time even with send_password_by_mail checked', function (): void {
+    // Regression test for a fixed bug -- see this file's own docblock.
+    // This environment has no smtp_host configured, so the welcome email
+    // goes through Piwigo\Mail\BoundedSendmailTransport, whose real local
+    // `sendmail` binary hangs trying to actually deliver -- registration
+    // must still complete (the email send failure is tolerated, not
+    // fatal) well within BoundedSendmailTransport's own bound, not the
+    // >2-minute hang this used to take.
+    $jar = registerFreshCookieJar();
+    $get = registerCurl($jar, '/register.php');
+    $key = registerExtractKey($get['body']);
+    sleep(7);
+
+    $username = 'browser_reg_mail_' . uniqid();
+    $email = $username . '@example.test';
+    $password = 'S3cure!Pass_' . uniqid();
+
+    expect(registerUserExists($username))->toBeFalse();
+
+    $start = hrtime(true);
+    $result = registerCurl($jar, '/register.php', [
+        'login' => $username,
+        'password' => $password,
+        'password_conf' => $password,
+        'mail_address' => $email,
+        'key' => $key,
+        'submit' => 'Register',
+        'send_password_by_mail' => 'on',
+    ], timeoutSeconds: 30);
+    $elapsedSeconds = (hrtime(true) - $start) / 1_000_000_000;
+
+    expect($result['status'])->toBe(200);
+    expect($result['body'])->toContain('act=logout');
+    expect(registerUserExists($username))->toBeTrue();
+    expect($elapsedSeconds)->toBeLessThan(20.0);
+
+    @unlink($jar);
+});
+
+it('shows "passwords do not match" and does not create an account', function (): void {
+    // Regression test for a fixed bug: RegisterController's own
+    // password-mismatch check (`$post_password_raw !== $post_password_conf_raw`)
+    // used to only ever append to $errors['register_form_error'] without
+    // gating the very next, unconditional call to
+    // `$userService->registerUser($post_login, $post_password, ...)` --
+    // that call (and everything through the final redirect) now only runs
+    // when `$errors === []`, so a mismatched confirmation never reaches
+    // registerUser() at all and no account is created.
     $jar = registerFreshCookieJar();
     $get = registerCurl($jar, '/register.php');
     $key = registerExtractKey($get['body']);
@@ -190,21 +226,20 @@ it('CONFIRMED BUG: shows "passwords do not match" but STILL creates the account 
 
     expect($result['status'])->toBe(200);
     expect($result['body'])->toContain('The passwords do not match');
-    // Not what a user would expect from that error message -- but it IS
-    // what happens: the account is created anyway.
-    expect(registerUserExists($username))->toBeTrue();
+    expect(registerUserExists($username))->toBeFalse();
 
     @unlink($jar);
 });
 
-// This one real request consistently takes ~127s (confirmed reproducible
-// across separate runs, not one-off contention): registerUser()'s own
-// duplicate-username branch calls notifyExistingAccountOfDuplicateRegistration(),
-// which sends a real "someone tried to register your username" email to
-// fixture_admin's own real address -- the same slow/unreachable mail
-// transport this file's own docblock documents for send_password_by_mail,
-// just hit from a different call site. Unlike that one, this path does
-// eventually complete (a bounded, not indefinite, delay).
+// registerUser()'s own duplicate-username branch calls
+// notifyExistingAccountOfDuplicateRegistration(), which sends a real
+// "someone tried to register your username" email to fixture_admin's own
+// real address -- the same slow/unreachable local mail transport this
+// file's own docblock documents for send_password_by_mail, just hit from a
+// different call site. Before the BoundedSendmailTransport fix this one
+// consistently took ~127s (confirmed reproducible across separate runs,
+// not one-off contention); now bounded to Piwigo\Mail\MailService::
+// MAIL_TRANSPORT_TIMEOUT_SECONDS instead.
 it('[SEC-31] handles a duplicate username indistinguishably from a real success, without creating a second account', function (): void {
     $jar = registerFreshCookieJar();
     $get = registerCurl($jar, '/register.php');

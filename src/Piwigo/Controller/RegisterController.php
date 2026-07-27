@@ -73,89 +73,88 @@ final class RegisterController implements ControllerInterface
             $post_password = $post_password_raw;
             $post_mail_address = $registerSubmit->mailAddress;
 
-            // UserService::registerUser()'s $registration_errors is a plain
-            // list<string> of validation messages, a different shape than
-            // the local $errors array above, which register.tpl reads by
-            // the specific keys 'register_page_error'/'register_form_error'
-            // set above. Fold it into 'register_form_error' instead of
-            // overwriting those keys.
-            //
-            // [SEC-31] registerUser() never puts a "this login is already
-            // used" message in $errors -- a duplicate username comes back
-            // as duplicateUsername: true with userId: null instead, and is
-            // handled identically to a real success below (same redirect,
-            // same flash message), so a requester probing for taken
-            // usernames can't tell the two apart from the response. See
-            // UserService::registerUser()'s own docblock for the full
-            // rationale (this is also why an existing account gets a
-            // "someone tried to register your username" email instead of
-            // the requester ever seeing an error here).
-            $conn = DbConnection::build();
-            $userService = \Piwigo\Bootstrap\CoreDomainAccessor::userService();
-            $registration_result = $userService
-                ->registerUser(
-                    $post_login,
-                    $post_password,
-                    $post_mail_address,
-                    $this->urlService,
-                    true,
-                    $registerSubmit->sendPasswordByMail
-                );
-            $registration_errors = $registration_result['errors'];
-            $new_user_id = $registration_result['userId'];
+            // Only attempt the actual registration once the form itself is
+            // valid (real key, matching non-empty passwords) -- registerUser()
+            // creates a real account using $post_password alone, with no
+            // knowledge of $post_password_conf_raw, so calling it while
+            // $errors is already non-empty would silently create an account
+            // with a password the requester never confirmed (or despite an
+            // invalid/expired key) while showing them an error that implies
+            // nothing happened.
+            if ($errors === []) {
+                // [SEC-31] registerUser() never puts a "this login is already
+                // used" message in $errors -- a duplicate username comes back
+                // as duplicateUsername: true with userId: null instead, and is
+                // handled identically to a real success below (same redirect,
+                // same flash message), so a requester probing for taken
+                // usernames can't tell the two apart from the response. See
+                // UserService::registerUser()'s own docblock for the full
+                // rationale (this is also why an existing account gets a
+                // "someone tried to register your username" email instead of
+                // the requester ever seeing an error here).
+                $conn = DbConnection::build();
+                $userService = \Piwigo\Bootstrap\CoreDomainAccessor::userService();
+                $registration_result = $userService
+                    ->registerUser(
+                        $post_login,
+                        $post_password,
+                        $post_mail_address,
+                        $this->urlService,
+                        true,
+                        $registerSubmit->sendPasswordByMail
+                    );
+                $registration_errors = $registration_result['errors'];
+                $new_user_id = $registration_result['userId'];
 
-            // [SEC-57] Only a real new account is audit-logged -- a
-            // duplicate username (userId: null) never reaches here, same
-            // "don't reveal/don't act on a duplicate as if it were real"
-            // discipline as the auto-login gate below. Actor is the new
-            // user themselves (self-registration has no separate acting
-            // admin); only the username is recorded, never the password.
-            if ($new_user_id !== null) {
-                \Piwigo\Bootstrap\CoreDomainAccessor::auditService()
-                    ->record($new_user_id, 'create', 'user', $new_user_id, null, [
-                        'username' => $post_login,
-                    ]);
-            }
-
-            if ($registration_errors !== []) {
-                $existing_form_error = $errors['register_form_error'] ?? null;
-                $form_error_messages = is_string($existing_form_error)
-                    ? [$existing_form_error, ...$registration_errors]
-                    : $registration_errors;
-                $errors['register_form_error'] = implode(' ', $form_error_messages);
-            }
-
-            if (count($errors) === 0) {
-                // email notification
-                if ($registerSubmit->sendPasswordByMail and \Piwigo\Validation\InputValidator::checkEmailFormat($post_mail_address)) {
-                    if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
-                        $_SESSION['page_infos'] = [];
-                    }
-                    $_SESSION['page_infos'][] = Lang::t('Successfully registered, you will soon receive an email with your connection settings. Welcome!');
-                }
-
-                // [SEC-31] Only a real new account gets logged in -- a
-                // duplicate username (userId: null) must never look up and
-                // log into the *existing* account by name here, which
-                // would be a full account-takeover, not just an
-                // information leak. Both cases redirect identically.
+                // [SEC-57] Only a real new account is audit-logged -- a
+                // duplicate username (userId: null) never reaches here, same
+                // "don't reveal/don't act on a duplicate as if it were real"
+                // discipline as the auto-login gate below. Actor is the new
+                // user themselves (self-registration has no separate acting
+                // admin); only the username is recorded, never the password.
                 if ($new_user_id !== null) {
-                    // Same real bug as InstallWizard's identical fix: this
-                    // controller never goes through
-                    // Bootstrap\UserBootstrap::initialize() either, so
-                    // without this sync, ActivityService::record()
-                    // misattributes this new user's own activity -- including
-                    // the 'login' row logUser() itself records internally,
-                    // which is why this must run BEFORE calling it, not
-                    // after -- to performed_by=NULL instead of their own new id.
-                    \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray(
-                        $userService->buildUser($new_user_id)
-                    ));
-                    \Piwigo\Users\CurrentUser::markRealUserResolved();
-                    \Piwigo\Bootstrap\CoreDomainAccessor::authService()
-                        ->logUser($new_user_id, false);
+                    \Piwigo\Bootstrap\CoreDomainAccessor::auditService()
+                        ->record($new_user_id, 'create', 'user', $new_user_id, null, [
+                            'username' => $post_login,
+                        ]);
                 }
-                $this->redirectService->redirect($this->urlService->makeIndexUrl());
+
+                if ($registration_errors !== []) {
+                    $errors['register_form_error'] = implode(' ', $registration_errors);
+                }
+
+                if (count($errors) === 0) {
+                    // email notification
+                    if ($registerSubmit->sendPasswordByMail and \Piwigo\Validation\InputValidator::checkEmailFormat($post_mail_address)) {
+                        if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
+                            $_SESSION['page_infos'] = [];
+                        }
+                        $_SESSION['page_infos'][] = Lang::t('Successfully registered, you will soon receive an email with your connection settings. Welcome!');
+                    }
+
+                    // [SEC-31] Only a real new account gets logged in -- a
+                    // duplicate username (userId: null) must never look up and
+                    // log into the *existing* account by name here, which
+                    // would be a full account-takeover, not just an
+                    // information leak. Both cases redirect identically.
+                    if ($new_user_id !== null) {
+                        // Same real bug as InstallWizard's identical fix: this
+                        // controller never goes through
+                        // Bootstrap\UserBootstrap::initialize() either, so
+                        // without this sync, ActivityService::record()
+                        // misattributes this new user's own activity -- including
+                        // the 'login' row logUser() itself records internally,
+                        // which is why this must run BEFORE calling it, not
+                        // after -- to performed_by=NULL instead of their own new id.
+                        \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray(
+                            $userService->buildUser($new_user_id)
+                        ));
+                        \Piwigo\Users\CurrentUser::markRealUserResolved();
+                        \Piwigo\Bootstrap\CoreDomainAccessor::authService()
+                            ->logUser($new_user_id, false);
+                    }
+                    $this->redirectService->redirect($this->urlService->makeIndexUrl());
+                }
             }
             $registration_post_key = new \Piwigo\Auth\EphemeralKeyService()
                 ->generate(2);

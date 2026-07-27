@@ -208,9 +208,7 @@ final class UserBootstrap
 
         if (\Piwigo\Config\CurrentConfig::browserLanguage() and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric()) and (bool) ($language = $userService->getBrowserLanguage())) {
             $user['language'] = $language;
-            if (is_string($language)) {
-                \Piwigo\Users\CurrentUser::updateLanguage($language);
-            }
+            \Piwigo\Users\CurrentUser::updateLanguage($language);
         }
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('user_init', $user);
     }

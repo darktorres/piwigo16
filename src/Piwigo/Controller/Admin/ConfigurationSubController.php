@@ -718,8 +718,9 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                         if ((bool) $params) {
                             [$tpl_var['w'], $tpl_var['h']] = $params->sizing->ideal_size;
-                            if (($tpl_var['crop'] = round(100.0 * $params->sizing->max_crop)) > 0) {
-                                [$tpl_var['minw'], $tpl_var['minh']] = $params->sizing->min_size;
+                            $minSize = $params->sizing->min_size;
+                            if (($tpl_var['crop'] = round(100.0 * $params->sizing->max_crop)) > 0 && $minSize !== null) {
+                                [$tpl_var['minw'], $tpl_var['minh']] = $minSize;
                             } else {
                                 $tpl_var['minw'] = $tpl_var['minh'] = '';
                             }

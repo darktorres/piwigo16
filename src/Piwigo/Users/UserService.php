@@ -864,7 +864,7 @@ DELETE FROM ' . Tables::favorites() . '
     /**
      * Tries to find the browser language among available languages.
      */
-    public function getBrowserLanguage(): false|int|string
+    public function getBrowserLanguage(): false|string
     {
         $language_header = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null;
         if (! is_string($language_header) || $language_header === '') {
@@ -907,7 +907,7 @@ DELETE FROM ' . Tables::favorites() . '
         // in both full and short forms, and case insensitive
         $languages_available = [];
         foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
-            $lowercase_full = strtolower((string) $language_code);
+            $lowercase_full = strtolower($language_code);
             $lowercase_parts = explode('_', $lowercase_full, 2);
             $lowercase_prefix = $lowercase_parts[0];
             $languages_available[$lowercase_full] = $language_code;

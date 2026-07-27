@@ -327,9 +327,6 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
                 if ((bool) count($data_users)) {
                     foreach ($data_users as $nbm_user) {
-                        // sendMailNotifications('list_to_send') returns
-                        // getUserNotifications() rows unchanged.
-                        assert($nbm_user instanceof \Piwigo\Notification\Projection\UserMailNotification);
                         if (
                             (! $must_repost) or // Not timeout, normal treatment
                             in_array($nbm_user->checkKey, $post_send_selection, true)  // Must be repost, show only user to send

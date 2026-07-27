@@ -730,7 +730,11 @@ final class ImageDerivativeController implements ControllerInterface
                 if ($candidate->sizing->max_crop !== 0.0) {
                     continue;
                 } // this could be optimized
-                if ($candidate_size[0] < $params->sizing->min_size[0] || $candidate_size[1] < $params->sizing->min_size[1]) {
+                $minSize = $params->sizing->min_size;
+                if ($minSize === null) {
+                    continue;
+                }
+                if ($candidate_size[0] < $minSize[0] || $candidate_size[1] < $minSize[1]) {
                     continue;
                 }
             }

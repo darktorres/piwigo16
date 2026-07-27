@@ -297,41 +297,38 @@ final readonly class MetadataService
         $map = $this->stringMap(\Piwigo\Config\CurrentConfig::useExifMapping());
 
         $exif = $this->getExifData($file, $map);
+        $result = [];
 
         foreach ($exif as $pwgKey => $value) {
             $valueStr = is_scalar($value) ? (string) $value : '';
+            $current = $value;
 
             if (in_array($pwgKey, ['date_creation', 'date_available'], true)) {
                 if ((bool) preg_match('/^(\d{4}).(\d{2}).(\d{2}) (\d{2}).(\d{2}).(\d{2})/', $valueStr, $matches)) {
-                    $exif[$pwgKey] = $matches[1] . '-' . $matches[2] . '-' . $matches[3] . ' ' . $matches[4] . ':' . $matches[5] . ':' . $matches[6];
-                    if ($exif[$pwgKey] === '0000-00-00 00:00:00') {
-                        $exif[$pwgKey] = null;
+                    $current = $matches[1] . '-' . $matches[2] . '-' . $matches[3] . ' ' . $matches[4] . ':' . $matches[5] . ':' . $matches[6];
+                    if ($current === '0000-00-00 00:00:00') {
+                        $current = null;
                     }
                 } elseif ((bool) preg_match('/^(\d{4}).(\d{2}).(\d{2})/', $valueStr, $matches)) {
-                    $exif[$pwgKey] = $matches[1] . '-' . $matches[2] . '-' . $matches[3];
+                    $current = $matches[1] . '-' . $matches[2] . '-' . $matches[3];
                 } else {
-                    unset($exif[$pwgKey]);
-
                     continue;
                 }
             }
 
             if (in_array($pwgKey, ['keywords', 'tags'], true)) {
-                $exif[$pwgKey] = $this->metadataNormalizeKeywordsString($valueStr);
+                $current = $this->metadataNormalizeKeywordsString($valueStr);
             }
 
-            $current = $exif[$pwgKey] ?? null;
             $isEmpty = $current === null || $current === '' || $current === 0 || $current === '0' || $current === false || $current === [];
             if ($isEmpty) {
-                unset($exif[$pwgKey]);
-
                 continue;
             }
 
-            $exif[$pwgKey] = addslashes(is_scalar($current) ? (string) $current : '');
+            $result[$pwgKey] = addslashes(is_scalar($current) ? (string) $current : '');
         }
 
-        return $exif;
+        return $result;
     }
 
     /**

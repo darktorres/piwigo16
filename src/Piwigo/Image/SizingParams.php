@@ -86,20 +86,27 @@ final class SizingParams
         $destCrop = new ImageRect($in_size);
 
         if ($this->max_crop > 0) {
+            // min_size is only ever null when max_crop=0 (see this class's
+            // own constructor docblock) -- guaranteed non-null here.
+            $minSize = $this->min_size;
+            if ($minSize === null) {
+                throw new \LogicException('SizingParams::compute(): min_size must not be null when max_crop > 0');
+            }
+
             $ratio_w = $destCrop->width() / (float) $this->ideal_size[0];
             $ratio_h = $destCrop->height() / (float) $this->ideal_size[1];
             if ($ratio_w > 1 || $ratio_h > 1) {
                 if ($ratio_w > $ratio_h) {
                     $h = $destCrop->height() / $ratio_w;
-                    if ($h < $this->min_size[1]) {
-                        $idealCropPx = $destCrop->width() - floor($destCrop->height() * (float) $this->ideal_size[0] / (float) $this->min_size[1]);
+                    if ($h < $minSize[1]) {
+                        $idealCropPx = $destCrop->width() - floor($destCrop->height() * (float) $this->ideal_size[0] / (float) $minSize[1]);
                         $maxCropPx = round($this->max_crop * $destCrop->width());
                         $destCrop->crop_h((int) min($idealCropPx, $maxCropPx), $coi);
                     }
                 } else {
                     $w = $destCrop->width() / $ratio_h;
-                    if ($w < $this->min_size[0]) {
-                        $idealCropPx = $destCrop->height() - floor($destCrop->width() * (float) $this->ideal_size[1] / (float) $this->min_size[0]);
+                    if ($w < $minSize[0]) {
+                        $idealCropPx = $destCrop->height() - floor($destCrop->width() * (float) $this->ideal_size[1] / (float) $minSize[0]);
                         $maxCropPx = round($this->max_crop * $destCrop->height());
                         $destCrop->crop_v((int) min($idealCropPx, $maxCropPx), $coi);
                     }

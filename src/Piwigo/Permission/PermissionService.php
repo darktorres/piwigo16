@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Permission;
 
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Lang;
 use Piwigo\Group\GroupRepository;
 
@@ -77,7 +79,10 @@ final readonly class PermissionService
 
         $authorizedIds = array_merge(
             $this->repo->findDirectlyAuthorizedCategoryIds($userId),
-            $this->groupRepo->getAccessibleCategoryIdsForUser($userId)
+            array_map(
+                static fn (CategoryId $id): int => $id->value,
+                $this->groupRepo->getAccessibleCategoryIdsForUser(UserId::from($userId)),
+            ),
         );
 
         // uniquify ids : some private categories might be authorized for the

@@ -4,13 +4,31 @@ declare(strict_types=1);
 
 namespace Piwigo\Group;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Env;
 use Piwigo\Group\Projection\Group;
 
 /**
  * Persistence layer for the group domain: `groups`, `user_group` (group
  * membership), `group_access` (per-group category permissions).
+ *
+ * Ids are typed VOs (`GroupId`/`UserId`/`CategoryId`) throughout, including
+ * on the mapped entities themselves ({@see GroupEntity}, {@see UserGroupEntity},
+ * {@see GroupAccessEntity} -- see their own docblocks for the custom
+ * Doctrine Types backing this). Single-value DQL parameters bound against a
+ * custom-typed field (`g.id = :x`) pass the VO directly -- Doctrine
+ * resolves the field's mapped Type for the conversion. Array parameters
+ * bound into an `IN (:x)` clause always unwrap to raw ints with an explicit
+ * `ArrayParameterType::INTEGER` first -- Doctrine's array-parameter binding
+ * does not reliably route each element through a custom field Type, unlike
+ * the single-value path (verified against the installed doctrine/dbal
+ * source, not assumed). Plain-DBAL (`getConnection()`) queries always bind
+ * raw scalars, single or array -- DBAL itself has no notion of a custom
+ * ORM field Type.
  *
  * @extends EntityRepository<GroupEntity>
  */
@@ -20,7 +38,7 @@ final class GroupRepository extends EntityRepository
      * Ids of every group marked is_default, ordered by id ascending.
      * Used to assign a newly registered user to the default groups.
      *
-     * @return list<int>
+     * @return list<GroupId>
      */
     public function findDefaultGroupIds(): array
     {
@@ -31,7 +49,11 @@ final class GroupRepository extends EntityRepository
             ->getQuery()
             ->getResult();
 
-        return array_map(static fn (GroupEntity $g): int => $g->id ?? 0, $entities);
+        return array_map(static function (GroupEntity $g): GroupId {
+            assert($g->id !== null);
+
+            return $g->id;
+        }, $entities);
     }
 
     /**
@@ -47,7 +69,11 @@ final class GroupRepository extends EntityRepository
             ->getResult();
 
         return array_map(
-            static fn (GroupEntity $g): Group => new Group($g->id ?? 0, $g->name, $g->isDefault),
+            static function (GroupEntity $g): Group {
+                assert($g->id !== null);
+
+                return new Group($g->id, $g->name, $g->isDefault);
+            },
             $entities,
         );
     }
@@ -59,8 +85,12 @@ final class GroupRepository extends EntityRepository
      * user-controlled free text, but genuinely dynamic, same shape as
      * Search/Calendar/Section's own documented DQL exceptions -- stays
      * plain DBAL via the entity manager's own connection rather than DQL.
+     * Plain DBAL never sees the `group_id` custom Type, so `$groupIds`
+     * unwraps to raw ints before binding regardless of the IN-clause rule
+     * above being about DQL specifically -- this was already true before
+     * this VO integration, unchanged behavior, just a typed input now.
      *
-     * @param array<int, int> $groupIds when non-empty, restricts to these ids
+     * @param list<GroupId> $groupIds when non-empty, restricts to these ids
      * @return list<array{id: int, name: string, is_default: bool, lastmodified: string, nb_users: int}>
      */
     public function findWithMemberCounts(
@@ -88,7 +118,7 @@ final class GroupRepository extends EntityRepository
 
         if ($groupIds !== []) {
             $qb->andWhere('g.id IN (:groupIds)')
-                ->setParameter('groupIds', $groupIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+                ->setParameter('groupIds', array_map(static fn (GroupId $id): int => $id->value, $groupIds), ArrayParameterType::INTEGER);
         }
 
         $rows = $qb->executeQuery()
@@ -113,7 +143,7 @@ final class GroupRepository extends EntityRepository
         );
     }
 
-    public function nameExists(string $name, ?int $excludeGroupId = null): bool
+    public function nameExists(string $name, ?GroupId $excludeGroupId = null): bool
     {
         $qb = $this->createQueryBuilder('g')
             ->select('COUNT(g.id)')
@@ -131,7 +161,7 @@ final class GroupRepository extends EntityRepository
         return is_numeric($value) && (int) $value > 0;
     }
 
-    public function exists(int $groupId): bool
+    public function exists(GroupId $groupId): bool
     {
         return $this->find($groupId) !== null;
     }
@@ -139,8 +169,8 @@ final class GroupRepository extends EntityRepository
     /**
      * Returns the subset of $groupIds that actually exist.
      *
-     * @param array<int, int> $groupIds
-     * @return list<int>
+     * @param list<GroupId> $groupIds
+     * @return list<GroupId>
      */
     public function findExistingIds(array $groupIds): array
     {
@@ -150,26 +180,30 @@ final class GroupRepository extends EntityRepository
 
         $entities = $this->createQueryBuilder('g')
             ->where('g.id IN (:groupIds)')
-            ->setParameter('groupIds', $groupIds)
+            ->setParameter('groupIds', array_map(static fn (GroupId $id): int => $id->value, $groupIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getResult();
 
-        return array_map(static fn (GroupEntity $g): int => $g->id ?? 0, $entities);
+        return array_map(static function (GroupEntity $g): GroupId {
+            assert($g->id !== null);
+
+            return $g->id;
+        }, $entities);
     }
 
-    public function findName(int $groupId): ?string
+    public function findName(GroupId $groupId): ?string
     {
         return $this->find($groupId)?->name;
     }
 
-    public function isDefault(int $groupId): bool
+    public function isDefault(GroupId $groupId): bool
     {
         $entity = $this->find($groupId);
 
         return $entity !== null && $entity->isDefault;
     }
 
-    public function insert(string $name, bool $isDefault): int
+    public function insert(string $name, bool $isDefault): GroupId
     {
         // lastmodified set explicitly rather than left to the schema's own
         // DEFAULT CURRENT_TIMESTAMP, which reads the real DB-server clock --
@@ -188,7 +222,7 @@ final class GroupRepository extends EntityRepository
     /**
      * @param array{name?: string, is_default?: bool} $updates
      */
-    public function update(int $groupId, array $updates): void
+    public function update(GroupId $groupId, array $updates): void
     {
         if ($updates === []) {
             return;
@@ -212,9 +246,9 @@ final class GroupRepository extends EntityRepository
     }
 
     /**
-     * @return list<int>
+     * @return list<UserId>
      */
-    public function findMemberUserIds(int $groupId): array
+    public function findMemberUserIds(GroupId $groupId): array
     {
         $entities = $this->getEntityManager()
             ->createQueryBuilder()
@@ -225,18 +259,19 @@ final class GroupRepository extends EntityRepository
             ->getQuery()
             ->getResult();
 
-        return array_map(static fn (UserGroupEntity $ug): int => $ug->userId, $entities);
+        return array_map(static fn (UserGroupEntity $ug): UserId => $ug->userId, $entities);
     }
 
     /**
      * Usernames of a group's members, via the configurable user-id/username
      * DB column names (see \Piwigo\Config\CurrentConfig::userFields()).
      * `users` isn't ORM-mapped (Users\UserRepository's own domain) -- plain
-     * DBAL via the entity manager's own connection.
+     * DBAL via the entity manager's own connection, so $groupId unwraps to
+     * a raw int before binding regardless of the custom Type.
      *
      * @return list<string>
      */
-    public function findMemberUsernames(int $groupId, string $usernameColumn, string $idColumn): array
+    public function findMemberUsernames(GroupId $groupId, string $usernameColumn, string $idColumn): array
     {
         $names = $this->getEntityManager()
             ->getConnection()
@@ -245,7 +280,7 @@ final class GroupRepository extends EntityRepository
             ->from(\Piwigo\Db\Tables::users(), 'u')
             ->innerJoin('u', \Piwigo\Db\Tables::userGroup(), 'ug', 'u.' . $idColumn . ' = ug.user_id')
             ->where('ug.group_id = :groupId')
-            ->setParameter('groupId', $groupId)
+            ->setParameter('groupId', $groupId->value)
             ->executeQuery()
             ->fetchFirstColumn();
 
@@ -263,18 +298,18 @@ final class GroupRepository extends EntityRepository
      * legitimately pass an already-member user id. No query-builder/DQL
      * equivalent for INSERT IGNORE; raw SQL + bindings on the entity
      * manager's own connection is safe here (no string concatenation of
-     * values).
+     * values) -- plain DBAL, so both ids unwrap to raw ints.
      *
-     * @param array<int, int> $userIds
+     * @param list<UserId> $userIds
      */
-    public function addMembers(int $groupId, array $userIds): void
+    public function addMembers(GroupId $groupId, array $userIds): void
     {
         $conn = $this->getEntityManager()
             ->getConnection();
         foreach ($userIds as $userId) {
             $conn->executeStatement(
                 'INSERT IGNORE INTO ' . \Piwigo\Db\Tables::userGroup() . ' (group_id, user_id) VALUES (?, ?)',
-                [$groupId, $userId],
+                [$groupId->value, $userId->value],
                 [\Doctrine\DBAL\ParameterType::INTEGER, \Doctrine\DBAL\ParameterType::INTEGER],
             );
         }
@@ -288,9 +323,9 @@ final class GroupRepository extends EntityRepository
     }
 
     /**
-     * @param array<int, int> $userIds
+     * @param list<UserId> $userIds
      */
-    public function removeMembers(int $groupId, array $userIds): void
+    public function removeMembers(GroupId $groupId, array $userIds): void
     {
         if ($userIds === []) {
             return;
@@ -302,7 +337,7 @@ final class GroupRepository extends EntityRepository
             ->where('ug.groupId = :groupId')
             ->andWhere('ug.userId IN (:userIds)')
             ->setParameter('groupId', $groupId)
-            ->setParameter('userIds', $userIds)
+            ->setParameter('userIds', array_map(static fn (UserId $id): int => $id->value, $userIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
@@ -311,9 +346,10 @@ final class GroupRepository extends EntityRepository
     /**
      * Deletes the given groups and everything referencing them
      * (group_access rows, user_group rows), returning the id => name of
-     * every group actually deleted.
+     * every group actually deleted. Return stays int-keyed -- a GroupId
+     * object can't be a PHP array key.
      *
-     * @param array<int, int> $groupIds
+     * @param list<GroupId> $groupIds
      * @return array<int, string>
      */
     public function delete(array $groupIds): array
@@ -322,16 +358,18 @@ final class GroupRepository extends EntityRepository
             return [];
         }
 
+        $rawIds = array_map(static fn (GroupId $id): int => $id->value, $groupIds);
+
         $entities = $this->createQueryBuilder('g')
             ->where('g.id IN (:groupIds)')
-            ->setParameter('groupIds', $groupIds)
+            ->setParameter('groupIds', $rawIds, ArrayParameterType::INTEGER)
             ->getQuery()
             ->getResult();
 
         $deleted = [];
         foreach ($entities as $entity) {
             assert($entity->id !== null);
-            $deleted[$entity->id] = $entity->name;
+            $deleted[$entity->id->value] = $entity->name;
         }
 
         if ($deleted === []) {
@@ -344,21 +382,21 @@ final class GroupRepository extends EntityRepository
         $em->createQueryBuilder()
             ->delete(GroupAccessEntity::class, 'ga')
             ->where('ga.groupId IN (:groupIds)')
-            ->setParameter('groupIds', $ids)
+            ->setParameter('groupIds', $ids, ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
 
         $em->createQueryBuilder()
             ->delete(UserGroupEntity::class, 'ug')
             ->where('ug.groupId IN (:groupIds)')
-            ->setParameter('groupIds', $ids)
+            ->setParameter('groupIds', $ids, ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
 
         $em->createQueryBuilder()
             ->delete(GroupEntity::class, 'g')
             ->where('g.id IN (:groupIds)')
-            ->setParameter('groupIds', $ids)
+            ->setParameter('groupIds', $ids, ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
 
@@ -368,9 +406,9 @@ final class GroupRepository extends EntityRepository
     }
 
     /**
-     * @return list<int>
+     * @return list<CategoryId>
      */
-    public function getAuthorizedCategoryIds(int $groupId): array
+    public function getAuthorizedCategoryIds(GroupId $groupId): array
     {
         $entities = $this->getEntityManager()
             ->createQueryBuilder()
@@ -381,13 +419,13 @@ final class GroupRepository extends EntityRepository
             ->getQuery()
             ->getResult();
 
-        return array_map(static fn (GroupAccessEntity $ga): int => $ga->catId, $entities);
+        return array_map(static fn (GroupAccessEntity $ga): CategoryId => $ga->catId, $entities);
     }
 
     /**
-     * @param array<int, int> $catIds
+     * @param list<CategoryId> $catIds
      */
-    public function removeAccess(int $groupId, array $catIds): void
+    public function removeAccess(GroupId $groupId, array $catIds): void
     {
         if ($catIds === []) {
             return;
@@ -399,16 +437,16 @@ final class GroupRepository extends EntityRepository
             ->where('ga.groupId = :groupId')
             ->andWhere('ga.catId IN (:catIds)')
             ->setParameter('groupId', $groupId)
-            ->setParameter('catIds', $catIds)
+            ->setParameter('catIds', array_map(static fn (CategoryId $id): int => $id->value, $catIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
     }
 
     /**
-     * @param array<int, int> $catIds
+     * @param list<CategoryId> $catIds
      */
-    public function addAccess(int $groupId, array $catIds): void
+    public function addAccess(GroupId $groupId, array $catIds): void
     {
         $em = $this->getEntityManager();
         foreach ($catIds as $catId) {
@@ -423,9 +461,9 @@ final class GroupRepository extends EntityRepository
      * group_access, not the user's own direct user_access grants). Used by
      * the Permission domain's forbidden-categories computation.
      *
-     * @return list<int>
+     * @return list<CategoryId>
      */
-    public function getAccessibleCategoryIdsForUser(int $userId): array
+    public function getAccessibleCategoryIdsForUser(UserId $userId): array
     {
         $rows = $this->getEntityManager()
             ->createQueryBuilder()
@@ -437,6 +475,18 @@ final class GroupRepository extends EntityRepository
             ->getQuery()
             ->getResult();
 
-        return array_map(static fn (array $row): int => $row['catId'], $rows);
+        return array_map(static function (array $row): CategoryId {
+            // Confirmed via GroupRepositoryTest: DQL scalar-field selects
+            // against a custom-typed column (ga.catId) hydrate straight
+            // into the real VO, same as full-entity hydration -- getResult()'s
+            // own generic array-row return type just can't express that
+            // statically, so this narrows explicitly rather than casting a
+            // value that could never actually be a raw int here.
+            if (! $row['catId'] instanceof CategoryId) {
+                throw new \LogicException('Expected DQL hydration to produce a CategoryId for ga.catId.');
+            }
+
+            return $row['catId'];
+        }, $rows);
     }
 }

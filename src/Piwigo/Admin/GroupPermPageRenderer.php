@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Audit\AuditService;
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -54,12 +56,15 @@ final class GroupPermPageRenderer
                 ->fatalError('group_id URL parameter is missing');
         }
 
-        if (! is_numeric($groupPermSubmit->groupId)) {
+        // is_numeric() alone didn't guarantee positivity before -- a
+        // 0/negative group_id used to silently proceed. tryFrom() now
+        // correctly rejects that too, same error message as the two
+        // existing checks above.
+        $groupId = is_numeric($groupPermSubmit->groupId) ? GroupId::tryFrom((int) $groupPermSubmit->groupId) : null;
+        if ($groupId === null) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('group_id URL parameter is missing');
         }
-
-        $group_id = (int) $groupPermSubmit->groupId;
 
         $group_service = \Piwigo\Bootstrap\CoreDomainAccessor::groupService();
 
@@ -72,10 +77,10 @@ final class GroupPermPageRenderer
             // automatically forbidden
             $subcats = $categoryService->getSubcatIds($cat_true);
             $subcat_ids = array_map(intval(...), $subcats);
-            $group_service->removeAccess($group_id, $subcat_ids);
+            $group_service->removeAccess($groupId, array_map(CategoryId::from(...), $subcat_ids));
 
             self::auditService()
-                ->record($actor_id, 'permission_revoke', 'group', $group_id, [
+                ->record($actor_id, 'permission_revoke', 'group', $groupId->value, [
                     'category_ids' => $subcat_ids,
                 ], null);
         } elseif ($groupPermSubmit->isTrueify
@@ -99,10 +104,10 @@ SELECT id
             // already authorized for (retrying to authorize an already-authorized
             // category may cause a duplicate-key SQL error otherwise).
             $private_uppercat_ids = array_map(intval(...), $private_uppercats);
-            $group_service->addAccess($group_id, $private_uppercat_ids);
+            $group_service->addAccess($groupId, array_map(CategoryId::from(...), $private_uppercat_ids));
 
             self::auditService()
-                ->record($actor_id, 'permission_grant', 'group', $group_id, null, [
+                ->record($actor_id, 'permission_grant', 'group', $groupId->value, null, [
                     'category_ids' => $private_uppercat_ids,
                 ]);
         }
@@ -119,14 +124,14 @@ SELECT id
                 'TITLE' => Lang::t(
                     'Manage permissions for group "%s"',
                     \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class)
-                        ->findName($group_id) ?? false
+                        ->findName($groupId) ?? false
                 ),
                 'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),
                 'L_CAT_OPTIONS_FALSE' => Lang::t('Forbidden'),
 
                 'F_ACTION' => $this->urlService->getRootUrl() .
                     'admin.php?page=group_perm&amp;group_id=' .
-                    $group_id,
+                    $groupId->value,
             ]
         );
 
@@ -135,7 +140,7 @@ SELECT id
 SELECT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::groupAccess() . ' ON cat_id = id
   WHERE status = \'private\'
-    AND group_id = ' . $group_id . '
+    AND group_id = ' . $groupId->value . '
 ;';
         $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template);
 

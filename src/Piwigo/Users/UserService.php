@@ -14,6 +14,7 @@ use Piwigo\Auth\PasswordService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DefaultLanguageProviderInterface;
@@ -303,9 +304,23 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $user_fields['email'] => $mailAddress,
         ]);
 
+        // Real bug fixed here: this used to call
+        // $this->groupRepo->addMembers($userId, $defaultGroupIds) directly,
+        // passing the arguments in the wrong shape entirely --
+        // addMembers(GroupId $groupId, list<UserId> $userIds) adds many
+        // users to ONE group, but the call needs the opposite (add ONE new
+        // user to EACH of several default groups). That wrote
+        // (group_id, user_id) = ($userId, each default group's id) to
+        // user_group -- backwards. Confirmed against 16.x-rewrite's
+        // correct ['user_id' => $userId, 'group_id' => $groupId] per
+        // default group; no test exercised registration + default-group
+        // assignment together, so this was never caught. Looping per
+        // group (addMembers() already loops per-user for one group)
+        // matches the repository's existing contract without changing its
+        // shape.
         $defaultGroupIds = $this->groupRepo->findDefaultGroupIds();
-        if ($defaultGroupIds !== []) {
-            $this->groupRepo->addMembers($userId, $defaultGroupIds);
+        foreach ($defaultGroupIds as $groupId) {
+            $this->groupRepo->addMembers($groupId, [UserId::from($userId)]);
         }
 
         $override = [];

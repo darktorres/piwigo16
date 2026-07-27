@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Piwigo\Db;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
+use Piwigo\Db\Type\CategoryIdType;
+use Piwigo\Db\Type\GroupIdType;
+use Piwigo\Db\Type\UserIdType;
 
 /**
  * Factory for a Doctrine ORM EntityManager -- the ORM counterpart to
@@ -26,6 +30,19 @@ final class EntityManagerFactory
 {
     public static function build(?Connection $conn = null): EntityManagerInterface
     {
+        // Guarded by hasType() since this factory is deliberately not
+        // memoized (called fresh per-request/per-test) and addType()
+        // throws on double-registration.
+        foreach ([
+            'group_id' => GroupIdType::class,
+            'user_id' => UserIdType::class,
+            'category_id' => CategoryIdType::class,
+        ] as $name => $class) {
+            if (! Type::hasType($name)) {
+                Type::addType($name, $class);
+            }
+        }
+
         $config = ORMSetup::createAttributeMetadataConfig(
             paths: [dirname(__DIR__)],
             isDevMode: true,

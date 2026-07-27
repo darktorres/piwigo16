@@ -7,6 +7,8 @@ namespace Piwigo\Category;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Category\Projection\Category;
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
@@ -609,11 +611,19 @@ DELETE FROM ' . Tables::imageCategory() . '
             return;
         }
 
+        // GroupAccessEntity's catId column is a custom-typed Piwigo\Db\Type\CategoryIdType
+        // field -- wrapping through CategoryId::from() validates every id
+        // reaching this shared entity, and the array bind unwraps back to
+        // raw ints with an explicit ArrayParameterType::INTEGER (Doctrine's
+        // IN-clause array binding doesn't route through a field's custom
+        // Type reliably, verified against the installed doctrine/orm source).
+        $catIds = array_map(CategoryId::from(...), $ids);
+
         $em = $this->getEntityManager();
         $em->createQueryBuilder()
             ->delete(GroupAccessEntity::class, 'ga')
             ->where('ga.catId IN (:ids)')
-            ->setParameter('ids', $ids)
+            ->setParameter('ids', array_map(static fn (CategoryId $c): int => $c->value, $catIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
@@ -650,6 +660,8 @@ DELETE FROM ' . Tables::imageCategory() . '
 
     /**
      * Same as {@see deleteUserAccessForUsersAndCategories()}, for groups.
+     * See {@see deleteGroupAccessForCategories()}'s own comment on why both
+     * arrays wrap through the VO before binding.
      *
      * @param  array<int>  $groupIds
      * @param  array<int>  $catIds
@@ -665,8 +677,8 @@ DELETE FROM ' . Tables::imageCategory() . '
             ->delete(GroupAccessEntity::class, 'ga')
             ->where('ga.groupId IN (:groupIds)')
             ->andWhere('ga.catId IN (:catIds)')
-            ->setParameter('groupIds', $groupIds)
-            ->setParameter('catIds', $catIds)
+            ->setParameter('groupIds', array_map(static fn (int $id): int => GroupId::from($id)->value, $groupIds), ArrayParameterType::INTEGER)
+            ->setParameter('catIds', array_map(static fn (int $id): int => CategoryId::from($id)->value, $catIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
@@ -970,16 +982,20 @@ SELECT
      */
     public function findAccessGroupIds(int $catId): array
     {
+        // Single-value DQL parameter against a custom-typed field -- the
+        // well-supported path (unlike the IN-clause array case above),
+        // still wraps to keep AbstractNumericIdType::convertToDatabaseValue()
+        // strict (VO-only).
         $entities = $this->getEntityManager()
             ->createQueryBuilder()
             ->select('ga')
             ->from(GroupAccessEntity::class, 'ga')
             ->where('ga.catId = :catId')
-            ->setParameter('catId', $catId)
+            ->setParameter('catId', CategoryId::from($catId))
             ->getQuery()
             ->getResult();
 
-        return array_map(static fn (GroupAccessEntity $ga): int => $ga->groupId, $entities);
+        return array_map(static fn (GroupAccessEntity $ga): int => $ga->groupId->value, $entities);
     }
 
     /**

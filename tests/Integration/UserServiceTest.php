@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration {
     use Doctrine\DBAL\Connection;
     use Piwigo\Activity\ActivityRepository;
     use Piwigo\Activity\ActivityService;
+    use Piwigo\Common\ValueObject\UserId;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
@@ -27,9 +28,14 @@ namespace Piwigo\Tests\Integration {
      * harness shouldn't attempt a real mail send). registerUser()'s full SUCCESS
      * path calls ActivityLoggerInterface::record() and
      * EventDispatcher::triggerNotify() -- both fully DBAL/in-memory now, no
-     * legacy $mysqli dependency -- but this class still doesn't cover it;
-     * live-verified separately instead, same limitation as GroupService
-     * (see its own test class docblock).
+     * legacy $mysqli dependency; test_register_user_adds_the_new_user_to_default_groups()
+     * below exercises it now, added as a regression test for a real bug
+     * found during the Group domain VO integration (see
+     * UserService::registerUser()'s own inline comment) -- the success
+     * path's OTHER effects (admin/user notification emails,
+     * EventDispatcher::triggerNotify(), ActivityLoggerInterface::record())
+     * still aren't independently asserted here; live-verified separately,
+     * same limitation as GroupService (see its own test class docblock).
      */
     final class UserServiceTest extends IntegrationTestCase
     {
@@ -163,6 +169,48 @@ namespace Piwigo\Tests\Integration {
                 ->fetchOne();
 
             self::assertSame($countBefore, $countAfter);
+        }
+
+        /**
+         * Regression test for a real bug found during the Group domain VO
+         * integration: registerUser() used to call
+         * $this->groupRepo->addMembers($userId, $defaultGroupIds) directly
+         * -- addMembers(GroupId $groupId, list<UserId> $userIds) adds many
+         * users to ONE group, so that call wrote
+         * (group_id, user_id) = ($userId, each default group's id) to
+         * user_group, backwards. No test exercised registration + a real
+         * default group together before this, which is exactly why it
+         * went uncaught -- the fixture itself has zero is_default groups
+         * (confirmed: all 3 fixture groups are is_default=0), so this test
+         * creates its own.
+         */
+        public function test_register_user_adds_the_new_user_to_default_groups(): void
+        {
+            $groupRepo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class);
+            $defaultGroupId = $groupRepo->insert('p18-regression-' . bin2hex(random_bytes(4)), true);
+
+            $login = 'p18-regression-' . bin2hex(random_bytes(4));
+            $result = $this->service->registerUser($login, 'password123', null, new UrlService(new HtmlService()));
+
+            self::assertNotNull($result['userId']);
+            $userId = $result['userId'];
+
+            $members = $groupRepo->findMemberUserIds($defaultGroupId);
+            self::assertSame([$userId], array_map(static fn (UserId $id): int => $id->value, $members));
+
+            // The bug wrote (group_id, user_id) = ($userId, $defaultGroupId)
+            // into user_group -- swapped columns, not just a missing row.
+            // Confirm no such row exists.
+            $swappedRowCount = $this->conn->createQueryBuilder()
+                ->select('COUNT(*)')
+                ->from(Tables::userGroup())
+                ->where('group_id = :userId')
+                ->setParameter('userId', $userId)
+                ->executeQuery()
+                ->fetchOne();
+            self::assertSame(0, is_numeric($swappedRowCount) ? (int) $swappedRowCount : -1);
+
+            $groupRepo->delete([$defaultGroupId]);
         }
 
         /**

@@ -14,6 +14,8 @@ namespace Piwigo\Ws;
 use InvalidArgumentException;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\PermissionCacheInvalidator;
+use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
@@ -47,7 +49,7 @@ final class PwgGroups
 
         $groups = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class)
             ->findWithMemberCounts(
-                $params['group_id'] ?? [],
+                array_values(array_map(GroupId::from(...), $params['group_id'] ?? [])),
                 isset($params['name']) && $params['name'] !== '' ? $params['name'] : null,
                 $params['order'],
                 $params['per_page'],
@@ -86,12 +88,12 @@ final class PwgGroups
         // [SEC-57]
         $actor_id = \Piwigo\Users\CurrentUser::get()->id;
         \Piwigo\Bootstrap\CoreDomainAccessor::auditService()
-            ->record($actor_id, 'create', 'group', $inserted_id, null, [
+            ->record($actor_id, 'create', 'group', $inserted_id->value, null, [
                 'name' => $name,
             ]);
 
         return $service->invoke('pwg.groups.getList', [
-            'group_id' => $inserted_id,
+            'group_id' => $inserted_id->value,
         ]);
     }
 
@@ -109,7 +111,7 @@ final class PwgGroups
             return new PwgError(403, 'Invalid security token');
         }
 
-        $deleted_groups = self::groupService()->delete($params['group_id']);
+        $deleted_groups = self::groupService()->delete(array_values(array_map(GroupId::from(...), $params['group_id'])));
         if ($deleted_groups === false) {
             return new PwgError(500, 'There is no group to delete');
         }
@@ -146,7 +148,7 @@ final class PwgGroups
         }
 
         try {
-            self::groupService()->update($params['group_id'], $updates);
+            self::groupService()->update(GroupId::from($params['group_id']), $updates);
         } catch (InvalidArgumentException $e) {
             return new PwgError(WsError::INVALID_PARAM, $e->getMessage());
         }
@@ -172,7 +174,7 @@ final class PwgGroups
             return new PwgError(403, 'Invalid security token');
         }
 
-        $added = self::groupService()->addMembers($params['group_id'], $params['user_id']);
+        $added = self::groupService()->addMembers(GroupId::from($params['group_id']), array_values(array_map(UserId::from(...), $params['user_id'])));
         if (! $added) {
             return new PwgError(WsError::INVALID_PARAM, 'This group does not exist.');
         }
@@ -205,7 +207,7 @@ final class PwgGroups
             'group_id' => $params['merge_group_id'],
         ]);
 
-        $merged = self::groupService()->merge($params['destination_group_id'], $params['merge_group_id']);
+        $merged = self::groupService()->merge(GroupId::from($params['destination_group_id']), array_values(array_map(GroupId::from(...), $params['merge_group_id'])));
         if (! $merged) {
             return new PwgError(WsError::INVALID_PARAM, 'All groups does not exist.');
         }
@@ -234,13 +236,13 @@ final class PwgGroups
         }
 
         try {
-            $inserted_id = self::groupService()->duplicate($params['group_id'], $params['copy_name']);
+            $inserted_id = self::groupService()->duplicate(GroupId::from($params['group_id']), $params['copy_name']);
         } catch (InvalidArgumentException $e) {
             return new PwgError(WsError::INVALID_PARAM, $e->getMessage());
         }
 
         return $service->invoke('pwg.groups.getList', [
-            'group_id' => $inserted_id,
+            'group_id' => $inserted_id->value,
         ]);
     }
 
@@ -260,7 +262,7 @@ final class PwgGroups
             return new PwgError(403, 'Invalid security token');
         }
 
-        $removed = self::groupService()->removeMembers($params['group_id'], $params['user_id']);
+        $removed = self::groupService()->removeMembers(GroupId::from($params['group_id']), array_values(array_map(UserId::from(...), $params['user_id'])));
         if (! $removed) {
             return new PwgError(WsError::INVALID_PARAM, 'This group does not exist.');
         }

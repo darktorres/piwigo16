@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Group;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\GroupId;
 
 /**
  * Maps the `groups` table (`piwigo_groups` once
@@ -14,6 +15,11 @@ use Doctrine\ORM\Mapping as ORM;
  * CURRENT_TIMESTAMP -- set explicitly to Env::now() on insert only,
  * matching GroupRepository::insert()'s pre-ORM behavior exactly; never
  * touched on update(), same as before).
+ *
+ * `id`'s `group_id` column type is a custom Doctrine Type
+ * ({@see \Piwigo\Db\Type\GroupIdType}, registered in
+ * EntityManagerFactory::build()) -- same underlying `INT` SQL, but hydrates
+ * straight into a real GroupId VO instead of a raw int.
  */
 #[ORM\Entity(repositoryClass: GroupRepository::class)]
 #[ORM\Table(name: 'groups')]
@@ -21,8 +27,8 @@ final class GroupEntity
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
-    public ?int $id = null;
+    #[ORM\Column(type: 'group_id')]
+    public ?GroupId $id = null;
 
     public function __construct(
         #[ORM\Column(type: 'string', length: 255)]

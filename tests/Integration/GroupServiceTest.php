@@ -9,6 +9,9 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -77,7 +80,7 @@ final class GroupServiceTest extends IntegrationTestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('This name is already used by another group.');
 
-        $this->service->duplicate(1, 'Editors');
+        $this->service->duplicate(GroupId::from(1), 'Editors');
     }
 
     public function test_duplicate_rejects_a_missing_source_group(): void
@@ -85,7 +88,7 @@ final class GroupServiceTest extends IntegrationTestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('This group does not exist.');
 
-        $this->service->duplicate(999999, 'p18-test-' . bin2hex(random_bytes(4)));
+        $this->service->duplicate(GroupId::from(999999), 'p18-test-' . bin2hex(random_bytes(4)));
     }
 
     public function test_update_rejects_an_empty_name(): void
@@ -93,7 +96,7 @@ final class GroupServiceTest extends IntegrationTestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Name field must not be empty');
 
-        $this->service->update(1, ['name' => '   ']);
+        $this->service->update(GroupId::from(1), ['name' => '   ']);
     }
 
     public function test_update_rejects_a_missing_group(): void
@@ -101,7 +104,7 @@ final class GroupServiceTest extends IntegrationTestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('This group does not exist.');
 
-        $this->service->update(999999, ['name' => 'Anything']);
+        $this->service->update(GroupId::from(999999), ['name' => 'Anything']);
     }
 
     public function test_update_rejects_an_already_used_name(): void
@@ -109,38 +112,40 @@ final class GroupServiceTest extends IntegrationTestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('This name is already used by another group.');
 
-        $this->service->update(1, ['name' => 'Reviewers']);
+        $this->service->update(GroupId::from(1), ['name' => 'Reviewers']);
     }
 
     public function test_add_members_returns_false_for_a_missing_group(): void
     {
-        self::assertFalse($this->service->addMembers(999999, [1]));
+        self::assertFalse($this->service->addMembers(GroupId::from(999999), [UserId::from(1)]));
     }
 
     public function test_remove_members_returns_false_for_a_missing_group(): void
     {
-        self::assertFalse($this->service->removeMembers(999999, [1]));
+        self::assertFalse($this->service->removeMembers(GroupId::from(999999), [UserId::from(1)]));
     }
 
     public function test_merge_returns_false_when_a_group_is_missing(): void
     {
-        self::assertFalse($this->service->merge(1, [999999]));
+        self::assertFalse($this->service->merge(GroupId::from(1), [GroupId::from(999999)]));
     }
 
     public function test_delete_returns_empty_array_when_no_ids_exist(): void
     {
-        self::assertSame([], $this->service->delete([999999]));
+        self::assertSame([], $this->service->delete([GroupId::from(999999)]));
     }
 
     public function test_get_name_returns_a_fixture_groups_name(): void
     {
-        self::assertSame('Editors', $this->service->getName(1));
-        self::assertNull($this->service->getName(999999));
+        self::assertSame('Editors', $this->service->getName(GroupId::from(1)));
+        self::assertNull($this->service->getName(GroupId::from(999999)));
     }
 
     public function test_get_authorized_category_ids_returns_fixture_access(): void
     {
-        self::assertSame([1, 2], $this->service->getAuthorizedCategoryIds(1));
+        $ids = $this->service->getAuthorizedCategoryIds(GroupId::from(1));
+
+        self::assertSame([1, 2], array_map(static fn (CategoryId $id): int => $id->value, $ids));
     }
 
     public function test_get_all_basic_returns_fixture_groups(): void

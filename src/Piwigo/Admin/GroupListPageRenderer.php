@@ -77,15 +77,19 @@ final class GroupListPageRenderer
                 'groups',
                 [
                     'NAME' => $row->name,
-                    'ID' => $row->id,
+                    // Explicit ->value, not relying on GroupId's Stringable
+                    // -- Smarty templates elsewhere in this page do real
+                    // arithmetic on ID (group_list.tpl's `$group.ID%5`),
+                    // which would TypeError against a bare VO object.
+                    'ID' => $row->id->value,
                     'IS_DEFAULT' => ($row->isDefault ? ' [' . Lang::t('default') . ']' : ''),
                     'NB_MEMBERS' => count($members),
                     'L_MEMBERS' => implode(' <span class="userSeparator">&middot;</span> ', $members),
                     'MEMBERS' => Translator::get()->plural('%d member', '%d members', count($members)),
-                    'U_DELETE' => $del_url . $row->id . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
-                    'U_PERM' => $perm_url . $row->id,
-                    'U_USERS' => $users_url . $row->id,
-                    'U_ISDEFAULT' => $toggle_is_default_url . $row->id . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
+                    'U_DELETE' => $del_url . $row->id->value . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
+                    'U_PERM' => $perm_url . $row->id->value,
+                    'U_USERS' => $users_url . $row->id->value,
+                    'U_ISDEFAULT' => $toggle_is_default_url . $row->id->value . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                 ]
             );
 

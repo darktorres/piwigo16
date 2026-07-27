@@ -6,6 +6,9 @@ namespace Piwigo\Group;
 
 use Piwigo\Audit\AuditService;
 use Piwigo\Cache\PermissionCacheInvalidator;
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivityLoggerInterface;
 
@@ -22,6 +25,11 @@ use Piwigo\Core\ActivityLoggerInterface;
  * always allowed (L2a may depend on L1). Also constructor-injects
  * ConfigService (L1Infrastructure, Phase 5 Legacy Coupling Retirement) for
  * delete()'s email_admin_on_new_user consistency write.
+ *
+ * Ids are typed VOs throughout this class's own public surface, matching
+ * GroupRepository. `ActivityLoggerInterface`/`AuditService`/`EventDispatcher`
+ * aren't being converted in this pass, so every call into them unwraps
+ * `->value` right before the call.
  */
 final readonly class GroupService
 {
@@ -43,13 +51,13 @@ final readonly class GroupService
     /**
      * @return list<string>
      */
-    public function getMemberUsernames(int $groupId, string $usernameColumn, string $idColumn): array
+    public function getMemberUsernames(GroupId $groupId, string $usernameColumn, string $idColumn): array
     {
         return $this->repo->findMemberUsernames($groupId, $usernameColumn, $idColumn);
     }
 
     /**
-     * @param array<int, int> $groupIds
+     * @param list<GroupId> $groupIds
      * @return list<array{id: int, name: string, is_default: bool, lastmodified: string, nb_users: int}>
      */
     public function getListWithMemberCounts(
@@ -68,7 +76,7 @@ final readonly class GroupService
      * same order (name-already-used checked before empty-name) -- callers
      * translate the message into their own error shape (e.g. PwgError).
      */
-    public function create(string $name, bool $isDefault): int
+    public function create(string $name, bool $isDefault): GroupId
     {
         if ($this->repo->nameExists($name)) {
             throw new \InvalidArgumentException('This name is already used by another group.');
@@ -79,7 +87,7 @@ final readonly class GroupService
         }
 
         $id = $this->repo->insert($name, $isDefault);
-        $this->activityLogger->record('group', $id, 'add');
+        $this->activityLogger->record('group', $id->value, 'add');
 
         return $id;
     }
@@ -91,7 +99,7 @@ final readonly class GroupService
      * create(), there is no separate empty-name check here, matching the
      * original.
      */
-    public function duplicate(int $groupId, string $copyName): int
+    public function duplicate(GroupId $groupId, string $copyName): GroupId
     {
         if ($this->repo->nameExists($copyName)) {
             throw new \InvalidArgumentException('This name is already used by another group.');
@@ -102,7 +110,7 @@ final readonly class GroupService
         }
 
         $newId = $this->repo->insert($copyName, $this->repo->isDefault($groupId));
-        $this->activityLogger->record('group', $newId, 'add');
+        $this->activityLogger->record('group', $newId->value, 'add');
 
         $memberIds = $this->repo->findMemberUserIds($groupId);
         $this->repo->addMembers($newId, $memberIds);
@@ -112,8 +120,8 @@ final readonly class GroupService
         // accidental, but faithfully preserved) choice of 'associated' id:
         // the *source* group being copied from, not the newly created copy.
         foreach ($memberIds as $userId) {
-            $this->activityLogger->record('user', $userId, 'edit', [
-                'associated' => $groupId,
+            $this->activityLogger->record('user', $userId->value, 'edit', [
+                'associated' => $groupId->value,
             ]);
         }
 
@@ -128,7 +136,7 @@ final readonly class GroupService
      *
      * @param array{name?: string, is_default?: bool} $updates
      */
-    public function update(int $groupId, array $updates): void
+    public function update(GroupId $groupId, array $updates): void
     {
         if (isset($updates['name']) && str_replace(' ', '', $updates['name']) === '') {
             throw new \InvalidArgumentException('Name field must not be empty');
@@ -146,15 +154,15 @@ final readonly class GroupService
         }
 
         $this->repo->update($groupId, $updates);
-        $this->activityLogger->record('group', $groupId, 'edit');
+        $this->activityLogger->record('group', $groupId->value, 'edit');
     }
 
     /**
      * Adds users to a group. Returns false when the group doesn't exist.
      *
-     * @param array<int, int> $userIds
+     * @param list<UserId> $userIds
      */
-    public function addMembers(int $groupId, array $userIds): bool
+    public function addMembers(GroupId $groupId, array $userIds): bool
     {
         if (! $this->repo->exists($groupId)) {
             return false;
@@ -163,8 +171,8 @@ final readonly class GroupService
         $this->repo->addMembers($groupId, $userIds);
         PermissionCacheInvalidator::invalidate();
 
-        $this->activityLogger->record('group', $groupId, 'edit');
-        $this->activityLogger->record('user', $userIds, 'edit');
+        $this->activityLogger->record('group', $groupId->value, 'edit');
+        $this->activityLogger->record('user', array_map(static fn (UserId $id): int => $id->value, $userIds), 'edit');
 
         return true;
     }
@@ -172,9 +180,9 @@ final readonly class GroupService
     /**
      * Removes users from a group. Returns false when the group doesn't exist.
      *
-     * @param array<int, int> $userIds
+     * @param list<UserId> $userIds
      */
-    public function removeMembers(int $groupId, array $userIds): bool
+    public function removeMembers(GroupId $groupId, array $userIds): bool
     {
         if (! $this->repo->exists($groupId)) {
             return false;
@@ -183,8 +191,8 @@ final readonly class GroupService
         $this->repo->removeMembers($groupId, $userIds);
         PermissionCacheInvalidator::invalidate();
 
-        $this->activityLogger->record('group', $groupId, 'edit');
-        $this->activityLogger->record('user', $userIds, 'edit');
+        $this->activityLogger->record('group', $groupId->value, 'edit');
+        $this->activityLogger->record('user', array_map(static fn (UserId $id): int => $id->value, $userIds), 'edit');
 
         return true;
     }
@@ -195,11 +203,16 @@ final readonly class GroupService
      * then the merged groups are deleted. Returns false when any of the
      * involved groups (destination + merge sources) don't exist.
      *
-     * @param array<int, int> $mergeGroupIds
+     * array_unique()/array_diff() below compare GroupId/UserId objects via
+     * their Stringable form (PHP's default SORT_STRING comparison) --
+     * correct here since each VO's __toString() is its canonical numeric
+     * value, same identity the original int comparison relied on.
+     *
+     * @param list<GroupId> $mergeGroupIds
      */
-    public function merge(int $destinationGroupId, array $mergeGroupIds): bool
+    public function merge(GroupId $destinationGroupId, array $mergeGroupIds): bool
     {
-        $allGroupIds = array_unique([...$mergeGroupIds, $destinationGroupId]);
+        $allGroupIds = array_values(array_unique([...$mergeGroupIds, $destinationGroupId]));
         if (count($this->repo->findExistingIds($allGroupIds)) !== count($allGroupIds)) {
             return false;
         }
@@ -220,11 +233,11 @@ final readonly class GroupService
         // cache invalidation and the destination group's own 'edit'
         // activity fire even when no members actually moved.
         PermissionCacheInvalidator::invalidate();
-        $this->activityLogger->record('group', $destinationGroupId, 'edit');
+        $this->activityLogger->record('group', $destinationGroupId->value, 'edit');
 
         foreach ($membersToAdd as $userId) {
-            $this->activityLogger->record('user', $userId, 'edit', [
-                'associated' => $destinationGroupId,
+            $this->activityLogger->record('user', $userId->value, 'edit', [
+                'associated' => $destinationGroupId->value,
             ]);
         }
 
@@ -244,7 +257,7 @@ final readonly class GroupService
      * Piwigo\Cache\PermissionCacheInvalidator::invalidate() themselves
      * afterward, same as before.
      *
-     * @param array<int, int> $groupIds
+     * @param list<GroupId> $groupIds
      * @return false|array<int, string>
      */
     public function delete(array $groupIds): false|array
@@ -257,7 +270,7 @@ final readonly class GroupService
         $emailAdminOnNewUser = \Piwigo\Config\CurrentConfig::emailAdminOnNewUser();
         if ((bool) preg_match('/^group:(\d+)$/', $emailAdminOnNewUser, $matches)) {
             foreach ($groupIds as $groupId) {
-                if ($groupId === (int) $matches[1]) {
+                if ($groupId->value === (int) $matches[1]) {
                     $this->configService->confUpdateParam('email_admin_on_new_user', 'all', true);
                 }
             }
@@ -284,15 +297,15 @@ final readonly class GroupService
         return $deleted;
     }
 
-    public function getName(int $groupId): ?string
+    public function getName(GroupId $groupId): ?string
     {
         return $this->repo->findName($groupId);
     }
 
     /**
-     * @return list<int>
+     * @return list<CategoryId>
      */
-    public function getAuthorizedCategoryIds(int $groupId): array
+    public function getAuthorizedCategoryIds(GroupId $groupId): array
     {
         return $this->repo->getAuthorizedCategoryIds($groupId);
     }
@@ -300,9 +313,9 @@ final readonly class GroupService
     /**
      * Forbids access to the given categories for a group.
      *
-     * @param array<int, int> $catIds
+     * @param list<CategoryId> $catIds
      */
-    public function removeAccess(int $groupId, array $catIds): void
+    public function removeAccess(GroupId $groupId, array $catIds): void
     {
         $this->repo->removeAccess($groupId, $catIds);
     }
@@ -311,9 +324,9 @@ final readonly class GroupService
      * Authorizes access to the given categories for a group, skipping ones
      * already authorized.
      *
-     * @param array<int, int> $catIds
+     * @param list<CategoryId> $catIds
      */
-    public function addAccess(int $groupId, array $catIds): void
+    public function addAccess(GroupId $groupId, array $catIds): void
     {
         $alreadyAuthorized = $this->repo->getAuthorizedCategoryIds($groupId);
         $toAuthorize = array_values(array_diff($catIds, $alreadyAuthorized));

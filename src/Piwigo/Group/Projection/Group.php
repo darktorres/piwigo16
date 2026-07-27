@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Group\Projection;
 
+use Piwigo\Common\ValueObject\GroupId;
+
 /**
  * Typed row shape for `piwigo_groups` (P17-23 Stage 1b, Group domain --
  * `docs/PLAN.md`'s own "7 Entity types, 73 projection shapes"
@@ -18,22 +20,35 @@ namespace Piwigo\Group\Projection;
  * deferral as {@see \Piwigo\Tag\TagRepository::findCommonTags()}: it feeds
  * `Ws\PwgGroups::getList()`'s own JSON response directly, with exactly one
  * real caller and no per-field access to centralise.
+ *
+ * `id` is `GroupId`, not `int` -- the first Projection DTO in this
+ * codebase to get real id typing (the Common\ValueObject VO layer). This
+ * makes `fromRow()`'s previous "null/malformed id defaults to 0" contract
+ * (still the convention on every other Projection, e.g. `Tag::fromRow()`)
+ * structurally impossible to keep: `GroupId::from(0)` always throws, 0 was
+ * never a valid id. `fromRow()` now throws on a null/malformed id instead
+ * of silently defaulting -- deliberate, not an oversight: `fromRow()` has
+ * no real caller anywhere in `src/Piwigo` (only `findAllBasic()`'s own
+ * direct `new Group(...)` construction is real), so there's no production
+ * behavior being changed, and a silently-wrong `Group` is exactly the
+ * failure mode typing this field exists to convert into a loud one.
  */
 final readonly class Group
 {
     public function __construct(
-        public int $id,
+        public GroupId $id,
         public string $name,
         public bool $isDefault,
     ) {}
 
     /**
      * @param array<string, mixed> $row a {@see \Piwigo\Group\GroupRepository::findAllBasic()} row
+     * @throws \InvalidArgumentException when $row['id'] is missing or not a valid positive id
      */
     public static function fromRow(array $row): self
     {
         return new self(
-            id: is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+            id: GroupId::from(is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0),
             name: is_string($row['name'] ?? null) ? $row['name'] : '',
             isDefault: (bool) ($row['is_default'] ?? false),
         );
@@ -45,7 +60,7 @@ final readonly class Group
     public function toArray(): array
     {
         return [
-            'id' => $this->id,
+            'id' => $this->id->value,
             'name' => $this->name,
             'is_default' => $this->isDefault,
         ];

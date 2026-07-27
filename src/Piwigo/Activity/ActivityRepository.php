@@ -7,6 +7,7 @@ namespace Piwigo\Activity;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
+use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Db\Tables;
 
 /**
@@ -27,7 +28,7 @@ final class ActivityRepository extends EntityRepository
      *   action: string,
      *   performedBy: ?int,
      *   sessionIdx: string,
-     *   ipAddress: ?string,
+     *   ipAddress: ?IpAddress,
      *   occuredOn: string,
      *   details: array<string, mixed>,
      *   userAgent: ?string,

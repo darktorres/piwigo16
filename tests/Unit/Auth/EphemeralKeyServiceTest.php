@@ -93,3 +93,19 @@ test('generate produces a different signature when the secret key changes', func
 
     expect($service->verify($key))->toBeFalse();
 });
+
+test('generate does not throw when REMOTE_ADDR is not a string', function (): void {
+    // Regression: before this call site's REMOTE_ADDR read was centralised
+    // through Piwigo\Common\ValueObject\IpAddress::fromRemoteAddr(), it read
+    // $_SERVER['REMOTE_ADDR'] with only `?? ''` -- no is_string() guard --
+    // so a non-string value would have reached substr() and TypeError'd
+    // under this file's own strict_types=1. 8 of the other 11 real
+    // REMOTE_ADDR call sites already guarded with is_string() before this
+    // pass; this one didn't. Not reachable via a real web SAPI (REMOTE_ADDR
+    // is always a string when set), but $_SERVER is untyped, and the fix
+    // is real regardless.
+    $_SERVER['REMOTE_ADDR'] = ['not', 'a', 'string'];
+    $service = new EphemeralKeyService();
+
+    expect(fn () => $service->generate(0))->not->toThrow(TypeError::class);
+});

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Rate;
 
 use Piwigo\Auth\CookieService;
+use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Core\AccessLevel;
 
 /**
@@ -66,8 +67,7 @@ final readonly class RateService
 
         $userId = \Piwigo\Users\CurrentUser::get()->id;
 
-        $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
-        $remoteAddr = is_string($remoteAddr) ? $remoteAddr : '';
+        $remoteAddr = IpAddress::fromRemoteAddr()->value ?? '';
         $ipComponents = explode('.', $remoteAddr);
         if (count($ipComponents) > 3) {
             array_pop($ipComponents);

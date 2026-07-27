@@ -12,6 +12,7 @@ use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
 use Piwigo\Db\Type\CategoryIdType;
 use Piwigo\Db\Type\GroupIdType;
+use Piwigo\Db\Type\IpAddressType;
 use Piwigo\Db\Type\UserIdType;
 
 /**
@@ -37,6 +38,7 @@ final class EntityManagerFactory
             'group_id' => GroupIdType::class,
             'user_id' => UserIdType::class,
             'category_id' => CategoryIdType::class,
+            'ip_address' => IpAddressType::class,
         ] as $name => $class) {
             if (! Type::hasType($name)) {
                 Type::addType($name, $class);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\History;
 
 use Piwigo\Auth\AccessControl;
+use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\ConfigService;
 
 /**
@@ -148,8 +149,7 @@ final readonly class HistoryService
             }
         }
 
-        $ip = $_SERVER['REMOTE_ADDR'] ?? null;
-        $ip = is_string($ip) ? $ip : '';
+        $ip = IpAddress::fromRemoteAddr()->value ?? '';
         // IPv6 should not be longer than 39 chars, and that is the maximum length of
         // the column in the database, but in case it would be longer, let's truncate it.
         if (strlen($ip) > 39) {

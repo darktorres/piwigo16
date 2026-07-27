@@ -6,6 +6,7 @@ namespace Piwigo\Comment;
 
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
@@ -140,8 +141,7 @@ final readonly class CommentService
     public function insertComment(array &$comm, string $key, array &$infos): string
     {
 
-        $remote_addr = $_SERVER['REMOTE_ADDR'] ?? null;
-        $comm['ip'] = is_string($remote_addr) ? $remote_addr : '';
+        $comm['ip'] = IpAddress::fromRemoteAddr()->value ?? '';
         $http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
         $comm['agent'] = is_string($http_user_agent) ? $http_user_agent : '';
 

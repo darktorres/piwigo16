@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
+use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
@@ -65,7 +66,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
                     'action' => 'test',
                     'performedBy' => 1,
                     'sessionIdx' => 'sess-1',
-                    'ipAddress' => '10.0.0.1',
+                    'ipAddress' => IpAddress::from('10.0.0.1'),
                     'occuredOn' => '2026-07-12 00:00:00',
                     'details' => [],
                     'userAgent' => 'test-agent',

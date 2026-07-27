@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Activity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\IpAddress;
 
 /**
  * Maps the `activity` table (`piwigo_activity` once
@@ -36,8 +37,8 @@ final class ActivityEntity
         public ?int $performedBy,
         #[ORM\Column(name: 'session_idx', type: 'string', length: 255)]
         public string $sessionIdx,
-        #[ORM\Column(name: 'ip_address', type: 'string', length: 50, nullable: true)]
-        public ?string $ipAddress,
+        #[ORM\Column(name: 'ip_address', type: 'ip_address', length: 50, nullable: true)]
+        public ?IpAddress $ipAddress,
         #[ORM\Column(name: 'occured_on', type: 'string', length: 19)]
         public string $occuredOn,
         /**

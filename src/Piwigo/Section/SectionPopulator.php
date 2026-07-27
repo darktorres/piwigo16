@@ -6,6 +6,7 @@ namespace Piwigo\Section;
 
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -405,8 +406,7 @@ SELECT id
                 $items = $this->tagService->getImageIdsForTags($tag_ids);
 
                 if (count($items) === 0) {
-                    $remote_addr = $_SERVER['REMOTE_ADDR'] ?? null;
-                    $remote_addr = is_string($remote_addr) ? $remote_addr : '';
+                    $remote_addr = IpAddress::fromRemoteAddr()->value ?? '';
                     $logger->info(
                         'attempt to see the name of the tag #' . implode(', #', array_map(strval(...), $tag_ids))
                 . ' from the address : ' . $remote_addr

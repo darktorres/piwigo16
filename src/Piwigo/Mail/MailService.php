@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Mail;
 
+use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
@@ -522,7 +523,7 @@ final class MailService implements MailerInterface
             $username = \Piwigo\Users\CurrentUser::get()->username;
             $tplVars['TECHNICAL'] = [
                 'username' => stripslashes($username),
-                'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+                'ip' => IpAddress::fromRemoteAddr()->value ?? '',
                 'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
             ];
         }

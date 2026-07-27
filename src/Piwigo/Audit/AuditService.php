@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Audit;
 
+use Piwigo\Common\ValueObject\IpAddress;
+
 /**
  * Audit domain business logic [SEC-57]: records an admin action, permission
  * change, or deletion as a hash-chained, append-only log line, and verifies
@@ -50,7 +52,7 @@ final readonly class AuditService
     ): int {
         $beforeJson = $before !== null ? json_encode($before, \JSON_THROW_ON_ERROR) : null;
         $afterJson = $after !== null ? json_encode($after, \JSON_THROW_ON_ERROR) : null;
-        $ipAddress = isset($_SERVER['REMOTE_ADDR']) && is_string($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null;
+        $ipAddress = IpAddress::fromRemoteAddr();
         // Explicit, not left to the column's DEFAULT CURRENT_TIMESTAMP, so
         // this respects the frozen test-mode clock the same way every
         // other P17/P18 service's own Env::now() call sites already do --
@@ -59,7 +61,7 @@ final readonly class AuditService
             ->format('Y-m-d H:i:s');
 
         $prevHash = $this->repo->findLatestRowHash();
-        $rowHash = self::computeHash($prevHash, $actorId, $action, $entityType, $entityId, $beforeJson, $afterJson, $ipAddress, $createdAt);
+        $rowHash = self::computeHash($prevHash, $actorId, $action, $entityType, $entityId, $beforeJson, $afterJson, $ipAddress?->value, $createdAt);
 
         return $this->repo->insert($actorId, $action, $entityType, $entityId, $beforeJson, $afterJson, $ipAddress, $createdAt, $prevHash, $rowHash);
     }
@@ -88,7 +90,7 @@ final readonly class AuditService
                 $row->entityId,
                 $row->beforeJson,
                 $row->afterJson,
-                $row->ipAddress,
+                $row->ipAddress?->value,
                 $row->createdAt,
             );
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Activity\Projection;
 
+use Piwigo\Common\ValueObject\IpAddress;
+
 /**
  * Typed row shape for
  * {@see \Piwigo\Activity\ActivityRepository::findUserObjectLogWithUsernames()}
@@ -25,7 +27,7 @@ final readonly class UserActivityLogEntry
         public string $object,
         public int $objectId,
         public string $action,
-        public ?string $ipAddress,
+        public ?IpAddress $ipAddress,
         public string $occuredOn,
         public ?string $details,
         public string $username,
@@ -42,7 +44,7 @@ final readonly class UserActivityLogEntry
             object: is_string($row['object'] ?? null) ? $row['object'] : '',
             objectId: is_numeric($row['object_id'] ?? null) ? (int) $row['object_id'] : 0,
             action: is_string($row['action'] ?? null) ? $row['action'] : '',
-            ipAddress: is_string($row['ip_address'] ?? null) ? $row['ip_address'] : null,
+            ipAddress: is_string($row['ip_address'] ?? null) ? IpAddress::tryFrom($row['ip_address']) : null,
             occuredOn: is_string($row['occured_on'] ?? null) ? $row['occured_on'] : '',
             details: is_string($row['details'] ?? null) ? $row['details'] : null,
             username: is_string($row['username'] ?? null) ? $row['username'] : '',
@@ -62,7 +64,7 @@ final readonly class UserActivityLogEntry
             'object' => $this->object,
             'object_id' => $this->objectId,
             'action' => $this->action,
-            'ip_address' => $this->ipAddress,
+            'ip_address' => $this->ipAddress?->value,
             'occured_on' => $this->occuredOn,
             'details' => $this->details,
             'username' => $this->username,

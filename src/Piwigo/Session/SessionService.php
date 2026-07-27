@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Session;
 
+use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Db\EntityManagerFactory;
@@ -111,9 +112,7 @@ final class SessionService
             return '';
         }
 
-        $remoteAddr = isset($_SERVER['REMOTE_ADDR']) && is_string($_SERVER['REMOTE_ADDR'])
-            ? $_SERVER['REMOTE_ADDR']
-            : '';
+        $remoteAddr = IpAddress::fromRemoteAddr()->value ?? '';
 
         if (! str_contains($remoteAddr, ':')) { // ipv4
             return vsprintf('%02X%02X', explode('.', $remoteAddr));

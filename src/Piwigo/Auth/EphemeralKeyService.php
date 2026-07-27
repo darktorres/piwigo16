@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use Piwigo\Common\ValueObject\IpAddress;
+
 /**
  * Short-lived, time-windowed keys sent back with a form (e.g. a signed
  * "not submitted too fast" / "not submitted too late" token), keyed by the
@@ -32,8 +34,7 @@ final class EphemeralKeyService
     public function generate(int $validAfterSeconds, string $additionalDataToHash = ''): string
     {
         $time = round(microtime(true), 1);
-        $remote_addr = $_SERVER['REMOTE_ADDR'] ?? '';
-        $remote_addr = is_string($remote_addr) ? $remote_addr : '';
+        $remote_addr = IpAddress::fromRemoteAddr()->value ?? '';
         $secret_key = \Piwigo\Config\CurrentConfig::secretKey();
 
         return (string) $time . ':' . $validAfterSeconds . ':'
@@ -70,8 +71,7 @@ final class EphemeralKeyService
             return false;
         }
 
-        $remote_addr = $_SERVER['REMOTE_ADDR'] ?? '';
-        $remote_addr = is_string($remote_addr) ? $remote_addr : '';
+        $remote_addr = IpAddress::fromRemoteAddr()->value ?? '';
         $secret_key = \Piwigo\Config\CurrentConfig::secretKey();
 
         $expected = hash_hmac(

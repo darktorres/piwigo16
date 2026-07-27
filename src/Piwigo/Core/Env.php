@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Common\ValueObject\IpAddress;
 use Symfony\Component\Dotenv\Dotenv;
 
 /**
@@ -52,7 +53,7 @@ final class Env
             return true;
         }
 
-        $remote = $_SERVER['REMOTE_ADDR'] ?? '';
+        $remote = IpAddress::fromRemoteAddr()->value ?? '';
         return $remote === '127.0.0.1' || $remote === '::1';
     }
 

@@ -7,6 +7,7 @@ namespace Piwigo\Audit;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
 use Piwigo\Audit\Projection\AuditLogEntry;
+use Piwigo\Common\ValueObject\IpAddress;
 
 /**
  * Persistence layer for the audit domain: `audit_log` [SEC-57]. Only ever
@@ -24,7 +25,7 @@ final class AuditRepository extends EntityRepository
         ?int $entityId,
         ?string $beforeJson,
         ?string $afterJson,
-        ?string $ipAddress,
+        ?IpAddress $ipAddress,
         string $createdAt,
         ?string $prevHash,
         string $rowHash,

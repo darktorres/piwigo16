@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Activity;
 
+use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\Env;
 use Piwigo\Users\CurrentUser;
@@ -108,7 +109,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
             $details['destination_tag'] = $activityContextRequest->destinationTag;
         }
 
-        $ipAddress = isset($_SERVER['REMOTE_ADDR']) && is_string($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null;
+        $ipAddress = IpAddress::fromRemoteAddr();
         $sessionId = session_id();
         $sessionIdx = $sessionId !== false && $sessionId !== '' ? $sessionId : 'none';
         // Explicit, not left to the column's DEFAULT CURRENT_TIMESTAMP, so

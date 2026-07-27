@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Picture;
 
+use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Rate\RateRepository;
@@ -72,8 +73,7 @@ final class PictureRateRenderer
 
                 $anonymous_id = null;
                 if (! \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic)) {
-                    $remote_addr = $_SERVER['REMOTE_ADDR'] ?? '';
-                    $remote_addr = is_string($remote_addr) ? $remote_addr : '';
+                    $remote_addr = IpAddress::fromRemoteAddr()->value ?? '';
                     $ip_components = explode('.', $remote_addr);
                     if (count($ip_components) > 3) {
                         array_pop($ip_components);

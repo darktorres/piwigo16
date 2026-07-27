@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Doctrine\DBAL\Connection;
 use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Audit\AuditRepository;
+use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
@@ -70,7 +71,7 @@ final class AuditRepositoryTest extends IntegrationTestCase
             42,
             null,
             '{"username":"alice"}',
-            '10.0.0.1',
+            IpAddress::from('10.0.0.1'),
             '2026-07-12 10:00:00',
             null,
             str_repeat('a', 64),

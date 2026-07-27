@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Audit;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\IpAddress;
 
 /**
  * Maps the `audit_log` table (`piwigo_audit_log` once
@@ -43,8 +44,8 @@ final class AuditLogEntity
         public ?string $beforeJson,
         #[ORM\Column(name: 'after_json', type: 'text', nullable: true)]
         public ?string $afterJson,
-        #[ORM\Column(name: 'ip_address', type: 'string', length: 45, nullable: true)]
-        public ?string $ipAddress,
+        #[ORM\Column(name: 'ip_address', type: 'ip_address', length: 45, nullable: true)]
+        public ?IpAddress $ipAddress,
         #[ORM\Column(name: 'created_at', type: 'string', length: 19)]
         public string $createdAt,
         #[ORM\Column(name: 'prev_hash', type: 'string', length: 64, nullable: true)]

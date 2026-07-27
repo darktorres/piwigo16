@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Audit\Projection\AuditLogEntry;
+use Piwigo\Common\ValueObject\IpAddress;
 
 /**
  * @return array<string, mixed>
@@ -34,7 +35,7 @@ test('fromRow narrows every column to its real type', function (): void {
         ->and($entry->entityId)->toBe(7)
         ->and($entry->beforeJson)->toBeNull()
         ->and($entry->afterJson)->toBe('{"username":"alice"}')
-        ->and($entry->ipAddress)->toBe('10.0.0.1')
+        ->and($entry->ipAddress)->toEqual(IpAddress::from('10.0.0.1'))
         ->and($entry->createdAt)->toBe('2026-07-12 10:00:00')
         ->and($entry->prevHash)->toBe(str_repeat('a', 64))
         ->and($entry->rowHash)->toBe(str_repeat('b', 64));

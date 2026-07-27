@@ -106,13 +106,13 @@
     "test:contract": "@php vendor/bin/pest --testsuite Contract",
     "test:browser": [
       "bash tools/reimport-fixture.sh",
-      "bash tools/pest-cleanup.sh --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=install-flow"
+      "@php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=install-flow"
     ],
     "test:coverage:web": [
       "rm -rf _data/coverage-raw/web",
       "PIWIGO_COVERAGE=1 php vendor/bin/pest --testsuite Contract",
       "bash tools/reimport-fixture.sh",
-      "PIWIGO_COVERAGE=1 bash tools/pest-cleanup.sh --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=install-flow"
+      "PIWIGO_COVERAGE=1 php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=install-flow"
     ],
     "test:coverage:all": [
       "@test:coverage",
@@ -120,12 +120,12 @@
       "@test:coverage:web",
       "@php tools/coverage-merge.php _data/coverage-raw/unit-arch.cov _data/coverage-raw/integration.cov"
     ],
-    "test:fixture-regen": "bash tools/pest-cleanup.sh --testsuite Browser --group=fixture-regen",
+    "test:fixture-regen": "@php vendor/bin/pest --testsuite Browser --group=fixture-regen",
     "test:visual": [
       "bash tools/reimport-fixture.sh",
-      "bash tools/pest-cleanup.sh --testsuite Browser --group=visual-regression"
+      "@php vendor/bin/pest --testsuite Browser --group=visual-regression"
     ],
-    "test:install": "bash tools/pest-cleanup.sh --testsuite Browser --group=install-flow",
+    "test:install": "@php vendor/bin/pest --testsuite Browser --group=install-flow",
     "require-checker": "@php vendor/bin/composer-require-checker check --config-file=composer-require-checker.json composer.json",
     "unused": "@php vendor/bin/composer-unused --configuration=composer-unused.php",
     "bench": "@php vendor/bin/phpbench run",
@@ -148,7 +148,8 @@
       "pestphp/pest-plugin-browser": {
         "Fix expectScreenshot() unconditionally failing when the tolerant threshold comparison actually passes (missing return after Page.php's foreach loop)": "patches/pest-plugin-browser-4.3.1-expect-screenshot-success-path.patch",
         "Add Chromium launch flags for deterministic screenshot rendering on Linux (font hinting/LCD text/color profile) -- the plugin's own maintainers don't trust screenshot assertions on Linux/CI without this class of mitigation, see PR pestphp/pest-plugin-browser#175": "patches/pest-plugin-browser-4.3.1-deterministic-screenshot-flags.patch",
-        "Fix Execution::resetAssertions() passing Assert::class instead of null as ReflectionProperty::setValue()'s first argument for a static property (PHP 8.1 deprecation)": "patches/pest-plugin-browser-4.3.1-reset-assertions-static-property.patch"
+        "Fix Execution::resetAssertions() passing Assert::class instead of null as ReflectionProperty::setValue()'s first argument for a static property (PHP 8.1 deprecation)": "patches/pest-plugin-browser-4.3.1-reset-assertions-static-property.patch",
+        "Fix the playwright run-server process leaking past pest's own exit: start it via an argv array instead of a shell string so proc_open() execve()s it directly (no shell, nothing left for stop()'s SIGTERM to miss) -- root-caused live via /proc inspection, matches the still-open upstream fix in PR pestphp/pest-plugin-browser#169": "patches/pest-plugin-browser-4.3.1-stop-server-without-shell.patch"
       }
     },
     "phpstan/extension-installer": {

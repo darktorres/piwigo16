@@ -490,13 +490,25 @@ not optional cleanup:
 - `BrowserTestHelpers::waitUntilHidden()` polls for an async loading
   spinner to actually disappear before a screenshot — `assertSee()`/
   `assertMissing()` are one-shot checks, not retrying.
-- **Always use `tools/pest-cleanup.sh`**, never a bare `pest`/`vendor/bin/pest`
-  invocation for Browser/Visual suites — `pest-plugin-browser`'s own
-  `playwright run-server` subprocess isn't cleaned up on exit (unmerged
-  upstream bug, `pestphp/pest-plugin-browser#169`); the wrapper force-kills
-  any orphaned instance before and after a run. A bare invocation also
-  skips the `fixture-regen`/`visual-regression` group exclusions the real
-  `composer test:*` scripts apply.
+- `pest-plugin-browser`'s own `playwright run-server` subprocess used to
+  outlive `pest`'s own exit (root cause, confirmed live via `/proc`
+  inspection: `PlaywrightNpmServer::start()` launched it via
+  `SystemProcess::fromShellCommandline()`, a plain command *string* --
+  `proc_open()` always routes a string command through `/bin/sh -c`
+  unless Symfony's `Process` adds an `exec` prefix, which it only does
+  when PHP was built `--enable-sigchild`; this project's PHP isn't, so
+  `/bin/sh` forked rather than exec'd, and `stop()`'s `SIGTERM` killed the
+  shell it tracked while the real server process, now an untracked child,
+  survived as an orphan). Fixed at the source via
+  `patches/pest-plugin-browser-4.3.1-stop-server-without-shell.patch`
+  (launches via an argv array instead, so `proc_open()` `execve()`s the
+  real binary directly -- no shell, nothing to orphan). A bare `pest`/
+  `vendor/bin/pest` invocation for Browser/Visual suites no longer needs
+  any wrapper as a result. It still needs the same `--exclude-group=
+  fixture-regen`/`--exclude-group=visual-regression`/`--exclude-group=
+  install-flow` flags the real `composer test:*` scripts pass when
+  running the whole suite (a single-file/filtered invocation doesn't
+  need them unless that file itself carries one of those groups).
 - `IntegrationTestCase::settleDatabase()` polls a real table after fixture
   reimport before returning control — a cold InnoDB buffer pool on a
   freshly-recreated schema can otherwise cause a transient timeout on the

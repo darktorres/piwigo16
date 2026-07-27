@@ -1,0 +1,64 @@
+# Fixes the `playwright run-server` process leaking past pest's own exit
+# (tracked separately by tools/pest-cleanup.sh, which force-kills whatever
+# leaked -- this patch fixes the actual cause instead of only cleaning up
+# after it).
+#
+# PlaywrightNpmServer::start() launches the server via
+# SystemProcess::fromShellCommandline(), which hands proc_open() a plain
+# command *string*. Symfony's Process only prefixes such a string with
+# `exec` (replacing the shell instead of forking under it) when
+# Process::isSigchildEnabled() is true -- a check for PHP's old
+# `--enable-sigchild` build flag. Confirmed live in this project's PHP
+# build that flag is NOT set, so that branch never runs, and proc_open()
+# falls through to its plain string-command path, which always invokes
+# `/bin/sh -c "<command>"`. On this system /bin/sh forks rather than
+# exec'ing a single simple command, so Symfony ends up tracking the PID
+# of the *shell*, not `playwright run-server` itself -- confirmed by
+# directly reproducing Symfony's exact proc_open() call and inspecting
+# /proc: the tracked PID's own cmdline is `sh -c ./node_modules/.bin/
+# playwright run-server ...`, with the real `node ... run-server` process
+# as its untracked child.
+#
+# PlaywrightNpmServer::stop() then calls Symfony Process::stop(), which
+# SIGTERMs the tracked PID (the shell) and gets back a clean exit code --
+# but SIGTERM sent to a specific PID never cascades to that PID's own
+# children, so the real server process is simply orphaned, reparented to
+# the nearest subreaper (systemd --user in this environment), and keeps
+# running/listening indefinitely.
+#
+# The fix: construct SystemProcess from an argv *array* instead of a
+# shell string. For an array command, proc_open() execve()s the binary
+# directly with no shell involved at all, so the PID Symfony tracks IS
+# the real `playwright run-server` process, and stop()'s SIGTERM reaches
+# it directly. explode(' ', ...) is safe here specifically because every
+# argument in this one hardcoded command template (host/port/mode) is a
+# plain unquoted token with no embedded spaces -- this is not a
+# general-purpose shell-argument parser.
+#
+# Matches the (still open, unmerged as of this patch) upstream fix in
+# https://github.com/pestphp/pest-plugin-browser/pull/169, though that
+# PR's own stated diagnosis ("the shell... does not forward [the signal]
+# to playwright") turned out to be imprecise for this exact mechanism --
+# real-world confirmation here required directly inspecting /proc, not
+# just re-reading the PR's own reasoning. Deliberately does not port that
+# PR's second, unrelated "avoid persisting a new port if playwright is
+# already set" change to ServerManager.php -- our installed 4.3.1 already
+# has a materially different playwright() method (a Playwright::host()
+# lookup the PR's base version didn't have), and that second change isn't
+# needed for this fix.
+--- a/src/Playwright/Servers/PlaywrightNpmServer.php	2026-07-27 20:06:38.609019600 -0300
++++ b/src/Playwright/Servers/PlaywrightNpmServer.php	2026-07-27 20:06:48.627453065 -0300
+@@ -60,11 +60,11 @@
+             return;
+         }
+ 
+-        $this->systemProcess = SystemProcess::fromShellCommandline(sprintf(
++        $this->systemProcess = new SystemProcess(explode(' ', sprintf(
+             $this->command,
+             $this->host,
+             $this->port,
+-        ), $this->baseDirectory, [
++        )), $this->baseDirectory, [
+             'APP_URL' => sprintf('http://%s:%d', $this->host, $this->port),
+         ]);
+ 

@@ -782,17 +782,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
                     'AAAA_DEBUG_TOTAL_TIME__' => \Piwigo\Core\TimingHelper::getElapsedTime(\Piwigo\Core\PageState::current()->requestStart, \Piwigo\Core\TimingHelper::getMoment()),
                 ]
             );
-            // Pre-existing dead code, unchanged by this extraction: class
-            // \Smarty_Internal_Debug doesn't exist in the installed Smarty
-            // 5.x package (that's Smarty\Debug now, an instance method, not
-            // static) — this call already fatals with "Class not found"
-            // whenever \Piwigo\Config\CurrentConfig::debugTemplate() is enabled. Not in scope for
-            // a pure extraction; preserved verbatim (still backslash-
-            // qualified so it keeps failing the same way, not silently
-            // resolving to a new Piwigo\Template\Smarty_Internal_Debug
-            // lookup).
-            // @phpstan-ignore class.notFound
-            \Smarty_Internal_Debug::display_debug($this->smarty);
+            (new \Smarty\Debug())->display_debug($this->smarty);
         }
     }
 

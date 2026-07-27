@@ -20,6 +20,7 @@ use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Comment\Projection\CommentSummary;
+use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
@@ -1548,7 +1549,7 @@ SELECT id, name, permalink
         if (isset($params['tag_ids']) and $params['tag_ids'] !== '') {
             self::tagService()
                 ->setTags(
-                    explode(',', $params['tag_ids']),
+                    array_values(array_filter(array_map(TagId::tryFrom(...), explode(',', $params['tag_ids'])))),
                     (int) $image_id
                 );
         }
@@ -2155,7 +2156,7 @@ SELECT COUNT(*)
         if (isset($params['tag_ids']) and $params['tag_ids'] !== '') {
             self::tagService()
                 ->setTags(
-                    explode(',', $params['tag_ids']),
+                    array_values(array_filter(array_map(TagId::tryFrom(...), explode(',', $params['tag_ids'])))),
                     (int) $image_id
                 );
         }
@@ -2728,7 +2729,7 @@ SELECT path
                 $candidate = trim($candidate);
 
                 if ((bool) preg_match(ValidationPattern::ID, $candidate)) {
-                    $tag_ids[] = $candidate;
+                    $tag_ids[] = TagId::from((int) $candidate);
                 }
             }
 

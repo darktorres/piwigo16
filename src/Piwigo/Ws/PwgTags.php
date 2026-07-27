@@ -14,6 +14,7 @@ namespace Piwigo\Ws;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\BatchWriter;
@@ -140,7 +141,7 @@ final class PwgTags
             $order_by = 'ORDER BY ' . $order_by;
         }
         $image_ids = $tagService->getImageIdsForTags(
-            $tag_ids,
+            array_map(TagId::from(...), $tag_ids),
             $params['tag_mode_and'] ? 'AND' : 'OR',
             $where_clauses,
             $order_by
@@ -323,7 +324,7 @@ SELECT COUNT(*)
         $tag_ids = $params['tag_id'];
 
         if (count($tag_ids) > 0) {
-            self::tagService()->deleteTags($params['tag_id']);
+            self::tagService()->deleteTags(array_values(array_map(TagId::from(...), $params['tag_id'])));
             return [
                 'id' => $tag_ids,
             ];
@@ -598,7 +599,7 @@ SELECT image_id
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('merge_tags', $params['destination_tag_id'], $merge_tag);
 
-        self::tagService()->deleteTags($merge_tag);
+        self::tagService()->deleteTags(array_values(array_map(TagId::from(...), $merge_tag)));
 
         $image_in_merged = array_merge($image_in_dest, $image_to_add);
 

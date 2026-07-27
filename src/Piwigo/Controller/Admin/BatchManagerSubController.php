@@ -11,6 +11,7 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -291,8 +292,14 @@ DELETE FROM ' . Tables::caddie() . '
                 } else {
                     $filter_tags = is_string($raw_filter_tags) ? $raw_filter_tags : '';
                 }
-                $_SESSION['bulk_manager_filter']['tags'] = self::tagService()
-                    ->getTagIds($filter_tags, false);
+                // $_SESSION crosses a serialization boundary read back by a
+                // later, unrelated request (see the plain is_numeric()
+                // read further down in this same class) -- unwrap to raw
+                // ints here rather than storing TagId objects.
+                $_SESSION['bulk_manager_filter']['tags'] = array_map(
+                    static fn (TagId $id): int => $id->value,
+                    self::tagService()->getTagIds($filter_tags, false)
+                );
 
                 if (isset($post['tag_mode']) and in_array($post['tag_mode'], ['AND', 'OR'], true)) {
                     $_SESSION['bulk_manager_filter']['tag_mode'] = $post['tag_mode'];
@@ -584,7 +591,7 @@ DELETE FROM ' . Tables::caddie() . '
 
             $filter_sets[] = self::tagService()
                 ->getImageIdsForTags(
-                    $filter_tag_ids,
+                    array_map(TagId::from(...), $filter_tag_ids),
                     $filter_tag_mode,
                     null,
                     null,

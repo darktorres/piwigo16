@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
+use Piwigo\Common\ValueObject\TagId;
+
 /**
  * Minimal mutable box for TagService::tagIdFromTagName()'s per-instance
  * memoization. TagService itself is `readonly` (no mutable instance or
@@ -15,16 +17,16 @@ namespace Piwigo\Tag;
 final class TagIdCache
 {
     /**
-     * @var array<string, int>
+     * @var array<string, TagId>
      */
     private array $ids = [];
 
-    public function get(string $tagName): ?int
+    public function get(string $tagName): ?TagId
     {
         return $this->ids[$tagName] ?? null;
     }
 
-    public function set(string $tagName, int $id): void
+    public function set(string $tagName, TagId $id): void
     {
         $this->ids[$tagName] = $id;
     }

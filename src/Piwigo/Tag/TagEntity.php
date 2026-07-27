@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tag;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\TagId;
 
 /**
  * Maps the `tags` table (`piwigo_tags` once Piwigo\Db\TablePrefixListener
@@ -16,6 +17,11 @@ use Doctrine\ORM\Mapping as ORM;
  * string, not \DateTimeImmutable -- matches Tag\Projection\Tag's own
  * already-documented decision ("no real consumer needs anything but the
  * raw DB DATETIME string form").
+ *
+ * `id`'s `tag_id` column type is a custom Doctrine Type
+ * ({@see \Piwigo\Db\Type\TagIdType}, registered in
+ * EntityManagerFactory::build()) -- same underlying `INT` SQL, but
+ * hydrates straight into a real TagId VO instead of a raw int.
  */
 #[ORM\Entity(repositoryClass: TagRepository::class)]
 #[ORM\Table(name: 'tags')]
@@ -23,8 +29,8 @@ final class TagEntity
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
-    public ?int $id = null;
+    #[ORM\Column(type: 'tag_id')]
+    public ?TagId $id = null;
 
     public function __construct(
         #[ORM\Column(type: 'string', length: 255)]

@@ -9,6 +9,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Activity\ActivityService;
     use Piwigo\Cache\CachePools;
     use Piwigo\Category\CategoryRepository;
+    use Piwigo\Common\ValueObject\TagId;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
@@ -189,6 +190,133 @@ namespace Piwigo\Tests\Integration {
                     [$imageId]
                 );
             }
+        }
+
+        // --- tagIdFromTagName() -------------------------------------------
+
+        public function test_tag_id_from_tag_name_returns_the_existing_id_for_a_known_name(): void
+        {
+            self::assertEquals(TagId::from(1), $this->service->tagIdFromTagName('nature'));
+        }
+
+        public function test_tag_id_from_tag_name_creates_a_new_tag_for_an_unknown_name(): void
+        {
+            $name = 'brand-new-tag-' . uniqid();
+
+            try {
+                $id = $this->service->tagIdFromTagName($name);
+
+                self::assertSame(
+                    $name,
+                    $this->conn->createQueryBuilder()
+                        ->select('name')
+                        ->from(Tables::tags())
+                        ->where('id = :id')
+                        ->setParameter('id', $id->value)
+                        ->executeQuery()
+                        ->fetchOne()
+                );
+            } finally {
+                $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE name = ?', [$name]);
+            }
+        }
+
+        // --- setTagsOf()/getImageTagIds() ----------------------------------
+
+        public function test_set_tags_of_creates_then_overwrites_image_tag_associations(): void
+        {
+            // fixture image 4 has no image_tag rows at all (see fixture's
+            // own comment above this class), so it's safe to freely
+            // set/overwrite here without disturbing any other test.
+            try {
+                $this->service->setTagsOf([4 => [TagId::from(1), TagId::from(2)]]);
+                self::assertEqualsCanonicalizing([TagId::from(1), TagId::from(2)], $this->service->getImageTagIds([4])[4]);
+
+                // Overwrites, not appends -- tag 3 replaces 1+2 entirely.
+                $this->service->setTagsOf([4 => [TagId::from(3)]]);
+                self::assertEqualsCanonicalizing([TagId::from(3)], $this->service->getImageTagIds([4])[4]);
+            } finally {
+                $this->conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE image_id = 4');
+            }
+        }
+
+        /**
+         * Regression test: compareImageTagLists() used to compare TagId
+         * lists with `!==`, which for objects checks identity, not value --
+         * two separately-constructed TagId(1) instances (one from the
+         * "before" read, one from the "after" read) are never `!==`-equal,
+         * so this would have wrongly reported every image as changed on
+         * every call, even when the tag list genuinely didn't change.
+         */
+        public function test_compare_image_tag_lists_reports_no_change_when_tags_are_set_to_the_same_values(): void
+        {
+            try {
+                $this->service->setTagsOf([4 => [TagId::from(1), TagId::from(2)]]);
+                $before = $this->service->getImageTagIds([4]);
+
+                // Re-set the exact same tags -- a genuine no-op from the
+                // caller's perspective.
+                $this->service->setTagsOf([4 => [TagId::from(1), TagId::from(2)]]);
+                $after = $this->service->getImageTagIds([4]);
+
+                self::assertSame([], $this->service->compareImageTagLists($before, $after));
+            } finally {
+                $this->conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE image_id = 4');
+            }
+        }
+
+        public function test_compare_image_tag_lists_reports_the_image_when_tags_genuinely_change(): void
+        {
+            $before = [4 => [TagId::from(1)]];
+            $after = [4 => [TagId::from(1), TagId::from(2)]];
+
+            self::assertSame([4], $this->service->compareImageTagLists($before, $after));
+        }
+
+        // --- getOrphanTags()/deleteOrphanTags() -----------------------------
+
+        public function test_get_orphan_tags_finds_a_tag_with_no_images_past_the_grace_period(): void
+        {
+            $name = 'orphan-tag-' . uniqid();
+            $this->conn->insert(Tables::tags(), [
+                'name' => $name,
+                'url_name' => $name,
+                // past the 1-day grace period findOrphanTags() applies.
+                'lastmodified' => '2020-01-01 00:00:00',
+            ]);
+            $id = (int) $this->conn->lastInsertId();
+
+            try {
+                $orphans = $this->service->getOrphanTags();
+                $orphanIds = array_map(static fn (\Piwigo\Tag\Projection\TagBrief $tag): int => $tag->id->value, $orphans);
+
+                self::assertContains($id, $orphanIds);
+            } finally {
+                $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE id = ?', [$id]);
+            }
+        }
+
+        public function test_delete_orphan_tags_removes_a_genuinely_orphaned_tag(): void
+        {
+            $name = 'orphan-tag-' . uniqid();
+            $this->conn->insert(Tables::tags(), [
+                'name' => $name,
+                'url_name' => $name,
+                'lastmodified' => '2020-01-01 00:00:00',
+            ]);
+            $id = (int) $this->conn->lastInsertId();
+
+            $this->service->deleteOrphanTags();
+
+            $remaining = $this->conn->createQueryBuilder()
+                ->select('id')
+                ->from(Tables::tags())
+                ->where('id = :id')
+                ->setParameter('id', $id)
+                ->executeQuery()
+                ->fetchOne();
+
+            self::assertFalse($remaining, 'the orphaned tag must have been deleted');
         }
     }
 }

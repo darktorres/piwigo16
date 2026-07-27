@@ -69,7 +69,7 @@ final class TagsPageRenderer
         $orphan_tag_names_array = '[]';
         $orphan_tag_names = [];
         foreach ($orphan_tags as $tag) {
-            $orphan_tag_names[] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $tag['name'], $tag);
+            $orphan_tag_names[] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $tag->name, $tag->toArray());
         }
         $orphan_tag_names = array_filter($orphan_tag_names, is_string(...));
 

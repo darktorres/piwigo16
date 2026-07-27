@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Search;
 
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\RedirectServiceInterface;
@@ -410,7 +411,7 @@ final readonly class SearchService
         if (isset($searchFields['tags']) && $tagsWords !== [] && (bool) ($displayFilters['tags']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $tagService = $this->tagService ?? new TagService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Tag\TagEntity::class), $this->permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)));
-            $imageIdsForFilter['tags'] = array_values(array_map(intval(...), array_filter($tagService->getImageIdsForTags($tagsWords, $tagsMode), is_numeric(...))));
+            $imageIdsForFilter['tags'] = array_values(array_map(intval(...), array_filter($tagService->getImageIdsForTags(array_map(TagId::from(...), $tagsWords), $tagsMode), is_numeric(...))));
         }
 
         // custom search

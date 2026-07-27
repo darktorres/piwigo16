@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag\Projection;
 
+use Piwigo\Common\ValueObject\TagId;
+
 /**
  * Typed row shape for `piwigo_tags` (P17-23 Stage 1b, Tag domain --
  * `docs/PLAN.md`'s own "7 Entity types, 73 projection shapes"
@@ -25,11 +27,17 @@ namespace Piwigo\Tag\Projection;
  * `lastmodified` stays `string`, not `\DateTimeImmutable` -- no real
  * consumer today needs anything but the raw DB DATETIME string form, same
  * reasoning as {@see \Piwigo\Image\Projection\Image}.
+ *
+ * `id` is `TagId`, not `?TagId` -- `fromRow()` itself has zero real
+ * callers (every real caller goes through {@see \Piwigo\Tag\TagRepository}'s
+ * own `toProjection()`, which builds this straight off a typed
+ * `TagEntity`), same "throw on a structurally-impossible missing id"
+ * shape as `Group\Projection\Group`'s own `fromRow()`.
  */
 final readonly class Tag
 {
     public function __construct(
-        public int $id,
+        public TagId $id,
         public string $name,
         public string $urlName,
         public string $lastmodified,
@@ -40,8 +48,13 @@ final readonly class Tag
      */
     public static function fromRow(array $row): self
     {
+        $id = TagId::tryFrom($row['id'] ?? null);
+        if ($id === null) {
+            throw new \InvalidArgumentException(sprintf('Expected a positive tag id, got %s', get_debug_type($row['id'] ?? null)));
+        }
+
         return new self(
-            id: is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+            id: $id,
             name: is_string($row['name'] ?? null) ? $row['name'] : '',
             urlName: is_string($row['url_name'] ?? null) ? $row['url_name'] : '',
             lastmodified: is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : '',
@@ -54,7 +67,7 @@ final readonly class Tag
     public function toArray(): array
     {
         return [
-            'id' => $this->id,
+            'id' => $this->id->value,
             'name' => $this->name,
             'url_name' => $this->urlName,
             'lastmodified' => $this->lastmodified,

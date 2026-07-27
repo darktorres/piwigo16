@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Tag\Projection\Tag;
 
 /**
@@ -20,26 +21,38 @@ function fullTagRow(): array
 test('fromRow narrows every column to its real type', function (): void {
     $tag = Tag::fromRow(fullTagRow());
 
-    expect($tag->id)->toBe(4)
+    expect($tag->id)->toEqual(TagId::from(4))
         ->and($tag->name)->toBe('Landscape')
         ->and($tag->urlName)->toBe('landscape')
         ->and($tag->lastmodified)->toBe('2026-07-24 10:00:00');
 });
 
-test('fromRow defaults every column to its zero value when absent', function (): void {
+test('fromRow defaults name/url_name/lastmodified to their zero value when absent, given a valid id', function (): void {
     $row = fullTagRow();
-    $row['id'] = null;
     $row['name'] = null;
     $row['url_name'] = null;
     $row['lastmodified'] = null;
 
     $tag = Tag::fromRow($row);
 
-    expect($tag->id)->toBe(0)
+    expect($tag->id)->toEqual(TagId::from(4))
         ->and($tag->name)->toBe('')
         ->and($tag->urlName)->toBe('')
         ->and($tag->lastmodified)->toBe('');
 });
+
+test('fromRow throws when id is missing', function (): void {
+    // Behavior change, deliberate: id is a TagId now, and TagId::from(0)
+    // always throws (0 was never a valid id) -- fromRow() itself has no
+    // real caller (every real caller goes through TagRepository's own
+    // toProjection(), which builds this straight off a typed TagEntity),
+    // same "throw on a structurally-impossible missing id" shape as
+    // Group\Projection\Group's own fromRow().
+    $row = fullTagRow();
+    $row['id'] = null;
+
+    Tag::fromRow($row);
+})->throws(InvalidArgumentException::class);
 
 test('fromRow tolerates an extra counter key without reading it', function (): void {
     $row = fullTagRow();
@@ -47,7 +60,7 @@ test('fromRow tolerates an extra counter key without reading it', function (): v
 
     $tag = Tag::fromRow($row);
 
-    expect($tag->id)->toBe(4)
+    expect($tag->id)->toEqual(TagId::from(4))
         ->and($tag->name)->toBe('Landscape');
 });
 

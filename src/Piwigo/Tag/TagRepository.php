@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
+use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 use Piwigo\Tag\Projection\Tag;
+use Piwigo\Tag\Projection\TagBrief;
 
 /**
  * Persistence layer for the tag domain, including the Tag+Image+Category
@@ -124,7 +127,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
      * falls back to every tag (matches the original's own "IN() clause too
      * large" avoidance), letting the caller filter down by its own id set.
      *
-     * @param list<int> $ids
+     * @param list<TagId> $ids
      * @return list<Tag>
      */
     public function findByIdsOrAll(array $ids): array
@@ -133,7 +136,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
 
         if (count($ids) < 1000) {
             $qb->where($qb->expr()->in('t.id', ':ids'))
-                ->setParameter('ids', $ids);
+                ->setParameter('ids', array_map(static fn (TagId $id): int => $id->value, $ids), ArrayParameterType::INTEGER);
         }
 
         $entities = $qb->getQuery()
@@ -208,7 +211,7 @@ SELECT t.*, count(*) AS counter
      * (grace period so a tag freshly created/detached isn't immediately
      * swept up).
      *
-     * @return list<array{id: string, name: string}>
+     * @return list<TagBrief>
      */
     public function findOrphanTags(): array
     {
@@ -221,19 +224,18 @@ SELECT
   WHERE tag_id IS NULL
     AND lastmodified < SUBDATE(NOW(), INTERVAL 1 DAY)
 ;';
-        $orphan_tags = [];
-        foreach ($this->getEntityManager()->getConnection()->executeQuery($query)->fetchAllAssociative() as $row) {
-            $orphan_tags[] = [
-                'id' => is_scalar($row['id']) ? (string) $row['id'] : '',
-                'name' => is_scalar($row['name']) ? (string) $row['name'] : '',
-            ];
-        }
-        return $orphan_tags;
+        return array_map(
+            TagBrief::fromRow(...),
+            $this->getEntityManager()
+                ->getConnection()
+                ->executeQuery($query)
+                ->fetchAllAssociative()
+        );
     }
 
     /**
      * @param array<int, int|string> $imageIds
-     * @return list<array{image_id: int, tag_id: int}>
+     * @return list<array{image_id: int, tag_id: TagId}>
      */
     public function findTagIdsByImageIds(array $imageIds): array
     {
@@ -260,7 +262,7 @@ SELECT
     }
 
     /**
-     * @param array<int, int|string> $tagIds
+     * @param list<TagId> $tagIds
      * @return list<int>
      */
     public function findImageIdsForTagIds(array $tagIds): array
@@ -274,7 +276,7 @@ SELECT
             ->select('it')
             ->from(ImageTagEntity::class, 'it')
             ->where('it.tagId IN (:tagIds)')
-            ->setParameter('tagIds', array_map(intval(...), $tagIds))
+            ->setParameter('tagIds', array_map(static fn (TagId $id): int => $id->value, $tagIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getResult();
 
@@ -282,7 +284,7 @@ SELECT
     }
 
     /**
-     * @param array<int, int|string> $tagIds
+     * @param list<TagId> $tagIds
      */
     public function deleteImageTagByTagIds(array $tagIds): void
     {
@@ -294,7 +296,7 @@ SELECT
         $em->createQueryBuilder()
             ->delete(ImageTagEntity::class, 'it')
             ->where('it.tagId IN (:tagIds)')
-            ->setParameter('tagIds', array_map(intval(...), $tagIds))
+            ->setParameter('tagIds', array_map(static fn (TagId $id): int => $id->value, $tagIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
@@ -323,7 +325,7 @@ SELECT
     /**
      * @param array<int|string> $imageIds real caller (TagService::addTags())
      *   doesn't guarantee a list -- key type is never read below
-     * @param array<int|string> $tagIds
+     * @param list<TagId> $tagIds
      */
     public function deleteImageTagByImageAndTagIds(array $imageIds, array $tagIds): void
     {
@@ -337,14 +339,14 @@ SELECT
             ->where('it.imageId IN (:imageIds)')
             ->andWhere('it.tagId IN (:tagIds)')
             ->setParameter('imageIds', array_values(array_map(intval(...), $imageIds)))
-            ->setParameter('tagIds', array_values(array_map(intval(...), $tagIds)))
+            ->setParameter('tagIds', array_map(static fn (TagId $id): int => $id->value, $tagIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
     }
 
     /**
-     * @param array<int, int|string> $tagIds
+     * @param list<TagId> $tagIds
      */
     public function deleteByIds(array $tagIds): void
     {
@@ -356,13 +358,13 @@ SELECT
         $em->createQueryBuilder()
             ->delete(TagEntity::class, 't')
             ->where('t.id IN (:tagIds)')
-            ->setParameter('tagIds', array_map(intval(...), $tagIds))
+            ->setParameter('tagIds', array_map(static fn (TagId $id): int => $id->value, $tagIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
     }
 
-    public function findIdByName(string $name): ?int
+    public function findIdByName(string $name): ?TagId
     {
         $entity = $this->findOneBy([
             'name' => $name,
@@ -371,7 +373,7 @@ SELECT
         return $entity?->id;
     }
 
-    public function findIdByUrlName(string $urlName): ?int
+    public function findIdByUrlName(string $urlName): ?TagId
     {
         $entity = $this->findOneBy([
             'urlName' => $urlName,
@@ -385,7 +387,7 @@ SELECT
      * (plugin-supplied extended-description sub-name matching) -- same
      * fragment-passing shape as countImagesPerTag()'s $fandFSql.
      */
-    public function findIdByWhereFragment(string $whereSql): ?int
+    public function findIdByWhereFragment(string $whereSql): ?TagId
     {
         $id = $this->getEntityManager()
             ->getConnection()
@@ -395,10 +397,10 @@ SELECT id
   WHERE ' . $whereSql . '
 ;')->fetchOne();
 
-        return is_numeric($id) ? (int) $id : null;
+        return is_numeric($id) ? TagId::from((int) $id) : null;
     }
 
-    public function insert(string $name, string $urlName): int
+    public function insert(string $name, string $urlName): TagId
     {
         // lastmodified set explicitly rather than left to the schema's own
         // DEFAULT CURRENT_TIMESTAMP, which reads the real DB-server clock --
@@ -426,7 +428,7 @@ SELECT id
      * mapped column, so it can't leave lastmodified to the DB's own
      * DEFAULT the way this raw INSERT does.
      */
-    public function insertWithoutTimestamp(string $name, string $urlName): int
+    public function insertWithoutTimestamp(string $name, string $urlName): TagId
     {
         $this->getEntityManager()
             ->getConnection()
@@ -440,9 +442,9 @@ SELECT id
             ->setParameter('urlName', $urlName)
             ->executeStatement();
 
-        return (int) $this->getEntityManager()
+        return TagId::from((int) $this->getEntityManager()
             ->getConnection()
-            ->lastInsertId();
+            ->lastInsertId());
     }
 
     /**

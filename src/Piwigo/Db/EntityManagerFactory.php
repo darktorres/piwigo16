@@ -14,6 +14,7 @@ use Piwigo\Db\Type\CategoryIdType;
 use Piwigo\Db\Type\CommentIdType;
 use Piwigo\Db\Type\GroupIdType;
 use Piwigo\Db\Type\IpAddressType;
+use Piwigo\Db\Type\TagIdType;
 use Piwigo\Db\Type\UserIdType;
 
 /**
@@ -41,6 +42,7 @@ final class EntityManagerFactory
             'category_id' => CategoryIdType::class,
             'ip_address' => IpAddressType::class,
             'comment_id' => CommentIdType::class,
+            'tag_id' => TagIdType::class,
         ] as $name => $class) {
             if (! Type::hasType($name)) {
                 Type::addType($name, $class);

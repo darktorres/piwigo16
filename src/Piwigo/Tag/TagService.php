@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
+use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -12,6 +13,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\Projection\Tag;
+use Piwigo\Tag\Projection\TagBrief;
 
 /**
  * Tag domain business logic. Constructor-injects TagRepository and
@@ -256,12 +258,13 @@ final readonly class TagService
         }
 
         $tags = [];
-        foreach ($this->repo->findByIdsOrAll(array_keys($tagCounters)) as $tag) {
-            if (! isset($tagCounters[$tag->id])) {
+        $tagIds = array_map(static fn (int $id): TagId => TagId::from($id), array_keys($tagCounters));
+        foreach ($this->repo->findByIdsOrAll($tagIds) as $tag) {
+            if (! isset($tagCounters[$tag->id->value])) {
                 continue;
             }
             $row = $tag->toArray();
-            $row['counter'] = $tagCounters[$tag->id];
+            $row['counter'] = $tagCounters[$tag->id->value];
             $row['name_raw'] = $tag->name;
             $row['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $tag->name, $row);
             $tags[] = $row;
@@ -292,7 +295,7 @@ final readonly class TagService
      * Return the list of image ids corresponding to given tags. AND & OR
      * mode supported.
      *
-     * @param int[] $tagIds
+     * @param list<TagId> $tagIds
      * @param string|null $extraImagesWhereSql optionally apply a sql where
      *   filter to retrieved images; null is treated the same as '' (both
      *   are matched via a strict in_array() check below), and
@@ -314,7 +317,7 @@ final readonly class TagService
         $joinSql .= '
     INNER JOIN ' . Tables::imageTag() . ' it ON id=it.image_id';
 
-        $whereSql = 'WHERE tag_id IN (' . implode(',', $tagIds) . ')';
+        $whereSql = 'WHERE tag_id IN (' . implode(',', array_map(static fn (TagId $id): int => $id->value, $tagIds)) . ')';
 
         if ($usePermissions) {
             $whereSql .= $this->permissionService->getSqlConditionFandF(
@@ -376,19 +379,14 @@ final readonly class TagService
         $orphanTags = $this->getOrphanTags();
 
         if ($orphanTags !== []) {
-            $orphanTagIds = [];
-            foreach ($orphanTags as $tag) {
-                $orphanTagIds[] = $tag['id'];
-            }
-
-            $this->deleteTags($orphanTagIds);
+            $this->deleteTags(array_map(static fn (TagBrief $tag): TagId => $tag->id, $orphanTags));
         }
     }
 
     /**
      * Get all tags (id + name) linked to no photo.
      *
-     * @return list<array{id: string, name: string}>
+     * @return list<TagBrief>
      */
     public function getOrphanTags(): array
     {
@@ -399,22 +397,19 @@ final readonly class TagService
      * Set tags to an image.
      * Warning: given tags are all tags associated to the image, not additionnal tags.
      *
-     * @param array<int|string> $tags real callers (ws_functions/pwg.images.php)
-     *   pass explode()'d tag id strings, never converted to int -- tag ids only
-     *   ever flow into SQL/array-value contexts here, so numeric strings work
-     *   identically
+     * @param list<TagId> $tags
      */
     public function setTags(array $tags, int $imageId): void
     {
         $this->setTagsOf([
-            $imageId => array_values($tags),
+            $imageId => $tags,
         ]);
     }
 
     /**
      * Add new tags to a set of images.
      *
-     * @param array<int|string> $tags see setTags()'s $tags
+     * @param list<TagId> $tags see setTags()'s $tags
      * @param int[] $images
      */
     public function addTags(array $tags, array $images): void
@@ -431,12 +426,15 @@ final readonly class TagService
         // delete lines we'll insert later
         $this->repo->deleteImageTagByImageAndTagIds($images, $tags);
 
+        // massInsertImageTags() is a raw BatchWriter passthrough (bypasses
+        // the ORM entirely), so tag_id unwraps to a plain int right here,
+        // at the point of building its row shape.
         $inserts = [];
         foreach ($images as $imageId) {
             foreach (array_unique($tags) as $tagId) {
                 $inserts[] = [
                     'image_id' => $imageId,
-                    'tag_id' => $tagId,
+                    'tag_id' => $tagId->value,
                 ];
             }
         }
@@ -453,9 +451,7 @@ final readonly class TagService
     /**
      * Delete tags and tags associations.
      *
-     * @param array<int, int|string> $tagIds getOrphanTags()'s ids flow in as
-     *   mysqli-returned numeric strings; tag ids only ever flow into SQL/array
-     *   contexts here, so numeric strings work identically
+     * @param list<TagId> $tagIds
      */
     public function deleteTags(array $tagIds): void
     {
@@ -465,8 +461,13 @@ final readonly class TagService
         $this->repo->deleteImageTagByTagIds($tagIds);
         $this->repo->deleteByIds($tagIds);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('delete_tags', $tagIds);
-        $this->activityLogger->record('tag', $tagIds, 'delete');
+        // EventDispatcher/ActivityLoggerInterface are cross-boundary sinks
+        // (plugin events, ActivityEntity::$objectId is a plain int column)
+        // -- unwrap ->value explicitly, same rule as every other
+        // unconverted-domain sink in this codebase.
+        $rawTagIds = array_map(static fn (TagId $id): int => $id->value, $tagIds);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('delete_tags', $rawTagIds);
+        $this->activityLogger->record('tag', $rawTagIds, 'delete');
 
         $this->newImageService()
             ->updateImagesLastmodified($imageIds);
@@ -476,7 +477,7 @@ final readonly class TagService
     /**
      * Returns a tag id from its name. If nothing found, create a new tag.
      */
-    public function tagIdFromTagName(string $tagName): int
+    public function tagIdFromTagName(string $tagName): TagId
     {
         $tagName = trim($tagName);
         $cached = $this->tagIdFromTagNameCache->get($tagName);
@@ -525,7 +526,7 @@ final readonly class TagService
     /**
      * Set tags of images. Overwrites all existing associations.
      *
-     * @param array<int|string, array<int, int|string>> $tagsOf - keys are image ids, values are array of tag ids
+     * @param array<int|string, list<TagId>> $tagsOf - keys are image ids, values are array of tag ids
      */
     public function setTagsOf(array $tagsOf): void
     {
@@ -540,13 +541,16 @@ final readonly class TagService
 
         $this->repo->deleteImageTagByImageIds(array_keys($tagsOf));
 
+        // massInsertImageTags() is a raw BatchWriter passthrough (bypasses
+        // the ORM entirely), so tag_id unwraps to a plain int right here,
+        // same as addTags()'s own identical insert-row construction.
         $inserts = [];
 
         foreach ($tagsOf as $imageId => $tagIds) {
             foreach (array_unique($tagIds) as $tagId) {
                 $inserts[] = [
                     'image_id' => $imageId,
-                    'tag_id' => $tagId,
+                    'tag_id' => $tagId->value,
                 ];
             }
         }
@@ -569,7 +573,7 @@ final readonly class TagService
      *
      * @since 2.9
      * @param array<int, int|string> $imageIds
-     * @return array<int, int[]> image_id => list of tag ids
+     * @return array<int, list<TagId>> image_id => list of tag ids
      */
     public function getImageTagIds(array $imageIds): array
     {
@@ -591,9 +595,9 @@ final readonly class TagService
      * Compare the list of tags, for each image. Returns image_ids where tag list has changed.
      *
      * @since 2.9
-     * @param array<int, int[]> $taglistBefore - for each image_id (key), list of tag ids;
+     * @param array<int, list<TagId>> $taglistBefore - for each image_id (key), list of tag ids;
      *   all real callers pass getImageTagIds()'s return directly
-     * @param array<int, int[]> $taglistAfter - for each image_id (key), list of tag ids
+     * @param array<int, list<TagId>> $taglistAfter - for each image_id (key), list of tag ids
      * @return array<int, int> - image_ids where the list has changed
      */
     public function compareImageTagLists(array $taglistBefore, array $taglistAfter): array
@@ -606,7 +610,17 @@ final readonly class TagService
             $listBefore = $taglistBefore[$imageId] ?? [];
             sort($listBefore);
 
-            if ($listAfter !== $listBefore) {
+            // TagId objects: !== compares by identity, not value, so two
+            // separately-constructed TagId(5) instances would never be
+            // considered equal -- would silently mark every image as
+            // "changed" on every call. Compare the unwrapped value lists
+            // instead (empirically verified: sort() itself DOES order
+            // same-class objects correctly by property value under
+            // SORT_REGULAR, so only the equality check needed fixing).
+            $valuesAfter = array_map(static fn (TagId $id): int => $id->value, $listAfter);
+            $valuesBefore = array_map(static fn (TagId $id): int => $id->value, $listBefore);
+
+            if ($valuesAfter !== $valuesBefore) {
                 $imagesToUpdate[] = $imageId;
             }
         }
@@ -636,7 +650,7 @@ final readonly class TagService
 
             return [
                 'info' => Lang::t('Tag "%s" was added', stripslashes($tagName)),
-                'id' => $insertedId,
+                'id' => $insertedId->value,
             ];
         }
 
@@ -704,7 +718,7 @@ final readonly class TagService
      * @param string|array<string> $rawTags - array or comma separated string;
      *   real callers (array_filter()'d $_POST fields) don't guarantee a
      *   list -- key type is never read below, only values
-     * @return int[]
+     * @return list<TagId>
      */
     public function getTagIds(string|array $rawTags, bool $allowCreate = true): array
     {
@@ -715,7 +729,7 @@ final readonly class TagService
 
         foreach ($rawTags as $rawTag) {
             if (preg_match('/^~~(\d+)~~$/', $rawTag, $matches) === 1) {
-                $tagIds[] = (int) $matches[1];
+                $tagIds[] = TagId::from((int) $matches[1]);
             } elseif ($allowCreate) {
                 // we have to create a new tag
                 $tagIds[] = $this->tagIdFromTagName(strip_tags($rawTag));

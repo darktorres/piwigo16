@@ -7,6 +7,7 @@ namespace Piwigo\Section;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -403,7 +404,7 @@ SELECT id
                 }
                 $page['tag_ids'] = $tag_ids;
 
-                $items = $this->tagService->getImageIdsForTags($tag_ids);
+                $items = $this->tagService->getImageIdsForTags(array_map(TagId::from(...), $tag_ids));
 
                 if (count($items) === 0) {
                     $remote_addr = IpAddress::fromRemoteAddr()->value ?? '';

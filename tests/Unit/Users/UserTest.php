@@ -16,31 +16,35 @@ test('fromUserArray coerces a real legacy $user row', function (): void {
         'enabled_high' => '1',
     ]);
 
-    expect($user->id)->toBe(7)
+    expect($user->id->value)->toBe(7)
         ->and($user->username)->toBe('alice')
         ->and($user->status)->toBe(UserStatus::Admin)
         ->and($user->enabledHigh)->toBeTrue()
         ->and($user->rawAttributes)->toHaveKey('id');
 });
 
-test('fromUserArray degrades safely on a missing/malformed row', function (): void {
-    $user = User::fromUserArray([]);
+test('fromUserArray throws on a missing/malformed id', function (): void {
+    User::fromUserArray([]);
+})->throws(InvalidArgumentException::class);
 
-    expect($user->id)->toBe(0)
+test('fromUserArray degrades safely on a missing/malformed non-id field', function (): void {
+    $user = User::fromUserArray(['id' => 7]);
+
+    expect($user->id->value)->toBe(7)
         ->and($user->username)->toBe('')
         ->and($user->status)->toBe(UserStatus::Guest)
         ->and($user->enabledHigh)->toBeFalse();
 });
 
 test('fromUserArray falls back to Guest for an unrecognized status value', function (): void {
-    $user = User::fromUserArray(['status' => 'not_a_real_status']);
+    $user = User::fromUserArray(['id' => 1, 'status' => 'not_a_real_status']);
 
     expect($user->status)->toBe(UserStatus::Guest);
 });
 
 test('withLanguage returns a new immutable instance, original is untouched', function (): void {
     $original = new User(
-        id: 1,
+        id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: 'bob',
         email: '',
         language: 'en_UK',
@@ -58,7 +62,7 @@ test('withLanguage returns a new immutable instance, original is untouched', fun
 
 test('withUsername returns a new immutable instance', function (): void {
     $original = new User(
-        id: 1,
+        id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: 'bob',
         email: '',
         language: 'en_UK',
@@ -75,7 +79,7 @@ test('withUsername returns a new immutable instance', function (): void {
 
 test('withRawAttribute adds a key without disturbing the rest of the array', function (): void {
     $original = new User(
-        id: 1,
+        id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: 'bob',
         email: '',
         language: 'en_UK',

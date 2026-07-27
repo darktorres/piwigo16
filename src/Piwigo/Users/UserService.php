@@ -98,7 +98,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * Checks if an email is well formed and not already in use. Returns an
      * error message, or '' when the address is fine / not required.
      */
-    public function validateMailAddress(?int $userId, ?string $mailAddress): string
+    public function validateMailAddress(?UserId $userId, ?string $mailAddress): string
     {
 
         $isEmpty = $mailAddress === null || $mailAddress === '';
@@ -169,7 +169,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         return $usersFound[0];
     }
 
-    public function getUserId(string $username): int|false
+    public function getUserId(string $username): ?UserId
     {
 
         /** @var array<string, string> $user_fields */
@@ -178,7 +178,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         return $this->repo->findIdByUsername($username, $user_fields['id'], $user_fields['username']);
     }
 
-    public function getUserIdByEmail(string $email): int|false
+    public function getUserIdByEmail(string $email): ?UserId
     {
 
         /** @var array<string, string> $user_fields */
@@ -192,7 +192,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * 8d), unchanged logic (including the stripslashes() call -- a real,
      * already-established precedent in this same file, not legacy cruft).
      */
-    public function getUsername(int $userId): false|string
+    public function getUsername(UserId $userId): false|string
     {
 
         /** @var array<string, string> $user_fields */
@@ -208,12 +208,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * log entry). Ported from admin/include/functions.php's delete_user()
      * (P23 batch 8d), unchanged logic.
      */
-    public function deleteUser(int $userId): void
+    public function deleteUser(UserId $userId): void
     {
         $this->repo->deleteUser($userId);
-        SessionService::get()->deleteUserSessions($userId);
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('delete_user', $userId);
-        $this->activityLogger->record('user', $userId, 'delete');
+        SessionService::get()->deleteUserSessions($userId->value);
+        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('delete_user', $userId->value);
+        $this->activityLogger->record('user', $userId->value, 'delete');
     }
 
     /**
@@ -255,7 +255,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         if (preg_match('/^ .*$/', $login) === 1) {
             $errors[] = Lang::t('login mustn\'t start with a space character');
         }
-        if ($this->getUserId($login) !== false) {
+        if ($this->getUserId($login) !== null) {
             $duplicateUsername = true;
         }
         if ($login !== strip_tags($login)) {
@@ -320,7 +320,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // shape.
         $defaultGroupIds = $this->groupRepo->findDefaultGroupIds();
         foreach ($defaultGroupIds as $groupId) {
-            $this->groupRepo->addMembers($groupId, [UserId::from($userId)]);
+            $this->groupRepo->addMembers($groupId, [$userId]);
         }
 
         $override = [];
@@ -343,23 +343,23 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify(
             'register_user',
             [
-                'id' => $userId,
+                'id' => $userId->value,
                 'username' => $login,
                 'email' => $mailAddress,
             ]
         );
 
-        $this->activityLogger->record('user', $userId, 'add');
+        $this->activityLogger->record('user', $userId->value, 'add');
 
         return [
-            'userId' => $userId,
+            'userId' => $userId->value,
             'errors' => [],
             'duplicateUsername' => false,
         ];
     }
 
     /**
-     * @param array<int|string, int|string> $userIds
+     * @param list<UserId> $userIds
      * @param array<string, mixed>|null $overrideValues
      */
     public function createUserInfos(array $userIds, ?array $overrideValues = null): void
@@ -395,7 +395,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         foreach ($userIds as $userId) {
             $level = $defaultUser['level'] ?? 0;
-            $userIdStr = (string) $userId;
+            $userIdStr = (string) $userId->value;
             if ($userIdStr === $webmasterId) {
                 $status = 'webmaster';
                 $level = $availablePermissionLevels !== []
@@ -441,7 +441,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     public function getDefaultUserInfo(): array|false
     {
         if (! \Piwigo\Core\ProcessCache::has('default_user')) {
-            $defaultUserId = \Piwigo\Config\CurrentConfig::defaultUserId();
+            $defaultUserId = UserId::from(\Piwigo\Config\CurrentConfig::defaultUserId());
 
             $row = $this->repo->findDefaultUserInfoRow($defaultUserId);
             if ($row !== null) {
@@ -514,10 +514,10 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         );
     }
 
-    private function notifyAdminsOfNewRegistration(int $userId, string $login, ?string $mailAddress, UrlServiceInterface $urlService): void
+    private function notifyAdminsOfNewRegistration(UserId $userId, string $login, ?string $mailAddress, UrlServiceInterface $urlService): void
     {
 
-        $adminUrl = $urlService->getAbsoluteRootUrl() . 'admin.php?page=user_list&user_id=' . $userId;
+        $adminUrl = $urlService->getAbsoluteRootUrl() . 'admin.php?page=user_list&user_id=' . $userId->value;
 
         $keyargsContent = [
             Lang::buildArgs('User: %s', stripslashes($login)),
@@ -589,11 +589,11 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      *
      * @return array<string, mixed>
      */
-    public function buildUser(int $userId): array
+    public function buildUser(UserId $userId): array
     {
 
         $user = [];
-        $user['id'] = $userId;
+        $user['id'] = $userId->value;
         $user = array_merge($user, $this->getUserData($userId));
 
         $userStatusValue = $user['status'] ?? null;
@@ -625,7 +625,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      *
      * @return array<string, mixed>
      */
-    public function getUserData(int $userId): array
+    public function getUserData(UserId $userId): array
     {
         // see validateMailAddress() for why this is string=>string
         /** @var array<string, string> $user_fields */
@@ -646,11 +646,11 @@ SELECT ';
         }
         $query .= '
   FROM ' . Tables::users() . '
-  WHERE ' . $user_fields['id'] . ' = \'' . $userId . '\'';
+  WHERE ' . $user_fields['id'] . ' = \'' . $userId->value . '\'';
 
         $row = $this->conn->fetchAssociative($query);
         if ($row === false) {
-            throw new \Exception('UserService::getUserData(): no such user_id ' . $userId);
+            throw new \Exception('UserService::getUserData(): no such user_id ' . $userId->value);
         }
 
         // retrieve additional user data ?
@@ -665,7 +665,7 @@ SELECT
     COUNT(1) AS counter
   FROM ' . Tables::userInfos() . ' AS ui
     LEFT JOIN ' . Tables::themes() . ' AS t ON t.id = ui.theme
-  WHERE ui.user_id = ' . $userId . '
+  WHERE ui.user_id = ' . $userId->value . '
   GROUP BY ui.user_id
 ;';
             $counter_row = $this->conn->fetchNumeric($query);
@@ -685,12 +685,12 @@ SELECT
     t.name AS theme_name
   FROM ' . Tables::userInfos() . ' AS ui
     LEFT JOIN ' . Tables::themes() . ' AS t ON t.id = ui.theme
-  WHERE ui.user_id = ' . $userId . '
+  WHERE ui.user_id = ' . $userId->value . '
 ;';
 
         $user_infos_row = $this->conn->fetchAssociative($query);
         if ($user_infos_row === false) {
-            throw new \Exception('UserService::getUserData(): user_infos fetch failed for user_id ' . $userId);
+            throw new \Exception('UserService::getUserData(): user_infos fetch failed for user_id ' . $userId->value);
         }
 
         // then merge basic + additional user data
@@ -763,7 +763,7 @@ SELECT
             $this->categoryService(),
             $this->conn,
             \Piwigo\Cache\CachePools::effectivePermissions()
-        )->getForUser($userId, $effective_status, $effective_level);
+        )->getForUser($userId->value, $effective_status, $effective_level);
 
         $userdata['forbidden_categories'] = $effective['forbiddenCategories'];
         $userdata['image_access_type'] = $effective['imageAccessType'];
@@ -792,7 +792,7 @@ SELECT
             return;
         }
 
-        $user_id_str = (string) $currentUser->id;
+        $user_id_str = (string) $currentUser->id->value;
 
         // $filter['visible_categories'] and $filter['visible_images']
         // must be not used because filter <> restriction
@@ -1101,7 +1101,7 @@ DELETE FROM ' . Tables::favorites() . '
         }
 
         if (count($user_ids) === 1) {
-            if ($this->getUsername($user_ids[0]) === false) {
+            if ($this->getUsername(UserId::from($user_ids[0])) === false) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1114,7 +1114,7 @@ DELETE FROM ' . Tables::favorites() . '
                 $username_param = $params['username'];
                 assert(is_string($username_param));
                 $user_id = $this->getUserId($username_param);
-                if ((bool) $user_id and $user_id !== $user_ids[0]) {
+                if ($user_id !== null and $user_id->value !== $user_ids[0]) {
                     return [
                         'error' => [
                             'code' => WsError::INVALID_PARAM,
@@ -1136,7 +1136,7 @@ DELETE FROM ' . Tables::favorites() . '
             if (! self::emptyValue($params['email'] ?? null)) {
                 $email_param = $params['email'] ?? null;
                 assert(is_string($email_param));
-                if (($error = $this->validateMailAddress($user_ids[0], $email_param)) !== '') {
+                if (($error = $this->validateMailAddress(UserId::from($user_ids[0]), $email_param)) !== '') {
                     return [
                         'error' => [
                             'code' => WsError::INVALID_PARAM,
@@ -1162,7 +1162,7 @@ SELECT
                         array_column($this->conn->fetchAllAssociative($query), 'user_id')
                     );
 
-                    $current_user_id_str = (string) CurrentUser::get()->id;
+                    $current_user_id_str = (string) CurrentUser::get()->id->value;
 
                     // we add all admin+webmaster users BUT the user herself
                     $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$current_user_id_str]));
@@ -1208,7 +1208,7 @@ SELECT
             // values) and string-castable.
             $protected_users = array_filter(
                 [
-                    CurrentUser::get()->id,
+                    CurrentUser::get()->id->value,
                     \Piwigo\Config\CurrentConfig::guestId(),
                     \Piwigo\Config\CurrentConfig::webmasterId(),
                 ],
@@ -1445,7 +1445,7 @@ SELECT
         $infosUsers = $this->repo->findDistinctUserIdsInTable(Tables::userInfos());
 
         // users present in $baseUsers and not in $infosUsers must be added
-        $toCreate = array_diff($baseUsers, $infosUsers);
+        $toCreate = array_values(array_diff($baseUsers, $infosUsers));
 
         if (count($toCreate) > 0) {
             $this->createUserInfos($toCreate);
@@ -1462,10 +1462,10 @@ SELECT
         ];
 
         foreach ($tables as $table) {
-            $toDelete = array_diff(
+            $toDelete = array_values(array_diff(
                 $this->repo->findDistinctUserIdsInTable($table),
                 $baseUsers
-            );
+            ));
 
             if (count($toDelete) > 0) {
                 $this->repo->deleteUsersFromTable($table, $toDelete);

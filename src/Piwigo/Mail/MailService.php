@@ -575,7 +575,7 @@ final class MailService implements MailerInterface
                 $userFields['email'],
                 $userStatuses,
                 $groupId !== null ? (int) $groupId : null,
-                $excludeCurrentUser ? \Piwigo\Users\CurrentUser::get()->id : null,
+                $excludeCurrentUser ? \Piwigo\Users\CurrentUser::get()->id->value : null,
             );
 
         if ($admins === []) {

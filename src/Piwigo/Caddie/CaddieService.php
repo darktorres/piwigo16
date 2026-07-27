@@ -22,7 +22,7 @@ final class CaddieService
      */
     public static function fillCurrentUserCaddie(array $elementsId): void
     {
-        $userId = \Piwigo\Users\CurrentUser::get()->id;
+        $userId = \Piwigo\Users\CurrentUser::get()->id->value;
 
         new CaddieRepository(DbConnection::build())
             ->addElements($userId, $elementsId);

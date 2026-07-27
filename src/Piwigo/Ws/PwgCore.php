@@ -362,7 +362,7 @@ SELECT id, path, representative_ext, width, height, rotation
      */
     public static function caddieAdd(array $params, PwgServer &$service): int
     {
-        $user_id = \Piwigo\Users\CurrentUser::get()->id;
+        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
 
         return new CaddieRepository(DbConnection::build())
             ->addElements($user_id, $params['image_id']);
@@ -613,7 +613,7 @@ DELETE FROM ' . Tables::rate() . '
         } elseif (\Piwigo\Config\CurrentConfig::activityDisplayConnections() === 'admins_only') {
             $admin_ids = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class)->findAdminIds();
             $where .= '
-    AND NOT (action IN (\'login\', \'logout\') AND object_id NOT IN (' . implode(',', $admin_ids) . '))';
+    AND NOT (action IN (\'login\', \'logout\') AND object_id NOT IN (' . implode(',', array_map(static fn (\Piwigo\Common\ValueObject\UserId $id): int => $id->value, $admin_ids)) . '))';
         }
 
         $more_rows_available = true;

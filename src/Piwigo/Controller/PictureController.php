@@ -164,7 +164,7 @@ final class PictureController implements ControllerInterface
         $image_file = $section_context->imageFile;
 
         $currentUser = \Piwigo\Users\CurrentUser::get();
-        $user_id = $currentUser->id;
+        $user_id = $currentUser->id->value;
 
         // if this image_id doesn't correspond to this category, an error
         // message is displayed, and execution is stopped

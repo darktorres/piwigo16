@@ -149,7 +149,7 @@ namespace Piwigo\Tests\Integration {
         public function test_get_available_tags_with_no_filter_caches_the_result_via_cache_pools_tag_cloud(): void
         {
             CurrentUser::set(new User(
-                id: 2,
+                id: \Piwigo\Common\ValueObject\UserId::from(2),
                 username: 'fixture_guest',
                 email: '',
                 language: '',

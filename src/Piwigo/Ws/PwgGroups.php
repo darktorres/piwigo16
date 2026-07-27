@@ -86,7 +86,7 @@ final class PwgGroups
         }
 
         // [SEC-57]
-        $actor_id = \Piwigo\Users\CurrentUser::get()->id;
+        $actor_id = \Piwigo\Users\CurrentUser::get()->id->value;
         \Piwigo\Bootstrap\CoreDomainAccessor::auditService()
             ->record($actor_id, 'create', 'group', $inserted_id->value, null, [
                 'name' => $name,

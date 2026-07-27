@@ -7,6 +7,7 @@ namespace Piwigo\Auth;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\Projection\AuthKeyDetails;
 use Piwigo\Auth\Projection\AuthUser;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\Tables;
 use Piwigo\Users\UserInfoEntity;
 
@@ -74,9 +75,9 @@ final readonly class AuthRepository
         ];
     }
 
-    public function updateLanguage(int|string $userId, string $language): void
+    public function updateLanguage(UserId $userId, string $language): void
     {
-        $entity = $this->em->find(UserInfoEntity::class, (int) $userId);
+        $entity = $this->em->find(UserInfoEntity::class, $userId);
         if ($entity === null) {
             return;
         }
@@ -174,7 +175,7 @@ final readonly class AuthRepository
         $this->em->clear();
     }
 
-    public function findUserStatus(int $userId): ?string
+    public function findUserStatus(UserId $userId): ?string
     {
         return $this->em->find(UserInfoEntity::class, $userId)?->status;
     }
@@ -238,7 +239,7 @@ final readonly class AuthRepository
         $this->em->clear();
     }
 
-    public function clearActivationKey(int $userId): void
+    public function clearActivationKey(UserId $userId): void
     {
         $entity = $this->em->find(UserInfoEntity::class, $userId);
         if ($entity === null) {
@@ -250,7 +251,7 @@ final readonly class AuthRepository
         $this->em->flush();
     }
 
-    public function setActivationKey(int $userId, string $hash, \DateTimeInterface $expire): void
+    public function setActivationKey(UserId $userId, string $hash, \DateTimeInterface $expire): void
     {
         $entity = $this->em->find(UserInfoEntity::class, $userId);
         if ($entity === null) {

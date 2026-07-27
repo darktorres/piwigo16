@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Piwigo\Common\ValueObject\UserId;
+
 /**
  * Typed user entity. `rawAttributes` carries the full legacy `$user` array
  * for P17-23 reads during migration -- retirement gates per the plan doc:
@@ -43,7 +45,7 @@ final readonly class User
      * @param array<string, mixed> $rawAttributes
      */
     public function __construct(
-        public int $id,
+        public UserId $id,
         public string $username,
         public string $email,
         public string $language,
@@ -65,8 +67,13 @@ final readonly class User
         $status = $row['status'] ?? null;
         $preferences = $row['preferences'] ?? null;
 
+        $id = UserId::tryFrom($row['id'] ?? null);
+        if ($id === null) {
+            throw new \InvalidArgumentException('User::fromUserArray(): missing or invalid id');
+        }
+
         return new self(
-            id: is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+            id: $id,
             username: is_string($row['username'] ?? null) ? $row['username'] : '',
             email: is_string($row['email'] ?? null) ? $row['email'] : '',
             language: is_string($row['language'] ?? null) ? $row['language'] : '',
@@ -92,7 +99,7 @@ final readonly class User
     public function toUserArray(): array
     {
         return array_merge($this->rawAttributes, [
-            'id' => $this->id,
+            'id' => $this->id->value,
             'username' => $this->username,
             'email' => $this->email,
             'language' => $this->language,

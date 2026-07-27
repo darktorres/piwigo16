@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use Doctrine\ORM\Mapping as ORM;
+use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Maps the `user_infos` table (`piwigo_user_infos` once
@@ -37,8 +38,8 @@ final class UserInfoEntity
 {
     public function __construct(
         #[ORM\Id]
-        #[ORM\Column(name: 'user_id', type: 'integer')]
-        public int $userId,
+        #[ORM\Column(name: 'user_id', type: 'user_id')]
+        public UserId $userId,
         #[ORM\Column(name: 'nb_image_page', type: 'smallint')]
         public int $nbImagePage,
         #[ORM\Column(type: 'string', length: 20)]

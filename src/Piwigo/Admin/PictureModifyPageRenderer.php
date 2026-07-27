@@ -360,8 +360,8 @@ SELECT
         $user_fields = \Piwigo\Config\CurrentConfig::userFields();
         $uf_username = $user_fields['username'];
         $uf_id = $user_fields['id'];
-        $row_added_by = is_numeric($row['added_by']) ? (int) $row['added_by'] : 0;
-        $added_by_username = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)
+        $row_added_by = \Piwigo\Common\ValueObject\UserId::tryFrom($row['added_by']);
+        $added_by_username = $row_added_by === null ? null : \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)
             ->findUsernameById($row_added_by, $uf_id, $uf_username);
         if ($added_by_username !== null) {
             $row['added_by'] = $added_by_username;
@@ -507,7 +507,7 @@ SELECT category_id
                 explode(
                     ',',
                     new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService(), \Piwigo\Cache\CachePools::permissions())
-                        ->getForUser(\Piwigo\Users\CurrentUser::get()->id, \Piwigo\Users\CurrentUser::get()->status->value)
+                        ->getForUser(\Piwigo\Users\CurrentUser::get()->id->value, \Piwigo\Users\CurrentUser::get()->status->value)
                 )
             );
 

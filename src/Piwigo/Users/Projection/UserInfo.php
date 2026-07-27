@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Users\Projection;
 
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\ArrayHelper;
 use Piwigo\Users\UserInfoEntity;
 
@@ -43,7 +44,7 @@ final readonly class UserInfo
      * @param array<string, mixed>|null $preferences
      */
     public function __construct(
-        public int $userId,
+        public UserId $userId,
         public int $nbImagePage,
         public string $status,
         public string $language,
@@ -70,8 +71,13 @@ final readonly class UserInfo
     {
         $preferencesRaw = $row['preferences'] ?? null;
 
+        $userId = UserId::tryFrom($row['user_id'] ?? null);
+        if ($userId === null) {
+            throw new \InvalidArgumentException('UserInfo::fromRow(): missing or invalid user_id');
+        }
+
         return new self(
-            userId: is_numeric($row['user_id'] ?? null) ? (int) $row['user_id'] : 0,
+            userId: $userId,
             nbImagePage: is_numeric($row['nb_image_page'] ?? null) ? (int) $row['nb_image_page'] : 0,
             status: is_string($row['status'] ?? null) ? $row['status'] : 'guest',
             language: is_string($row['language'] ?? null) ? $row['language'] : '',
@@ -128,7 +134,7 @@ final readonly class UserInfo
     public function toArray(): array
     {
         return [
-            'user_id' => $this->userId,
+            'user_id' => $this->userId->value,
             'nb_image_page' => $this->nbImagePage,
             'status' => $this->status,
             'language' => $this->language,

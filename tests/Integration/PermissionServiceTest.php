@@ -120,7 +120,7 @@ use Piwigo\Category\CategoryRepository;
 
         public function test_sql_condition_fand_f_returns_empty_string_with_no_globals_set(): void
         {
-            CurrentUser::set(User::fromUserArray([]));
+            CurrentUser::set(User::fromUserArray(['id' => 1]));
 
             self::assertSame('', $this->service->getSqlConditionFandF([
                 'forbidden_categories' => 'id',
@@ -129,7 +129,7 @@ use Piwigo\Category\CategoryRepository;
 
         public function test_sql_condition_fand_f_forces_one_condition_when_empty(): void
         {
-            CurrentUser::set(User::fromUserArray([]));
+            CurrentUser::set(User::fromUserArray(['id' => 1]));
 
             self::assertSame('1 = 1', $this->service->getSqlConditionFandF([
                 'forbidden_categories' => 'id',
@@ -138,7 +138,7 @@ use Piwigo\Category\CategoryRepository;
 
         public function test_sql_condition_fand_f_builds_forbidden_categories_not_in(): void
         {
-            CurrentUser::set(User::fromUserArray(['forbidden_categories' => '1,2,3']));
+            CurrentUser::set(User::fromUserArray(['id' => 1, 'forbidden_categories' => '1,2,3']));
 
             self::assertSame('(id NOT IN (1,2,3))', $this->service->getSqlConditionFandF([
                 'forbidden_categories' => 'id',
@@ -147,7 +147,7 @@ use Piwigo\Category\CategoryRepository;
 
         public function test_sql_condition_fand_f_builds_visible_categories_in(): void
         {
-            CurrentUser::set(User::fromUserArray([]));
+            CurrentUser::set(User::fromUserArray(['id' => 1]));
             \Piwigo\Core\FilterState::set(true, '4,5');
 
             self::assertSame('(category_id IN (4,5))', $this->service->getSqlConditionFandF([
@@ -157,7 +157,7 @@ use Piwigo\Category\CategoryRepository;
 
         public function test_sql_condition_fand_f_combines_multiple_conditions_with_prefix(): void
         {
-            CurrentUser::set(User::fromUserArray(['forbidden_categories' => '1']));
+            CurrentUser::set(User::fromUserArray(['id' => 1, 'forbidden_categories' => '1']));
             \Piwigo\Core\FilterState::set(true, '2');
 
             self::assertSame(
@@ -171,7 +171,7 @@ use Piwigo\Category\CategoryRepository;
 
         public function test_sql_condition_fand_f_prefix_is_omitted_when_condition_is_empty(): void
         {
-            CurrentUser::set(User::fromUserArray([]));
+            CurrentUser::set(User::fromUserArray(['id' => 1]));
 
             self::assertSame('', $this->service->getSqlConditionFandF([
                 'forbidden_categories' => 'id',
@@ -182,7 +182,7 @@ use Piwigo\Category\CategoryRepository;
         {
             // same gate as the forbidden_images-only test below: a
             // non-default image_access_type is what opens the fallthrough.
-            CurrentUser::set(User::fromUserArray(['level' => '3', 'image_access_type' => 'IN', 'image_access_list' => '']));
+            CurrentUser::set(User::fromUserArray(['id' => 1, 'level' => '3', 'image_access_type' => 'IN', 'image_access_list' => '']));
             \Piwigo\Core\FilterState::set(true, '', '7,8');
 
             self::assertSame('(id IN (7,8) AND level<=3)', $this->service->getSqlConditionFandF([
@@ -196,7 +196,7 @@ use Piwigo\Category\CategoryRepository;
             // !== 'NOT IN') is false (and the whole condition skipped) when
             // both are at their getuserdata() defaults (empty list, 'NOT
             // IN' type) -- a non-default type is what opens the gate here.
-            CurrentUser::set(User::fromUserArray(['level' => '5', 'image_access_type' => 'IN', 'image_access_list' => '']));
+            CurrentUser::set(User::fromUserArray(['id' => 1, 'level' => '5', 'image_access_type' => 'IN', 'image_access_list' => '']));
 
             self::assertSame('(i.level<=5)', $this->service->getSqlConditionFandF([
                 'forbidden_images' => 'i.id',
@@ -205,7 +205,7 @@ use Piwigo\Category\CategoryRepository;
 
         public function test_sql_condition_fand_f_forbidden_images_uses_access_list_for_other_fields(): void
         {
-            CurrentUser::set(User::fromUserArray(['level' => '0', 'image_access_type' => 'IN', 'image_access_list' => '9,10']));
+            CurrentUser::set(User::fromUserArray(['id' => 1, 'level' => '0', 'image_access_type' => 'IN', 'image_access_list' => '9,10']));
 
             self::assertSame('(image_id IN (9,10))', $this->service->getSqlConditionFandF([
                 'forbidden_images' => 'image_id',

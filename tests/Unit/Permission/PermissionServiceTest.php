@@ -35,7 +35,7 @@ function makePermissionService(): PermissionService
 function seedPermissionUser(string $forbiddenCategories = '', int $level = 0, string $imageAccessType = '', string $imageAccessList = ''): void
 {
     CurrentUser::set(new User(
-        id: 1,
+        id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: 'torres',
         email: '',
         language: '',

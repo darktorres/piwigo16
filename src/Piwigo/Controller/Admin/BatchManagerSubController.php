@@ -90,7 +90,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
 
         $batchManagerRequest = Request\BatchManagerRequest::fromGlobals();
 
-        $user_id = \Piwigo\Users\CurrentUser::get()->id;
+        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
 
         $available_permission_levels = \Piwigo\Config\CurrentConfig::availablePermissionLevels();
         $conf_order_by = \Piwigo\Config\CurrentConfig::orderBy();

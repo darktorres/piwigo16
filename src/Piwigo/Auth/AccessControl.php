@@ -138,7 +138,7 @@ final class AccessControl
             return false;
         }
 
-        $currentUserId = \Piwigo\Users\CurrentUser::get()->id;
+        $currentUserId = \Piwigo\Users\CurrentUser::get()->id->value;
 
         if ($action === 'edit' && \Piwigo\Config\CurrentConfig::userCanEditComment()) {
             if ((int) $commentAuthorId === $currentUserId) {

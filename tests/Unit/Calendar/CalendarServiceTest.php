@@ -42,7 +42,7 @@ function makeCalendarService(): CalendarService
 
 beforeEach(function (): void {
     CurrentUser::set(new User(
-        id: 1,
+        id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: '',
         email: '',
         language: '',
@@ -98,7 +98,7 @@ test('buildInnerSql browses everything visible when there is no category context
 
 test('buildInnerSql composes forbidden/visible categories and images into the WHERE clause', function (): void {
     CurrentUser::set(new User(
-        id: 1,
+        id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: '',
         email: '',
         language: '',

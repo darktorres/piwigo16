@@ -464,7 +464,7 @@ SELECT
                     explode(
                         ',',
                         new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService(), \Piwigo\Cache\CachePools::permissions())
-                            ->getForUser($currentUser->id, $currentUser->status->value)
+                            ->getForUser($currentUser->id->value, $currentUser->status->value)
                     )
                 );
 

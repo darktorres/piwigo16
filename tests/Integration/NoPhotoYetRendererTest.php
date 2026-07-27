@@ -64,7 +64,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         // isAdmin() directly (real class methods), which read
         // Piwigo\Users\CurrentUser (Legacy Coupling Retirement Track A
         // batch A3).
-        CurrentUser::set(User::fromUserArray(['status' => 'guest', 'username' => 'fixture_guest']));
+        CurrentUser::set(User::fromUserArray(['id' => 2, 'status' => 'guest', 'username' => 'fixture_guest']));
         unset($_SESSION['no_photo_yet']);
     }
 

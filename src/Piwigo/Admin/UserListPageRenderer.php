@@ -119,7 +119,7 @@ ORDER BY registration_year, registration_month
         $webmaster_id = \Piwigo\Config\CurrentConfig::webmasterId();
 
         $protected_users = [
-            \Piwigo\Users\CurrentUser::get()->id,
+            \Piwigo\Users\CurrentUser::get()->id->value,
             $guest_id,
             $default_user_id,
             $webmaster_id,
@@ -142,7 +142,7 @@ SELECT
 
             $protected_users = array_merge($protected_users, $admin_ids);
 
-            $current_user_id = (string) \Piwigo\Users\CurrentUser::get()->id;
+            $current_user_id = (string) \Piwigo\Users\CurrentUser::get()->id->value;
 
             // we add all admin+webmaster users BUT the user herself
             $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$current_user_id]));
@@ -183,7 +183,7 @@ SELECT
                 'guest_user' => $guest_id,
                 'filter_group' => $userListFilter->groupId,
                 'search_input' => $userListFilter->userSearchInput,
-                'connected_user' => \Piwigo\Users\CurrentUser::get()->id,
+                'connected_user' => \Piwigo\Users\CurrentUser::get()->id->value,
                 'connected_user_status' => \Piwigo\Users\CurrentUser::get()->status->value,
                 'owner' => $webmaster_id,
                 'owner_username' => $owner_username[0],

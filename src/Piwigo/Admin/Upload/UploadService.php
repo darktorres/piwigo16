@@ -479,7 +479,7 @@ SELECT
                 'width' => $file_infos['width'],
                 'height' => $file_infos['height'],
                 'md5sum' => $md5sum,
-                'added_by' => \Piwigo\Users\CurrentUser::get()->id,
+                'added_by' => \Piwigo\Users\CurrentUser::get()->id->value,
                 'rotation' => $rotation,
             ];
 
@@ -515,7 +515,7 @@ SELECT
                 'width' => $file_infos['width'],
                 'height' => $file_infos['height'],
                 'md5sum' => $md5sum,
-                'added_by' => \Piwigo\Users\CurrentUser::get()->id,
+                'added_by' => \Piwigo\Users\CurrentUser::get()->id->value,
                 'rotation' => $rotation,
             ];
 

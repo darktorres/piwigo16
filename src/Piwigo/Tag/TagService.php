@@ -237,7 +237,7 @@ final readonly class TagService
             // (same reasoning as CachePools::config()'s own inline use in
             // ConfigService).
             $pool = \Piwigo\Cache\CachePools::tagCloud();
-            $item = $pool->getItem('counts_' . \Piwigo\Users\CurrentUser::get()->id);
+            $item = $pool->getItem('counts_' . \Piwigo\Users\CurrentUser::get()->id->value);
             $cached = $item->isHit() ? $item->get() : null;
             $tagCounters = is_array($cached) ? array_map(
                 static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,

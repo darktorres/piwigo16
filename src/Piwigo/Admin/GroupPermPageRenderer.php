@@ -69,7 +69,7 @@ final class GroupPermPageRenderer
         $group_service = \Piwigo\Bootstrap\CoreDomainAccessor::groupService();
 
         // [SEC-57] actor for either branch below
-        $actor_id = \Piwigo\Users\CurrentUser::get()->id;
+        $actor_id = \Piwigo\Users\CurrentUser::get()->id->value;
 
         if ($groupPermSubmit->isFalsify
             and count($cat_true) > 0) {

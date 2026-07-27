@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -123,7 +124,7 @@ final readonly class AuthService
                 $this->htmlRenderer->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
             }
 
-            $this->repo->updateLanguage($userId, $lang_cookie);
+            $this->repo->updateLanguage(UserId::from((int) $userId), $lang_cookie);
 
             // We unset the lang cookie, if user has changed their language
             // using interface we don't want to keep setting it back to
@@ -567,7 +568,7 @@ final readonly class AuthService
 
         if (! isset($userStatus)) {
             // we have to find the user status
-            $userStatus = $this->repo->findUserStatus($userId);
+            $userStatus = $this->repo->findUserStatus(UserId::from($userId));
 
             if ($userStatus === null) {
                 return false;
@@ -616,7 +617,7 @@ final readonly class AuthService
      */
     public function deactivatePasswordResetKey(int $userId): void
     {
-        $this->repo->clearActivationKey($userId);
+        $this->repo->clearActivationKey(UserId::from($userId));
     }
 
     /**
@@ -635,7 +636,7 @@ final readonly class AuthService
         : \Piwigo\Config\CurrentConfig::passwordResetDuration();
         $expire = (clone Env::now())->modify('+' . $duration . ' seconds');
 
-        $this->repo->setActivationKey($userId, $this->passwordService->hash($activation_key), $expire);
+        $this->repo->setActivationKey(UserId::from($userId), $this->passwordService->hash($activation_key), $expire);
 
         $urlService->setMakeFullUrl();
 

@@ -64,8 +64,8 @@ final class FeedController implements ControllerInterface
                 $htmlRenderer->pageNotFound($this->redirectService, Lang::t('Unknown feed identifier'));
             }
             $feed_last_check = $feed_row['lastCheck'];
-            if ($feed_row['userId'] !== \Piwigo\Users\CurrentUser::get()->id) { // new user
-                $feed_owner = self::userService()->buildUser($feed_row['userId']);
+            if ($feed_row['userId'] !== \Piwigo\Users\CurrentUser::get()->id->value) { // new user
+                $feed_owner = self::userService()->buildUser(\Piwigo\Common\ValueObject\UserId::from($feed_row['userId']));
                 // The feed is per-user-token, so this request's "current user"
                 // genuinely becomes the feed owner, not the real session user.
                 \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($feed_owner));
@@ -74,7 +74,7 @@ final class FeedController implements ControllerInterface
             $image_only = true;
             if (! \Piwigo\Auth\AccessControl::isAGuest()) {// auto session was created - so switch to guest
                 $guest_id = \Piwigo\Config\CurrentConfig::guestId();
-                $guest_user = self::userService()->buildUser($guest_id);
+                $guest_user = self::userService()->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
                 \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($guest_user));
             }
         }

@@ -33,12 +33,12 @@ test('attachGlobals seeds a guest user', function (): void {
     expect($user->status)->toBe(UserStatus::Guest)
         ->and($user->language)->toBe(AppInfo::DEFAULT_LANGUAGE)
         ->and($user->theme)->toBe(AppInfo::DEFAULT_TEMPLATE)
-        ->and($user->id)->toBe(CurrentConfig::guestId());
+        ->and($user->id->value)->toBe(CurrentConfig::guestId());
 });
 
 test('attachGlobals is idempotent -- does not clobber a real set() user', function (): void {
     $real = new User(
-        id: 42,
+        id: \Piwigo\Common\ValueObject\UserId::from(42),
         username: 'alice',
         email: '',
         language: 'fr_FR',

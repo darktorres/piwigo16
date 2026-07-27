@@ -143,7 +143,7 @@ final readonly class NotificationService
     public function getRecentPostDates(int $maxDates, int $maxElements, int $maxCats): array
     {
         $currentUser = \Piwigo\Users\CurrentUser::get();
-        $userId = (string) $currentUser->id;
+        $userId = (string) $currentUser->id->value;
 
         $pool = \Piwigo\Cache\CachePools::notifications();
         $cacheItem = $pool->getItem('recent_posts_' . $userId . '_' . $maxDates . '_' . $maxElements . '_' . $maxCats);

@@ -540,7 +540,7 @@ final class RequestBootstrap
             if ($is_mail_send) {
                 $apiKeyRepo->updateLastNotifiedOn(
                     $notify_api_key_expiration['auth_key'],
-                    CurrentUser::get()->id,
+                    CurrentUser::get()->id->value,
                     $notify_api_key_expiration['dbnow'],
                 );
             }

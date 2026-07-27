@@ -135,13 +135,13 @@ final class FilterService implements FilterUpdaterInterface
                 // visible well within one user session.
                 time() - $filter_key_time >= 30 or
                 // Date, period, user are changed
-                $filter_key['user'] !== $currentUser->id or
+                $filter_key['user'] !== $currentUser->id->value or
                 (is_numeric($filter_key['recent_period']) ? (int) $filter_key['recent_period'] : 0) !== $filter_recent_period or
                 (is_string($filter_key['date']) ? $filter_key['date'] : '') !== date('Ymd')
             ) {
                 // Need to compute dats
                 $filter_key = [
-                    'user' => $currentUser->id,
+                    'user' => $currentUser->id->value,
                     'recent_period' => $filter_recent_period,
                     'time' => time(),
                     'date' => date('Ymd'),

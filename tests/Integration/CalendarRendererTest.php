@@ -74,6 +74,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         // rationale: getSqlConditionFandF()'s forbidden_images fallthrough
         // needs a complete row, not just a partial one.
         CurrentUser::set(User::fromUserArray([
+            'id' => 1,
             'forbidden_categories' => '0',
             'level' => '0',
             'image_access_type' => 'NOT IN',

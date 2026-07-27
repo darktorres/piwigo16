@@ -325,7 +325,7 @@ SELECT COUNT(*)
         }
 
         // any photo in the caddie?
-        $user_id = \Piwigo\Users\CurrentUser::get()->id;
+        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
         $query = '
 SELECT COUNT(*)
   FROM ' . Tables::caddie() . '

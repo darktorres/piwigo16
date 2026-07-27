@@ -98,7 +98,7 @@ final class RedirectService implements RedirectServiceInterface
         if (! Lang::isLangInfoInitialized() || ! isset($template)) {
             $paths = CurrentPaths::get();
             $guest_id = CurrentConfig::guestId();
-            $user = self::userService()->buildUser($guest_id);
+            $user = self::userService()->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
             CurrentUser::set(User::fromUserArray($user));
             Lang::load('common.lang');
             EventDispatcher::get()->triggerNotify('loading_lang');

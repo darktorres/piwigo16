@@ -177,7 +177,7 @@ final readonly class CommentService
         } else {
             $currentUser = \Piwigo\Users\CurrentUser::get();
             $comm['author'] = addslashes($currentUser->username);
-            $comm['author_id'] = $currentUser->id;
+            $comm['author_id'] = $currentUser->id->value;
         }
 
         if (self::emptyValue($comm['content'])) {
@@ -326,7 +326,7 @@ final readonly class CommentService
 
         $authorId = null;
         if (! \Piwigo\Auth\AccessControl::isAdmin()) {
-            $authorId = \Piwigo\Users\CurrentUser::get()->id;
+            $authorId = \Piwigo\Users\CurrentUser::get()->id->value;
         }
 
         if ($this->repo->delete($ids, $authorId) === 0) {
@@ -421,7 +421,7 @@ final readonly class CommentService
         if ($commentAction !== 'reject') {
             $authorId = null;
             if (! \Piwigo\Auth\AccessControl::isAdmin()) {
-                $authorId = \Piwigo\Users\CurrentUser::get()->id;
+                $authorId = \Piwigo\Users\CurrentUser::get()->id->value;
             }
 
             $content = is_string($comment['content']) ? $comment['content'] : '';

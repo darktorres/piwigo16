@@ -395,7 +395,7 @@ SELECT
 
         $output = [];
         $where = ['1=1'];
-        $user_id = $currentUser->id;
+        $user_id = $currentUser->id->value;
         // Which user's own "remembered random representative" cache entry
         // (CachePools::categoryTree(), see below) each row's
         // user_representative_picture_id is read from/written to --
@@ -451,7 +451,7 @@ SELECT
             // CategoryTreeCache already computes/caches for this same
             // user id, so feeding it back into that same cache pool here
             // cannot desync it.
-            $guest_userdata = self::userService()->getUserData($repr_user_id);
+            $guest_userdata = self::userService()->getUserData(\Piwigo\Common\ValueObject\UserId::from($repr_user_id));
             $guest_forbidden_categories = $guest_userdata['forbidden_categories'] ?? '0';
             $guest_forbidden_categories = is_string($guest_forbidden_categories) ? $guest_forbidden_categories : '0';
             $where[] = 'id NOT IN (' . $guest_forbidden_categories . ')';

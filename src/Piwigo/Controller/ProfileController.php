@@ -180,7 +180,7 @@ SELECT ' . implode(',', $fields) . '
                     'language' => $cookie_lang,
                 ],
                 [
-                    'user_id' => \Piwigo\Users\CurrentUser::get()->id,
+                    'user_id' => \Piwigo\Users\CurrentUser::get()->id->value,
                 ]
             );
             \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();

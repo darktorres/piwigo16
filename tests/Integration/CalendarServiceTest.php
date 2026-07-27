@@ -61,6 +61,7 @@ final class CalendarServiceTest extends IntegrationTestCase
         // with no right-hand value, same gotcha documented in
         // CategoryServiceTest/SearchServiceTest.
         CurrentUser::set(User::fromUserArray([
+            'id' => 1,
             'forbidden_categories' => '0',
             'level' => '0',
             'image_access_type' => 'NOT IN',

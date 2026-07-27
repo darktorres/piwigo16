@@ -532,7 +532,10 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
                     } else {
                         self::permissionService()
-                            ->addPermissionOnCategory($category_ids, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)->findAdminIds());
+                            ->addPermissionOnCategory($category_ids, array_map(
+                                static fn (\Piwigo\Common\ValueObject\UserId $id): int => $id->value,
+                                \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)->findAdminIds()
+                            ));
                     }
                 }
 
@@ -645,7 +648,7 @@ SELECT id, path
                     'path' => $path,
                     'representative_ext' => $fs[$path]['representative_ext'],
                     'storage_category_id' => $db_fulldirs[$dirname],
-                    'added_by' => \Piwigo\Users\CurrentUser::get()->id,
+                    'added_by' => \Piwigo\Users\CurrentUser::get()->id->value,
                 ];
 
                 if ($post['privacy_level'] !== '0') {

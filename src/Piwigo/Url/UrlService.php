@@ -977,7 +977,7 @@ final class UrlService implements UrlServiceInterface
             return [];
         }
 
-        $user_id = \Piwigo\Users\CurrentUser::get()->id;
+        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
 
         $query = '
 SELECT

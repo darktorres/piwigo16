@@ -152,7 +152,7 @@ final class ProfileFormHandler
             // if $_POST and $userdata have are same email
             // validate_mail_address allows, however, to check email
             $mail_address_input = is_string($post['mail_address']) ? $post['mail_address'] : null;
-            $mail_error = self::userService()->validateMailAddress($user_id, $mail_address_input);
+            $mail_error = self::userService()->validateMailAddress(\Piwigo\Common\ValueObject\UserId::tryFrom($user_id), $mail_address_input);
             if ($mail_error !== '' && $mail_error !== '0') {
                 $errors[] = $mail_error;
             }

@@ -1794,9 +1794,12 @@ final readonly class CategoryService
             $grantedUsers = $this->repo->findAccessUserIds($insertIdUppercat);
             $this->permissionService->addPermissionOnCategory((int) $insertedId, $grantedUsers);
         } elseif ($insert['status'] === 'private') {
-            $currentUserId = \Piwigo\Users\CurrentUser::get()->id;
-            $adminIds = $this->userRepository()
-                ->findAdminIds();
+            $currentUserId = \Piwigo\Users\CurrentUser::get()->id->value;
+            $adminIds = array_map(
+                static fn (\Piwigo\Common\ValueObject\UserId $id): int => $id->value,
+                $this->userRepository()
+                    ->findAdminIds()
+            );
             $this->permissionService->addPermissionOnCategory((int) $insertedId, array_unique(array_merge($adminIds, [$currentUserId])));
         }
 

@@ -210,7 +210,13 @@ final readonly class ExtensionRepository
             ->getQuery()
             ->getResult();
 
-        return array_map(static fn (array $row): string => (string) $row['userId'], $ids);
+        return array_map(static function (array $row): string {
+            if (! $row['userId'] instanceof \Piwigo\Common\ValueObject\UserId) {
+                throw new \RuntimeException('Expected UserId from DQL scalar hydration of ui.userId');
+            }
+
+            return (string) $row['userId']->value;
+        }, $ids);
     }
 
     /**

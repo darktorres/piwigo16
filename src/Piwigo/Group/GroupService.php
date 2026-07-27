@@ -286,7 +286,7 @@ final readonly class GroupService
         $this->activityLogger->record('group', $ids, 'delete');
 
         // [SEC-57] one row per group actually deleted
-        $actorId = \Piwigo\Users\CurrentUser::get()->id;
+        $actorId = \Piwigo\Users\CurrentUser::get()->id->value;
         $audit = $this->auditService;
         foreach ($deleted as $deletedId => $deletedName) {
             $audit->record($actorId, 'delete', 'group', $deletedId, [

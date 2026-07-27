@@ -568,7 +568,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             ->massInsert(Tables::users(), array_keys($inserts[0]), $inserts);
 
         $this->userService($conn)
-            ->createUserInfos([1, 2], [
+            ->createUserInfos([\Piwigo\Common\ValueObject\UserId::from(1), \Piwigo\Common\ValueObject\UserId::from(2)], [
                 'language' => $this->language,
             ]);
     }
@@ -650,7 +650,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             register_shutdown_function(session_write_close(...));
 
             $user = $this->userService($conn)
-                ->buildUser(1);
+                ->buildUser(\Piwigo\Common\ValueObject\UserId::from(1));
             // build_user() returns array<string, mixed>; the 'id' key we just set
             // to the literal user id 1 doesn't retain that literal type through
             // the return, so narrow to what log_user() actually accepts.

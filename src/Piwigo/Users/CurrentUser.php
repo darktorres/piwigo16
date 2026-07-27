@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 
@@ -46,7 +47,7 @@ final class CurrentUser
     public static function attachGlobals(): void
     {
         self::$instance ??= new User(
-            id: CurrentConfig::guestId(),
+            id: UserId::from(CurrentConfig::guestId()),
             username: '',
             email: '',
             language: AppInfo::DEFAULT_LANGUAGE,

@@ -101,7 +101,7 @@ final class UserBootstrap
             $remote_user = self::resolveApacheRemoteUser($_SERVER);
 
             if ($remote_user !== null) {
-                if (! (bool) ($user['id'] = $userService->getUserId($remote_user))) {
+                if (! (bool) ($user['id'] = $userService->getUserId($remote_user)?->value)) {
                     $user['id'] = $userService
                         ->registerUser($remote_user, '', '', new UrlService(new HtmlService()), false)['userId'] ?? false;
                 }
@@ -186,7 +186,7 @@ final class UserBootstrap
         // guest_id fallback already used earlier in this file.
         $user_id_int = is_numeric($user['id']) ? (int) $user['id'] : $guest_id_int;
 
-        $user = $userService->buildUser($user_id_int);
+        $user = $userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($user_id_int));
         // Legacy Coupling Retirement Track A batch A3: sync CurrentUser here,
         // not only in RequestBootstrap::connect() after this method returns
         // -- AccessControl::isAGuest()/isGeneric() right below already read

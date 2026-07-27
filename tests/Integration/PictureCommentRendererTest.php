@@ -189,7 +189,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
     private function seedUser(int $id, UserStatus $status): void
     {
         CurrentUser::set(new User(
-            id: $id,
+            id: \Piwigo\Common\ValueObject\UserId::from($id),
             username: 'fixture_user_' . $id,
             email: '',
             language: '',

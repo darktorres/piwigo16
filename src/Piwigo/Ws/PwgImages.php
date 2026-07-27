@@ -1995,7 +1995,7 @@ SELECT COUNT(*)
         }
 
         $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::uploadDir();
-        $output_filepath_prefix = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-u' . \Piwigo\Users\CurrentUser::get()->id;
+        $output_filepath_prefix = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-u' . \Piwigo\Users\CurrentUser::get()->id->value;
         $chunkfile_path_pattern = $output_filepath_prefix . '-%03uof%03u.chunk';
 
         $chunkfile_path = sprintf($chunkfile_path_pattern, $params['chunk'] + 1, $params['chunks']);

@@ -14,7 +14,7 @@ use Piwigo\Users\UserStatus;
 function seedCurrentUserStatus(UserStatus $status): void
 {
     CurrentUser::set(new User(
-        id: 1,
+        id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: '',
         email: '',
         language: '',

@@ -69,7 +69,7 @@ final class PictureRateRenderer
         if (\Piwigo\Config\CurrentConfig::rateAnonymous() or \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic)) {
             if ($rate_summary['count'] > 0) {
                 $rate_image_id = $imageId;
-                $rate_user_id = \Piwigo\Users\CurrentUser::get()->id;
+                $rate_user_id = \Piwigo\Users\CurrentUser::get()->id->value;
 
                 $anonymous_id = null;
                 if (! \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic)) {

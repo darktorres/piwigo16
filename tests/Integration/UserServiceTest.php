@@ -94,7 +94,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_validate_mail_address_excludes_the_given_user_id(): void
         {
-            self::assertSame('', $this->service->validateMailAddress(1, 'fixture_admin@example.test'));
+            self::assertSame('', $this->service->validateMailAddress(UserId::from(1), 'fixture_admin@example.test'));
         }
 
         public function test_validate_login_case_rejects_an_existing_username_any_case(): void
@@ -114,13 +114,13 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_user_id_finds_a_fixture_user(): void
         {
-            self::assertSame(1, $this->service->getUserId('fixture_admin'));
-            self::assertFalse($this->service->getUserId('does-not-exist'));
+            self::assertEquals(UserId::from(1), $this->service->getUserId('fixture_admin'));
+            self::assertNull($this->service->getUserId('does-not-exist'));
         }
 
         public function test_get_user_id_by_email_finds_a_fixture_user(): void
         {
-            self::assertSame(1, $this->service->getUserIdByEmail('fixture_admin@example.test'));
+            self::assertEquals(UserId::from(1), $this->service->getUserIdByEmail('fixture_admin@example.test'));
         }
 
         public function test_get_default_user_info_and_value(): void
@@ -228,7 +228,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_build_user_populates_effective_permission_fields(): void
         {
-            $user = $this->service->buildUser(1);
+            $user = $this->service->buildUser(UserId::from(1));
 
             self::assertIsString($user['forbidden_categories']);
             self::assertSame('NOT IN', $user['image_access_type']);

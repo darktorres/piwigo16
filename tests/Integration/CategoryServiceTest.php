@@ -52,7 +52,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class))
         );
 
-        CurrentUser::set(User::fromUserArray([]));
+        CurrentUser::set(User::fromUserArray(['id' => 1]));
         CurrentConfig::setRateEnabled(true);
     }
 
@@ -121,7 +121,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_preferred_image_orders_returns_the_fixed_option_list(): void
     {
-        CurrentUser::set(User::fromUserArray(['status' => 'normal']));
+        CurrentUser::set(User::fromUserArray(['id' => 1, 'status' => 'normal']));
 
         $orders = $this->service->getPreferredImageOrders();
 
@@ -134,7 +134,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_preferred_image_orders_permissions_option_visible_to_admin(): void
     {
-        CurrentUser::set(User::fromUserArray(['status' => 'admin']));
+        CurrentUser::set(User::fromUserArray(['id' => 1, 'status' => 'admin']));
 
         $orders = $this->service->getPreferredImageOrders();
 
@@ -294,6 +294,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // malformed 'level<=' fragment with no right-hand value, a state
         // that can't happen in production.
         return [
+            'id' => 1,
             'forbidden_categories' => '0',
             'level' => '0',
             'image_access_type' => 'NOT IN',

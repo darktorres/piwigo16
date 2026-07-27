@@ -64,7 +64,7 @@ function makePictureCommentTestTemplate(): Template
 beforeEach(function (): void {
     CurrentTemplate::set(makePictureCommentTestTemplate());
     CurrentUser::set(new User(
-        id: 1,
+        id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: 'torres',
         email: '',
         language: '',
@@ -125,7 +125,7 @@ test('render rejects a posted comment as "ugly spammer" when no related category
 
 test('render rejects a posted comment as "Session expired" for a guest when comments_forall is off', function (): void {
     CurrentUser::set(new User(
-        id: 0,
+        id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: '',
         email: '',
         language: '',
@@ -157,7 +157,7 @@ test('render rejects a posted comment as "Session expired" for a guest when comm
 
 test('render lets a guest post a comment when comments_forall is on', function (): void {
     CurrentUser::set(new User(
-        id: 0,
+        id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: '',
         email: '',
         language: '',

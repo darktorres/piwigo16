@@ -136,13 +136,13 @@ final class PasswordController implements ControllerInterface
 
         if ($key !== null and ! $this->request->isSubmitted) {
             $user_id = $this->checkPasswordResetKey($key);
-            if (is_numeric($user_id)) {
+            if (is_int($user_id)) {
                 $conn = DbConnection::build();
-                $userdata = self::userService()->getUserData((int) $user_id);
+                $userdata = self::userService()->getUserData(\Piwigo\Common\ValueObject\UserId::from($user_id));
                 $userdata_username = $userdata['username'] ?? null;
                 $this->username = is_string($userdata_username) ? $userdata_username : '';
                 $template->assign('key', $key);
-                $first_login = self::authService()->hasAlreadyLoggedIn((int) $user_id);
+                $first_login = self::authService()->hasAlreadyLoggedIn($user_id);
 
                 if ($this->action === null) {
                     $this->action = 'reset';
@@ -291,19 +291,18 @@ final class PasswordController implements ControllerInterface
         // retrievies user by email is not try by username
         $user_id_raw = self::userService()->getUserIdByEmail($username_or_email);
 
-        if (! is_numeric($user_id_raw)) {
+        if ($user_id_raw === null) {
             $user_id_raw = self::userService()->getUserId($username_or_email);
         }
 
         // when no user is found, we assign guest_id instead of stopping.
         // this lets the function behave identically for unknown users,
         // preventing username/email enumeration through timing or responses.
-        $is_user_found = is_numeric($user_id_raw);
-        if (is_numeric($user_id_raw)) {
+        $is_user_found = $user_id_raw !== null;
+        if ($user_id_raw !== null) {
             $user_id = $user_id_raw;
         } else {
-            $guest_id = \Piwigo\Config\CurrentConfig::guestId();
-            $user_id = $guest_id;
+            $user_id = \Piwigo\Common\ValueObject\UserId::from(\Piwigo\Config\CurrentConfig::guestId());
         }
 
         $userdata = self::userService()->getUserData($user_id);
@@ -358,7 +357,7 @@ final class PasswordController implements ControllerInterface
         $_SESSION['reset_password_code'] = [
             'secret' => $user_code['secret'],
             'attempts' => 0,
-            'user_id' => $is_user_found ? $user_id : null,
+            'user_id' => $is_user_found ? $user_id->value : null,
             'created_at' => time(),
             'ttl' => min(\Piwigo\Config\CurrentConfig::passwordResetCodeDuration(), 900), // max 15 min
         ];
@@ -421,7 +420,7 @@ final class PasswordController implements ControllerInterface
                 // lockout account for 1hour
                 if ($has_valid_user_id) {
                     $saveCurrentUser = \Piwigo\Users\CurrentUser::get();
-                    $target_user_data = self::userService()->buildUser((int) $user_id_raw);
+                    $target_user_data = self::userService()->buildUser(\Piwigo\Common\ValueObject\UserId::from((int) $user_id_raw));
                     // PreferencesService writes onto CurrentUser::get()->id
                     // (Legacy Coupling Retirement Track A batch A3), so the
                     // identity must switch here too, or the preference
@@ -452,7 +451,7 @@ final class PasswordController implements ControllerInterface
             $this->errors['password_form_error'] = Lang::t('Invalid verification code');
             return false;
         }
-        $user_id = (int) $user_id_raw;
+        $user_id = \Piwigo\Common\ValueObject\UserId::from((int) $user_id_raw);
 
         $saveCurrentUser = \Piwigo\Users\CurrentUser::get();
         $target_user_data = self::userService()->buildUser($user_id);
@@ -465,7 +464,7 @@ final class PasswordController implements ControllerInterface
 
         $targetUser = \Piwigo\Users\CurrentUser::get();
         $_SESSION['valid_reset_password_code'] = [
-            'user_id' => $user_id,
+            'user_id' => $user_id->value,
             'username' => $targetUser->username,
             'email' => $targetUser->email,
             'language' => $targetUser->language,
@@ -489,14 +488,14 @@ final class PasswordController implements ControllerInterface
      * checks the activation key: does it match the expected pattern? is it
      * linked to a user? is this user allowed to reset his password?
      *
-     * The return value is always false or $row['user_id'] (a NOT NULL int
-     * primary key, verified is_numeric() just before every return), never
-     * genuinely mixed -- matches resetPasswordKey()'s own already-real
-     * return type.
+     * The return value is always false or the matching row's user_id (a
+     * NOT NULL int primary key, via ActivationKeyRow's own UserId
+     * narrowing) -- matches resetPasswordKey()'s own already-real return
+     * type.
      *
-     * @return false|int|string user_id if OK, false otherwise
+     * @return false|int user_id if OK, false otherwise
      */
-    private function checkPasswordResetKey(?string $reset_key): false|int|string
+    private function checkPasswordResetKey(?string $reset_key): false|int
     {
         $key = $reset_key ?? '';
         if (! (bool) preg_match('/^[a-z0-9]{20}$/i', $key)) {
@@ -516,24 +515,22 @@ SELECT
         $conn = DbConnection::build();
         $user_id = null;
         foreach ($conn->fetchAllAssociative($query) as $row) {
-            $activation_key = $row['activation_key'] ?? null;
-            if (! is_string($activation_key)) {
+            $activationKeyRow = \Piwigo\Users\Projection\ActivationKeyRow::fromRow($row);
+            if ($activationKeyRow->activationKey === '') {
                 continue;
             }
-            if (self::passwordService()->verify($key, $activation_key)) {
-                $status = $row['status'] ?? null;
-                $status = is_string($status) ? $status : '';
-                if (\Piwigo\Auth\AccessControl::isAGuest($status) or \Piwigo\Auth\AccessControl::isGeneric($status)) {
+            if (self::passwordService()->verify($key, $activationKeyRow->activationKey)) {
+                if (\Piwigo\Auth\AccessControl::isAGuest($activationKeyRow->status) or \Piwigo\Auth\AccessControl::isGeneric($activationKeyRow->status)) {
                     $this->errors['password_page_error'] = Lang::t('Password reset is not allowed for this user');
                     return false;
                 }
 
-                $user_id = $row['user_id'];
+                $user_id = $activationKeyRow->userId->value;
                 break;
             }
         }
 
-        if (! (is_int($user_id) || is_string($user_id)) || (int) $user_id === 0) {
+        if ($user_id === null) {
             $this->errors['password_page_error'] = Lang::t('Invalid key');
             return false;
         }
@@ -610,7 +607,7 @@ SELECT
         }
         unset($_SESSION['valid_reset_password_code']);
 
-        self::activityService($conn)->record('user', (int) $user_id, 'reset_password_success');
+        self::activityService($conn)->record('user', $user_id, 'reset_password_success');
 
         \Piwigo\Core\PageState::current()->addInfo(Lang::t('Your password has been reset'));
         \Piwigo\Core\PageState::current()->addInfo('<a href="' . $this->urlService->getRootUrl() . 'identification.php">' . Lang::t('Login') . '</a>');
@@ -618,7 +615,7 @@ SELECT
         return true;
     }
 
-    private function resetPasswordKey(): false|int|string
+    private function resetPasswordKey(): false|int
     {
         // Read directly from the request, not the guest-nulled $key:
         // this method is only ever reached via the submit-processing path
@@ -633,13 +630,13 @@ SELECT
 
         $user_id = $this->checkPasswordResetKey($this->request->key);
 
-        if (! is_numeric($user_id)) {
+        if (! is_int($user_id)) {
             return false;
         }
 
         $conn = DbConnection::build();
-        self::authService()->deactivatePasswordResetKey((int) $user_id);
-        self::authService()->deactivateUserAuthKeys((int) $user_id);
+        self::authService()->deactivatePasswordResetKey($user_id);
+        self::authService()->deactivateUserAuthKeys($user_id);
         return $user_id;
     }
 

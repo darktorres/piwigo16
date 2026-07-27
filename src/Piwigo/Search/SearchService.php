@@ -1053,7 +1053,7 @@ final readonly class SearchService
         $cacheKey = md5(serialize([
             strtolower($q),
             \Piwigo\Config\CurrentConfig::orderBy(),
-            $currentUser->id,
+            $currentUser->id->value,
             isset($options['permissions']) ? (bool) $options['permissions'] : true,
             $options['images_where'] ?? '',
         ]));
@@ -1317,7 +1317,7 @@ final readonly class SearchService
         $dbNow = $this->repo->now();
         $searchUuid = $this->getAvailableSearchUuid();
 
-        $userId = \Piwigo\Users\CurrentUser::get()->id;
+        $userId = \Piwigo\Users\CurrentUser::get()->id->value;
 
         $this->repo->insertSearch($rules, $dbNow, $userId, $searchUuid, $forkedFrom);
 

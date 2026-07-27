@@ -626,7 +626,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                 $guest_id = \Piwigo\Config\CurrentConfig::guestId();
 
-                $edit_user = self::userService($conn)->buildUser($guest_id);
+                $edit_user = self::userService($conn)->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
                 // P22: profile.php's own save_profile_from_post()/
                 // load_profile_in_template() ported to Piwigo\Controller\
                 // ProfileFormHandler in P23 batch 8c.
@@ -635,7 +635,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {
                     // Reload user
-                    $edit_user = self::userService($conn)->buildUser($guest_id);
+                    $edit_user = self::userService($conn)->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
                     \Piwigo\Core\PageState::current()->addInfo(Lang::t('Information data registered in database'));
                 }
                 \Piwigo\Core\PageState::current()->errors = array_merge(\Piwigo\Core\PageState::current()->errors, array_values(array_filter($errors, is_string(...))));

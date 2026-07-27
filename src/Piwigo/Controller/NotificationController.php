@@ -51,7 +51,7 @@ final class NotificationController implements ControllerInterface
         // file reads $GLOBALS['title']. Plain local, not global.
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $user_id = \Piwigo\Users\CurrentUser::get()->id;
+        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
 
         $feedRepo->insert($feedId, $user_id);
 

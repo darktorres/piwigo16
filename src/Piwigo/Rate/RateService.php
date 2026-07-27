@@ -65,7 +65,7 @@ final readonly class RateService
             return false;
         }
 
-        $userId = \Piwigo\Users\CurrentUser::get()->id;
+        $userId = \Piwigo\Users\CurrentUser::get()->id->value;
 
         $remoteAddr = IpAddress::fromRemoteAddr()->value ?? '';
         $ipComponents = explode('.', $remoteAddr);

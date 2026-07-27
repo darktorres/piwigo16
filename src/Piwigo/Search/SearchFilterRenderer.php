@@ -132,7 +132,7 @@ final readonly class SearchFilterRenderer
         }
 
         $currentUser = \Piwigo\Users\CurrentUser::get();
-        $userId = (string) $currentUser->id;
+        $userId = (string) $currentUser->id->value;
 
         $langMonth = \Piwigo\Core\Lang::months();
 

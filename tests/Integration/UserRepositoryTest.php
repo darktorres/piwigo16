@@ -41,29 +41,29 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_find_id_by_username_returns_a_fixture_user(): void
     {
-        self::assertSame(1, $this->repo->findIdByUsername('fixture_admin', 'id', 'username'));
-        self::assertFalse($this->repo->findIdByUsername('does-not-exist', 'id', 'username'));
+        self::assertEquals(\Piwigo\Common\ValueObject\UserId::from(1), $this->repo->findIdByUsername('fixture_admin', 'id', 'username'));
+        self::assertNull($this->repo->findIdByUsername('does-not-exist', 'id', 'username'));
     }
 
     public function test_find_username_by_id_returns_a_fixture_user(): void
     {
-        self::assertSame('fixture_admin', $this->repo->findUsernameById(1, 'id', 'username'));
+        self::assertSame('fixture_admin', $this->repo->findUsernameById(\Piwigo\Common\ValueObject\UserId::from(1), 'id', 'username'));
     }
 
     public function test_find_username_by_id_returns_null_for_a_nonexistent_user(): void
     {
-        self::assertNull($this->repo->findUsernameById(999999, 'id', 'username'));
+        self::assertNull($this->repo->findUsernameById(\Piwigo\Common\ValueObject\UserId::from(999999), 'id', 'username'));
     }
 
     public function test_find_id_by_email_returns_a_fixture_user(): void
     {
-        self::assertSame(1, $this->repo->findIdByEmail('fixture_admin@example.test', 'id', 'mail_address'));
-        self::assertFalse($this->repo->findIdByEmail('nobody@example.test', 'id', 'mail_address'));
+        self::assertEquals(\Piwigo\Common\ValueObject\UserId::from(1), $this->repo->findIdByEmail('fixture_admin@example.test', 'id', 'mail_address'));
+        self::assertNull($this->repo->findIdByEmail('nobody@example.test', 'id', 'mail_address'));
     }
 
     public function test_find_id_by_email_is_case_insensitive(): void
     {
-        self::assertSame(1, $this->repo->findIdByEmail('FIXTURE_ADMIN@EXAMPLE.TEST', 'id', 'mail_address'));
+        self::assertEquals(\Piwigo\Common\ValueObject\UserId::from(1), $this->repo->findIdByEmail('FIXTURE_ADMIN@EXAMPLE.TEST', 'id', 'mail_address'));
     }
 
     public function test_find_by_username_case_insensitive_matches_regardless_of_case(): void
@@ -95,8 +95,8 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_email_exists_excludes_the_given_user_id(): void
     {
-        self::assertFalse($this->repo->emailExists('fixture_admin@example.test', 'mail_address', 'id', 1));
-        self::assertTrue($this->repo->emailExists('fixture_admin@example.test', 'mail_address', 'id', 2));
+        self::assertFalse($this->repo->emailExists('fixture_admin@example.test', 'mail_address', 'id', \Piwigo\Common\ValueObject\UserId::from(1)));
+        self::assertTrue($this->repo->emailExists('fixture_admin@example.test', 'mail_address', 'id', \Piwigo\Common\ValueObject\UserId::from(2)));
     }
 
     public function test_find_all_usernames_includes_fixture_users(): void
@@ -117,9 +117,9 @@ final class UserRepositoryTest extends IntegrationTestCase
             'mail_address' => null,
         ]);
 
-        self::assertSame($id, $this->repo->findIdByUsername($username, 'id', 'username'));
+        self::assertEquals($id, $this->repo->findIdByUsername($username, 'id', 'username'));
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id);
+        $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id->value);
     }
 
     public function test_insert_user_infos_then_find_default_user_info_row_round_trips(): void
@@ -211,7 +211,7 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_save_preferences_persists_the_json_encoded_value(): void
     {
-        $this->repo->savePreferences(1, ['theme' => 'dark']);
+        $this->repo->savePreferences(\Piwigo\Common\ValueObject\UserId::from(1), ['theme' => 'dark']);
 
         $value = $this->conn->createQueryBuilder()
             ->select('preferences')

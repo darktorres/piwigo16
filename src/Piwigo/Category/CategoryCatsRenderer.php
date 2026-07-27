@@ -84,7 +84,7 @@ final readonly class CategoryCatsRenderer
         $treeCache = new CategoryTreeCache($categoryService, $categoryRepo, $reprPool);
 
         $currentUser = \Piwigo\Users\CurrentUser::get();
-        $userId = $currentUser->id;
+        $userId = $currentUser->id->value;
         $isRecentCats = $section === 'recent_cats';
 
         $tree = $treeCache->getForUser($currentUser->rawAttributes);

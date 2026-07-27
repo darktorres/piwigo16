@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\Tables;
 use Piwigo\Users\Projection\UserInfo;
 
@@ -78,7 +80,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         return is_string($email) ? $email : '';
     }
 
-    public function findIdByUsername(string $username, string $idColumn, string $usernameColumn): int|false
+    public function findIdByUsername(string $username, string $idColumn, string $usernameColumn): ?UserId
     {
         $value = $this->getEntityManager()
             ->getConnection()
@@ -90,10 +92,10 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             ->executeQuery()
             ->fetchOne();
 
-        return is_numeric($value) ? (int) $value : false;
+        return UserId::tryFrom($value);
     }
 
-    public function findIdByEmail(string $email, string $idColumn, string $emailColumn): int|false
+    public function findIdByEmail(string $email, string $idColumn, string $emailColumn): ?UserId
     {
         $value = $this->getEntityManager()
             ->getConnection()
@@ -105,7 +107,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             ->executeQuery()
             ->fetchOne();
 
-        return is_numeric($value) ? (int) $value : false;
+        return UserId::tryFrom($value);
     }
 
     /**
@@ -153,7 +155,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         return is_numeric($value) && (int) $value > 0;
     }
 
-    public function emailExists(string $email, string $emailColumn, string $idColumn, ?int $excludeUserId): bool
+    public function emailExists(string $email, string $emailColumn, string $idColumn, ?UserId $excludeUserId): bool
     {
         $qb = $this->getEntityManager()
             ->getConnection()
@@ -165,7 +167,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
 
         if ($excludeUserId !== null) {
             $qb->andWhere($idColumn . ' != :excludeUserId')
-                ->setParameter('excludeUserId', $excludeUserId);
+                ->setParameter('excludeUserId', $excludeUserId->value);
         }
 
         $value = $qb->executeQuery()
@@ -174,7 +176,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         return is_numeric($value) && (int) $value > 0;
     }
 
-    public function findUsernameById(int $userId, string $idColumn, string $usernameColumn): ?string
+    public function findUsernameById(UserId $userId, string $idColumn, string $usernameColumn): ?string
     {
         $value = $this->getEntityManager()
             ->getConnection()
@@ -182,7 +184,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             ->select($usernameColumn)
             ->from(Tables::users())
             ->where($idColumn . ' = :id')
-            ->setParameter('id', $userId)
+            ->setParameter('id', $userId->value)
             ->executeQuery()
             ->fetchOne();
 
@@ -213,7 +215,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      *   column-name-and-value pairs (username/password/email), matching
      *   the original's \Piwigo\Config\CurrentConfig::userFields() mapping
      */
-    public function insertUser(array $columns): int
+    public function insertUser(array $columns): UserId
     {
         $conn = $this->getEntityManager()
             ->getConnection();
@@ -231,11 +233,11 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         }
         $qb->executeStatement();
 
-        return (int) $conn->lastInsertId();
+        return UserId::from((int) $conn->lastInsertId());
     }
 
     /**
-     * @param array<int|string, int|string> $userIds
+     * @param list<UserId> $userIds
      * @param array<string, mixed> $row default column => value pairs,
      *   copied onto every inserted row (matches create_user_infos()'s own
      *   "start from get_default_user_info(), overlay per-row fields"
@@ -251,7 +253,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
 
         $em = $this->getEntityManager();
         foreach ($userIds as $userId) {
-            $em->persist($this->buildUserInfoEntity((int) $userId, $row));
+            $em->persist($this->buildUserInfoEntity($userId, $row));
         }
 
         $em->flush();
@@ -260,7 +262,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     /**
      * @param array<string, mixed> $row
      */
-    private function buildUserInfoEntity(int $userId, array $row): UserInfoEntity
+    private function buildUserInfoEntity(UserId $userId, array $row): UserInfoEntity
     {
         $preferencesRaw = $row['preferences'] ?? null;
 
@@ -286,7 +288,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         );
     }
 
-    public function findDefaultUserInfoRow(int $defaultUserId): ?UserInfo
+    public function findDefaultUserInfoRow(UserId $defaultUserId): ?UserInfo
     {
         $entity = $this->find($defaultUserId);
 
@@ -296,9 +298,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     /**
      * @param array<string, mixed> $preferences
      */
-    public function savePreferences(int|string $userId, array $preferences): void
+    public function savePreferences(UserId $userId, array $preferences): void
     {
-        $entity = $this->find((int) $userId);
+        $entity = $this->find($userId);
         if ($entity === null) {
             return;
         }
@@ -313,7 +315,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * Ported from admin/include/functions.php's get_admins() (P23 batch
      * 8d), unchanged logic.
      *
-     * @return list<int>
+     * @return list<UserId>
      */
     public function findAdminIds(bool $includeWebmaster = true): array
     {
@@ -329,7 +331,13 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             ->getQuery()
             ->getResult();
 
-        return array_map(static fn (array $row): int => $row['userId'], $rows);
+        return array_map(static function (array $row): UserId {
+            if (! $row['userId'] instanceof UserId) {
+                throw new \RuntimeException('Expected UserId from DQL scalar hydration of ui.userId');
+            }
+
+            return $row['userId'];
+        }, $rows);
     }
 
     /**
@@ -339,7 +347,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * purge / activity log stay in Piwigo\Users\UserService::deleteUser(),
      * which calls this).
      */
-    public function deleteUser(int $userId): void
+    public function deleteUser(UserId $userId): void
     {
 
         $tables = [
@@ -371,7 +379,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             $conn->createQueryBuilder()
                 ->delete($table)
                 ->where('user_id = :userId')
-                ->setParameter('userId', $userId)
+                ->setParameter('userId', $userId->value)
                 ->executeStatement();
         }
 
@@ -386,7 +394,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         $conn->createQueryBuilder()
             ->delete(Tables::users())
             ->where($userIdField . ' = :userId')
-            ->setParameter('userId', $userId)
+            ->setParameter('userId', $userId->value)
             ->executeStatement();
     }
 
@@ -396,35 +404,35 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * compat column-name lookup (the caller passes it, this method never
      * reads `$conf` itself).
      *
-     * @return list<int>
+     * @return list<UserId>
      */
     public function findAllUserIds(string $userIdColumn): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()
+        return array_values(array_filter(array_map(static fn (mixed $v): ?UserId => UserId::tryFrom($v), $this->getEntityManager()
             ->getConnection()
             ->createQueryBuilder()
             ->select($userIdColumn . ' AS id')
             ->from(Tables::users())
             ->executeQuery()
-            ->fetchFirstColumn());
+            ->fetchFirstColumn())));
     }
 
     /**
-     * @return list<int>
+     * @return list<UserId>
      */
     public function findDistinctUserIdsInTable(string $table): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()
+        return array_values(array_filter(array_map(static fn (mixed $v): ?UserId => UserId::tryFrom($v), $this->getEntityManager()
             ->getConnection()
             ->createQueryBuilder()
             ->select('DISTINCT user_id')
             ->from($table)
             ->executeQuery()
-            ->fetchFirstColumn());
+            ->fetchFirstColumn())));
     }
 
     /**
-     * @param  array<int>  $userIds  array_diff()'s result doesn't guarantee a list
+     * @param list<UserId> $userIds
      */
     public function deleteUsersFromTable(string $table, array $userIds): void
     {
@@ -437,7 +445,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             ->createQueryBuilder()
             ->delete($table)
             ->where('user_id IN (:userIds)')
-            ->setParameter('userIds', $userIds, \Doctrine\DBAL\ArrayParameterType::INTEGER)
+            ->setParameter('userIds', array_map(static fn (UserId $id): int => $id->value, $userIds), ArrayParameterType::INTEGER)
             ->executeStatement();
 
         // $table may be user_infos -- bypasses the ORM, so any

@@ -173,7 +173,7 @@ final class BatchManagerGlobalPageRenderer
             $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService());
 
             if ($action === 'remove_from_caddie') {
-                $current_user_id = \Piwigo\Users\CurrentUser::get()->id;
+                $current_user_id = \Piwigo\Users\CurrentUser::get()->id->value;
                 $query = '
 DELETE
   FROM ' . Tables::caddie() . '

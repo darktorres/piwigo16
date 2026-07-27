@@ -55,7 +55,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
 
     public function test_update_language_persists_the_new_value(): void
     {
-        $this->repo->updateLanguage(1, 'fr_FR');
+        $this->repo->updateLanguage(\Piwigo\Common\ValueObject\UserId::from(1), 'fr_FR');
 
         $value = $this->conn->createQueryBuilder()
             ->select('language')

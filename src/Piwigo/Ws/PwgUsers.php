@@ -542,7 +542,7 @@ SELECT DISTINCT ';
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
         $protected_users = [
-            $currentUser->id,
+            $currentUser->id->value,
             \Piwigo\Config\CurrentConfig::guestId(),
             \Piwigo\Config\CurrentConfig::defaultUserId(),
             \Piwigo\Config\CurrentConfig::webmasterId(),
@@ -572,7 +572,7 @@ SELECT
 
         $user_service = self::userService();
         foreach ($params['user_id'] as $user_id) {
-            $user_service->deleteUser($user_id);
+            $user_service->deleteUser(\Piwigo\Common\ValueObject\UserId::from($user_id));
             $counter++;
         }
 
@@ -669,7 +669,7 @@ SELECT
         }
 
         // SPECIAL_USER
-        $special_user = in_array($currentUser->id, [\Piwigo\Config\CurrentConfig::guestId(), \Piwigo\Config\CurrentConfig::defaultUserId()], true);
+        $special_user = in_array($currentUser->id->value, [\Piwigo\Config\CurrentConfig::guestId(), \Piwigo\Config\CurrentConfig::defaultUserId()], true);
         if ($special_user) {
             unset(
                 $params['password'],
@@ -689,7 +689,7 @@ SELECT
             $user_fields = \Piwigo\Config\CurrentConfig::userFields();
             $user_field_password = $user_fields['password'];
             $user_field_id = $user_fields['id'];
-            $current_user_id = (string) $currentUser->id;
+            $current_user_id = (string) $currentUser->id->value;
 
             $query = '
 SELECT ' . $user_field_password . ' AS password
@@ -723,7 +723,7 @@ SELECT ' . $user_field_password . ' AS password
             $params['enabled_high']
         );
 
-        $params['user_id'] = [$currentUser->id];
+        $params['user_id'] = [$currentUser->id->value];
         $updated_users = self::userService()->checkAndSaveUserInfos($params);
 
         if (isset($updated_users['error'])) {
@@ -802,7 +802,7 @@ SELECT COUNT(*)
                 Tables::favorites(),
                 [
                     'image_id' => $params['image_id'],
-                    'user_id' => \Piwigo\Users\CurrentUser::get()->id,
+                    'user_id' => \Piwigo\Users\CurrentUser::get()->id->value,
                 ],
                 [
                     'ignore' => true,
@@ -838,7 +838,7 @@ SELECT COUNT(*)
             return new PwgError(404, 'image_id not found');
         }
 
-        $current_user_id = (string) \Piwigo\Users\CurrentUser::get()->id;
+        $current_user_id = (string) \Piwigo\Users\CurrentUser::get()->id->value;
         $query = '
 DELETE
   FROM ' . Tables::favorites() . '
@@ -872,7 +872,7 @@ DELETE
 
         $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
         $order_by = $order_by === '' ? \Piwigo\Config\CurrentConfig::orderBy() : 'ORDER BY ' . $order_by;
-        $current_user_id = (string) \Piwigo\Users\CurrentUser::get()->id;
+        $current_user_id = (string) \Piwigo\Users\CurrentUser::get()->id->value;
 
         $query = '
 SELECT
@@ -938,15 +938,17 @@ SELECT
             return new PwgError(403, 'Invalid security token');
         }
 
+        $lost_user_id = \Piwigo\Common\ValueObject\UserId::from($params['user_id']);
+
         // check if user exist
-        if (self::userService()->getUsername($params['user_id']) === false) {
+        if (self::userService()->getUsername($lost_user_id) === false) {
             return new PwgError(WsError::INVALID_PARAM, 'This user does not exist.');
         }
 
         // UserService::getUserData() is declared to return
         // array<string, mixed> (its own @return docblock); narrow the
         // specific fields this function consumes to their real column types.
-        $user_lost = self::userService()->getUserData($params['user_id']);
+        $user_lost = self::userService()->getUserData($lost_user_id);
         $user_lost_status = is_string($user_lost['status']) ? $user_lost['status'] : '';
 
         // Cannot perform this action for a guest or generic user
@@ -1023,12 +1025,14 @@ SELECT
             return new PwgError(403, 'Invalid security token');
         }
 
+        $new_main_user_id = \Piwigo\Common\ValueObject\UserId::from($params['user_id']);
+
         // checl if user exist
-        if (self::userService()->getUsername($params['user_id']) === false) {
+        if (self::userService()->getUsername($new_main_user_id) === false) {
             return new PwgError(WsError::INVALID_PARAM, 'This user does not exist.');
         }
 
-        $new_main_user = self::userService()->getUserData($params['user_id']);
+        $new_main_user = self::userService()->getUserData($new_main_user_id);
 
         // check if the user to set as main user is not webmaster
         if ($new_main_user['status'] !== 'webmaster') {
@@ -1077,7 +1081,7 @@ SELECT
         // it can never be 0 here.
         $duration = $params['duration'];
 
-        $user_id = \Piwigo\Users\CurrentUser::get()->id;
+        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
 
         $secret = self::apiKeyService()->create($user_id, $duration, $key_name);
 
@@ -1110,7 +1114,7 @@ SELECT
             return new PwgError(403, Lang::t('Invalid pkid format'));
         }
 
-        $user_id = \Piwigo\Users\CurrentUser::get()->id;
+        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
 
         $revoked_key = self::apiKeyService()->revoke($user_id, $params['pkid']);
 
@@ -1156,7 +1160,7 @@ SELECT
         // parameterizes apikey_name instead of interpolating it, same
         // "dead pre-escaping" rationale as createApiKey() above.
         $key_name = $params['key_name'];
-        $user_id = \Piwigo\Users\CurrentUser::get()->id;
+        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
         $edited_key = self::apiKeyService()->edit($user_id, $params['pkid'], $key_name);
 
         if ($edited_key !== true) {
@@ -1198,7 +1202,7 @@ SELECT
         // "requires a string $user_id", which was itself just describing
         // the bug). Every other ApiKeyService method here (create/revoke/
         // edit) already passes a plain int for the same user id value.
-        $user_id = \Piwigo\Users\CurrentUser::get()->id;
+        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
         $api_keys = self::apiKeyService()->get($user_id);
 
         return ((bool) $api_keys) ? $api_keys : Lang::t('No API key found');

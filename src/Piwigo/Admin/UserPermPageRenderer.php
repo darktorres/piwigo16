@@ -81,7 +81,7 @@ final class UserPermPageRenderer
                 'TITLE' => Lang::t(
                     'Manage permissions for user "%s"',
                     \Piwigo\Bootstrap\CoreDomainAccessor::userService()
-                        ->getUsername($user_id)
+                        ->getUsername(\Piwigo\Common\ValueObject\UserId::from($user_id))
                 ),
                 'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),
                 'L_CAT_OPTIONS_FALSE' => Lang::t('Forbidden'),

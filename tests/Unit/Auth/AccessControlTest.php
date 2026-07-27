@@ -20,7 +20,7 @@ use Piwigo\Users\UserStatus;
 function seedAccessControlUser(UserStatus $status, int $id = 1): void
 {
     CurrentUser::set(new User(
-        id: $id,
+        id: \Piwigo\Common\ValueObject\UserId::from($id),
         username: '',
         email: '',
         language: '',

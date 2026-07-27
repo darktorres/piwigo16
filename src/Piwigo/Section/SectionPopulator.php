@@ -318,7 +318,7 @@ SELECT id
                         ], 'AND');
                     } else {
                         $currentUser = \Piwigo\Users\CurrentUser::get();
-                        $user_id_for_cache = $currentUser->id;
+                        $user_id_for_cache = $currentUser->id->value;
                         $cache_item = \Piwigo\Cache\CachePools::sectionImageIds()
                             ->getItem('all_iids_' . $user_id_for_cache . '_' . md5($order_by));
                         unset($page['is_homepage']);
@@ -472,7 +472,7 @@ SELECT id
                     ]
                 );
 
-                $user_id_sql = \Piwigo\Users\CurrentUser::get()->id;
+                $user_id_sql = \Piwigo\Users\CurrentUser::get()->id->value;
                 if (Request\FavoritesActionRequest::fromGlobals()->removeAllFromFavorites) {
                     $query = '
 DELETE FROM ' . Tables::favorites() . '

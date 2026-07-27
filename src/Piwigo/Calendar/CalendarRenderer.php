@@ -281,7 +281,7 @@ final readonly class CalendarRenderer
             ) {
                 $currentUser = \Piwigo\Users\CurrentUser::get();
                 $cache_item = \Piwigo\Cache\CachePools::calendarNav()
-                    ->getItem('nav_' . $currentUser->id . '_' . md5($calendar->date_field . $order_by));
+                    ->getItem('nav_' . $currentUser->id->value . '_' . md5($calendar->date_field . $order_by));
             }
 
             $cache_item ??= null;

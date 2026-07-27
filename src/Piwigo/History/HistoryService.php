@@ -119,7 +119,7 @@ final readonly class HistoryService
         }
         $updateLastVisit = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('pwg_log_update_last_visit', $updateLastVisit);
 
-        $userId = $currentUser->id;
+        $userId = $currentUser->id->value;
 
         if ((bool) $updateLastVisit) {
             $this->repo->updateLastVisitNow($userId);

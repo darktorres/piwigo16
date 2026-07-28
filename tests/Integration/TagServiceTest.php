@@ -18,6 +18,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Html\HtmlService;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
+    use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Tag\TagRepository;
     use Piwigo\Tag\TagService;
     use Piwigo\Users\CurrentUser;
@@ -317,6 +318,204 @@ namespace Piwigo\Tests\Integration {
                 ->fetchOne();
 
             self::assertFalse($remaining, 'the orphaned tag must have been deleted');
+        }
+
+        // --- getAvailableTags() with an explicit filter ---------------------
+
+        public function test_get_available_tags_returns_empty_when_the_filter_matches_no_images(): void
+        {
+            self::assertSame([], $this->service->getAvailableTags([999999]));
+        }
+
+        // --- getImageIdsForTags() -------------------------------------------
+
+        public function test_get_image_ids_for_tags_returns_empty_for_no_tag_ids(): void
+        {
+            self::assertSame([], $this->service->getImageIdsForTags([]));
+        }
+
+        /**
+         * fixture image_tag rows: image 1 has tags 1+2+3, image 2 and 3
+         * each have only tag 1 -- AND-mode with tags [1, 2] must only
+         * match image 1 (the one image with BOTH), while OR-mode with the
+         * same 2 tags matches every image that has either one.
+         */
+        public function test_get_image_ids_for_tags_and_mode_requires_every_tag(): void
+        {
+            self::assertSame([1], $this->service->getImageIdsForTags([TagId::from(1), TagId::from(2)], 'AND'));
+        }
+
+        public function test_get_image_ids_for_tags_or_mode_matches_any_tag(): void
+        {
+            $ids = $this->service->getImageIdsForTags([TagId::from(1), TagId::from(2)], 'OR');
+            sort($ids);
+
+            self::assertSame([1, 2, 3], $ids);
+        }
+
+        // --- getCommonTags() -------------------------------------------------
+
+        public function test_get_common_tags_returns_empty_for_no_items(): void
+        {
+            self::assertSame([], $this->service->getCommonTags([], 10, new HtmlService()));
+        }
+
+        // --- addTags() ---------------------------------------------------------
+
+        public function test_add_tags_is_a_no_op_for_empty_tags_or_images(): void
+        {
+            $this->service->addTags([], [5]);
+            $this->service->addTags([TagId::from(1)], []);
+
+            self::assertSame([], $this->service->getImageTagIds([5])[5]);
+        }
+
+        // --- tagIdFromTagName() edge cases -----------------------------------
+
+        /**
+         * A 2nd call for the same name must return the identical id from
+         * the in-process TagIdCache without touching the DB at all -- proven
+         * by deleting the underlying row directly in between: if the cache
+         * hit didn't short-circuit, the 2nd call would fall through to
+         * findIdByName() (returns null, row is gone) and create a brand
+         * new tag with a different id instead.
+         */
+        public function test_tag_id_from_tag_name_returns_the_cached_id_without_touching_the_db(): void
+        {
+            $name = 'cache-hit-tag-' . uniqid();
+
+            $firstId = $this->service->tagIdFromTagName($name);
+            $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE id = ?', [$firstId->value]);
+
+            try {
+                $secondId = $this->service->tagIdFromTagName($name);
+
+                self::assertEquals($firstId, $secondId);
+                $tagCount = $this->conn->createQueryBuilder()->select('COUNT(*)')->from(Tables::tags())->where('name = :name')->setParameter('name', $name)->executeQuery()->fetchOne();
+                self::assertSame(
+                    0,
+                    is_numeric($tagCount) ? (int) $tagCount : -1,
+                    'the cache hit must never re-insert the deleted row'
+                );
+            } finally {
+                $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE name = ?', [$name]);
+            }
+        }
+
+        public function test_tag_id_from_tag_name_falls_back_to_the_raw_name_when_render_tag_url_misbehaves(): void
+        {
+            $name = 'weird url name ' . uniqid();
+            EventDispatcher::get()->addEventHandler('render_tag_url', static fn (): int => 42);
+
+            try {
+                $id = $this->service->tagIdFromTagName($name);
+
+                self::assertSame(
+                    $name,
+                    $this->conn->createQueryBuilder()->select('url_name')->from(Tables::tags())->where('id = :id')->setParameter('id', $id->value)->executeQuery()->fetchOne()
+                );
+            } finally {
+                EventDispatcher::reset();
+                $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE name = ?', [$name]);
+            }
+        }
+
+        /**
+         * A plugin's `get_tag_name_like_where` handler (extended-description
+         * sub-name matching) can resolve to an EXISTING tag even when the
+         * exact name and url name both miss -- no new tag gets created in
+         * that case.
+         */
+        public function test_tag_id_from_tag_name_matches_via_a_plugin_supplied_sql_fragment(): void
+        {
+            EventDispatcher::get()->addEventHandler(
+                'get_tag_name_like_where',
+                static fn (mixed $data, string $tagName): array => ["name = 'nature'"]
+            );
+
+            try {
+                self::assertEquals(TagId::from(1), $this->service->tagIdFromTagName('totally-unrelated-name-' . uniqid()));
+            } finally {
+                EventDispatcher::reset();
+            }
+        }
+
+        // --- getImageTagIds() --------------------------------------------------
+
+        public function test_get_image_tag_ids_returns_empty_for_no_image_ids(): void
+        {
+            self::assertSame([], $this->service->getImageTagIds([]));
+        }
+
+        // --- createTag() ---------------------------------------------------------
+
+        public function test_create_tag_returns_an_error_for_an_existing_name(): void
+        {
+            self::assertSame(['error' => 'Tag "nature" already exists'], $this->service->createTag('nature'));
+        }
+
+        // --- getTagList() ---------------------------------------------------------
+
+        /**
+         * onlyUserLanguage=false additionally surfaces every alt name a
+         * `get_tag_alt_names` plugin handler returns, except any alt name
+         * identical to the tag's own already-rendered name (array_diff
+         * against $nameForDiff) -- both the original and surviving alt
+         * entries share the same '~~id~~' marker.
+         */
+        public function test_get_tag_list_includes_surviving_alt_names_when_not_restricted_to_user_language(): void
+        {
+            EventDispatcher::get()->addEventHandler(
+                'get_tag_alt_names',
+                static fn (mixed $data, string $rawName): array => $rawName === 'nature' ? ['nature', 'Nature (alt)'] : []
+            );
+
+            try {
+                $query = 'SELECT id, name FROM ' . Tables::tags() . ' WHERE id = 1';
+                $result = $this->service->getTagList($query, new HtmlService(), false);
+
+                $names = array_column($result, 'name');
+                sort($names);
+                self::assertSame(['Nature (alt)', 'nature'], $names);
+
+                foreach ($result as $row) {
+                    self::assertSame('~~1~~', $row['id']);
+                }
+            } finally {
+                EventDispatcher::reset();
+            }
+        }
+
+        // --- getTagIds() ---------------------------------------------------------
+
+        public function test_get_tag_ids_parses_existing_tag_id_markers(): void
+        {
+            self::assertEquals(
+                [TagId::from(1), TagId::from(2)],
+                $this->service->getTagIds('~~1~~,~~2~~')
+            );
+        }
+
+        public function test_get_tag_ids_creates_a_new_tag_for_a_plain_name_when_allowed(): void
+        {
+            $name = 'freeform-tag-' . uniqid();
+
+            try {
+                $ids = $this->service->getTagIds([$name]);
+
+                self::assertCount(1, $ids);
+                self::assertSame(
+                    $name,
+                    $this->conn->createQueryBuilder()->select('name')->from(Tables::tags())->where('id = :id')->setParameter('id', $ids[0]->value)->executeQuery()->fetchOne()
+                );
+            } finally {
+                $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE name = ?', [$name]);
+            }
+        }
+
+        public function test_get_tag_ids_skips_a_plain_name_when_creation_is_disallowed(): void
+        {
+            self::assertSame([], $this->service->getTagIds(['brand-new-name-' . uniqid()], false));
         }
     }
 }

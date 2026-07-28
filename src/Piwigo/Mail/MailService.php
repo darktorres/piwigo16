@@ -183,7 +183,7 @@ final class MailService implements MailerInterface
     private static array $switchLangStack = [];
 
     /**
-     * @var array<string, array{lang_info: array<string, string|bool>, lang: array<string, string|array<int, string>>}>
+     * @var array<string, array{lang_info: array<string, string|bool>, lang: array<string, string|array<int, string>>, translator: \Piwigo\Lang\Translator}>
      */
     private static array $switchLangLanguages = [];
 
@@ -420,6 +420,14 @@ final class MailService implements MailerInterface
             self::$switchLangLanguages[$currentUserLanguage] = [
                 'lang_info' => Lang::langInfo(),
                 'lang' => Lang::snapshot(),
+                // \Piwigo\Core\Lang's own $data/$langInfo are just parallel
+                // bookkeeping (has()/langInfo()) -- the real translations
+                // t() actually reads live in the separate Translator
+                // singleton's gettext dictionary, which Lang::snapshot()/
+                // restore() never touch. A clone (Translator::__clone()
+                // deep-copies its own $inner) is the only way to capture
+                // and later restore that real state too.
+                'translator' => clone \Piwigo\Lang\Translator::get(),
             ];
         }
 
@@ -462,11 +470,13 @@ final class MailService implements MailerInterface
             self::$switchLangLanguages[$language] = [
                 'lang_info' => Lang::langInfo(),
                 'lang' => Lang::snapshot(),
+                'translator' => clone \Piwigo\Lang\Translator::get(),
             ];
         } else {
             $entry = self::$switchLangLanguages[$language];
             Lang::setLangInfo($entry['lang_info']);
             Lang::restore($entry['lang']);
+            \Piwigo\Lang\Translator::set(clone $entry['translator']);
         }
     }
 
@@ -486,6 +496,7 @@ final class MailService implements MailerInterface
             $entry = self::$switchLangLanguages[$language];
             Lang::setLangInfo($entry['lang_info']);
             Lang::restore($entry['lang']);
+            \Piwigo\Lang\Translator::set(clone $entry['translator']);
         }
         CurrentUser::updateLanguage($language);
     }

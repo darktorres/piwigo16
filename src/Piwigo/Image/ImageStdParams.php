@@ -178,7 +178,7 @@ final class ImageStdParams
         $key = [];
         $params->add_url_tokens($key);
         $key = implode('_', $key);
-        if (@self::$custom[$key] < time() - 24 * 3600) {
+        if ((self::$custom[$key] ?? 0) < time() - 24 * 3600) {
             self::$custom[$key] = time();
             self::save();
         }

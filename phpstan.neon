@@ -90,10 +90,47 @@ parameters:
             paths:
                 - tests/Unit/Admin/Maintenance/ServerInfoServiceTest.php
                 - tests/Unit/Bootstrap/CliBootstrapTest.php
+                - tests/Unit/Core/EnvTest.php
+                - tests/Unit/Core/FilesystemHelperTest.php
+                - tests/Unit/Core/LangTest.php
+                - tests/Unit/Core/LoggerTest.php
                 - tests/Unit/Lang/LangServiceTest.php
                 - tests/Unit/Lang/TranslatorTest.php
                 - tests/Unit/Search/Inflector/Inflector_frTest.php
                 - tests/Unit/Session/SessionServiceTest.php
+                - tests/Unit/Site/LocalSiteReaderTest.php
+        # Same root cause one level further downstream than property.notFound
+        # above: once $this->root/$this->langRoot's type is unresolvable
+        # (Pest's dynamic closure-bound state), every string concatenation
+        # against it also surfaces as a binaryOp.invalid hit. Scoped to
+        # just these files, whose only binaryOp.invalid occurrences are
+        # this exact pattern (confirmed by reading every hit before adding
+        # this entry) -- not a blanket allowance for real string/mixed
+        # concatenation bugs elsewhere.
+        -
+            identifier: binaryOp.invalid
+            paths:
+                - tests/Unit/Core/EnvTest.php
+                - tests/Unit/Core/FilesystemHelperTest.php
+                - tests/Unit/Core/LangTest.php
+                - tests/Unit/Core/LoggerTest.php
+                - tests/Unit/Site/LocalSiteReaderTest.php
+        # Same root cause again: $this->root passed straight into
+        # LocalSiteReader's constructor / get_elements() -- confirmed this
+        # file's only argument.type hits are this exact pattern.
+        # tests/Unit/Db/TablePrefixListenerTest.php's own argument.type hit
+        # is a different instance of the same Pest-binding root cause:
+        # $this->createStub()'s return type is unresolvable for the same
+        # reason $this->root is (Pest's PendingCalls\TestCall stand-in), so
+        # the resulting mixed can't satisfy EntityManagerInterface either.
+        -
+            identifier: argument.type
+            paths:
+                - tests/Unit/Db/TablePrefixListenerTest.php
+                - tests/Unit/Site/LocalSiteReaderTest.php
+        -
+            identifier: method.notFound
+            path: tests/Unit/Db/TablePrefixListenerTest.php
         -
             identifier: method.nonObject
             paths:

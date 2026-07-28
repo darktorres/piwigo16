@@ -121,4 +121,19 @@ final class PluginRepositoryTest extends IntegrationTestCase
 
         self::assertSame('1.0', $version);
     }
+
+    public function test_update_version_is_a_no_op_for_an_unknown_plugin_id(): void
+    {
+        // must not throw despite there being no matching row to update
+        $this->repo->updateVersion('this-plugin-id-does-not-exist', '9.9');
+
+        $count = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::plugins())
+            ->where("id = 'this-plugin-id-does-not-exist'")
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertSame(0, is_numeric($count) ? (int) $count : -1);
+    }
 }

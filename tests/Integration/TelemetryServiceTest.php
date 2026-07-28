@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\MariaDBPlatform;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
@@ -127,6 +130,50 @@ final class TelemetryServiceTest extends IntegrationTestCase
         self::assertStringNotContainsString('@', $encoded);
         self::assertStringNotContainsString('http://', $encoded);
         self::assertStringNotContainsString('https://', $encoded);
+    }
+
+    /**
+     * detectDriverLabel()'s own real DB connection (see setUp()) is always
+     * MySQL in this environment, so the mariadb/pgsql/unknown branches
+     * below can only be reached with a stub Connection returning the
+     * corresponding Doctrine platform directly -- Connection is a plain
+     * (non-final) class, and detectDriverLabel() itself never touches
+     * anything else on it besides getDatabasePlatform(), so a bare stub
+     * of just that one method is enough. Reflection reaches the private
+     * method directly since none of its 3 sibling branches are reachable
+     * through buildPayload() in this environment either.
+     */
+    public function test_detect_driver_label_recognizes_mariadb(): void
+    {
+        $conn = self::createStub(Connection::class);
+        $conn->method('getDatabasePlatform')->willReturn(new MariaDBPlatform());
+
+        $service = new TelemetryService($conn, $this->configRepo);
+        $method = new \ReflectionMethod(TelemetryService::class, 'detectDriverLabel');
+
+        self::assertSame('mariadb', $method->invoke($service));
+    }
+
+    public function test_detect_driver_label_recognizes_postgresql(): void
+    {
+        $conn = self::createStub(Connection::class);
+        $conn->method('getDatabasePlatform')->willReturn(new PostgreSQLPlatform());
+
+        $service = new TelemetryService($conn, $this->configRepo);
+        $method = new \ReflectionMethod(TelemetryService::class, 'detectDriverLabel');
+
+        self::assertSame('pgsql', $method->invoke($service));
+    }
+
+    public function test_detect_driver_label_falls_back_to_unknown_for_an_unrecognized_platform(): void
+    {
+        $conn = self::createStub(Connection::class);
+        $conn->method('getDatabasePlatform')->willReturn(new SQLitePlatform());
+
+        $service = new TelemetryService($conn, $this->configRepo);
+        $method = new \ReflectionMethod(TelemetryService::class, 'detectDriverLabel');
+
+        self::assertSame('unknown', $method->invoke($service));
     }
 
     private function scalarCount(string $table): int

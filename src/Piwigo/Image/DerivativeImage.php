@@ -243,7 +243,8 @@ final class DerivativeImage
 
         $url_style = \Piwigo\Config\CurrentConfig::derivativeUrlStyle();
         if (! (bool) $url_style) {
-            $mtime = @filemtime(CurrentPaths::get()->root . $rel_path);
+            $abs_path = CurrentPaths::get()->root . $rel_path;
+            $mtime = file_exists($abs_path) ? filemtime($abs_path) : false;
             if ($mtime === false or $mtime < $params->last_mod_time) {
                 $is_cached = false;
                 $url_style = 2;

@@ -193,13 +193,16 @@ final class SrcImage
             // location if a misbehaving handler returns a non-string.
             $this->rel_path = is_string($mimetype_location) ? $mimetype_location : $default_mimetype_location;
             $this->flags |= self::IS_MIMETYPE;
-            if (($size = @getimagesize(CurrentPaths::get()->root . $this->rel_path)) === false) {
+            $mimetype_abs_path = CurrentPaths::get()->root . $this->rel_path;
+            $size = file_exists($mimetype_abs_path) ? getimagesize($mimetype_abs_path) : false;
+            if ($size === false) {
                 if ($ext === 'svg') {
                     $this->rel_path = $path;
                 } else {
                     $this->rel_path = 'themes/default/icon/mimetypes/unknown.png';
                 }
-                $size = getimagesize(CurrentPaths::get()->root . $this->rel_path);
+                $fallback_abs_path = CurrentPaths::get()->root . $this->rel_path;
+                $size = file_exists($fallback_abs_path) ? getimagesize($fallback_abs_path) : false;
                 if ($size === false) {
                     throw new \Exception('SrcImage: unable to read size of fallback icon ' . $this->rel_path);
                 }

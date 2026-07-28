@@ -72,3 +72,19 @@ test('add_anomaly generates distinct ids for anomalies that differ only by corre
     expect($c13y->retrieve_list)->toHaveCount(2);
     expect($c13y->retrieve_list[0]['id'])->not->toBe($c13y->retrieve_list[1]['id']);
 });
+
+// get_htlm_links_more_info() is this class's other genuinely pure method --
+// AdminUiHelper::pwgUrl() is a fixed, DB/config-free constant map, and
+// Lang::t()/Translator::get() self-initialize without any Lang::load() call
+// (untranslated gettext falls back to the literal English string).
+test('get_htlm_links_more_info formats a forum + wiki link pair from the fixed pwg URL map', function (): void {
+    $c13y = check_integrity_new();
+
+    $result = $c13y->get_htlm_links_more_info();
+
+    expect($result)->toBe(sprintf(
+        'Go to %s or %s for more informations',
+        '<a href="' . \Piwigo\Core\AppInfo::URL . '/forum" onclick="window.open(this.href, \'\'); return false;">the forum</a>',
+        '<a href="' . \Piwigo\Core\AppInfo::URL . '/doc" onclick="window.open(this.href, \'\'); return false;">the wiki</a>'
+    ));
+});

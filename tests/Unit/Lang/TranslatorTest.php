@@ -174,3 +174,71 @@ test('translate does not warn about a resolved key even when debug_l10n is enabl
     expect($result)->toBe('known value')
         ->and($triggered)->toBeFalse();
 });
+
+test('set() replaces the singleton instance returned by get()', function (): void {
+    $replacement = new Translator();
+    $replacement->loadArray(['swapped_key' => 'swapped value']);
+
+    Translator::set($replacement);
+
+    expect(Translator::get())->toBe($replacement)
+        ->and(Translator::get()->translate('swapped_key'))->toBe('swapped value');
+});
+
+test('plural applies sprintf-style args after the count', function (): void {
+    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+        msgid ""
+        msgstr ""
+        "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+        msgid "%d photo by %s"
+        msgid_plural "%d photos by %s"
+        msgstr[0] "%d photo by %s"
+        msgstr[1] "%d photos by %s"
+        PO);
+
+    Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+
+    expect(Translator::get()->plural('%d photo by %s', '%d photos by %s', 1, 'Alice'))->toBe('1 photo by Alice')
+        ->and(Translator::get()->plural('%d photo by %s', '%d photos by %s', 3, 'Bob'))->toBe('3 photos by Bob');
+});
+
+// A msgctxt-tagged entry with an empty msgid is a real, loadable PO shape
+// (confirmed empirically against the installed gettext/gettext PoLoader --
+// distinct from the file-level header, which is the *context-less* empty
+// msgid) that produces a Translation with getOriginal() === '' but a real
+// context and translation string. Both toDictionaryEntry() and mirror()
+// skip it via their own `$original === ''` guard -- this single load()
+// call exercises both continue branches at once, since they iterate the
+// same Translations collection.
+//
+// The sibling `! ($entry instanceof Translation)` guard in both of those
+// same foreach loops is NOT exercised anywhere: Gettext\Translations::
+// $translations is only ever populated through add()/addOrMerge(), both
+// typed to accept a Translation and nothing else, so every element
+// getTranslations() can ever yield is genuinely guaranteed to already be
+// a Translation instance -- confirmed by reading vendor/gettext/gettext's
+// own Translations class. There is no legitimate PO file or public API
+// call that reaches that branch; it's unreachable defensive code, not a
+// real gap.
+test('load skips a context-tagged entry whose msgid is empty', function (): void {
+    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+        msgid ""
+        msgstr ""
+        "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+        msgctxt "empty-original-context"
+        msgid ""
+        msgstr "should never surface"
+
+        msgid "Hello"
+        msgstr "Bonjour"
+        PO);
+
+    Translator::get()->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
+
+    $mirror = Translator::get()->mirroredStrings();
+    expect($mirror)->not->toHaveKey('')
+        ->and($mirror['Hello'])->toBe('Bonjour')
+        ->and(Translator::get()->translate('Hello'))->toBe('Bonjour');
+});

@@ -151,4 +151,27 @@ final class AuditServiceTest extends IntegrationTestCase
 
         self::assertFalse($this->service->verifyChain());
     }
+
+    public function test_verify_chain_is_false_when_a_rows_prev_hash_is_tampered_directly(): void
+    {
+        // Content and row_hash both stay internally consistent for every
+        // row -- only the *link* between rows 1 and 2 is severed by
+        // overwriting the second row's stored prev_hash with a value that
+        // doesn't match the first row's real row_hash. This exercises the
+        // "prevHash !== expectedPrevHash" branch specifically, distinct
+        // from the "recomputed hash mismatch" branch already covered by
+        // the row-content and stored-hash tampering tests above.
+        $this->service->record(1, 'create', 'user', 1);
+        $this->service->record(1, 'delete', 'group', 2);
+
+        $this->conn->createQueryBuilder()
+            ->update(Tables::auditLog())
+            ->set('prev_hash', ':fake')
+            ->where('action = :action')
+            ->setParameter('fake', str_repeat('a', 64))
+            ->setParameter('action', 'delete')
+            ->executeStatement();
+
+        self::assertFalse($this->service->verifyChain());
+    }
 }

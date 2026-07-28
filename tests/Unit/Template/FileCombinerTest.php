@@ -86,3 +86,44 @@ test('add merges an array of combinables', function (): void {
     // single-item batch and is returned unchanged, in order.
     expect($combiner->combine())->toBe([$first, $second]);
 });
+
+test('clear_combined_files deletes only .js and .css files from the combined dir', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-clear-' . bin2hex(random_bytes(8));
+    mkdir($root . '/_data/combined', 0o777, true);
+    file_put_contents($root . '/_data/combined/a.js', 'x');
+    file_put_contents($root . '/_data/combined/b.css', 'x');
+    file_put_contents($root . '/_data/combined/c.txt', 'x');
+    \Piwigo\Core\CurrentPaths::set(Paths::fromRoot($root));
+    CurrentConfig::setDataLocation('_data/');
+
+    try {
+        FileCombiner::clear_combined_files();
+
+        expect(file_exists($root . '/_data/combined/a.js'))->toBeFalse();
+        expect(file_exists($root . '/_data/combined/b.css'))->toBeFalse();
+        expect(file_exists($root . '/_data/combined/c.txt'))->toBeTrue();
+    } finally {
+        unlink($root . '/_data/combined/c.txt');
+        rmdir($root . '/_data/combined');
+        rmdir($root . '/_data');
+        rmdir($root);
+        \Piwigo\Core\CurrentPaths::reset();
+    }
+});
+
+test('clear_combined_files returns without error when the combined dir does not exist', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-noclear-' . bin2hex(random_bytes(8));
+    \Piwigo\Core\CurrentPaths::set(Paths::fromRoot($root));
+    CurrentConfig::setDataLocation('_data/');
+
+    set_error_handler(static fn (): bool => true);
+    try {
+        FileCombiner::clear_combined_files();
+        $ranToCompletion = true;
+    } finally {
+        restore_error_handler();
+        \Piwigo\Core\CurrentPaths::reset();
+    }
+
+    expect($ranToCompletion)->toBeTrue();
+});

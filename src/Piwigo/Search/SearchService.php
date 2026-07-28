@@ -495,9 +495,17 @@ final readonly class SearchService
         if ($preset === 'custom' && $custom !== []) {
             $subclauses = [];
             $params = [];
+            // $customDates (a flip, kept only for its isset() lookups
+            // below) canonicalizes a purely-numeric string value (e.g.
+            // (string) 20250101) into an int array key -- confirmed live,
+            // array_keys() on it would hand the loop below a genuine int,
+            // not the string substr() requires. Deduplicating the
+            // iteration list separately via array_unique() (which, unlike
+            // array_flip()'s keys, never touches value types) sidesteps
+            // that entirely.
             $customDates = array_flip($custom);
 
-            foreach (array_keys($customDates) as $customDate) {
+            foreach (array_unique($custom) as $customDate) {
                 $begin = $end = null;
                 $ymd = substr($customDate, 0, 1);
                 if ($ymd === 'y') {
@@ -671,8 +679,18 @@ final readonly class SearchService
                 $dbVersion = $this->repo->getDbVersion();
                 $useRegexpICU = preg_match('/mariadb/i', $dbVersion) !== 1 && version_compare($dbVersion, '8.0.4', '>');
 
-                $pre = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_BEGIN)) ? '' : ($useRegexpICU ? '\\\\b' : '[[:<:]]');
-                $post = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_END)) ? '' : ($useRegexpICU ? '\\\\b' : '[[:>:]]');
+                // A single literal backslash here ('\\b' is a 2-char PHP
+                // string: backslash + b) -- quote() below does its own SQL
+                // string-literal escaping (doubling it to '\\\\b' in the
+                // SQL text), which MySQL's parser then reduces back to one
+                // literal backslash before REGEXP ever sees it. Confirmed
+                // live: starting from an already-doubled '\\\\b' here
+                // (4-char PHP string) round-trips through quote() into 4
+                // literal backslashes, which ICU regex parses as an
+                // escaped literal backslash + a literal 'b' -- never a
+                // \b word-boundary token -- so it silently matched 0 rows.
+                $pre = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_BEGIN)) ? '' : ($useRegexpICU ? '\\b' : '[[:<:]]');
+                $post = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_END)) ? '' : ($useRegexpICU ? '\\b' : '[[:>:]]');
                 foreach ($fields as $field) {
                     $clauses[] = $field . ' REGEXP ' . $this->repo->quote($pre . preg_quote($variant) . $post);
                 }

@@ -78,4 +78,20 @@ final class MysqlDateTest extends TestCase
     {
         self::assertSame('2026-05-18', (string) MysqlDate::from('2026-05-18'));
     }
+
+    public function testEqualsIsTrueForTheSameCalendarDate(): void
+    {
+        $a = MysqlDate::from('2026-05-18');
+        $b = MysqlDate::from('2026-05-18');
+
+        self::assertTrue($a->equals($b));
+    }
+
+    public function testEqualsIsFalseForADifferentCalendarDate(): void
+    {
+        $a = MysqlDate::from('2026-05-18');
+        $b = MysqlDate::from('2026-05-19');
+
+        self::assertFalse($a->equals($b));
+    }
 }

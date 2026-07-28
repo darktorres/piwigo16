@@ -17,3 +17,16 @@ test('fromArray reports true only for the exact action value', function (): void
     expect($matching->removeAllFromFavorites)->toBeTrue()
         ->and($other->removeAllFromFavorites)->toBeFalse();
 });
+
+test('fromGlobals reads $_GET directly', function (): void {
+    $original = $_GET;
+    $_GET = ['action' => 'remove_all_from_favorites'];
+
+    try {
+        $request = FavoritesActionRequest::fromGlobals();
+
+        expect($request->removeAllFromFavorites)->toBeTrue();
+    } finally {
+        $_GET = $original;
+    }
+});

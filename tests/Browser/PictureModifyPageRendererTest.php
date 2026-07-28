@@ -147,3 +147,79 @@ it('rejects a photo-modify submission with a missing CSRF token', function (): v
     $row = pictureModifyImageRow($imageId);
     expect($row['name'] ?? null)->not->toBe('Should Not Be Applied');
 });
+
+it('sets a plain (non-array) tag name and assigns the photo as its new album representative', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Photo Modify Represent Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Photo Modify Represent Photo');
+    @unlink($image);
+
+    // '~~2~~' selects existing fixture tag 2 by id, sent as a bare string
+    // (not wrapped in an array) -- the sibling shape to
+    // BatchManagerUnitPageRendererTest's own equivalent scalar-tag test.
+    $result = H::adminPost($page, '/admin.php?page=photo&image_id=' . $imageId, [
+        'pwg_token' => H::pwgToken($page),
+        'submit' => '1',
+        'level' => '0',
+        'tags' => '~~2~~',
+        'represent' => [(string) $albumId],
+    ]);
+
+    expect($result['status'])->toBe(200);
+    expect(pictureModifyImageHasTag($imageId, 2))->toBeTrue();
+
+    $db = pictureModifyDbConnect();
+    $prefix = pictureModifyDbPrefix();
+    $row = $db->query(sprintf('SELECT representative_picture_id FROM %scategories WHERE id = %d', $prefix, $albumId));
+    $assoc = $row instanceof mysqli_result ? $row->fetch_assoc() : null;
+    $db->close();
+    expect(is_array($assoc) ? (int) $assoc['representative_picture_id'] : -1)->toBe($imageId);
+});
+
+it('synchronizes metadata from file via the sync_metadata CSRF-gated action', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Photo Modify Sync Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Photo Modify Sync Photo');
+    @unlink($image);
+
+    // sync_metadata (like delete) is read from $_GET, not $_POST --
+    // confirmed by direct read of PictureModifyRequest::fromArrays().
+    $token = H::pwgToken($page);
+    $page = H::navigateOk($page, '/admin.php?page=photo&image_id=' . $imageId . '&sync_metadata=1&pwg_token=' . $token);
+
+    $page->assertSee('Metadata synchronized from file');
+});
+
+it('deletes the photo via the CSRF-gated delete action and redirects to the gallery root', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Photo Modify Delete Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Photo Modify Delete Photo');
+    @unlink($image);
+
+    $token = H::pwgToken($page);
+    // redirect() is a real Location header -- opaque under fetch(manual),
+    // status always 0 (see this suite's own established convention for
+    // this exact Fetch API caveat).
+    $result = H::rawGet($page, '/admin.php?page=photo&image_id=' . $imageId . '&delete=1&pwg_token=' . $token);
+
+    expect($result['status'])->toBe(0);
+    expect(pictureModifyImageRow($imageId))->toBeNull();
+});

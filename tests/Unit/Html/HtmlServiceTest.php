@@ -2,7 +2,30 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\ProcessCache;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Html\HtmlService;
+use Piwigo\Image\SrcImage;
+use Piwigo\Menu\BlockManager;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Url\UrlService;
+use Piwigo\Users\CurrentUser;
+
+beforeEach(function (): void {
+    ProcessCache::reset();
+    CurrentUser::reset();
+    CurrentTemplate::reset();
+    CurrentConfig::reset();
+});
+
+afterEach(function (): void {
+    ProcessCache::reset();
+    CurrentUser::reset();
+    CurrentTemplate::reset();
+    CurrentConfig::reset();
+});
 
 test('renderCommentContent escapes html and linkifies bare URLs', function (): void {
     $service = new HtmlService();
@@ -146,4 +169,287 @@ test('getThumbnailTitle truncates a long comment to 100 characters with an ellip
     $title = $service->getThumbnailTitle([], 'Title', $longComment);
 
     expect($title)->toBe('Title ' . str_repeat('x', 100) . '...');
+});
+
+test('getCatDisplayName falls back to an empty category name when a render_category_name handler returns a non-string', function (): void {
+    $service = new HtmlService();
+    $handler = static fn (): int => 42;
+    EventDispatcher::get()->addEventHandler('render_category_name', $handler);
+
+    try {
+        // $url = null -> the "no link, name only" branch; the fallback
+        // empty name proves the non-string handler return was actually
+        // discarded rather than coerced/propagated.
+        expect($service->getCatDisplayName([['id' => 1, 'name' => 'Nature']], null))->toBe('');
+    } finally {
+        EventDispatcher::get()->removeEventHandler('render_category_name', $handler);
+    }
+});
+
+test('getCatDisplayNameCache injects an auth param and wraps the whole chain in a single link with a class when singleLink is set', function (): void {
+    ProcessCache::set('cat_names', [
+        '3' => ['id' => 3, 'name' => 'Nature', 'permalink' => null],
+    ]);
+    $service = new HtmlService();
+
+    $result = $service->getCatDisplayNameCache('3', 'index.php?/category/', true, 'my-link-class', 'SECRETKEY');
+
+    expect($result)->toBe('<a href="index.php?/category/3&amp;auth=SECRETKEY" class="my-link-class">Nature</a>');
+});
+
+test('getCatDisplayNameCache falls back to an empty category name when a render_category_name handler returns a non-string', function (): void {
+    ProcessCache::set('cat_names', [
+        '5' => ['id' => 5, 'name' => 'Landscape', 'permalink' => null],
+    ]);
+    $service = new HtmlService();
+    $handler = static fn (): int => 7;
+    EventDispatcher::get()->addEventHandler('render_category_name', $handler);
+
+    try {
+        expect($service->getCatDisplayNameCache('5', null))->toBe('');
+    } finally {
+        EventDispatcher::get()->removeEventHandler('render_category_name', $handler);
+    }
+});
+
+test('getCombinedCategoriesContentTitle renders a single category link without a remove-tag link', function (): void {
+    $service = new HtmlService();
+    $category = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
+
+    // Independently computed from the same real UrlService primitive
+    // getCombinedCategoriesContentTitle() itself delegates to (via
+    // getCatDisplayName()) -- an exact-value assertion without
+    // re-implementing makeSectionInUrl()'s own url-building algorithm here.
+    $expectedLink = new UrlService($service)->makeIndexUrl(['category' => $category]);
+
+    $title = $service->getCombinedCategoriesContentTitle($category, []);
+
+    expect($title)->toBe('Albums <a href="' . $expectedLink . '">Nature</a>');
+});
+
+test('getCombinedCategoriesContentTitle appends a remove-tag link referencing the other category when combining 2', function (): void {
+    $service = new HtmlService();
+    $catA = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
+    $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
+
+    $urlService = new UrlService($service);
+    $linkA = $urlService->makeIndexUrl(['category' => $catA]);
+    $linkB = $urlService->makeIndexUrl(['category' => $catB]);
+
+    $title = $service->getCombinedCategoriesContentTitle($catA, [$catB]);
+
+    // Each category's own remove-link points at the *other* category (the
+    // "un-combine" target) -- CurrentTemplate is reset in this file's own
+    // beforeEach, so icon_dir resolves to '' via the documented defensive
+    // fallback, giving a bare '/remove_s.png' src.
+    $removeLinkTemplate = static fn (string $removeUrl): string => '<a id="TagsGroupRemoveTag" href="' . $removeUrl . '" style="border:none;" title="remove this tag from the list">'
+        . '<img src="/remove_s.png" alt="x" style="vertical-align:bottom;" >'
+        . '<span class="pwg-icon pwg-icon-close" ></span></a>';
+
+    $expected = 'Albums '
+        . '<a href="' . $linkA . '">Nature</a>' . $removeLinkTemplate($linkB)
+        . ' + '
+        . '<a href="' . $linkB . '">Portraits</a>' . $removeLinkTemplate($linkA);
+
+    expect($title)->toBe($expected);
+});
+
+test('setStatusHeader accepts every well-known status code and the default fallback without a fatal/warning', function (): void {
+    $service = new HtmlService();
+
+    foreach ([200, 301, 302, 304, 400, 401, 403, 500, 501, 503] as $code) {
+        $service->setStatusHeader($code);
+    }
+    // Unrecognized code, no explicit $text -- exercises the match's
+    // `default => $text` arm (still the already-empty '' at that point).
+    $service->setStatusHeader(999);
+
+    expect(true)->toBeTrue(); // header() is a no-op under CLI SAPI; absence of a fatal/warning is the real assertion
+});
+
+test('registerDefaultMenubarBlocks does nothing for a BlockManager whose id is not "menubar"', function (): void {
+    $service = new HtmlService();
+    $menu = new BlockManager('sidebar');
+
+    $service->registerDefaultMenubarBlocks([$menu]);
+
+    expect($menu->get_registered_blocks())->toBe([]);
+});
+
+test('getSrcImageUrlProtectionHandler uses "e" for an original image and "r" for a non-original representative', function (): void {
+    $service = new HtmlService();
+    $original = new SrcImage(['id' => 7, 'path' => 'upload/2026/07/photo.jpg', 'file' => 'photo.jpg']);
+    $representative = new SrcImage(['id' => 9, 'path' => 'upload/2026/07/video.mp4', 'file' => 'video.mp4', 'representative_ext' => 'jpg']);
+
+    expect($original->is_original())->toBeTrue()
+        ->and($representative->is_original())->toBeFalse();
+
+    expect($service->getSrcImageUrlProtectionHandler('ignored-input-url', $original))
+        ->toBe('action.php?id=7&amp;part=e')
+        ->and($service->getSrcImageUrlProtectionHandler('ignored-input-url', $representative))
+        ->toBe('action.php?id=9&amp;part=r');
+});
+
+test('getElementUrlProtectionHandler passes a non-image extension through unchanged when protection is scoped to images', function (): void {
+    CurrentConfig::setOriginalUrlProtection('images');
+    $service = new HtmlService();
+
+    $result = $service->getElementUrlProtectionHandler('original-url-unchanged', ['id' => 3, 'path' => 'upload/video.mp4']);
+
+    expect($result)->toBe('original-url-unchanged');
+});
+
+test('getElementUrlProtectionHandler builds an action url for an image extension when protection is scoped to images', function (): void {
+    CurrentConfig::setOriginalUrlProtection('images');
+    $service = new HtmlService();
+
+    $result = $service->getElementUrlProtectionHandler('ignored', ['id' => 3, 'path' => 'upload/photo.jpg']);
+
+    expect($result)->toBe('action.php?id=3&amp;part=e');
+});
+
+test('getElementUrlProtectionHandler builds an action url for any extension when protection is not scoped to images', function (): void {
+    // Default originalUrlProtection() is '' -- the images-only guard never
+    // triggers, so even a non-image extension reaches the action url.
+    $service = new HtmlService();
+
+    $result = $service->getElementUrlProtectionHandler('ignored', ['id' => 5, 'path' => 'upload/video.mp4']);
+
+    expect($result)->toBe('action.php?id=5&amp;part=e');
+});
+
+/**
+ * Captures redirectHttp()'s url argument then throws, matching
+ * CategoryServiceFakeHtmlRendererDeniesAccess's own established
+ * "marker exception" convention for a `never`-typed interface method.
+ */
+final class HtmlServiceTestCapturingRedirectHttpService implements RedirectServiceInterface
+{
+    public ?string $capturedUrl = null;
+
+    #[\Override]
+    public function redirectHttp(string $url, int $status = 302): never
+    {
+        $this->capturedUrl = $url;
+        throw new \RuntimeException('HTML_SERVICE_TEST_REDIRECT_HTTP_MARKER');
+    }
+
+    #[\Override]
+    public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never
+    {
+        throw new \LogicException('not used by accessDenied()');
+    }
+
+    #[\Override]
+    public function redirect(string $url, string $msg = '', int $refresh_time = 0): never
+    {
+        throw new \LogicException('not used by accessDenied()');
+    }
+}
+
+test('accessDenied redirects to identification.php with a double urlencoded REQUEST_URI when the user is unauthenticated', function (): void {
+    $service = new HtmlService();
+    $redirectService = new HtmlServiceTestCapturingRedirectHttpService();
+    $_SERVER['REQUEST_URI'] = '/gallery/index.php?/category/5';
+
+    try {
+        // redirectHttp() is `never`-typed and this fake's implementation
+        // unconditionally throws -- if it somehow didn't, PHP's own
+        // return-type enforcement would raise a TypeError here, so no
+        // separate "did it throw" assertion is needed.
+        $service->accessDenied($redirectService);
+    } catch (\RuntimeException $e) {
+        expect($e->getMessage())->toBe('HTML_SERVICE_TEST_REDIRECT_HTTP_MARKER');
+    } finally {
+        unset($_SERVER['REQUEST_URI']);
+    }
+
+    expect($redirectService->capturedUrl)->toBe(
+        'identification.php?redirect=' . urlencode(urlencode('/gallery/index.php?/category/5'))
+    );
+});
+
+test('accessDenied falls back to an empty redirect path when REQUEST_URI is missing or not a string', function (): void {
+    $service = new HtmlService();
+    $redirectService = new HtmlServiceTestCapturingRedirectHttpService();
+    // A crafted 'REQUEST_URI' can never really be non-scalar over a real
+    // web SAPI, but $_SERVER is untyped -- accessDenied() narrows
+    // defensively before using it.
+    $_SERVER['REQUEST_URI'] = ['not', 'a', 'string'];
+
+    try {
+        $service->accessDenied($redirectService);
+    } catch (\RuntimeException) {
+    } finally {
+        unset($_SERVER['REQUEST_URI']);
+    }
+
+    expect($redirectService->capturedUrl)->toBe('identification.php?redirect=');
+});
+
+/**
+ * Captures redirectHtml()'s 4 arguments then throws, same convention as
+ * HtmlServiceTestCapturingRedirectHttpService above.
+ */
+final class HtmlServiceTestCapturingRedirectHtmlService implements RedirectServiceInterface
+{
+    public ?string $capturedUrl = null;
+
+    public ?string $capturedMsg = null;
+
+    public ?int $capturedRefreshTime = null;
+
+    public ?int $capturedStatus = null;
+
+    #[\Override]
+    public function redirectHttp(string $url, int $status = 302): never
+    {
+        throw new \LogicException('not used by pageForbidden()');
+    }
+
+    #[\Override]
+    public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never
+    {
+        $this->capturedUrl = $url;
+        $this->capturedMsg = $msg;
+        $this->capturedRefreshTime = $refresh_time;
+        $this->capturedStatus = $status;
+        throw new \RuntimeException('HTML_SERVICE_TEST_REDIRECT_HTML_MARKER');
+    }
+
+    #[\Override]
+    public function redirect(string $url, string $msg = '', int $refresh_time = 0): never
+    {
+        throw new \LogicException('not used by pageForbidden()');
+    }
+}
+
+test('pageForbidden redirects to the given alternate url with a 403 status, a 5 second refresh, and the forbidden message', function (): void {
+    $service = new HtmlService();
+    $redirectService = new HtmlServiceTestCapturingRedirectHtmlService();
+
+    try {
+        $service->pageForbidden($redirectService, 'You lack permission.', '/custom-redirect.php');
+    } catch (\RuntimeException $e) {
+        expect($e->getMessage())->toBe('HTML_SERVICE_TEST_REDIRECT_HTML_MARKER');
+    }
+
+    expect($redirectService->capturedUrl)->toBe('/custom-redirect.php')
+        ->and($redirectService->capturedStatus)->toBe(403)
+        ->and($redirectService->capturedRefreshTime)->toBe(5)
+        ->and($redirectService->capturedMsg)->toContain('Forbidden')
+        ->and($redirectService->capturedMsg)->toContain('You lack permission.');
+});
+
+test('pageForbidden computes the default alternate url via makeIndexUrl when none is given', function (): void {
+    $service = new HtmlService();
+    $redirectService = new HtmlServiceTestCapturingRedirectHtmlService();
+    $expectedUrl = new UrlService($service)->makeIndexUrl();
+
+    try {
+        $service->pageForbidden($redirectService, 'blocked');
+    } catch (\RuntimeException) {
+    }
+
+    expect($redirectService->capturedUrl)->toBe($expectedUrl);
 });

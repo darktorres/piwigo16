@@ -132,42 +132,6 @@ final class WsCategoriesMutationTest extends ContractTestCase
         }, $ids);
     }
 
-    /**
-     * Bypasses callWs()'s hard `assertLessThan(500, $status)` guard --
-     * needed for branches where PwgError() itself uses a 4xx/5xx code
-     * (PwgError's constructor sets a real HTTP status header for codes
-     * 400-599), a genuine business-logic response here, not a real server
-     * error.
-     *
-     * @param array<string, mixed> $params
-     * @return array<string, mixed>
-     */
-    private function callWsAllowingServerError(string $method, array $params): array
-    {
-        $url = $this->baseUrl . '/ws.php?format=json';
-        $ch = curl_init($url);
-        self::assertNotFalse($ch);
-
-        $cookieJar = $this->cookieJar();
-        assert($cookieJar !== '');
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge(['method' => $method], $params)));
-        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
-        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
-
-        $body = curl_exec($ch);
-        unset($ch);
-
-        self::assertIsString($body);
-        $decoded = json_decode($body, true);
-        self::assertIsArray($decoded);
-        /** @var array<string, mixed> $decoded */
-        return $decoded;
-    }
-
     public function test_add_returns_category_shape(): void
     {
         $response = $this->callWs('pwg.categories.add', ['name' => 'ct_album_' . uniqid()]);
@@ -176,6 +140,21 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertMatchesSchema('pwg.categories.add', $response);
 
         $this->categoryId = $this->extractResultId($response);
+    }
+
+    public function test_add_with_an_explicit_invalid_token_returns_error(): void
+    {
+        // pwg_token is WsParamFlag::OPTIONAL for add() -- every other add()
+        // test omits it entirely; this exercises the branch where it's
+        // present but wrong.
+        $response = $this->callWs('pwg.categories.add', [
+            'name' => 'ct_album_' . uniqid(),
+            'pwg_token' => 'wrong',
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+        self::assertSame('Invalid security token', $response['message']);
     }
 
     public function test_setInfo_updates_name(): void
@@ -324,6 +303,25 @@ final class WsCategoriesMutationTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
         self::assertSame([$child3, $child1, $child2], $this->siblingOrder($parentId));
+    }
+
+    /**
+     * A requested rank beyond the sibling count never matches `$i` inside
+     * the old-order loop -- $was_inserted stays false, and the category is
+     * appended at the very end instead (rather than left out entirely).
+     */
+    public function test_setRank_single_category_with_a_rank_beyond_siblings_appends_it_last(): void
+    {
+        $parentId = $this->createCategory('ct_rank_parent_' . uniqid());
+        $child1 = $this->createCategory('ct_rank_child1_' . uniqid(), $parentId);
+        $child2 = $this->createCategory('ct_rank_child2_' . uniqid(), $parentId);
+        $this->assignRanks([$child1, $child2]);
+        self::assertSame([$child1, $child2], $this->siblingOrder($parentId));
+
+        $response = $this->callWs('pwg.categories.setRank', ['category_id' => [$child1], 'rank' => 99]);
+
+        self::assertSame('ok', $response['stat']);
+        self::assertSame([$child2, $child1], $this->siblingOrder($parentId));
     }
 
     public function test_setRank_multiple_categories_reorders_them_all(): void

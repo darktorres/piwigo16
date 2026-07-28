@@ -8,6 +8,12 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Piwigo\Admin\PictureFormatsPageRenderer (admin.php?page=picture_formats)
  * -- lists a photo's alternate-format files (RAW/PSD/TIFF alongside the
  * main JPEG).
+ *
+ * Not exercised: the `Lang::has('format ' . $ext)` translated-label
+ * override -- confirmed via a direct grep that no `language/en_UK/*.po`
+ * catalog defines any `"format XXX"` msgid at all, so this always
+ * evaluates false and the plain `strtoupper($ext)` label is always used
+ * in this environment's current translation data.
  */
 function pictureFormatsDbPrefix(): string
 {

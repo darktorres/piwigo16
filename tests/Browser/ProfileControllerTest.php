@@ -181,3 +181,174 @@ it('rejects an empty nb_image_page and leaves the stored settings untouched', fu
     $after = profileUserSettings();
     expect($after)->toBe($before);
 });
+
+/** @return array{email: string, password: string}|null */
+function profileUserAuthRow(): ?array
+{
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+    $prefix = $prefix !== false ? $prefix : 'piwigo_';
+    $result = $db->query(sprintf(
+        "SELECT mail_address, password FROM %susers WHERE username = '%s'",
+        $prefix,
+        $db->real_escape_string(PROFILE_TEST_USER)
+    ));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+
+    if (! is_array($row)) {
+        return null;
+    }
+
+    return ['email' => (string) ($row['mail_address'] ?? ''), 'password' => (string) ($row['password'] ?? '')];
+}
+
+/** @param array<string, string> $overrides */
+/**
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function profileBaselineFields(array $overrides = []): array
+{
+    return array_merge([
+        'validate' => '1',
+        'nb_image_page' => '15',
+        'recent_period' => '7',
+        'language' => 'en_UK',
+        'theme' => 'default',
+        'redirect' => '',
+    ], $overrides);
+}
+
+it('fatal-errors on a hacking-attempt invalid language value', function (): void {
+    $page = profileLogin($this);
+    H::navigateOk($page, '/profile.php');
+
+    $result = H::adminPost($page, '/profile.php', profileBaselineFields([
+        'pwg_token' => H::pwgToken($page),
+        'language' => 'not_a_real_language_' . uniqid(),
+    ]));
+
+    expect($result['status'])->toBe(500);
+    expect($result['body'])->toContain('Hacking attempt, incorrect language value');
+});
+
+it('fatal-errors on a hacking-attempt invalid theme value', function (): void {
+    $page = profileLogin($this);
+    H::navigateOk($page, '/profile.php');
+
+    $result = H::adminPost($page, '/profile.php', profileBaselineFields([
+        'pwg_token' => H::pwgToken($page),
+        'theme' => 'not_a_real_theme_' . uniqid(),
+    ]));
+
+    expect($result['status'])->toBe(500);
+    expect($result['body'])->toContain('Hacking attempt, incorrect theme value');
+});
+
+it('rejects a new-password submission whose confirmation does not match', function (): void {
+    $page = profileLogin($this);
+    H::navigateOk($page, '/profile.php');
+    $before = profileUserAuthRow();
+
+    $result = H::adminPost($page, '/profile.php', profileBaselineFields([
+        'pwg_token' => H::pwgToken($page),
+        'mail_address' => 'regular-user-unchanged@example.test',
+        'password' => PROFILE_TEST_PASS,
+        'use_new_pwd' => 'a-brand-new-password-1',
+        'passwordConf' => 'a-different-password-2',
+    ]));
+
+    expect($result['status'])->toBe(200);
+    expect($result['body'])->toContain('The passwords do not match');
+    expect(profileUserAuthRow())->toBe($before);
+});
+
+it('rejects a password change when the current password is wrong', function (): void {
+    $page = profileLogin($this);
+    H::navigateOk($page, '/profile.php');
+    $before = profileUserAuthRow();
+
+    $result = H::adminPost($page, '/profile.php', profileBaselineFields([
+        'pwg_token' => H::pwgToken($page),
+        'mail_address' => 'regular-user-unchanged@example.test',
+        'password' => 'definitely-the-wrong-current-password',
+        'use_new_pwd' => 'a-brand-new-password-1',
+        'passwordConf' => 'a-brand-new-password-1',
+    ]));
+
+    expect($result['status'])->toBe(200);
+    expect($result['body'])->toContain('Current password is wrong');
+    expect(profileUserAuthRow())->toBe($before);
+});
+
+function profileRestoreAuthRow(string $email, string $passwordHash): void
+{
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+    $prefix = $prefix !== false ? $prefix : 'piwigo_';
+    $db->query(sprintf(
+        "UPDATE %susers SET mail_address = %s, password = '%s' WHERE username = '%s'",
+        $prefix,
+        $email === '' ? 'NULL' : "'" . $db->real_escape_string($email) . "'",
+        $db->real_escape_string($passwordHash),
+        $db->real_escape_string(PROFILE_TEST_USER)
+    ));
+    $db->close();
+}
+
+it('changes both the email address and password given the correct current password', function (): void {
+    $page = profileLogin($this);
+    H::navigateOk($page, '/profile.php');
+    $before = profileUserAuthRow();
+    expect($before)->not->toBeNull();
+    assert(is_array($before));
+
+    $newEmail = 'ct-regular-user-' . uniqid() . '@example.test';
+
+    try {
+        H::adminPost($page, '/profile.php', profileBaselineFields([
+            'pwg_token' => H::pwgToken($page),
+            'mail_address' => $newEmail,
+            'password' => PROFILE_TEST_PASS,
+            'use_new_pwd' => 'a-brand-new-password-9',
+            'passwordConf' => 'a-brand-new-password-9',
+            // The redirect must be a real, current-site URL for
+            // RedirectServiceInterface to accept it -- reusing the site
+            // root, same target ProfileController's own hidden field
+            // already uses.
+            'redirect' => H::baseUrl() . '/',
+        ]));
+
+        $after = profileUserAuthRow();
+        expect($after)->not->toBeNull();
+        assert(is_array($after));
+        expect($after['email'])->toBe($newEmail);
+        expect($after['email'])->not->toBe($before['email']);
+        expect($after['password'])->not->toBe($before['password']);
+
+        // Log back in with the NEW password to confirm it was really
+        // hashed and persisted (self::passwordService()->hash()), not
+        // just accepted and discarded.
+        $freshPage = H::visitPwg($this, '/identification.php');
+        $freshPage = $freshPage->fill('username', PROFILE_TEST_USER)->fill('password', 'a-brand-new-password-9')->click('login');
+        $freshPage->assertPresent('a[href*="act=logout"]');
+    } finally {
+        // A raw DB restore, not a second app-level password-change round
+        // trip -- guarantees the fixture's own documented credentials
+        // (regular_user/regular_user_pass, relied on by every other test
+        // in this file and by PictureControllerTest.php) are back exactly
+        // as they were even if an assertion above threw partway through.
+        profileRestoreAuthRow($before['email'], $before['password']);
+    }
+});

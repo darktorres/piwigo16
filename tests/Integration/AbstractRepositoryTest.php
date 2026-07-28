@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\AbstractRepository;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 
 final class AbstractRepositoryTest extends IntegrationTestCase
@@ -54,5 +55,22 @@ final class AbstractRepositoryTest extends IntegrationTestCase
         $value = $repo->conn()->fetchOne('SELECT 1');
         self::assertTrue(is_int($value) || is_string($value));
         self::assertSame(1, (int) $value);
+    }
+
+    public function testBatchWriterBuildsAWriterBoundToTheSameConnection(): void
+    {
+        $conn = DbConnection::build();
+        $repo = new class ($conn) extends AbstractRepository {
+            public function exposedBatchWriter(): BatchWriter
+            {
+                return $this->batchWriter();
+            }
+        };
+
+        $writer = $repo->exposedBatchWriter();
+        self::assertInstanceOf(BatchWriter::class, $writer);
+
+        $writerConn = new \ReflectionProperty(BatchWriter::class, 'conn');
+        self::assertSame($conn, $writerConn->getValue($writer));
     }
 }

@@ -31,7 +31,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     /**
      * @param array{
      *   author: string,
-     *   authorId: int,
+     *   authorId: ?int,
      *   anonymousId: string,
      *   content: string,
      *   validated: bool,

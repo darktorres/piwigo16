@@ -1182,10 +1182,13 @@ final readonly class CategoryService
      */
     public function setCatVisible(array $categories, bool|string $value, bool $unlockChild = false): ?false
     {
-        if (($value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
+        $filteredValue = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        if ($filteredValue === null) {
             trigger_error("setCatVisible invalid param {$value}", E_USER_WARNING);
             return false;
         }
+
+        $value = $filteredValue;
 
         // unlocking a category => all its parent categories become unlocked
         if ($value) {

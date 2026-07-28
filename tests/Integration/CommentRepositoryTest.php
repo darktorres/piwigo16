@@ -287,6 +287,37 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->repo->findForImage(999999, false, 'id', 'mail_address', 'ASC', 10, 0));
     }
 
+    public function test_count_validated_by_image_ids_short_circuits_on_an_empty_list(): void
+    {
+        self::assertSame([], $this->repo->countValidatedByImageIds([]));
+    }
+
+    /**
+     * Asserts the *delta* rather than an absolute count -- other tests in
+     * this class also insert disposable image_id=1 comments and the
+     * fixture is loaded once per class, not reset per test, so the
+     * pre-existing count isn't a fixed number. Adds one validated and one
+     * unvalidated comment and confirms exactly the validated one is
+     * reflected, keyed by the string image id, with a requested-but-empty
+     * image id absent entirely (not present with a zero count).
+     */
+    public function test_count_validated_by_image_ids_keys_the_result_by_image_id(): void
+    {
+        $beforeCounts = $this->repo->countValidatedByImageIds([1]);
+        $before = $beforeCounts === [] ? 0 : array_values($beforeCounts)[0];
+
+        $this->insertFixtureComment(['validated' => true]);
+        $this->insertFixtureComment(['validated' => false]);
+
+        $counts = $this->repo->countValidatedByImageIds([1, 999999]);
+
+        // Only image 1 has any validated comments -- 999999 is absent
+        // entirely (not present with a zero count), so a single-entry
+        // result is exactly image 1's own count.
+        self::assertCount(1, $counts);
+        self::assertSame($before + 1, array_values($counts)[0]);
+    }
+
     /**
      * Inserts a fresh, disposable comment for destructive tests (delete/
      * update/validate) so they never depend on -- or on run order relative

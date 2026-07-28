@@ -149,3 +149,39 @@ it('sets the upload_hide_warnings session flag when hide_warnings= is present', 
     $page = H::navigateOk($page, '/admin.php?page=photos_add');
     $page->assertNoJavaScriptErrors();
 });
+
+it('computes the GD max-upload-resolution memory warning when forced onto the "gd" graphics library', function (): void {
+    $snapshot = H::snapshotConfig(['graphics_library']);
+    // Default 'auto' resolves to 'ext_imagick' in this test env (both the
+    // imagick PHP extension and the `convert`/`identify` CLI binaries are
+    // present, confirmed live) -- prepareUploadForm()'s own memory-limit
+    // math only runs for the 'gd' library specifically.
+    H::setConfigValue('graphics_library', '"gd"');
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=photos_add');
+
+        $page->assertNoJavaScriptErrors();
+        H::assertNoServerErrors($page, 'photos_add, graphics_library=gd');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('shows the original-resize dimensions warning when original_resize is enabled', function (): void {
+    $snapshot = H::snapshotConfig(['original_resize', 'original_resize_maxwidth', 'original_resize_maxheight']);
+    H::setConfigValue('original_resize', 'true');
+    H::setConfigValue('original_resize_maxwidth', '1600');
+    H::setConfigValue('original_resize_maxheight', '1200');
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=photos_add');
+
+        $page->assertNoJavaScriptErrors();
+        H::assertNoServerErrors($page, 'photos_add, original_resize enabled');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});

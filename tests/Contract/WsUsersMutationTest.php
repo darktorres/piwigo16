@@ -101,40 +101,6 @@ final class WsUsersMutationTest extends ContractTestCase
     }
 
     /**
-     * Bypasses callWs()'s hard `assertLessThan(500, $status)` guard for
-     * branches where PwgError() itself uses a 4xx/5xx code -- a genuine
-     * business-logic response, not a real server error.
-     *
-     * @param array<string, mixed> $params
-     * @return array<string, mixed>
-     */
-    private function callWsAllowingServerError(string $method, array $params): array
-    {
-        $url = $this->baseUrl . '/ws.php?format=json';
-        $ch = curl_init($url);
-        self::assertNotFalse($ch);
-
-        $cookieJar = $this->cookieJar();
-        assert($cookieJar !== '');
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge(['method' => $method], $params)));
-        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
-        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
-
-        $body = curl_exec($ch);
-        unset($ch);
-
-        self::assertIsString($body);
-        $decoded = json_decode($body, true);
-        self::assertIsArray($decoded);
-        /** @var array<string, mixed> $decoded */
-        return $decoded;
-    }
-
-    /**
      * Narrows a decoded WS response down to result.users[0], asserting the
      * shape at every level. callWs() returns array<string, mixed>, so
      * nothing below the top level is known without explicit checks.
@@ -281,6 +247,38 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame(1003, $response['err']);
     }
 
+    /**
+     * double_password_type_in_admin defaults to false (CurrentConfig's own
+     * static default) -- must be explicitly enabled for add()'s
+     * password/password_confirm comparison to run at all.
+     */
+    public function test_add_password_confirmation_mismatch_returns_error(): void
+    {
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('double_password_type_in_admin', 'true')
+             ON DUPLICATE KEY UPDATE value = VALUES(value)"
+        );
+        \Piwigo\Cache\CachePools::config()->clear();
+
+        try {
+            $token = $this->getPwgToken();
+
+            $response = $this->callWs('pwg.users.add', [
+                'username' => 'ct_user_' . uniqid(),
+                'password' => 'FirstPass123!',
+                'password_confirm' => 'SecondPass456!',
+                'pwg_token' => $token,
+            ]);
+
+            self::assertSame('fail', $response['stat']);
+            self::assertSame(1003, $response['err']);
+            self::assertSame('The passwords do not match', $response['message']);
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'double_password_type_in_admin'");
+            \Piwigo\Cache\CachePools::config()->clear();
+        }
+    }
+
     public function test_add_auto_password_generates_one(): void
     {
         $token = $this->getPwgToken();
@@ -409,6 +407,47 @@ final class WsUsersMutationTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
         self::assertSame('0 users deleted', $response['result']);
+    }
+
+    /**
+     * delete()'s own status-check branch: a non-webmaster admin session
+     * additionally protects every other admin/webmaster account, on top of
+     * the always-protected self/guest/default/webmaster_id list a
+     * webmaster session already gets. fixture_admin is 'webmaster'
+     * (protected unconditionally either way), so this needs a throwaway
+     * user promoted to plain 'admin' to actually exercise the extra query.
+     */
+    public function test_delete_as_a_non_webmaster_admin_also_protects_other_admins(): void
+    {
+        $adminToken = $this->getPwgToken();
+        $selfId = $this->conn->fetchOne('SELECT id FROM ' . Tables::users() . ' WHERE username = ?', ['fixture_admin']);
+        self::assertIsNumeric($selfId);
+
+        $username = 'ct_nonwm_admin_' . uniqid();
+        $password = 'Test1234!';
+        $newAdminId = $this->createUser($username, $password);
+        $this->callWs('pwg.users.setInfo', [
+            'user_id' => $newAdminId,
+            'status' => 'admin',
+            'pwg_token' => $adminToken,
+        ]);
+
+        $login = $this->callWs('pwg.session.login', ['username' => $username, 'password' => $password]);
+        self::assertSame('ok', $login['stat']);
+        $nonWebmasterToken = $this->getPwgToken();
+
+        $response = $this->callWs('pwg.users.delete', [
+            'user_id' => [(int) $selfId],
+            'pwg_token' => $nonWebmasterToken,
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        self::assertSame('0 users deleted', $response['result']);
+        $stillExists = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::users() . ' WHERE id = ?', [(int) $selfId]);
+        self::assertIsNumeric($stillExists);
+        self::assertSame(1, (int) $stillExists);
+
+        $this->loginAsAdmin();
     }
 
     // -------------------------------------------------------------- setInfo
@@ -547,6 +586,38 @@ final class WsUsersMutationTest extends ContractTestCase
             'password' => 'NewPass456!',
         ]);
         self::assertSame('ok', $reLogin['stat'], 'the new password must actually authenticate');
+    }
+
+    /**
+     * allow_user_customization=false unsets nb_image_page/theme/language/
+     * recent_period/expand/show_nb_comments/show_nb_hits from $params
+     * before checkAndSaveUserInfos() runs -- a requested theme change is
+     * silently ignored rather than erroring.
+     */
+    public function test_setMyInfo_ignores_theme_when_user_customization_is_disabled(): void
+    {
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('allow_user_customization', 'false')
+             ON DUPLICATE KEY UPDATE value = VALUES(value)"
+        );
+        \Piwigo\Cache\CachePools::config()->clear();
+
+        try {
+            $token = $this->getPwgToken();
+            $before = $this->conn->fetchOne('SELECT theme FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
+
+            $response = $this->callWs('pwg.users.setMyInfo', [
+                'theme' => 'a_theme_that_should_be_ignored',
+                'pwg_token' => $token,
+            ]);
+
+            self::assertSame('ok', $response['stat']);
+            $after = $this->conn->fetchOne('SELECT theme FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
+            self::assertSame($before, $after);
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'allow_user_customization'");
+            \Piwigo\Cache\CachePools::config()->clear();
+        }
     }
 
     // -------------------------------------------------------- preferencesSet

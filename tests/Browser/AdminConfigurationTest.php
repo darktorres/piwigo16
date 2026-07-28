@@ -810,3 +810,558 @@ it('rejects a submission with a missing CSRF token', function (): void {
         H::restoreConfig($snapshot);
     }
 });
+
+it('shows the webmaster-required warning for a plain "admin"-status user', function (): void {
+    $page = H::loginAsAdmin($this);
+    $username = 'config_ct_admin_' . uniqid();
+    $password = 'a-strong-test-password-1';
+
+    $addResult = H::wsCall($page, 'pwg.users.add', [
+        'username' => $username,
+        'password' => $password,
+        'password_confirm' => $password,
+        'pwg_token' => H::pwgToken($page),
+    ]);
+    $userId = wsAddedUserId($addResult);
+
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+    $prefix = $prefix !== false ? $prefix : 'piwigo_';
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $db->query(sprintf("UPDATE %suser_infos SET status = 'admin' WHERE user_id = %d", $prefix, $userId));
+
+    try {
+        $adminPage = H::visitPwg($this, '/identification.php');
+        H::assertNoServerErrors($adminPage, 'plain-admin identification page');
+        $adminPage = $adminPage->fill('username', $username)->fill('password', $password)->click('login');
+        H::assertNoServerErrors($adminPage, 'plain-admin post-login page');
+
+        $adminPage = H::navigateOk($adminPage, ctConfigSection('main'));
+        $adminPage->assertSee('status is required to edit parameters');
+    } finally {
+        $db->query(sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
+        $db->query(sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+        $db->close();
+    }
+});
+
+it('uploads a real PNG watermark image and rejects a non-PNG upload', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives']);
+
+    $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_browser_watermark_upload_');
+    if ($cookieJar === false) {
+        throw new RuntimeException('tempnam failed');
+    }
+
+    $curl = static function (string $url, array $fields = []) use ($cookieJar): array {
+        $ch = curl_init($url);
+        if ($ch === false) {
+            throw new RuntimeException('curl_init failed');
+        }
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        if ($fields !== []) {
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+        }
+        $body = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        unset($ch);
+
+        return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+    };
+
+    $baseUrl = H::baseUrl();
+    $curl($baseUrl . '/identification.php');
+    $curl($baseUrl . '/identification.php', [
+        'username' => H::ADMIN_USER,
+        'password' => H::ADMIN_PASS,
+        'login' => 'Login',
+    ]);
+
+    $statusResult = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.session.getStatus']);
+    $decodedStatus = json_decode($statusResult['body'], true);
+    $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
+    $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+    $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
+    expect($pwgToken)->not->toBe('');
+
+    $watermarkUrl = $baseUrl . '/' . ltrim(ctConfigSection('watermark'), '/');
+    $baseFields = [
+        'pwg_token' => $pwgToken,
+        'submit' => '1',
+        'w[file]' => '',
+        'w[position]' => 'topleft',
+        'w[xpos]' => '0',
+        'w[ypos]' => '0',
+        'w[xrepeat]' => '0',
+        'w[yrepeat]' => '0',
+        'w[opacity]' => '50',
+        'w[minw]' => '10',
+        'w[minh]' => '10',
+    ];
+
+    $pngPath = tempnam(sys_get_temp_dir(), 'pwg_watermark_') . '.png';
+    $img = imagecreatetruecolor(20, 20);
+    if ($img === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagepng($img, $pngPath);
+
+    $jpgPath = tempnam(sys_get_temp_dir(), 'pwg_watermark_') . '.jpg';
+    $imgJpg = imagecreatetruecolor(20, 20);
+    if ($imgJpg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagejpeg($imgJpg, $jpgPath);
+
+    try {
+        // Wrong file type first: getimagesize()'s own IMAGETYPE_PNG check
+        // rejects a real JPEG upload with a real error, without ever
+        // writing anything to disk.
+        $jpgResult = $curl($watermarkUrl, array_merge($baseFields, [
+            'watermarkImage' => new CURLFile($jpgPath, 'image/jpeg', 'not-a-watermark.jpg'),
+        ]));
+        expect($jpgResult['status'])->toBe(200);
+        expect($jpgResult['body'])->toContain('Allowed file types: PNG');
+
+        // Real PNG upload: StorageRegistry::disk('watermarks') actually
+        // writes the file, and w[file] gets persisted as a real,
+        // root-relative path under local/watermarks/.
+        $pngResult = $curl($watermarkUrl, array_merge($baseFields, [
+            'watermarkImage' => new CURLFile($pngPath, 'image/png', 'ct-real-watermark.png'),
+        ]));
+        expect($pngResult['status'])->toBe(200);
+        expect($pngResult['body'])->toContain('Your configuration settings are saved');
+
+        // ImageStdParams::save() persists `derivatives` as a real PHP
+        // serialize() blob (confirmed live), not JSON -- ['w' => a real
+        // WatermarkParams object] holds the watermark, its own `file`
+        // property root-relative to CurrentPaths::get()->root. A plain
+        // regex extraction avoids unserialize()'s own class-instantiation
+        // side effects for a value this test only needs to read.
+        $derivatives = H::configValue('derivatives');
+        if (! is_string($derivatives) || preg_match('/s:4:"file";s:\d+:"([^"]*)"/', $derivatives, $matches) !== 1) {
+            throw new RuntimeException('Could not find a watermark file entry in the derivatives config: ' . var_export($derivatives, true));
+        }
+        $watermarkFile = $matches[1];
+        expect($watermarkFile)->not->toBe('');
+        expect($watermarkFile)->toContain('watermarks/');
+
+        $uploadedPath = __DIR__ . '/../../' . ltrim($watermarkFile, '/');
+        expect(file_exists($uploadedPath))->toBeTrue();
+        @unlink($uploadedPath);
+    } finally {
+        @unlink($cookieJar);
+        @unlink($pngPath);
+        @unlink($jpgPath);
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('main tab: dedups a repeated order_by selection into a single field', function (): void {
+    $page = H::loginAsAdmin($this);
+    H::navigateOk($page, ctConfigSection('main'));
+    $token = H::pwgToken($page);
+
+    $snapshot = H::snapshotConfig(array_merge(
+        ['order_by', 'order_by_inside_category', 'gallery_title'],
+        ctMainCheckboxes()
+    ));
+
+    try {
+        $result = H::adminPost($page, ctConfigSection('main'), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'gallery_title' => 'CT Dedup Gallery',
+            // The same value submitted twice -- the per-entry dedup loop
+            // (handle()'s own `isset($used[$val])` check) must collapse
+            // this back down to a single field, not persist a duplicate.
+            'order_by' => ['id ASC', 'id ASC'],
+            'email_admin_on_new_user_filter' => 'all',
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Fatal error');
+        expect(H::configValue('order_by'))->toBe(json_encode('ORDER BY id ASC'));
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('main tab: a rank-only order_by selection falls back to id ASC while order_by_inside_category keeps rank', function (): void {
+    $page = H::loginAsAdmin($this);
+    H::navigateOk($page, ctConfigSection('main'));
+    $token = H::pwgToken($page);
+
+    $snapshot = H::snapshotConfig(array_merge(
+        ['order_by', 'order_by_inside_category', 'gallery_title'],
+        ctMainCheckboxes()
+    ));
+
+    try {
+        $result = H::adminPost($page, ctConfigSection('main'), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'gallery_title' => 'CT Rank Only Gallery',
+            'order_by' => ['`rank` ASC'],
+            'email_admin_on_new_user_filter' => 'all',
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Fatal error');
+        // '`rank` ASC' is stripped out of $order_by specifically ("there is
+        // no rank outside categories"), falling back to the hardcoded
+        // 'id ASC' default -- order_by_inside_category has no such
+        // restriction and keeps the rank selection untouched, distinguishing
+        // the two fields rather than asserting the same value for both.
+        expect(H::configValue('order_by'))->toBe(json_encode('ORDER BY id ASC'));
+        expect(H::configValue('order_by_inside_category'))->toBe(json_encode('ORDER BY `rank` ASC'));
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('main tab: rejects an order_by submission that becomes empty after de-duplication', function (): void {
+    $page = H::loginAsAdmin($this);
+    H::navigateOk($page, ctConfigSection('main'));
+    $token = H::pwgToken($page);
+
+    $snapshot = H::snapshotConfig(['order_by', 'gallery_title']);
+    $title = 'CT Should Not Save Empty Order ' . uniqid();
+
+    try {
+        $result = H::adminPost($page, ctConfigSection('main'), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'gallery_title' => $title,
+            // A non-empty array (so the *outer* emptyValue() check lets it
+            // through, unlike the "no order field selected" test above,
+            // which omits 'order_by' entirely and never enters this inner
+            // branch) whose only entry is itself an empty string -- the
+            // per-entry emptyValue() filter drops it, leaving nothing
+            // selected: a genuinely different source line.
+            'order_by' => [''],
+            'email_admin_on_new_user_filter' => 'all',
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Fatal error');
+        expect($result['body'])->toContain('No order field selected');
+        expect(H::configValue('gallery_title'))->not->toBe(json_encode($title));
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('main tab: shows the order-by-is-custom notice and disables the selector when order_by_custom is set', function (): void {
+    $page = H::loginAsAdmin($this);
+    $snapshot = H::snapshotConfig(['order_by_custom']);
+
+    try {
+        H::setConfigValue('order_by_custom', H::jsonEncode('ORDER BY RAND()'));
+
+        $page = H::navigateOk($page, ctConfigSection('main'));
+        $page->assertSee("You can't define a default photo order because you have a custom setting in your local configuration.");
+        $page->assertPresent('select[name="order_by[]"][disabled]');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('sizes tab: saves valid original-resize settings alongside derivative sizes', function (): void {
+    $snapshot = H::snapshotConfig([
+        'derivatives', 'disabled_derivatives',
+        'original_resize', 'original_resize_maxwidth', 'original_resize_maxheight', 'original_resize_quality',
+    ]);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        $result = H::adminPost($page, ctConfigSection('sizes'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'resize_quality' => '90',
+            'original_resize' => '1',
+            'original_resize_maxwidth' => '3000',
+            'original_resize_maxheight' => '2500',
+            'original_resize_quality' => '85',
+            'd' => ctDerivativesPayload(),
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('Your configuration settings are saved');
+        // UploadService::saveUploadFormConfig() writes these 4 params via
+        // its own raw BatchWriter::massUpdate() call, bypassing
+        // ConfigService::confUpdateParam()'s json_encode() -- unlike every
+        // other field on this page, these are plain literal strings in the
+        // config table, not JSON-quoted.
+        expect(H::configValue('original_resize'))->toBe('true');
+        expect(H::configValue('original_resize_maxwidth'))->toBe('3000');
+        expect(H::configValue('original_resize_maxheight'))->toBe('2500');
+        expect(H::configValue('original_resize_quality'))->toBe('85');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('sizes tab: rejects an out-of-range original_resize_maxwidth, redisplaying the submitted fields', function (): void {
+    $snapshot = H::snapshotConfig([
+        'derivatives', 'disabled_derivatives',
+        'original_resize', 'original_resize_maxwidth', 'original_resize_maxheight', 'original_resize_quality',
+    ]);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        $result = H::adminPost($page, ctConfigSection('sizes'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'resize_quality' => '90',
+            'original_resize' => '1',
+            // Below UploadService::getUploadFormConfig()'s own 500 minimum
+            // -- rejected by saveUploadFormConfig()'s range check, which
+            // shares processSizes()'s own $errors array and so aborts the
+            // whole "sizes" save, not just this one field.
+            'original_resize_maxwidth' => '100',
+            'original_resize_maxheight' => '2500',
+            'original_resize_quality' => '85',
+            'd' => ctDerivativesPayload(),
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Your configuration settings are saved');
+        expect($result['body'])->not->toContain('Fatal error');
+        expect(H::configValue('original_resize_maxwidth'))->toBe($snapshot['original_resize_maxwidth']);
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('sizes tab: toggles a non-required derivative type off then back on across successive saves', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives', 'disabled_derivatives']);
+
+    try {
+        $page = H::loginAsAdmin($this);
+
+        // Step 1: baseline -- every type enabled.
+        $token = H::pwgToken($page);
+        $baseline = H::adminPost($page, ctConfigSection('sizes'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'resize_quality' => '90',
+            'd' => ctDerivativesPayload(),
+        ]);
+        expect($baseline['status'])->toBe(200);
+        expect($baseline['body'])->toContain('Your configuration settings are saved');
+
+        // Step 2: disable '4xlarge' (not must_enable, so omitting its
+        // 'enabled' key is enough) -- it was enabled a moment ago, so this
+        // hits the "now disabled, before was enabled" branch.
+        $disablePayload = ctDerivativesPayload();
+        unset($disablePayload['4xlarge']['enabled']);
+        $token = H::pwgToken($page);
+        $disabled = H::adminPost($page, ctConfigSection('sizes'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'resize_quality' => '90',
+            'd' => $disablePayload,
+        ]);
+        expect($disabled['status'])->toBe(200);
+        expect($disabled['body'])->toContain('Your configuration settings are saved');
+
+        $page = H::navigateOk($page, ctConfigSection('sizes'));
+        $page->assertMissing('input[name="d[4xlarge][enabled]"][checked]');
+
+        // Step 3: re-enable '4xlarge' -- it was disabled a moment ago, so
+        // this hits the "now enabled, before was disabled" branch.
+        $token = H::pwgToken($page);
+        $reenabled = H::adminPost($page, ctConfigSection('sizes'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'resize_quality' => '90',
+            'd' => ctDerivativesPayload(),
+        ]);
+        expect($reenabled['status'])->toBe(200);
+        expect($reenabled['body'])->toContain('Your configuration settings are saved');
+
+        $page = H::navigateOk($page, ctConfigSection('sizes'));
+        $page->assertPresent('input[name="d[4xlarge][enabled]"][checked]');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('rejects an out-of-range watermark ypos, without saving', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives']);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        $result = H::adminPost($page, ctConfigSection('watermark'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'w' => [
+                'file' => '',
+                'position' => 'custom',
+                'xpos' => '50',
+                'ypos' => '150',
+                'xrepeat' => '0',
+                'yrepeat' => '0',
+                'opacity' => '50',
+                'minw' => '10',
+                'minh' => '10',
+            ],
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Your configuration settings are saved');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('avoids a watermark filename collision by appending a numbered suffix on a repeat upload', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives']);
+
+    $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_browser_watermark_collision_');
+    if ($cookieJar === false) {
+        throw new RuntimeException('tempnam failed');
+    }
+
+    $curl = static function (string $url, array $fields = []) use ($cookieJar): array {
+        $ch = curl_init($url);
+        if ($ch === false) {
+            throw new RuntimeException('curl_init failed');
+        }
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        if ($fields !== []) {
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+        }
+        $body = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        unset($ch);
+
+        return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+    };
+
+    $baseUrl = H::baseUrl();
+    $curl($baseUrl . '/identification.php');
+    $curl($baseUrl . '/identification.php', [
+        'username' => H::ADMIN_USER,
+        'password' => H::ADMIN_PASS,
+        'login' => 'Login',
+    ]);
+
+    $statusResult = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.session.getStatus']);
+    $decodedStatus = json_decode($statusResult['body'], true);
+    $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
+    $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+    $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
+    expect($pwgToken)->not->toBe('');
+
+    $watermarkUrl = $baseUrl . '/' . ltrim(ctConfigSection('watermark'), '/');
+    $baseFields = [
+        'pwg_token' => $pwgToken,
+        'submit' => '1',
+        'w[file]' => '',
+        'w[position]' => 'topleft',
+        'w[xpos]' => '0',
+        'w[ypos]' => '0',
+        'w[xrepeat]' => '0',
+        'w[yrepeat]' => '0',
+        'w[opacity]' => '50',
+        'w[minw]' => '10',
+        'w[minh]' => '10',
+    ];
+
+    $sharedName = 'ctdupmark' . uniqid();
+
+    $firstPath = tempnam(sys_get_temp_dir(), 'pwg_watermark_') . '.png';
+    $img1 = imagecreatetruecolor(20, 20);
+    if ($img1 === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagepng($img1, $firstPath);
+
+    $secondPath = tempnam(sys_get_temp_dir(), 'pwg_watermark_') . '.png';
+    $img2 = imagecreatetruecolor(20, 20);
+    if ($img2 === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagepng($img2, $secondPath);
+
+    $firstStoredPath = null;
+    $secondStoredPath = null;
+
+    try {
+        $firstResult = $curl($watermarkUrl, array_merge($baseFields, [
+            'watermarkImage' => new CURLFile($firstPath, 'image/png', $sharedName . '.png'),
+        ]));
+        expect($firstResult['status'])->toBe(200);
+        expect($firstResult['body'])->toContain('Your configuration settings are saved');
+
+        $derivativesAfterFirst = H::configValue('derivatives');
+        expect($derivativesAfterFirst)->not->toBeNull();
+        assert(is_string($derivativesAfterFirst));
+        if (preg_match('/s:4:"file";s:\d+:"([^"]*)"/', $derivativesAfterFirst, $matches) !== 1) {
+            throw new RuntimeException('Could not find a watermark file entry after the first upload');
+        }
+        $firstStoredFile = $matches[1];
+        expect($firstStoredFile)->toContain($sharedName . '.png');
+        expect($firstStoredFile)->not->toContain($sharedName . '-1.png');
+        $firstStoredPath = __DIR__ . '/../../' . ltrim($firstStoredFile, '/');
+        expect(file_exists($firstStoredPath))->toBeTrue();
+
+        // Same reported original filename again -- getWatermarkFilename()
+        // must find the first upload already on disk (via its own
+        // glob('watermarks/*.png') existing-files scan) and append a "-1"
+        // numbered suffix rather than overwrite it.
+        $secondResult = $curl($watermarkUrl, array_merge($baseFields, [
+            'watermarkImage' => new CURLFile($secondPath, 'image/png', $sharedName . '.png'),
+        ]));
+        expect($secondResult['status'])->toBe(200);
+        expect($secondResult['body'])->toContain('Your configuration settings are saved');
+
+        $derivativesAfterSecond = H::configValue('derivatives');
+        expect($derivativesAfterSecond)->not->toBeNull();
+        assert(is_string($derivativesAfterSecond));
+        if (preg_match('/s:4:"file";s:\d+:"([^"]*)"/', $derivativesAfterSecond, $matches) !== 1) {
+            throw new RuntimeException('Could not find a watermark file entry after the second upload');
+        }
+        $secondStoredFile = $matches[1];
+        expect($secondStoredFile)->toContain($sharedName . '-1.png');
+        $secondStoredPath = __DIR__ . '/../../' . ltrim($secondStoredFile, '/');
+        expect(file_exists($secondStoredPath))->toBeTrue();
+
+        // Both files must still exist side by side -- the first was never
+        // overwritten by the second.
+        expect(file_exists($firstStoredPath))->toBeTrue();
+    } finally {
+        @unlink($cookieJar);
+        @unlink($firstPath);
+        @unlink($secondPath);
+        if ($firstStoredPath !== null) {
+            @unlink($firstStoredPath);
+        }
+        if ($secondStoredPath !== null) {
+            @unlink($secondStoredPath);
+        }
+        H::restoreConfig($snapshot);
+    }
+});

@@ -42,44 +42,6 @@ final class WsImagesSetInfoTest extends ContractTestCase
         return $this->getPwgToken();
     }
 
-    /**
-     * setInfo()'s own single_value_mode/multiple_value_mode/"file on a
-     * synced photo" validation errors are real, deliberate
-     * `new PwgError(500, ...)` returns (see PwgError::__construct(): any
-     * code in [400,600) sets a matching real HTTP status header) -- the
-     * shared callWs()'s own `< 500` guard exists to catch genuine crashes
-     * and would wrongly reject this well-formed application error, same
-     * shape as WsCategoriesMutationTest's own callWsAllowingServerError().
-     *
-     * @param array<string, mixed> $params
-     * @return array<string, mixed>
-     */
-    private function callWsAllowingServerError(string $method, array $params): array
-    {
-        $url = $this->baseUrl . '/ws.php?format=json';
-        $ch = curl_init($url);
-        self::assertNotFalse($ch);
-
-        $cookieJar = $this->cookieJar();
-        assert($cookieJar !== '');
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge(['method' => $method], $params)));
-        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
-        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
-
-        $body = curl_exec($ch);
-        unset($ch);
-
-        self::assertIsString($body);
-        $decoded = json_decode($body, true);
-        self::assertIsArray($decoded);
-        /** @var array<string, mixed> $decoded */
-        return $decoded;
-    }
-
     private static function toIntOrFail(mixed $value): int
     {
         self::assertIsNumeric($value);

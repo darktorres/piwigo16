@@ -4,6 +4,17 @@ declare(strict_types=1);
 
 use Piwigo\Core\StringHelper;
 
+/**
+ * pwgTransliterate()'s `function_exists('mb_strtolower') && defined
+ * ('PWG_CHARSET')` branch is deliberately NOT exercised here: same
+ * reasoning as tests/Unit/Core/CharsetHelperTest.php's own documented
+ * skip for PWG_CHARSET -- it stays undefined for this whole shared
+ * PHPUnit/Pest process (that file's own test asserts so directly), and
+ * constants can't be undefined once define()'d, so forcing it true here
+ * would permanently leak into every other test file, including that
+ * one's own explicit `expect(defined('PWG_CHARSET'))->toBeFalse()`
+ * assertion. Not worth that risk for one branch.
+ */
 test('getExtension returns the part after the last dot', function (): void {
     expect(StringHelper::getExtension('archive.tar.gz'))->toBe('gz');
     expect(StringHelper::getExtension('photo.JPG'))->toBe('JPG');
@@ -38,6 +49,28 @@ test('qualifyUtf8 returns -1 for a malformed continuation byte', function (): vo
 
 test('qualifyUtf8 returns -1 when a multi-byte sequence is cut off at the end of the string', function (): void {
     expect(StringHelper::qualifyUtf8("Caf\xc3"))->toBe(-1);
+});
+
+test('qualifyUtf8 returns 1 for a well-formed 4-byte sequence (a real UTF-8 emoji)', function (): void {
+    expect(StringHelper::qualifyUtf8("\xf0\x9f\x98\x80"))->toBe(1); // U+1F600
+});
+
+test('qualifyUtf8 returns 1 for well-formed 5-byte and 6-byte lead sequences', function (): void {
+    // 0xF8-0xFB (5-byte) and 0xFC-0xFD (6-byte) lead bytes are outside
+    // the RFC 3629 UTF-8 range (capped at 4 bytes) but are part of the
+    // original, broader UTF-8 scheme this method still recognizes --
+    // synthetic since no real character encodes to either width.
+    expect(StringHelper::qualifyUtf8("\xf8\x88\x88\x88\x88"))->toBe(1)
+        ->and(StringHelper::qualifyUtf8("\xfc\x88\x88\x88\x88\x88"))->toBe(1);
+});
+
+test('qualifyUtf8 returns -1 for a 5-byte sequence cut off before its continuation bytes complete', function (): void {
+    expect(StringHelper::qualifyUtf8("\xf8\x88\x88"))->toBe(-1);
+});
+
+test('qualifyUtf8 returns -1 for a lead byte matching none of the recognized bit patterns', function (): void {
+    // 0xFE is 11111110 -- fails every (ord & mask) === pattern check.
+    expect(StringHelper::qualifyUtf8("\xfe"))->toBe(-1);
 });
 
 test('removeAccents leaves a plain ASCII string unchanged', function (): void {

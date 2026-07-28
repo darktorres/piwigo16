@@ -57,9 +57,17 @@ it('lists the private album as already-authorized for the group that has access 
     // the only element bearing this text.
     $page->assertSee('Manage permissions for the group "Editors"');
 
+    // Not toBe([]) for cat_false: the double-select lists *every* private
+    // album in the whole gallery, a shared, ever-growing resource across
+    // this whole Browser suite run -- other test files' own leftover
+    // private albums (never category 2, which this test doesn't touch)
+    // can genuinely populate it, so only category 2's own classification
+    // is this test's real claim (confirmed live: with 10+ accumulated
+    // private albums from earlier tests, exact-array equality broke here
+    // even though category 2 itself behaved correctly).
     $html = H::rawWebpage($page)->content();
-    expect(groupPermSelectOptions($html, 'cat_true[]'))->toBe([2 => 'Sample Album / Nested Sub Album']);
-    expect(groupPermSelectOptions($html, 'cat_false[]'))->toBe([]);
+    expect(groupPermSelectOptions($html, 'cat_true[]'))->toHaveKey(2, 'Sample Album / Nested Sub Album');
+    expect(groupPermSelectOptions($html, 'cat_false[]'))->not->toHaveKey(2);
 });
 
 it('lists the same private album as still-forbidden for a group without access to it', function (): void {
@@ -71,9 +79,87 @@ it('lists the same private album as still-forbidden for a group without access t
 
     $page->assertSee('Manage permissions for the group "Guests"');
 
+    // See the sibling test above for why an exact array can't be asserted
+    // against this shared, ever-growing list.
     $html = H::rawWebpage($page)->content();
-    expect(groupPermSelectOptions($html, 'cat_true[]'))->toBe([]);
-    expect(groupPermSelectOptions($html, 'cat_false[]'))->toBe([2 => 'Sample Album / Nested Sub Album']);
+    expect(groupPermSelectOptions($html, 'cat_true[]'))->not->toHaveKey(2);
+    expect(groupPermSelectOptions($html, 'cat_false[]'))->toHaveKey(2, 'Sample Album / Nested Sub Album');
+});
+
+it('falsifies (revokes) a private album\'s access for a group that currently has it', function (): void {
+    H::setCategoryPrivate(2, private: true);
+    $page = H::loginAsAdmin($this);
+
+    try {
+        // Group 1 ("Editors") has real group_access to category 2 in the
+        // fixture -- falsify with cat_true=[2] revokes it via
+        // GroupService::removeAccess().
+        $result = H::adminPost($page, '/admin.php?page=group_perm&group_id=1', [
+            'pwg_token' => H::pwgToken($page),
+            'cat_true' => ['2'],
+            'falsify' => '1',
+        ]);
+        expect($result['status'])->toBe(200);
+
+        $db = new mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $prefix = getenv('PIWIGO_DB_PREFIX');
+        $prefix = $prefix !== false ? $prefix : 'piwigo_';
+        $row = $db->query(sprintf('SELECT COUNT(*) AS c FROM %sgroup_access WHERE group_id = 1 AND cat_id = 2', $prefix));
+        $assoc = $row instanceof mysqli_result ? $row->fetch_assoc() : null;
+        expect(is_array($assoc) ? (int) $assoc['c'] : -1)->toBe(0);
+        $db->close();
+    } finally {
+        // Restore the fixture's own group 1 <-> category 2 group_access row
+        // via the real trueify submission (this class's own sibling
+        // branch), not a raw INSERT, so other Browser tests sharing this
+        // fixture (e.g. this file's own earlier tests) see it again.
+        H::adminPost($page, '/admin.php?page=group_perm&group_id=1', [
+            'pwg_token' => H::pwgToken($page),
+            'cat_false' => ['2'],
+            'trueify' => '1',
+        ]);
+        H::setCategoryPrivate(2, private: false);
+    }
+});
+
+it('trueifies (grants) a private album\'s access for a group that currently lacks it', function (): void {
+    H::setCategoryPrivate(2, private: true);
+    $page = H::loginAsAdmin($this);
+
+    try {
+        // Group 3 ("Guests") has no group_access to category 2 in the
+        // fixture -- trueify with cat_false=[2] grants it via
+        // GroupService::addAccess().
+        $result = H::adminPost($page, '/admin.php?page=group_perm&group_id=3', [
+            'pwg_token' => H::pwgToken($page),
+            'cat_false' => ['2'],
+            'trueify' => '1',
+        ]);
+        expect($result['status'])->toBe(200);
+
+        $db = new mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $prefix = getenv('PIWIGO_DB_PREFIX');
+        $prefix = $prefix !== false ? $prefix : 'piwigo_';
+        $row = $db->query(sprintf('SELECT COUNT(*) AS c FROM %sgroup_access WHERE group_id = 3 AND cat_id = 2', $prefix));
+        $assoc = $row instanceof mysqli_result ? $row->fetch_assoc() : null;
+        expect(is_array($assoc) ? (int) $assoc['c'] : -1)->toBe(1);
+
+        // Restore fixture state (group 3 had no access to category 2).
+        $db->query('DELETE FROM ' . $prefix . 'group_access WHERE group_id = 3 AND cat_id = 2');
+        $db->close();
+    } finally {
+        H::setCategoryPrivate(2, private: false);
+    }
 });
 
 // Edge/error condition: group_id is a required GET param with no default --

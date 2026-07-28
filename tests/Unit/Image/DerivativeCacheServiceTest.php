@@ -128,3 +128,73 @@ test('clearDerivativeCache with an explicit type list only matches those types',
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse()
         ->and(file_exists($derivDir . '/photo-sq.jpg'))->toBeTrue();
 });
+
+test('clearDerivativeCache accepts a single type given as a plain string, not wrapped in an array', function (): void {
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026';
+    mkdir($derivDir, 0o777, true);
+    file_put_contents($derivDir . '/photo-th.jpg', 'x');
+    file_put_contents($derivDir . '/photo-sq.jpg', 'x');
+
+    new DerivativeCacheService()->clearDerivativeCache('thumb');
+
+    expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse()
+        ->and(file_exists($derivDir . '/photo-sq.jpg'))->toBeTrue();
+});
+
+test('clearDerivativeCache falls back to the custom-type pattern for a type name that is neither "all" nor a standard ImageStdParams type', function (): void {
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026';
+    mkdir($derivDir, 0o777, true);
+    // derivativeToUrl(CUSTOM) . '_' . $type == 'cu_myCustomWidget', matching
+    // the '-cu_myCustomWidget.ext' filename a real custom-type derivative
+    // would carry.
+    file_put_contents($derivDir . '/photo-cu_myCustomWidget.jpg', 'x');
+    file_put_contents($derivDir . '/photo-th.jpg', 'x');
+
+    new DerivativeCacheService()->clearDerivativeCache('myCustomWidget');
+
+    expect(file_exists($derivDir . '/photo-cu_myCustomWidget.jpg'))->toBeFalse()
+        ->and(file_exists($derivDir . '/photo-th.jpg'))->toBeTrue();
+});
+
+test('deleteElementDerivatives rewrites the path to its pwg_representative form when representative_ext is given', function (): void {
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026/07/pwg_representative';
+    mkdir($derivDir, 0o777, true);
+    file_put_contents($derivDir . '/photo-th.jpg', 'x');
+
+    new DerivativeCacheService()->deleteElementDerivatives([
+        'path' => '2026/07/photo.pdf',
+        'representative_ext' => 'jpg',
+    ]);
+
+    expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse();
+});
+
+test('deleteElementDerivatives strips a leading "../" from the path', function (): void {
+    $derivDir = CurrentPaths::get()->root . CurrentConfig::derivativeDir() . '2026/07';
+    mkdir($derivDir, 0o777, true);
+    file_put_contents($derivDir . '/photo-th.jpg', 'x');
+
+    new DerivativeCacheService()->deleteElementDerivatives([
+        'path' => '../2026/07/photo.jpg',
+    ]);
+
+    expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse();
+});
+
+test('clearDerivativeCacheRecursive returns false without throwing when the directory cannot be opened', function (): void {
+    $missing = CurrentPaths::get()->root . 'does-not-exist';
+
+    // opendir() on a missing directory is a real, unsuppressed E_WARNING
+    // at the call site (not `@`-guarded in the source) -- absorb it with
+    // a scoped handler instead of letting failOnWarning="true" turn it
+    // into a failure, same convention as PluginMaintainTest's own
+    // set_error_handler()/restore_error_handler() pair.
+    set_error_handler(static fn (): bool => true);
+    try {
+        $result = new DerivativeCacheService()->clearDerivativeCacheRecursive($missing, '#.*#');
+    } finally {
+        restore_error_handler();
+    }
+
+    expect($result)->toBeFalse();
+});

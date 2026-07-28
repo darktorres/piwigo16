@@ -241,4 +241,41 @@ abstract class ContractTestCase extends IntegrationTestCase
         /** @var array<string, mixed> $decoded */
         return $decoded;
     }
+
+    /**
+     * Same as callWs(), but without the HTTP-status sanity check --
+     * PwgError's constructor mirrors any WS err code >= 400 onto the real
+     * HTTP response status (HtmlService::setStatusHeader()), so a
+     * deliberately-triggered WS error >= 500 (e.g. WsError::INVALID_METHOD
+     * = 501, or the many business-rule `new PwgError(500, ...)` returns
+     * across the Ws\Pwg* classes) is a real, correct HTTP 500/501 response,
+     * not the server-crashed condition callWs()'s guard exists to catch.
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
+    protected function callWsAllowingServerError(string $method, array $params): array
+    {
+        $url = $this->baseUrl . '/ws.php?format=json';
+        $ch = curl_init($url);
+        self::assertNotFalse($ch);
+
+        $cookieJar = $this->cookieJar();
+        assert($cookieJar !== '');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge(['method' => $method], $params)));
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
+
+        $body = curl_exec($ch);
+        unset($ch);
+
+        self::assertIsString($body);
+        $decoded = json_decode($body, true);
+        self::assertIsArray($decoded);
+        /** @var array<string, mixed> $decoded */
+        return $decoded;
+    }
 }

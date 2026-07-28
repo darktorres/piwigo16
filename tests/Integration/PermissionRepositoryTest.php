@@ -11,6 +11,19 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionRepository;
 
+/**
+ * findGrantedGroupIdsByCategory()/findGrantedUserIdsByCategory()'s own
+ * `! is_numeric(...)` `continue` branches (guarding against a non-numeric
+ * cat_id/group_id/user_id in a fetched row) are NOT exercised by any test
+ * here -- confirmed unreachable: `group_access.group_id`/`.cat_id` and
+ * `user_access.user_id`/`.cat_id` are all `NOT NULL` unsigned int columns
+ * and each pair is the table's own PRIMARY KEY (see
+ * tests/Fixtures/piwigo-17.0.sql's own CREATE TABLE statements), so no
+ * real query against either table can ever produce a row with a
+ * non-numeric value in one of those columns. Same defensive-dead-code
+ * shape as Lang\Translator's own `! ($entry instanceof Translation)`
+ * branches.
+ */
 final class PermissionRepositoryTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
@@ -142,5 +155,17 @@ final class PermissionRepositoryTest extends IntegrationTestCase
     public function test_find_granted_user_ids_by_category_with_an_empty_id_list_returns_empty(): void
     {
         self::assertSame([], $this->repo->findGrantedUserIdsByCategory([]));
+    }
+
+    public function test_find_private_category_ids_among_with_an_empty_id_list_returns_empty(): void
+    {
+        self::assertSame([], $this->repo->findPrivateCategoryIdsAmong([]));
+    }
+
+    public function test_mass_insert_user_access_with_no_inserts_does_nothing(): void
+    {
+        $this->repo->massInsertUserAccess([]);
+
+        self::assertSame([], $this->repo->findDirectlyAuthorizedCategoryIds(2));
     }
 }

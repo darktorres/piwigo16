@@ -112,4 +112,13 @@ final class PreferencesServiceTest extends IntegrationTestCase
     {
         self::assertSame('fallback', $this->service->getParam('never-set', 'fallback'));
     }
+
+    public function test_delete_param_with_an_empty_array_is_a_noop(): void
+    {
+        $this->service->updateParam('a', 1);
+
+        $this->service->deleteParam([]);
+
+        self::assertSame(1, $this->service->getParam('a'));
+    }
 }

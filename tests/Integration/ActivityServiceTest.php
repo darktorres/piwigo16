@@ -248,6 +248,87 @@ final class ActivityServiceTest extends IntegrationTestCase
         self::assertSame(3, $performedBy);
     }
 
+    public function test_record_detects_the_auto_login_auth_function_from_the_call_stack(): void
+    {
+        // No real caller in this rewrite is literally named auto_login()
+        // yet (grep-confirmed) -- ActivityService::record() still walks
+        // debug_backtrace() looking for that bare function/method name, so
+        // this closes the gap directly against a same-named private
+        // helper below rather than a real call site.
+        try {
+            $this->auto_login();
+
+            $details = $this->fetchDetails('user', 555, 'login');
+            self::assertIsArray($details);
+            self::assertSame('auto_login', $details['auth_function']);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 555');
+        }
+    }
+
+    public function test_record_detects_the_auth_key_login_auth_function_from_the_call_stack(): void
+    {
+        try {
+            $this->auth_key_login();
+
+            $details = $this->fetchDetails('user', 556, 'login');
+            self::assertIsArray($details);
+            self::assertSame('auth_key_login', $details['auth_function']);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 556');
+        }
+    }
+
+    public function test_record_marks_a_photo_add_as_browser_added_when_the_referer_is_the_admin_photos_add_page(): void
+    {
+        // added_with detection is hardcoded to the literal object 'photo'
+        // (the fixture already has 5 real photo/add rows the repository's
+        // own count-by-object test depends on, object_id 1-5), so this
+        // can't use the 'test-' prefix tearDown() relies on -- a
+        // disposable, non-colliding object_id cleaned up explicitly.
+        $_SERVER['HTTP_REFERER'] = 'https://example.test/admin.php?page=photos_add';
+
+        try {
+            $this->service->record('photo', 888887, 'add');
+
+            $details = $this->fetchDetails('photo', 888887, 'add');
+            self::assertIsArray($details);
+            self::assertSame('browser', $details['added_with']);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 888887');
+        }
+    }
+
+    public function test_get_user_object_log_with_usernames_delegates_to_the_repository(): void
+    {
+        $rows = $this->service->getUserObjectLogWithUsernames('username', 'id');
+
+        // Fixture: object='user' rows are activity_id 3, 4, 15, 16 (2
+        // logins + 2 adds), all performed_by fixture_admin -- same baseline
+        // ActivityRepositoryTest::test_find_user_object_log_with_usernames()
+        // asserts directly against the repository.
+        self::assertCount(4, $rows);
+        foreach ($rows as $row) {
+            self::assertInstanceOf(\Piwigo\Activity\Projection\UserActivityLogEntry::class, $row);
+            self::assertSame('user', $row->object);
+            self::assertSame('fixture_admin', $row->username);
+        }
+    }
+
+    // Named literally auto_login()/auth_key_login() on purpose -- see the
+    // two test methods above; ActivityService::record() matches on the
+    // bare function/method name from debug_backtrace(), not this class's
+    // own naming convention.
+    private function auto_login(): void
+    {
+        $this->service->record('user', 555, 'login');
+    }
+
+    private function auth_key_login(): void
+    {
+        $this->service->record('user', 556, 'login');
+    }
+
     public function test_record_writes_a_null_performed_by_when_no_user_is_loaded(): void
     {
         // Real, adversarially-verified bug fixed in this same batch:

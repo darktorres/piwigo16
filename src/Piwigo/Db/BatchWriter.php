@@ -70,6 +70,13 @@ final readonly class BatchWriter
 
         $params = [];
         foreach ($data as $key => $value) {
+            // A raw PHP bool binds inconsistently through mysqli/DBAL
+            // (confirmed live: false arrived as '' rather than 0, tripping
+            // a strict-mode "Incorrect integer value" error on a tinyint
+            // column) -- normalize to int first, same convention already
+            // used at other real call sites (e.g. SqlDialect::booleanToInt()
+            // callers building their own $insert arrays).
+            $value = SqlDialect::booleanToInt($value);
             $params[$key] = ($value === '' || $value === null || ! is_scalar($value)) ? null : $value;
         }
 
@@ -98,7 +105,7 @@ final readonly class BatchWriter
                 foreach ($dbfields as $i => $field) {
                     $placeholder = 'p' . $i;
                     $placeholders[] = ':' . $placeholder;
-                    $value = $insert[$field] ?? null;
+                    $value = SqlDialect::booleanToInt($insert[$field] ?? null);
                     $params[$placeholder] = ($value === '' || $value === null || ! is_scalar($value)) ? null : $value;
                 }
 
@@ -170,6 +177,7 @@ final readonly class BatchWriter
         $params = [];
         $i = 0;
         foreach ($data as $key => $value) {
+            $value = SqlDialect::booleanToInt($value);
             $isEmpty = ! isset($value) || $value === '' || ! is_scalar($value);
             if ($isEmpty) {
                 if ((bool) ($flags & self::SKIP_EMPTY)) {
@@ -191,6 +199,7 @@ final readonly class BatchWriter
         $whereParts = [];
         $j = 0;
         foreach ($where as $key => $value) {
+            $value = SqlDialect::booleanToInt($value);
             if (isset($value) && is_scalar($value)) {
                 $placeholder = 'where' . $j++;
                 $whereParts[] = SqlDialect::protectColumnName($key) . ' = :' . $placeholder;

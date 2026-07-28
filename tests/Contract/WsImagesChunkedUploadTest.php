@@ -52,43 +52,6 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         return $bytes;
     }
 
-    /**
-     * ContractTestCase::callWs() hard-asserts HTTP status < 500 (guarding
-     * against a genuine server crash) -- PwgError(500, ...) is itself a
-     * real, intentional business-logic response several PwgImages methods
-     * return, which also sets a real HTTP 500 status (PwgError's own
-     * constructor, codes 400-599). Bypass that guard the same way
-     * test_getInfo_on_missing_image_returns_404 bypasses callWs() for its
-     * own non-2xx status, just for POST + JSON decode.
-     * @param array<string, mixed> $params
-     * @return array<string, mixed>
-     */
-    private function callWsAllowingServerError(string $method, array $params): array
-    {
-        $url = $this->baseUrl . '/ws.php?format=json';
-        $ch  = curl_init($url);
-        self::assertNotFalse($ch);
-
-        $cookieJar = $this->cookieJar();
-        assert($cookieJar !== '');
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge(['method' => $method], $params)));
-        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
-        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
-
-        $body = curl_exec($ch);
-        unset($ch);
-
-        self::assertIsString($body);
-        $decoded = json_decode($body, true);
-        self::assertIsArray($decoded);
-        /** @var array<string, mixed> $decoded */
-        return $decoded;
-    }
-
     public function test_addChunk_writes_a_buffer_file(): void
     {
         $sum = md5($this->pngBytes() . uniqid());

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Bootstrap\InfrastructureAccessor;
 use Piwigo\Core\Kernel;
+use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
  * Piwigo\Bootstrap\InfrastructureAccessor -- had zero dedicated coverage
@@ -32,3 +33,10 @@ test('entityManager resolves the container\'s own single EntityManagerInterface 
     // always-fresh contract.
     expect(InfrastructureAccessor::entityManager())->toBe($em);
 });
+
+test('entityManager throws when the container returns an unexpected type', function (): void {
+    KernelContainerOverride::withWrongTypeFor(
+        EntityManagerInterface::class,
+        static fn () => InfrastructureAccessor::entityManager()
+    );
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . EntityManagerInterface::class);

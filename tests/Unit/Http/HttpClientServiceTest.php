@@ -214,3 +214,77 @@ test('requestRaw still guards a different host even when a trustedSelfHost is se
     expect(fn (): \Symfony\Contracts\HttpClient\ResponseInterface => $service->requestRaw('GET', 'http://127.0.0.1/', [], ''))
         ->toThrow(HttpClientSsrfException::class);
 });
+
+// The remaining gaps below are all reachable through the same injectable
+// MockHttpClient seam used throughout this file. `fetch()`/`fetchToFile()`/
+// their shared `guardedFetch()` helper are deliberately NOT chased here --
+// same shape as this project's documented HttpClientService::fetch()-only
+// untestable classes (rule: "core logic calls the static, non-injectable
+// HttpClientService::fetch() ... no fake-able seam"): guardedFetch()
+// always constructs `new self(...)` internally using the hardcoded real
+// defaultClient() (Symfony\Component\HttpClient\HttpClient::create()),
+// with no parameter anywhere in the static call chain to substitute a
+// MockHttpClient. Confirmed via the coverage report that every other red
+// line in this class (141, 156-158, 161, 210-211, 219-225, 240) lives
+// inside that same static path.
+
+test('guardedRequest returns the redirect response as-is when the Location header is entirely absent', function (): void {
+    $client = new MockHttpClient(new MockResponse('', ['http_code' => 302]));
+    $service = new HttpClientService($client);
+
+    $response = $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/no-location-header'));
+
+    expect($response->getStatusCode())->toBe(302);
+});
+
+test('guardedRequest returns the redirect response as-is when the Location header is an empty string', function (): void {
+    $client = new MockHttpClient(new MockResponse('', [
+        'http_code' => 302,
+        'response_headers' => ['Location' => ''],
+    ]));
+    $service = new HttpClientService($client);
+
+    $response = $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/empty-location-header'));
+
+    expect($response->getStatusCode())->toBe(302);
+});
+
+test('resolveRedirectTarget resolves a root-relative Location against the scheme+host+port of the current URI', function (): void {
+    $seenUrls = [];
+    $client = new MockHttpClient(function (string $method, string $url) use (&$seenUrls): MockResponse {
+        $seenUrls[] = $url;
+
+        return count($seenUrls) === 1
+            ? new MockResponse('', ['http_code' => 302, 'response_headers' => ['Location' => '/other-page']])
+            : new MockResponse('landed-root-relative', ['http_code' => 200]);
+    });
+    $service = new HttpClientService($client);
+
+    $response = $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34:8443/start'));
+
+    expect($seenUrls)->toBe([
+        'https://93.184.216.34:8443/start',
+        'https://93.184.216.34:8443/other-page',
+    ])
+        ->and((string) $response->getBody())->toBe('landed-root-relative');
+});
+
+test('resolveRedirectTarget resolves a bare relative Location against the current URIs own directory', function (): void {
+    $seenUrls = [];
+    $client = new MockHttpClient(function (string $method, string $url) use (&$seenUrls): MockResponse {
+        $seenUrls[] = $url;
+
+        return count($seenUrls) === 1
+            ? new MockResponse('', ['http_code' => 302, 'response_headers' => ['Location' => 'step2']])
+            : new MockResponse('landed-bare-relative', ['http_code' => 200]);
+    });
+    $service = new HttpClientService($client);
+
+    $response = $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/album/start'));
+
+    expect($seenUrls)->toBe([
+        'https://93.184.216.34/album/start',
+        'https://93.184.216.34/album/step2',
+    ])
+        ->and((string) $response->getBody())->toBe('landed-bare-relative');
+});

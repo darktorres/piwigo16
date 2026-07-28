@@ -16,6 +16,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
+use Piwigo\Http\ResponseReadyException;
 
 /**
  * InstallWizard is install.php's whole orchestration, ported verbatim from
@@ -212,11 +213,13 @@ final class InstallWizardTest extends IntegrationTestCase
      * @param array<string, string> $post
      * @param array<string, string> $get
      */
-    private function submit(array $post, array $get = [], string $prefix = 'itest_'): InstallWizard
+    private function submit(array $post, array $get = [], string $prefix = 'itest_', bool $preserveAcceptLanguage = false): InstallWizard
     {
         $_GET = $get;
         $_POST = $post;
-        unset($_SERVER['HTTP_ACCEPT_LANGUAGE']);
+        if (! $preserveAcceptLanguage) {
+            unset($_SERVER['HTTP_ACCEPT_LANGUAGE']);
+        }
         // Deterministic PIWIGO_BASE_URL computation (performInstall()'s own
         // test-mode-only block) -- fixed host/script/scheme so that value
         // is exactly assertable rather than depending on this CLI process's
@@ -558,5 +561,213 @@ final class InstallWizardTest extends IntegrationTestCase
         // block ran, but Env::testModeEnvFile() resolved differently while
         // the header was unset.
         self::assertFileExists($this->tempRoot . '.env');
+    }
+
+    // performInstall()'s OWN config-write-failure fallback (secureDirectory()
+    // + a tmp pwg_<hash> file under _data/, template 'config_creation_failed'
+    // flag) is deliberately not chased here: it needs the *prod-mode* legacy
+    // database.inc.php write (already isolated to one test above, which
+    // temporarily unsets the test-mode header) to ALSO fail its own
+    // fopen($this->configFile, 'w'), which needs local/config/ itself made
+    // unwritable at exactly that moment -- stacking that on top of the
+    // already-delicate umask/header save-restore dance above, for a
+    // secondary fallback-of-a-fallback path, was judged not worth the added
+    // fragility risk versus this batch's remaining scope.
+
+    public function test_performInstall_records_an_error_when_the_env_file_cannot_be_written(): void
+    {
+        $this->bootInstallBootstrap();
+        $freshDb = $this->createFreshDatabase();
+
+        $wizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $freshDb,
+            'admin_name' => 'p17setup3',
+            'admin_pass1' => 'Env-Write-Fails-1!',
+            'admin_pass2' => 'Env-Write-Fails-1!',
+            'admin_mail' => 'webmaster3@example.test',
+            'install' => '1',
+        ]);
+        $wizard->analyzeForm();
+        self::assertFalse($wizard->hasErrors(), 'unexpected validation/connection errors: ' . $this->reflectErrorsJoined($wizard));
+
+        // Env::mergeIntoEnvFile() writes directly into $this->tempRoot
+        // (creating a brand-new '.env.test' entry there) -- a read-only
+        // root blocks exactly that one write (mkdir()/fopen() into
+        // already-existing subdirectories like local/config/ still succeed,
+        // since directory write permission is checked on the immediate
+        // parent only, not inherited from an ancestor), without touching
+        // any of the DB-backed schema/user/site creation performInstall()
+        // does afterwards.
+        chmod($this->tempRoot, 0o555);
+        try {
+            $wizard->performInstall();
+        } finally {
+            chmod($this->tempRoot, 0o777);
+        }
+
+        self::assertStringContainsString('Could not write', $this->reflectErrorsJoined($wizard));
+    }
+
+    // ------------------------------------------------------------- boot()
+
+    public function test_boot_fatals_when_the_install_stamp_already_exists(): void
+    {
+        $this->bootInstallBootstrap();
+        touch($this->paths->siteLocal . Env::testModeInstalledStamp());
+
+        $this->expectException(ResponseReadyException::class);
+
+        $this->submit([], []);
+    }
+
+    public function test_boot_falls_back_to_the_default_language_for_an_unrecognized_requested_language(): void
+    {
+        $this->bootInstallBootstrap();
+
+        $wizard = $this->submit([], ['language' => 'totally-bogus-language-xyz']);
+
+        self::assertSame(\Piwigo\Core\AppInfo::DEFAULT_LANGUAGE, $this->reflectPrivate($wizard, 'language'));
+    }
+
+    public function test_boot_picks_the_browser_language_when_none_was_requested_and_it_is_bundled(): void
+    {
+        $this->bootInstallBootstrap();
+        $_SERVER['HTTP_ACCEPT_LANGUAGE'] = 'de-DE,de;q=0.9';
+
+        $wizard = $this->submit([], [], preserveAcceptLanguage: true);
+
+        self::assertSame('de_DE', $this->reflectPrivate($wizard, 'language'));
+    }
+
+    // --------------------------------------------------------- analyzeForm(), more
+
+    public function test_analyzeForm_prints_the_errors_when_the_db_connection_itself_fails(): void
+    {
+        $this->bootInstallBootstrap();
+
+        $wizard = $this->submit([
+            'dbhost' => '127.0.0.1:1', // nothing listens here -- a real, immediate connection failure
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $this->dbName,
+            'admin_name' => 'somebody',
+            'admin_pass1' => 'same-password',
+            'admin_pass2' => 'same-password',
+            // Empty, not a real address: userService()'s own docblock
+            // documents (faithfully preserved from the legacy install.php,
+            // confirmed by reading it directly) that a non-empty admin_mail
+            // makes analyzeForm() attempt a *second*, entirely independent
+            // DbConnection::build() for validateMailAddress() -- with the
+            // same broken dbhost above, that second attempt is never
+            // caught by anything and really does crash the whole request,
+            // in both the legacy code and here. Only an empty admin_mail
+            // avoids that call entirely, isolating this test to the one
+            // connection-failure behavior it actually means to exercise.
+            'admin_mail' => '',
+            'install' => '1',
+        ]);
+
+        ob_start();
+        $wizard->analyzeForm();
+        $output = ob_get_clean();
+
+        self::assertIsString($output);
+        // analyzeForm()'s own print_r($this->errors) -- a real connection
+        // failure's Lang::t($e->getMessage()) text, not asserted verbatim
+        // (mysqli's own driver message text/wording isn't this class's
+        // contract), just that the debug dump actually ran.
+        self::assertStringContainsString('Array', $output);
+        self::assertTrue($wizard->hasErrors());
+        self::assertNull($this->reflectPrivate($wizard, 'conn'));
+    }
+
+    public function test_analyzeForm_rejects_a_webmaster_login_containing_a_quote_character(): void
+    {
+        $this->bootInstallBootstrap();
+
+        $wizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $this->dbName,
+            'admin_name' => "O'Brien",
+            'admin_pass1' => 'same-password',
+            'admin_pass2' => 'same-password',
+            'admin_mail' => 'somebody@example.test',
+            'install' => '1',
+        ]);
+
+        $wizard->analyzeForm();
+
+        // install.po's own en_UK translation rewords this slightly from
+        // the raw source literal -- install.lang is genuinely loaded by
+        // this point (confirmed live, deterministically, not a cross-test
+        // leak).
+        self::assertSame(["the webmaster login may not contain the characters ' or \""], $this->reflectPrivate($wizard, 'errors'));
+    }
+
+    public function test_analyzeForm_surfaces_a_malformed_mail_address_from_user_service(): void
+    {
+        $this->bootInstallBootstrap();
+
+        $wizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $this->dbName,
+            'admin_name' => 'somebody',
+            'admin_pass1' => 'same-password',
+            'admin_pass2' => 'same-password',
+            'admin_mail' => 'not-an-email-address-at-all',
+            'install' => '1',
+        ]);
+
+        $wizard->analyzeForm();
+
+        // common.po's own en_UK translation drops the space before the
+        // colon in "(example : ...)" -- confirmed live, common.lang is
+        // genuinely loaded by this point.
+        self::assertSame(
+            ['mail address must be like xxx@yyy.eee (example: jack@altern.org)'],
+            $this->reflectPrivate($wizard, 'errors')
+        );
+    }
+
+    // ------------------------------------------------------------ render(), step 2 guard
+
+    /**
+     * render()'s full step-2 body (session_set_save_handler(), a real
+     * login, newsletter subscription, credential email) is deliberately
+     * NOT exercised here -- see this file's own top-of-class docblock:
+     * tests/Browser/InstallTest.php already covers it through a real
+     * install.php request, and that file's own docblock documents a real
+     * hung request thread this suite previously hit trying to exercise the
+     * same real session/mail lifecycle in-process. Only the one pure guard
+     * at the very top of the step-2 branch -- reachable with zero session/
+     * mail setup -- is safe and cheap to exercise directly here.
+     */
+    public function test_render_throws_when_step_2_is_reached_without_a_successful_connection(): void
+    {
+        $this->bootInstallBootstrap();
+        $wizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $this->dbName,
+        ]);
+        // step defaults to 1 and conn defaults to null until analyzeForm()
+        // -> performInstall() run; force step to 2 directly (mirroring what
+        // performInstall() does) without ever building a connection, the
+        // exact "reached step 2 before a successful connection" state this
+        // guard exists for.
+        new \ReflectionProperty($wizard, 'step')->setValue($wizard, 2);
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('render() reached step 2 before a successful analyzeForm() connection.');
+
+        $wizard->render();
     }
 }

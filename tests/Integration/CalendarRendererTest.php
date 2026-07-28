@@ -362,6 +362,139 @@ final class CalendarRendererTest extends IntegrationTestCase
         );
         self::assertSame([2, 1], $descending->items);
     }
+
+    /**
+     * buildInnerSql('categories', true, ...) returns null when the given
+     * category has no visible sub-category ids at all (a category id that
+     * doesn't exist anywhere in the real tree) -- render()'s own early
+     * "nothing to do" return for the categories branch, distinct from
+     * (and previously untested next to) the items-branch equivalent above.
+     */
+    public function test_render_returns_early_for_a_categories_section_with_no_visible_subcategories(): void
+    {
+        $result = $this->makeRenderer()->render(
+            section: 'categories',
+            category: ['id' => 999999],
+            items: [],
+            chronologyField: 'posted',
+            chronologyStyle: 'monthly',
+            chronologyView: CalendarBase::CAL_VIEW_LIST,
+            chronologyDate: [2026, 'any'],
+            superOrderBy: false,
+        );
+
+        self::assertSame([], $result->items);
+        self::assertSame('', $result->comment);
+        self::assertSame([2026, 'any'], $result->chronologyDate);
+    }
+
+    /**
+     * render()'s own chronology_date sanity check truncates to at most 3
+     * components (year/month/day) before ever handing it to the calendar
+     * object, regardless of how many extra tokens a crafted URL supplies.
+     */
+    public function test_render_truncates_chronology_date_to_at_most_three_components(): void
+    {
+        $result = $this->makeRenderer()->render(
+            section: 'items',
+            category: null,
+            items: [1, 2, 3, 4, 5],
+            chronologyField: 'posted',
+            chronologyStyle: 'monthly',
+            chronologyView: CalendarBase::CAL_VIEW_LIST,
+            chronologyDate: ['2024', '3', '10', '999'],
+            superOrderBy: false,
+        );
+
+        self::assertSame([2024, 3, 10], $result->chronologyDate);
+    }
+
+    /**
+     * 'any' is never allowed together with the calendar view -- render()
+     * discards that component and everything after it (not just the
+     * 'any' token itself) rather than passing a partially-wildcarded date
+     * through to CalendarMonthly's own calendar-grid rendering.
+     */
+    public function test_render_discards_any_and_everything_after_it_in_calendar_view(): void
+    {
+        $result = $this->makeRenderer()->render(
+            section: 'items',
+            category: null,
+            items: [1, 2, 3, 4, 5],
+            chronologyField: 'posted',
+            chronologyStyle: 'monthly',
+            chronologyView: CalendarBase::CAL_VIEW_CALENDAR,
+            chronologyDate: ['2024', 'any', '15'],
+            superOrderBy: false,
+        );
+
+        self::assertSame([2024], $result->chronologyDate);
+    }
+
+    /**
+     * Outside calendar view, 'any' is a legitimate wildcard component --
+     * kept as-is (not converted to an int like its real numeric
+     * siblings), counted toward $any_count.
+     */
+    public function test_render_keeps_a_literal_any_component_in_list_view(): void
+    {
+        $result = $this->makeRenderer()->render(
+            section: 'items',
+            category: null,
+            items: [1, 2, 3, 4, 5],
+            chronologyField: 'posted',
+            chronologyStyle: 'monthly',
+            chronologyView: CalendarBase::CAL_VIEW_LIST,
+            chronologyDate: ['any', '3'],
+            superOrderBy: false,
+        );
+
+        self::assertSame(['any', 3], $result->chronologyDate);
+    }
+
+    /**
+     * An empty-string component (a real shape a crafted/malformed URL can
+     * produce) truncates everything from that point on, same as an
+     * over-long array -- but via a completely separate branch than the
+     * >3-components truncation above.
+     */
+    public function test_render_truncates_chronology_date_at_an_empty_string_component(): void
+    {
+        $result = $this->makeRenderer()->render(
+            section: 'items',
+            category: null,
+            items: [1, 2, 3, 4, 5],
+            chronologyField: 'posted',
+            chronologyStyle: 'monthly',
+            chronologyView: CalendarBase::CAL_VIEW_LIST,
+            chronologyDate: ['2024', '', '15'],
+            superOrderBy: false,
+        );
+
+        self::assertSame([2024], $result->chronologyDate);
+    }
+
+    /**
+     * All 3 components wildcarded ($any_count === 3) drops the last one --
+     * a real day-precision "any/any/any" is meaningless (equivalent to no
+     * date filter at all), so render() narrows it back to 2 wildcarded
+     * components instead of keeping a pointless 3rd.
+     */
+    public function test_render_drops_the_last_component_when_every_component_is_any(): void
+    {
+        $result = $this->makeRenderer()->render(
+            section: 'items',
+            category: null,
+            items: [1, 2, 3, 4, 5],
+            chronologyField: 'posted',
+            chronologyStyle: 'monthly',
+            chronologyView: CalendarBase::CAL_VIEW_LIST,
+            chronologyDate: ['any', 'any', 'any'],
+            superOrderBy: false,
+        );
+
+        self::assertSame(['any', 'any'], $result->chronologyDate);
+    }
 }
 
 /**

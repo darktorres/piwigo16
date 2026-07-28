@@ -26,6 +26,22 @@ use Symfony\Component\Cache\Adapter\ArrayAdapter;
  * `nbTotalImages` counts all 5 unless a category is structurally forbidden;
  * `lastPhotoDate` is that one shared date unless every image is excluded.
  */
+/**
+ * compute()'s own `$structuralForbidden === '' ? implode(...) : ...`
+ * ternary TRUE branch (the bare-implode() form, used when there is no
+ * existing structural-forbidden prefix to append onto) is NOT exercised
+ * anywhere here -- confirmed unreachable: $structuralForbidden's only
+ * producer is PermissionService::getForbiddenCategories(), which itself
+ * guarantees at least the '0' sentinel whenever its own internal
+ * $forbiddenIds list would otherwise be empty (see that method's own
+ * `if ($forbiddenIds === []) { $forbiddenIds[] = 0; }` guard) -- it can
+ * never actually return a bare ''. PermissionService is `final`, so no
+ * test double can be substituted in its place to force the ''  case
+ * either. test_get_for_user_widens_forbidden_categories_for_a_non_admin_with_an_empty_album
+ * below already covers this ternary's other (non-'') branch. Same
+ * defensive-dead-code shape as Lang\Translator's own
+ * `! ($entry instanceof Translation)` branches.
+ */
 final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;

@@ -25,6 +25,27 @@ it('renders the env tab with real server/DB info when the gallery is unlocked', 
     }
 });
 
+it('shows the time-since-last-calculation when a real cache_sizes config value is present', function (): void {
+    $snapshot = H::snapshotConfig(['cache_sizes']);
+    // cache_sizes is a `[{name, value}, ...]` list persisted by
+    // Ws\PwgCore's cache-size calculation (confirmed via direct read) --
+    // index 3's own 'value' (a date string) is what MaintenanceEnvPageRenderer
+    // reads for its "time since last calculation" display. Hand-crafted
+    // here rather than triggering a real calculation, since only that one
+    // index/key matters to this branch.
+    H::setConfigValue('cache_sizes', '[{"name":"a","value":1},{"name":"b","value":2},{"name":"c","value":3},{"name":"d","value":"2020-01-01 00:00:00"}]');
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=maintenance&tab=env');
+
+        $page->assertNoJavaScriptErrors();
+        H::assertNoServerErrors($page, 'maintenance env tab, cache_sizes present');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
 it('renders successfully with the gallery locked (U_MAINT_UNLOCK_GALLERY branch)', function (): void {
     $snapshot = H::snapshotConfig(['gallery_locked']);
     H::setConfigValue('gallery_locked', 'true');

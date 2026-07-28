@@ -164,3 +164,114 @@ test('purge(false) deletes only files older than default_lifetime, keeping fresh
         ->and($freshValue)->toBe('fresh-value')
         ->and($cache->get($oldKey, $oldValue))->toBeFalse();
 });
+
+test('purge is a no-op on a directory with no .cache files at all (glob() returns an empty array)', function (): void {
+    $cache = new PersistentFileCache();
+
+    // No set() call has happened in this test, so the cache dir mkdir()ed
+    // in beforeEach() is genuinely empty -- glob('*.cache') returns [],
+    // not false, exercising purge()'s own early-return guard.
+    $cache->purge(true);
+    $cache->purge(false);
+
+    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    expect(glob($dir . '*.cache'))->toBe([]);
+});
+
+test('get returns false when the file is unreadable despite existing (a Unix domain socket at that path, not a regular file)', function (): void {
+    // is_readable() is true for a socket special file with the usual
+    // permission bits, but file_get_contents() itself fails to open it
+    // (verified directly: "No such device or address") and returns false
+    // rather than throwing -- the one realistic, deterministic way to
+    // reach this branch without a genuine TOCTOU race.
+    $cache = new PersistentFileCache();
+    $key = $cache->make_key(['blocked-by-socket']);
+    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    $path = $dir . $key . '.cache';
+
+    $socket = socket_create(AF_UNIX, SOCK_STREAM, 0);
+    if (! $socket instanceof Socket) {
+        throw new RuntimeException('socket_create failed');
+    }
+    expect(socket_bind($socket, $path))->toBeTrue();
+
+    try {
+        $value = 'sentinel-untouched';
+        // @ suppression alone doesn't stop PHPUnit's own ErrorHandler from
+        // surfacing the warning (failOnWarning="true") -- a real no-op
+        // handler for the duration of this one expected-to-warn call is
+        // the reliable way to swallow it, matching ArrayHelperTest's own
+        // established pattern.
+        set_error_handler(static fn (): bool => true);
+        try {
+            $found = $cache->get($key, $value);
+        } finally {
+            restore_error_handler();
+        }
+
+        expect($found)->toBeFalse()
+            ->and($value)->toBe('sentinel-untouched');
+    } finally {
+        socket_close($socket);
+    }
+})->skip(! extension_loaded('sockets'), 'requires ext-sockets to create a Unix domain socket file');
+
+test('get returns false for a cache file whose payload is not an array at all', function (): void {
+    $cache = new PersistentFileCache();
+    $key = $cache->make_key(['scalar-payload']);
+    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    file_put_contents($dir . $key . '.cache', serialize('just-a-scalar-string'));
+
+    $value = 'sentinel-untouched';
+    $found = $cache->get($key, $value);
+
+    expect($found)->toBeFalse()
+        ->and($value)->toBe('sentinel-untouched');
+});
+
+test('get returns false for a cache file whose payload array is missing the data key', function (): void {
+    $cache = new PersistentFileCache();
+    $key = $cache->make_key(['missing-data-key']);
+    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    file_put_contents($dir . $key . '.cache', serialize(['expire' => time() + 3600]));
+
+    $value = 'sentinel-untouched';
+    $found = $cache->get($key, $value);
+
+    expect($found)->toBeFalse()
+        ->and($value)->toBe('sentinel-untouched');
+});
+
+test('get returns false when the stored expire value is not an int', function (): void {
+    $cache = new PersistentFileCache();
+    $key = $cache->make_key(['non-int-expire']);
+    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    file_put_contents($dir . $key . '.cache', serialize(['expire' => 'not-an-int', 'data' => 'some-value']));
+
+    $value = 'sentinel-untouched';
+    $found = $cache->get($key, $value);
+
+    expect($found)->toBeFalse()
+        ->and($value)->toBe('sentinel-untouched');
+});
+
+test('set eventually fires its opportunistic purge(false) over many calls, sweeping a stale file', function (): void {
+    // mt_rand() % 97 === 0 gates the opportunistic purge -- rather than
+    // pin a magic mt_srand() seed to this build's own RNG output (fragile
+    // across PHP versions), enough set() calls make hitting that ~1/97
+    // chance at least once a near-certainty ([96/97]^2000 ~= 2e-9) and the
+    // real, observable effect (the stale file disappearing) is what
+    // actually matters here.
+    $cache = new PersistentFileCache();
+    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+
+    $staleKey = $cache->make_key(['stale-sentinel-for-opportunistic-purge']);
+    $cache->set($staleKey, 'stale-value');
+    touch($dir . $staleKey . '.cache', time() - $cache->default_lifetime - 60);
+
+    for ($i = 0; $i < 2000; $i++) {
+        $cache->set($cache->make_key(['opportunistic-purge-churn', $i]), 'churn-value');
+    }
+
+    expect(is_file($dir . $staleKey . '.cache'))->toBeFalse();
+});

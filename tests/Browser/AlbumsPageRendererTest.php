@@ -10,6 +10,11 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * (simpleAutoOrder/recursiveAutoOrder), which reorders a set of sibling
  * albums by name/date/natural order and persists the new rank via
  * CategoryService::saveCategoriesOrder().
+ *
+ * Not exercised: assocToOrderedTree()'s own "$cat['cat'] missing/not an
+ * array" defensive `continue` -- its own comment documents this as an
+ * algorithmic invariant of how $associatedTree is built just above (every
+ * reachable node always gets a real 'cat' row), not a real reachable state.
  */
 function albumsPageDbPrefix(): string
 {
@@ -125,6 +130,71 @@ it('reorders a specific parent\'s direct children via simpleAutoOrder scoped by 
 
     $ordered = albumsPageChildrenOrderedByRank($parentId);
     expect(array_keys($ordered))->toBe([$childAId, $childBId]);
+});
+
+it('reorders recursively (recursiveAutoOrder) including grandchildren', function (): void {
+    $page = H::loginAsAdmin($this);
+    $suffix = uniqid();
+    $parent = H::wsCall($page, 'pwg.categories.add', ['name' => 'Recursive Auto Order Parent ' . $suffix]);
+    $parentResult = $parent['result'] ?? null;
+    if (! is_array($parentResult) || ! is_numeric($parentResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id');
+    }
+    $parentId = (int) $parentResult['id'];
+
+    $childB = H::wsCall($page, 'pwg.categories.add', ['name' => 'B Recursive Child', 'parent' => (string) $parentId]);
+    $childA = H::wsCall($page, 'pwg.categories.add', ['name' => 'A Recursive Child', 'parent' => (string) $parentId]);
+    $childBResult = $childB['result'] ?? null;
+    $childAResult = $childA['result'] ?? null;
+    if (! is_array($childBResult) || ! is_numeric($childBResult['id'] ?? null) || ! is_array($childAResult) || ! is_numeric($childAResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return numeric ids for children');
+    }
+    $childAId = (int) $childAResult['id'];
+
+    // recursiveAutoOrder runs CategoryService::getSubcatIds() over the
+    // whole tree under $post_id first (rather than simpleAutoOrder's own
+    // direct-children-only id list) -- exercised here via a real 2-level
+    // tree, distinct from the sibling simpleAutoOrder tests above.
+    $result = H::adminPost($page, '/admin.php?page=albums', [
+        'pwg_token' => H::pwgToken($page),
+        'recursiveAutoOrder' => '1',
+        'id' => (string) $parentId,
+        'order' => 'name ASC',
+    ]);
+    expect($result['status'])->toBe(200);
+
+    $ordered = albumsPageChildrenOrderedByRank($parentId);
+    expect(array_keys($ordered)[0])->toBe($childAId);
+});
+
+it('sorts by date_creation via the date-based auto-order branch', function (): void {
+    $page = H::loginAsAdmin($this);
+    $suffix = uniqid();
+    $parent = H::wsCall($page, 'pwg.categories.add', ['name' => 'Date Auto Order Parent ' . $suffix]);
+    $parentResult = $parent['result'] ?? null;
+    if (! is_array($parentResult) || ! is_numeric($parentResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id');
+    }
+    $parentId = (int) $parentResult['id'];
+    $child = H::wsCall($page, 'pwg.categories.add', ['name' => 'Date Auto Order Child', 'parent' => (string) $parentId]);
+    $childResult = $child['result'] ?? null;
+    if (! is_array($childResult) || ! is_numeric($childResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id for the child');
+    }
+
+    // A date_* order routes through CategoryAdminService::getCategoriesRefDate()
+    // (str_starts_with($order_by_field, 'date_')) instead of the plain
+    // name-based sort every other test in this file uses -- exercised here
+    // for real, even though neither child has any photo yet (ref_dates
+    // falls back to null per category in that case, still a valid sort key).
+    $result = H::adminPost($page, '/admin.php?page=albums', [
+        'pwg_token' => H::pwgToken($page),
+        'simpleAutoOrder' => '1',
+        'id' => (string) $parentId,
+        'order' => 'date_creation DESC',
+    ]);
+
+    expect($result['status'])->toBe(200);
 });
 
 it('rejects an invalid auto-order sort value', function (): void {

@@ -113,6 +113,12 @@ namespace Piwigo\Tests\Integration {
         // superglobal mutations across function calls).
         private function resetEditContext(): void
         {
+            // $_SESSION is never auto-started in this CLI test process --
+            // whichever test in this file happens to touch it first sees
+            // it as null, not []. unset($_SESSION['edit_context']) alone is
+            // a safe no-op either way, but a test asserting on $_SESSION's
+            // own array-ness afterward needs a real array here.
+            $_SESSION ??= [];
             unset($_SESSION['edit_context']);
         }
 
@@ -738,6 +744,35 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
+        public function test_register_user_notifies_admins_of_a_new_registration_scoped_to_a_group(): void
+        {
+            // Same reasoning/trick as
+            // test_register_user_notifies_admins_of_a_new_registration()
+            // above, but with the 'group:N' form of email_admin_on_new_user
+            // -- exercises notifyAdminsOfNewRegistration()'s own
+            // preg_match('/^group:(\d+)$/', ...) capture into $groupId.
+            CurrentConfig::setEmailAdminOnNewUser('group:5');
+            CurrentConfig::setWebmasterId(1);
+            CurrentConfig::setSmtpHost('127.0.0.1:1');
+            $login = 'reg-notify-group-' . bin2hex(random_bytes(4));
+
+            set_error_handler(static fn (): bool => true);
+            try {
+                $result = $this->service->registerUser($login, 'password123', null, new UrlService(new HtmlService()), true, false);
+            } finally {
+                restore_error_handler();
+            }
+
+            try {
+                self::assertNotNull($result['userId']);
+                self::assertSame([], $result['errors']);
+            } finally {
+                if ($result['userId'] !== null) {
+                    $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$result['userId']]);
+                }
+            }
+        }
+
         public function test_search_case_username_returns_the_input_unchanged_when_no_match_exists(): void
         {
             self::assertSame('totally-unknown-name', $this->service->searchCaseUsername('totally-unknown-name'));
@@ -843,6 +878,33 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
+        public function test_create_user_infos_assigns_webmaster_status_and_level_zero_when_no_permission_levels_are_configured(): void
+        {
+            $this->conn->executeStatement(
+                "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('temp-webmaster-target-2', NULL, NULL)"
+            );
+            $tempId = (int) $this->conn->lastInsertId();
+            CurrentConfig::setWebmasterId($tempId);
+            // setAvailablePermissionLevels([]) itself treats an empty array
+            // as "reset to the built-in default" ([0,1,2,4,8]) -- confirmed
+            // live, not a real empty state -- so a genuinely empty list can
+            // only be reached by seeding the backing property directly.
+            new \ReflectionProperty(CurrentConfig::class, 'availablePermissionLevels')->setValue(null, []);
+
+            try {
+                $this->service->createUserInfos([UserId::from($tempId)]);
+
+                $row = $this->conn->fetchAssociative(
+                    'SELECT status, level FROM ' . Tables::userInfos() . ' WHERE user_id = ?',
+                    [$tempId]
+                );
+                self::assertSame(['status' => 'webmaster', 'level' => 0], $row);
+            } finally {
+                CurrentConfig::setAvailablePermissionLevels([0, 1, 2, 4, 8]);
+                $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$tempId]);
+            }
+        }
+
         public function test_get_default_user_value_returns_the_fallback_for_an_empty_field(): void
         {
             // Guest (the configured default user, id 2) has NULL
@@ -864,6 +926,19 @@ namespace Piwigo\Tests\Integration {
                 $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET status = 'guest' WHERE user_id = 2");
             }
         }
+
+        // buildUser()'s `! is_array($internal_status)` re-normalization
+        // guard (the branch resetting a non-array $user['internal_status']
+        // back to []) is not exercised above or anywhere else in this
+        // file -- getUserData() (the only populator of $user before that
+        // guard runs) never returns an 'internal_status' key: it's not a
+        // real users/user_infos column, and CurrentConfig::userFields()'s
+        // return type is a fixed 4-key shape (id/username/password/email)
+        // with no way to alias an extra pwgfield onto it. There is no path
+        // through buildUser()'s public contract that hands it a
+        // pre-populated, non-array 'internal_status' to normalize -- same
+        // "verified unreachable through the real API" shape as
+        // UserRepositoryTest's findAdminIds() note.
 
         public function test_get_user_data_creates_missing_user_infos_when_external_authentification_is_active(): void
         {
@@ -889,6 +964,60 @@ namespace Piwigo\Tests\Integration {
             } finally {
                 \Piwigo\Config\DeploymentPolicy::reset();
                 $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$tempId]);
+            }
+        }
+
+        public function test_get_user_data_throws_for_a_user_id_absent_from_the_users_table(): void
+        {
+            $this->expectException(\Exception::class);
+            $this->expectExceptionMessage('UserService::getUserData(): no such user_id 88888888');
+
+            $this->service->getUserData(UserId::from(88888888));
+        }
+
+        public function test_get_user_data_throws_when_the_user_infos_row_is_missing(): void
+        {
+            $this->conn->executeStatement(
+                "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('no-user-infos-target', NULL, NULL)"
+            );
+            $tempId = (int) $this->conn->lastInsertId();
+
+            try {
+                $this->expectException(\Exception::class);
+                $this->expectExceptionMessage('UserService::getUserData(): user_infos fetch failed for user_id ' . $tempId);
+
+                $this->service->getUserData(UserId::from($tempId));
+            } finally {
+                $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$tempId]);
+            }
+        }
+
+        public function test_get_user_data_coerces_a_literal_true_or_false_scalar_value_to_a_real_bool(): void
+        {
+            // getUserData()'s generic true/false-string scan (a leftover
+            // from the old enum('true','false') representation -- see its
+            // own inline comment) still applies to every merged field, not
+            // just the tinyint columns it used to cover. `users.username`
+            // has no reserved-word restriction at this layer, so a literal
+            // 'true'/'false' username is a real, if odd, way to reach it.
+            $this->conn->executeStatement(
+                "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('true', NULL, NULL)"
+            );
+            $trueId = (int) $this->conn->lastInsertId();
+            $this->conn->executeStatement(
+                "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('false', NULL, NULL)"
+            );
+            $falseId = (int) $this->conn->lastInsertId();
+            $this->conn->executeStatement('INSERT INTO ' . Tables::userInfos() . ' (user_id) VALUES (?), (?)', [$trueId, $falseId]);
+
+            try {
+                $trueData = $this->service->getUserData(UserId::from($trueId));
+                $falseData = $this->service->getUserData(UserId::from($falseId));
+
+                self::assertSame(true, $trueData['username']);
+                self::assertSame(false, $falseData['username']);
+            } finally {
+                $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id IN (?, ?)', [$trueId, $falseId]);
             }
         }
 
@@ -942,6 +1071,35 @@ namespace Piwigo\Tests\Integration {
             } finally {
                 $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET theme = 'default' WHERE user_id = 2");
             }
+        }
+
+        public function test_get_default_theme_coerces_a_non_string_cached_value_to_the_literal_default(): void
+        {
+            // ProcessCache::get('default_user') is a plain per-request
+            // memoization cell -- getDefaultTheme() defensively re-checks
+            // is_string() on whatever getDefaultUserValue('theme', ...)
+            // hands back rather than trusting the docblock-only array
+            // shape. Poisoning the cache with a non-string 'theme' value
+            // is the only way to reach that guard: without it,
+            // ThemeCatalog::checkThemeInstalled() (a strictly-typed string
+            // param) would receive an int and fatal with a TypeError.
+            \Piwigo\Core\ProcessCache::set('default_user', [
+                'nb_image_page' => 15,
+                'language' => 'en_UK',
+                'expand' => false,
+                'show_nb_comments' => false,
+                'show_nb_hits' => false,
+                'recent_period' => 7,
+                'theme' => 12345,
+                'enabled_high' => true,
+                'level' => 0,
+                'activation_key' => null,
+                'activation_key_expire' => null,
+                'lastmodified' => '2026-01-01 00:00:00',
+                'preferences' => null,
+            ]);
+
+            self::assertSame('default', $this->service->getDefaultTheme());
         }
 
         public function test_get_browser_language_returns_false_when_no_header_is_present(): void
@@ -1036,6 +1194,18 @@ namespace Piwigo\Tests\Integration {
             $this->resetEditContext();
 
             self::assertFalse($this->service->getEditContext(999999));
+        }
+
+        public function test_get_edit_context_returns_false_for_a_non_string_stored_value(): void
+        {
+            $this->resetEditContext();
+            $_SESSION['edit_context'] = [198 => ['not' => 'a-string']];
+
+            try {
+                self::assertFalse($this->service->getEditContext(198));
+            } finally {
+                $this->resetEditContext();
+            }
         }
     }
 }

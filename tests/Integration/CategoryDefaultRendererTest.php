@@ -19,6 +19,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -246,6 +247,27 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // Confirms NB_HITS actually reached the template with the real,
         // distinct per-image value (not just that no prefix rendered).
         self::assertStringContainsString('17 hits', $html);
+    }
+
+    public function test_render_treats_a_misbehaving_plugin_handlers_non_array_selection_as_empty(): void
+    {
+        // count() on a non-array/non-Countable is a fatal TypeError in
+        // PHP 8 -- a plugin handler returning something else must be
+        // coerced to an empty selection rather than crashing.
+        EventDispatcher::get()->addEventHandler('loc_index_thumbnails_selection', static fn (): int => 42);
+
+        try {
+            $this->seedUser(showNbHits: false, showNbComments: false);
+            $slideshowUrl = $this->renderer->render([3, 1, 2], 0, 3, '');
+        } finally {
+            EventDispatcher::reset();
+        }
+
+        self::assertNull($slideshowUrl);
+        $html = $this->renderedThumbnailsHtml();
+        foreach ([1, 2, 3] as $id) {
+            self::assertStringNotContainsString('Photo ' . $id, $html);
+        }
     }
 
     public function test_render_shows_the_validated_comment_count_when_show_nb_comments_is_enabled(): void

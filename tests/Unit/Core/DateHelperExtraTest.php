@@ -93,3 +93,39 @@ test('transformDate returns the default (null unless given) when the input forma
     expect(DateHelper::transformDate('not-in-the-expected-format', 'Y-m-d H:i:s', 'd/m/Y'))->toBeNull();
     expect(DateHelper::transformDate('not-in-the-expected-format', 'Y-m-d H:i:s', 'd/m/Y', 'fallback'))->toBe('fallback');
 });
+
+test('str2DateTime returns false for an unformatted string that tokenizes to fewer than 3 date parts', function (): void {
+    // No format given, and "notadate" has no digits to trim and no '- :/'
+    // delimiters to split on -- strtok() yields exactly one token, well
+    // short of the 3 (year/month/day) the "unknown format" branch needs.
+    expect(DateHelper::str2DateTime('notadate'))->toBeFalse();
+});
+
+test('formatFromto returns the untranslated "N/A" key when either date is unparseable', function (): void {
+    // "notadate" has no digits to trim and no '- :/' delimiter to tokenize
+    // on, so str2DateTime() returns false outright (see the direct
+    // str2DateTime test above) -- unlike a hyphenated non-date string,
+    // which tokenizes into 3+ parts and is accepted as a (nonsensical but
+    // non-false) DateTime instead.
+    expect(DateHelper::formatFromto('notadate', '2024-06-15'))->toBe('N/A');
+    expect(DateHelper::formatFromto('2024-06-15', 'notadate'))->toBe('N/A');
+});
+
+test('timeSince with only_last_unit stops at the first non-zero chunk once it reaches the requested $stop unit', function (): void {
+    // tests/.env.test freezes Env::now() at 2026-08-01 00:00:00 -- against
+    // that clock, 2023-01-15 10:00:00 is exactly a 3-year-and-change diff,
+    // so $diff->y (the very first chunk checked) is already non-zero.
+    // stop: 'year' makes $j point at that same first chunk (index 0), so
+    // the break fires on the very first iteration instead of the outer
+    // while condition alone ending the loop.
+    expect(DateHelper::timeSince('2023-01-15 10:00:00', stop: 'year', only_last_unit: true))
+        ->toBe('3 years ago');
+});
+
+test('isValidMysqlDatetime returns true for a full "Y-m-d H:i:s" match', function (): void {
+    expect(DateHelper::isValidMysqlDatetime('2024-06-15 10:20:30'))->toBeTrue();
+});
+
+test('isValidMysqlDatetime returns false for a string matching neither MySQL datetime format', function (): void {
+    expect(DateHelper::isValidMysqlDatetime('not-a-date'))->toBeFalse();
+});

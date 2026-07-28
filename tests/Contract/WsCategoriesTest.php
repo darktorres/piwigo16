@@ -488,6 +488,47 @@ final class WsCategoriesTest extends ContractTestCase
     }
 
     /**
+     * allow_random_representative defaults to false -- when enabled, a
+     * category with no representative_picture_id/user_representative_
+     * picture_id of its own picks one at random from its own images
+     * (CategoryService::getRandomImageInCategory()), a distinct branch
+     * from the "fall back to a subcategory" one above.
+     */
+    public function test_getList_picks_a_random_representative_when_enabled_and_none_is_set(): void
+    {
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('allow_random_representative', 'true')
+             ON DUPLICATE KEY UPDATE value = VALUES(value)"
+        );
+        \Piwigo\Cache\CachePools::config()->clear();
+
+        try {
+            $catId = $this->createCategory('ct_randomrep_' . uniqid());
+            $token = $this->getPwgToken();
+            $assoc = $this->callWs('pwg.images.setCategory', [
+                'image_id' => [1],
+                'category_id' => $catId,
+                'pwg_token' => $token,
+            ]);
+            self::assertSame('ok', $assoc['stat']);
+
+            $response = $this->wsAdmin('pwg.categories.getList', ['cat_id' => $catId, 'recursive' => false]);
+
+            self::assertSame('ok', $response['stat']);
+            $result = $response['result'];
+            self::assertIsArray($result);
+            $categories = $result['categories'];
+            self::assertIsArray($categories);
+            $entry = $categories[0] ?? null;
+            self::assertIsArray($entry);
+            self::assertSame(1, $entry['representative_picture_id'], 'only image in the category, so the random pick is deterministic');
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'allow_random_representative'");
+            \Piwigo\Cache\CachePools::config()->clear();
+        }
+    }
+
+    /**
      * Gap-closure: a representative image whose privacy level exceeds the
      * viewing user's own level must not be shown to that user -- getList()
      * substitutes a random lower-level image from the same category

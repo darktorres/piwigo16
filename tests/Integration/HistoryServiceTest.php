@@ -9,11 +9,32 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Logger;
+use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
+use Piwigo\History\HistoryEntity;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\User;
 
+/**
+ * Two of logVisit()'s/autopurge()'s own defensive branches are
+ * unreachable through any legitimate call and deliberately not chased
+ * here (same "confirmed unreachable" treatment as RateRepositoryTest's
+ * own identical note):
+ *  - logVisit()'s `! is_array($cachedSections)` fallback: every writer
+ *    of CurrentConfig::$historySectionsCache (both the reflection-setter
+ *    path in confUpdateParam(updateGlobal: true) and ConfigService::
+ *    hydrate()'s own 'array' match arm) always coerces to a real array
+ *    or leaves it null -- there is no code path that leaves it non-null
+ *    and non-array.
+ *  - autopurge()'s `$latestId === null` guard: only reachable after
+ *    already confirming `countAll() > keepLines` (so at least one real
+ *    row exists) two lines above, with no intervening write that could
+ *    empty the table in a single-threaded request.
+ */
 final class HistoryServiceTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
@@ -40,10 +61,20 @@ final class HistoryServiceTest extends IntegrationTestCase
 
         CurrentConfig::setHistoryAutopurgeKeepLines(0);
         CurrentConfig::setHistoryAutopurgeBlocksize(50);
+        // logVisit()'s own isLoggingAllowed() defaults log_conf to false --
+        // real production traffic gets it from a genuine DB-loaded config
+        // row (never exercised here, this class never calls
+        // ConfigService::loadConfFromDb()), so logVisit() tests need it on
+        // explicitly. A 'normal' (non-admin, non-guest) CurrentUser leaves
+        // it as this exact value (isLoggingAllowed()'s admin/guest
+        // overrides don't apply).
+        CurrentConfig::setLogConf(true);
+        CurrentUser::set(User::fromUserArray(['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin']));
+        PageState::reset();
         $GLOBALS['logger'] = new Logger(['severity' => Logger::OFF]);
 
         $this->conn = DbConnection::build();
-        $this->service = new HistoryService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\History\HistoryEntity::class), new ConfigService($this->buildConfigRepository()));
+        $this->service = new HistoryService(EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class), new ConfigService($this->buildConfigRepository()));
     }
 
     #[\Override]
@@ -85,6 +116,27 @@ final class HistoryServiceTest extends IntegrationTestCase
         $result = $this->service->getHistory([], [], []);
 
         self::assertCount(2, $result);
+    }
+
+    /**
+     * $types (the *full* possible image-type universe the caller passes,
+     * e.g. every real extension + 'none') always has more entries than
+     * $search['fields']['types'] (the user's own narrower filter) in any
+     * real search -- every type NOT in that narrower filter is skipped
+     * while building the SQL OR-clauses, not just the ones that happen to
+     * be first/last.
+     */
+    public function test_get_history_filters_by_image_type_skipping_types_outside_the_search_filter(): void
+    {
+        // image_type is enum('picture','high','other') -- not a real file
+        // extension.
+        $this->conn->insert(Tables::history(), ['date' => '2026-07-12', 'time' => '03:00:00', 'user_id' => 1, 'IP' => '127.0.0.1', 'image_type' => 'picture']);
+        $this->conn->insert(Tables::history(), ['date' => '2026-07-12', 'time' => '04:00:00', 'user_id' => 1, 'IP' => '127.0.0.1', 'image_type' => 'high']);
+        $this->conn->insert(Tables::history(), ['date' => '2026-07-12', 'time' => '05:00:00', 'user_id' => 1, 'IP' => '127.0.0.1', 'image_type' => null]);
+
+        $result = $this->service->getHistory([], ['fields' => ['types' => ['picture']]], ['none', 'picture', 'high']);
+
+        self::assertSame(['picture'], array_column($result, 'image_type'));
     }
 
     public function test_summarize_creates_new_summary_rows_from_scratch(): void
@@ -183,6 +235,182 @@ final class HistoryServiceTest extends IntegrationTestCase
         // latestId-keepLines=$id3-1=$id2, oldestId+blocksize=$id1+1=$id2)
         // = $id2, so only $id1 (id < $id2) is purged.
         self::assertSame([$id2, $id3], $this->allHistoryIds());
+    }
+
+    /**
+     * Summarize()'s own $needUpdate accumulation has to track the true
+     * minimum history id per higher-level bucket (year/month/day), not
+     * just whichever group happens to be processed first -- the
+     * underlying query orders groups by *date*, not by id, and id/date
+     * are otherwise completely decoupled (both set explicitly here, not
+     * left to autoincrement-follows-insertion-order coincidence): the
+     * FIRST-inserted row (smaller id) is deliberately given the LATER
+     * date, so it's the SECOND group processed for the shared month
+     * bucket, forcing the "found an even smaller id" branch to run.
+     */
+    public function test_summarize_tracks_the_true_minimum_history_id_across_out_of_order_groups(): void
+    {
+        $smallerId = $this->insertHistoryLine(1, '2026-07-15', '10:00:00');
+        $largerId = $this->insertHistoryLine(1, '2026-07-10', '05:00:00');
+        self::assertLessThan($largerId, $smallerId);
+
+        $this->service->summarize();
+
+        self::assertSame($smallerId, $this->fetchSummaryHistoryIdFrom(2026, 7, null, null));
+        self::assertSame($largerId, $this->fetchSummaryHistoryIdFrom(2026, 7, 10, null));
+        self::assertSame($smallerId, $this->fetchSummaryHistoryIdFrom(2026, 7, 15, null));
+    }
+
+    // --- logVisit() -------------------------------------------------------
+
+    /**
+     * A tag_ids string over 50 chars (the DB column's own length limit) is
+     * truncated at exactly 50, then trimmed back to the last full comma so
+     * a partially-cut tag id is never stored.
+     */
+    public function test_log_visit_truncates_an_over_long_tag_ids_string(): void
+    {
+        $tagIds = range(100, 130);
+
+        $this->service->logVisit(section: 'tags', tagIds: $tagIds);
+
+        self::assertSame(
+            '100,101,102,103,104,105,106,107,108,109,110,111',
+            $this->fetchLastHistoryColumn('tag_ids')
+        );
+    }
+
+    /**
+     * A full 8-group IPv6 address with an embedded IPv4 tail (a real,
+     * filter_var()-valid form -- see IpAddress::from()) can be 45 chars,
+     * over the IP column's own 39-char limit -- truncated the same way
+     * the docblock above logVisit()'s own truncation describes.
+     */
+    public function test_log_visit_truncates_an_over_long_ip_address(): void
+    {
+        $longIp = '0000:0000:0000:0000:0000:ffff:192.168.100.100';
+        self::assertGreaterThan(39, strlen($longIp));
+        $_SERVER['REMOTE_ADDR'] = $longIp;
+
+        try {
+            $this->service->logVisit();
+
+            self::assertSame(substr($longIp, 0, 39), $this->fetchLastHistoryColumn('IP'));
+        } finally {
+            unset($_SERVER['REMOTE_ADDR']);
+        }
+    }
+
+    /**
+     * A page section matching an existing enum option only by case (not
+     * exact string equality) is still accepted, rather than triggering
+     * the enum-widening ALTER TABLE path -- but what's actually stored
+     * back is the enum's own defined casing ('tags'), not the original
+     * input's casing ('Tags'): confirmed live, MySQL's ENUM type stores
+     * only the matched index internally, so the exact defined string is
+     * always what a later SELECT reads back, regardless of which casing
+     * variant was in the INSERT.
+     */
+    public function test_log_visit_accepts_a_known_section_case_insensitively(): void
+    {
+        $this->service->logVisit(section: 'Tags');
+
+        self::assertSame('tags', $this->fetchLastHistoryColumn('section'));
+    }
+
+    /**
+     * A brand new page section (not in the enum at all, e.g. a plugin-
+     * registered one) widens the `section` column's ENUM definition on
+     * the fly via a real ALTER TABLE, then stores it -- restores the
+     * original enum list and clears the now-stale cache afterwards so
+     * later tests (and other test classes sharing this DB) see the
+     * schema exactly as the fixture left it.
+     */
+    public function test_log_visit_widens_the_section_enum_for_a_brand_new_section(): void
+    {
+        $repo = EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class);
+        self::assertInstanceOf(HistoryRepository::class, $repo);
+        $originalOptions = $repo->getSectionEnumOptions();
+        self::assertNotContains('my_custom_section', $originalOptions);
+
+        try {
+            $this->service->logVisit(section: 'my_custom_section');
+
+            self::assertSame('my_custom_section', $this->fetchLastHistoryColumn('section'));
+            self::assertContains('my_custom_section', $repo->getSectionEnumOptions());
+        } finally {
+            // Restoring the narrower, original enum list while a row still
+            // holds 'my_custom_section' would itself fail under strict SQL
+            // mode ("Data truncated for column 'section'") -- confirmed
+            // live, MySQL must be able to fit every existing row's value
+            // into the new, narrower enum definition. Delete that row
+            // first.
+            $this->conn->executeStatement(
+                'DELETE FROM ' . Tables::history() . " WHERE section = 'my_custom_section'"
+            );
+            $repo->alterSectionEnum($originalOptions);
+            $configService = new ConfigService($this->buildConfigRepository());
+            $configService->confDeleteParam('history_sections_cache');
+            CurrentConfig::setHistorySectionsCache(null);
+        }
+    }
+
+    /**
+     * history_autopurge_every > 0 triggers autopurge() on every insert
+     * whose new id is an exact multiple of it -- set to 1 so this always
+     * fires, regardless of whatever id the insert actually lands on. 2
+     * pre-existing, already-summarized lines are needed (not just 1): the
+     * most recent summarized line always survives as autopurge()'s own
+     * boundary (its own historyIdTo caps deleteBeforeId), so only the
+     * OLDER of the two gets purged -- proving real deletion happened, not
+     * just that autopurge() silently no-op'd.
+     */
+    public function test_log_visit_triggers_autopurge_when_the_new_id_is_a_multiple_of_autopurge_every(): void
+    {
+        CurrentConfig::setHistoryAutopurgeEvery(1);
+        CurrentConfig::setHistoryAutopurgeKeepLines(1);
+        CurrentConfig::setHistoryAutopurgeBlocksize(1);
+        $oldId1 = $this->insertHistoryLine(1, '2026-01-01', '00:00:00');
+        $oldId2 = $this->insertHistoryLine(1, '2026-01-01', '01:00:00');
+        $this->service->summarize();
+
+        $this->service->logVisit();
+
+        // autopurge() ran as a direct side effect of this logVisit() call
+        // (not a separately-called autopurge()): the oldest already-
+        // summarized line is gone; the newer summarized one and the brand
+        // new visit both survive.
+        self::assertSame(2, $this->countHistory());
+        $remaining = $this->allHistoryIds();
+        self::assertNotContains($oldId1, $remaining);
+        self::assertContains($oldId2, $remaining);
+    }
+
+    private function fetchLastHistoryColumn(string $column): mixed
+    {
+        return $this->conn->createQueryBuilder()
+            ->select($column)
+            ->from(Tables::history())
+            ->orderBy('id', 'DESC')
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchOne();
+    }
+
+    private function fetchSummaryHistoryIdFrom(int $year, ?int $month, ?int $day, ?int $hour): ?int
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('history_id_from')
+            ->from(Tables::historySummary())
+            ->where('year = :year')
+            ->setParameter('year', $year);
+        $qb->andWhere($month === null ? 'month IS NULL' : 'month = ' . $month);
+        $qb->andWhere($day === null ? 'day IS NULL' : 'day = ' . $day);
+        $qb->andWhere($hour === null ? 'hour IS NULL' : 'hour = ' . $hour);
+
+        $value = $qb->executeQuery()->fetchOne();
+
+        return is_numeric($value) ? (int) $value : null;
     }
 
     private function insertHistoryLine(int $userId, string $date, string $time): int

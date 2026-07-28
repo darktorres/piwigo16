@@ -81,9 +81,17 @@ it('shows the album granted through group membership, with no private albums yet
     $page->assertSee('Albums authorized thanks to group associations');
     $page->assertSee('Sample Album');
 
+    // Not toBe([]) for cat_false: the double-select lists *every* private
+    // album in the whole gallery, a shared, ever-growing resource across
+    // this whole Browser suite run -- other test files' own leftover
+    // private albums (never category 2, which this test doesn't touch)
+    // can genuinely populate it, so only category 2's own absence is this
+    // test's real claim (confirmed live: with 10+ accumulated private
+    // albums from earlier tests, exact-array equality broke here even
+    // though category 2 itself behaved correctly).
     $html = H::rawWebpage($page)->content();
-    expect(userPermSelectOptions($html, 'cat_true[]'))->toBe([]);
-    expect(userPermSelectOptions($html, 'cat_false[]'))->toBe([]);
+    expect(userPermSelectOptions($html, 'cat_true[]'))->not->toHaveKey(2);
+    expect(userPermSelectOptions($html, 'cat_false[]'))->not->toHaveKey(2);
 });
 
 it('lists the newly-private album as forbidden once it stops being covered by the group grant', function (): void {
@@ -96,6 +104,52 @@ it('lists the newly-private album as forbidden once it stops being covered by th
     $html = H::rawWebpage($page)->content();
     // user 4's only group (3 "Guests") has no group_access row for category
     // 2, so once it's private it must show up as forbidden, not authorized.
-    expect(userPermSelectOptions($html, 'cat_true[]'))->toBe([]);
-    expect(userPermSelectOptions($html, 'cat_false[]'))->toBe([2 => 'Sample Album / Nested Sub Album']);
+    // Not toBe([...]) for cat_false: see the sibling test above for why an
+    // exact array can't be asserted against this shared, ever-growing list.
+    expect(userPermSelectOptions($html, 'cat_true[]'))->not->toHaveKey(2);
+    expect(userPermSelectOptions($html, 'cat_false[]'))->toHaveKey(2, 'Sample Album / Nested Sub Album');
+});
+
+it('trueifies then falsifies direct user_access for a private album', function (): void {
+    H::setCategoryPrivate(2, private: true);
+    $page = H::loginAsAdmin($this);
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+    $prefix = $prefix !== false ? $prefix : 'piwigo_';
+
+    try {
+        // piwigo_user_access has no rows at all in this fixture (see this
+        // file's own docblock) -- trueify grants user 4 direct access to
+        // category 2 via PermissionService::grantUserAccess().
+        $trueifyResult = H::adminPost($page, '/admin.php?page=user_perm&user_id=4', [
+            'pwg_token' => H::pwgToken($page),
+            'cat_false' => ['2'],
+            'trueify' => '1',
+        ]);
+        expect($trueifyResult['status'])->toBe(200);
+
+        $row = $db->query(sprintf('SELECT COUNT(*) AS c FROM %suser_access WHERE user_id = 4 AND cat_id = 2', $prefix));
+        $assoc = $row instanceof mysqli_result ? $row->fetch_assoc() : null;
+        expect(is_array($assoc) ? (int) $assoc['c'] : -1)->toBe(1);
+
+        // falsify then removes it again via removeUserAccess().
+        $falsifyResult = H::adminPost($page, '/admin.php?page=user_perm&user_id=4', [
+            'pwg_token' => H::pwgToken($page),
+            'cat_true' => ['2'],
+            'falsify' => '1',
+        ]);
+        expect($falsifyResult['status'])->toBe(200);
+
+        $row2 = $db->query(sprintf('SELECT COUNT(*) AS c FROM %suser_access WHERE user_id = 4 AND cat_id = 2', $prefix));
+        $assoc2 = $row2 instanceof mysqli_result ? $row2->fetch_assoc() : null;
+        expect(is_array($assoc2) ? (int) $assoc2['c'] : -1)->toBe(0);
+    } finally {
+        $db->query(sprintf('DELETE FROM %suser_access WHERE user_id = 4 AND cat_id = 2', $prefix));
+        $db->close();
+    }
 });

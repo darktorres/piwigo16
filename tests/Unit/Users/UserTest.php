@@ -77,6 +77,48 @@ test('withUsername returns a new immutable instance', function (): void {
         ->and($original->username)->toBe('bob');
 });
 
+test('withLevel returns a new immutable instance and syncs rawAttributes', function (): void {
+    $original = new User(
+        id: \Piwigo\Common\ValueObject\UserId::from(1),
+        username: 'bob',
+        email: '',
+        language: 'en_UK',
+        theme: 'modus',
+        status: UserStatus::Normal,
+        enabledHigh: false,
+        level: 4,
+        rawAttributes: ['level' => 4],
+    );
+
+    $updated = $original->withLevel(8);
+
+    expect($updated->level)->toBe(8)
+        ->and($updated->rawAttributes)->toBe(['level' => 8])
+        ->and($original->level)->toBe(4)
+        ->and($original->rawAttributes)->toBe(['level' => 4])
+        ->and($updated)->not->toBe($original);
+});
+
+test('withEnabledHigh returns a new immutable instance and syncs rawAttributes', function (): void {
+    $original = new User(
+        id: \Piwigo\Common\ValueObject\UserId::from(1),
+        username: 'bob',
+        email: '',
+        language: 'en_UK',
+        theme: 'modus',
+        status: UserStatus::Normal,
+        enabledHigh: false,
+        rawAttributes: ['enabled_high' => false],
+    );
+
+    $updated = $original->withEnabledHigh(true);
+
+    expect($updated->enabledHigh)->toBeTrue()
+        ->and($updated->rawAttributes)->toBe(['enabled_high' => true])
+        ->and($original->enabledHigh)->toBeFalse()
+        ->and($original->rawAttributes)->toBe(['enabled_high' => false]);
+});
+
 test('withRawAttribute adds a key without disturbing the rest of the array', function (): void {
     $original = new User(
         id: \Piwigo\Common\ValueObject\UserId::from(1),

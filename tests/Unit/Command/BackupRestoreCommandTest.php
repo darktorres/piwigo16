@@ -17,6 +17,20 @@ use Symfony\Component\Console\Tester\CommandTester;
 // through to the service without needing Integration-tier infra. The real
 // success path is covered by tests/Integration/BackupServiceTest.php.
 
+test('aborts when the file argument is an empty string', function (): void {
+    // CommandTester::execute() bypasses normal CLI argv parsing (which
+    // would itself reject a missing/blank required argument before
+    // execute() ever runs) -- an explicit empty string still reaches this
+    // method's own `$file === ''` guard directly.
+    $command = new BackupRestoreCommand(new BackupService());
+    $tester = new CommandTester($command);
+
+    $exitCode = $tester->execute(['file' => '']);
+
+    expect($exitCode)->toBe(Command::INVALID)
+        ->and($tester->getDisplay())->toContain('Missing required argument: file');
+});
+
 test('aborts when the file does not exist', function (): void {
     $command = new BackupRestoreCommand(new BackupService());
     $tester = new CommandTester($command);

@@ -525,6 +525,136 @@ final class WsHistoryTest extends ContractTestCase
         self::assertStringNotContainsString('0 guest', $summary['GUESTS']);
     }
 
+    /**
+     * historySearch()'s "reconstruct rule details for a saved search_id"
+     * branch -- pwg.history.log has no search_id parameter at all
+     * (confirmed via its WsDefaultMethods registration and
+     * HistoryService::logVisit()'s own signature: image_id/image_type/
+     * section/category/tagIds only), so the *only* way a real
+     * piwigo_history row ever gets a non-null search_id is a lower-level
+     * write this Contract suite doesn't otherwise reach -- writing it
+     * directly via SQL, then reading it back through the real WS route, is
+     * the same "set up a precondition unreachable via the WS API itself"
+     * technique WsImagesMaintenanceTest already uses for a null md5sum.
+     *
+     * allwords/author/filetypes are used here (not tags/categories/
+     * added_by) -- see the sibling test below for why.
+     */
+    public function test_historySearch_reconstructs_details_of_a_saved_search(): void
+    {
+        $this->enableHistoryForAdmin();
+        // pwg.history.search is admin_only -- getPwgToken() reads the
+        // *current* session's token, so the login must happen first
+        // (confirmed live: without it, the session stays guest and the
+        // final search call below fails with 401 Access denied).
+        $this->loginAsAdmin();
+        $token = $this->getPwgToken();
+
+        $searchResponse = $this->callWs('pwg.images.filteredSearch.create', [
+            'allwords' => 'mountain lake',
+            'authors' => ['Alice'],
+            'filetypes' => ['jpg'],
+        ]);
+        self::assertSame('ok', $searchResponse['stat']);
+        $searchResult = $searchResponse['result'];
+        self::assertIsArray($searchResult);
+        $searchUuid = $searchResult['search_id'];
+        self::assertIsString($searchUuid);
+        $searchDbId = $this->conn->fetchOne(
+            'SELECT id FROM ' . Tables::search() . ' WHERE search_uuid = ?',
+            [$searchUuid]
+        );
+        self::assertIsNumeric($searchDbId);
+
+        $this->callWs('pwg.history.log', ['image_id' => 1]);
+        $this->conn->executeStatement(
+            'UPDATE ' . Tables::history() . ' SET search_id = ? WHERE image_id = 1',
+            [(int) $searchDbId]
+        );
+
+        $response = $this->callWs('pwg.history.search', ['image_id' => 1, 'pwg_token' => $token]);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $lines = $result['lines'];
+        self::assertIsArray($lines);
+        self::assertNotEmpty($lines);
+        $line = $lines[0];
+        self::assertIsArray($line);
+        self::assertSame((string) (int) $searchDbId, $line['SEARCH_ID']);
+        $details = $line['SEARCH_DETAILS'];
+        self::assertIsArray($details);
+        self::assertSame(['mountain', 'lake'], $details['allwords']);
+        self::assertSame(['Alice'], $details['author']);
+        self::assertSame(['jpg'], $details['filetypes']);
+        self::assertNull($details['tags']);
+        self::assertNull($details['cat']);
+        self::assertNull($details['added_by']);
+        self::assertNull($details['date_posted']);
+    }
+
+    /**
+     * Regression-documenting test for a real, pre-existing bug found while
+     * writing the sibling test above: historySearch()'s own
+     * tags/cat/added_by reconstruction filters each id list through
+     * `array_filter($words, is_string(...))` -- but
+     * filteredSearchCreate() registers 'tags'/'categories'/'added_by' with
+     * 'type' => WsParamType::ID, so PwgServer::checkType() coerces every
+     * element to a real PHP int (filter_var(..., FILTER_VALIDATE_INT)), and
+     * json round-tripping through piwigo_search.rules preserves that int
+     * type. is_string() on an int is always false, so the filter empties
+     * the list every time regardless of what was actually searched --
+     * confirmed live (a real WS call, not a unit test poking internals)
+     * before writing this test. Out of scope to fix in a test-writing
+     * pass; documented here so a future fix is a deliberate, visible
+     * change to this assertion, not a silent one.
+     */
+    public function test_historySearch_saved_search_tags_cat_added_by_are_always_null_due_to_a_real_bug(): void
+    {
+        $this->enableHistoryForAdmin();
+        $this->loginAsAdmin();
+        $token = $this->getPwgToken();
+
+        $searchResponse = $this->callWs('pwg.images.filteredSearch.create', [
+            'tags' => [1],
+            'categories' => [1],
+            'added_by' => [1],
+        ]);
+        self::assertSame('ok', $searchResponse['stat']);
+        $searchResult = $searchResponse['result'];
+        self::assertIsArray($searchResult);
+        $searchUuid = $searchResult['search_id'];
+        self::assertIsString($searchUuid);
+        $searchDbId = $this->conn->fetchOne(
+            'SELECT id FROM ' . Tables::search() . ' WHERE search_uuid = ?',
+            [$searchUuid]
+        );
+        self::assertIsNumeric($searchDbId);
+
+        $this->callWs('pwg.history.log', ['image_id' => 1]);
+        $this->conn->executeStatement(
+            'UPDATE ' . Tables::history() . ' SET search_id = ? WHERE image_id = 1',
+            [(int) $searchDbId]
+        );
+
+        $response = $this->callWs('pwg.history.search', ['image_id' => 1, 'pwg_token' => $token]);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $lines = $result['lines'];
+        self::assertIsArray($lines);
+        self::assertNotEmpty($lines);
+        $line = $lines[0];
+        self::assertIsArray($line);
+        $details = $line['SEARCH_DETAILS'];
+        self::assertIsArray($details);
+        self::assertNull($details['tags'], 'documents the real bug: should reflect tag 1, always null instead');
+        self::assertNull($details['cat'], 'documents the real bug: should reflect category 1, always null instead');
+        self::assertNull($details['added_by'], 'documents the real bug: should reflect user 1, always null instead');
+    }
+
     public function test_historySearch_computes_the_total_filesize_of_high_type_images(): void
     {
         $this->enableHistoryForAdmin();

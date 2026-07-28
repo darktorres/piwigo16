@@ -141,6 +141,17 @@ final class RateRepositoryTest extends IntegrationTestCase
         }
     }
 
+    /**
+     * findRateSummaries()'s own `! is_numeric($row['element_id'])`
+     * defensive `continue` (and findUsersWithStatusByIdUsername()'s
+     * identically-shaped one below) is unreachable through any real row:
+     * `rate.element_id`/`users.id` are both NOT NULL integer PKs enforced
+     * by the schema (see tests/Fixtures/piwigo-17.0.sql's own CREATE
+     * TABLE), so a genuine DB row can never produce a non-numeric value
+     * here -- same "confirmed unreachable, not worth a forced test"
+     * treatment as this project's documented HttpClientService-only
+     * skip list, just via a schema constraint instead of a network call.
+     */
     public function test_find_rate_summaries_matches_the_fixture(): void
     {
         $summaries = $this->repo->findRateSummaries();
@@ -171,6 +182,15 @@ final class RateRepositoryTest extends IntegrationTestCase
                 ->setParameter('score', $original)
                 ->executeStatement();
         }
+    }
+
+    public function test_update_rating_scores_is_a_no_op_for_an_empty_list(): void
+    {
+        $original = $this->fetchRatingScore(1);
+
+        $this->repo->updateRatingScores([]);
+
+        self::assertSame($original, $this->fetchRatingScore(1));
     }
 
     public function test_find_image_ids_with_stale_rating_score(): void
@@ -400,6 +420,47 @@ final class RateRepositoryTest extends IntegrationTestCase
         // rating_score: 3=5.00, 1=4.50, 2=3.00, 4=2.00, 5=NULL (sorts last)
         self::assertSame([3, 1, 2], $this->repo->findTopRatedImageIds(3));
         self::assertSame([3, 1, 2, 4, 5], $this->repo->findTopRatedImageIds(10));
+    }
+
+    /**
+     * fixture: element 1 has 2 rates (5 from user 1, 4 from user 3) ->
+     * count=2, average=ROUND((5+4)/2, 2)=4.5.
+     */
+    public function test_find_rate_summary_for_element_matches_the_fixture(): void
+    {
+        self::assertSame(['count' => 2, 'average' => 4.5], $this->repo->findRateSummaryForElement(1));
+    }
+
+    /**
+     * element 5 has zero rate rows -- COUNT(rate)/AVG(rate) without a
+     * GROUP BY still returns exactly one row (count=0, average=NULL),
+     * never a false fetchAssociative() result: this exercises the same
+     * "count" cast and the `average` null-fallback as the has-rates case
+     * above, just with the opposite values.
+     */
+    public function test_find_rate_summary_for_element_is_zero_for_an_unrated_element(): void
+    {
+        self::assertSame(['count' => 0, 'average' => null], $this->repo->findRateSummaryForElement(5));
+    }
+
+    public function test_find_user_rate_returns_the_users_own_rate(): void
+    {
+        self::assertSame(5, $this->repo->findUserRate(1, 1, null));
+    }
+
+    public function test_find_user_rate_matches_a_non_null_anonymous_id(): void
+    {
+        self::assertSame(5, $this->repo->findUserRate(1, 1, ''));
+    }
+
+    public function test_find_user_rate_returns_null_when_the_anonymous_id_does_not_match(): void
+    {
+        self::assertNull($this->repo->findUserRate(1, 1, 'no-such-anonymous-id'));
+    }
+
+    public function test_find_user_rate_returns_null_for_a_user_with_no_rate_on_that_element(): void
+    {
+        self::assertNull($this->repo->findUserRate(1, 999999, null));
     }
 
     private function fetchRateCount(int $elementId, int $userId): int

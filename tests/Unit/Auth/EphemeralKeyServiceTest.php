@@ -54,6 +54,13 @@ test('verify rejects a malformed key with the wrong number of parts', function (
         ->and($service->verify('1:2:3:4'))->toBeFalse();
 });
 
+test('verify rejects a key with the right shape but non-numeric issuedAt/validAfterSeconds parts', function (): void {
+    $service = new EphemeralKeyService();
+
+    expect($service->verify('not-a-number:0:somesignature'))->toBeFalse()
+        ->and($service->verify('123.0:not-a-number:somesignature'))->toBeFalse();
+});
+
 test('verify rejects a tampered signature', function (): void {
     $service = new EphemeralKeyService();
     $key = $service->generate(0);

@@ -130,6 +130,43 @@ test('dispatch strips one extra SCRIPT_NAME directory level per MOUNT_DEPTH_ATTR
     expect($result->handler)->toBe('AdminPopuphelpController');
 });
 
+test('fromFile throws when the required file does not return a RouteCollection', function (): void {
+    $path = sys_get_temp_dir() . '/piwigo-router-bad-' . bin2hex(random_bytes(8)) . '.php';
+    file_put_contents($path, "<?php\nreturn ['not' => 'a route collection'];\n");
+
+    try {
+        expect(static fn () => Router::fromFile($path))
+            ->toThrow(RuntimeException::class, "{$path} must return a RouteCollection");
+    } finally {
+        unlink($path);
+    }
+});
+
+test('dispatch throws when a matched route has no _controller default', function (): void {
+    $routes = new RouteCollection();
+    $routes->add('broken_route', new Route('/broken'));
+
+    expect(static fn () => new Router($routes)->dispatch(new ServerRequest('GET', '/broken')))
+        ->toThrow(RuntimeException::class, "Route 'broken_route' has no _controller default.");
+});
+
+test('dispatch falls back to the raw path when SCRIPT_NAME is not actually a prefix of it', function (): void {
+    // Distinct from the "SCRIPT_NAME absent entirely" fallback above --
+    // here SCRIPT_NAME is present and non-empty, but the prefix it
+    // reduces to (via dirname()) is not actually a prefix of the real
+    // request path at all (e.g. a stale/mismatched SCRIPT_NAME from a
+    // different vhost), so pathInfo() must still fall back to the raw
+    // path unchanged rather than mangling it with substr().
+    $routes = new RouteCollection();
+    $routes->add('about', new Route('/about.php', defaults: ['_controller' => 'AboutController']));
+
+    $request = new ServerRequest('GET', '/about.php', serverParams: ['SCRIPT_NAME' => '/some-other-app/index.php']);
+    $result = new Router($routes)->dispatch($request);
+
+    expect($result->status)->toBe(RouteMatchStatus::Found);
+    expect($result->handler)->toBe('AboutController');
+});
+
 test('dispatch without MOUNT_DEPTH_ATTRIBUTE set does not match a route one directory below the app root', function (): void {
     // The other half of the fix above: confirms the attribute is genuinely
     // load-bearing, not a no-op -- omitting it reproduces the real bug

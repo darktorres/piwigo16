@@ -38,7 +38,7 @@
                     {if !empty($c13y.correction_error_fct)}
                       {'Correction applied with error'|@translate}
                       <br>
-                      {$c13y.c13y.correction_error_fct}
+                      {$c13y.correction_error_fct}
                     {/if}
                     {if !empty($c13y.correction_msg)}
                       {if $c13y.show_correction_success_fct or !empty($c13y.correction_error_fct) or $c13y.show_correction_fct or $c13y.show_correction_bad_fct }

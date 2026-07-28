@@ -1,0 +1,393 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Tests\Integration;
+
+use Doctrine\DBAL\Connection;
+use Piwigo\Cache\CachePools;
+use Piwigo\Category\CategoryCatsRenderer;
+use Piwigo\Category\CategoryEntity;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigService;
+use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\FilterUpdaterInterface;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\Tables;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Html\HtmlService;
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\Template;
+use Piwigo\Url\UrlService;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\User;
+
+/**
+ * Real fake for FilterUpdaterInterface -- lets a test force a specific
+ * category's post-filter count_images down to 0 (simulating a real tag/date
+ * filter that hides every one of its images) without needing a real
+ * Piwigo\Filter\FilterService + active filter session, which CategoryCatsRenderer
+ * itself can't depend on directly (L2aCoreDomain, see the interface's own
+ * docblock).
+ */
+final class CategoryCatsRendererFakeFilterUpdater implements FilterUpdaterInterface
+{
+    /** @var list<int> */
+    public array $forceCountImagesZeroFor = [];
+
+    #[\Override]
+    public function updateCatsWithFilteredData(array &$cats): void
+    {
+        foreach ($cats as $idx => $cat) {
+            $catId = $cat['id'] ?? null;
+            if (is_int($catId) && in_array($catId, $this->forceCountImagesZeroFor, true)) {
+                $cats[$idx]['count_images'] = 0;
+            }
+        }
+    }
+}
+
+/**
+ * Real no-op fake for createVirtualCategory()'s per-call
+ * ActivityLoggerInterface parameter -- this suite only uses it to create a
+ * disposable, zero-image category fixture, never asserts on the log itself.
+ */
+final class CategoryCatsRendererFakeActivityLogger implements ActivityLoggerInterface
+{
+    #[\Override]
+    public function record(string $object, int|string|array $objectId, string $action, array $details = []): void {}
+}
+
+/**
+ * Fixture shape (tests/Fixtures/piwigo-17.0.sql), same as
+ * CategoryRepositoryTest/CategoryServiceTest/CategoryTreeCacheTest: category
+ * 1 "Sample Album" (root, uppercats="1", representative_picture_id=1, 3
+ * direct images: 1, 2, 3), category 2 "Nested Sub Album" (child of 1,
+ * uppercats="1,2", representative_picture_id=4, 2 direct images: 4, 5).
+ * group_access grants groups 1/2/3 -> category 1, group 1 -> category 2.
+ *
+ * render()'s "category was deleted between the rollup and the full-row
+ * fetch a moment later" `continue` branch is left uncovered -- confirmed
+ * untestable without a production refactor, same shape as
+ * CategoryTreeCacheTest's own identical gap: CategoryRepository is `final`
+ * with no interface seam, and render() constructs its own internal
+ * CategoryTreeCache from this renderer's own injected (also `final`)
+ * CategoryRepository/CategoryService, so there's no fake-able collaborator
+ * to make the rollup query and findFullCategoriesByIds() disagree about
+ * which categories exist. The real race window only exists between two
+ * sequential, non-transactional queries inside one synchronous PHP call.
+ */
+final class CategoryCatsRendererTest extends IntegrationTestCase
+{
+    private static bool $fixtureReady = false;
+
+    private CategoryCatsRenderer $renderer;
+
+    private CategoryCatsRendererFakeFilterUpdater $filterUpdater;
+
+    private CategoryService $categoryService;
+
+    private Template $template;
+
+    private Connection $conn;
+
+    #[\Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->setUpConnectionFromEnv();
+
+        if (! self::$fixtureReady) {
+            $this->resetDatabase();
+            $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
+            self::$fixtureReady = true;
+        }
+
+        CurrentConfig::reset();
+        ConfigLoader::applyDefaults();
+        ConfigLoader::applyEnvOverrides();
+        // See CategoryDefaultRendererTest's identical comment: skips
+        // Template's own data_dir_checked write, which would otherwise
+        // reach for a full RequestBootstrap dependency this test never
+        // boots.
+        CurrentConfig::setDataDirChecked('1');
+
+        $this->conn = DbConnection::build();
+
+        $configService = new ConfigService($this->buildConfigRepository());
+        $configService->loadConfFromDb();
+        ImageStdParams::load_from_db();
+
+        // render() builds its own internal CategoryTreeCache from
+        // CachePools::categoryTree() (not injectable) -- a stale repr_*/
+        // tree_* entry left over from an earlier test run (this is a real
+        // persistent filesystem-backed pool, not an in-memory fake) would
+        // silently make an assertion here pass or fail for the wrong
+        // reason.
+        CachePools::categoryTree()->clear();
+
+        $em = EntityManagerFactory::build($this->conn);
+        $categoryRepo = $em->getRepository(CategoryEntity::class);
+        self::assertInstanceOf(CategoryRepository::class, $categoryRepo);
+        $imageRepo = $em->getRepository(ImageEntity::class);
+        self::assertInstanceOf(ImageRepository::class, $imageRepo);
+
+        $permissionService = new PermissionService(
+            new PermissionRepository($em),
+            $em->getRepository(GroupEntity::class),
+            $categoryRepo
+        );
+        $this->categoryService = new CategoryService($categoryRepo, $permissionService);
+
+        $htmlService = new HtmlService();
+        $urlService = new UrlService($htmlService);
+        // mainpage_categories.tpl's own {assign var=derivative
+        // value=$pwg->derivative(...)} constructs a real DerivativeImage per
+        // category thumbnail, whose get_url() reaches for this same static
+        // registry -- same real-UrlService-instance wiring as
+        // CategoryDefaultRendererTest's own DerivativeImage::setUrlService()
+        // call.
+        DerivativeImage::setUrlService($urlService);
+
+        $this->filterUpdater = new CategoryCatsRendererFakeFilterUpdater();
+
+        $this->template = new Template(CurrentPaths::get()->root . 'themes', 'default');
+
+        $this->renderer = new CategoryCatsRenderer(
+            $this->filterUpdater,
+            $htmlService,
+            $this->template,
+            $categoryRepo,
+            $this->categoryService,
+            $permissionService,
+            $imageRepo,
+            $urlService
+        );
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public'");
+        CachePools::categoryTree()->clear();
+        parent::tearDown();
+    }
+
+    /**
+     * @param array<string, mixed> $overrides
+     */
+    private function seedUser(array $overrides = []): void
+    {
+        CurrentUser::set(User::fromUserArray(array_merge([
+            'id' => 1,
+            'level' => 0,
+            'forbidden_categories' => '',
+            'status' => 'normal',
+            'image_access_type' => 'NOT IN',
+            'image_access_list' => '',
+            'recent_period' => 30,
+            'last_photo_date' => null,
+        ], $overrides)));
+    }
+
+    private function renderedCategoriesHtml(): string
+    {
+        $vars = $this->template->get_template_vars('CATEGORIES');
+
+        return is_string($vars) ? $vars : '';
+    }
+
+    public function test_render_renders_the_root_categories_with_their_own_representative_picture(): void
+    {
+        $this->seedUser();
+
+        $this->renderer->render('', null, 0);
+
+        $html = $this->renderedCategoriesHtml();
+        self::assertStringContainsString('Sample Album', $html);
+        self::assertStringNotContainsString('Nested Sub Album', $html);
+    }
+
+    public function test_render_recent_cats_excludes_a_category_with_zero_images(): void
+    {
+        $this->seedUser();
+        $result = $this->categoryService->createVirtualCategory('Empty Recent Test', new CategoryCatsRendererFakeActivityLogger());
+        $newIdRaw = $result['id'] ?? null;
+        self::assertTrue(is_numeric($newIdRaw));
+        $newId = (int) $newIdRaw;
+
+        try {
+            // The zero-image guard is checked (and returns false) before
+            // isRecentCategory() ever runs, so this proves the category
+            // never reaches the recency check at all, regardless of
+            // whether cat 1/2 themselves qualify as "recent".
+            $this->renderer->render('recent_cats', null, 0);
+
+            $html = $this->renderedCategoriesHtml();
+            self::assertStringNotContainsString('Empty Recent Test', $html);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $newId);
+        }
+    }
+
+    public function test_render_picks_a_random_representative_when_allow_random_representative_is_enabled(): void
+    {
+        $this->seedUser();
+        CurrentConfig::setAllowRandomRepresentative(true);
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = NULL WHERE id = 2');
+
+        try {
+            $this->renderer->render('', ['id' => 1], 0);
+
+            $item = CachePools::categoryTree()->getItem('repr_1_2');
+            self::assertTrue($item->isHit());
+            self::assertContains($item->get(), ['4', '5']);
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 4 WHERE id = 2');
+        }
+    }
+
+    public function test_render_picks_a_random_representative_among_subcategories_when_none_is_set_directly(): void
+    {
+        $this->seedUser();
+        // allow_random_representative stays disabled (the real fixture
+        // default) -- category 1 has sub-categories with images, so it
+        // must fall back to a sub-category's own representative instead.
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = NULL WHERE id = 1');
+
+        try {
+            $this->renderer->render('', null, 0);
+
+            // category 2 (the only sub-category) has exactly one
+            // representative_picture_id set (4) -- the only possible match.
+            $item = CachePools::categoryTree()->getItem('repr_1_1');
+            self::assertTrue($item->isHit());
+            self::assertSame('4', $item->get());
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 1 WHERE id = 1');
+        }
+    }
+
+    public function test_render_skips_a_category_with_no_resolvable_representative(): void
+    {
+        $this->seedUser();
+        // category 2 has no sub-categories of its own, so with no direct
+        // representative and allow_random_representative disabled, no
+        // branch can resolve an image_id at all.
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = NULL WHERE id = 2');
+
+        try {
+            $this->renderer->render('', ['id' => 1], 0);
+
+            $html = $this->renderedCategoriesHtml();
+            self::assertStringNotContainsString('Nested Sub Album', $html);
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 4 WHERE id = 2');
+        }
+    }
+
+    public function test_render_shows_the_date_range_when_display_fromto_is_enabled(): void
+    {
+        $this->seedUser();
+        CurrentConfig::setDisplayFromto(true);
+        // Only image 1's date_creation is set -- the other 2 direct images
+        // of category 1 stay NULL, so MIN/MAX both resolve to this single
+        // real value rather than just echoing back a NULL.
+        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2021-03-10 08:00:00' WHERE id = 1");
+
+        try {
+            $this->renderer->render('', null, 0);
+
+            $expected = \Piwigo\Core\DateHelper::formatFromto('2021-03-10 08:00:00', '2021-03-10 08:00:00');
+            $html = $this->renderedCategoriesHtml();
+            self::assertStringContainsString($expected, $html);
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET date_creation = NULL WHERE id = 1');
+        }
+    }
+
+    public function test_render_substitutes_a_representative_photo_whose_privacy_level_is_too_high(): void
+    {
+        // image_access_list='4' simulates a precomputed permission snapshot
+        // that already excludes image 4 for this user (real production
+        // shape -- see PermissionService::getSqlConditionFandF()'s own
+        // 'image_access_list'/'image_access_type' fields); the images.level
+        // column (checked directly, not via SQL, against the *fetched*
+        // representative row) is what actually triggers the substitution.
+        $this->seedUser(['image_access_list' => '4']);
+        $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET level = 5 WHERE id = 4');
+
+        try {
+            $this->renderer->render('', ['id' => 1], 0);
+
+            // category 2's real representative (4) is too high-level;
+            // image 5 (also directly in category 2, not excluded) is the
+            // only possible substitute.
+            $item = CachePools::categoryTree()->getItem('repr_1_2');
+            self::assertTrue($item->isHit());
+            self::assertSame('5', $item->get());
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET level = 0 WHERE id = 4');
+        }
+    }
+
+    public function test_render_caches_a_null_representative_when_no_privacy_safe_substitute_exists(): void
+    {
+        // Both of category 2's own images (4 and 5) excluded this time --
+        // no substitute exists anywhere in the category.
+        $this->seedUser(['image_access_list' => '4,5']);
+        $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET level = 5 WHERE id = 4');
+
+        try {
+            $this->renderer->render('', ['id' => 1], 0);
+
+            $item = CachePools::categoryTree()->getItem('repr_1_2');
+            self::assertTrue($item->isHit());
+            self::assertNull($item->get());
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET level = 0 WHERE id = 4');
+        }
+    }
+
+    public function test_render_skips_a_category_whose_filtered_count_images_becomes_zero(): void
+    {
+        $this->seedUser();
+        // Simulates a real tag/date filter that hides every one of
+        // category 1's images post-rollup.
+        $this->filterUpdater->forceCountImagesZeroFor[] = 1;
+
+        $this->renderer->render('', null, 0);
+
+        $html = $this->renderedCategoriesHtml();
+        self::assertStringNotContainsString('Sample Album', $html);
+    }
+
+    public function test_render_falls_back_to_the_raw_name_when_the_event_handler_returns_a_non_string(): void
+    {
+        $this->seedUser();
+        EventDispatcher::get()->addEventHandler('render_category_name', static fn (): int => 42);
+
+        try {
+            $this->renderer->render('', null, 0);
+        } finally {
+            EventDispatcher::reset();
+        }
+
+        // A misbehaving 'render_category_name' handler returning a
+        // non-string falls back to the category's own real name instead of
+        // crashing or rendering something blank.
+        $html = $this->renderedCategoriesHtml();
+        self::assertStringContainsString('Sample Album', $html);
+    }
+}

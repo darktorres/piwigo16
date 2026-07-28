@@ -42,4 +42,55 @@ final class UserListCommandTest extends IntegrationTestCase
         self::assertStringContainsString('ID', $tester->getDisplay());
         self::assertStringContainsString('Username', $tester->getDisplay());
     }
+
+    public function test_reports_a_formatted_error_and_fails_when_the_mysql_query_itself_fails(): void
+    {
+        // Same "point PIWIGO_DB_PORT at a closed local port for a fast,
+        // real connection-refused failure" trick already established this
+        // session for BackupCreateCommandTest -- DbCredentials::fromEnv()
+        // (not the memoized current()) picks up the change immediately.
+        $originalPort = getenv('PIWIGO_DB_PORT');
+        putenv('PIWIGO_DB_PORT=1');
+
+        try {
+            $command = new UserListCommand();
+            $tester = new CommandTester($command);
+
+            $exitCode = $tester->execute([]);
+
+            self::assertSame(Command::FAILURE, $exitCode);
+            self::assertStringContainsString('Query failed:', $tester->getDisplay());
+        } finally {
+            putenv($originalPort === false ? 'PIWIGO_DB_PORT' : 'PIWIGO_DB_PORT=' . $originalPort);
+        }
+    }
+
+    public function test_reports_no_users_found_against_an_empty_database(): void
+    {
+        // Destructive against the shared fixture DB (TRUNCATE the two
+        // tables this command queries) -- reloads the full fixture again
+        // in a finally block so every other test in this shared-process
+        // suite still sees the real fixture data afterward, regardless of
+        // pass/fail here. loadFixture() is the same idempotent, full
+        // DROP+CREATE+INSERT reset setUp() itself relies on for whichever
+        // Integration test class happens to run first.
+        $db = $this->newMysqli($this->dbName);
+        $db->query('SET FOREIGN_KEY_CHECKS=0');
+        $db->query('TRUNCATE TABLE `' . $this->dbPrefix . 'user_infos`');
+        $db->query('TRUNCATE TABLE `' . $this->dbPrefix . 'users`');
+        $db->query('SET FOREIGN_KEY_CHECKS=1');
+        $db->close();
+
+        try {
+            $command = new UserListCommand();
+            $tester = new CommandTester($command);
+
+            $exitCode = $tester->execute([]);
+
+            self::assertSame(Command::SUCCESS, $exitCode);
+            self::assertSame("No users found.\n", $tester->getDisplay());
+        } finally {
+            $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
+        }
+    }
 }

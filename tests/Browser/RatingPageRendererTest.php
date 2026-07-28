@@ -9,6 +9,13 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * GET-tested by AdminExtendedSmokeTest against an empty rate table; this
  * file adds real piwigo_rate rows so the actual report loop (~60 lines),
  * cat_id/user/guest filters, and order_by clamping all execute.
+ *
+ * Not exercised: the "? {user_id}" unknown-rater fallback (only reached
+ * when a rate row's user_id has no matching users row) -- piwigo_rate's
+ * own fk_rate_user_id FOREIGN KEY (ON DELETE CASCADE) guarantees every
+ * real rate row's user_id always resolves to a real user (deleting the
+ * user cascades to delete their rates too), so this can't actually happen
+ * against this schema.
  */
 function ratingPageDbPrefix(): string
 {

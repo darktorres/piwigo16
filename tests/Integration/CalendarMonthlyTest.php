@@ -601,6 +601,186 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $navVars = $this->digArray($template->get_template_vars('chronology_navigation_bars'), [0]);
         self::assertSame([], $navVars);
     }
+
+    /**
+     * A specific day with month left as 'any' is an unusual but
+     * code-supported combination -- the year-known branch of
+     * get_date_where() re-checks the day component independently of month
+     * when month is 'any' (or unset).
+     */
+    public function test_get_date_where_year_known_month_any_still_applies_a_day_filter(): void
+    {
+        $calendar = $this->makeCalendar();
+        $calendar->chronology_date = [2024, 'any', 15];
+
+        self::assertSame(
+            " AND date_available BETWEEN '2024-01-01' AND '2024-12-31 23:59:59' AND DAYOFMONTH(date_available)=15",
+            $calendar->get_date_where()
+        );
+    }
+
+    /**
+     * Same day-filter-independent-of-month behaviour as above, but on the
+     * year='any' side of get_date_where() (a completely separate branch).
+     */
+    public function test_get_date_where_year_any_month_any_still_applies_a_day_filter(): void
+    {
+        $calendar = $this->makeCalendar();
+        $calendar->chronology_date = ['any', 'any', 15];
+
+        self::assertSame(
+            ' AND date_available IS NOT NULL AND DAYOFMONTH(date_available)=15',
+            $calendar->get_date_where()
+        );
+    }
+
+    /**
+     * get_all_days_in_month()'s final fallback (neither a leap-year-aware
+     * February computation nor a plain lookup-table hit) only triggers
+     * when $month itself isn't numeric -- reachable through
+     * generate_category_content()'s own day-nav-bar branch when the URL's
+     * month component is the literal 'any', not a real number.
+     */
+    public function test_generate_category_content_defaults_to_31_days_when_month_is_any(): void
+    {
+        $calendar = $this->makeCalendar();
+        $calendar->chronology_view = CalendarBase::CAL_VIEW_LIST;
+        $calendar->chronology_date = [2024, 'any'];
+        $template = new Template();
+
+        $calendar->generate_category_content($template);
+
+        $dayNav = $this->digArray($template->get_template_vars('chronology_navigation_bars'), [0, 'items']);
+        self::assertCount(31, $dayNav);
+    }
+
+    /**
+     * build_next_prev()'s own per-index sub-query loop uses a single,
+     * uniform literal `'any'` for any chronology_date index that is
+     * itself 'any' -- applied to *every* row's period, not just the
+     * current one -- so with chronology_date=[2024, 'any'] the whole
+     * query groups by (YEAR(date_field), 'any'), collapsing every month
+     * within a year into one period per year ('2024-any', '2025-any'),
+     * not one period per real month. Confirmed live: this is genuinely
+     * how the algorithm behaves, not a documented-elsewhere edge case.
+     * '2024-any' sorts before '2025-any' under version_compare(),
+     * landing at rank 0 -- no previous, and 'next' pointing at the only
+     * other period, 2025 (get_date_nice_name() skips the 'any' component
+     * entirely, so the label is just the year).
+     */
+    public function test_build_next_prev_treats_an_any_component_as_an_unmatched_current_period(): void
+    {
+        $calendar = $this->makeCalendar();
+        $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
+        $calendar->chronology_date = [2024, 'any'];
+        $template = new Template();
+
+        $calendar->generate_category_content($template);
+
+        $nav = $this->digArray($template->get_template_vars('chronology_navigation_bars'), [0]);
+        self::assertArrayNotHasKey('previous', $nav);
+        self::assertSame('2025', $this->dig($nav, ['next', 'LABEL']));
+        self::assertSame(
+            '/fake-index?' . json_encode(['chronology_date' => ['2025', 'any']]) . '|removed=' . json_encode(['start']),
+            $this->dig($nav, ['next', 'URL'])
+        );
+    }
+
+    /**
+     * build_global_calendar() (case A: no year selected) bails out and
+     * auto-narrows to a single real year instead of rendering a
+     * pointless one-entry "choose a year" calendar -- scoped to images
+     * 1-3 (all 2024) so exactly one year exists in this query's scope,
+     * unlike the full 1-5 fixture set (spanning 2024 and 2025) every
+     * other test in this file uses.
+     */
+    public function test_build_global_calendar_bails_out_to_year_view_when_only_one_year_exists(): void
+    {
+        $calendar = new CalendarMonthly(new CalendarRepository($this->conn), $this->urlService);
+        $calendar->chronology_field = 'posted';
+        $calendar->initialize(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3)');
+        $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
+        $calendar->chronology_date = [];
+        $template = new Template();
+
+        $calendar->generate_category_content($template);
+
+        self::assertSame([2024], $calendar->chronology_date);
+    }
+
+    /**
+     * build_year_calendar() (case B: year selected) bails out and
+     * auto-narrows to a single real month the same way -- images 4 and 5
+     * are both dated January 2025, the only month in this query's scope.
+     */
+    public function test_build_year_calendar_bails_out_to_month_view_when_only_one_month_exists(): void
+    {
+        $calendar = new CalendarMonthly(new CalendarRepository($this->conn), $this->urlService);
+        $calendar->chronology_field = 'posted';
+        $calendar->initialize(' FROM ' . Tables::images() . ' WHERE id IN (4,5)');
+        $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
+        $calendar->chronology_date = [2025];
+        $template = new Template();
+
+        $calendar->generate_category_content($template);
+
+        self::assertSame([2025, 1], $calendar->chronology_date);
+    }
+
+    /**
+     * September 1, 2024 is a Sunday. build_month_calendar()'s raw
+     * DAYOFWEEK()-1 gives dow=0 for Sunday; with week_starts_on=monday
+     * (the default), a raw 0 must remap to column 6 (the last column of
+     * the week), not stay at column 0 -- scoped to image 1 alone, moved
+     * to September for this test only and restored afterwards.
+     */
+    public function test_build_month_calendar_shifts_a_sunday_first_day_to_the_last_column(): void
+    {
+        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-09-15 00:00:00' WHERE id = 1");
+
+        try {
+            $calendar = new CalendarMonthly(new CalendarRepository($this->conn), $this->urlService);
+            $calendar->chronology_field = 'posted';
+            $calendar->initialize(' FROM ' . Tables::images() . ' WHERE id = 1');
+            $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
+            $calendar->chronology_date = [2024, 9];
+            $template = new Template();
+
+            $calendar->generate_category_content($template);
+
+            $weeks = $this->digArray($template->get_template_vars('chronology_calendar'), ['month_view', 'weeks']);
+            $firstWeek = $this->digArray($weeks, [0]);
+            self::assertArrayNotHasKey('DAY', $this->digArray($firstWeek, [0]));
+            self::assertSame(1, $this->dig($firstWeek, [6, 'DAY']));
+        } finally {
+            $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-03-10 00:00:00' WHERE id = 1");
+        }
+    }
+
+    /**
+     * July 31, 2024 is a Wednesday, not the last column of its week (under
+     * week_starts_on=monday) -- the trailing padding loop must fill the
+     * rest of the final week with empty cells rather than leaving it
+     * short. Scoped to image 3 (already dated 2024-07-04 by this file's
+     * own setUp(), no restoration needed).
+     */
+    public function test_build_month_calendar_pads_trailing_days_to_complete_the_final_week(): void
+    {
+        $calendar = new CalendarMonthly(new CalendarRepository($this->conn), $this->urlService);
+        $calendar->chronology_field = 'posted';
+        $calendar->initialize(' FROM ' . Tables::images() . ' WHERE id = 3');
+        $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
+        $calendar->chronology_date = [2024, 7];
+        $template = new Template();
+
+        $calendar->generate_category_content($template);
+
+        $weeks = $this->digArray($template->get_template_vars('chronology_calendar'), ['month_view', 'weeks']);
+        $lastWeek = $this->digArray($weeks, [count($weeks) - 1]);
+
+        self::assertCount(7, $lastWeek);
+        self::assertArrayNotHasKey('DAY', $this->digArray($lastWeek, [count($lastWeek) - 1]));
+    }
 }
 
 /**

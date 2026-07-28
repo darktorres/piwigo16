@@ -85,6 +85,51 @@ it('cannot deactivate en_UK: it is the only active language and the default', fu
     expect(languagesInstalledIsActive('en_UK'))->toBeTrue();
 });
 
+it('reassigns users off a missing-from-disk language and deletes its stale db row on page load', function (): void {
+    $page = H::loginAsAdmin($this);
+    $prefix = languagesInstalledDbPrefix();
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+
+    // A language row with no matching fs entry -- render()'s own
+    // `array_diff(db_languages, fs_languages)` cleanup loop reassigns any
+    // user still set to it (to the gallery's default language) and deletes
+    // the now-orphaned db row, every page load.
+    $db->query(sprintf("INSERT INTO %slanguages (id, version, name) VALUES ('xx_XX', '1.0', 'Missing Language')", $prefix));
+
+    $username = 'languages_installed_missing_lang_' . uniqid();
+    $password = 'a-strong-test-password-1';
+    $addResult = H::wsCall($page, 'pwg.users.add', [
+        'username' => $username,
+        'password' => $password,
+        'password_confirm' => $password,
+        'pwg_token' => H::pwgToken($page),
+    ]);
+    $userId = wsAddedUserId($addResult);
+    $db->query(sprintf("UPDATE %suser_infos SET language = 'xx_XX' WHERE user_id = %d", $prefix, $userId));
+
+    try {
+        H::navigateOk($page, '/admin.php?page=languages');
+
+        $langRow = $db->query(sprintf("SELECT COUNT(*) AS c FROM %slanguages WHERE id = 'xx_XX'", $prefix));
+        $langAssoc = $langRow instanceof mysqli_result ? $langRow->fetch_assoc() : null;
+        expect(is_array($langAssoc) ? (int) $langAssoc['c'] : -1)->toBe(0);
+
+        $userRow = $db->query(sprintf('SELECT language FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
+        $userAssoc = $userRow instanceof mysqli_result ? $userRow->fetch_assoc() : null;
+        expect(is_array($userAssoc) ? $userAssoc['language'] : 'MISSING')->toBe('en_UK');
+    } finally {
+        $db->query(sprintf("DELETE FROM %slanguages WHERE id = 'xx_XX'", $prefix));
+        $db->query(sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
+        $db->query(sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+        $db->close();
+    }
+});
+
 it('shows the webmaster-required warning for a plain "admin"-status user', function (): void {
     $page = H::loginAsAdmin($this);
     $username = 'languages_installed_admin_' . uniqid();

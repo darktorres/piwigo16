@@ -1,0 +1,68 @@
+<?php
+
+declare(strict_types=1);
+
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\Logger;
+use Piwigo\Html\HtmlService;
+use Piwigo\Job\BatchUploadJob;
+use Piwigo\Job\Handler\BatchUploadHandler;
+use Piwigo\Url\UrlService;
+
+/**
+ * BatchUploadHandler::__invoke() is a 1-line delegate to
+ * UploadService::addUploadedFile() -- its own docblock already documents
+ * why the general case can't be constructor-injected/faked (UploadService
+ * is final, no interface) and why its "new photo" branch specifically
+ * needs a live Browser-tier context (a genuine self-fetchRemote() HTTP
+ * call to force derivative generation, see UploadService::
+ * addUploadedFileAddToCategories()). The *duplicate-detected* branch is
+ * different: it returns early (addUploadedFile()'s own `return $image_id;`
+ * right after `unlink($source_filepath)`) before that HTTP call is ever
+ * reached, so it's exercised for real here against the fixture's own
+ * photo #1 (md5sum '2e7ee450c4a4cffe42945205029782b9') -- no fake/mock
+ * needed, and this closes 100% of this handler's own coverage gap (its
+ * entire body is one call expression + assert + return, all executed
+ * together the moment any successful invocation runs).
+ *
+ * loungeActive is forced true so addUploadedFileAddToCategories()'s own
+ * `! loungeActive()` branch (a DB COUNT(*) query, then a
+ * CurrentConfigService-backed confUpdateParam() call once
+ * loungeActivateThreshold, which defaults to 1, is met) never runs --
+ * unrelated to what this test targets, and would otherwise need
+ * CurrentConfigService wired for no reason (categories is null here, so
+ * the rest of that method's body is skipped either way).
+ */
+beforeEach(function (): void {
+    CurrentLogger::set(new Logger(['severity' => Logger::OFF]));
+    CurrentConfig::setLoungeActive(true);
+});
+
+afterEach(function (): void {
+    CurrentLogger::reset();
+    CurrentConfig::reset();
+});
+
+test('__invoke returns the existing image id and deletes the newly uploaded file when its md5sum already exists (duplicate detection)', function (): void {
+    $sourceFilepath = sys_get_temp_dir() . '/piwigo-batch-upload-handler-test-' . bin2hex(random_bytes(8)) . '.jpg';
+    file_put_contents($sourceFilepath, 'duplicate-upload-bytes');
+
+    $handler = new BatchUploadHandler(new UrlService(new HtmlService()));
+
+    $imageId = $handler(new BatchUploadJob(
+        sourceFilepath: $sourceFilepath,
+        originalFilename: 'duplicate.jpg',
+        categories: null,
+        level: null,
+        imageId: null,
+        // Matches tests/Fixtures/piwigo-17.0.sql's own image #1
+        // (fixture-photo-1.jpg) exactly -- triggers the "this md5sum
+        // already exists" early-return branch instead of a real new-photo
+        // insert.
+        originalMd5sum: '2e7ee450c4a4cffe42945205029782b9',
+    ));
+
+    expect($imageId)->toBe(1)
+        ->and(file_exists($sourceFilepath))->toBeFalse();
+});

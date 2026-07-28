@@ -124,6 +124,38 @@ final class NotificationServiceTest extends IntegrationTestCase
         self::assertSame([1, 2, 3, 4], $result);
     }
 
+    /**
+     * Exercises the 'new_elements'/'updated_categories' match arm of
+     * customNotificationQuery()'s own internal `$restrictSql` selection --
+     * distinct from the 'new_comments' arm already covered above, and from
+     * the 'default' (empty restrictSql) arm covered by the new_users test
+     * just below.
+     */
+    public function test_custom_notification_query_counts_updated_categories(): void
+    {
+        // Fixture image_category rows (image_id => category_id): 1,2,3 => 1
+        // and 4,5 => 2 (confirmed against tests/Fixtures/piwigo-17.0.sql
+        // directly). Images 3/4/5 fall in this date_available window (same
+        // window as test_nb_new_elements_counts_in_range), touching
+        // category 1 (via image 3) and category 2 (via images 4 and 5) --
+        // 2 distinct categories.
+        $result = $this->service->customNotificationQuery('count', 'updated_categories', '2026-07-07 05:02:36', '2026-07-07 05:02:38');
+
+        self::assertSame(2, $result);
+    }
+
+    /**
+     * 'new_users' (like 'unvalidated_comments') falls through to
+     * customNotificationQuery()'s `default => ''` restrictSql arm --
+     * distinct from both arms above.
+     */
+    public function test_custom_notification_query_counts_new_users_via_default_restrict_arm(): void
+    {
+        $result = $this->service->customNotificationQuery('count', 'new_users', '2026-07-07 05:02:35', '2026-07-07 05:02:39');
+
+        self::assertSame(2, $result);
+    }
+
     public function test_nb_new_elements_counts_in_range(): void
     {
         self::assertSame(3, $this->service->nbNewElements('2026-07-07 05:02:36', '2026-07-07 05:02:38'));
@@ -137,9 +169,45 @@ final class NotificationServiceTest extends IntegrationTestCase
         self::assertSame([3, 4, 5], $ids);
     }
 
+    public function test_new_comments_returns_ids_in_range(): void
+    {
+        // Direct call to newComments() itself (as opposed to
+        // customNotificationQuery('info', 'new_comments', ...), already
+        // covered above) -- same window/expected ids as that test, proving
+        // the convenience wrapper delegates correctly on its own.
+        $ids = $this->service->newComments('2026-07-07 05:02:37', '2026-07-07 05:02:39');
+        sort($ids);
+
+        self::assertSame([1, 2, 3, 4], $ids);
+    }
+
     public function test_nb_new_users_counts_in_range(): void
     {
         self::assertSame(2, $this->service->nbNewUsers('2026-07-07 05:02:35', '2026-07-07 05:02:39'));
+    }
+
+    public function test_updated_categories_returns_ids_in_range(): void
+    {
+        // Same window as test_nb_new_elements_counts_in_range/
+        // test_custom_notification_query_counts_updated_categories -- see
+        // that test's own comment for the image->category fixture mapping
+        // that makes [1, 2] the correct distinct category id list.
+        $ids = $this->service->updatedCategories('2026-07-07 05:02:36', '2026-07-07 05:02:38');
+        sort($ids);
+
+        self::assertSame([1, 2], $ids);
+    }
+
+    public function test_new_users_returns_ids_in_range(): void
+    {
+        // user_id 3 (regular_user) and 4 (power_user) are the fixture rows
+        // whose registration_date was moved to 05:02:38 in setUp(); 1/2
+        // (fixture_admin/guest) sit at 05:02:35, excluded by the
+        // exclusive-start '> $start' comparison the repository uses.
+        $ids = $this->service->newUsers('2026-07-07 05:02:35', '2026-07-07 05:02:39');
+        sort($ids);
+
+        self::assertSame([3, 4], $ids);
     }
 
     public function test_news_exists_is_true_when_new_elements_exist(): void
@@ -209,6 +277,61 @@ final class NotificationServiceTest extends IntegrationTestCase
         $viaDirect = $this->service->getRecentPostDates(3, 3, 3);
 
         self::assertSame($viaDirect, $viaArray);
+    }
+
+    public function test_news_appends_the_auth_key_to_every_generated_url(): void
+    {
+        CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Normal));
+
+        // This window has new elements, updated categories, and new
+        // comments all firing at once (see the elements/categories/
+        // comments tests above using the same or an overlapping window),
+        // so every addUrlParams() call site inside news() that carries
+        // $addUrlParams runs at least once.
+        $news = $this->service->news(
+            '2026-07-07 05:02:36',
+            '2026-07-07 05:02:38',
+            excludeImgCats: false,
+            addUrl: true,
+            authKey: 'notif-auth-marker-77',
+        );
+
+        self::assertNotSame([], $news);
+        self::assertStringContainsString('auth=notif-auth-marker-77', implode('', $news));
+    }
+
+    public function test_news_omits_the_auth_param_entirely_when_no_auth_key_is_given(): void
+    {
+        CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Normal));
+
+        $news = $this->service->news(
+            '2026-07-07 05:02:36',
+            '2026-07-07 05:02:38',
+            excludeImgCats: false,
+            addUrl: true,
+        );
+
+        self::assertNotSame([], $news);
+        self::assertStringNotContainsString('auth=', implode('', $news));
+    }
+
+    public function test_get_html_description_recent_post_date_appends_the_auth_key_to_its_url(): void
+    {
+        $html = $this->service->getHtmlDescriptionRecentPostDate(
+            ['date_available' => '2026-07-15', 'nb_elements' => 5, 'nb_cats' => 2],
+            'notif-auth-marker-88',
+        );
+
+        self::assertStringContainsString('auth=notif-auth-marker-88', $html);
+    }
+
+    public function test_get_html_description_recent_post_date_omits_the_auth_param_when_no_auth_key_is_given(): void
+    {
+        $html = $this->service->getHtmlDescriptionRecentPostDate(
+            ['date_available' => '2026-07-15', 'nb_elements' => 5, 'nb_cats' => 2],
+        );
+
+        self::assertStringNotContainsString('auth=', $html);
     }
 }
 }

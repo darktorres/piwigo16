@@ -259,6 +259,50 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         // already being viewed).
         self::assertSame('2025', $this->dig($nav, ['next', 'LABEL']));
     }
+
+    /**
+     * With week_starts_on=monday (the default), initialize() also rotates
+     * the day-name labels themselves (not just the SQL), moving Sunday
+     * from the front to the back -- untested until now because every
+     * other test in this file (and CalendarMonthlyTest's identical
+     * rationale) resets Lang, leaving Lang::days() empty and this
+     * particular rotation's `is_string($shifted)` guard always false.
+     * Lang::loadArray() populates real day names directly, without
+     * needing an actual language file on disk.
+     */
+    public function test_initialize_rotates_sunday_to_the_end_of_the_day_labels_when_monday_starts_the_week(): void
+    {
+        Lang::loadArray(['day' => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']]);
+        CurrentConfig::setWeekStartsOn('monday');
+
+        $calendar = $this->makeCalendar();
+
+        $labels = $calendar->calendar_levels[CalendarBase::CDAY]['labels'];
+        self::assertIsArray($labels);
+        self::assertSame(
+            ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            array_values($labels)
+        );
+    }
+
+    /**
+     * get_date_where()'s own truncation loop (shared shape with
+     * CalendarMonthly's identical one) drops components beyond
+     * $max_levels -- distinct from every other get_date_where() test in
+     * this file, which always calls it with the default (untruncated)
+     * $max_levels=3.
+     */
+    public function test_get_date_where_truncates_beyond_an_explicit_smaller_max_levels(): void
+    {
+        $calendar = $this->makeCalendar();
+        $calendar->chronology_date = [2024, 12, 3];
+
+        self::assertSame(
+            " AND date_available BETWEEN '2024-01-01' AND '2024-12-31 23:59:59'"
+            . ' AND WEEK(date_available, 5)+1=12',
+            $calendar->get_date_where(2)
+        );
+    }
 }
 
 /**

@@ -715,6 +715,24 @@ final class BrowserTestHelpers
     }
 
     /**
+     * json_encode() for a value the caller knows cannot fail to encode
+     * (plain scalars/arrays, no resources or invalid-UTF8 strings) --
+     * throws instead of silently handing a `false` (encode failure) or
+     * `""` (accidental cast of that false) into a config/DB write, which
+     * would be a real, silently-wrong value rather than a type-check
+     * nuisance.
+     */
+    public static function jsonEncode(mixed $value): string
+    {
+        $encoded = json_encode($value);
+        if ($encoded === false) {
+            throw new \RuntimeException('json_encode() failed for: ' . var_export($value, true));
+        }
+
+        return $encoded;
+    }
+
+    /**
      * Writes (or clears, when $rawJsonValue is null) a single `config`.
      * `value` cell directly, and clears the config cache pool -- the
      * counterpart to configValue(), for restoring a config param an

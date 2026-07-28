@@ -7,8 +7,13 @@ use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
+use Piwigo\Url\UrlService;
 
 // Marker-based filesystem safety: this suite writes real files to verify
 // [SEC-21]'s SVG sanitizer, so every path must be scoped to a unique
@@ -303,6 +308,132 @@ test('saveUploadFormConfig collects a range error and a field-keyed form_errors 
     expect($result)->toBeFalse();
     expect($errors)->toHaveCount(1);
     expect($formErrors)->toBe(['original_resize_maxwidth' => '[500 .. 20000]']);
+});
+
+test('saveUploadFormConfig silently skips a field name absent from getUploadFormConfig()', function (): void {
+    // A 0-error result always reaches saveUploadFormConfig()'s own final
+    // InfrastructureAccessor::entityManager()->clear() call, real DB write
+    // or not -- needs a booted container even for this "nothing to
+    // persist" case.
+    Kernel::reset();
+    Kernel::boot();
+    try {
+        $service = new UploadService();
+        $errors = [];
+        $formErrors = [];
+
+        // 'totally_unknown_field' never appears in getUploadFormConfig()'s own
+        // 4-key map -- the `continue` on the very first isset() guard, before
+        // any min/max/pattern lookup even happens.
+        $result = $service->saveUploadFormConfig(['totally_unknown_field' => 'whatever'], $errors, $formErrors);
+
+        expect($result)->toBeTrue();
+        expect($errors)->toBe([]);
+        expect($formErrors)->toBe([]);
+    } finally {
+        Kernel::reset();
+    }
+});
+
+test('saveUploadFormConfig skips a numeric field whose posted value is non-scalar (PHPStan-narrowing guard)', function (): void {
+    Kernel::reset();
+    Kernel::boot();
+    try {
+        $service = new UploadService();
+        $errors = [];
+        $formErrors = [];
+
+        // is_scalar($value) is false for an array -- hits the "should never
+        // actually skip a field in practice" narrowing `continue`, not the
+        // pattern/min/max check below it.
+        $result = $service->saveUploadFormConfig(['original_resize_maxwidth' => ['not', 'scalar']], $errors, $formErrors);
+
+        expect($result)->toBeTrue();
+        expect($errors)->toBe([]);
+        expect($formErrors)->toBe([]);
+    } finally {
+        Kernel::reset();
+    }
+});
+
+test('saveUploadFormConfig sets the boolean field true whenever it is present, even with a falsy-looking value', function (): void {
+    Kernel::reset();
+    Kernel::boot();
+    try {
+        $service = new UploadService();
+        $errors = [];
+        $formErrors = [];
+
+        // isset($value) is true for '0' (it's non-null) -- the boolean toggle's
+        // own "present at all" semantics, distinct from isFalsy()'s falsy set.
+        $result = $service->saveUploadFormConfig(['original_resize' => '0'], $errors, $formErrors);
+
+        expect($result)->toBeTrue();
+        expect($errors)->toBe([]);
+
+        $conn = DbConnection::build();
+        try {
+            $stored = $conn->fetchOne('SELECT value FROM ' . Tables::config() . " WHERE param = 'original_resize'");
+            expect($stored)->toBe('true');
+        } finally {
+            $conn->executeStatement("UPDATE " . Tables::config() . " SET value = 'false' WHERE param = 'original_resize'");
+            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+        }
+    } finally {
+        Kernel::reset();
+    }
+});
+
+test('saveUploadFormConfig persists a valid in-range numeric field', function (): void {
+    Kernel::reset();
+    Kernel::boot();
+    try {
+        $service = new UploadService();
+        $errors = [];
+        $formErrors = [];
+
+        // 1500 is within original_resize_maxheight's [300 .. 20000] range --
+        // the (bool) preg_match(...) and $value >= $min and $value <= $max
+        // success branch, distinct from the out-of-range test above.
+        $result = $service->saveUploadFormConfig(['original_resize_maxheight' => '1500'], $errors, $formErrors);
+
+        expect($result)->toBeTrue();
+        expect($errors)->toBe([]);
+        expect($formErrors)->toBe([]);
+
+        $conn = DbConnection::build();
+        try {
+            $stored = $conn->fetchOne('SELECT value FROM ' . Tables::config() . " WHERE param = 'original_resize_maxheight'");
+            expect($stored)->toBe('1500');
+        } finally {
+            $conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+        }
+    } finally {
+        Kernel::reset();
+    }
+});
+
+test('addUploadedFile throws when md5_file() fails to read the source file', function (): void {
+    $service = new UploadService();
+    $missingPath = upload_service_test_marker() . '/does-not-exist-at-all.jpg';
+    $urlService = new UrlService(new HtmlService());
+
+    // md5_file() on a missing file emits a real PHP warning (confirmed live:
+    // "Failed to open stream: No such file or directory") that
+    // phpunit.xml's failOnWarning="true" would otherwise convert into a
+    // PHPUnit\Framework\Error\Warning right at the call site, before
+    // addUploadedFile()'s own `$md5sum === false` check (and its own
+    // \Exception with a distinct message) is ever reached -- swallow it
+    // for the duration of this one expected-to-warn call only, same
+    // pattern as ImageGdTest's own construct-throws-on-bad-jpeg case.
+    set_error_handler(static fn (): bool => true);
+    try {
+        expect(fn () => $service->addUploadedFile($missingPath, $urlService, original_md5sum: null))
+            ->toThrow(\Exception::class, "upload(): unable to compute md5sum of {$missingPath}");
+    } finally {
+        restore_error_handler();
+    }
 });
 
 test('readyForUploadMessage returns null when the real upload directory exists and is writable', function (): void {

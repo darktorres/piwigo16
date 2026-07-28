@@ -87,6 +87,35 @@ test('modcompiler_translate_dec falls back to a runtime Lang::plural() call when
     expect($result)->toBe("\\Piwigo\\Core\\Lang::plural('%d comment','%d comments',\$count)");
 });
 
+test('modcompiler_translate wraps a cached lang lookup in sprintf when extra params are given and caching is on', function (): void {
+    CurrentConfig::setCompiledTemplateCacheLanguage(true);
+    Lang::loadArray(['%d comments' => '%d commentaires']);
+
+    $result = Template::modcompiler_translate(["'%d comments'", '$count']);
+
+    expect($result)->toBe("sprintf(" . var_export('%d commentaires', true) . ',$count)');
+});
+
+test('modcompiler_translate_dec builds a plain >1 ternary from cached lang lookups when caching is on and zero is not plural', function (): void {
+    CurrentConfig::setCompiledTemplateCacheLanguage(true);
+    Lang::setLangInfo(['zero_plural' => false]);
+    Lang::loadArray(['%d comment' => '%d commentaire', '%d comments' => '%d commentaires']);
+
+    $result = Template::modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
+
+    expect($result)->toBe("sprintf((\$tmp=(\$count))>1?'%d commentaires':'%d commentaire',\$tmp)");
+});
+
+test('modcompiler_translate_dec also treats zero as plural when zero_plural is set', function (): void {
+    CurrentConfig::setCompiledTemplateCacheLanguage(true);
+    Lang::setLangInfo(['zero_plural' => true]);
+    Lang::loadArray(['%d comment' => '%d commentaire', '%d comments' => '%d commentaires']);
+
+    $result = Template::modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
+
+    expect($result)->toBe("sprintf((\$tmp=(\$count))>1||\$tmp==0?'%d commentaires':'%d commentaire',\$tmp)");
+});
+
 test('mod_explode splits on the given delimiter', function (): void {
     expect(Template::mod_explode('a,b,c', ','))->toBe(['a', 'b', 'c']);
 });

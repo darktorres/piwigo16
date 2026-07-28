@@ -24,6 +24,9 @@
 # deptrac's incremental-analysis cache (P6+)
 /.deptrac.cache
 
+# PHPUnit's own test-result cache (--order-by=defects, risky/incomplete tracking)
+/.phpunit.result.cache
+
 # Piwigo specific directories
 /_data/*
 !/_data/.gitkeep

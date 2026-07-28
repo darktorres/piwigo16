@@ -50,7 +50,15 @@ final class EphemeralKeyService
      */
     public function verify(string $key, string $additionalDataToHash = ''): bool
     {
-        $time = microtime(true);
+        // Must match generate()'s own round(microtime(true), 1) exactly --
+        // comparing a rounded $issuedAt against an unrounded $time here
+        // lets rounding push $issuedAt's stored value slightly ahead of
+        // the real clock (e.g. a true 1785265426.19 rounds up to .2),
+        // making a key generated and verified mere microseconds apart, with
+        // $validAfterSeconds = 0, look like it came "from the future" and
+        // get rejected -- confirmed live, intermittently (whichever way
+        // that instant's rounding falls), not a cross-test leak.
+        $time = round(microtime(true), 1);
         $keyParts = explode(':', $key);
 
         if (count($keyParts) !== 3) {

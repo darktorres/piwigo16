@@ -50,6 +50,35 @@ it('rejects a delete action without a valid CSRF token', function (): void {
     expect($result['status'])->toBe(400);
 });
 
+it('handles a CSRF-valid activate action on the already-active default theme as a safe no-op redirect', function (): void {
+    // ExtensionLifecycle::performThemeAction()'s 'activate' case breaks
+    // immediately with zero errors when the theme already has a DB row
+    // ($dbRow !== null), before any real activation logic runs -- 'default'
+    // is always installed in this test environment, so this exercises the
+    // CSRF-valid action-dispatch block (fs-entry lookup + performAction()
+    // call + the action_errors===[] "delete_compiled_templates()+redirect"
+    // branch) as a genuine no-op, without ever mutating real theme state.
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+
+    $page = H::navigateOk($page, '/admin.php?page=themes&action=activate&theme=default&pwg_token=' . $token);
+
+    $page->assertSee('Add a new theme');
+});
+
+it('rejects a CSRF-valid deactivate action on the only installed theme with the "need at least one theme" error', function (): void {
+    // performThemeAction()'s 'deactivate' case checks $this->repo->count(Theme) <= 1
+    // before touching anything -- 'default' is the only row in this test
+    // environment's themes table, so this always trips that guard and
+    // leaves DB state untouched.
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+
+    $page = H::navigateOk($page, '/admin.php?page=themes&action=deactivate&theme=default&pwg_token=' . $token);
+
+    $page->assertSee('Impossible to deactivate this theme, you need at least one theme');
+});
+
 it('does not attempt any action when action= is present but theme= is missing', function (): void {
     $page = H::loginAsAdmin($this);
 

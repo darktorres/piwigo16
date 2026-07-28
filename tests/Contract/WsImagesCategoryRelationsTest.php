@@ -1,0 +1,204 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Tests\Contract;
+
+use Doctrine\DBAL\Connection;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
+
+/**
+ * Ws\PwgImages::addImageCategoryRelations() -- a private helper only
+ * reachable through pwg.images.setInfo()'s `categories` parameter (or
+ * pwg.images.add(), already exercised for its "digits prefix" branch by
+ * WsImagesChunkedUploadTest). Covers the branches WsImagesSetInfoTest
+ * doesn't reach: the categories_string==='' shortcut (both replace and
+ * non-replace mode), the "no valid digit token survives filtering" shortcut,
+ * the "diff against existing associations leaves nothing new" early return,
+ * and the auto-rank branch for a category with zero prior ranked images.
+ */
+final class WsImagesCategoryRelationsTest extends ContractTestCase
+{
+    private const int FIXTURE_CAT_ID = 1;
+
+    private Connection $conn;
+
+    /** @var list<int> */
+    private array $imageIdsToDelete = [];
+
+    /** @var list<int> */
+    private array $categoryIdsToDelete = [];
+
+    #[\Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->conn = DbConnection::build();
+        $this->loginAsAdmin();
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        foreach ($this->imageIdsToDelete as $imageId) {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        }
+        foreach (array_reverse($this->categoryIdsToDelete) as $categoryId) {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE category_id = ?', [$categoryId]);
+            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ?', [$categoryId]);
+        }
+        parent::tearDown();
+    }
+
+    private function pwgToken(): string
+    {
+        $this->loginAsAdmin();
+
+        return $this->getPwgToken();
+    }
+
+    /** @param list<int> $categoryIds */
+    private function insertThrowawayImage(array $categoryIds = []): int
+    {
+        $filename = 'cat-relations-test-' . uniqid() . '.jpg';
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            [$filename, 'upload/2026/08/01/' . $filename, md5($filename)]
+        );
+        $id = (int) $this->conn->lastInsertId();
+        $this->imageIdsToDelete[] = $id;
+
+        foreach ($categoryIds as $catId) {
+            $this->conn->executeStatement(
+                'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (?, ?)',
+                [$id, $catId]
+            );
+        }
+
+        return $id;
+    }
+
+    /** Creates a virtual category (no prior photos, no prior ranked associations) via the WS API. */
+    private function createFreshCategory(): int
+    {
+        $response = $this->callWs('pwg.categories.add', [
+            'name' => 'ct_relations_' . uniqid(),
+            'pwg_token' => $this->pwgToken(),
+        ]);
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $id = $result['id'];
+        self::assertIsInt($id);
+        $this->categoryIdsToDelete[] = $id;
+
+        return $id;
+    }
+
+    /** @return list<int> */
+    private function categoryIdsOf(int $imageId): array
+    {
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->conn->fetchFirstColumn(
+                'SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ?',
+                [$imageId]
+            )
+        );
+    }
+
+    public function test_categories_empty_string_with_replace_mode_deletes_all_associations(): void
+    {
+        $imageId = $this->insertThrowawayImage([self::FIXTURE_CAT_ID]);
+        self::assertSame([self::FIXTURE_CAT_ID], $this->categoryIdsOf($imageId));
+
+        $response = $this->callWs('pwg.images.setInfo', [
+            'image_id' => $imageId,
+            'categories' => '',
+            'multiple_value_mode' => 'replace',
+            'pwg_token' => $this->pwgToken(),
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        self::assertSame([], $this->categoryIdsOf($imageId));
+    }
+
+    public function test_categories_empty_string_with_append_mode_leaves_associations_untouched(): void
+    {
+        $imageId = $this->insertThrowawayImage([self::FIXTURE_CAT_ID]);
+
+        $response = $this->callWs('pwg.images.setInfo', [
+            'image_id' => $imageId,
+            'categories' => '',
+            'multiple_value_mode' => 'append',
+            'pwg_token' => $this->pwgToken(),
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        self::assertSame([self::FIXTURE_CAT_ID], $this->categoryIdsOf($imageId));
+    }
+
+    public function test_categories_with_no_valid_digit_tokens_and_replace_mode_is_a_noop(): void
+    {
+        $imageId = $this->insertThrowawayImage([self::FIXTURE_CAT_ID]);
+
+        $response = $this->callWs('pwg.images.setInfo', [
+            'image_id' => $imageId,
+            'categories' => 'not-a-digit;also-not',
+            'multiple_value_mode' => 'replace',
+            'pwg_token' => $this->pwgToken(),
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        // every token was filtered out by the '/^\d+$/' check -- cat_ids ends
+        // up empty, hitting the *same* unconditional "delete every existing
+        // association for this image_id" query as the literal ''
+        // categories_string branch (the code doesn't distinguish "explicitly
+        // empty" from "non-empty but nothing survived filtering"), so
+        // replace_mode still wipes the pre-existing association.
+        self::assertSame([], $this->categoryIdsOf($imageId));
+    }
+
+    public function test_categories_reassociating_an_already_associated_category_is_a_noop(): void
+    {
+        $imageId = $this->insertThrowawayImage([self::FIXTURE_CAT_ID]);
+
+        $response = $this->callWs('pwg.images.setInfo', [
+            'image_id' => $imageId,
+            'categories' => (string) self::FIXTURE_CAT_ID,
+            'multiple_value_mode' => 'append',
+            'pwg_token' => $this->pwgToken(),
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        // new_cat_ids = array_diff([1], [1]) = [] -- addImageCategoryRelations()
+        // returns true immediately without touching the rank/insert machinery.
+        self::assertSame([self::FIXTURE_CAT_ID], $this->categoryIdsOf($imageId));
+    }
+
+    public function test_categories_auto_rank_on_a_brand_new_category_starts_at_one(): void
+    {
+        $freshCatId = $this->createFreshCategory();
+        $imageId = $this->insertThrowawayImage();
+
+        $response = $this->callWs('pwg.images.setInfo', [
+            'image_id' => $imageId,
+            'categories' => (string) $freshCatId,
+            'multiple_value_mode' => 'append',
+            'pwg_token' => $this->pwgToken(),
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+
+        // The category has zero prior images, so the MAX(`rank`) aggregate
+        // for it returns no row at all -- current_rank_of[$cat_id] defaults
+        // to 0, then the 'auto' branch adds 1.
+        $rank = $this->conn->fetchOne(
+            'SELECT `rank` FROM ' . Tables::imageCategory() . ' WHERE image_id = ? AND category_id = ?',
+            [$imageId, $freshCatId]
+        );
+        self::assertSame(1, is_numeric($rank) ? (int) $rank : 0);
+    }
+}

@@ -131,6 +131,22 @@ final class WsImagesMaintenanceTest extends ContractTestCase
         self::assertSame('No image found', $response['message']);
     }
 
+    public function test_syncMetadata_image_id_with_no_value_after_splitting_returns_error(): void
+    {
+        // ", ," splits (on [\s,;\|], PREG_SPLIT_NO_EMPTY) into zero tokens --
+        // a distinct branch from "not-a-number" above: the per-token
+        // ValidationPattern::ID loop never runs at all, so $image_ids stays
+        // [] by the time the *post-loop* emptiness check runs.
+        $response = $this->callWs('pwg.images.syncMetadata', [
+            'image_id' => ' , ,',
+            'pwg_token' => $this->pwgToken(),
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(1003, $response['err']);
+        self::assertSame('Invalid image_id (no value after filters)', $response['message']);
+    }
+
     public function test_syncMetadata_valid_image_id_returns_synchronized_count(): void
     {
         $response = $this->callWs('pwg.images.syncMetadata', [

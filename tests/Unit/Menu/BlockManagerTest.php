@@ -47,6 +47,13 @@ test('DisplayBlock get_position/set_position round-trip', function (): void {
     expect($display->get_position())->toBe(42);
 });
 
+test('DisplayBlock get_block returns the exact registered block it was constructed with', function (): void {
+    $registered = new RegisteredBlock('tags', 'Tags', 'core');
+    $display = new DisplayBlock($registered);
+
+    expect($display->get_block())->toBe($registered);
+});
+
 test('register_block accepts the first registration and rejects a duplicate id', function (): void {
     $manager = new BlockManager('menubar');
     $block = new RegisteredBlock('cat', 'Categories', 'core');

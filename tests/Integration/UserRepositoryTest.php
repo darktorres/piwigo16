@@ -225,4 +225,51 @@ final class UserRepositoryTest extends IntegrationTestCase
 
         $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET preferences = NULL WHERE user_id = 1");
     }
+
+    public function test_save_preferences_is_a_noop_for_a_nonexistent_user(): void
+    {
+        // No user_infos row exists for this id -- find() returns null and
+        // the method returns early rather than persisting a fresh entity.
+        $this->repo->savePreferences(\Piwigo\Common\ValueObject\UserId::from(999999), ['theme' => 'dark']);
+
+        $count = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::userInfos())
+            ->where('user_id = 999999')
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertSame('0', is_scalar($count) ? (string) $count : '');
+    }
+
+    public function test_delete_users_from_table_with_no_ids_is_a_noop(): void
+    {
+        $countBefore = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::userInfos())
+            ->executeQuery()
+            ->fetchOne();
+
+        $this->repo->deleteUsersFromTable(Tables::userInfos(), []);
+
+        $countAfter = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::userInfos())
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertSame($countBefore, $countAfter);
+    }
+
+    // findAdminIds()'s `$row['userId'] instanceof UserId` defensive throw
+    // (line 336) is not exercised here -- `user_id` is mapped through the
+    // 'user_id' custom Doctrine type (see UserInfoEntity), which converts
+    // every hydrated value to a real UserId instance unconditionally, DQL
+    // scalar selects included. There is no way to make the ORM hand back a
+    // non-UserId value through this method's public contract without
+    // bypassing the type system entirely (which findAdminIds deliberately
+    // doesn't do, precisely so this conversion always applies) -- same
+    // "verified untestable without breaking the framework's own guarantee"
+    // shape as the HttpClientService-gated skip list, just a different
+    // concrete cause.
 }

@@ -72,6 +72,23 @@ final class FilesystemHelper
     }
 
     /**
+     * Walks up from $dir to the nearest ancestor that already exists, so
+     * callers can check write access before attempting a recursive mkdir()
+     * whose immediate parent may not exist yet.
+     */
+    private static function nearestExistingAncestor(string $dir): string
+    {
+        while (! is_dir($dir)) {
+            $parent = dirname($dir);
+            if ($parent === $dir) {
+                break;
+            }
+            $dir = $parent;
+        }
+        return $dir;
+    }
+
+    /**
      * creates directory if not exists and ensures that directory is writable
      *
      * @param int $flags combination of self::MKGETDIR_xxx
@@ -84,7 +101,13 @@ final class FilesystemHelper
             }
             $umask = umask(0);
             $chmod_value = \Piwigo\Config\CurrentConfig::chmodValue();
-            $mkd = @mkdir($dir, $chmod_value, ((bool) ($flags & self::MKGETDIR_RECURSIVE)) ? true : false);
+            // Checking the nearest existing ancestor's write access before
+            // calling mkdir() avoids a PHP-level warning on the deterministic
+            // permission-denied case; a concurrent creation of the same
+            // directory by another process is still handled below by the
+            // is_dir() re-check, same as before.
+            $mkd = is_writable(self::nearestExistingAncestor($dir))
+                && mkdir($dir, $chmod_value, ((bool) ($flags & self::MKGETDIR_RECURSIVE)) ? true : false);
             umask($umask);
             // Retest existence on mkdir() failure: concurrent requests (e.g.
             // parallel i.php derivative generations on a cold cache) race to
@@ -213,7 +236,12 @@ final class FilesystemHelper
                 closedir($fh);
             }
 
-            if (@rmdir($path)) {
+            // Checking the parent directory's write access first avoids a
+            // PHP-level warning on the deterministic permission-denied case
+            // -- rename() needs the same write access on $path's parent to
+            // remove its old entry, so a locked parent rules out both.
+            $canModifyParent = is_writable(dirname($path));
+            if ($canModifyParent && rmdir($path)) {
                 return true;
             }
             if ($trash_path !== null && $trash_path !== '') {
@@ -222,7 +250,9 @@ final class FilesystemHelper
                 }
                 while ((bool) ($r = $trash_path . '/' . md5(uniqid((string) mt_rand(), true)))) {
                     if (! is_dir($r)) {
-                        @rename($path, $r);
+                        if ($canModifyParent) {
+                            rename($path, $r);
+                        }
                         break;
                     }
                 }

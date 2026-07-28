@@ -54,3 +54,43 @@ it('shows the private status and the single granted group for category 2', funct
     $groupsSelected = $page->attribute('[data-selectize=groups]', 'data-value');
     expect(json_decode((string) $groupsSelected, true))->toBe([1]);
 });
+
+it('submits a status/group permission change and persists it', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Cat Perm Submit Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+
+    // Fixture group 3 ("Guests") -- see this file's own fixture-shape
+    // memory note.
+    $result = H::adminPost($page, '/admin.php?page=album-' . $albumId . '-permissions', [
+        'pwg_token' => H::pwgToken($page),
+        'status' => 'private',
+        'groups' => ['3'],
+        'users' => [],
+    ]);
+
+    expect($result['status'])->toBe(200);
+    expect($result['body'])->toContain('Album updated successfully');
+
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+    $prefix = $prefix !== false ? $prefix : 'piwigo_';
+
+    $statusRow = $db->query(sprintf('SELECT status FROM %scategories WHERE id = %d', $prefix, $albumId));
+    $statusAssoc = $statusRow instanceof mysqli_result ? $statusRow->fetch_assoc() : null;
+    expect(is_array($statusAssoc) ? $statusAssoc['status'] : 'MISSING')->toBe('private');
+
+    $groupRow = $db->query(sprintf('SELECT group_id FROM %sgroup_access WHERE cat_id = %d', $prefix, $albumId));
+    $groupAssoc = $groupRow instanceof mysqli_result ? $groupRow->fetch_assoc() : null;
+    expect(is_array($groupAssoc) ? (int) $groupAssoc['group_id'] : -1)->toBe(3);
+    $db->close();
+});

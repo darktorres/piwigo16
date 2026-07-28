@@ -88,4 +88,15 @@ final class FeedRepositoryTest extends IntegrationTestCase
         self::assertNotNull($row['lastCheck']);
         self::assertSame($lastCheck->format('Y-m-d H:i:s'), $row['lastCheck']->format('Y-m-d H:i:s'));
     }
+
+    public function test_update_last_check_on_an_unknown_id_is_a_silent_no_op(): void
+    {
+        $unknownId = 'p17-test-' . bin2hex(random_bytes(20));
+
+        // Should neither throw nor create a row -- findById() confirms the
+        // id genuinely stays absent afterward.
+        $this->repo->updateLastCheck($unknownId, new \DateTimeImmutable('2024-03-05 12:34:56'));
+
+        self::assertNull($this->repo->findById($unknownId));
+    }
 }

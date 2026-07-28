@@ -18,6 +18,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
+    use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Rate\RateRepository;
     use Piwigo\Rate\RateService;
     use Piwigo\Users\CurrentUser;
@@ -179,6 +180,80 @@ namespace Piwigo\Tests\Integration {
                 ['score' => null, 'average' => null, 'count' => 0],
                 $this->service->updateRatingScore(5)
             );
+        }
+
+        public function test_update_rating_score_returns_a_plugin_handlers_replacement_verbatim(): void
+        {
+            $override = ['score' => 999, 'average' => 9.9, 'count' => 42];
+            EventDispatcher::get()->addEventHandler(
+                'update_rating_score',
+                static fn (mixed $data, int|false $elementId): array => $override
+            );
+
+            try {
+                self::assertSame($override, $this->service->updateRatingScore(5));
+            } finally {
+                EventDispatcher::reset();
+            }
+        }
+
+        /**
+         * Simulates a returning anonymous rater whose IP address changed
+         * since their last visit (cookie still says the old, saved
+         * anonymous_id) while ALSO already having a rate stored under the
+         * exact new ip-derived anonymous_id for a different element (e.g.
+         * a prior visit from the same subnet) -- the
+         * `$existingElementIds !== []` branch deletes that stale
+         * old-anonymous_id row before reassignAnonymousId() runs, avoiding
+         * a primary-key collision on (element_id, user_id, anonymous_id).
+         * Only the row already at the new anonymous_id survives.
+         */
+        public function test_rate_for_a_returning_anonymous_user_deletes_the_stale_duplicate_before_reassigning(): void
+        {
+            CurrentUser::set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
+            $_COOKIE['pwg_anonymous_rater'] = '99.99.99';
+
+            $this->conn->insert(Tables::rate(), ['element_id' => 4, 'user_id' => 2, 'anonymous_id' => '99.99.99', 'rate' => 2, 'date' => '2026-08-01']);
+            $this->conn->insert(Tables::rate(), ['element_id' => 4, 'user_id' => 2, 'anonymous_id' => '10.20.30', 'rate' => 1, 'date' => '2026-08-01']);
+
+            try {
+                $result = $this->service->rate(5, 3);
+
+                self::assertIsArray($result);
+                self::assertSame(['10.20.30'], $this->fetchAnonymousIdsForElement(4, 2));
+                self::assertSame('10.20.30', $_COOKIE['pwg_anonymous_rater']);
+            } finally {
+                $this->conn->createQueryBuilder()->delete(Tables::rate())->where('element_id = 4')->andWhere('user_id = 2')->executeStatement();
+                $this->conn->createQueryBuilder()->delete(Tables::rate())->where('element_id = 5')->andWhere('user_id = 2')->executeStatement();
+                $this->conn->createQueryBuilder()->update(Tables::images())->set('rating_score', 'NULL')->where('id = 5')->executeStatement();
+            }
+        }
+
+        /**
+         * @return list<string>
+         */
+        private function fetchAnonymousIdsForElement(int $elementId, int $userId): array
+        {
+            $values = $this->conn->createQueryBuilder()
+                ->select('anonymous_id')
+                ->from(Tables::rate())
+                ->where('element_id = :elementId')
+                ->andWhere('user_id = :userId')
+                ->setParameter('elementId', $elementId)
+                ->setParameter('userId', $userId)
+                ->executeQuery()
+                ->fetchFirstColumn();
+
+            $result = [];
+            foreach ($values as $value) {
+                if (is_string($value)) {
+                    $result[] = $value;
+                }
+            }
+
+            sort($result);
+
+            return $result;
         }
 
         private function fetchRate(int $elementId, int $userId): ?string

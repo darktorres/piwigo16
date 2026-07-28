@@ -294,3 +294,282 @@ test('operator priority regroups "a OR b c" as "a OR (b c)"', function (): void 
     expect(qexprSingle($group->tokens[0])->term)->toBe('b');
     expect(qexprSingle($group->tokens[1])->term)->toBe('c');
 });
+
+test('operator priority regroups a 4-term "a OR b c d" so the whole AND-run joins the group', function (): void {
+    // Distinct from the 3-term test above: the inner regroup loop
+    // (QMultiToken::check_operator_priority()'s own `for ($j = $i + 1; ...)`)
+    // only actually iterates once there's a 4th term to pull in -- with
+    // only 3 terms the loop's own condition is never true.
+    $expr = new QExpression('a OR b c d', qexprScopes());
+
+    expect($expr->tokens)->toHaveCount(2);
+    expect(qexprSingle($expr->tokens[0])->term)->toBe('a');
+    $group = qexprMulti($expr->tokens[1]);
+    expect($group->tokens)->toHaveCount(3);
+    expect(qexprSingle($group->tokens[0])->term)->toBe('b');
+    expect(qexprSingle($group->tokens[1])->term)->toBe('c');
+    expect(qexprSingle($group->tokens[2])->term)->toBe('d');
+});
+
+test('operator priority stops regrouping at the next OR, using "a OR b c OR d"', function (): void {
+    // The inner regroup loop's own break-on-lower-priority branch: 'd'
+    // carries its own OR (lower priority than the AND run being
+    // collected), so only (b c) get bundled under the leading OR -- 'd'
+    // stays a separate top-level term with its OR intact.
+    $expr = new QExpression('a OR b c OR d', qexprScopes());
+
+    expect($expr->tokens)->toHaveCount(3);
+    expect(qexprSingle($expr->tokens[0])->term)->toBe('a');
+    expect($expr->tokens[1]->is_single)->toBeFalse();
+    $group = qexprMulti($expr->tokens[1]);
+    expect($group->tokens)->toHaveCount(2);
+    expect(qexprSingle($group->tokens[0])->term)->toBe('b');
+    expect(qexprSingle($group->tokens[1])->term)->toBe('c');
+    expect(qexprSingle($expr->tokens[2])->term)->toBe('d');
+    expect($expr->tokens[2]->modifier & QSingleToken::QST_OR)->toBe(QSingleToken::QST_OR);
+});
+
+test('QSearchScope::parse rejects an empty term when the scope is not nullable', function (): void {
+    // Unreachable through QExpression's own tokenizer: QMultiToken::push()
+    // already drops an empty-term token before scope->parse() is ever
+    // called, unless the scope is nullable -- and a nullable scope's
+    // parse() always returns true regardless of term length. Calling
+    // parse() directly is the only way to exercise this branch.
+    $scope = new QSearchScope('author', [], false);
+    $token = new QSingleToken('', 0, $scope);
+
+    expect($scope->parse($token))->toBeFalse();
+});
+
+test('QSingleToken::__toString prefixes a leading wildcard alone', function (): void {
+    $token = new QSingleToken('llo', QSingleToken::QST_WILDCARD_BEGIN, null);
+
+    expect((string) $token)->toBe('*llo');
+});
+
+test('QSingleToken::__toString wraps a quoted term alone in double quotes', function (): void {
+    $token = new QSingleToken('hello world', QSingleToken::QST_QUOTED, null);
+
+    expect((string) $token)->toBe('"hello world"');
+});
+
+test('QSingleToken::__toString appends a trailing wildcard alone', function (): void {
+    $token = new QSingleToken('hel', QSingleToken::QST_WILDCARD_END, null);
+
+    expect((string) $token)->toBe('hel*');
+});
+
+test('QSingleToken::__toString round-trips a scoped, quoted, doubly-wildcarded term', function (): void {
+    $scope = new QSearchScope('tag', []);
+    $modifier = QSingleToken::QST_WILDCARD_BEGIN | QSingleToken::QST_QUOTED | QSingleToken::QST_WILDCARD_END;
+    $token = new QSingleToken('mid', $modifier, $scope);
+
+    expect((string) $token)->toBe('tag:*"mid"*');
+});
+
+test('QDateRangeScope applies a strict lower bound for a > prefix, shifting to end-of-period', function (): void {
+    $expr = new QExpression('created:>2020', qexprScopes());
+    $token = $expr->stokens[0];
+
+    // strict[0]=1 makes the year-only default land on Dec 31st 23:59:59
+    // instead of Jan 1st -- "after 2020" means "from 2021 onward".
+    expect(qexprDateData($token)[0])->toBe('2020-12-31 23:59:59');
+    expect(qexprDateData($token)[1])->toBe('');
+});
+
+test('QDateRangeScope applies a strict upper bound for a < prefix', function (): void {
+    $expr = new QExpression('created:<2020', qexprScopes());
+    $token = $expr->stokens[0];
+
+    expect(qexprDateData($token)[0])->toBe('');
+    expect(qexprDateData($token)[1])->toBe('2020-1-1');
+});
+
+test('QDateRangeScope trailing wildcard sets the upper range only', function (): void {
+    $expr = new QExpression('created:2020*', qexprScopes());
+    $token = $expr->stokens[0];
+
+    expect(qexprDateData($token)[0])->toBe('2020-1-1');
+    expect(qexprDateData($token)[1])->toBe('');
+});
+
+test('QDateRangeScope get_sql returns IS NOT NULL for an empty wildcarded nullable range', function (): void {
+    $expr = new QExpression('created:*', qexprScopes());
+    $token = $expr->stokens[0];
+
+    // leading-wildcard-with-empty-term also exercises the WILDCARD_BEGIN
+    // parse() branch itself (range = ['', $str]) before get_sql() collapses
+    // both sides to an empty clause list.
+    expect(qexprDateData($token))->toBe(['', '']);
+    expect(qexprScope($token->scope)->get_sql('images.date_creation', $token))
+        ->toBe('images.date_creation IS NOT NULL');
+});
+
+test('QDateRangeScope get_sql returns IS NULL for a plain empty nullable range', function (): void {
+    $expr = new QExpression('created:', qexprScopes());
+    $token = $expr->stokens[0];
+
+    expect(qexprScope($token->scope)->get_sql('images.date_creation', $token))
+        ->toBe('images.date_creation IS NULL');
+});
+
+test('QDateRangeScope::parse rejects a fully-empty range on a non-nullable scope', function (): void {
+    // Same unreachable-through-the-tokenizer reasoning as QSearchScope's
+    // own direct-call test above -- 'posted' here is deliberately
+    // non-nullable (unlike qexprScopes()'s own 'created'), and an empty
+    // term never survives QMultiToken::push() for a non-nullable scope.
+    $scope = new QDateRangeScope('posted', []);
+    $token = new QSingleToken('', 0, $scope);
+
+    expect($scope->parse($token))->toBeFalse();
+});
+
+test('QNumericRangeScope applies a strict upper bound for a < prefix', function (): void {
+    $expr = new QExpression('width:<800', qexprScopes());
+    $token = $expr->stokens[0];
+
+    expect(qexprRangeData($token)['range'])->toBe(['', 800.0]);
+    expect(qexprRangeData($token)['strict'][1])->toBe(1);
+});
+
+test('QNumericRangeScope leading wildcard sets the lower range empty, upper to the value', function (): void {
+    $expr = new QExpression('width:*800', qexprScopes());
+    $token = $expr->stokens[0];
+
+    expect(qexprRangeData($token)['range'])->toBe(['', 800.0]);
+});
+
+test('QNumericRangeScope trailing wildcard sets the upper range empty, lower to the value', function (): void {
+    $expr = new QExpression('width:800*', qexprScopes());
+    $token = $expr->stokens[0];
+
+    expect(qexprRangeData($token)['range'])->toBe([800.0, '']);
+});
+
+test('QNumericRangeScope resolves an aperture-style fraction (a/b) for a bare value', function (): void {
+    $expr = new QExpression('ratio:1/2', qexprScopes());
+    $token = $expr->stokens[0];
+
+    // bare value -> [term, term], epsilon (0.001) subtracted/added on each
+    // side -- computed via the exact same floating-point expression the
+    // production code performs, not a hand-rounded decimal literal.
+    expect(qexprRangeData($token)['range'][0])->toBe(0.5 - 0.001);
+    expect(qexprRangeData($token)['range'][1])->toBe(0.5 + 0.001);
+});
+
+test('QNumericRangeScope expands an M suffix to millions', function (): void {
+    $expr = new QExpression('filesize:2m', qexprScopes());
+    $token = $expr->stokens[0];
+
+    // bare value: lower bound is the plain multiplication (no rounding,
+    // i=0); upper bound rounds up to the next whole million minus 1,
+    // mirroring the class's own "6k -> 6999" example scaled to millions.
+    expect(qexprRangeData($token)['range'][0])->toBe(2000000.0);
+    expect(qexprRangeData($token)['range'][1])->toBe(2999999.0);
+});
+
+test('QNumericRangeScope rounds a decimal k-suffixed value using its requested precision', function (): void {
+    $expr = new QExpression('filesize:6.12k', qexprScopes());
+    $token = $expr->stokens[0];
+
+    // matches the class's own "6.12k goes only up to 6129" docblock
+    // example -- 2 decimal digits of precision -> divisor 100.
+    expect(qexprRangeData($token)['range'][0])->toBe(6120.0);
+    expect(qexprRangeData($token)['range'][1])->toBe(6129.0);
+});
+
+test('QNumericRangeScope rejects a non-numeric value on a non-nullable scope and drops the token', function (): void {
+    $expr = new QExpression('width:abc hello', qexprScopes());
+
+    // parse() returns false (both sides collapse to '' with no digits at
+    // all to match) -> the token is removed, same removal mechanism as
+    // the QDateRangeScope non-date test above.
+    expect($expr->stokens)->toHaveCount(1);
+    expect($expr->stokens[0]->term)->toBe('hello');
+});
+
+test('QNumericRangeScope get_sql returns IS NULL for a plain empty nullable range', function (): void {
+    $expr = new QExpression('score:', qexprScopes());
+    $token = $expr->stokens[0];
+
+    expect(qexprScope($token->scope)->get_sql('images.rating_score', $token))
+        ->toBe('images.rating_score IS NULL');
+});
+
+test('QNumericRangeScope get_sql returns IS NOT NULL for an empty wildcarded nullable range', function (): void {
+    $expr = new QExpression('score:*', qexprScopes());
+    $token = $expr->stokens[0];
+
+    expect(qexprScope($token->scope)->get_sql('images.rating_score', $token))
+        ->toBe('images.rating_score IS NOT NULL');
+});
+
+test('an opening paren pushes pending leading text before recursing', function (): void {
+    $expr = new QExpression('hello(world)', qexprScopes());
+
+    expect($expr->tokens)->toHaveCount(2);
+    expect(qexprSingle($expr->tokens[0])->term)->toBe('hello');
+    expect($expr->tokens[1]->is_single)->toBeFalse();
+    $group = qexprMulti($expr->tokens[1]);
+    expect($group->tokens)->toHaveCount(1);
+    expect(qexprSingle($group->tokens[0])->term)->toBe('world');
+});
+
+test('a text scope applied before a parenthesized group scopes every word inside it', function (): void {
+    $expr = new QExpression('tag:(sunset OR sunrise)', qexprScopes());
+
+    expect($expr->stokens)->toHaveCount(2);
+    expect(qexprScope($expr->stokens[0]->scope)->id)->toBe('tag');
+    expect(qexprScope($expr->stokens[1]->scope)->id)->toBe('tag');
+});
+
+test('a text scope applied before a parenthesized group recurses into a nested sub-group too', function (): void {
+    $expr = new QExpression('tag:(sunset (deep))', qexprScopes());
+
+    expect($expr->stokens)->toHaveCount(2);
+    expect(qexprSingle($expr->stokens[0])->term)->toBe('sunset');
+    expect(qexprScope($expr->stokens[0]->scope)->id)->toBe('tag');
+    expect(qexprSingle($expr->stokens[1])->term)->toBe('deep');
+    expect(qexprScope($expr->stokens[1]->scope)->id)->toBe('tag');
+});
+
+test('a quote immediately following pending text pushes that text first', function (): void {
+    $expr = new QExpression('hello"world"', qexprScopes());
+
+    expect($expr->stokens)->toHaveCount(2);
+    expect($expr->stokens[0]->term)->toBe('hello');
+    expect($expr->stokens[1]->term)->toBe('world');
+    expect($expr->stokens[1]->modifier & QSingleToken::QST_QUOTED)->toBe(QSingleToken::QST_QUOTED);
+});
+
+test('a dot between two digits is kept as part of the term, not treated as a separator', function (): void {
+    $expr = new QExpression('2.8', qexprScopes());
+
+    expect($expr->stokens)->toHaveCount(1);
+    expect($expr->stokens[0]->term)->toBe('2.8');
+});
+
+test('a wildcard immediately after a closing quote sets QST_WILDCARD_END', function (): void {
+    $expr = new QExpression('"hello world"*', qexprScopes());
+
+    expect($expr->stokens)->toHaveCount(1);
+    expect($expr->stokens[0]->term)->toBe('hello world');
+    $modifier = $expr->stokens[0]->modifier;
+    expect($modifier & QSingleToken::QST_QUOTED)->toBe(QSingleToken::QST_QUOTED);
+    expect($modifier & QSingleToken::QST_WILDCARD_END)->toBe(QSingleToken::QST_WILDCARD_END);
+});
+
+test('the NOT keyword sets QST_NOT on the following token and is dropped entirely', function (): void {
+    $expr = new QExpression('NOT hello', qexprScopes());
+
+    expect($expr->stokens)->toHaveCount(1);
+    expect($expr->stokens[0]->term)->toBe('hello');
+    expect($expr->stokens[0]->modifier & QSingleToken::QST_NOT)->toBe(QSingleToken::QST_NOT);
+});
+
+test('an empty parenthesized group is dropped entirely', function (): void {
+    $expr = new QExpression('() hello', qexprScopes());
+
+    expect($expr->tokens)->toHaveCount(1);
+    expect(qexprSingle($expr->tokens[0])->term)->toBe('hello');
+});

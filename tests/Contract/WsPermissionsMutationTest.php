@@ -125,4 +125,112 @@ final class WsPermissionsMutationTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
     }
+
+    /**
+     * add()'s own group_id branch (getUppercatIds()/getSubcatIds() +
+     * groupAccess mass-insert) -- WsPermissionsMutationTest's other tests
+     * only ever pass user_id, never group_id.
+     */
+    public function test_add_group_permission_grants_group_access_to_the_category(): void
+    {
+        $token = $this->getPwgToken();
+        $cat = $this->callWs('pwg.categories.add', [
+            'name' => 'ct_private_group_' . uniqid(),
+            'status' => 'private',
+        ]);
+        $this->privateCatId = self::resultId($cat);
+
+        $response = $this->callWs('pwg.permissions.add', [
+            'cat_id' => [$this->privateCatId],
+            'group_id' => [1],
+            'pwg_token' => $token,
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $categories = $result['categories'];
+        self::assertIsArray($categories);
+        self::assertNotEmpty($categories);
+        $entry = $categories[0];
+        self::assertIsArray($entry);
+        self::assertSame($this->privateCatId, $entry['id']);
+        self::assertIsArray($entry['groups']);
+        self::assertContains(1, $entry['groups']);
+    }
+
+    public function test_remove_group_permission_revokes_group_access(): void
+    {
+        $token = $this->getPwgToken();
+        $cat = $this->callWs('pwg.categories.add', [
+            'name' => 'ct_private_group_' . uniqid(),
+            'status' => 'private',
+        ]);
+        $this->privateCatId = self::resultId($cat);
+
+        $this->callWs('pwg.permissions.add', [
+            'cat_id' => [$this->privateCatId],
+            'group_id' => [1],
+            'pwg_token' => $token,
+        ]);
+
+        $response = $this->callWs('pwg.permissions.remove', [
+            'cat_id' => [$this->privateCatId],
+            'group_id' => [1],
+            'pwg_token' => $token,
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $categories = $result['categories'];
+        self::assertIsArray($categories);
+        $entry = $categories[0] ?? null;
+        if ($entry !== null) {
+            self::assertIsArray($entry);
+            self::assertIsArray($entry['groups']);
+            self::assertNotContains(1, $entry['groups']);
+        }
+    }
+
+    public function test_getList_too_many_filters_returns_error(): void
+    {
+        $response = $this->callWs('pwg.permissions.getList', [
+            'cat_id' => [1],
+            'group_id' => [1],
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(1003, $response['err']);
+        self::assertSame('Too many parameters, provide cat_id OR user_id OR group_id', $response['message']);
+    }
+
+    public function test_getList_filters_by_group_id(): void
+    {
+        $token = $this->getPwgToken();
+        $cat = $this->callWs('pwg.categories.add', [
+            'name' => 'ct_private_group_filter_' . uniqid(),
+            'status' => 'private',
+        ]);
+        $this->privateCatId = self::resultId($cat);
+        $this->callWs('pwg.permissions.add', [
+            'cat_id' => [$this->privateCatId],
+            'group_id' => [1],
+            'pwg_token' => $token,
+        ]);
+
+        $matching = $this->callWs('pwg.permissions.getList', ['group_id' => [1]]);
+        self::assertSame('ok', $matching['stat']);
+        $matchingResult = $matching['result'];
+        self::assertIsArray($matchingResult);
+        self::assertIsArray($matchingResult['categories']);
+        $matchingIds = array_column($matchingResult['categories'], 'id');
+        self::assertContains($this->privateCatId, $matchingIds);
+
+        $nonMatching = $this->callWs('pwg.permissions.getList', ['group_id' => [999999]]);
+        self::assertSame('ok', $nonMatching['stat']);
+        $nonMatchingResult = $nonMatching['result'];
+        self::assertIsArray($nonMatchingResult);
+        self::assertSame([], $nonMatchingResult['categories']);
+    }
 }

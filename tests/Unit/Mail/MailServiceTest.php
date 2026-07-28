@@ -51,6 +51,13 @@ test('formatEmail strips newlines from both name and email (header injection)', 
         ->toBe('"JaneBcc: evil@test" <jane@example.test>');
 });
 
+test('formatEmail returns the name concatenated as-is when the email already contains angle brackets', function (): void {
+    $service = new MailService();
+
+    expect($service->formatEmail('Jane Doe', 'Real Name <jane@example.test>'))
+        ->toBe('"Jane Doe" Real Name <jane@example.test>');
+});
+
 test('unformatEmail parses a "name <email>" string', function (): void {
     $service = new MailService();
 
@@ -126,6 +133,19 @@ test('getCleanRecipientsList accepts a single hashmap recipient', function (): v
     ]);
 });
 
+test('getCleanRecipientsList falls back to a scalar-cast email for a non-array, non-string item inside an array of hashmaps', function (): void {
+    $service = new MailService();
+
+    // The first item being an array routes into the "array of hashmaps"
+    // branch; the second item (a bare int) is neither an array nor a
+    // string, so it takes the scalar-cast fallback instead of
+    // unformatEmail().
+    expect($service->getCleanRecipientsList([['email' => 'a@test.com'], 42]))->toBe([
+        ['email' => 'a@test.com', 'name' => ''],
+        ['email' => '42', 'name' => ''],
+    ]);
+});
+
 test('getStrictEmailList strips names, keeping only the bare email addresses', function (): void {
     $service = new MailService();
 
@@ -166,6 +186,16 @@ test('getMailSenderName uses mail_sender_name when configured', function (): voi
     $service = new MailService();
 
     expect($service->getMailSenderName())->toBe('Custom Sender');
+});
+
+test('getMailSenderEmail uses the configured mail_sender_email without falling back to the webmaster address', function (): void {
+    CurrentConfig::setMailSenderEmail('sender@example.test');
+    // No WebmasterMailProviderInterface fake needed here -- a configured,
+    // non-empty mail_sender_email short-circuits before webmasterMailAddress()
+    // (which would otherwise need a real DB connection) is ever reached.
+    $service = new MailService();
+
+    expect($service->getMailSenderEmail())->toBe('sender@example.test');
 });
 
 test('getMailConfiguration reports use_smtp false when smtp_host is unset', function (): void {

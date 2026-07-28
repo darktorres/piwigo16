@@ -84,3 +84,33 @@ test('validate accepts a custom regex pattern', function (): void {
 
     expect($validator->validate('mode', ['mode' => 'lost'], false, '/^(lost|reset)$/'))->toBeNull();
 });
+
+test('validate raises a hacking-attempt error when an array item is itself non-scalar', function (): void {
+    // Distinct from "value is not an array" above -- here the outer value
+    // IS an array, but one of ITS OWN items is a non-scalar (e.g. a
+    // nested array), which has no sane string form to run $pattern
+    // against.
+    $validator = new InputValidator();
+
+    expect(fn (): ?true => $validator->validate('ids', ['ids' => [['nested' => 'array']]], true, ValidationPattern::ID))
+        ->toThrow(RuntimeException::class, '[Hacking attempt] an item is not valid in input parameter "ids"');
+});
+
+test('checkUrlFormat rejects a url missing the http(s) protocol prefix', function (): void {
+    expect(InputValidator::checkUrlFormat('example.com/no-protocol'))->toBeFalse();
+});
+
+test('checkUrlFormat accepts a well-formed http url', function (): void {
+    expect(InputValidator::checkUrlFormat('http://example.com/path?query=1'))->toBeTrue();
+});
+
+test('checkUrlFormat accepts a well-formed https url', function (): void {
+    expect(InputValidator::checkUrlFormat('https://example.com'))->toBeTrue();
+});
+
+test('checkUrlFormat rejects a url with a valid protocol prefix but no real host', function (): void {
+    // Reaches filter_var(FILTER_VALIDATE_URL) itself (distinct from the
+    // protocol-prefix check above, which this string already passes) --
+    // confirmed empirically that a bare "http://" fails FILTER_VALIDATE_URL.
+    expect(InputValidator::checkUrlFormat('http://'))->toBeFalse();
+});

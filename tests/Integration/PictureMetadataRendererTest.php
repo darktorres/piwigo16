@@ -1,0 +1,275 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Tests\Integration;
+
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\CurrentConfigService;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
+use Piwigo\Image\SrcImage;
+use Piwigo\Picture\PictureMetadataRenderer;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Template;
+
+/**
+ * The Unit sibling (tests/Unit/Picture/PictureMetadataRendererTest.php)
+ * only exercises the show_exif=false/show_iptc=false guard -- every other
+ * branch needs a real image file on disk (getExifData()/getIptcData() are
+ * filesystem-bound, not DB-bound), hence Integration level here. Reuses
+ * the same hand-rolled JPEG APP1(EXIF)/APP13(IPTC) marker-segment
+ * construction technique as MetadataServiceTest.php in this same
+ * directory (see that file's own docblocks for why: neither ImageMagick's
+ * `-set`/`-define` nor a synthetic `xc:` canvas actually persists either
+ * profile).
+ */
+final class PictureMetadataRendererTest extends IntegrationTestCase
+{
+    private string $scratchDir;
+
+    private PictureMetadataRenderer $renderer;
+
+    #[\Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        CurrentConfig::reset();
+        ConfigLoader::applyDefaults();
+        ConfigLoader::applyEnvOverrides();
+
+        CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 2)));
+        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
+        CurrentTemplate::set(new Template());
+
+        $this->scratchDir = dirname(__DIR__, 2) . '/_data/picture-metadata-renderer-test-scratch';
+        @mkdir($this->scratchDir, 0o777, true);
+
+        $this->renderer = new PictureMetadataRenderer();
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        $files = glob($this->scratchDir . '/*');
+        foreach ($files !== false ? $files : [] as $file) {
+            @unlink($file);
+        }
+        @rmdir($this->scratchDir);
+
+        CurrentTemplate::reset();
+        Lang::restore(null);
+
+        parent::tearDown();
+    }
+
+    /**
+     * @param  array<string, string>  $tags  tag name => ASCII value, e.g. ['Artist' => 'Jane']
+     */
+    private function buildApp1ExifSegment(array $tags): string
+    {
+        $tagIds = [
+            'ImageDescription' => 0x010E,
+            'Artist' => 0x013B,
+        ];
+        $numEntries = count($tags);
+        $ifdStart = 8;
+        $ifdSize = 2 + $numEntries * 12 + 4;
+        $dataAreaStart = $ifdStart + $ifdSize;
+
+        $entries = '';
+        $dataArea = '';
+        $currentDataOffset = $dataAreaStart;
+        foreach ($tags as $name => $value) {
+            $tagId = $tagIds[$name];
+            $bytes = $value . "\x00";
+            $count = strlen($bytes);
+            if ($count <= 4) {
+                $entries .= pack('v', $tagId) . pack('v', 2) . pack('V', $count) . str_pad($bytes, 4, "\x00");
+            } else {
+                $entries .= pack('v', $tagId) . pack('v', 2) . pack('V', $count) . pack('V', $currentDataOffset);
+                $dataArea .= $bytes;
+                $currentDataOffset += $count;
+            }
+        }
+
+        $tiff = 'II' . pack('v', 42) . pack('V', 8)
+            . pack('v', $numEntries)
+            . $entries
+            . pack('V', 0)
+            . $dataArea;
+
+        $exifHeader = "Exif\x00\x00" . $tiff;
+
+        return "\xFF\xE1" . pack('n', strlen($exifHeader) + 2) . $exifHeader;
+    }
+
+    /**
+     * @param  list<array{0: int<0, 255>, 1: string}>  $records  [datasetNumber, value] pairs, record 2 (Application Record)
+     */
+    private function buildApp13IptcSegment(array $records): string
+    {
+        $iptcData = '';
+        foreach ($records as [$dataset, $value]) {
+            $iptcData .= "\x1c" . chr(2) . chr($dataset) . pack('n', strlen($value)) . $value;
+        }
+        $blockData = $iptcData;
+        if (strlen($blockData) % 2 !== 0) {
+            $blockData .= "\x00";
+        }
+        $block = '8BIM' . pack('n', 0x0404) . chr(0) . "\x00" . pack('N', strlen($iptcData)) . $blockData;
+        $psHeader = "Photoshop 3.0\x00" . $block;
+
+        return "\xFF\xED" . pack('n', strlen($psHeader) + 2) . $psHeader;
+    }
+
+    /**
+     * Splices 1+ raw marker segments (built by buildApp1ExifSegment()/
+     * buildApp13IptcSegment() above) right after a real, minimal GD JPEG's
+     * own SOI marker.
+     */
+    private function makeJpegWithSegments(string ...$segments): string
+    {
+        $img = imagecreatetruecolor(6, 6);
+        self::assertNotFalse($img);
+        ob_start();
+        imagejpeg($img);
+        $base = ob_get_clean();
+        self::assertNotFalse($base);
+
+        return substr($base, 0, 2) . implode('', $segments) . substr($base, 2);
+    }
+
+    /**
+     * @return array<string, array{src_image: SrcImage}>
+     */
+    private function makePicture(string $relativePath): array
+    {
+        return [
+            'current' => [
+                'src_image' => new SrcImage(['id' => 1, 'path' => $relativePath, 'file' => basename($relativePath), 'width' => 6, 'height' => 6]),
+            ],
+        ];
+    }
+
+    public function test_render_appends_exif_metadata_with_direct_and_nested_field_tokens(): void
+    {
+        CurrentConfig::setShowExif(true);
+        CurrentConfig::setShowIptc(false);
+        // 'COMPUTED;Height' is a real nested key exif_read_data() always
+        // populates, even with zero embedded tags -- exercises the ';'
+        // token branch alongside the 2 direct fields.
+        CurrentConfig::setShowExifFields(['Artist', 'ImageDescription', 'COMPUTED;Height']);
+        // Only 'Artist' gets a translation -- exercises both the
+        // Lang::has() true and false sub-branches in the same test.
+        // Lang::loadArray() (not restore()): Lang::t() reads through the
+        // separate Translator singleton, which only loadArray() seeds --
+        // confirmed live, restore() alone (which only updates Lang::has()'s
+        // own table) leaves Lang::t() returning the untranslated key.
+        Lang::loadArray(['exif_field_Artist' => 'Translated Artist']);
+
+        $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-fields.jpg';
+        file_put_contents(
+            dirname(__DIR__, 2) . '/' . $relativePath,
+            $this->makeJpegWithSegments($this->buildApp1ExifSegment(['Artist' => 'Jane Photographer', 'ImageDescription' => 'A test photo']))
+        );
+
+        $this->renderer->render($this->makePicture($relativePath));
+
+        $metadata = CurrentTemplate::get()->get_template_vars('metadata');
+        self::assertIsArray($metadata);
+        self::assertCount(1, $metadata);
+        self::assertIsArray($metadata[0]);
+        self::assertSame('EXIF Metadata', $metadata[0]['TITLE']);
+        self::assertSame([
+            'Translated Artist' => 'Jane Photographer',
+            'ImageDescription' => 'A test photo',
+            // allowHtmlInMetadata defaults to false -- getExifData()'s own
+            // HTML-strip pass runs strip_tags((string) $value) on every
+            // scalar result, coercing this int (from exif_read_data()'s
+            // own real COMPUTED.Height key) into a string.
+            'Height' => '6',
+        ], $metadata[0]['lines']);
+    }
+
+    public function test_render_appends_nothing_for_exif_when_no_configured_field_matches(): void
+    {
+        CurrentConfig::setShowExif(true);
+        CurrentConfig::setShowIptc(false);
+        CurrentConfig::setShowExifFields(['ThisFieldDoesNotExistAnywhere']);
+
+        $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-empty.jpg';
+        file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $this->makeJpegWithSegments($this->buildApp1ExifSegment(['Artist' => 'Jane'])));
+
+        $this->renderer->render($this->makePicture($relativePath));
+
+        self::assertNull(CurrentTemplate::get()->get_template_vars('metadata'));
+    }
+
+    public function test_render_appends_iptc_metadata_translating_known_fields(): void
+    {
+        CurrentConfig::setShowExif(false);
+        CurrentConfig::setShowIptc(true);
+        CurrentConfig::setShowIptcMapping(['title' => '2#005', 'author' => '2#080']);
+        // getIptcData()'s own result is keyed by the *pwg* side of the
+        // mapping ('title'/'author'), not the raw IPTC code -- confirmed
+        // live, the renderer's own Lang::has($field)/Lang::t($field) calls
+        // check against that pwg key, not the code. 'author' gets a
+        // translation, 'title' does not -- both sub-branches of the
+        // `if (Lang::has($field))` check in the same test. Lang::loadArray()
+        // (not restore()): Lang::t() reads through the separate Translator
+        // singleton, which only loadArray() seeds -- confirmed live,
+        // restore() alone (which only updates Lang::has()'s own table)
+        // leaves Lang::t() returning the untranslated key.
+        Lang::loadArray(['author' => 'By-line']);
+
+        $relativePath = '_data/picture-metadata-renderer-test-scratch/iptc-fields.jpg';
+        file_put_contents(
+            dirname(__DIR__, 2) . '/' . $relativePath,
+            $this->makeJpegWithSegments($this->buildApp13IptcSegment([[5, 'Sunset Over The Bay'], [80, 'Jane Photographer']]))
+        );
+
+        $this->renderer->render($this->makePicture($relativePath));
+
+        $metadata = CurrentTemplate::get()->get_template_vars('metadata');
+        self::assertIsArray($metadata);
+        self::assertCount(1, $metadata);
+        self::assertIsArray($metadata[0]);
+        self::assertSame('IPTC Metadata', $metadata[0]['TITLE']);
+        self::assertSame([
+            'title' => 'Sunset Over The Bay',
+            'By-line' => 'Jane Photographer',
+        ], $metadata[0]['lines']);
+    }
+
+    public function test_render_appends_both_exif_and_iptc_metadata_as_2_separate_entries(): void
+    {
+        CurrentConfig::setShowExif(true);
+        CurrentConfig::setShowIptc(true);
+        CurrentConfig::setShowExifFields(['Artist']);
+        CurrentConfig::setShowIptcMapping(['title' => '2#005']);
+
+        $relativePath = '_data/picture-metadata-renderer-test-scratch/both-fields.jpg';
+        // Both marker segments spliced onto the same real file -- proves
+        // both branches genuinely operate on the same source image.
+        $combined = $this->makeJpegWithSegments(
+            $this->buildApp1ExifSegment(['Artist' => 'Jane Photographer']),
+            $this->buildApp13IptcSegment([[5, 'Sunset']])
+        );
+        file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $combined);
+
+        $this->renderer->render($this->makePicture($relativePath));
+
+        $metadata = CurrentTemplate::get()->get_template_vars('metadata');
+        self::assertIsArray($metadata);
+        self::assertCount(2, $metadata);
+        self::assertIsArray($metadata[0]);
+        self::assertIsArray($metadata[1]);
+        self::assertSame('EXIF Metadata', $metadata[0]['TITLE']);
+        self::assertSame('IPTC Metadata', $metadata[1]['TITLE']);
+    }
+}

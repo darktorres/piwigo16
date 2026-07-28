@@ -10,12 +10,21 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
 use Piwigo\Bootstrap\RedirectService;
+use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfigService;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
+use Piwigo\Core\UniqueExecLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\ResponseReadyException;
 use Piwigo\Section\SectionInitializer;
 use Piwigo\Section\SectionRepository;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\ScriptLoader;
+use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
 
 /**
@@ -23,10 +32,17 @@ use Piwigo\Url\UrlService;
  * throughout -- the alternative $_GET-key branch's escaping now goes
  * through SectionRepository (a real DBAL Connection, built here same as
  * every other repository-backed Integration test), so it no longer needs
- * the legacy `global $mysqli` avoidance this test used to require. Still
- * never exercises the "invalid/missing picture identifier" branches
- * (bad_request() is exit-triggering), same "don't stub/exercise what would
- * kill the test" reasoning used throughout this suite.
+ * the legacy `global $mysqli` avoidance this test used to require.
+ *
+ * The "invalid/missing picture identifier" branches call
+ * HtmlRenderingInterface::badRequest(), which itself just delegates to
+ * RedirectServiceInterface::redirectHtml() -- Workstream C3 converted that
+ * from a real header()+echo+exit() sequence to throwing
+ * Piwigo\Http\ResponseReadyException (see RedirectService's own
+ * docblock), so despite this file's own former docblock claim, they are
+ * NOT exit-triggering any more and ARE safely testable, given the same
+ * real Template/Lang/Kernel preconditions RedirectServiceTest.php's
+ * "already-initialised" scenario needs.
  */
 final class SectionInitializerTest extends IntegrationTestCase
 {
@@ -61,7 +77,29 @@ final class SectionInitializerTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         unset($_SERVER['PATH_INFO'], $_SERVER['SCRIPT_NAME']);
+        CurrentTemplate::reset();
+        Lang::reset();
+        Kernel::reset();
         parent::tearDown();
+    }
+
+    /**
+     * Shared preconditions for the 2 badRequest()-reaching tests below --
+     * a real booted Kernel/ConfigService/Template/Lang, same shape as
+     * RedirectServiceTest.php's own "already-initialised template" setup.
+     * Lang::setLangInfo() must run BEFORE constructing Template -- its
+     * constructor snapshots Lang::langInfo() once into Smarty's own
+     * 'lang_info' var (confirmed live: a real "Undefined array key"
+     * warning under this suite's failOnWarning=true otherwise).
+     */
+    private function bootRedirectPreconditions(): void
+    {
+        Kernel::boot();
+        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
+        ScriptLoader::setUrlService(new UrlService(new HtmlService()));
+        Lang::setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
+        CurrentTemplate::set(new Template(\Piwigo\Core\CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentConfig::setSendPiwigoInfos(false);
     }
 
     public function test_parse_computes_root_path_from_path_info_depth(): void
@@ -134,6 +172,62 @@ final class SectionInitializerTest extends IntegrationTestCase
             ->parse();
 
         self::assertSame('most_visited', $context->parsed['section'] ?? null);
+    }
+
+    public function test_parse_calls_bad_request_for_a_purely_zero_picture_id(): void
+    {
+        $this->bootRedirectPreconditions();
+        $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
+        $_SERVER['PATH_INFO'] = '/0';
+        $execId = UniqueExecLock::begins('check_for_updates');
+        self::assertIsString($execId);
+
+        $body = null;
+        $status = null;
+        try {
+            new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(), new UrlService(new HtmlService()))
+                ->parse();
+        } catch (ResponseReadyException $e) {
+            $response = $e->response();
+            $status = $response->getStatusCode();
+            $body = (string) $response->getBody();
+        } finally {
+            UniqueExecLock::ends('check_for_updates');
+        }
+
+        self::assertSame(400, $status);
+        self::assertIsString($body);
+        self::assertStringContainsString('invalid picture identifier', $body);
+    }
+
+    public function test_parse_calls_bad_request_for_a_missing_picture_id(): void
+    {
+        $this->bootRedirectPreconditions();
+        $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
+        // A bare '/' -> ltrim/explode yields a single empty-string token,
+        // which is neither purely numeric (the id===0 branch above) nor
+        // matches the "<digits>-<slug>" shape -- the genuinely-missing
+        // identifier case.
+        $_SERVER['PATH_INFO'] = '/';
+        $execId = UniqueExecLock::begins('check_for_updates');
+        self::assertIsString($execId);
+
+        $body = null;
+        $status = null;
+        try {
+            new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(), new UrlService(new HtmlService()))
+                ->parse();
+        } catch (ResponseReadyException $e) {
+            $response = $e->response();
+            $status = $response->getStatusCode();
+            $body = (string) $response->getBody();
+        } finally {
+            UniqueExecLock::ends('check_for_updates');
+        }
+
+        self::assertSame(400, $status);
+        self::assertIsString($body);
+        self::assertStringContainsString('picture identifier is missing', $body);
     }
 }
 }

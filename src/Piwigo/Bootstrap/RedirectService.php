@@ -71,11 +71,11 @@ final class RedirectService implements RedirectServiceInterface
     }
 
     #[\Override]
-    public function redirectHttp(string $url): never
+    public function redirectHttp(string $url, int $status = 302): never
     {
         // default url is on html format
         $url = html_entity_decode($url);
-        throw new \Piwigo\Http\ResponseReadyException(\Piwigo\Http\ResponseFactory::redirect($url));
+        throw new \Piwigo\Http\ResponseReadyException(\Piwigo\Http\ResponseFactory::redirect($url, $status));
     }
 
     #[\Override]

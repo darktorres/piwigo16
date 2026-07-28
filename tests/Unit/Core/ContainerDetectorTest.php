@@ -16,6 +16,23 @@ use Piwigo\Core\ContainerDetector;
  * result is asserted: confirmed live (open_basedir unset, PHP_OS Linux,
  * /proc/2/sched's first line genuinely starts with "kthreadd") --
  * provably 'none' here, not just today's incidental happy path.
+ *
+ * Same "no injection seam, would pollute real system state" reasoning
+ * also rules out the two remaining still-red branches, confirmed via the
+ * coverage report:
+ *  - The official/LinuxServer container tagfile checks (needs PID 2 to
+ *    NOT be kthreadd, which nothing in a test can fake -- /proc is a
+ *    real kernel-provided special file, not writable, and its content
+ *    reflects the actual host process tree) -- unreachable regardless of
+ *    the tagfiles' own existence.
+ *  - The `else` branch (`return ['none', null]` for a non-Linux OS or a
+ *    restricted open_basedir): PHP_OS is a compile-time constant
+ *    (unfakeable), and while `ini_set('open_basedir', ...)` can
+ *    genuinely flip `ini_get('open_basedir')` at runtime, that setting
+ *    can only ever be tightened, never cleared, for the rest of this
+ *    single shared PHPUnit process (confirmed live) -- exercising it
+ *    would permanently restrict every later test's filesystem access,
+ *    not just this one test's.
  */
 test('detect returns [\'none\', null] in this real, non-containerized Linux environment', function (): void {
     expect(ini_get('open_basedir'))->toBeFalsy();

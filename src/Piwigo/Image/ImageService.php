@@ -163,7 +163,7 @@ final readonly class ImageService
      */
     public function countPdfPages(string $pdfPath): int|false
     {
-        if (! is_readable($pdfPath)) {
+        if (! is_file($pdfPath) || ! is_readable($pdfPath)) {
             return false;
         }
 
@@ -520,7 +520,8 @@ final readonly class ImageService
         $updates = [];
 
         foreach ($pathForId as $id => $path) {
-            $md5sum = md5_file(CurrentPaths::get()->root . $path);
+            $absPath = CurrentPaths::get()->root . $path;
+            $md5sum = is_readable($absPath) ? md5_file($absPath) : false;
             // md5_file() returns false when the file can't be read -- skip
             // rather than writing a bogus md5sum that would then read as
             // "already computed" on the next addMd5sum() pass.

@@ -1,0 +1,424 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Tests\Integration;
+
+use Piwigo\Admin\Integrity\CheckIntegrity;
+use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfigService;
+use Piwigo\Core\AppInfo;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\PageState;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Template;
+
+/**
+ * CheckIntegrity::check()/display()/maintenance() -- the Unit suite
+ * (tests/Unit/Admin/Integrity/CheckIntegrityTest.php) already covers
+ * add_anomaly()/get_htlm_links_more_info() directly (pure logic, no
+ * DB/event/template dependency); check()/display() genuinely need a real
+ * DI-bootstrapped ConfigService (update_conf()'s own
+ * CurrentConfigService::get()) and a real rendered check_integrity.tpl
+ * (themes/admin/default/template/), so this suite boots Kernel + a real
+ * admin Template directly, the same shape as
+ * PictureCommentRendererTest's own gallery-theme Template construction.
+ *
+ * check() overwrites $this->retrieve_list from the 'list_check_integrity'
+ * event on every call (there is no other way to populate it) -- this
+ * suite registers its own throwaway `[self::class, 'pushQueuedAnomalies']`
+ * handler (an array callable, so EventDispatcher's own dedup-by-identity
+ * removeEventHandler() call in tearDown() finds and removes exactly it,
+ * never touching any other real handler this process might have
+ * registered) instead of exercising the real, DB/filesystem-scanning
+ * C13yInternal checks.
+ */
+final class CheckIntegrityTest extends IntegrationTestCase
+{
+    private static bool $fixtureReady = false;
+
+    /**
+     * @var list<array{anomaly: string, correction_fct: ?string, correction_fct_args: ?array<string, mixed>, correction_msg: ?string}>
+     */
+    public static array $queuedAnomalies = [];
+
+    public static function pushQueuedAnomalies(CheckIntegrity $c13y): void
+    {
+        foreach (self::$queuedAnomalies as $a) {
+            $c13y->add_anomaly($a['anomaly'], $a['correction_fct'], $a['correction_fct_args'], $a['correction_msg']);
+        }
+    }
+
+    public static function fakeCorrectionSucceeds(): bool
+    {
+        return true;
+    }
+
+    public static function fakeCorrectionFails(): bool
+    {
+        return false;
+    }
+
+    #[\Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->setUpConnectionFromEnv();
+
+        if (! self::$fixtureReady) {
+            $this->resetDatabase();
+            $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
+            self::$fixtureReady = true;
+        }
+
+        CurrentConfig::reset();
+        ConfigLoader::applyDefaults();
+        ConfigLoader::applyEnvOverrides();
+        Kernel::boot();
+        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
+
+        DbConnection::build()->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'c13y_ignore'");
+
+        self::$queuedAnomalies = [];
+        EventDispatcher::get()->addEventHandler('list_check_integrity', [self::class, 'pushQueuedAnomalies']);
+
+        unset($_POST['c13y_submit_correction'], $_POST['c13y_submit_ignore'], $_POST['c13y_selection']);
+
+        CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        EventDispatcher::get()->removeEventHandler('list_check_integrity', [self::class, 'pushQueuedAnomalies']);
+        unset($_POST['c13y_submit_correction'], $_POST['c13y_submit_ignore'], $_POST['c13y_selection']);
+        DbConnection::build()->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'c13y_ignore'");
+        CurrentTemplate::reset();
+        Kernel::reset();
+        parent::tearDown();
+    }
+
+    /** @param array<mixed>|null $correctionFctArgs */
+    private function anomalyId(string $anomaly, ?string $correctionFct = null, ?array $correctionFctArgs = null, ?string $correctionMsg = null): string
+    {
+        return md5($anomaly . $correctionFct . serialize($correctionFctArgs) . $correctionMsg);
+    }
+
+    public function test_check_reports_no_header_note_when_zero_anomalies_are_found(): void
+    {
+        $before = count(PageState::current()->headerNotes);
+
+        new CheckIntegrity()->check();
+
+        self::assertCount($before, PageState::current()->headerNotes);
+    }
+
+    public function test_check_reports_a_singular_header_note_for_exactly_one_anomaly(): void
+    {
+        self::$queuedAnomalies = [
+            ['anomaly' => 'Singular anomaly ' . uniqid(), 'correction_fct' => null, 'correction_fct_args' => null, 'correction_msg' => null],
+        ];
+
+        new CheckIntegrity()->check();
+
+        self::assertContains('1 anomaly has been detected.', PageState::current()->headerNotes);
+    }
+
+    public function test_check_reports_a_plural_header_note_for_multiple_anomalies(): void
+    {
+        self::$queuedAnomalies = [
+            ['anomaly' => 'Plural anomaly one ' . uniqid(), 'correction_fct' => null, 'correction_fct_args' => null, 'correction_msg' => null],
+            ['anomaly' => 'Plural anomaly two ' . uniqid(), 'correction_fct' => null, 'correction_fct_args' => null, 'correction_msg' => null],
+        ];
+
+        new CheckIntegrity()->check();
+
+        self::assertContains('2 anomalies have been detected.', PageState::current()->headerNotes);
+    }
+
+    public function test_check_correction_mode_reports_the_corrected_count_for_a_successful_fix(): void
+    {
+        $anomaly = 'Fixable anomaly ' . uniqid();
+        $correctionFct = self::class . '::fakeCorrectionSucceeds';
+        self::$queuedAnomalies = [
+            ['anomaly' => $anomaly, 'correction_fct' => $correctionFct, 'correction_fct_args' => null, 'correction_msg' => null],
+        ];
+        $_POST['c13y_submit_correction'] = '1';
+        $_POST['c13y_selection'] = [$this->anomalyId($anomaly, $correctionFct)];
+
+        $c13y = new CheckIntegrity();
+        $c13y->check();
+
+        self::assertContains('1 anomaly has been corrected.', PageState::current()->infos);
+        self::assertTrue($c13y->retrieve_list[0]['corrected'] ?? false);
+    }
+
+    public function test_check_correction_mode_reports_the_not_corrected_count_for_a_failed_fix(): void
+    {
+        $anomaly = 'Unfixable anomaly ' . uniqid();
+        $correctionFct = self::class . '::fakeCorrectionFails';
+        self::$queuedAnomalies = [
+            ['anomaly' => $anomaly, 'correction_fct' => $correctionFct, 'correction_fct_args' => null, 'correction_msg' => null],
+        ];
+        $_POST['c13y_submit_correction'] = '1';
+        $_POST['c13y_selection'] = [$this->anomalyId($anomaly, $correctionFct)];
+
+        $c13y = new CheckIntegrity();
+        $c13y->check();
+
+        self::assertContains('1 anomaly has not been corrected.', PageState::current()->errors);
+        self::assertFalse($c13y->retrieve_list[0]['corrected'] ?? false);
+    }
+
+    public function test_check_ignore_mode_marks_the_anomaly_ignored_and_persists_the_build_ignore_list(): void
+    {
+        $anomaly = 'Ignorable anomaly ' . uniqid();
+        $id = $this->anomalyId($anomaly);
+        self::$queuedAnomalies = [
+            ['anomaly' => $anomaly, 'correction_fct' => null, 'correction_fct_args' => null, 'correction_msg' => null],
+        ];
+        $_POST['c13y_submit_ignore'] = '1';
+        $_POST['c13y_selection'] = [$id];
+
+        $c13y = new CheckIntegrity();
+        $c13y->check();
+
+        self::assertContains('1 anomaly has been ignored.', PageState::current()->infos);
+        self::assertTrue($c13y->retrieve_list[0]['ignored'] ?? false);
+        self::assertSame([$id], $c13y->build_ignore_list);
+
+        $raw = DbConnection::build()->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'c13y_ignore'");
+        self::assertIsString($raw);
+        $decoded = json_decode($raw, true);
+        self::assertIsArray($decoded);
+        self::assertSame(AppInfo::VERSION, $decoded['version']);
+        self::assertSame([$id], $decoded['list']);
+    }
+
+    public function test_check_skips_an_already_ignored_anomaly_reported_via_current_config(): void
+    {
+        $anomaly = 'Pre-ignored anomaly ' . uniqid();
+        $id = $this->anomalyId($anomaly);
+        CurrentConfig::setC13yIgnore(['version' => AppInfo::VERSION, 'list' => [$id]]);
+        self::$queuedAnomalies = [
+            ['anomaly' => $anomaly, 'correction_fct' => null, 'correction_fct_args' => null, 'correction_msg' => null],
+        ];
+
+        $c13y = new CheckIntegrity();
+        $c13y->check();
+
+        self::assertSame([], $c13y->retrieve_list);
+        self::assertSame([$id], $c13y->build_ignore_list);
+    }
+
+    public function test_maintenance_delegates_to_update_conf_and_clears_the_ignore_list(): void
+    {
+        DbConnection::build()->executeStatement(
+            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('c13y_ignore', '{\"version\":\"stale\",\"list\":[\"stale-id\"]}')
+             ON DUPLICATE KEY UPDATE value = VALUES(value)"
+        );
+
+        new CheckIntegrity()->maintenance();
+
+        $raw = DbConnection::build()->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'c13y_ignore'");
+        self::assertIsString($raw);
+        $decoded = json_decode($raw, true);
+        self::assertIsArray($decoded);
+        self::assertSame(AppInfo::VERSION, $decoded['version']);
+        self::assertSame([], $decoded['list']);
+    }
+
+    // ------------------------------------------------------------ display()
+
+    public function test_display_flags_an_ignored_anomaly_and_never_offers_it_for_selection(): void
+    {
+        $c13y = new CheckIntegrity();
+        $c13y->retrieve_list = [
+            [
+                'id' => 'ignored-1',
+                'anomaly' => 'An ignored anomaly',
+                'correction_fct' => null,
+                'correction_fct_args' => null,
+                'correction_msg' => null,
+                'is_callable' => false,
+                'ignored' => true,
+            ],
+        ];
+
+        $c13y->display();
+
+        $template = CurrentTemplate::get();
+        $list = $template->get_template_vars('c13y_list');
+        self::assertIsArray($list);
+        self::assertIsArray($list[0]);
+        self::assertTrue($list[0]['show_ignore_msg']);
+        self::assertFalse($list[0]['can_select']);
+        self::assertFalse((bool) $template->get_template_vars('c13y_show_submit_ignore'));
+        self::assertFalse((bool) $template->get_template_vars('c13y_show_submit_automatic_correction'));
+    }
+
+    public function test_display_throws_when_an_anomaly_is_marked_ignored_false(): void
+    {
+        $c13y = new CheckIntegrity();
+        $c13y->retrieve_list = [
+            [
+                'id' => 'bad-1',
+                'anomaly' => 'Malformed anomaly',
+                'correction_fct' => null,
+                'correction_fct_args' => null,
+                'correction_msg' => null,
+                'is_callable' => false,
+                'ignored' => false,
+            ],
+        ];
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage("\$c13y['ignored'] cannot be false");
+
+        $c13y->display();
+    }
+
+    public function test_display_flags_a_successfully_corrected_anomaly(): void
+    {
+        $c13y = new CheckIntegrity();
+        $c13y->retrieve_list = [
+            [
+                'id' => 'corrected-1',
+                'anomaly' => 'A corrected anomaly',
+                'correction_fct' => 'strlen',
+                'correction_fct_args' => null,
+                'correction_msg' => null,
+                'is_callable' => true,
+                'corrected' => true,
+            ],
+        ];
+
+        $c13y->display();
+
+        $list = CurrentTemplate::get()->get_template_vars('c13y_list');
+        self::assertIsArray($list);
+        self::assertIsArray($list[0]);
+        self::assertTrue($list[0]['show_correction_success_fct']);
+        self::assertFalse($list[0]['can_select']);
+    }
+
+    public function test_display_flags_a_failed_correction_with_the_more_info_links(): void
+    {
+        $c13y = new CheckIntegrity();
+        $c13y->retrieve_list = [
+            [
+                'id' => 'failed-1',
+                'anomaly' => 'A failed-correction anomaly',
+                'correction_fct' => 'strlen',
+                'correction_fct_args' => null,
+                'correction_msg' => null,
+                'is_callable' => true,
+                'corrected' => false,
+            ],
+        ];
+
+        $c13y->display();
+
+        $list = CurrentTemplate::get()->get_template_vars('c13y_list');
+        self::assertIsArray($list);
+        self::assertIsArray($list[0]);
+        self::assertFalse($list[0]['show_correction_success_fct']);
+        self::assertFalse($list[0]['can_select']);
+        self::assertIsString($list[0]['correction_error_fct']);
+        self::assertNotSame('', $list[0]['correction_error_fct']);
+        self::assertStringContainsString('forum', $list[0]['correction_error_fct']);
+    }
+
+    public function test_display_offers_a_callable_uncorrected_anomaly_for_automatic_correction(): void
+    {
+        $c13y = new CheckIntegrity();
+        $c13y->retrieve_list = [
+            [
+                'id' => 'selectable-1',
+                'anomaly' => 'A selectable anomaly',
+                'correction_fct' => 'strlen',
+                'correction_fct_args' => null,
+                'correction_msg' => null,
+                'is_callable' => true,
+            ],
+        ];
+
+        $c13y->display();
+
+        $template = CurrentTemplate::get();
+        $list = $template->get_template_vars('c13y_list');
+        self::assertIsArray($list);
+        self::assertIsArray($list[0]);
+        self::assertTrue($list[0]['show_correction_fct']);
+        self::assertTrue($list[0]['can_select']);
+        self::assertTrue((bool) $template->get_template_vars('c13y_show_submit_automatic_correction'));
+        self::assertTrue((bool) $template->get_template_vars('c13y_show_submit_ignore'));
+        $doCheck = $template->get_template_vars('c13y_do_check');
+        self::assertIsArray($doCheck);
+        self::assertContains('selectable-1', $doCheck);
+    }
+
+    public function test_display_flags_a_non_callable_correction_function_as_a_bad_fct(): void
+    {
+        $c13y = new CheckIntegrity();
+        $c13y->retrieve_list = [
+            [
+                'id' => 'bad-fct-1',
+                'anomaly' => 'A bad-fct anomaly',
+                'correction_fct' => 'this_function_does_not_exist_anywhere',
+                'correction_fct_args' => null,
+                'correction_msg' => null,
+                'is_callable' => false,
+            ],
+        ];
+
+        $c13y->display();
+
+        $list = CurrentTemplate::get()->get_template_vars('c13y_list');
+        self::assertIsArray($list);
+        self::assertIsArray($list[0]);
+        self::assertTrue($list[0]['show_correction_bad_fct']);
+        self::assertTrue($list[0]['can_select']);
+    }
+
+    public function test_display_shows_a_correction_msg_for_an_anomaly_with_no_correction_function(): void
+    {
+        $c13y = new CheckIntegrity();
+        $c13y->retrieve_list = [
+            [
+                'id' => 'msg-only-1',
+                'anomaly' => 'A message-only anomaly',
+                'correction_fct' => null,
+                'correction_fct_args' => null,
+                'correction_msg' => 'please fix this by hand',
+                'is_callable' => false,
+            ],
+        ];
+
+        $c13y->display();
+
+        $list = CurrentTemplate::get()->get_template_vars('c13y_list');
+        self::assertIsArray($list);
+        self::assertIsArray($list[0]);
+        self::assertTrue($list[0]['can_select']);
+        self::assertSame('please fix this by hand', $list[0]['correction_msg']);
+    }
+
+    public function test_display_does_nothing_when_there_are_no_anomalies(): void
+    {
+        $c13y = new CheckIntegrity();
+
+        $c13y->display();
+
+        // No 'check_integrity' filename ever gets set_filenames()'d, so
+        // parse() never runs -- get_template_vars() for a var nothing ever
+        // assigned stays null.
+        self::assertNull(CurrentTemplate::get()->get_template_vars('c13y_show_submit_ignore'));
+    }
+}

@@ -166,3 +166,103 @@ test('removeEventHandler on one handler leaves sibling handlers at the same prio
 
     expect($dispatcher->triggerChange('e', ' hello '))->toBe('hello');
 });
+
+test('removeEventHandler returns false when the priority bucket has handlers but none match', function (): void {
+    $dispatcher = new EventDispatcher();
+    $dispatcher->addEventHandler('e', 'strtoupper');
+
+    expect($dispatcher->removeEventHandler('e', 'strtolower'))->toBeFalse();
+    // the non-matching handler must still be registered and callable
+    expect($dispatcher->triggerChange('e', 'hello'))->toBe('HELLO');
+});
+
+test('set publishes a specific instance that get then returns', function (): void {
+    $dispatcher = new EventDispatcher();
+
+    EventDispatcher::set($dispatcher);
+
+    expect(EventDispatcher::get())->toBe($dispatcher);
+});
+
+test('triggerChange notifies a registered "trigger" meta-handler before and after the real event fires', function (): void {
+    $dispatcher = new EventDispatcher();
+    $metaCalls = [];
+    $dispatcher->addEventHandler('trigger', static function (mixed $payload) use (&$metaCalls): mixed {
+        $metaCalls[] = $payload;
+
+        return $payload;
+    });
+    $dispatcher->addEventHandler('greet', static fn (string $s): string => $s . '!');
+
+    $result = $dispatcher->triggerChange('greet', 'hi');
+
+    expect($result)->toBe('hi!')
+        ->and($metaCalls)->toBe([
+            ['type' => 'event', 'event' => 'greet', 'data' => 'hi'],
+            ['type' => 'post_event', 'event' => 'greet', 'data' => 'hi!'],
+        ]);
+});
+
+test('triggerChange include_once-s a handler\'s includePath before calling it', function (): void {
+    $path = tempnam(sys_get_temp_dir(), 'event_dispatcher_test_');
+    expect($path)->not->toBeFalse();
+    file_put_contents($path, '<?php $GLOBALS["event_dispatcher_test_included_change"] = true;');
+    $GLOBALS['event_dispatcher_test_included_change'] = false;
+
+    try {
+        $dispatcher = new EventDispatcher();
+        $dispatcher->addEventHandler('e', 'strtoupper', 50, $path);
+
+        $result = $dispatcher->triggerChange('e', 'hi');
+
+        expect($result)->toBe('HI')
+            ->and($GLOBALS['event_dispatcher_test_included_change'])->toBeTrue();
+    } finally {
+        unlink($path);
+        unset($GLOBALS['event_dispatcher_test_included_change']);
+    }
+});
+
+test('triggerNotify notifies a registered "trigger" meta-handler before calling the real event\'s own handlers', function (): void {
+    $dispatcher = new EventDispatcher();
+    $metaCalls = [];
+    $dispatcher->addEventHandler('trigger', static function (mixed $payload) use (&$metaCalls): void {
+        $metaCalls[] = $payload;
+    });
+    $realCalls = [];
+    $dispatcher->addEventHandler('announce', static function () use (&$realCalls): void {
+        $realCalls[] = true;
+    });
+
+    $dispatcher->triggerNotify('announce');
+
+    expect($metaCalls)->toBe([
+        ['type' => 'action', 'event' => 'announce', 'data' => null],
+    ])->and($realCalls)->toBe([true]);
+});
+
+test('triggerNotify include_once-s a handler\'s includePath before calling it', function (): void {
+    $path = tempnam(sys_get_temp_dir(), 'event_dispatcher_test_');
+    expect($path)->not->toBeFalse();
+    file_put_contents($path, '<?php $GLOBALS["event_dispatcher_test_included_notify"] = true;');
+    $GLOBALS['event_dispatcher_test_included_notify'] = false;
+
+    try {
+        $dispatcher = new EventDispatcher();
+        $dispatcher->addEventHandler('e', static function (): void {}, 50, $path);
+
+        $dispatcher->triggerNotify('e');
+
+        expect($GLOBALS['event_dispatcher_test_included_notify'])->toBeTrue();
+    } finally {
+        unlink($path);
+        unset($GLOBALS['event_dispatcher_test_included_notify']);
+    }
+});
+
+test('triggerNotify throws only when a dead handler registration is actually invoked', function (): void {
+    $dispatcher = new EventDispatcher();
+    $dispatcher->addEventHandler('dead_event_notify', 'this_function_does_not_exist_anywhere_either');
+
+    $dispatcher->triggerNotify('dead_event_notify');
+})->throws(Error::class);

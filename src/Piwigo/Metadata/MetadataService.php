@@ -41,7 +41,7 @@ final readonly class MetadataService
         $result = [];
 
         $imginfo = [];
-        if (@getimagesize($filename, $imginfo) === false) {
+        if (! file_exists($filename) || @getimagesize($filename, $imginfo) === false) {
             return $result;
         }
 

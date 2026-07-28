@@ -75,6 +75,91 @@ it('submits a new center of interest, persists it, and invalidates derivative-UR
     expect(pictureCoiValue($imageId))->toHaveLength(4);
 });
 
+it('carries a real representative_ext into the deleted derivative_infos when set', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Picture Coi RepExt Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Picture Coi RepExt Photo');
+    @unlink($image);
+
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $prefix = pictureCoiDbPrefix();
+    // representative_ext is non-empty for a video/pdf/etc. upload (a
+    // representative image with a different extension than the original
+    // file) -- set directly here rather than via a real video/pdf upload,
+    // which needs ffmpeg/imagemagick binaries this test env may not have.
+    $db->query(sprintf("UPDATE %simages SET representative_ext = 'jpg' WHERE id = %d", $prefix, $imageId));
+
+    try {
+        $result = H::adminPost($page, '/admin.php?page=picture_coi&image_id=' . $imageId, [
+            'submit' => '1',
+            'l' => '0.05',
+            't' => '0.15',
+            'r' => '0.75',
+            'b' => '0.85',
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect(pictureCoiValue($imageId))->not->toBeNull();
+    } finally {
+        $db->close();
+    }
+});
+
+it('resets a "questionmark" derivative_url_style (1) back to "auto" (0) for this render only', function (): void {
+    // CurrentConfig::setDerivativeUrlStyle() (what render()'s reset calls)
+    // only ever writes the in-process static -- there is no
+    // confUpdateParam('derivative_url_style', ...) call anywhere in this
+    // codebase, so the DB row is never actually touched (confirmed live:
+    // the config table's value is still '1' after a real POST here). The
+    // real, externally-observable effect is that THIS SAME response's
+    // U_IMG now renders through the "auto" i.php? derivative route
+    // instead of a plain static link -- assert that instead of a DB value
+    // that was never meant to change.
+    $snapshot = H::snapshotConfig(['derivative_url_style']);
+    H::setConfigValue('derivative_url_style', '1');
+
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Picture Coi UrlStyle Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Picture Coi UrlStyle Photo');
+    @unlink($image);
+
+    try {
+        $result = H::adminPost($page, '/admin.php?page=picture_coi&image_id=' . $imageId, [
+            'submit' => '1',
+            'l' => '0.1',
+            't' => '0.2',
+            'r' => '0.8',
+            'b' => '0.9',
+        ]);
+
+        expect($result['status'])->toBe(200);
+        // A not-yet-cached derivative under "always static link" (1) would
+        // render a plain upload/... path with no i.php involved; seeing it
+        // routed through i.php? here proves the in-request reset to "auto"
+        // (0) took effect for this render.
+        expect($result['body'])->toContain('i.php?/upload/');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
 it('renders a real 404 "Page not found" response for a nonexistent image_id', function (): void {
     $page = H::loginAsAdmin($this);
 

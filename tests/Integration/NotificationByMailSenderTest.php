@@ -12,6 +12,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -51,6 +52,16 @@ use Piwigo\Notification\Projection\UserMailNotification;
  * production-code-deliberate warning, so every call that can reach a real
  * send is `@`-suppressed, matching ArrayHelperTest's established
  * `@unserialize()` pattern for the same failOnWarning interaction.
+ *
+ * incMailSentSuccess()'s own call sites inside
+ * doSubscribeUnsubscribeNotificationByMail()/sendMailNotifications() (both
+ * gated behind a real MailService::mail() returning true) are deliberately
+ * not chased here: every other test in this class (and MailServiceTest's
+ * own Integration suite) forces delivery *failure* via a closed local SMTP
+ * port specifically because a deterministic *success* would need a real,
+ * reachable mail transport -- no test anywhere in this codebase attempts
+ * that (confirmed via a full-repo grep), by the same established design
+ * this class's own docblock already documents for the failure trick.
  */
 final class NotificationByMailSenderTest extends IntegrationTestCase
 {
@@ -78,6 +89,15 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot();
+        // Every Lang::t() assertion in this file expects the real en_UK
+        // admin.po wording (which sometimes differs from the raw English
+        // literal passed to Lang::t() -- e.g. "No mail to send." vs the
+        // po's "No mail to be sent."). Without this, whether admin.lang
+        // happens to already be loaded (and by which language) depends on
+        // which other Integration test file ran earlier in this shared
+        // process -- confirmed live. Loading it explicitly here makes
+        // every assertion deterministic regardless of run order.
+        Lang::load('admin.lang');
 
         $conn = DbConnection::build();
         $repo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
@@ -122,6 +142,12 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $this->restoreUser1Row();
+        // Idempotent even for tests that never touch user 4 -- belt-and-
+        // suspenders cleanup so a failed assertion mid-test (which skips a
+        // test-local finally-block restore) can't leak into later tests.
+        $this->conn->executeStatement('DELETE FROM ' . Tables::userMailNotification() . ' WHERE user_id = 4');
+        $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . ' WHERE user_id = 4');
+        $this->conn->executeStatement('UPDATE ' . Tables::users() . ' SET mail_address = NULL WHERE id = 4');
         CurrentConfig::setSmtpHost('');
         CurrentConfig::setNbmListAllEnabledUsersToSend(false);
         CurrentConfig::setNbmSendDetailedContent(true);
@@ -133,6 +159,29 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
     private function fakeUser(): UserMailNotification
     {
         return new UserMailNotification(1, 'ck12345', 'fixture_admin', 'admin@example.test', '1', null, 'normal');
+    }
+
+    /**
+     * Rebuilds the DI container after lowering nbm_treatment_timeout_default
+     * to a negative value -- (float) intval(ini_get('max_execution_time'))
+     * is '0' under this CLI SAPI (confirmed via `php -r`), so
+     * NotificationByMailSender's own constructor always falls back to this
+     * config value for $sendmailTimeout; a negative default guarantees
+     * checkSendmailTimeout()'s very first real-elapsed-time check is
+     * already past it. Kernel::boot() itself no-ops once already booted
+     * (this file's own setUp() already booted it), so reset() first is
+     * required to force a fresh container -- and therefore a fresh
+     * NotificationByMailSender reading the new config value at
+     * construction time, since the already-built $this->sender instance
+     * from setUp() captured the *old* value in its constructor.
+     */
+    private function senderWithImmediateTimeout(): NotificationByMailSender
+    {
+        CurrentConfig::setNbmTreatmentTimeoutDefault(-1);
+        Kernel::reset();
+        Kernel::boot();
+
+        return PresentationAccessor::notificationByMailSender();
     }
 
     private function setUser1LastSend(?string $lastSend): void
@@ -249,7 +298,13 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // inside the method (never written back to $this->mailTemplate for
         // a single isolated call), so there's no further state to inspect
         // from outside without changing production code.
-        $this->expectNotToPerformAssertions();
+        //
+        // Not expectNotToPerformAssertions(): this file's own setUp()
+        // already performs real assertions (assertInstanceOf/assertIsArray
+        // type-narrowing guards), which PHPUnit counts against *every*
+        // test in the class -- confirmed live, that combination is what
+        // PHPUnit's risky-test detector flags ("not expected to perform
+        // assertions but performed N").
         $this->sender->assignVarsNbmMailContent($this->fakeUser());
     }
 
@@ -392,6 +447,33 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertFalse($this->sender->isSendmailTimeout());
     }
 
+    public function test_beginUsersEnv_uses_the_configured_nbm_send_mail_as_name_instead_of_the_mail_sender_name_fallback(): void
+    {
+        // sendAsName has no public getter, and MailService::mail() is
+        // never actually reached here -- this exercises nbm_send_mail_as's
+        // own ternary true branch (an admin-configured override) rather
+        // than falling through to MailService::getMailSenderName(),
+        // matching assignVarsNbmMailContent()'s own established "no fatal
+        // is the real assertion" pattern above for a private, otherwise
+        // unobservable field. Not expectNotToPerformAssertions(): see that
+        // test's own comment -- this file's setUp() already performs real
+        // assertions, which PHPUnit counts against every test in the class.
+        CurrentConfig::setNbmSendMailAs('Custom Notifier');
+
+        $this->sender->beginUsersEnv(true);
+        $this->sender->endUsersEnv();
+    }
+
+    public function test_quote_check_key_list_wraps_string_keys_in_single_quotes_and_drops_non_string_entries(): void
+    {
+        // array_filter()/array_map() both preserve the original, non-list
+        // keys (index 1 -- the non-string entry -- is dropped, not
+        // reindexed), so the exact expected shape keeps keys 0 and 2.
+        $result = NotificationByMailSender::quoteCheckKeyList(['abc', 123, 'def']);
+
+        self::assertSame([0 => "'abc'", 2 => "'def'"], $result);
+    }
+
     public function test_doSubscribeUnsubscribeNotificationByMail_ignores_an_empty_check_key_list(): void
     {
         $result = $this->sender->doSubscribeUnsubscribeNotificationByMail(true, false, []);
@@ -433,5 +515,99 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // $doUpdate stayed false on delivery failure, so the batched
         // massUpdate() never included this row -- enabled is untouched.
         self::assertSame(1, $this->user1Enabled());
+    }
+
+    public function test_doSubscribeUnsubscribeNotificationByMail_stops_the_loop_early_when_the_sendmail_timeout_is_already_exceeded(): void
+    {
+        $sender = $this->senderWithImmediateTimeout();
+
+        $result = $sender->doSubscribeUnsubscribeNotificationByMail(true, false, [$this->user1OriginalRow['check_key']]);
+
+        // The timeout check runs before the check_key is even added to
+        // $checkKeyTreated, so the very first (and only) user breaks the
+        // loop without being treated at all.
+        self::assertSame([], $result);
+        self::assertSame(
+            ['The time to send mail is limited. Others mails have been skipped.'],
+            PageState::current()->errors
+        );
+        // displayCounterInfo() runs unconditionally after the loop (even
+        // though the loop broke on its very first iteration, before
+        // treating any user) -- with nothing sent and nothing failed, its
+        // own "no mail to send" info message lands first, then the final
+        // updated-count summary below it.
+        self::assertSame(['No mail to be sent.', '0 users updated.'], PageState::current()->infos);
+    }
+
+    public function test_sendMailNotifications_list_to_send_stops_early_when_the_sendmail_timeout_is_already_exceeded(): void
+    {
+        $sender = $this->senderWithImmediateTimeout();
+        $this->setUser1LastSend('2000-01-01 00:00:00');
+
+        $result = $sender->sendMailNotifications('list_to_send', [$this->user1OriginalRow['check_key']]);
+
+        self::assertSame([], $result);
+        self::assertSame(
+            ['The time to prepare the list of users who will be sent mail is limited. Other users are not listed.'],
+            PageState::current()->infos
+        );
+        self::assertSame([], PageState::current()->errors);
+    }
+
+    public function test_sendMailNotifications_send_action_stops_early_when_the_sendmail_timeout_is_already_exceeded(): void
+    {
+        $sender = $this->senderWithImmediateTimeout();
+        $this->setUser1LastSend('2000-01-01 00:00:00');
+
+        $result = $sender->sendMailNotifications('send', [$this->user1OriginalRow['check_key']]);
+
+        self::assertSame([], $result);
+        self::assertSame(
+            ['The time to send mail is limited. Others mails have been skipped.'],
+            PageState::current()->errors
+        );
+        // displayCounterInfo() still runs after the loop for a 'send'
+        // action regardless of the early break (0 sent, 0 failed).
+        self::assertSame(['No mail to be sent.'], PageState::current()->infos);
+    }
+
+    public function test_sendMailNotifications_send_action_builds_an_auth_key_link_and_a_never_sent_before_and_custom_content_mail_for_an_eligible_user(): void
+    {
+        // User 4 (power_user, status 'normal' -- unlike user 1's
+        // 'webmaster', which AuthService::createUserAuthKey() always
+        // refuses) gets a temporary, real notification row + mail_address
+        // so it both (a) qualifies for a real auth_key
+        // (authKey !== false, the LINK-building branch), and (b) has
+        // never been sent to before (last_send NULL, the "single date"
+        // branch -- every other test's setUser1LastSend() only ever
+        // exercises the "between two dates" branch). Also sets a real
+        // nbm_complementary_mail_content so the per-user
+        // customize-content branch (never empty here, no plugin handler
+        // registered) fires too.
+        $this->conn->executeStatement("UPDATE " . Tables::users() . " SET mail_address = 'temp4@example.test' WHERE id = 4");
+        // check_key is varchar(16) -- must stay within that limit.
+        $checkKey = 'user4-tmp-key';
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::userMailNotification() . ' (user_id, check_key, enabled, last_send) VALUES (?, ?, 1, NULL)',
+            [4, $checkKey]
+        );
+        CurrentConfig::setSmtpHost('127.0.0.1:1');
+        CurrentConfig::setNbmComplementaryMailContent('A note from the admin.');
+
+        $result = $this->suppressMailerWarning(fn () => $this->sender->sendMailNotifications('send', [$checkKey]));
+
+        self::assertSame([$checkKey], $result);
+        self::assertSame(
+            [
+                'Error when sending email to power_user [temp4@example.test].',
+                '1 mail has not been sent.',
+            ],
+            PageState::current()->errors
+        );
+
+        $authKeyCount = $this->conn->fetchOne(
+            'SELECT COUNT(*) FROM ' . Tables::userAuthKeys() . " WHERE user_id = 4 AND key_type = 'auth_key'"
+        );
+        self::assertSame(1, is_numeric($authKeyCount) ? (int) $authKeyCount : -1);
     }
 }

@@ -72,4 +72,28 @@ final class WsCommentsMutationTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
     }
+
+    public function test_validate_invalid_token_returns_error(): void
+    {
+        $response = $this->callWs('pwg.userComments.validate', [
+            'comment_id' => [1],
+            'pwg_token'  => 'wrong',
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+        self::assertSame('Invalid security token', $response['message']);
+    }
+
+    public function test_delete_invalid_token_returns_error(): void
+    {
+        $response = $this->callWs('pwg.userComments.delete', [
+            'comment_id' => [1],
+            'pwg_token'  => 'wrong',
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+        self::assertSame('Invalid security token', $response['message']);
+    }
 }

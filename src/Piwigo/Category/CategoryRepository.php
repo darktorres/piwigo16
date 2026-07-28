@@ -1552,7 +1552,11 @@ SELECT representative_picture_id
                   'uppercatsLike' => $uppercats . ',%',
               ])->fetchOne();
 
-        return is_scalar($value) ? (string) $value : null;
+        // fetchOne() returns false (also a real is_scalar() value) to
+        // signal "no rows matched" -- is_scalar() alone can't tell that
+        // apart from a genuine representative_picture_id, so it must be
+        // excluded explicitly first.
+        return $value !== false && is_scalar($value) ? (string) $value : null;
     }
 
     /**

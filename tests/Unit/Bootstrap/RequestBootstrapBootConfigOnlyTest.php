@@ -70,3 +70,26 @@ test('bootConfigOnly attaches a guest CurrentUser', function (): void {
 
     expect(CurrentUser::isInitialized())->toBeTrue();
 });
+
+test('bootConfigOnly reuses an already-set CurrentConfigService instead of resolving a new one', function (): void {
+    $conn = \Piwigo\Db\DbConnection::build();
+    $ormConfig = \Doctrine\ORM\ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 3) . '/src/Piwigo'], isDevMode: true);
+    $ormConfig->enableNativeLazyObjects(true);
+    $em = new \Doctrine\ORM\EntityManager($conn, $ormConfig);
+    $em->getEventManager()->addEventListener(\Doctrine\ORM\Events::loadClassMetadata, new \Piwigo\Db\TablePrefixListener());
+    $preSetService = new \Piwigo\Config\ConfigService($em->getRepository(\Piwigo\Config\ConfigEntry::class));
+    CurrentConfigService::set($preSetService);
+
+    RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()));
+
+    // Same instance as the one set beforehand -- proves the isSet() branch
+    // really did reuse it instead of resolving (and loadConfFromDb()-ing) a
+    // fresh one from the container.
+    expect(CurrentConfigService::get())->toBe($preSetService);
+});
+
+test('CurrentConfigService::get throws when nothing has ever been set', function (): void {
+    expect(CurrentConfigService::isSet())->toBeFalse();
+
+    CurrentConfigService::get();
+})->throws(LogicException::class, 'CurrentConfigService not initialised -- call Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint() or Piwigo\Bootstrap\CliBootstrap::buildApplication() first.');

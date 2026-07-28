@@ -23,3 +23,16 @@ test('fromArray narrows a non-string value to null', function (): void {
 
     expect($request->action)->toBeNull();
 });
+
+test('fromGlobals reads the action from the real $_GET superglobal', function (): void {
+    $original = $_GET;
+    $_GET['no_photo_yet'] = 'browse';
+
+    try {
+        $request = NoPhotoYetRequest::fromGlobals();
+
+        expect($request->action)->toBe('browse');
+    } finally {
+        $_GET = $original;
+    }
+});

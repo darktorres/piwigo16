@@ -93,6 +93,89 @@ function suImageDateMetadataUpdate(int $imageId): ?string
     return is_string($value) ? $value : null;
 }
 
+function suImageLevel(int $imageId): ?int
+{
+    $db = suConnect();
+    $result = $db->query(sprintf('SELECT level FROM %simages WHERE id = %d', suDbPrefix(), $imageId));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+
+    $value = is_array($row) ? ($row['level'] ?? null) : null;
+
+    return is_numeric($value) ? (int) $value : null;
+}
+
+function suImageFormatFilesize(int $imageId, string $ext): ?int
+{
+    $db = suConnect();
+    $result = $db->query(sprintf(
+        "SELECT filesize FROM %simage_format WHERE image_id = %d AND ext = '%s'",
+        suDbPrefix(),
+        $imageId,
+        $db->real_escape_string($ext)
+    ));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+
+    $value = is_array($row) ? ($row['filesize'] ?? null) : null;
+
+    return is_numeric($value) ? (int) $value : null;
+}
+
+function suGrantGroupAccess(int $groupId, int $catId): void
+{
+    $db = suConnect();
+    $db->query(sprintf(
+        'INSERT INTO %sgroup_access (group_id, cat_id) VALUES (%d, %d)',
+        suDbPrefix(),
+        $groupId,
+        $catId
+    ));
+    $db->close();
+}
+
+function suGrantUserAccess(int $userId, int $catId): void
+{
+    $db = suConnect();
+    $db->query(sprintf(
+        'INSERT INTO %suser_access (user_id, cat_id) VALUES (%d, %d)',
+        suDbPrefix(),
+        $userId,
+        $catId
+    ));
+    $db->close();
+}
+
+function suHasGroupAccess(int $groupId, int $catId): bool
+{
+    $db = suConnect();
+    $result = $db->query(sprintf(
+        'SELECT 1 FROM %sgroup_access WHERE group_id = %d AND cat_id = %d',
+        suDbPrefix(),
+        $groupId,
+        $catId
+    ));
+    $found = $result instanceof mysqli_result && $result->num_rows > 0;
+    $db->close();
+
+    return $found;
+}
+
+function suHasUserAccess(int $userId, int $catId): bool
+{
+    $db = suConnect();
+    $result = $db->query(sprintf(
+        'SELECT 1 FROM %suser_access WHERE user_id = %d AND cat_id = %d',
+        suDbPrefix(),
+        $userId,
+        $catId
+    ));
+    $found = $result instanceof mysqli_result && $result->num_rows > 0;
+    $db->close();
+
+    return $found;
+}
+
 function suInsertRemoteSite(string $url): int
 {
     $db = suConnect();
@@ -435,6 +518,278 @@ it('synchronizes metadata for a registered photo', function (): void {
         expect($result['body'])->toContain("1 photos' information synchronized with files metadata");
         expect($result['body'])->toContain('1 photos candidates for metadata synchronization');
         expect(suImageDateMetadataUpdate($imageId))->not->toBeNull();
+    } finally {
+        suRemoveDirRecursive($tempDir);
+        H::adminPost($page, suPath(), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'sync' => 'files',
+            'subcats-included' => '1',
+            'privacy_level' => '0',
+            'simulate' => '0',
+        ]);
+    }
+});
+
+it('scopes a submit to a single category via cat, honoring subcats-included and assigning a new sub-category its parent chain', function (): void {
+    $parentDir = 'ct_site_cat_parent_' . uniqid();
+    $parentTemp = suMakeTempDir($parentDir);
+
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+
+    try {
+        // Unscoped sync creates the top-level parent category (no
+        // id_uppercat), leaving $db_categories'/$post['cat'] scoping
+        // branches (subcats-included true/false, basedir-from-cat) still
+        // untested -- both exercised below.
+        $created = suSync($page, $token);
+        expect($created['status'])->toBe(200);
+        $parentId = suCategoryIdByDir(1, $parentDir);
+        expect($parentId)->not->toBeNull();
+        assert($parentId !== null);
+
+        // A brand new sub-directory under the parent: cat-scoped +
+        // subcats-included='1' hits the uppercats-regex query branch, the
+        // basedir-from-$post['cat'] resolution, and (since the parent
+        // already exists in $db_categories) the new-category-with-parent
+        // block (id_uppercat/uppercats/rank/global_rank inheritance).
+        $childDir = $parentDir . '/ct_child_' . uniqid();
+        mkdir(suGalleriesRoot() . $childDir, 0777, true);
+
+        $scoped = suSync($page, $token, ['cat' => (string) $parentId, 'subcats-included' => '1']);
+        expect($scoped['status'])->toBe(200);
+        expect($scoped['body'])->toContain('1 albums added in the database');
+
+        $childId = suCategoryIdByDir(1, basename($childDir));
+        expect($childId)->not->toBeNull();
+
+        // A second new sub-directory, this time submitted with
+        // subcats-included NOT '1': the query restricts to `id =
+        // $post['cat']` alone (no descendants fetched), so the fs-vs-db
+        // comparison is intersected down to the parent's own path only --
+        // the new directory must NOT be detected as a new category.
+        $secondChildDir = $parentDir . '/ct_child2_' . uniqid();
+        mkdir(suGalleriesRoot() . $secondChildDir, 0777, true);
+
+        $notScoped = suSync($page, $token, ['cat' => (string) $parentId, 'subcats-included' => '0']);
+        expect($notScoped['status'])->toBe(200);
+        expect($notScoped['body'])->toContain('0 albums added in the database');
+        expect(suCategoryIdByDir(1, basename($secondChildDir)))->toBeNull();
+    } finally {
+        suRemoveDirRecursive($parentTemp);
+        H::adminPost($page, suPath(), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'sync' => 'files',
+            'subcats-included' => '1',
+            'privacy_level' => '0',
+            'simulate' => '0',
+        ]);
+    }
+});
+
+it('propagates directly-granted group/user permissions onto newly-synced private child categories, walking a multi-level new-category chain', function (): void {
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+    $snapshot = H::snapshotConfig(['inheritance_by_default', 'newcat_default_status']);
+
+    $parentDir = 'ct_site_perm_parent_' . uniqid();
+    $parentTemp = suMakeTempDir($parentDir);
+
+    try {
+        H::setConfigValue('inheritance_by_default', 'true');
+        H::setConfigValue('newcat_default_status', H::jsonEncode('private'));
+
+        // Parent category created alone: no id_uppercat, so this sync takes
+        // the *other* branch (PermissionService::addPermissionOnCategory,
+        // already covered) -- not the one under test here.
+        $created = suSync($page, $token);
+        expect($created['status'])->toBe(200);
+        $parentId = suCategoryIdByDir(1, $parentDir);
+        expect($parentId)->not->toBeNull();
+        assert($parentId !== null);
+
+        // Directly grant group 1 ("Editors") and user 4 access on the
+        // parent -- the rows findGrantedGroupIdsByCategory()/
+        // findGrantedUserIdsByCategory() must discover and copy onto the
+        // new children below.
+        suGrantGroupAccess(1, $parentId);
+        suGrantUserAccess(4, $parentId);
+
+        // Three new directories in a single sync request: childA and
+        // childB directly under the parent (parent already existed before
+        // this request, so is NOT in this batch's own $category_ids --
+        // parent_id resolves immediately, no while-loop walk), and
+        // grandchildC nested one level under childB (childB *is* in this
+        // same batch's $category_ids, forcing the while-loop to walk one
+        // level further up to the pre-existing parent).
+        mkdir(suGalleriesRoot() . $parentDir . '/ct_childA_' . uniqid(), 0777, true);
+        $childBDir = $parentDir . '/ct_childB_' . uniqid();
+        mkdir(suGalleriesRoot() . $childBDir . '/ct_grandchildC_' . uniqid(), 0777, true);
+
+        $result = suSync($page, $token);
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('3 albums added in the database');
+
+        $childBId = suCategoryIdByDir(1, basename($childBDir));
+        expect($childBId)->not->toBeNull();
+        assert($childBId !== null);
+
+        $db = suConnect();
+        $rows = $db->query(sprintf(
+            "SELECT id FROM %scategories WHERE site_id = 1 AND id_uppercat = %d",
+            suDbPrefix(),
+            $childBId
+        ));
+        $grandchildRow = $rows instanceof mysqli_result ? $rows->fetch_assoc() : null;
+        $db->close();
+        expect($grandchildRow)->not->toBeNull();
+        assert(is_array($grandchildRow));
+        $grandchildId = (int) $grandchildRow['id'];
+
+        // All three new categories inherited private status from the
+        // parent, and all three received the parent's own direct grants.
+        foreach ([$childBId, $grandchildId] as $newCatId) {
+            expect(suHasGroupAccess(1, $newCatId))->toBeTrue();
+            expect(suHasUserAccess(4, $newCatId))->toBeTrue();
+        }
+    } finally {
+        H::restoreConfig($snapshot);
+        suRemoveDirRecursive($parentTemp);
+        H::adminPost($page, suPath(), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'sync' => 'files',
+            'subcats-included' => '1',
+            'privacy_level' => '0',
+            'simulate' => '0',
+        ]);
+    }
+});
+
+it('assigns a non-zero privacy level, mass-inserts/removes per-image formats, and deletes an element missing from the filesystem', function (): void {
+    $dir = 'ct_site_formats_' . uniqid();
+    $tempDir = suMakeTempDir($dir);
+    mkdir($tempDir . '/pwg_format', 0777, true);
+
+    $image1 = H::makeTestImage('CT Format Photo1');
+    copy($image1, $tempDir . '/photo1.jpg');
+    @unlink($image1);
+    file_put_contents($tempDir . '/pwg_format/photo1.cr2', str_repeat('A', 2048));
+
+    $image2 = H::makeTestImage('CT Format Photo2');
+    copy($image2, $tempDir . '/photo2.jpg');
+    @unlink($image2);
+
+    $image3 = H::makeTestImage('CT Format Photo3');
+    copy($image3, $tempDir . '/photo3.jpg');
+    @unlink($image3);
+
+    file_put_contents($tempDir . '/bad name!.jpg', 'not a real image');
+
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+    $snapshot = H::snapshotConfig(['enable_formats']);
+
+    try {
+        H::setConfigValue('enable_formats', 'true');
+
+        $created = suSync($page, $token, ['privacy_level' => '4']);
+        expect($created['status'])->toBe(200);
+        expect($created['body'])->toContain('3 photos added in the database');
+        expect($created['body'])->toContain('1 errors during synchronization');
+        expect($created['body'])->toContain('PWG-UPDATE-1');
+        expect($created['body'])->toContain('format cr2 added');
+
+        $photo1Id = suImageIdByFile('photo1.jpg');
+        $photo2Id = suImageIdByFile('photo2.jpg');
+        $photo3Id = suImageIdByFile('photo3.jpg');
+        expect($photo1Id)->not->toBeNull();
+        expect($photo2Id)->not->toBeNull();
+        expect($photo3Id)->not->toBeNull();
+        assert($photo1Id !== null && $photo2Id !== null && $photo3Id !== null);
+
+        // privacy_level (non-'0') is stamped onto every newly-created
+        // element, not just the first.
+        expect(suImageLevel($photo1Id))->toBe(4);
+        expect(suImageLevel($photo2Id))->toBe(4);
+        expect(suImageFormatFilesize($photo1Id, 'cr2'))->toBe(2);
+
+        // A new format sibling added for an *already-registered* photo:
+        // the "new formats on existing photos" diff branch.
+        file_put_contents($tempDir . '/pwg_format/photo2.cr2', str_repeat('B', 4096));
+
+        $addedFormat = suSync($page, $token);
+        expect($addedFormat['status'])->toBe(200);
+        expect($addedFormat['body'])->toContain('0 photos added in the database');
+        expect($addedFormat['body'])->toContain('format cr2 added');
+        expect(suImageFormatFilesize($photo2Id, 'cr2'))->toBe(4);
+
+        // Remove photo1's format sibling (format-removal diff branch +
+        // mass-delete) and delete photo3's main file entirely (element
+        // deletion when missing from the filesystem), in the same request.
+        unlink($tempDir . '/pwg_format/photo1.cr2');
+        unlink($tempDir . '/photo3.jpg');
+
+        $removedFormat = suSync($page, $token);
+        expect($removedFormat['status'])->toBe(200);
+        expect($removedFormat['body'])->toContain('format cr2 removed');
+        expect($removedFormat['body'])->toContain('1 photos deleted from the database');
+        expect(suImageFormatFilesize($photo1Id, 'cr2'))->toBeNull();
+        expect(suImageIdByFile('photo3.jpg'))->toBeNull();
+    } finally {
+        H::restoreConfig($snapshot);
+        suRemoveDirRecursive($tempDir);
+        H::adminPost($page, suPath(), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'sync' => 'files',
+            'subcats-included' => '1',
+            'privacy_level' => '0',
+            'simulate' => '0',
+        ]);
+    }
+});
+
+it('reports a PWG-ERROR-NO-FS error when a registered photo is deleted before its metadata sync runs', function (): void {
+    $dir = 'ct_site_meta_missing_' . uniqid();
+    $file = $dir . '.jpg';
+    $tempDir = suMakeTempDir($dir);
+    $imagePath = H::makeTestImage('CT Meta Missing');
+    copy($imagePath, $tempDir . '/' . $file);
+    @unlink($imagePath);
+
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+
+    try {
+        suSync($page, $token);
+        $imageId = suImageIdByFile($file);
+        expect($imageId)->not->toBeNull();
+
+        // Delete the physical file but leave the directory (and the DB
+        // image row) untouched, then request metadata sync alone (sync
+        // set to 'dirs', which never reaches the element-deletion block --
+        // otherwise the image row itself would be deleted by the
+        // files/elements block before the metadata block ever saw it).
+        unlink($tempDir . '/' . $file);
+
+        $result = suSync($page, $token, [
+            'sync' => 'dirs',
+            'sync_meta' => '1',
+            'meta_all' => '1',
+        ]);
+
+        expect($result['status'])->toBe(200);
+        // NB_ERRORS on update_result is computed before the metadata block
+        // runs (still 0 here, since sync='dirs' found no bad directory
+        // names) -- the metadata-sync error only surfaces via the
+        // unconditional sync_errors/sync_error_captions listing below,
+        // which reflects the full $errors array at render time.
+        expect($result['body'])->toContain('PWG-ERROR-NO-FS');
+        expect($result['body'])->toContain('File/directory read error');
+        expect($result['body'])->toContain('The file or directory cannot be accessed');
     } finally {
         suRemoveDirRecursive($tempDir);
         H::adminPost($page, suPath(), [

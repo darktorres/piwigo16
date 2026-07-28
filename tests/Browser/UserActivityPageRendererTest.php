@@ -17,6 +17,21 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * piwigo_categories/piwigo_groups) and is unaffected by how many logins have
  * accumulated.
  */
+it('streams a CSV export via type=download_logs instead of rendering the normal page', function (): void {
+    $page = H::loginAsAdmin($this);
+
+    $result = H::rawGet($page, '/admin.php?page=user_activity&type=download_logs');
+
+    expect($result['status'])->toBe(200);
+    // The header row is written first, unconditionally -- real fixture_admin
+    // login activity (guaranteed present: every Browser test's own
+    // loginAsAdmin() call writes one) means at least one real data row
+    // follows it too.
+    expect($result['body'])->toContain('User;ID_User;Object;Object_ID;Action;Date;Hour;IP_Address;Details');
+    expect($result['body'])->toContain('fixture_admin');
+    expect($result['body'])->toContain('login');
+});
+
 it('resolves the album additional-filter to its real fixture name', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=user_activity&album=1');

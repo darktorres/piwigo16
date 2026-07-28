@@ -14,8 +14,13 @@ final class WsApiKeyTest extends ContractTestCase
         parent::setUp();
         // api_key.* handlers require $_SESSION['connected_with'] === 'pwg_ui',
         // which is only set by a real identification.php form login, not by
-        // pwg.session.login. Use the UI login path here.
-        $this->loginAsAdminViaUI();
+        // pwg.session.login. Tests that need an authorized session call
+        // loginAsAdminViaUI() themselves -- calling it unconditionally here
+        // would pollute the forbidden-for-guest/not-connected-via-pwg-ui
+        // tests below, which rely on the cookie jar starting out
+        // unauthenticated (confirmed live: with an unconditional login here,
+        // "forbidden for guest" hit the CSRF-token guard instead of the
+        // guest guard, and "not connected via pwg ui" actually succeeded).
     }
 
     #[\Override]
@@ -35,6 +40,7 @@ final class WsApiKeyTest extends ContractTestCase
 
     public function test_create_returns_secret_and_pkid(): void
     {
+        $this->loginAsAdminViaUI();
         $token    = $this->getPwgToken();
         $response = $this->callWs('pwg.users.api_key.create', [
             'key_name'  => 'ct_key_' . uniqid(),
@@ -57,6 +63,7 @@ final class WsApiKeyTest extends ContractTestCase
 
     public function test_get_returns_api_key_list(): void
     {
+        $this->loginAsAdminViaUI();
         $token  = $this->getPwgToken();
         $create = $this->callWs('pwg.users.api_key.create', [
             'key_name'  => 'ct_key_' . uniqid(),
@@ -79,6 +86,7 @@ final class WsApiKeyTest extends ContractTestCase
 
     public function test_edit_returns_ok_message(): void
     {
+        $this->loginAsAdminViaUI();
         $token  = $this->getPwgToken();
         $create = $this->callWs('pwg.users.api_key.create', [
             'key_name'  => 'ct_key_' . uniqid(),
@@ -101,8 +109,130 @@ final class WsApiKeyTest extends ContractTestCase
         self::assertIsString($response['result']);
     }
 
+    public function test_create_forbidden_for_guest(): void
+    {
+        $response = $this->ws('pwg.users.api_key.create', [
+            'key_name' => 'x', 'duration' => 1, 'pwg_token' => 'irrelevant',
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(401, $response['err']);
+        self::assertSame('Acces Denied', $response['message']);
+    }
+
+    public function test_create_forbidden_when_not_connected_via_pwg_ui(): void
+    {
+        // pwg.session.login (not identification.php) never sets
+        // $_SESSION['connected_with'] = 'pwg_ui' -- ApiKeyService::
+        // connectedWithPwgUi() is false even for a real, logged-in admin.
+        $this->loginAsAdmin();
+        $token = $this->getPwgToken();
+
+        $response = $this->callWs('pwg.users.api_key.create', [
+            'key_name' => 'x', 'duration' => 1, 'pwg_token' => $token,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(401, $response['err']);
+        self::assertSame('Acces Denied', $response['message']);
+    }
+
+    public function test_revoke_forbidden_for_guest(): void
+    {
+        $response = $this->ws('pwg.users.api_key.revoke', [
+            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst', 'pwg_token' => 'irrelevant',
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(401, $response['err']);
+        self::assertSame('Acces Denied', $response['message']);
+    }
+
+    public function test_revoke_invalid_token_returns_error(): void
+    {
+        $this->loginAsAdminViaUI();
+        $response = $this->callWs('pwg.users.api_key.revoke', [
+            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst', 'pwg_token' => 'wrong',
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+        self::assertSame('Invalid security token', $response['message']);
+    }
+
+    public function test_revoke_a_wellformed_but_nonexistent_pkid_returns_error(): void
+    {
+        $this->loginAsAdminViaUI();
+        $token = $this->getPwgToken();
+
+        $response = $this->callWs('pwg.users.api_key.revoke', [
+            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst', 'pwg_token' => $token,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+        self::assertSame('API Key not found', $response['message']);
+    }
+
+    public function test_edit_forbidden_for_guest(): void
+    {
+        $response = $this->ws('pwg.users.api_key.edit', [
+            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst', 'key_name' => 'x', 'pwg_token' => 'irrelevant',
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(401, $response['err']);
+        self::assertSame('Acces Denied', $response['message']);
+    }
+
+    public function test_edit_invalid_token_returns_error(): void
+    {
+        $this->loginAsAdminViaUI();
+        $response = $this->callWs('pwg.users.api_key.edit', [
+            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst', 'key_name' => 'x', 'pwg_token' => 'wrong',
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+        self::assertSame('Invalid security token', $response['message']);
+    }
+
+    public function test_edit_a_wellformed_but_nonexistent_pkid_returns_error(): void
+    {
+        $this->loginAsAdminViaUI();
+        $token = $this->getPwgToken();
+
+        $response = $this->callWs('pwg.users.api_key.edit', [
+            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst', 'key_name' => 'x', 'pwg_token' => $token,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+        self::assertSame('API Key not found', $response['message']);
+    }
+
+    public function test_get_forbidden_for_guest(): void
+    {
+        $response = $this->ws('pwg.users.api_key.get', ['pwg_token' => 'irrelevant']);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(401, $response['err']);
+        self::assertSame('Acces Denied', $response['message']);
+    }
+
+    public function test_get_invalid_token_returns_error(): void
+    {
+        $this->loginAsAdminViaUI();
+        $response = $this->callWs('pwg.users.api_key.get', ['pwg_token' => 'wrong']);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+        self::assertSame('Invalid security token', $response['message']);
+    }
+
     public function test_revoke_returns_ok_message(): void
     {
+        $this->loginAsAdminViaUI();
         $token  = $this->getPwgToken();
         $create = $this->callWs('pwg.users.api_key.create', [
             'key_name'  => 'ct_key_' . uniqid(),

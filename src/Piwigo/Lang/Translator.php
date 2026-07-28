@@ -57,6 +57,20 @@ final class Translator
         $this->inner = new GettextTranslator();
     }
 
+    /**
+     * $inner's own properties (domain/dictionary/plurals) are plain
+     * scalars/arrays -- PHP's value semantics already deep-copy those on
+     * assignment, so cloning $inner itself is enough to fully decouple the
+     * clone from the original (no further nested __clone() needed on
+     * $inner). Needed so MailService::switchLangTo()/switchLangBack() can
+     * snapshot and restore a language's full translation state, not just
+     * Piwigo\Core\Lang's own parallel $data/$langInfo bookkeeping.
+     */
+    public function __clone(): void
+    {
+        $this->inner = clone $this->inner;
+    }
+
     public static function get(): self
     {
         return self::$instance ??= new self();

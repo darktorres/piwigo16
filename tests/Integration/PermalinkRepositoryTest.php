@@ -122,4 +122,44 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
     {
         self::assertFalse($this->repo->deleteOldPermalinkByValue('never-used-' . bin2hex(random_bytes(4))));
     }
+
+    public function test_clear_category_permalink_on_an_unknown_category_is_a_silent_noop(): void
+    {
+        // Should neither throw nor affect any real category -- em->find()
+        // returns null for a nonexistent id, so this exercises the early
+        // `return;` guard directly.
+        $this->expectNotToPerformAssertions();
+
+        $this->repo->clearCategoryPermalink(999999);
+    }
+
+    public function test_set_category_permalink_on_an_unknown_category_is_a_silent_noop(): void
+    {
+        $this->repo->setCategoryPermalink(999999, 'p17-test-' . bin2hex(random_bytes(4)));
+
+        self::assertNull($this->repo->findCategoryIdByPermalink('p17-test-does-not-matter'));
+    }
+
+    public function test_find_all_ordered_by_applies_the_given_order_column(): void
+    {
+        $lowSlug = 'aaa-order-test-' . bin2hex(random_bytes(4));
+        $highSlug = 'zzz-order-test-' . bin2hex(random_bytes(4));
+        $this->repo->insertOldPermalinkDeleted(1, $lowSlug);
+        $this->repo->insertOldPermalinkDeleted(1, $highSlug);
+
+        try {
+            $rows = $this->repo->findAllOrderedBy('permalink');
+            $permalinks = array_map(static fn ($row) => $row->permalink, $rows);
+
+            $lowIndex = array_search($lowSlug, $permalinks, true);
+            $highIndex = array_search($highSlug, $permalinks, true);
+
+            self::assertIsInt($lowIndex);
+            self::assertIsInt($highIndex);
+            self::assertLessThan($highIndex, $lowIndex, 'ascending order by permalink puts the lexicographically-earlier slug first');
+        } finally {
+            $this->repo->deleteOldPermalink(1, $lowSlug);
+            $this->repo->deleteOldPermalink(1, $highSlug);
+        }
+    }
 }

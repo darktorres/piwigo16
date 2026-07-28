@@ -21,10 +21,12 @@ use Piwigo\Db\Tables;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Html\HtmlService;
 use Piwigo\Mail\MailService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserInfoEntity;
 use Piwigo\Users\UserService;
+use Piwigo\Users\UserStatus;
 
 /**
  * Piwigo\Mail\MailService::mailNotificationAdmins()/mailAdmins()/
@@ -55,6 +57,24 @@ use Piwigo\Users\UserService;
  * user 1's 'webmaster' status) the natural pick for a temporary real
  * mail_address to exercise mailGroup()'s auth-key-link branch without a
  * lasting fixture mutation.
+ *
+ * moveCssToBody()'s catch(\Exception) fallback (see this class's own
+ * MailServiceTest.php sibling in the Unit suite for the happy path) is
+ * deliberately not chased here: CssInliner::fromHtml()->inlineCss() only
+ * throws ParseException/\RuntimeException for an invalid selector/XPath
+ * when debug mode is on (see vendor/pelago/emogrifier/src/CssInliner.php's
+ * own docblocks), and moveCssToBody() never calls setDebug(true) -- no
+ * public seam exists to force that branch from a black-box caller without
+ * relying on fragile, version-specific internal Emogrifier behavior.
+ *
+ * mailGroup()'s own `if ($language === '')` and `if ($users === [])`
+ * guards are both structurally unreachable through the real
+ * MailRecipientRepository pair: findDistinctLanguagesInGroup() already
+ * filters out empty-string languages via array_filter(), and
+ * findByGroupAndLanguage() runs the identical group/email/language join
+ * conditions -- any language the first query returns is guaranteed at
+ * least one row in the second. Left uncovered as genuinely dead defensive
+ * code, not overlooked.
  */
 final class MailServiceTest extends IntegrationTestCase
 {
@@ -295,5 +315,170 @@ final class MailServiceTest extends IntegrationTestCase
         self::assertStringStartsWith('ERROR: ', $contents);
 
         unlink($created[0]);
+    }
+
+    public function test_sendMailTest_returns_early_when_the_target_file_cannot_be_opened(): void
+    {
+        CurrentConfig::setSmtpHost('127.0.0.1:1');
+        CurrentConfig::setDebugMail(true);
+        // A username containing '/' makes sendMailTest()'s own filename
+        // resolve into a non-existent subdirectory of _data/tmp --
+        // fopen('w+') doesn't create missing intermediate directories, so
+        // it fails, exercising the "file couldn't be opened" early return.
+        // suppressMailerWarning() below also swallows the resulting
+        // fopen() warning, not just the expected "Mailer Error" one.
+        CurrentUser::set(new User(
+            id: UserId::from(1),
+            username: 'nonexistent-subdir/evil',
+            email: '',
+            language: 'en_UK',
+            theme: '',
+            status: UserStatus::Normal,
+            enabledHigh: false,
+        ));
+
+        $dir = dirname(__DIR__, 2) . '/_data/tmp';
+        $before = glob($dir . '/mail.*');
+        self::assertIsArray($before);
+
+        $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
+            ['name' => 'Someone', 'email' => 'someone@example.test'],
+            ['subject' => 'hi', 'content' => 'body', 'content_format' => 'text/plain']
+        ));
+        self::assertFalse($result);
+
+        $after = glob($dir . '/mail.*');
+        self::assertIsArray($after);
+        self::assertSame($before, $after);
+    }
+
+    public function test_switchLangTo_loads_language_files_and_notifies_loading_lang_for_a_language_not_yet_cached(): void
+    {
+        $notified = false;
+        $handler = static function () use (&$notified): void {
+            $notified = true;
+        };
+        EventDispatcher::get()->addEventHandler('loading_lang', $handler);
+
+        try {
+            // A fresh MailService::reset() (this file's own setUp())
+            // starts with an empty $switchLangLanguages cache -- 'fr_FR'
+            // (a real installed language, see language/fr_FR/common.po)
+            // has never been loaded yet, so this exercises the real
+            // re-init branch (Lang::load() for common.lang/admin.lang/
+            // every registered plugin lang file, then the loading_lang
+            // notify) -- not the already-cached restore branch every
+            // other switchLangTo() call in this file happens to hit
+            // (CurrentUser's own guest language and
+            // userService()->getDefaultLanguage() are both 'en_UK', so
+            // the very first switchLangTo() call in those tests
+            // self-populates the cache for its own target language).
+            $this->mailer->switchLangTo('fr_FR');
+
+            self::assertTrue($notified);
+        } finally {
+            EventDispatcher::get()->removeEventHandler('loading_lang', $handler);
+            $this->mailer->switchLangBack();
+        }
+    }
+
+    public function test_switchLangBack_is_a_no_op_when_the_stack_is_empty(): void
+    {
+        // A fresh MailService::reset() (this file's own setUp()) starts
+        // with an empty $switchLangStack -- calling switchLangBack()
+        // without a prior switchLangTo() must return immediately rather
+        // than array_pop()-ing an empty stack.
+        //
+        // Not expectNotToPerformAssertions(): this file's own setUp()
+        // already performs a real assertInstanceOf() guard, which PHPUnit
+        // counts against every test in the class -- confirmed live, that
+        // combination is what PHPUnit's risky-test detector flags ("not
+        // expected to perform assertions but performed N").
+        $this->mailer->switchLangBack();
+    }
+
+    public function test_mailGroup_filters_recipients_by_an_explicit_language_selected_argument(): void
+    {
+        // Same fixture shape as the "single real recipient" test above
+        // (group 1: user 1 real+English, user 3 NULL email) -- explicitly
+        // requesting 'en_UK' here exercises language_selected's own
+        // non-empty ternary branch, not just its default-null fallback.
+        CurrentConfig::setSmtpHost('127.0.0.1:1');
+
+        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(1, ['content' => 'hi', 'language_selected' => 'en_UK']));
+
+        self::assertFalse($result);
+    }
+
+    public function test_mailGroup_builds_an_auth_key_link_for_the_optional_IMG_assign_slot_too(): void
+    {
+        // Same user-3-temp-email fixture trick as the LINK-only test
+        // above, this time also supplying an IMG assign slot with its own
+        // 'link' key to exercise that separate auth-key-appending branch.
+        $this->conn->executeStatement(
+            "UPDATE " . Tables::users() . " SET mail_address = 'temp3@example.test' WHERE id = 3"
+        );
+        CurrentConfig::setSmtpHost('127.0.0.1:1');
+
+        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(
+            2,
+            ['content' => 'hi'],
+            ['assign' => ['LINK' => 'http://example.test/link', 'IMG' => ['link' => 'http://example.test/img.png']]]
+        ));
+
+        self::assertFalse($result);
+    }
+
+    public function test_mail_auto_adds_a_bcc_to_the_webmaster_when_send_bcc_mail_webmaster_is_enabled(): void
+    {
+        CurrentConfig::setSmtpHost('127.0.0.1:1');
+        CurrentConfig::setSendBccMailWebmaster(true);
+
+        $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
+            ['name' => 'Someone', 'email' => 'someone@example.test'],
+            ['content' => 'hi']
+        ));
+
+        self::assertFalse($result);
+    }
+
+    public function test_mail_sets_a_custom_template_dir_then_falls_back_to_raw_content_when_the_filename_does_not_exist(): void
+    {
+        // 'dirname' set (any value -- Smarty's addTemplateDir() appends
+        // rather than validates/replaces, so this alone can't hide the
+        // real theme's own templates) exercises set_template_dir() being
+        // called at all; the genuinely nonexistent 'filename' is what
+        // actually forces templateExists() to return false, independent
+        // of dirname.
+        CurrentConfig::setSmtpHost('127.0.0.1:1');
+
+        $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
+            ['name' => 'Someone', 'email' => 'someone@example.test'],
+            ['content' => 'hi'],
+            ['filename' => 'this_template_does_not_exist', 'dirname' => '_data/mail_templates_extra', 'assign' => []]
+        ));
+
+        self::assertFalse($result);
+    }
+
+    public function test_mail_builds_an_smtp_dsn_with_the_default_port_url_encoded_auth_and_encryption_when_configured(): void
+    {
+        // No colon in smtp_host -> defaults to port 25; a configured
+        // smtp_user/password -> rawurlencode()d DSN auth; smtp_secure
+        // 'tls' -> appends '?encryption=tls'. 127.0.0.1 has no local mail
+        // daemon listening on port 25 in this environment, so the
+        // connection is refused just as fast/deterministically as the
+        // ':1'-suffixed closed port every other test in this file uses.
+        CurrentConfig::setSmtpHost('127.0.0.1');
+        CurrentConfig::setSmtpUser('mail user');
+        CurrentConfig::setSmtpPassword('p@ss w/ord');
+        CurrentConfig::setSmtpSecure('tls');
+
+        $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
+            ['name' => 'Someone', 'email' => 'someone@example.test'],
+            ['content' => 'hi']
+        ));
+
+        self::assertFalse($result);
     }
 }

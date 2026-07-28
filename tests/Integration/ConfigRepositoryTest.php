@@ -103,6 +103,31 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $fresh->deleteByParam($param);
     }
 
+    public function test_upsert_updates_the_comment_of_an_existing_row_when_given_one(): void
+    {
+        $param = 'p14_test_upsert_comment_' . bin2hex(random_bytes(4));
+        $this->repo->upsert($param, 'first', 'original comment');
+
+        // a null $comment (the default) leaves the existing comment alone
+        $this->repo->upsert($param, 'second');
+
+        $fresh = $this->freshRepo();
+        $entry = $fresh->find($param);
+        self::assertNotNull($entry);
+        self::assertSame('second', $entry->value);
+        self::assertSame('original comment', $entry->comment);
+
+        // a non-null $comment on an update DOES overwrite it
+        $this->repo->upsert($param, 'third', 'updated comment');
+
+        $fresh2 = $this->freshRepo();
+        $entry2 = $fresh2->find($param);
+        self::assertNotNull($entry2);
+        self::assertSame('updated comment', $entry2->comment);
+
+        $fresh2->deleteByParam($param);
+    }
+
     public function test_deleteByParam_removes_the_row(): void
     {
         $param = 'p14_test_delete_' . bin2hex(random_bytes(4));

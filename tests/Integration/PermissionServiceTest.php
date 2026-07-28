@@ -211,5 +211,70 @@ use Piwigo\Category\CategoryRepository;
                 'forbidden_images' => 'image_id',
             ]));
         }
+
+        /**
+         * @return list<int>
+         */
+        private function userAccessCatIdsFor(int $userId): array
+        {
+            $rows = $this->conn->createQueryBuilder()
+                ->select('cat_id')
+                ->from(Tables::userAccess())
+                ->where('user_id = :userId')
+                ->setParameter('userId', $userId)
+                ->executeQuery()
+                ->fetchFirstColumn();
+
+            return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+        }
+
+        public function test_remove_user_access_delegates_to_the_repository(): void
+        {
+            $this->conn->executeStatement('INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (2, 1), (2, 2)');
+
+            $this->service->removeUserAccess(2, [1]);
+
+            self::assertSame([2], $this->userAccessCatIdsFor(2));
+        }
+
+        public function test_grant_user_access_delegates_to_add_permission_on_category(): void
+        {
+            // grantUserAccess()'s own $userId param is a plain scalar int,
+            // not a list -- this also exercises addPermissionOnCategory()'s
+            // own `$userIds = [$userIds];` scalar-to-array normalization
+            // (the sibling normalization for $categoryIds is already
+            // covered by other callers that pass a bare int there).
+            $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET status = 'private' WHERE id = 1");
+
+            $this->service->grantUserAccess(4, [1]);
+
+            self::assertSame([1], $this->userAccessCatIdsFor(4));
+        }
+
+        public function test_add_permission_on_category_with_no_categories_is_a_noop(): void
+        {
+            $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET status = 'private' WHERE id = 1");
+
+            $this->service->addPermissionOnCategory([], [2]);
+
+            self::assertSame([], $this->userAccessCatIdsFor(2));
+        }
+
+        public function test_add_permission_on_category_with_apply_on_sub_also_grants_the_subcategory(): void
+        {
+            // Fixture: category 2 ("Nested Sub Album") is category 1's own
+            // child (uppercats '1,2'). Both made private here so both are
+            // eligible for an explicit user_access row -- proving
+            // applyOnSub's own findSubcategoryIds() merge actually widens
+            // the grant beyond category 1 alone.
+            $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET status = 'private' WHERE id IN (1, 2)");
+
+            $this->service->addPermissionOnCategory([1], [3], applyOnSub: true);
+
+            $catIds = $this->userAccessCatIdsFor(3);
+            sort($catIds);
+
+            self::assertSame([1, 2], $catIds);
+        }
     }
 }

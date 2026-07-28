@@ -28,6 +28,16 @@ use Piwigo\Db\Tables;
  * delegates to this class: the rehash path now does a real DBAL write via
  * PasswordRepository, which a Unit test's DB-less stubs can no longer
  * intercept.
+ *
+ * verifyLegacyPhpass()'s own `strlen($salt) !== 8` guard (right after the
+ * cost-factor check) is not chased here: $salt is `substr($hash, 4, 8)`,
+ * and the length guard a few lines above already fixes $hash at exactly
+ * 34 chars -- positions 4..11 always exist by then, so that substr() call
+ * can never return fewer than 8 chars. Genuinely dead code given the
+ * method's own earlier guard, not overlooked. (Its own final encoding-loop
+ * break at line ~141 is separately, explicitly documented in the source
+ * with a phpstan-ignore tag for the identifier greaterOrEqual.alwaysFalse,
+ * same "provably redundant" reasoning.)
  */
 final class PasswordServiceTest extends IntegrationTestCase
 {
@@ -139,5 +149,28 @@ final class PasswordServiceTest extends IntegrationTestCase
     {
         self::assertFalse($this->service->verifyLegacyPhpass('anything', 'not-a-phpass-hash'));
         self::assertFalse($this->service->verifyLegacyPhpass('anything', '$2y$04$tooshortforbcryptbutwrongprefix'));
+    }
+
+    public function test_verify_legacy_phpass_rejects_a_correctly_sized_hash_with_the_wrong_prefix(): void
+    {
+        // Exactly 34 chars (passes the length guard), but the first 3
+        // chars are neither '$P$' nor '$H$' -- a distinct rejection branch
+        // from the "wrong length" case above (real phpass hashes always
+        // use one of those 2 prefixes).
+        $wrongPrefixHash = '$Q$5testsalt/.6ES3kLR5L.kwZkBtHpD/';
+        self::assertSame(34, strlen($wrongPrefixHash));
+
+        self::assertFalse($this->service->verifyLegacyPhpass('legacyPhpassPassw0rd!', $wrongPrefixHash));
+    }
+
+    public function test_verify_legacy_phpass_rejects_a_hash_with_an_out_of_range_cost_factor(): void
+    {
+        // Correct '$P$' prefix and 34-char length, but hash[3] (the cost
+        // log2 character) is '.' -- itoa64 index 0, below the 7-30 valid
+        // range real phpass costs use.
+        $outOfRangeCostHash = '$P$.testsalt/.6ES3kLR5L.kwZkBtHpD/';
+        self::assertSame(34, strlen($outOfRangeCostHash));
+
+        self::assertFalse($this->service->verifyLegacyPhpass('legacyPhpassPassw0rd!', $outOfRangeCostHash));
     }
 }

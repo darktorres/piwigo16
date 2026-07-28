@@ -744,11 +744,22 @@ SELECT id
 
             if (self::needsPermalinkRedirect($category_permalink, $category_url_style, $hit_by_cat_url_name, $hit_by_cat_permalink, $expected_cat_url_name)) {
                 $this->categoryService->checkRestrictions($page_category['id'], $this->htmlRenderer, $this->redirectService);
+                // duplicateIndexUrl()/duplicatePictureUrl() read the
+                // current section's params from SectionContextRegistry,
+                // which this method otherwise only populates at its very
+                // end (buildSectionContext($page), below) -- too late for
+                // this early-exit redirect. $page['category'] is already
+                // set by this point (see $page_category's own assignment
+                // above), and buildSectionContext() is fully defensive for
+                // every field it doesn't have yet, so registering here is
+                // safe; the later, fully-populated call for the normal
+                // (non-redirect) path simply overwrites it afterward.
+                SectionContextRegistry::set(self::buildSectionContext($page));
                 $redirect_url = \Piwigo\Core\PageFilterHelper::scriptBasename() === 'picture' ? $this->urlService->duplicatePictureUrl() : $this->urlService->duplicateIndexUrl();
 
                 if (! headers_sent()) { // this is a permanent redirection
                     $this->htmlRenderer->setStatusHeader(301);
-                    $this->redirectService->redirectHttp($redirect_url);
+                    $this->redirectService->redirectHttp($redirect_url, 301);
                 }
                 $this->redirectService->redirect($redirect_url);
             }

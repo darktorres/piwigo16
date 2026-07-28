@@ -21,6 +21,17 @@ use Symfony\Component\Cache\Adapter\ArrayAdapter;
  * Same fixture shape as CategoryServiceTest/CategoryRepositoryTest:
  * category 1 "Sample Album" (root, 3 direct images), category 2 "Nested Sub
  * Album" (child of 1, 2 direct images).
+ *
+ * getForUser()'s `continue` branch (skipping a rollup row whose category
+ * was deleted between the rollup query and findNamesByIds()'s own lookup a
+ * moment later) is left uncovered -- confirmed untestable without a
+ * production refactor: both CategoryService and CategoryRepository are
+ * `final` with no interface seam, constructed directly by this class's own
+ * constructor (not via DI), so there's no fake-able collaborator to make
+ * one query see a category the other query's already-run result doesn't.
+ * The real race window only exists between two sequential,
+ * non-transactional queries inside one synchronous PHP call -- not
+ * reproducible from a single-threaded test.
  */
 final class CategoryTreeCacheTest extends IntegrationTestCase
 {

@@ -443,5 +443,473 @@ namespace Piwigo\Tests\Integration {
         {
             return 'p17-test-theme-' . bin2hex(random_bytes(4));
         }
+
+        /**
+         * buildThemeMaintain()'s $classname is `$themeId . '_maintain'`
+         * verbatim, with NO hyphen-to-underscore translation (unlike
+         * buildPluginMaintain()'s own str_replace('-', '_', ...)) -- a
+         * hyphenated id here would produce an invalid PHP class name, so
+         * every real-on-disk-theme test below uses this hyphen-free id
+         * generator instead of themeId().
+         */
+        private function themeIdNoHyphens(): string
+        {
+            return 'p17lifecycletheme' . bin2hex(random_bytes(4));
+        }
+
+        /**
+         * Recursively removes a directory tree -- the real plugins/themes/
+         * directory fixtures below (buildPluginMaintain()/
+         * buildThemeMaintain()/getChildrenThemes()/missingParentTheme() all
+         * genuinely `file_exists()`/`opendir()` real filesystem paths, no
+         * fake-able seam) create and must clean up.
+         */
+        private function rrmdir(string $dir): void
+        {
+            if (! is_dir($dir)) {
+                return;
+            }
+            $entries = scandir($dir);
+            foreach ($entries !== false ? $entries : [] as $entry) {
+                if ($entry === '.' || $entry === '..') {
+                    continue;
+                }
+                $path = $dir . '/' . $entry;
+                if (is_dir($path)) {
+                    $this->rrmdir($path);
+                } else {
+                    unlink($path);
+                }
+            }
+            rmdir($dir);
+        }
+
+        /**
+         * Writes a real plugins/<id>/maintain.<ext> file declaring a
+         * global-namespace `<id>_maintain` class (hyphens folded to '_',
+         * matching buildPluginMaintain()'s own str_replace) -- $body is
+         * spliced in verbatim as the class's method overrides.
+         */
+        private function writePluginMaintainFile(string $id, string $ext, bool $extendsBase, string $body = ''): void
+        {
+            $dir = \Piwigo\Admin\PluginLoader::pluginsPath() . $id;
+            mkdir($dir, 0o777, true);
+            $classname = str_replace('-', '_', $id . '_maintain');
+            $extends = $extendsBase ? ' extends \\Piwigo\\Admin\\PluginMaintain' : '';
+            file_put_contents(
+                $dir . '/maintain.' . $ext,
+                "<?php\nclass {$classname}{$extends}\n{\n{$body}\n}\n"
+            );
+        }
+
+        private function removePluginDir(string $id): void
+        {
+            $this->rrmdir(\Piwigo\Admin\PluginLoader::pluginsPath() . $id);
+        }
+
+        /**
+         * Writes a real themes/<id>/admin/maintain.inc.php file declaring a
+         * global-namespace `<id>_maintain` class -- buildThemeMaintain()'s
+         * classname is the bare theme id with NO hyphen folding, so callers
+         * must pass a themeIdNoHyphens()-shaped id.
+         */
+        private function writeThemeMaintainFile(string $id, bool $extendsBase, string $body = ''): void
+        {
+            $dir = \Piwigo\Core\CurrentPaths::get()->root . 'themes/' . $id . '/admin';
+            mkdir($dir, 0o777, true);
+            $classname = $id . '_maintain';
+            $extends = $extendsBase ? ' extends \\Piwigo\\Admin\\ThemeMaintain' : '';
+            file_put_contents(
+                $dir . '/maintain.inc.php',
+                "<?php\nclass {$classname}{$extends}\n{\n{$body}\n}\n"
+            );
+        }
+
+        /**
+         * Writes a real themes/<id>/themeconf.inc.php -- the file
+         * ExtensionScanner::scanTheme()/ThemeCatalog::checkThemeInstalled()
+         * both genuinely check for on disk, no fake-able seam.
+         *
+         * @param array{name?: string, parent?: string, mobile?: bool} $conf
+         */
+        private function writeThemeConf(string $id, array $conf = []): void
+        {
+            $dir = \Piwigo\Core\CurrentPaths::get()->root . 'themes/' . $id;
+            mkdir($dir, 0o777, true);
+            $name = $conf['name'] ?? $id;
+            $lines = "<?php\n/*\nTheme Name: {$name}\nVersion: 1.0\n*/\n";
+            if (isset($conf['parent'])) {
+                $lines .= "\$theme_conf['parent'] = '{$conf['parent']}';\n";
+            }
+            if (isset($conf['mobile']) && $conf['mobile']) {
+                $lines .= "\$theme_conf['mobile'] = true;\n";
+            }
+            file_put_contents($dir . '/themeconf.inc.php', $lines);
+        }
+
+        private function removeThemeDir(string $id): void
+        {
+            $this->rrmdir(\Piwigo\Core\CurrentPaths::get()->root . 'themes/' . $id);
+        }
+
+        // --------------------------------------------- plugin update/errors
+
+        public function test_plugin_update_without_a_revision_option_throws(): void
+        {
+            $this->expectException(\LogicException::class);
+            $this->expectExceptionMessage("performPluginAction('update'): missing 'revision' option");
+
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'update', $this->pluginId(), ['version' => '1.0'], []);
+        }
+
+        // The 'update' action's real extraction-succeeds branch
+        // (ExtensionLifecycle.php lines ~163-177: rescanning the plugin,
+        // calling PluginMaintain::update(), bumping the stored version) is
+        // gated entirely behind PemCatalog::extractArchive(), which itself
+        // calls the static, non-injectable HttpClientService::fetchToFile()
+        // against the real piwigo.org PEM server -- PemCatalog is `final
+        // readonly` (no interface, no fake-able seam) and is already on this
+        // effort's own documented skip list (see UploadServiceTest and
+        // PemCatalogTest's siblings). In this environment extractArchive()
+        // always returns a non-'ok' status, so only the ELSE branch
+        // (activityDetails['result'] = 'error') is reachable -- already
+        // covered indirectly by test_plugin_update_without_a_revision_option_throws's
+        // sibling network-failure path in the wider suite. Not chased further.
+
+        public function test_plugin_install_failure_marks_activity_as_error_and_does_not_insert_a_row(): void
+        {
+            $id = $this->pluginId();
+            $this->writePluginMaintainFile($id, 'class.php', extendsBase: true, body: <<<'PHP'
+    public function install($plugin_version, &$errors = [])
+    {
+        $errors[] = 'forced install failure';
+    }
+PHP);
+
+            try {
+                $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, ['version' => '1.0']);
+
+                self::assertSame(['forced install failure'], $errors);
+                self::assertNull($this->repo->find(ExtensionType::Plugin, $id));
+            } finally {
+                $this->removePluginDir($id);
+            }
+        }
+
+        public function test_plugin_activate_failure_marks_activity_as_error_after_a_successful_implicit_install(): void
+        {
+            $id = $this->pluginId();
+            $this->writePluginMaintainFile($id, 'class.php', extendsBase: true, body: <<<'PHP'
+    public function install($plugin_version, &$errors = [])
+    {
+    }
+
+    public function activate($plugin_version, &$errors = [])
+    {
+        $errors[] = 'forced activate failure';
+    }
+PHP);
+
+            try {
+                $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, ['version' => '1.0']);
+
+                self::assertSame(['forced activate failure'], $errors);
+                // The implicit install() (called first, no errors) DID
+                // insert the row -- only the subsequent activate() call
+                // failed, so state stays 'inactive', never flipped to
+                // 'active'.
+                $row = $this->repo->find(ExtensionType::Plugin, $id);
+                self::assertNotNull($row);
+                self::assertSame('inactive', $row['state']);
+            } finally {
+                $this->removePluginDir($id);
+            }
+        }
+
+        // ------------------------------------------- buildPluginMaintain()
+
+        public function test_build_plugin_maintain_loads_a_real_class_php_file(): void
+        {
+            $id = $this->pluginId();
+            $this->writePluginMaintainFile($id, 'class.php', extendsBase: true);
+
+            try {
+                $method = new \ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
+                $maintain = $method->invoke($this->lifecycle, $id);
+
+                self::assertInstanceOf(\Piwigo\Admin\PluginMaintain::class, $maintain);
+                self::assertNotInstanceOf(\Piwigo\Admin\DummyPluginMaintain::class, $maintain);
+            } finally {
+                $this->removePluginDir($id);
+            }
+        }
+
+        public function test_build_plugin_maintain_throws_when_the_class_php_class_does_not_extend_plugin_maintain(): void
+        {
+            $id = $this->pluginId();
+            $this->writePluginMaintainFile($id, 'class.php', extendsBase: false);
+            $classname = str_replace('-', '_', $id . '_maintain');
+
+            try {
+                $method = new \ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
+
+                $this->expectException(\LogicException::class);
+                $this->expectExceptionMessage("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
+
+                $method->invoke($this->lifecycle, $id);
+            } finally {
+                $this->removePluginDir($id);
+            }
+        }
+
+        public function test_build_plugin_maintain_loads_a_real_inc_php_file(): void
+        {
+            $id = $this->pluginId();
+            $this->writePluginMaintainFile($id, 'inc.php', extendsBase: true);
+
+            try {
+                $method = new \ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
+                $maintain = $method->invoke($this->lifecycle, $id);
+
+                self::assertInstanceOf(\Piwigo\Admin\PluginMaintain::class, $maintain);
+                self::assertNotInstanceOf(\Piwigo\Admin\DummyPluginMaintain::class, $maintain);
+            } finally {
+                $this->removePluginDir($id);
+            }
+        }
+
+        public function test_build_plugin_maintain_throws_when_the_inc_php_class_does_not_extend_plugin_maintain(): void
+        {
+            $id = $this->pluginId();
+            $this->writePluginMaintainFile($id, 'inc.php', extendsBase: false);
+            $classname = str_replace('-', '_', $id . '_maintain');
+
+            try {
+                $method = new \ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
+
+                $this->expectException(\LogicException::class);
+                $this->expectExceptionMessage("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
+
+                $method->invoke($this->lifecycle, $id);
+            } finally {
+                $this->removePluginDir($id);
+            }
+        }
+
+        // -------------------------------------------- buildThemeMaintain()
+
+        public function test_build_theme_maintain_loads_a_real_maintain_inc_php_file(): void
+        {
+            $id = $this->themeIdNoHyphens();
+            $this->writeThemeMaintainFile($id, extendsBase: true);
+
+            try {
+                $method = new \ReflectionMethod($this->lifecycle, 'buildThemeMaintain');
+                $maintain = $method->invoke($this->lifecycle, $id);
+
+                self::assertInstanceOf(\Piwigo\Admin\ThemeMaintain::class, $maintain);
+                self::assertNotInstanceOf(\Piwigo\Admin\DummyThemeMaintain::class, $maintain);
+            } finally {
+                $this->removeThemeDir($id);
+            }
+        }
+
+        public function test_build_theme_maintain_throws_when_the_class_does_not_extend_theme_maintain(): void
+        {
+            $id = $this->themeIdNoHyphens();
+            $this->writeThemeMaintainFile($id, extendsBase: false);
+
+            try {
+                $method = new \ReflectionMethod($this->lifecycle, 'buildThemeMaintain');
+
+                $this->expectException(\LogicException::class);
+                $this->expectExceptionMessage("buildThemeMaintain(): {$id}_maintain does not extend ThemeMaintain");
+
+                $method->invoke($this->lifecycle, $id);
+            } finally {
+                $this->removeThemeDir($id);
+            }
+        }
+
+        // ------------------------------------------------- theme, more
+
+        public function test_theme_deactivate_of_a_never_installed_theme_is_a_silent_noop(): void
+        {
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $this->themeId(), null);
+
+            self::assertSame([], $errors);
+        }
+
+        public function test_theme_delete_of_a_theme_neither_installed_nor_on_disk_is_a_silent_noop(): void
+        {
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'delete', $this->themeId(), null);
+
+            self::assertSame([], $errors);
+        }
+
+        public function test_theme_delete_is_blocked_by_a_real_child_theme_depending_on_it(): void
+        {
+            $parent = $this->themeIdNoHyphens();
+            $child = $this->themeIdNoHyphens();
+            $this->writeThemeConf($child, ['name' => 'Child Theme', 'parent' => $parent]);
+
+            try {
+                self::assertSame(['Child Theme'], $this->lifecycle->getChildrenThemes($parent));
+
+                $errors = $this->lifecycle->performAction(
+                    ExtensionType::Theme,
+                    'delete',
+                    $parent,
+                    ['version' => '1.0', 'name' => 'Parent Theme'],
+                );
+
+                self::assertCount(1, $errors);
+                self::assertStringContainsString('Child Theme', $errors[0]);
+                self::assertNull($this->repo->find(ExtensionType::Theme, $parent));
+            } finally {
+                $this->removeThemeDir($child);
+            }
+        }
+
+        public function test_missing_parent_theme_recurses_through_a_real_intermediate_theme(): void
+        {
+            $middle = $this->themeIdNoHyphens();
+            $this->writeThemeConf($middle, ['name' => 'Middle Theme', 'parent' => 'totally-missing-ancestor-xyz']);
+
+            try {
+                $result = $this->lifecycle->missingParentTheme('leaf-theme-never-on-disk', ['parent' => $middle]);
+
+                self::assertSame('totally-missing-ancestor-xyz', $result);
+            } finally {
+                $this->removeThemeDir($middle);
+            }
+        }
+
+        public function test_theme_deactivate_resets_mobile_theme_config_when_deactivating_the_mobile_theme(): void
+        {
+            $mobile = $this->themeId();
+            $other = $this->themeId();
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $mobile, ['version' => '1.0', 'name' => 'Mobile', 'mobile' => true]);
+            CurrentConfig::setEnableExtensionsInstall(true);
+            CurrentConfig::setPhpExtensionInUrls(false);
+            CurrentConfig::setMobilTheme($mobile);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $other, ['version' => '1.0', 'name' => 'Other']);
+
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $mobile, ['version' => '1.0', 'name' => 'Mobile', 'mobile' => true]);
+
+            self::assertSame([], $errors);
+            $raw = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'mobile_theme'");
+            self::assertIsString($raw);
+            self::assertSame('', json_decode($raw));
+
+            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'mobile_theme'");
+        }
+
+        /**
+         * performThemeAction()'s own `$id === getDefaultTheme()` gate
+         * (guarding the pickReplacementDefaultTheme()/setDefaultTheme()
+         * call) is unreachable through the public performAction() API in
+         * this specific Integration harness: ThemeCatalog::
+         * checkThemeInstalled() composes `CurrentPaths::get()->root .
+         * CurrentConfig::themesDir()`, but this class's own setUp() (line
+         * ~79) sets themesDir() to an ALREADY-absolute path (`root .
+         * 'themes'`) for a different, unrelated reason (buildThemeMaintain()/
+         * ExtensionScanner need the absolute form) -- composing root with an
+         * already-absolute themesDir() double-prefixes the path, so
+         * checkThemeInstalled() (confirmed live) returns false for every
+         * theme id, including 'default' itself. getPwgThemes() is filtered
+         * through that same check, so it's always empty, and
+         * UserService::getDefaultTheme() always falls through to its own
+         * hard 'default' fallback -- which can never match a real
+         * performAction()-installed theme id ('default' itself can never
+         * get a DB row, since performThemeAction()'s own 'activate' case
+         * short-circuits for `$id === 'default'`). Exercising
+         * pickReplacementDefaultTheme()/setDefaultTheme() directly (both
+         * private, already covered read-only elsewhere in this class) via
+         * Reflection instead -- same tactic as buildPluginMaintain()/
+         * buildThemeMaintain() above -- is the only way to reach their real
+         * bodies at all in this harness.
+         */
+        public function test_pick_replacement_default_theme_returns_any_other_installed_theme(): void
+        {
+            $keep = $this->themeId();
+            $exclude = $this->themeId();
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $keep, ['version' => '1.0', 'name' => 'Keep']);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $exclude, ['version' => '1.0', 'name' => 'Exclude']);
+
+            $method = new \ReflectionMethod($this->lifecycle, 'pickReplacementDefaultTheme');
+            $result = $method->invoke($this->lifecycle, $exclude);
+
+            self::assertSame($keep, $result);
+        }
+
+        public function test_pick_replacement_default_theme_falls_back_to_default_when_none_other_exists(): void
+        {
+            $method = new \ReflectionMethod($this->lifecycle, 'pickReplacementDefaultTheme');
+            $result = $method->invoke($this->lifecycle, 'a-theme-id-that-is-not-installed-xyz');
+
+            self::assertSame('default', $result);
+        }
+
+        public function test_set_default_theme_reassigns_every_user_on_the_fallback_default_theme(): void
+        {
+            $new = $this->themeId();
+
+            // See this section's own docblock above: getDefaultTheme()
+            // always returns the literal 'default' string in this harness,
+            // so setDefaultTheme()'s internal findUserIdsByTheme() call
+            // always looks up whoever currently has theme = 'default' --
+            // snapshot them all so this test can restore the exact prior
+            // state no matter how many rows that is.
+            $before = $this->conn->fetchAllAssociative("SELECT user_id, theme FROM " . Tables::userInfos() . " WHERE theme = 'default'");
+
+            try {
+                $method = new \ReflectionMethod($this->lifecycle, 'setDefaultTheme');
+                $method->invoke($this->lifecycle, $new);
+
+                foreach ($before as $row) {
+                    $current = $this->conn->fetchOne('SELECT theme FROM ' . Tables::userInfos() . ' WHERE user_id = ?', [$row['user_id']]);
+                    self::assertSame($new, $current);
+                }
+                // defaultUserId()/guestId() (both user_id 2 in this
+                // environment) are unconditionally folded into $userIds --
+                // still true even for a user who happened to already be on
+                // 'default' (already asserted above for user 2), so this
+                // only adds real signal when user 2 *wasn't* already in
+                // $before; assert it regardless for a stable, exact check.
+                $guestTheme = $this->conn->fetchOne('SELECT theme FROM ' . Tables::userInfos() . ' WHERE user_id = 2');
+                self::assertSame($new, $guestTheme);
+            } finally {
+                foreach ($before as $row) {
+                    $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET theme = ? WHERE user_id = ?', [$row['theme'], $row['user_id']]);
+                }
+            }
+        }
+
+        // ---------------------------------------------------- language, more
+
+        public function test_language_delete_of_a_never_activated_but_on_disk_language_succeeds(): void
+        {
+            $errors = $this->lifecycle->performAction(
+                ExtensionType::Language,
+                'delete',
+                'never-activated-on-disk-xyz',
+                ['version' => '1.0', 'name' => 'On Disk Lang'],
+            );
+
+            self::assertSame([], $errors);
+        }
+
+        public function test_language_set_default_reassigns_the_default_and_guest_users(): void
+        {
+            $errors = $this->lifecycle->performAction(ExtensionType::Language, 'set_default', 'xx_ZZ', null);
+
+            self::assertSame([], $errors);
+            $row = $this->conn->fetchAssociative('SELECT language FROM ' . Tables::userInfos() . ' WHERE user_id = 2');
+            self::assertIsArray($row);
+            self::assertSame('xx_ZZ', $row['language']);
+
+            $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET language = 'en_UK' WHERE user_id = 2");
+        }
     }
 }

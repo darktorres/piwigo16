@@ -12,6 +12,7 @@ use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
  * InstallBootstrap is install.php's counterpart to
@@ -188,5 +189,16 @@ final class InstallBootstrapTest extends IntegrationTestCase
         $this->expectExceptionMessage('Kernel not booted');
 
         InstallBootstrap::activateConfigService();
+    }
+
+    public function test_activateConfigService_throws_when_the_container_returns_an_unexpected_type(): void
+    {
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('Container returned an unexpected type for ' . ConfigService::class);
+
+        KernelContainerOverride::withWrongTypeFor(
+            ConfigService::class,
+            static fn () => InstallBootstrap::activateConfigService()
+        );
     }
 }

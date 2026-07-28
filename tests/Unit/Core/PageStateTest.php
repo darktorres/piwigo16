@@ -76,6 +76,19 @@ test('addQueryTime accumulates count and time', function (): void {
         ->and($state->queriesTime)->toBe(0.75);
 });
 
+test('setUpdatedVersion/markAuthKeyInvalid set their respective fields', function (): void {
+    $state = PageState::current();
+
+    expect($state->updatedVersion)->toBeNull()
+        ->and($state->authKeyInvalid)->toBeFalse();
+
+    $state->setUpdatedVersion('17.1.0');
+    $state->markAuthKeyInvalid();
+
+    expect($state->updatedVersion)->toBe('17.1.0')
+        ->and($state->authKeyInvalid)->toBeTrue();
+});
+
 test('attachGlobals seeds the singleton like current(), idempotently', function (): void {
     PageState::attachGlobals();
     $state = PageState::current();

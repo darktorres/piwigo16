@@ -47,6 +47,13 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class);
     }
 
+    private function countRows(string $table): int
+    {
+        $count = $this->conn->createQueryBuilder()->select('COUNT(*) AS c')->from($table)->executeQuery()->fetchOne();
+
+        return is_numeric($count) ? (int) $count : 0;
+    }
+
     #[\Override]
     protected function tearDown(): void
     {
@@ -281,6 +288,249 @@ final class CategoryRepositoryTest extends IntegrationTestCase
     public function test_find_full_categories_by_ids_returns_empty_for_no_ids(): void
     {
         self::assertSame([], $this->repo->findFullCategoriesByIds([]));
+    }
+
+    public function test_find_permalink_matches_returns_empty_for_no_permalinks(): void
+    {
+        self::assertSame([], $this->repo->findPermalinkMatches([]));
+    }
+
+    public function test_find_image_ids_for_categories_applies_a_non_empty_extra_where_fragment(): void
+    {
+        // Without the fragment, category 1's own 3 images (1, 2, 3) all
+        // qualify -- excluding image 1 by id proves $extraImagesWhereSql
+        // (aliased 'i', matching the query's own images-table alias)
+        // actually reaches the query rather than being silently dropped.
+        $ids = $this->repo->findImageIdsForCategories([1], 'AND', 'i.id != 1', '', '');
+        sort($ids);
+
+        self::assertSame([2, 3], $ids);
+    }
+
+    public function test_find_categories_by_ids_returns_empty_for_no_ids(): void
+    {
+        self::assertSame([], $this->repo->findCategoriesByIds([]));
+    }
+
+    public function test_find_storage_linked_image_ids_returns_empty_for_no_ids(): void
+    {
+        self::assertSame([], $this->repo->findStorageLinkedImageIds([]));
+    }
+
+    public function test_find_distinct_linked_image_ids_returns_empty_for_no_ids(): void
+    {
+        self::assertSame([], $this->repo->findDistinctLinkedImageIds([]));
+    }
+
+    public function test_find_non_orphan_image_ids_returns_empty_for_no_image_ids(): void
+    {
+        self::assertSame([], $this->repo->findNonOrphanImageIds([], [2]));
+    }
+
+    public function test_find_non_orphan_image_ids_keeps_only_images_still_linked_outside_the_excluded_categories(): void
+    {
+        // Images 1-3 are (also) directly linked to category 1, which is
+        // NOT excluded here -- they survive. Images 4-5 are linked ONLY to
+        // category 2, the excluded one -- they don't survive, proving this
+        // is a real "still has another home" diff, not just "was in the
+        // requested list".
+        $ids = $this->repo->findNonOrphanImageIds([1, 2, 3, 4, 5], [2]);
+        sort($ids);
+
+        self::assertSame([1, 2, 3], $ids);
+    }
+
+    public function test_delete_user_access_for_categories_is_a_no_op_for_no_ids(): void
+    {
+        $before = $this->countRows(Tables::userAccess());
+
+        $this->repo->deleteUserAccessForCategories([]);
+
+        $after = $this->countRows(Tables::userAccess());
+        self::assertSame($before, $after);
+    }
+
+    public function test_delete_group_access_for_categories_is_a_no_op_for_no_ids(): void
+    {
+        $before = $this->countRows(Tables::groupAccess());
+
+        $this->repo->deleteGroupAccessForCategories([]);
+
+        $after = $this->countRows(Tables::groupAccess());
+        self::assertSame($before, $after);
+    }
+
+    public function test_delete_user_access_for_users_and_categories_is_a_no_op_for_no_user_ids(): void
+    {
+        $before = $this->countRows(Tables::userAccess());
+
+        $this->repo->deleteUserAccessForUsersAndCategories([], [1]);
+
+        $after = $this->countRows(Tables::userAccess());
+        self::assertSame($before, $after);
+    }
+
+    public function test_delete_group_access_for_groups_and_categories_is_a_no_op_for_no_group_ids(): void
+    {
+        $before = $this->countRows(Tables::groupAccess());
+
+        $this->repo->deleteGroupAccessForGroupsAndCategories([], [1]);
+
+        $after = $this->countRows(Tables::groupAccess());
+        self::assertSame($before, $after);
+    }
+
+    public function test_delete_categories_by_ids_is_a_no_op_for_no_ids(): void
+    {
+        $this->repo->deleteCategoriesByIds([]);
+
+        self::assertNotNull($this->repo->findById(1));
+    }
+
+    public function test_delete_old_permalinks_for_categories_is_a_no_op_for_no_ids(): void
+    {
+        $this->repo->deleteOldPermalinksForCategories([]);
+
+        $count = $this->countRows(Tables::oldPermalinks());
+        self::assertSame(1, $count);
+    }
+
+    public function test_clear_representative_picture_ids_is_a_no_op_for_no_ids(): void
+    {
+        $this->repo->clearRepresentativePictureIds([]);
+
+        $cat = $this->repo->findById(1);
+        self::assertNotNull($cat);
+    }
+
+    public function test_update_category_visibility_is_a_no_op_for_no_ids(): void
+    {
+        $this->repo->updateCategoryVisibility([], false);
+
+        $visible = $this->conn->createQueryBuilder()->select('visible')->from(Tables::categories())->where('id = 1')->executeQuery()->fetchOne();
+        self::assertSame(1, is_numeric($visible) ? (int) $visible : null);
+    }
+
+    public function test_update_category_commentable_is_a_no_op_for_no_ids(): void
+    {
+        $this->repo->updateCategoryCommentable([], false);
+
+        $commentable = $this->conn->createQueryBuilder()->select('commentable')->from(Tables::categories())->where('id = 1')->executeQuery()->fetchOne();
+        self::assertSame(1, is_numeric($commentable) ? (int) $commentable : null);
+    }
+
+    public function test_update_category_status_is_a_no_op_for_no_ids(): void
+    {
+        $this->repo->updateCategoryStatus([], 'private');
+
+        self::assertSame('public', $this->repo->findCategoryStatus(1));
+    }
+
+    public function test_update_image_order_is_a_no_op_for_a_missing_category(): void
+    {
+        // 999999 doesn't exist -- find() returns null and the method
+        // returns early instead of dereferencing a null entity.
+        $this->repo->updateImageOrder(999999, 'name ASC');
+
+        self::assertNull($this->repo->findById(999999));
+    }
+
+    public function test_find_status_by_ids_returns_empty_for_no_ids(): void
+    {
+        self::assertSame([], $this->repo->findStatusByIds([]));
+    }
+
+    public function test_find_uppercats_columns_returns_empty_for_no_ids(): void
+    {
+        self::assertSame([], $this->repo->findUppercatsColumns([]));
+    }
+
+    public function test_find_uppercats_by_id_returns_empty_for_no_ids(): void
+    {
+        self::assertSame([], $this->repo->findUppercatsById([]));
+    }
+
+    public function test_find_ref_dates_by_category_ids_returns_empty_for_no_ids(): void
+    {
+        self::assertSame([], $this->repo->findRefDatesByCategoryIds([], 'date_creation', 'MIN'));
+    }
+
+    public function test_find_uppercat_ids_returns_empty_for_no_ids(): void
+    {
+        self::assertSame([], $this->repo->findUppercatIds([]));
+    }
+
+    public function test_find_categories_for_fulldirs_returns_empty_for_no_ids(): void
+    {
+        self::assertSame([], $this->repo->findCategoriesForFulldirs([]));
+    }
+
+    public function test_update_category_parent_is_a_no_op_for_no_ids(): void
+    {
+        $this->repo->updateCategoryParent([], 'NULL');
+
+        $cat = $this->repo->findById(2);
+        self::assertNotNull($cat);
+        $idUppercat = $this->conn->createQueryBuilder()->select('id_uppercat')->from(Tables::categories())->where('id = 2')->executeQuery()->fetchOne();
+        self::assertSame(1, is_numeric($idUppercat) ? (int) $idUppercat : null);
+    }
+
+    public function test_find_max_rank_for_parent_returns_the_highest_rank_among_root_categories(): void
+    {
+        self::assertSame(1, $this->repo->findMaxRankForParent(null));
+    }
+
+    public function test_find_max_rank_for_parent_returns_the_highest_rank_among_a_specific_parents_children(): void
+    {
+        self::assertSame(1, $this->repo->findMaxRankForParent(1));
+    }
+
+    public function test_find_max_rank_for_parent_returns_null_when_the_parent_has_no_children(): void
+    {
+        self::assertNull($this->repo->findMaxRankForParent(2));
+    }
+
+    public function test_find_random_representative_id_among_subcategories_finds_a_real_match(): void
+    {
+        // category 2 ("1,2") is the only row LIKE '1,%', and its fixture
+        // representative_picture_id is 4.
+        self::assertSame('4', $this->repo->findRandomRepresentativeIdAmongSubcategories('1', ''));
+    }
+
+    public function test_find_random_representative_id_among_subcategories_returns_null_when_no_subcategory_matches(): void
+    {
+        // category 2 has no sub-categories of its own.
+        self::assertNull($this->repo->findRandomRepresentativeIdAmongSubcategories('2', ''));
+    }
+
+    public function test_find_random_representative_id_among_subcategories_returns_null_when_the_permission_condition_excludes_everything(): void
+    {
+        self::assertNull($this->repo->findRandomRepresentativeIdAmongSubcategories('1', ' AND 1 = 0'));
+    }
+
+    public function test_find_date_range_by_category_returns_empty_for_no_category_ids(): void
+    {
+        self::assertSame([], $this->repo->findDateRangeByCategory([], ''));
+    }
+
+    public function test_find_date_range_by_category_returns_the_min_and_max_creation_date(): void
+    {
+        // Only image 2's date_creation is set (the other 2 direct images
+        // of category 1 stay NULL) -- MIN/MAX both resolve to that single
+        // real value, proving the aggregate reads real data rather than
+        // just echoing back a NULL.
+        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2019-06-15 10:00:00' WHERE id = 2");
+
+        try {
+            $range = $this->repo->findDateRangeByCategory([1], '');
+            self::assertCount(1, $range);
+            $entry = array_values($range)[0];
+
+            self::assertSame('2019-06-15 10:00:00', $entry['from']);
+            self::assertSame('2019-06-15 10:00:00', $entry['to']);
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET date_creation = NULL WHERE id = 2');
+        }
     }
 
 }

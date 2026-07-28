@@ -199,4 +199,148 @@ final class WsGroupsMutationTest extends ContractTestCase
         // src was deleted by merge; clean up dst
         $this->callWs('pwg.groups.delete', ['group_id' => $dstId, 'pwg_token' => $token]);
     }
+
+    public function test_add_with_a_duplicate_name_returns_error(): void
+    {
+        // 'Editors' is a real fixture group name.
+        $response = $this->callWs('pwg.groups.add', ['name' => 'Editors']);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(1003, $response['err']);
+        self::assertSame('This name is already used by another group.', $response['message']);
+    }
+
+    public function test_delete_invalid_token_returns_error(): void
+    {
+        $response = $this->callWs('pwg.groups.delete', ['group_id' => [1], 'pwg_token' => 'wrong']);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+    }
+
+    public function test_setInfo_invalid_token_returns_error(): void
+    {
+        $response = $this->callWs('pwg.groups.setInfo', ['group_id' => 1, 'pwg_token' => 'wrong']);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+    }
+
+    public function test_addUser_invalid_token_returns_error(): void
+    {
+        $response = $this->callWs('pwg.groups.addUser', ['group_id' => 1, 'user_id' => [1], 'pwg_token' => 'wrong']);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+    }
+
+    public function test_deleteUser_invalid_token_returns_error(): void
+    {
+        $response = $this->callWs('pwg.groups.deleteUser', ['group_id' => 1, 'user_id' => [1], 'pwg_token' => 'wrong']);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+    }
+
+    public function test_merge_invalid_token_returns_error(): void
+    {
+        $response = $this->callWs('pwg.groups.merge', ['destination_group_id' => 1, 'merge_group_id' => [2], 'pwg_token' => 'wrong']);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+    }
+
+    public function test_duplicate_invalid_token_returns_error(): void
+    {
+        $response = $this->callWs('pwg.groups.duplicate', ['group_id' => 1, 'copy_name' => 'x', 'pwg_token' => 'wrong']);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+    }
+
+    public function test_getList_invalid_order_returns_error(): void
+    {
+        $response = $this->callWs('pwg.groups.getList', ['order' => '1 DROP TABLE']);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(1003, $response['err']);
+        self::assertSame('Invalid input parameter order', $response['message']);
+    }
+
+    public function test_setInfo_on_a_nonexistent_group_returns_error(): void
+    {
+        $token = $this->getPwgToken();
+
+        $response = $this->callWs('pwg.groups.setInfo', [
+            'group_id' => 999999,
+            'name' => 'irrelevant',
+            'pwg_token' => $token,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(1003, $response['err']);
+        self::assertSame('This group does not exist.', $response['message']);
+    }
+
+    public function test_addUser_on_a_nonexistent_group_returns_error(): void
+    {
+        $token = $this->getPwgToken();
+
+        $response = $this->callWs('pwg.groups.addUser', [
+            'group_id' => 999999,
+            'user_id' => [1],
+            'pwg_token' => $token,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(1003, $response['err']);
+        self::assertSame('This group does not exist.', $response['message']);
+    }
+
+    public function test_deleteUser_on_a_nonexistent_group_returns_error(): void
+    {
+        $token = $this->getPwgToken();
+
+        $response = $this->callWs('pwg.groups.deleteUser', [
+            'group_id' => 999999,
+            'user_id' => [1],
+            'pwg_token' => $token,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(1003, $response['err']);
+        self::assertSame('This group does not exist.', $response['message']);
+    }
+
+    public function test_merge_with_a_nonexistent_source_group_returns_error(): void
+    {
+        $token = $this->getPwgToken();
+        $dst = $this->callWs('pwg.groups.add', ['name' => 'ct_merge_bad_dst_' . uniqid()]);
+        $this->groupId = self::firstItemId($dst, 'groups');
+
+        $response = $this->callWs('pwg.groups.merge', [
+            'destination_group_id' => $this->groupId,
+            'merge_group_id' => [999999],
+            'pwg_token' => $token,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(1003, $response['err']);
+        self::assertSame('All groups does not exist.', $response['message']);
+    }
+
+    public function test_duplicate_a_nonexistent_group_returns_error(): void
+    {
+        $token = $this->getPwgToken();
+
+        $response = $this->callWs('pwg.groups.duplicate', [
+            'group_id' => 999999,
+            'copy_name' => 'irrelevant',
+            'pwg_token' => $token,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(1003, $response['err']);
+        self::assertSame('This group does not exist.', $response['message']);
+    }
 }

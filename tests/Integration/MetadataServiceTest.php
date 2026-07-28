@@ -74,6 +74,71 @@ final class MetadataServiceTest extends IntegrationTestCase
         parent::tearDown();
     }
 
+    /**
+     * Builds a real, minimal JPEG (via GD) with a hand-built Photoshop-IRB
+     * APP13 segment (the real "8BIM"/0x0404 IPTC-NAA resource block format)
+     * spliced in right after the SOI marker -- same "getimagesize()/
+     * iptcparse() need genuinely valid marker-segment bytes" reasoning as
+     * PwgImageTest's own EXIF-orientation helper (Admin\Image domain),
+     * confirmed live: neither ImageMagick's `-set`/`-define` nor a
+     * synthetic `xc:` canvas actually persists an IPTC profile either.
+     *
+     * @param  list<array{0: int<0, 255>, 1: string}>  $records  [datasetNumber, value] pairs, all under IPTC record 2 (Application Record)
+     */
+    private function makeJpegWithApp13Iptc(array $records): string
+    {
+        $iptcData = '';
+        foreach ($records as [$dataset, $value]) {
+            $iptcData .= "\x1c" . chr(2) . chr($dataset) . pack('n', strlen($value)) . $value;
+        }
+        // Empty Pascal-string resource name, 1-byte length prefix already
+        // even-length (0+1=1... padded to 2 below per the IRB spec).
+        $nameField = chr(0);
+        $nameField .= "\x00";
+        $blockData = $iptcData;
+        if (strlen($blockData) % 2 !== 0) {
+            $blockData .= "\x00";
+        }
+        $block = '8BIM' . pack('n', 0x0404) . $nameField . pack('N', strlen($iptcData)) . $blockData;
+        $psHeader = "Photoshop 3.0\x00" . $block;
+        $app13 = "\xFF\xED" . pack('n', strlen($psHeader) + 2) . $psHeader;
+
+        $img = imagecreatetruecolor(6, 6);
+        if ($img === false) {
+            throw new \RuntimeException('imagecreatetruecolor failed');
+        }
+        ob_start();
+        imagejpeg($img);
+        // ob_get_clean() can only return false when there's no active output
+        // buffer -- ob_start() immediately above guarantees one here.
+        $base = ob_get_clean();
+
+        return substr($base, 0, 2) . $app13 . substr($base, 2);
+    }
+
+    /**
+     * A real, minimal JPEG (via GD) with no special markers -- used by every
+     * getExifData() test below that injects its own synthetic $exif shape
+     * via the 'format_exif_data' plugin filter (always invoked for a real,
+     * truthy exif_read_data() result -- see that method's own inline
+     * comment) rather than hand-rolling binary EXIF tags for every field
+     * combination.
+     */
+    private function makePlainJpeg(): string
+    {
+        $img = imagecreatetruecolor(6, 6);
+        if ($img === false) {
+            throw new \RuntimeException('imagecreatetruecolor failed');
+        }
+        ob_start();
+        imagejpeg($img);
+        // ob_get_clean() can only return false when there's no active output
+        // buffer -- ob_start() immediately above guarantees one here.
+        $base = ob_get_clean();
+
+        return $base;
+    }
+
     public function test_clean_iptc_value_strips_leading_null_bytes(): void
     {
         $value = chr(0) . chr(0) . 'Hello';
@@ -236,5 +301,648 @@ final class MetadataServiceTest extends IntegrationTestCase
 
         self::assertSame('', $value);
     }
+
+    // ------------------------------------------------------------ getIptcData()
+
+    public function test_get_iptc_data_returns_empty_when_getimagesize_fails(): void
+    {
+        $result = $this->service->getIptcData($this->scratchDir . '/no-such-file.jpg', ['title' => '2#005']);
+
+        self::assertSame([], $result);
+    }
+
+    public function test_get_iptc_data_parses_real_iptc_fields_including_the_keyword_array_join(): void
+    {
+        $bytes = $this->makeJpegWithApp13Iptc([
+            [5, 'Sunset Over The Bay'],
+            [80, 'Jane Photographer'],
+            [25, 'nature'],
+            [25, 'travel'],
+        ]);
+        $path = $this->scratchDir . '/iptc-fields.jpg';
+        file_put_contents($path, $bytes);
+
+        $result = $this->service->getIptcData($path, [
+            'title' => '2#005',
+            'author' => '2#080',
+            'keywords' => '2#025',
+        ], '|');
+
+        self::assertSame([
+            'title' => 'Sunset Over The Bay',
+            'author' => 'Jane Photographer',
+            'keywords' => 'nature|travel',
+        ], $result);
+    }
+
+    public function test_get_iptc_data_strips_html_when_allow_html_in_metadata_is_disabled(): void
+    {
+        CurrentConfig::setAllowHtmlInMetadata(false);
+        $bytes = $this->makeJpegWithApp13Iptc([[5, '<b>Bold</b> Title']]);
+        $path = $this->scratchDir . '/iptc-html-stripped.jpg';
+        file_put_contents($path, $bytes);
+
+        $result = $this->service->getIptcData($path, ['title' => '2#005']);
+
+        self::assertSame(['title' => 'Bold Title'], $result);
+    }
+
+    public function test_get_iptc_data_keeps_html_when_allow_html_in_metadata_is_enabled(): void
+    {
+        CurrentConfig::setAllowHtmlInMetadata(true);
+        $bytes = $this->makeJpegWithApp13Iptc([[5, '<b>Bold</b> Title']]);
+        $path = $this->scratchDir . '/iptc-html-kept.jpg';
+        file_put_contents($path, $bytes);
+
+        $result = $this->service->getIptcData($path, ['title' => '2#005']);
+
+        self::assertSame(['title' => '<b>Bold</b> Title'], $result);
+    }
+
+    // ----------------------------------------------------------- cleanIptcValue()
+
+    public function test_clean_iptc_value_lets_a_plugin_handler_override_the_value(): void
+    {
+        $handler = static fn (string $value): string => 'plugin-override';
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('clean_iptc_value', $handler);
+
+        try {
+            $result = $this->service->cleanIptcValue("raw \x92 value");
+
+            self::assertSame('plugin-override', $result);
+        } finally {
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('clean_iptc_value', $handler);
+        }
+    }
+
+    public function test_clean_iptc_value_passes_through_a_value_that_is_already_valid_utf8(): void
+    {
+        // 'é' as a real 2-byte UTF-8 sequence (0xC3 0xA9) -- qualifyUtf8()
+        // classifies this as valid UTF-8 (not iso-8859-1/windows-1252), so
+        // convertCharset('utf-8', 'utf-8') short-circuits to the same bytes.
+        $value = "Caf\xc3\xa9";
+
+        self::assertSame("Caf\xc3\xa9", $this->service->cleanIptcValue($value));
+    }
+
+    public function test_clean_iptc_value_converts_windows_1252_bytes_to_utf8(): void
+    {
+        // A lone 0x92 byte (windows-1252's right single quotation mark) is
+        // not valid UTF-8 on its own -- qualifyUtf8() returns -1, routing
+        // through the windows-1252 (not plain iso-8859-1) fallback since
+        // iconv()/mb_convert_encoding() are both available here.
+        $value = "It\x92s a test";
+
+        self::assertSame("It\u{2019}s a test", $this->service->cleanIptcValue($value));
+    }
+
+    // ------------------------------------------------------------ getExifData()
+
+    public function test_get_exif_data_reads_a_nested_field_token(): void
+    {
+        // 'COMPUTED;Height' is a real nested key exif_read_data() always
+        // populates, even with zero embedded EXIF tags -- no synthetic
+        // override needed for this one. allowHtmlInMetadata stays disabled
+        // (setUp's default), so the scalar HTML-strip pass also coerces
+        // this int value to a string, matching real getExifData() behavior.
+        $path = $this->scratchDir . '/nested-field.jpg';
+        file_put_contents($path, $this->makePlainJpeg());
+
+        $result = $this->service->getExifData($path, ['nested_field' => 'COMPUTED;Height']);
+
+        self::assertSame(['nested_field' => '6'], $result);
+    }
+
+    public function test_get_exif_data_computes_gps_coordinates_from_a_valid_composite(): void
+    {
+        // allowHtmlInMetadata=true here specifically to bypass the
+        // unconditional strip_tags((string) $value) pass on every scalar
+        // result value (tested on its own below) -- keeps this test
+        // focused on the GPS composite math/wiring alone.
+        CurrentConfig::setAllowHtmlInMetadata(true);
+        $path = $this->scratchDir . '/gps-valid.jpg';
+        file_put_contents($path, $this->makePlainJpeg());
+
+        $handler = static function (mixed $exif, string $filename, array $map): mixed {
+            $exif = is_array($exif) ? $exif : [];
+            $exif['GPSLatitudeRef'] = 'N';
+            $exif['GPSLatitude'] = ['41/1', '54/1', '9686/1000'];
+            $exif['GPSLongitudeRef'] = 'E';
+            $exif['GPSLongitude'] = ['12/1', '30/1', '0/1'];
+
+            return $exif;
+        };
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+
+        try {
+            $result = $this->service->getExifData($path, []);
+
+            self::assertEqualsWithDelta(41.9027, $result['latitude'], 0.001);
+            self::assertEqualsWithDelta(12.5, $result['longitude'], 0.001);
+        } finally {
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+        }
+    }
+
+    public function test_get_exif_data_skips_out_of_range_gps_coordinates(): void
+    {
+        CurrentConfig::setAllowHtmlInMetadata(true);
+        $path = $this->scratchDir . '/gps-invalid.jpg';
+        file_put_contents($path, $this->makePlainJpeg());
+
+        $handler = static function (mixed $exif, string $filename, array $map): mixed {
+            $exif = is_array($exif) ? $exif : [];
+            // 200 degrees is out of the valid [-90, 90] latitude range --
+            // reaches the `else` logging branch instead of assigning
+            // latitude/longitude.
+            $exif['GPSLatitudeRef'] = 'N';
+            $exif['GPSLatitude'] = ['200/1', '0/1', '0/1'];
+            $exif['GPSLongitudeRef'] = 'E';
+            $exif['GPSLongitude'] = ['12/1', '0/1', '0/1'];
+
+            return $exif;
+        };
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+
+        try {
+            $result = $this->service->getExifData($path, []);
+
+            self::assertArrayNotHasKey('latitude', $result);
+            self::assertArrayNotHasKey('longitude', $result);
+        } finally {
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+        }
+    }
+
+    public function test_get_exif_data_strips_html_recursively_from_an_array_valued_field(): void
+    {
+        $path = $this->scratchDir . '/array-field.jpg';
+        file_put_contents($path, $this->makePlainJpeg());
+
+        $handler = static function (mixed $exif, string $filename, array $map): mixed {
+            $exif = is_array($exif) ? $exif : [];
+            $exif['MultiField'] = ['<b>one</b>', '<i>two</i>'];
+
+            return $exif;
+        };
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+
+        try {
+            $result = $this->service->getExifData($path, ['multi' => 'MultiField']);
+
+            self::assertSame(['multi' => ['one', 'two']], $result);
+        } finally {
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+        }
+    }
+
+    public function test_get_exif_data_strips_html_from_a_scalar_field(): void
+    {
+        $path = $this->scratchDir . '/scalar-field.jpg';
+        file_put_contents($path, $this->makePlainJpeg());
+
+        $handler = static function (mixed $exif, string $filename, array $map): mixed {
+            $exif = is_array($exif) ? $exif : [];
+            $exif['Artist'] = '<script>alert(1)</script>Jane';
+
+            return $exif;
+        };
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+
+        try {
+            $result = $this->service->getExifData($path, ['author' => 'Artist']);
+
+            self::assertSame(['author' => 'alert(1)Jane'], $result);
+        } finally {
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+        }
+    }
+
+    public function test_get_exif_data_uses_the_format_exif_data_override_when_exif_read_data_itself_fails(): void
+    {
+        // A non-JPEG byte stream with a real .jpg extension -- exif_read_data()
+        // genuinely fails here (a real "File not supported" E_WARNING, not
+        // merely an empty array), which is the only way to reach the
+        // `$exif2 = triggerChange(...)` branch (only computed when
+        // exif_read_data() itself was falsy), as opposed to the
+        // always-invoked triggerChange() call on the truthy-$exif path
+        // every other test above exercises.
+        $path = $this->scratchDir . '/malformed.jpg';
+        file_put_contents($path, str_repeat('not a real jpeg', 10));
+
+        // Returning a non-empty, non-array truthy value additionally
+        // covers the `! is_array($exif)` reset-to-[] guard right after
+        // this branch.
+        $handler = static fn (mixed $exif, string $filename, array $map): string => 'plugin-supplied-non-array-exif';
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+
+        set_error_handler(static fn (): bool => true);
+        try {
+            $result = $this->service->getExifData($path, ['author' => 'Artist']);
+        } finally {
+            restore_error_handler();
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+        }
+
+        self::assertSame([], $result);
+    }
+
+    // getExifData()'s `if (! function_exists('exif_read_data'))` RuntimeException
+    // (its very first guard) is not exercised anywhere in this file --
+    // ext-exif is a real, always-loaded extension in this environment (see
+    // composer.json's own "ext-exif" requirement), and function_exists()
+    // can't be forced to return false for a real built-in extension
+    // function from within a test process. Same "verified untestable
+    // without breaking a real runtime guarantee" shape as the
+    // HttpClientService-gated skip list.
+
+    // -------------------------------------------------------- getSyncIptcData()
+
+    public function test_get_sync_iptc_data_formats_a_valid_date_field(): void
+    {
+        CurrentConfig::setUseIptcMapping(['date_creation' => '2#055']);
+        $bytes = $this->makeJpegWithApp13Iptc([[55, '20240315']]);
+        $path = $this->scratchDir . '/iptc-date-valid.jpg';
+        file_put_contents($path, $bytes);
+
+        $result = $this->service->getSyncIptcData($path);
+
+        self::assertSame('2024-3-15', $result['date_creation']);
+    }
+
+    public function test_get_sync_iptc_data_falls_back_to_month_and_day_one_for_an_invalid_calendar_date(): void
+    {
+        CurrentConfig::setUseIptcMapping(['date_creation' => '2#055']);
+        // 2023-02-30 does not exist -- checkdate() fails, and the method
+        // "supposes the year is correct", resetting month/day to 1/1.
+        $bytes = $this->makeJpegWithApp13Iptc([[55, '20230230']]);
+        $path = $this->scratchDir . '/iptc-date-invalid.jpg';
+        file_put_contents($path, $bytes);
+
+        $result = $this->service->getSyncIptcData($path);
+
+        self::assertSame('2023-1-1', $result['date_creation']);
+    }
+
+    public function test_get_sync_iptc_data_normalizes_keywords_and_escapes_quotes(): void
+    {
+        CurrentConfig::setUseIptcMapping(['keywords' => '2#025', 'title' => '2#005']);
+        $titleValue = 'Bob\'s "Best" Shot';
+        $bytes = $this->makeJpegWithApp13Iptc([
+            [25, 'nature'],
+            [25, 'nature'],
+            [25, 'travel'],
+            [5, $titleValue],
+        ]);
+        $path = $this->scratchDir . '/iptc-keywords.jpg';
+        file_put_contents($path, $bytes);
+
+        $result = $this->service->getSyncIptcData($path);
+
+        self::assertSame('nature,travel', $result['keywords']);
+        // addslashes() on a value with no non-ASCII bytes never reaches
+        // cleanIptcValue()'s own charset-conversion branch -- the quotes
+        // are escaped by getSyncIptcData()'s own final addslashes() pass.
+        self::assertSame(addslashes($titleValue), $result['title']);
+    }
+
+    // -------------------------------------------------------- getSyncExifData()
+
+    public function test_get_sync_exif_data_formats_a_full_datetime_field(): void
+    {
+        CurrentConfig::setUseExifMapping(['date_creation' => 'DateTimeOriginal']);
+        $path = $this->scratchDir . '/exif-datetime-full.jpg';
+        file_put_contents($path, $this->makePlainJpeg());
+
+        $handler = static function (mixed $exif, string $filename, array $map): mixed {
+            $exif = is_array($exif) ? $exif : [];
+            $exif['DateTimeOriginal'] = '2024:03:15 10:20:30';
+
+            return $exif;
+        };
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+
+        try {
+            $result = $this->service->getSyncExifData($path);
+
+            self::assertSame('2024-03-15 10:20:30', $result['date_creation']);
+        } finally {
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+        }
+    }
+
+    public function test_get_sync_exif_data_formats_a_date_only_field(): void
+    {
+        CurrentConfig::setUseExifMapping(['date_creation' => 'DateTimeOriginal']);
+        $path = $this->scratchDir . '/exif-date-only.jpg';
+        file_put_contents($path, $this->makePlainJpeg());
+
+        $handler = static function (mixed $exif, string $filename, array $map): mixed {
+            $exif = is_array($exif) ? $exif : [];
+            // No time portion -- the full-datetime regex fails to match,
+            // falling through to the date-only regex branch.
+            $exif['DateTimeOriginal'] = '2024:03:15';
+
+            return $exif;
+        };
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+
+        try {
+            $result = $this->service->getSyncExifData($path);
+
+            self::assertSame('2024-03-15', $result['date_creation']);
+        } finally {
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+        }
+    }
+
+    public function test_get_sync_exif_data_treats_the_zero_datetime_as_empty_and_skips_it(): void
+    {
+        CurrentConfig::setUseExifMapping(['date_creation' => 'DateTimeOriginal']);
+        $path = $this->scratchDir . '/exif-date-zero.jpg';
+        file_put_contents($path, $this->makePlainJpeg());
+
+        $handler = static function (mixed $exif, string $filename, array $map): mixed {
+            $exif = is_array($exif) ? $exif : [];
+            $exif['DateTimeOriginal'] = '0000:00:00 00:00:00';
+
+            return $exif;
+        };
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+
+        try {
+            $result = $this->service->getSyncExifData($path);
+
+            self::assertArrayNotHasKey('date_creation', $result);
+        } finally {
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+        }
+    }
+
+    public function test_get_sync_exif_data_normalizes_keywords(): void
+    {
+        CurrentConfig::setUseExifMapping(['keywords' => 'UserComment']);
+        $path = $this->scratchDir . '/exif-keywords.jpg';
+        file_put_contents($path, $this->makePlainJpeg());
+
+        $handler = static function (mixed $exif, string $filename, array $map): mixed {
+            $exif = is_array($exif) ? $exif : [];
+            $exif['UserComment'] = 'nature.travel;family';
+
+            return $exif;
+        };
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+
+        try {
+            $result = $this->service->getSyncExifData($path);
+
+            self::assertSame('nature,travel,family', $result['keywords']);
+        } finally {
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+        }
+    }
+
+    // ----------------------------------------------- getSyncMetadataAttributes()
+
+    public function test_get_sync_metadata_attributes_includes_iptc_fields_when_enabled(): void
+    {
+        CurrentConfig::setUseIptc(true);
+        CurrentConfig::setUseIptcMapping(['title' => '2#005']);
+
+        $attributes = $this->service->getSyncMetadataAttributes();
+
+        self::assertContains('title', $attributes);
+    }
+
+    // ------------------------------------------------------------ getSyncMetadata()
+
+    public function test_get_sync_metadata_detects_a_tiff_original_and_reads_exif_from_it_while_using_the_representative_for_dimensions(): void
+    {
+        CurrentConfig::setUseExifMapping(['author' => 'Artist']);
+        $originalRelative = '_data/metadata-service-test-scratch/tiff-original.tiff';
+        $originalAbsolute = dirname(__DIR__, 2) . '/' . $originalRelative;
+
+        $tiff = new \Imagick();
+        $tiff->newImage(8, 6, 'white');
+        $tiff->setImageFormat('tiff');
+        $tiff->writeImage($originalAbsolute);
+        $tiff->clear();
+
+        $representativeDir = $this->scratchDir . '/pwg_representative';
+        mkdir($representativeDir, 0o777, true);
+        // Deliberately distinct dimensions (30x20) from the TIFF original's
+        // own 8x6 -- proves which file getSyncMetadata() actually read for
+        // width/height.
+        $representativeImg = imagecreatetruecolor(30, 20);
+        self::assertNotFalse($representativeImg);
+        imagejpeg($representativeImg, $representativeDir . '/tiff-original.jpg');
+
+        $exifReadFilename = null;
+        $handler = static function (mixed $exif, string $filename, array $map) use (&$exifReadFilename): mixed {
+            $exifReadFilename = $filename;
+
+            return $exif;
+        };
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+
+        try {
+            $result = $this->service->getSyncMetadata([
+                'path' => $originalRelative,
+                'representative_ext' => 'jpg',
+            ]);
+        } finally {
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+            @unlink($representativeDir . '/tiff-original.jpg');
+            @rmdir($representativeDir);
+        }
+
+        self::assertIsArray($result);
+        self::assertSame(30, $result['width']);
+        self::assertSame(20, $result['height']);
+        // Proves the isTiff branch really did reset $file back to the
+        // original TIFF for EXIF reading, despite the representative
+        // being used for width/height just above.
+        self::assertSame($originalAbsolute, $exifReadFilename);
+    }
+
+    public function test_get_sync_metadata_strips_newlines_from_name_and_author(): void
+    {
+        CurrentConfig::setUseExif(false);
+        CurrentConfig::setUseIptc(false);
+        $relativePath = '_data/metadata-service-test-scratch/newline-fields.jpg';
+        file_put_contents($this->scratchDir . '/newline-fields.jpg', $this->makePlainJpeg());
+
+        $result = $this->service->getSyncMetadata([
+            'path' => $relativePath,
+            'name' => "Multi\r\nLine Name",
+            'author' => "Author\nWith\rBreaks",
+        ]);
+
+        self::assertIsArray($result);
+        self::assertSame('Multi Line Name', $result['name']);
+        self::assertSame('Author With Breaks', $result['author']);
+    }
+
+    // getSyncMetadata()'s `if ($fs === false) { return false; }` guard
+    // (right after a successful is_readable() check moments earlier) is
+    // not exercised here -- there is no reliable, non-racy way to make
+    // filesize() fail on a path that just passed is_readable() without a
+    // TOCTOU race or a blocking special file (a named FIFO hangs
+    // filesize() entirely rather than returning false), neither of which
+    // is a safe, deterministic test.
+
+    // ----------------------------------------------------------- parseSvgDimensions()
+
+    public function test_parse_svg_dimensions_falls_back_to_the_viewbox_when_width_and_height_are_absent(): void
+    {
+        $method = new \ReflectionMethod(MetadataService::class, 'parseSvgDimensions');
+        $path = $this->scratchDir . '/viewbox-only.svg';
+        file_put_contents(
+            $path,
+            '<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150"></svg>'
+        );
+
+        $result = $method->invoke($this->service, $path);
+
+        self::assertSame([200, 150], $result);
+    }
+
+    public function test_parse_svg_dimensions_defaults_to_zero_for_a_malformed_viewbox(): void
+    {
+        $method = new \ReflectionMethod(MetadataService::class, 'parseSvgDimensions');
+        $path = $this->scratchDir . '/malformed-viewbox.svg';
+        file_put_contents(
+            $path,
+            '<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" viewBox="not-numbers"></svg>'
+        );
+
+        $result = $method->invoke($this->service, $path);
+
+        self::assertSame([0, 0], $result);
+    }
+
+    public function test_parse_svg_dimensions_returns_null_for_an_unreadable_file(): void
+    {
+        $method = new \ReflectionMethod(MetadataService::class, 'parseSvgDimensions');
+
+        // file_get_contents() on a missing file emits a real E_WARNING --
+        // swallowed for this one call, same established pattern as
+        // PwgImageTest's fopen()/getimagesize() failure cases.
+        set_error_handler(static fn (): bool => true);
+        try {
+            $result = $method->invoke($this->service, $this->scratchDir . '/does-not-exist.svg');
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertNull($result);
+    }
+
+    public function test_parse_svg_dimensions_returns_null_when_preg_replace_hits_the_backtrack_limit(): void
+    {
+        $method = new \ReflectionMethod(MetadataService::class, 'parseSvgDimensions');
+        $path = $this->scratchDir . '/doctype.svg';
+        file_put_contents(
+            $path,
+            '<?xml version="1.0"?><!DOCTYPE svg><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"></svg>'
+        );
+
+        // Forces preg_replace()'s own DOCTYPE-strip to fail with
+        // PREG_BACKTRACK_LIMIT_ERROR (confirmed live: a backtrack_limit of
+        // 0 fails even this simple, non-catastrophic-backtracking pattern),
+        // returning null exactly like a real PCRE resource-limit failure
+        // would in production.
+        $originalLimit = ini_get('pcre.backtrack_limit');
+        ini_set('pcre.backtrack_limit', '0');
+        try {
+            $result = $method->invoke($this->service, $path);
+        } finally {
+            ini_set('pcre.backtrack_limit', $originalLimit === false ? '1000000' : $originalLimit);
+        }
+
+        self::assertNull($result);
+    }
+
+    // parseSvgDimensions()'s `$attributes === null` guard is not exercised
+    // here -- SimpleXMLElement::attributes() only returns null for a
+    // handful of internal-error conditions that don't occur once
+    // simplexml_load_string() has already succeeded (confirmed live: even
+    // a real root element with zero attributes returns an empty
+    // SimpleXMLElement, never null). Same "verified unreachable through
+    // realistic input" shape as this file's other documented guards.
+
+    // ------------------------------------------------------------- syncMetadata()
+
+    public function test_sync_metadata_assigns_tags_from_a_keywords_csv_field(): void
+    {
+        CurrentConfig::setUseExif(false);
+        CurrentConfig::setUseIptc(true);
+        CurrentConfig::setUseIptcMapping(['keywords' => '2#025']);
+
+        $relativePath = '_data/metadata-service-test-scratch/sync-tags.jpg';
+        $bytes = $this->makeJpegWithApp13Iptc([[25, 'sync-nature'], [25, 'sync-travel']]);
+        file_put_contents($this->scratchDir . '/sync-tags.jpg', $bytes);
+
+        $this->conn->executeStatement(
+            'INSERT INTO ' . \Piwigo\Db\Tables::images() . ' (path) VALUES (?)',
+            [$relativePath]
+        );
+        $imageId = (int) $this->conn->lastInsertId();
+
+        try {
+            $this->service->syncMetadata([$imageId]);
+
+            $tagNames = $this->conn->fetchFirstColumn(
+                'SELECT t.name FROM ' . \Piwigo\Db\Tables::tags() . ' t
+                 INNER JOIN ' . \Piwigo\Db\Tables::imageTag() . ' it ON it.tag_id = t.id
+                 WHERE it.image_id = ?
+                 ORDER BY t.name',
+                [$imageId]
+            );
+            self::assertSame(['sync-nature', 'sync-travel'], $tagNames);
+
+            $updatedDate = $this->conn->fetchOne(
+                'SELECT date_metadata_update FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?',
+                [$imageId]
+            );
+            self::assertNotNull($updatedDate);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::imageTag() . ' WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::tags() . " WHERE name IN ('sync-nature', 'sync-travel')");
+        }
+    }
+
+    public function test_sync_metadata_skips_a_row_whose_file_is_unreadable(): void
+    {
+        $this->conn->executeStatement(
+            "INSERT INTO " . \Piwigo\Db\Tables::images() . " (path) VALUES ('no/such/file-for-sync.jpg')"
+        );
+        $imageId = (int) $this->conn->lastInsertId();
+
+        try {
+            // Must not throw/fatal -- getSyncMetadata() returns false for
+            // this row (is_readable() fails), hitting the `continue` guard;
+            // the row is never added to $datas/$tagsOf or written back.
+            $this->service->syncMetadata([$imageId]);
+
+            $updatedDate = $this->conn->fetchOne(
+                'SELECT date_metadata_update FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?',
+                [$imageId]
+            );
+            self::assertNull($updatedDate);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?', [$imageId]);
+        }
+    }
+
+    // syncMetadata()'s `! is_int($id) && ! is_string($id)` guard is not
+    // exercised here -- $data['id'] always comes from
+    // Projection\MetadataImage::toArray()['id'], typed `int` unconditionally
+    // (see that class), and syncMetadata() only ever builds $data from rows
+    // MetadataRepository::findImagesByIds() itself produced. There is no
+    // path through this method's public contract that hands it a
+    // non-int/string id, same "verified unreachable through the real API"
+    // shape as UserRepositoryTest's findAdminIds() note.
 }
 }

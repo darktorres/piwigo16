@@ -13,6 +13,11 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * and deletes them via a CSRF-gated action. pwg.images.setInfo's own
  * `tag_ids` param only accepts existing numeric tag ids (not names) --
  * pwg.tags.add is the real way to create a brand-new tag over the WS API.
+ *
+ * Not exercised: the 'alt_names' assign (only set when a
+ * 'get_tag_alt_names' event handler returns a non-empty list) -- this
+ * offline test env has no plugins registered to answer that hook, so
+ * $alt_names is always empty.
  */
 function tagsPageAddTag(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $name): int
 {

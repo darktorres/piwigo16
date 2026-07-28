@@ -176,6 +176,28 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertTrue($response['result']);
     }
 
+    public function test_pluginsPerformAction_activate_on_a_nonexistent_plugin_is_a_safe_noop_and_clears_the_template_cache(): void
+    {
+        // dbRow is null and fsEntry is null (no matching plugins/ directory)
+        // -- performPluginAction('activate', ...) delegates to
+        // performPluginAction('install', ...) first, which itself breaks
+        // out immediately with $errors=[] (same fsEntry-absent shortcut as
+        // the 'install' no-op test above), so $errors stays [] the whole
+        // way through -- covers the success branch (not the error one),
+        // including the delete_compiled_templates() call gated on
+        // action in {activate, deactivate}.
+        $token = $this->getPwgToken();
+
+        $response = $this->callWs('pwg.plugins.performAction', [
+            'action' => 'activate',
+            'plugin' => 'ct_fake_plugin_' . uniqid(),
+            'pwg_token' => $token,
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        self::assertTrue($response['result']);
+    }
+
     // --------------------------------------------------------- themesPerformAction
 
     public function test_themesPerformAction_invalid_token_returns_error(): void
@@ -205,6 +227,42 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('fail', $response['stat']);
         self::assertSame(401, $response['err']);
         self::assertSame('Piwigo extensions install/update/delete system is disabled', $response['message']);
+    }
+
+    /**
+     * ExtensionLifecycle::performThemeAction()'s 'deactivate' case refuses
+     * to deactivate the last remaining theme ("you need at least one
+     * theme") -- but only once it has a real dbRow to act on; the fixture's
+     * piwigo_themes table starts out completely empty (confirmed live --
+     * without a seeded row, 'default' hits the null-dbRow safe-noop branch
+     * instead, same as the "never installed" test below), so this test
+     * seeds the single row itself and removes it afterward.
+     */
+    public function test_themesPerformAction_deactivate_the_only_registered_theme_returns_error(): void
+    {
+        $token = $this->getPwgToken();
+
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::themes() . ' (id, version, name) VALUES (?, ?, ?)',
+            ['default', '1.0.0', 'default']
+        );
+
+        try {
+            // PwgError(500, ...) mirrors onto a real HTTP 500 status --
+            // callWs()'s generic "< 500" guard would wrongly reject this
+            // well-formed business-rule error.
+            $response = $this->callWsAllowingServerError('pwg.themes.performAction', [
+                'action' => 'deactivate',
+                'theme' => 'default',
+                'pwg_token' => $token,
+            ]);
+
+            self::assertSame('fail', $response['stat']);
+            self::assertSame(500, $response['err']);
+            self::assertSame('Impossible to deactivate this theme, you need at least one theme.', $response['message']);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::themes() . ' WHERE id = ?', ['default']);
+        }
     }
 
     public function test_themesPerformAction_deactivate_on_a_never_installed_theme_is_a_safe_noop(): void

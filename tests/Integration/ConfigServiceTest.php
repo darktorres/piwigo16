@@ -8,6 +8,17 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 
+/**
+ * hydrate()'s own `match ($paramTypeName) { ... default => $decoded }` arm
+ * is unreachable through any currently-defined CurrentConfig setter: every
+ * one of them (grepped across the whole class) takes a plain (nullable)
+ * bool/int/float/string/array first parameter, all handled by the match's
+ * explicit arms above `default` -- a genuinely union/object-typed setter
+ * would need to exist for that arm to ever run. Not worth a forced test;
+ * same "confirmed unreachable, not worth chasing" treatment this project
+ * already applies elsewhere (see e.g. RateRepositoryTest's own identical
+ * note on 2 defensive `is_numeric()` continues).
+ */
 final class ConfigServiceTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
@@ -258,5 +269,40 @@ final class ConfigServiceTest extends IntegrationTestCase
     public function test_pwgIsDbconfWriteable_returns_true_against_a_real_writable_db(): void
     {
         self::assertTrue($this->service->pwgIsDbconfWriteable());
+    }
+
+    /**
+     * hydrate()'s own docblock names 'upload_user_access' as a real
+     * example of a genuinely dynamic/unschematized param -- a row for it
+     * must load without error (and without touching any CurrentConfig
+     * property), exactly like the SCHEMA-driven design this replaces
+     * silently skipped keys with no matching accessor.
+     */
+    public function test_loadConfFromDb_silently_skips_a_row_with_no_matching_property(): void
+    {
+        $param = 'upload_user_access';
+        $this->service->confUpdateParam($param, 'admins');
+
+        try {
+            $this->service->loadConfFromDb();
+
+            self::assertSame('admins', $this->service->confGetParam($param));
+        } finally {
+            $this->service->confDeleteParam($param);
+        }
+    }
+
+    public function test_conf_update_param_encodes_null_as_a_literal_null_db_value(): void
+    {
+        $param = 'a_genuinely_dynamic_nullable_test_param';
+        $this->service->confUpdateParam($param, 'first');
+
+        try {
+            $this->service->confUpdateParam($param, null);
+
+            self::assertNull($this->buildConfigRepository()->find($param)?->value);
+        } finally {
+            $this->service->confDeleteParam($param);
+        }
     }
 }

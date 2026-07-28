@@ -187,6 +187,183 @@ test('result-only detail is formatted as an error badge', function (): void {
     expect($entry['detail'])->toBe(['type' => 'error', 'icon' => 'icon-block', 'text' => 'failed']);
 });
 
+test('core config action with an unknown section falls back to the raw section name', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow([
+            'action' => 'config',
+            'details' => ['config_section' => 'totally-unknown-section'],
+        ]),
+        []
+    );
+
+    $detail = is_array($entry['detail']) ? $entry['detail'] : [];
+    expect($detail['type'])->toBe('config_section')
+        ->and($detail[0])->toBe(['icon' => 'icon-cog-alt', 'text' => 'totally-unknown-section']);
+});
+
+test('core autoupdate action is flagged as major_infos with the blue update icon', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['action' => 'autoupdate']),
+        []
+    );
+
+    expect($entry['action_icon'])->toBe('icon-arrows-cw')
+        ->and($entry['action_color'])->toBe('icon-blue')
+        ->and($entry['action'])->toBe('Auto-update')
+        ->and($entry['major_infos'])->toBeTrue();
+});
+
+test('core unknown action falls back to the default yellow download icon', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['action' => 'some-future-core-action']),
+        []
+    );
+
+    expect($entry['action_icon'])->toBe('icon-download')
+        ->and($entry['action_color'])->toBe('icon-yellow')
+        // Core's default arm never overwrites $action -- it stays the raw
+        // action string from the row, distinct from every named arm above
+        // which replaces it with a translated label.
+        ->and($entry['action'])->toBe('some-future-core-action');
+});
+
+test('plugin install action gets the green download icon', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['object_id' => ActivitySystem::Plugin, 'action' => 'install', 'details' => ['plugin_id' => 'plugin-one']]),
+        []
+    );
+
+    expect($entry['object'])->toBe('Plugin One')
+        ->and($entry['action_icon'])->toBe('icon-download')
+        ->and($entry['action_color'])->toBe('icon-green')
+        ->and($entry['action'])->toBe('Install');
+});
+
+test('plugin activate action gets the green check icon', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['object_id' => ActivitySystem::Plugin, 'action' => 'activate', 'details' => ['plugin_id' => 'plugin-two']]),
+        []
+    );
+
+    expect($entry['action_icon'])->toBe('icon-check')
+        ->and($entry['action_color'])->toBe('icon-green')
+        ->and($entry['action'])->toBe('Activate');
+});
+
+test('plugin deactivate action gets the purple block icon', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['object_id' => ActivitySystem::Plugin, 'action' => 'deactivate', 'details' => ['plugin_id' => 'plugin-three']]),
+        []
+    );
+
+    expect($entry['action_icon'])->toBe('icon-block')
+        ->and($entry['action_color'])->toBe('icon-purple')
+        ->and($entry['action'])->toBe('Deactivate');
+});
+
+test('plugin uninstall action gets the red trash icon', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['object_id' => ActivitySystem::Plugin, 'action' => 'uninstall', 'details' => ['plugin_id' => 'plugin-four']]),
+        []
+    );
+
+    expect($entry['action_icon'])->toBe('icon-trash-1')
+        ->and($entry['action_color'])->toBe('icon-red')
+        ->and($entry['action'])->toBe('Uninstall');
+});
+
+test('plugin restore action gets the blue back-in-time icon', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['object_id' => ActivitySystem::Plugin, 'action' => 'restore', 'details' => ['plugin_id' => 'plugin-five']]),
+        []
+    );
+
+    expect($entry['action_icon'])->toBe('icon-back-in-time')
+        ->and($entry['action_color'])->toBe('icon-blue')
+        ->and($entry['action'])->toBe('Restore');
+});
+
+test('plugin autoupdate action gets the blue update icon, not flagged major_infos', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['object_id' => ActivitySystem::Plugin, 'action' => 'autoupdate', 'details' => ['plugin_id' => 'plugin-six']]),
+        []
+    );
+
+    expect($entry['action_icon'])->toBe('icon-arrows-cw')
+        ->and($entry['action_color'])->toBe('icon-blue')
+        ->and($entry['action'])->toBe('Auto-update')
+        // Unlike Core's own 'autoupdate'/'update' arms, the Plugin arm never
+        // sets major_infos.
+        ->and($entry['major_infos'])->toBeFalse();
+});
+
+test('plugin unknown action falls back to the default yellow puzzle icon', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['object_id' => ActivitySystem::Plugin, 'action' => 'some-future-plugin-action', 'details' => ['plugin_id' => 'plugin-seven']]),
+        []
+    );
+
+    expect($entry['action_icon'])->toBe('icon-puzzle')
+        ->and($entry['action_color'])->toBe('icon-yellow')
+        ->and($entry['action'])->toBe('some-future-plugin-action');
+});
+
+test('theme install action gets the green download icon', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['object_id' => ActivitySystem::Theme, 'action' => 'install', 'details' => ['theme_id' => 'theme-one']]),
+        []
+    );
+
+    expect($entry['object'])->toBe('Theme One')
+        ->and($entry['action_icon'])->toBe('icon-download')
+        ->and($entry['action_color'])->toBe('icon-green')
+        ->and($entry['action'])->toBe('Install');
+});
+
+test('theme deactivate action gets the purple block icon', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['object_id' => ActivitySystem::Theme, 'action' => 'deactivate', 'details' => ['theme_id' => 'theme-two']]),
+        []
+    );
+
+    expect($entry['action_icon'])->toBe('icon-block')
+        ->and($entry['action_color'])->toBe('icon-purple')
+        ->and($entry['action'])->toBe('Deactivate');
+});
+
+test('theme delete action gets the red trash icon', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['object_id' => ActivitySystem::Theme, 'action' => 'delete', 'details' => ['theme_id' => 'theme-three']]),
+        []
+    );
+
+    expect($entry['action_icon'])->toBe('icon-trash-1')
+        ->and($entry['action_color'])->toBe('icon-red')
+        ->and($entry['action'])->toBe('Delete');
+});
+
+test('theme update action gets the blue update icon', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['object_id' => ActivitySystem::Theme, 'action' => 'update', 'details' => ['theme_id' => 'theme-four']]),
+        []
+    );
+
+    expect($entry['action_icon'])->toBe('icon-arrows-cw')
+        ->and($entry['action_color'])->toBe('icon-blue')
+        ->and($entry['action'])->toBe('Update');
+});
+
+test('theme unknown action falls back to the default yellow brush icon', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['object_id' => ActivitySystem::Theme, 'action' => 'some-future-theme-action', 'details' => ['theme_id' => 'theme-five']]),
+        []
+    );
+
+    expect($entry['action_icon'])->toBe('icon-brush')
+        ->and($entry['action_color'])->toBe('icon-yellow')
+        ->and($entry['action'])->toBe('some-future-theme-action');
+});
+
 test('date and hour are split from occured_on and id/user/username pass through', function (): void {
     $entry = new ActivityLogEntryFormatter()->format(
         makeActivityRow([

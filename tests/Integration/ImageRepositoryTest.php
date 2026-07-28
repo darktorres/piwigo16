@@ -283,4 +283,164 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         self::assertNull($this->repo->findLoungeLockValue());
     }
+
+    public function test_update_coi_is_a_noop_for_a_nonexistent_image(): void
+    {
+        $this->repo->updateCoi(999_999, 'ABCD');
+
+        $coi = $this->conn->createQueryBuilder()
+            ->select('coi')
+            ->from(Tables::images())
+            ->where('id = 1')
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertNull($coi);
+    }
+
+    public function test_find_formats_by_image_ids_returns_empty_array_for_empty_input(): void
+    {
+        self::assertSame([], $this->repo->findFormatsByImageIds([]));
+    }
+
+    public function test_delete_images_is_a_noop_for_empty_ids(): void
+    {
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::images());
+
+        $this->repo->deleteImages([]);
+
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::images());
+        self::assertSame($before, $after);
+    }
+
+    public function test_find_orphan_image_ids_excludes_ids_present_in_lounged_ids(): void
+    {
+        // Every fixture image already belongs to exactly one album -- break
+        // image 3's own link so it's a real orphan for this test, then
+        // restore the exact original row.
+        $this->conn->executeStatement(
+            'DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = 3 AND category_id = 1'
+        );
+
+        try {
+            $withoutLoungedIds = $this->repo->findOrphanImageIds([]);
+            self::assertContains(3, $withoutLoungedIds);
+
+            $withLoungedIds = $this->repo->findOrphanImageIds([3]);
+            self::assertNotContains(3, $withLoungedIds);
+        } finally {
+            $this->conn->executeStatement(
+                'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id, `rank`) VALUES (3, 1, 3)'
+            );
+        }
+    }
+
+    public function test_touch_lastmodified_is_a_noop_for_empty_ids(): void
+    {
+        $before = $this->conn->createQueryBuilder()
+            ->select('lastmodified')
+            ->from(Tables::images())
+            ->where('id = 1')
+            ->executeQuery()
+            ->fetchOne();
+
+        $this->repo->touchLastmodified([]);
+
+        $after = $this->conn->createQueryBuilder()
+            ->select('lastmodified')
+            ->from(Tables::images())
+            ->where('id = 1')
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertSame($before, $after);
+    }
+
+    public function test_update_rotation_sets_the_column_for_an_existing_image(): void
+    {
+        try {
+            $this->repo->updateRotation(1, 3);
+
+            $rotation = $this->conn->createQueryBuilder()
+                ->select('rotation')
+                ->from(Tables::images())
+                ->where('id = 1')
+                ->executeQuery()
+                ->fetchOne();
+
+            self::assertSame(3, is_numeric($rotation) ? (int) $rotation : null);
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET rotation = 0 WHERE id = 1');
+        }
+    }
+
+    public function test_update_rotation_is_a_noop_for_a_nonexistent_image(): void
+    {
+        $this->repo->updateRotation(999_999, 2);
+
+        $rotation = $this->conn->createQueryBuilder()
+            ->select('rotation')
+            ->from(Tables::images())
+            ->where('id = 1')
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertSame(0, is_numeric($rotation) ? (int) $rotation : null);
+    }
+
+    public function test_mass_insert_lounge_is_a_noop_for_empty_inserts(): void
+    {
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::lounge());
+
+        $this->repo->massInsertLounge([]);
+
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::lounge());
+        self::assertSame($before, $after);
+    }
+
+    public function test_mass_insert_image_category_is_a_noop_for_empty_inserts(): void
+    {
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageCategory());
+
+        $this->repo->massInsertImageCategory([]);
+
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageCategory());
+        self::assertSame($before, $after);
+    }
+
+    public function test_update_dimensions_sets_width_and_height_for_an_existing_image(): void
+    {
+        try {
+            $this->repo->updateDimensions(1, 999, 888);
+
+            $row = $this->conn->createQueryBuilder()
+                ->select('width', 'height')
+                ->from(Tables::images())
+                ->where('id = 1')
+                ->executeQuery()
+                ->fetchAssociative();
+
+            self::assertIsArray($row);
+            self::assertSame(999, is_numeric($row['width']) ? (int) $row['width'] : null);
+            self::assertSame(888, is_numeric($row['height']) ? (int) $row['height'] : null);
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET width = 200, height = 150 WHERE id = 1');
+        }
+    }
+
+    public function test_update_dimensions_is_a_noop_for_a_nonexistent_image(): void
+    {
+        $this->repo->updateDimensions(999_999, 111, 222);
+
+        $row = $this->conn->createQueryBuilder()
+            ->select('width', 'height')
+            ->from(Tables::images())
+            ->where('id = 1')
+            ->executeQuery()
+            ->fetchAssociative();
+
+        self::assertIsArray($row);
+        self::assertSame(200, is_numeric($row['width']) ? (int) $row['width'] : null);
+        self::assertSame(150, is_numeric($row['height']) ? (int) $row['height'] : null);
+    }
 }

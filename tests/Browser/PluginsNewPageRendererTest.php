@@ -14,6 +14,25 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * same documented limitation as PemCatalog itself -- so render() always
  * degrades to "Can't connect to server" in this offline test environment,
  * which every test below tolerates rather than asserting against.
+ *
+ * Several other still-red branches were investigated and confirmed
+ * genuinely unreachable here, not just uncovered by oversight: the
+ * description-trimming/revision-date-diff/certification-computation body
+ * (the `foreach ($server_plugins as $plugin)` loop) is nested inside the
+ * same PemCatalog network-only `$server_plugins !== null` gate as above.
+ * The already-fs-installed exclusion filter (`$fs_plugin_ids` loop) scans
+ * PluginLoader::pluginsPath() -- this test env's real plugins/ directory
+ * is empty (confirmed by direct read), and ExtensionType::scanDirectory()
+ * hardcodes that real path with no injection point (same documented
+ * limitation as ExtensionScannerTest's own docblock), so writing a
+ * throwaway plugin there would mean mutating the live, Apache-shared
+ * plugins/ root while other Browser suites may run concurrently -- out of
+ * scope for the same reason ThemesInstalledPageRendererTest's own docblock
+ * gives for not writing a second theme under the shared themes/ root. The
+ * beta-test URL param (`preg_match('/(beta|RC)/', AppInfo::VERSION)`) is
+ * gated on AppInfo::VERSION (a fixed class constant, currently '16.3.0')
+ * containing "beta" or "RC", which it never does -- not overridable from a
+ * test.
  */
 it('shows a fatal error when the extensions install system is disabled', function (): void {
     $snapshot = H::snapshotConfig(['enable_extensions_install']);
@@ -79,6 +98,32 @@ it('reports an unrecognized installstatus with the generic extraction-error mess
 
         $page->assertSee('An error occured during the files');
         $page->assertSee('Please check "plugins" folder and sub-folders permissions');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('runs the webmaster automatic-install branch with a valid CSRF token, landing on the dl_archive_error result page', function (): void {
+    $snapshot = H::snapshotConfig(['enable_extensions_install']);
+    H::setConfigValue('enable_extensions_install', 'true');
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        // revision/extension are arbitrary PEM ids -- the real download
+        // always fails in this offline test environment (AppInfo::DOMAIN
+        // resolves to upstream.example.invalid, a deliberately
+        // unresolvable placeholder, confirmed via a real DNS lookup), so
+        // extractArchive() always returns 'dl_archive_error'. This still
+        // exercises the webmaster+CSRF-checked automatic-install branch
+        // itself (isWebmaster() true, checkOrFail() passing, extractArchive()
+        // called, redirect to base_url with the resulting installstatus),
+        // distinct from the passive installstatus= display-only cases
+        // already covered above.
+        $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new&revision=999999&extension=888888&pwg_token=' . $token);
+
+        $page->assertSee('Archive cannot be downloaded');
     } finally {
         H::restoreConfig($snapshot);
     }

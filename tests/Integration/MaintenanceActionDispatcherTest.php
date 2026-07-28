@@ -10,10 +10,15 @@ use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfigService;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
 
 /**
@@ -62,14 +67,28 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // Kernel::container(), which this isolated Integration test (no
         // full RequestBootstrap) wouldn't otherwise boot.
         Kernel::boot();
+        // Every Lang::t() assertion in this file expects the real en_UK
+        // admin.po wording (which sometimes differs from the raw English
+        // literal passed to Lang::t() -- e.g. "Update albums informations"
+        // vs the po's "Update albums' information"). Without this,
+        // whether admin.lang happens to already be loaded depends on
+        // which other Integration test file ran earlier in this shared
+        // process -- confirmed live. Loading it explicitly here makes
+        // every assertion deterministic regardless of run order.
+        Lang::load('admin.lang');
 
         $this->conn = DbConnection::build();
+        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
         $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository()));
     }
 
     #[\Override]
     protected function tearDown(): void
     {
+        // Harmless for every other test in this file, which never sets it
+        // -- same nullable-safe reset() shape as CurrentConfigService's own
+        // base-class reset (see IntegrationTestCase's own docblock).
+        CurrentTemplate::reset();
         Kernel::reset();
         parent::tearDown();
     }
@@ -155,6 +174,229 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             ->fetchOne();
 
         return is_numeric($value) ? (int) $value : 0;
+    }
+
+    // 'phpinfo' isn't covered here: its own body is a plain `echo ... ;
+    // exit();` -- a real, uncatchable process termination (unlike
+    // RedirectServiceInterface::redirect()/HtmlRenderingInterface::
+    // fatalError(), both `never`-typed but implemented via a catchable
+    // ResponseReadyException, see the 2 tests below). Calling it directly
+    // here would kill this entire shared PHPUnit/Pest process mid-suite,
+    // exactly the same hazard ExtensionLifecycleTest's own die()-guard
+    // documents. ServerInfoService::renderHtml() itself (the real
+    // curated-output logic) is already Unit-tested directly in
+    // ServerInfoServiceTest.php.
+
+    public function test_lock_gallery_persists_gallery_locked_and_redirects(): void
+    {
+        try {
+            $this->dispatcher->dispatch('lock_gallery');
+            self::fail('Expected RedirectServiceInterface::redirect() to throw ResponseReadyException');
+        } catch (\Piwigo\Http\ResponseReadyException) {
+            // redirect() is `never`-typed -- this catchable exception is
+            // its real non-exit() implementation, see that class's own
+            // docblock.
+        }
+
+        $raw = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'gallery_locked'");
+        self::assertSame(true, json_decode(is_scalar($raw) ? (string) $raw : ''));
+
+        $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'gallery_locked'");
+    }
+
+    public function test_unlock_gallery_persists_gallery_unlocked_and_redirects(): void
+    {
+        try {
+            $this->dispatcher->dispatch('unlock_gallery');
+            self::fail('Expected RedirectServiceInterface::redirect() to throw ResponseReadyException');
+        } catch (\Piwigo\Http\ResponseReadyException) {
+        }
+
+        $raw = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'gallery_locked'");
+        self::assertSame(false, json_decode(is_scalar($raw) ? (string) $raw : ''));
+        // $_SESSION['page_infos'] here has no reader anywhere in src/Piwigo
+        // (confirmed via full-repo grep) -- exercised for coverage credit
+        // without asserting on a visible effect that doesn't exist.
+        self::assertSame(['Gallery unlocked'], $_SESSION['page_infos'] ?? null);
+
+        $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'gallery_locked'");
+        unset($_SESSION['page_infos']);
+    }
+
+    public function test_categories_updates_album_information_and_adds_the_success_note(): void
+    {
+        $this->dispatcher->dispatch('categories');
+
+        self::assertContains(
+            "Update albums' information : action successfully performed.",
+            \Piwigo\Core\PageState::current()->infos
+        );
+    }
+
+    public function test_images_updates_photo_information_and_adds_the_success_note(): void
+    {
+        $this->dispatcher->dispatch('images');
+
+        self::assertContains(
+            "Update photos' information : action successfully performed.",
+            \Piwigo\Core\PageState::current()->infos
+        );
+    }
+
+    public function test_delete_orphan_tags_removes_a_tag_with_no_image_links(): void
+    {
+        // findOrphanTags() only considers a tag orphaned once its
+        // lastmodified is more than 1 day old (a grace period against
+        // deleting a tag the instant it's created, before it's had a
+        // chance to be associated with an image yet) -- confirmed live,
+        // a freshly-inserted tag (lastmodified defaulting to NOW()) is
+        // never picked up regardless of having no image_tag rows.
+        $this->conn->createQueryBuilder()
+            ->insert(Tables::tags())
+            ->values(['name' => ':name', 'url_name' => ':url', 'lastmodified' => ':lastmodified'])
+            ->setParameter('name', 'orphan-tag-' . uniqid())
+            ->setParameter('url', 'orphan-tag-' . uniqid())
+            ->setParameter('lastmodified', '2020-01-01 00:00:00')
+            ->executeStatement();
+        $before = $this->countRows(Tables::tags());
+
+        $this->dispatcher->dispatch('delete_orphan_tags');
+
+        self::assertLessThan($before, $this->countRows(Tables::tags()));
+        self::assertContains(
+            'Delete orphan tags : action successfully performed.',
+            \Piwigo\Core\PageState::current()->infos
+        );
+    }
+
+    public function test_user_cache_adds_the_success_note(): void
+    {
+        $this->dispatcher->dispatch('user_cache');
+
+        self::assertContains(
+            'Purge user cache : action successfully performed.',
+            \Piwigo\Core\PageState::current()->infos
+        );
+    }
+
+    public function test_sessions_purges_stale_sessions_and_adds_the_success_note(): void
+    {
+        $this->dispatcher->dispatch('sessions');
+
+        self::assertContains(
+            'Purge sessions : action successfully performed.',
+            \Piwigo\Core\PageState::current()->infos
+        );
+    }
+
+    public function test_feeds_purges_unused_feeds_and_adds_the_success_note(): void
+    {
+        $this->dispatcher->dispatch('feeds');
+
+        self::assertContains(
+            'Purge never used notification feeds : action successfully performed.',
+            \Piwigo\Core\PageState::current()->infos
+        );
+    }
+
+    public function test_database_repairs_and_optimizes_all_tables(): void
+    {
+        $this->dispatcher->dispatch('database');
+
+        self::assertContains(
+            'All optimizations have been successfully completed.',
+            \Piwigo\Core\PageState::current()->infos
+        );
+    }
+
+    public function test_c13y_delegates_to_check_integritys_maintenance(): void
+    {
+        $this->dispatcher->dispatch('c13y');
+
+        self::assertContains(
+            'Reinitialize integrity check : action successfully performed.',
+            \Piwigo\Core\PageState::current()->infos
+        );
+    }
+
+    public function test_empty_lounge_reports_the_number_of_photos_moved(): void
+    {
+        $this->dispatcher->dispatch('empty_lounge');
+
+        // The fixture's lounge is empty, so emptyLounge() genuinely moves 0
+        // photos -- this still exercises the real ImageService call and the
+        // exact message format (count() of an empty/null result), distinct
+        // from a real non-zero count this suite has no lounge fixture for.
+        self::assertContains(
+            '0 photos were moved from the upload lounge to their albums',
+            \Piwigo\Core\PageState::current()->infos
+        );
+    }
+
+    public function test_derivatives_with_type_all_clears_the_whole_cache(): void
+    {
+        $_GET['type'] = 'all';
+        try {
+            $this->dispatcher->dispatch('derivatives');
+        } finally {
+            unset($_GET['type']);
+        }
+
+        self::assertContains('action successfully performed.', \Piwigo\Core\PageState::current()->infos);
+    }
+
+    public function test_derivatives_with_underscore_joined_types_clears_each_one(): void
+    {
+        $_GET['type'] = 'thumb_2small';
+        try {
+            $this->dispatcher->dispatch('derivatives');
+        } finally {
+            unset($_GET['type']);
+        }
+
+        self::assertContains('action successfully performed.', \Piwigo\Core\PageState::current()->infos);
+    }
+
+    public function test_compiled_templates_fatal_errors_when_the_persistent_cache_is_not_initialized(): void
+    {
+        \Piwigo\Cache\CurrentPersistentCache::reset();
+        // delete_compiled_templates() runs before the persistent-cache
+        // guard -- needs a real Template instance, unset by default since
+        // this test never boots a full RequestBootstrap.
+        CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
+
+        // HtmlService::fatalError()'s own trigger_error(E_USER_ERROR) hard-
+        // halts the script unless something intercepts it and returns true
+        // -- real requests get this from Piwigo\Core\ErrorCollector::install(),
+        // never called here (a real set_error_handler()/
+        // register_shutdown_function() pair would leak into every later
+        // test in this shared process, same reasoning as
+        // TemplateDefineDerivativeTest's own identical local handler).
+        set_error_handler(static fn (): bool => true);
+        try {
+            $this->dispatcher->dispatch('compiled-templates');
+            self::fail('Expected HtmlRenderingInterface::fatalError() to throw ResponseReadyException');
+        } catch (\Piwigo\Http\ResponseReadyException) {
+        } finally {
+            restore_error_handler();
+        }
+    }
+
+    public function test_compiled_templates_purges_a_real_initialized_persistent_cache(): void
+    {
+        CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        \Piwigo\Cache\CurrentPersistentCache::set(new \Piwigo\Cache\PersistentFileCache());
+
+        try {
+            $this->dispatcher->dispatch('compiled-templates');
+
+            self::assertContains(
+                'Purge compiled templates : action successfully performed.',
+                \Piwigo\Core\PageState::current()->infos
+            );
+        } finally {
+            \Piwigo\Cache\CurrentPersistentCache::reset();
+        }
     }
 }
 

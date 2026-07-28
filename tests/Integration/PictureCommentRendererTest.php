@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\ResponseReadyException;
 use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
@@ -53,6 +58,14 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
+        // The moderation-message assertion below expects the real en_UK
+        // common.po wording (which differs slightly from the raw English
+        // literal passed to Lang::t()) -- whether common.lang happens to
+        // already be loaded otherwise depends on which other Integration
+        // test file ran earlier in this shared process, confirmed live.
+        // Loading it explicitly here makes that assertion deterministic
+        // regardless of run order.
+        Lang::load('common.lang');
 
         $this->conn = DbConnection::build();
         $this->commentRepo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class);
@@ -138,6 +151,193 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         self::assertArrayHasKey('U_DELETE', $ownerRow);
         self::assertArrayNotHasKey('U_EDIT', $otherRow);
         self::assertArrayNotHasKey('U_DELETE', $otherRow);
+    }
+
+    public function test_render_rejects_a_guest_submission_with_session_expired_when_comments_for_all_is_disabled(): void
+    {
+        CurrentConfig::setCommentsForall(false);
+        $imageId = 3;
+        $_POST['content'] = 'A guest comment attempt.';
+
+        try {
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php');
+            self::fail('Expected a ResponseReadyException');
+        } catch (ResponseReadyException $e) {
+            self::assertSame(200, $e->response()->getStatusCode());
+            self::assertSame('Session expired', (string) $e->response()->getBody());
+        } finally {
+            unset($_POST['content']);
+        }
+    }
+
+    public function test_render_rejects_a_submission_as_ugly_spammer_when_the_picture_is_not_commentable(): void
+    {
+        $imageId = 3;
+        $_POST['content'] = 'Spam attempt on a non-commentable picture.';
+
+        try {
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), [['commentable' => false]], '/picture.php');
+            self::fail('Expected a ResponseReadyException');
+        } catch (ResponseReadyException $e) {
+            self::assertSame(403, $e->response()->getStatusCode());
+            self::assertSame('ugly spammer', (string) $e->response()->getBody());
+        } finally {
+            unset($_POST['content']);
+        }
+    }
+
+    public function test_render_moderates_a_valid_guest_submission_when_comments_validation_is_enabled(): void
+    {
+        CurrentConfig::setCommentsForall(true);
+        CurrentConfig::setCommentsValidation(true);
+        CurrentConfig::setCommentsAuthorMandatory(false);
+        CurrentConfig::setCommentsEmailMandatory(false);
+        CurrentConfig::setAntiFloodTime(0);
+        // Real production default (true) would otherwise attempt a real
+        // MailerInterface::mail() send for this exact outcome.
+        CurrentConfig::setEmailAdminOnCommentValidation(false);
+        $imageId = 3;
+        $_POST['content'] = 'A moderated comment.';
+        $_POST['key'] = new EphemeralKeyService()->generate(0, (string) $imageId);
+
+        try {
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php');
+
+            self::assertSame(
+                [
+                    // common.po's own en_UK translation rewords this from
+                    // the raw source literal ("becomes" instead of "is").
+                    'An administrator must authorize your comment before it becomes visible.',
+                    'Your comment has been registered',
+                ],
+                PageState::current()->infos
+            );
+        } finally {
+            unset($_POST['content'], $_POST['key']);
+            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'A moderated comment.'");
+        }
+    }
+
+    public function test_render_validates_a_guest_submission_immediately_when_comments_validation_is_disabled(): void
+    {
+        CurrentConfig::setCommentsForall(true);
+        CurrentConfig::setCommentsValidation(false);
+        CurrentConfig::setCommentsAuthorMandatory(false);
+        CurrentConfig::setCommentsEmailMandatory(false);
+        CurrentConfig::setAntiFloodTime(0);
+        $imageId = 3;
+        $_POST['content'] = 'A validated comment.';
+        $_POST['key'] = new EphemeralKeyService()->generate(0, (string) $imageId);
+
+        try {
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php');
+
+            self::assertSame(['Your comment has been registered'], PageState::current()->infos);
+        } finally {
+            unset($_POST['content'], $_POST['key']);
+            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'A validated comment.'");
+        }
+    }
+
+    public function test_render_rejects_an_invalid_key_and_repopulates_the_add_comment_form(): void
+    {
+        CurrentConfig::setCommentsForall(true);
+        CurrentConfig::setCommentsAuthorMandatory(false);
+        CurrentConfig::setCommentsEmailMandatory(false);
+        CurrentConfig::setAntiFloodTime(0);
+        $imageId = 3;
+        $_POST['author'] = 'Some Author';
+        $_POST['content'] = 'Rejected <b>content</b>.';
+        $_POST['website_url'] = '';
+        $_POST['email'] = '';
+        // Not a real ephemeral key -- EphemeralKeyService::verify() fails,
+        // forcing 'reject' regardless of the (otherwise valid) content.
+        $_POST['key'] = 'totally-invalid-key';
+
+        try {
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php');
+
+            self::assertSame(
+                ['Your comment has NOT been registered because it did not pass the validation rules'],
+                PageState::current()->errors
+            );
+
+            $commentAdd = CurrentTemplate::get()->get_template_vars('comment_add');
+            self::assertIsArray($commentAdd);
+            self::assertSame('Some Author', $commentAdd['AUTHOR']);
+            // stripslashes() is a no-op here (no backslashes); htmlspecialchars()
+            // escapes the tag markup.
+            self::assertSame('Rejected &lt;b&gt;content&lt;/b&gt;.', $commentAdd['CONTENT']);
+            self::assertSame('', $commentAdd['WEBSITE_URL']);
+            self::assertSame('', $commentAdd['EMAIL']);
+        } finally {
+            unset($_POST['author'], $_POST['content'], $_POST['website_url'], $_POST['email'], $_POST['key']);
+        }
+    }
+
+    public function test_render_persists_a_get_comments_order_override_to_the_session(): void
+    {
+        $_SESSION ??= [];
+        $imageId = 3;
+        $this->insertComment($imageId, 3, 'Order override test comment.');
+        $this->seedUser(3, UserStatus::Normal);
+        $_GET['comments_order'] = 'desc';
+
+        try {
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php');
+
+            self::assertSame('desc', \Piwigo\Session\SessionService::get()->getSessionVar('comments_order'));
+            // The nav link toggles to the opposite of whatever order is now
+            // active ('desc' -> offers 'ASC').
+            $orderUrl = CurrentTemplate::get()->get_template_vars('COMMENTS_ORDER_URL');
+            self::assertIsString($orderUrl);
+            self::assertStringContainsString('comments_order=ASC', $orderUrl);
+        } finally {
+            unset($_GET['comments_order']);
+            \Piwigo\Session\SessionService::get()->unsetSessionVar('comments_order');
+        }
+    }
+
+    public function test_render_falls_back_to_the_comment_own_email_when_no_registered_user_email_matches(): void
+    {
+        $imageId = 3;
+        // authorId points at fixture_admin (id 1), which has a real
+        // mail_address on file -- exercises the `$row->userEmail` branch.
+        $commentIdWithUserEmail = $this->commentRepo->insert([
+            'author' => 'fixture_admin',
+            'authorId' => 1,
+            'anonymousId' => '10.30.0.1',
+            'content' => 'Comment by a user with a registered email.',
+            'validated' => true,
+            'imageId' => $imageId,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
+        // Anonymous (no authorId -> no user-table match), but with its own
+        // posted email column set -- exercises the `$row->email` fallback.
+        $commentIdWithOwnEmail = $this->commentRepo->insert([
+            'author' => 'anon-commenter',
+            'authorId' => null,
+            'anonymousId' => '10.30.0.2',
+            'content' => 'Comment by an anonymous poster with their own email.',
+            'validated' => true,
+            'imageId' => $imageId,
+            'websiteUrl' => null,
+            'email' => 'anon@example.test',
+        ]);
+
+        $this->seedUser(1, UserStatus::Admin);
+
+        try {
+            $rows = $this->renderComments($imageId);
+            $rowWithUserEmail = $this->findRenderedRow($rows, $commentIdWithUserEmail);
+            $rowWithOwnEmail = $this->findRenderedRow($rows, $commentIdWithOwnEmail);
+
+            self::assertSame('fixture_admin@example.test', $rowWithUserEmail['EMAIL']);
+            self::assertSame('anon@example.test', $rowWithOwnEmail['EMAIL']);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::comments() . ' WHERE id IN (?, ?)', [$commentIdWithUserEmail->value, $commentIdWithOwnEmail->value]);
+        }
     }
 
     public function test_render_exposes_edit_and_delete_links_to_an_admin_regardless_of_ownership(): void

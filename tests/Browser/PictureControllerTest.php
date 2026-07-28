@@ -629,3 +629,485 @@ it('rates a photo via the rate action', function (): void {
         H::restoreConfig($snapshot);
     }
 });
+
+it('rejects an edit_comment submission whose key is used before its 2-second minimum age', function (): void {
+    $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_browser_editcomment_reject_');
+    if ($cookieJar === false) {
+        throw new RuntimeException('tempnam failed');
+    }
+
+    $curl = static function (string $url, array $fields = [], bool $followRedirects = true) use ($cookieJar): array {
+        $ch = curl_init($url);
+        if ($ch === false) {
+            throw new RuntimeException('curl_init failed');
+        }
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, $followRedirects);
+        if ($fields !== []) {
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
+        }
+        $body = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        unset($ch);
+
+        return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+    };
+
+    $baseUrl = H::baseUrl();
+    $curl($baseUrl . '/identification.php');
+    $curl($baseUrl . '/identification.php', [
+        'username' => H::ADMIN_USER,
+        'password' => H::ADMIN_PASS,
+        'login' => 'Login',
+    ]);
+
+    $statusResult = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.session.getStatus']);
+    $decodedStatus = json_decode($statusResult['body'], true);
+    $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
+    $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+    $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
+    expect($pwgToken)->not->toBe('');
+
+    $album = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.categories.add', 'name' => 'Picture Reject Comment Album ' . uniqid()]);
+    $decodedAlbum = json_decode($album['body'], true);
+    $albumResultData = is_array($decodedAlbum) ? ($decodedAlbum['result'] ?? null) : null;
+    $albumIdRaw = is_array($albumResultData) ? ($albumResultData['id'] ?? null) : null;
+    $albumId = is_numeric($albumIdRaw) ? (int) $albumIdRaw : 0;
+    expect($albumId)->toBeGreaterThan(0);
+
+    $image = H::makeTestImage('Reject Comment Photo');
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Reject Comment Photo');
+    @unlink($image);
+
+    $commentId = pictureInsertComment($imageId, 'reject-me-' . uniqid(), 'Original content.', false, 3);
+
+    $editUrl = $baseUrl . '/picture.php?/' . $imageId . '/category/' . $albumId
+        . '&action=edit_comment&comment_to_edit=' . $commentId;
+
+    $getResult = $curl($editUrl);
+    if (preg_match('/name="key" value="([^"]+)"/', $getResult['body'], $matches) !== 1) {
+        throw new RuntimeException('Could not find the edit-comment form\'s hidden key field in: ' . $getResult['body']);
+    }
+    $key = html_entity_decode($matches[1]);
+
+    // No sleep here, unlike the sibling "edits a comment's own content"
+    // test above -- EphemeralKeyService::verify() requires >=2 real
+    // wall-clock seconds since the key was issued, so posting immediately
+    // deterministically hits CommentService::updateComment()'s own
+    // $commentAction = 'reject' branch (confirmed live): a 200 response,
+    // no error surfaced (the $_SESSION['page_errors'] write that branch
+    // makes has no reader anywhere in this codebase, confirmed via a
+    // full-repo grep -- same class of dead-write gap as this file's own
+    // moderate/validate branches use), and the comment's content column
+    // left untouched.
+    $newContent = 'Rejected content ' . uniqid();
+    $postResult = $curl($editUrl, [
+        'content' => $newContent,
+        'website_url' => '',
+        'key' => $key,
+        'pwg_token' => $pwgToken,
+    ]);
+
+    @unlink($cookieJar);
+
+    expect($postResult['status'])->toBe(200);
+    expect($postResult['body'])->not->toContain('Fatal error');
+
+    $db = pictureDbConnect();
+    $row = H::fetchAssocOrFail($db, sprintf('SELECT content FROM %scomments WHERE id = %d', pictureDbPrefix(), $commentId));
+    $db->close();
+    expect($row['content'])->toBe('Original content.');
+});
+
+it('toggles the show_metadata session flag on repeated ?metadata visits without erroring', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Picture Metadata Toggle Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Metadata Toggle Photo');
+    @unlink($image);
+
+    // First visit: getSessionVar('show_metadata') is null -> sets it to 1.
+    $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId . '&metadata');
+    $page->assertNoJavaScriptErrors();
+    // Second visit, same session: no longer null -> unsets it. Neither
+    // branch has any template-visible effect of its own (confirmed live:
+    // $url_metadata is a plain "current URL + metadata param" link, not
+    // conditioned on the session var's value) -- exercising both real
+    // branches without erroring is the correct assertion here.
+    $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId . '&metadata');
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'picture.php show_metadata toggle');
+});
+
+it('renders a related tag link for a photo with a real assigned tag', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Picture Related Tags Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Related Tags Photo');
+    @unlink($image);
+
+    $tagName = 'Related Tag ' . uniqid();
+    $tagResult = H::wsCall($page, 'pwg.tags.add', ['name' => $tagName]);
+    $tagData = $tagResult['result'] ?? null;
+    $tagId = is_array($tagData) ? ($tagData['id'] ?? null) : null;
+    if (! is_numeric($tagId)) {
+        throw new RuntimeException('pwg.tags.add did not return a numeric id: ' . var_export($tagResult, true));
+    }
+
+    $updateResult = H::wsCall($page, 'pwg.images.setInfo', [
+        'image_id' => (string) $imageId,
+        'tag_ids' => (string) $tagId,
+    ]);
+    expect($updateResult['stat'] ?? null)->toBe('ok');
+
+    // picture.tpl's own {if ($display_info.tags and isset($related_tags))}
+    // gate needs the fixture's real picture_informations config to have
+    // tags=true (confirmed live) -- true by default in this fixture, not
+    // overridden here.
+    $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId);
+    $page->assertSee($tagName);
+    $page->assertNoJavaScriptErrors();
+});
+
+/**
+ * Raw curl through a persistent cookie jar, following redirects, using the given credentials to log in first.
+ *
+ * @return array{curl: Closure(string, array<string, string>=, bool=): array{status: int, body: string}, cookieJar: non-empty-string, baseUrl: string}
+ */
+function pictureCurlLoginSession(string $username, string $password): array
+{
+    $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_browser_session_');
+    if ($cookieJar === false) {
+        throw new RuntimeException('tempnam failed');
+    }
+
+    /** @param array<string, string> $fields */
+    $curl = static function (string $url, array $fields = [], bool $followRedirects = true) use ($cookieJar): array {
+        $ch = curl_init($url);
+        if ($ch === false) {
+            throw new RuntimeException('curl_init failed');
+        }
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, $followRedirects);
+        if ($fields !== []) {
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
+        }
+        $body = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        unset($ch);
+
+        return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+    };
+
+    $baseUrl = H::baseUrl();
+    $curl($baseUrl . '/identification.php');
+    $curl($baseUrl . '/identification.php', [
+        'username' => $username,
+        'password' => $password,
+        'login' => 'Login',
+    ]);
+
+    return ['curl' => $curl, 'cookieJar' => $cookieJar, 'baseUrl' => $baseUrl];
+}
+
+function pictureSetImageDateAvailable(int $imageId, string $mysqlDateTime): void
+{
+    $db = pictureDbConnect();
+    $db->query(sprintf(
+        "UPDATE %simages SET date_available = '%s' WHERE id = %d",
+        pictureDbPrefix(),
+        $db->real_escape_string($mysqlDateTime),
+        $imageId
+    ));
+    $db->close();
+}
+
+it("shows the access-denied page for a photo whose privacy level exceeds the viewer's, reached via a mismatched album", function (): void {
+    // PictureController::__invoke()'s own row_level > user_level check
+    // (L193-198) only runs inside the "this image_id doesn't belong to
+    // the current section's item list" fallback -- so the request must
+    // deliberately target the photo through an album it does NOT belong
+    // to, not its real one.
+    $adminSession = pictureCurlLoginSession(H::ADMIN_USER, H::ADMIN_PASS);
+    $curl = $adminSession['curl'];
+    $baseUrl = $adminSession['baseUrl'];
+
+    $ownAlbum = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.categories.add', 'name' => 'Level Test Own Album ' . uniqid()]);
+    $ownAlbumData = json_decode($ownAlbum['body'], true);
+    $ownAlbumResult = is_array($ownAlbumData) ? ($ownAlbumData['result'] ?? null) : null;
+    $ownAlbumIdRaw = is_array($ownAlbumResult) ? ($ownAlbumResult['id'] ?? null) : null;
+    $ownAlbumId = is_numeric($ownAlbumIdRaw) ? (int) $ownAlbumIdRaw : 0;
+    expect($ownAlbumId)->toBeGreaterThan(0);
+
+    $otherAlbum = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.categories.add', 'name' => 'Level Test Other Album ' . uniqid()]);
+    $otherAlbumData = json_decode($otherAlbum['body'], true);
+    $otherAlbumResult = is_array($otherAlbumData) ? ($otherAlbumData['result'] ?? null) : null;
+    $otherAlbumIdRaw = is_array($otherAlbumResult) ? ($otherAlbumResult['id'] ?? null) : null;
+    $otherAlbumId = is_numeric($otherAlbumIdRaw) ? (int) $otherAlbumIdRaw : 0;
+    expect($otherAlbumId)->toBeGreaterThan(0);
+
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $ownAlbumId, 'Level Test Photo');
+    @unlink($image);
+
+    // level=8 is above any non-admin user's default level.
+    $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.images.setPrivacyLevel', 'image_id' => (string) $imageId, 'level' => '8']);
+
+    $regularSession = pictureCurlLoginSession('regular_user', 'regular_user_pass');
+    $result = $regularSession['curl']($baseUrl . '/picture.php?/' . $imageId . '/category/' . $otherAlbumId);
+
+    @unlink($adminSession['cookieJar']);
+    @unlink($regularSession['cookieJar']);
+
+    expect($result['status'])->toBe(401);
+    expect($result['body'])->toContain('You are not authorized to access the requested page');
+});
+
+it('shows "requested image is filtered" for a backdated photo excluded by an active recent-content filter, reached via a mismatched album', function (): void {
+    $adminSession = pictureCurlLoginSession(H::ADMIN_USER, H::ADMIN_PASS);
+    $curl = $adminSession['curl'];
+    $baseUrl = $adminSession['baseUrl'];
+
+    $ownAlbum = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.categories.add', 'name' => 'Filtered Test Own Album ' . uniqid()]);
+    $ownAlbumData = json_decode($ownAlbum['body'], true);
+    $ownAlbumResult = is_array($ownAlbumData) ? ($ownAlbumData['result'] ?? null) : null;
+    $ownAlbumIdRaw = is_array($ownAlbumResult) ? ($ownAlbumResult['id'] ?? null) : null;
+    $ownAlbumId = is_numeric($ownAlbumIdRaw) ? (int) $ownAlbumIdRaw : 0;
+    expect($ownAlbumId)->toBeGreaterThan(0);
+
+    $otherAlbum = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.categories.add', 'name' => 'Filtered Test Other Album ' . uniqid()]);
+    $otherAlbumData = json_decode($otherAlbum['body'], true);
+    $otherAlbumResult = is_array($otherAlbumData) ? ($otherAlbumData['result'] ?? null) : null;
+    $otherAlbumIdRaw = is_array($otherAlbumResult) ? ($otherAlbumResult['id'] ?? null) : null;
+    $otherAlbumId = is_numeric($otherAlbumIdRaw) ? (int) $otherAlbumIdRaw : 0;
+    expect($otherAlbumId)->toBeGreaterThan(0);
+
+    // A fresh photo keeps the filtered-in album non-empty for the "last
+    // 1 day" window (so FilterState::visibleImages() is a real,
+    // non-empty list, never the '-1' "computed nothing" sentinel
+    // PictureController deliberately treats as "no restriction").
+    $freshImage = H::makeTestImage(uniqid());
+    H::uploadPhotoViaApi($freshImage, $ownAlbumId, 'Filter Recent Photo');
+    @unlink($freshImage);
+
+    $oldImage = H::makeTestImage(uniqid());
+    $oldImageId = H::uploadPhotoViaApi($oldImage, $ownAlbumId, 'Filter Old Photo');
+    @unlink($oldImage);
+    pictureSetImageDateAvailable($oldImageId, date('Y-m-d H:i:s', strtotime('-30 days')));
+
+    // Activates FilterService::initializeFromRequest()'s session-persisted
+    // recent-content filter (start-recent-1 -> a real 1-day window),
+    // confirmed live via source read: CurrentConfig::filterPages()'s
+    // 'default' entry has used=true, so this runs on every subsequent
+    // request in this same cookie-jar session, including picture.php.
+    $curl($baseUrl . '/index.php?filter=start-recent-1');
+
+    $result = $curl($baseUrl . '/picture.php?/' . $oldImageId . '/category/' . $otherAlbumId);
+
+    @unlink($adminSession['cookieJar']);
+
+    expect($result['status'])->toBe(404);
+    expect($result['body'])->toContain('The requested image is filtered');
+});
+
+it('redirects to the section listing (not back to the picture) when removing a favorite from within the favorites section', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Favorites Up Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Favorites Up Photo');
+    @unlink($image);
+
+    H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId . '&action=add_to_favorites');
+    expect(pictureFavoriteExists($imageId, 1))->toBeTrue();
+
+    // Raw curl, no auto-follow, capturing the real Location header directly
+    // via CURLINFO_REDIRECT_URL: PictureController's remove_from_favorites
+    // case redirects to $url_up (the section listing) instead of
+    // $url_self (this same picture) specifically when the CURRENT section
+    // being viewed is 'favorites' -- distinct from the plain add/remove
+    // round trip above, which views the photo via its real album and so
+    // takes the $url_self branch instead.
+    $session = pictureCurlLoginSession(H::ADMIN_USER, H::ADMIN_PASS);
+    $ch = curl_init($session['baseUrl'] . '/picture.php?/' . $imageId . '/favorites&action=remove_from_favorites');
+    if ($ch === false) {
+        throw new RuntimeException('curl_init failed');
+    }
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_COOKIEJAR, $session['cookieJar']);
+    curl_setopt($ch, CURLOPT_COOKIEFILE, $session['cookieJar']);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+    curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    $location = curl_getinfo($ch, CURLINFO_REDIRECT_URL);
+    unset($ch);
+    @unlink($session['cookieJar']);
+
+    expect($status)->toBe(302);
+    expect(is_string($location) ? $location : '')->not->toContain('picture.php');
+    expect(pictureFavoriteExists($imageId, 1))->toBeFalse();
+});
+
+it('does not increment the hit counter for a Firefox prefetch request (X-Moz: prefetch)', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Prefetch Test Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Prefetch Photo');
+    @unlink($image);
+
+    expect(pictureHitCount($imageId))->toBe(0);
+
+    $session = pictureCurlLoginSession(H::ADMIN_USER, H::ADMIN_PASS);
+    $ch = curl_init($session['baseUrl'] . '/picture.php?/' . $imageId . '/category/' . $albumId);
+    if ($ch === false) {
+        throw new RuntimeException('curl_init failed');
+    }
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_COOKIEJAR, $session['cookieJar']);
+    curl_setopt($ch, CURLOPT_COOKIEFILE, $session['cookieJar']);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [...H::testHeaders(), 'X-Moz: prefetch']);
+    curl_exec($ch);
+    unset($ch);
+    @unlink($session['cookieJar']);
+
+    expect(pictureHitCount($imageId))->toBe(0);
+});
+
+it('remembers a picture_deriv cookie choice in the session across a follow-up request', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Deriv Cookie Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Deriv Cookie Photo');
+    @unlink($image);
+
+    $session = pictureCurlLoginSession(H::ADMIN_USER, H::ADMIN_PASS);
+    $curl = $session['curl'];
+    $baseUrl = $session['baseUrl'];
+    $picUrl = $baseUrl . '/picture.php?/' . $imageId . '/category/' . $albumId;
+
+    // First request carries the cookie: defaultPictureContent() reads it,
+    // persists 'large' into the session, and clears the cookie itself.
+    $ch = curl_init($picUrl);
+    if ($ch === false) {
+        throw new RuntimeException('curl_init failed');
+    }
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_COOKIEJAR, $session['cookieJar']);
+    curl_setopt($ch, CURLOPT_COOKIEFILE, $session['cookieJar']);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [...H::testHeaders(), 'Cookie: picture_deriv=large']);
+    $firstBody = curl_exec($ch);
+    $firstStatus = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    unset($ch);
+    expect($firstStatus)->toBe(200);
+    expect(is_string($firstBody) ? $firstBody : '')->not->toContain('Fatal error');
+
+    // Second request, no cookie this time: the session value from the
+    // first request alone must still drive defaultPictureContent()'s
+    // $deriv_type, without erroring.
+    $second = $curl($picUrl);
+    @unlink($session['cookieJar']);
+    expect($second['status'])->toBe(200);
+    expect($second['body'])->not->toContain('Fatal error');
+});
+
+it('renders the related-categories breadcrumb via the single-category fast path when the photo belongs to exactly its own viewed album', function (): void {
+    $page = H::loginAsAdmin($this);
+    $albumName = 'Related Cats Fast Path Album ' . uniqid();
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => $albumName]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Related Cats Photo');
+    @unlink($image);
+
+    // This photo belongs to exactly one category (this album) and is
+    // viewed via that same album -- PictureController::__invoke()'s
+    // `count($related_categories) === 1 and $page_category !== null and
+    // $related_cat0_id === $page_category_id_for_compare` fast path,
+    // rendering the breadcrumb straight from $page_category['upper_names']
+    // instead of the multi-category SQL-lookup branch.
+    $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId);
+    $page->assertSee($albumName);
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'picture.php related-categories single-category fast path');
+});
+
+it('renders slideshow mode with play/repeat/period controls and a real next item', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Picture Slideshow Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $suffix = uniqid();
+    $imageA = H::makeTestImage($suffix . 'a');
+    $idA = H::uploadPhotoViaApi($imageA, $albumId, 'Slideshow Photo A ' . $suffix);
+    @unlink($imageA);
+    $imageB = H::makeTestImage($suffix . 'b');
+    H::uploadPhotoViaApi($imageB, $albumId, 'Slideshow Photo B ' . $suffix);
+    @unlink($imageB);
+
+    // light_slideshow defaults true (CurrentConfig::$lightSlideshow),
+    // slideshow_period/min/max/step default 4/1/10/1 and slideshow_repeat
+    // defaults true -- confirmed live, none overridden by this fixture --
+    // so viewing photo A (which has a real next item, B) with slideshow=1
+    // exercises the play=true auto-advance branch, both period-step
+    // links (4-1=3 and 4+1=5 both stay within [1,10]), and the
+    // repeat=true branch, all via slideshow.tpl + picture_nav_buttons.tpl.
+    $page = H::navigateOk($page, '/picture.php?/' . $idA . '/category/' . $albumId . '&slideshow=1');
+
+    $page->assertSee('stop the slideshow');
+    // picture_nav_buttons.tpl's own control labels (pwg-button-text spans)
+    // are icon-only, CSS-hidden text -- confirmed live via screenshot, so
+    // assertSee() (visible text only) never finds them; a raw-content
+    // check is the right tool, same precedent as BatchManagerUnitPageRenderer
+    // Test's own title-attribute case. The loaded en_UK catalog also
+    // rephrases these from their literal PHP source msgids (e.g. "Reduce
+    // diaporama speed" -> "Reduce slideshow speed") -- confirmed live.
+    $body = H::rawWebpage($page)->content();
+    expect($body)->toContain('Reduce slideshow speed');
+    expect($body)->toContain('Increase slideshow speed');
+    expect($body)->toContain('Pause slideshow');
+    expect($body)->toContain('Do not repeat slideshow');
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'picture.php slideshow mode');
+});

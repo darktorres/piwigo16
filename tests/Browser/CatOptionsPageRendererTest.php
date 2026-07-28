@@ -97,6 +97,58 @@ it('splits albums between the true/false selects once one of them is private', f
 // fallback actually reaches the rendered page, not just the DTO in
 // isolation (already covered separately by
 // tests/Unit/Admin/Request/CatOptionsRequestTest.php).
+it('renders the comments section with its own legend/labels', function (): void {
+    $page = H::loginAsAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=cat_options&section=comments');
+    $page->assertNoJavaScriptErrors();
+
+    $page->assertSeeIn('#content legend', 'Authorize users to add comments on selected albums');
+});
+
+it('renders the visible section with its own legend/labels', function (): void {
+    $page = H::loginAsAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=cat_options&section=visible');
+    $page->assertNoJavaScriptErrors();
+
+    $page->assertSeeIn('#content legend', 'Lock albums');
+});
+
+it('falsifies commentable for a chosen album via the falsify submission', function (): void {
+    $page = H::loginAsAdmin($this);
+
+    try {
+        $result = H::adminPost($page, '/admin.php?page=cat_options&section=comments', [
+            'pwg_token' => H::pwgToken($page),
+            'cat_true' => ['1'],
+            'falsify' => '1',
+        ]);
+
+        expect($result['status'])->toBe(200);
+
+        $db = new mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $prefix = getenv('PIWIGO_DB_PREFIX');
+        $prefix = $prefix !== false ? $prefix : 'piwigo_';
+        $row = $db->query(sprintf('SELECT commentable FROM %scategories WHERE id = 1', $prefix));
+        $assoc = $row instanceof mysqli_result ? $row->fetch_assoc() : null;
+        $db->close();
+        expect(is_array($assoc) ? (int) $assoc['commentable'] : -1)->toBe(0);
+    } finally {
+        // Fixture category 1 starts commentable=1 -- restore it via the
+        // real trueify submission (the sibling of falsify, distinct
+        // branches, both real production code) rather than a raw UPDATE.
+        H::adminPost($page, '/admin.php?page=cat_options&section=comments', [
+            'pwg_token' => H::pwgToken($page),
+            'cat_false' => ['1'],
+            'trueify' => '1',
+        ]);
+    }
+});
+
 it('falls back to the status section for an unrecognized section value', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=cat_options&section=bogus');

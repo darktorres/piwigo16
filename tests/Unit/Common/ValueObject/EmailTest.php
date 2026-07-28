@@ -32,7 +32,12 @@ final class EmailTest extends StringVoContract
         yield 'no domain'            => ['user@'];
         yield 'whitespace'           => ['user @example.com'];
         yield 'control char'         => ["user\x01@example.com"];
+        // Exactly at the 255-char boundary (250 + '@x.io' = 255) --
+        // rejected by filter_var()'s own local-part-length rule, NOT by
+        // Email::from()'s own MAX_LENGTH check (`> 255`, not `>=`). See
+        // 'genuinely over 255 chars' below for that distinct branch.
         yield 'over 255 chars'       => [str_repeat('a', 250) . '@x.io'];
+        yield 'genuinely over 255 chars' => [str_repeat('a', 251) . '@x.io'];
     }
 
     public function testAcceptsPlusTagAndSubdomain(): void

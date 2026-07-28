@@ -52,6 +52,25 @@ test('tags throws when myBaseUrl was not set in the context', function (): void 
     expect(fn () => CoreTabs::addCoreTabs([], 'tags'))->toThrow(RuntimeException::class);
 });
 
+test('a context-needing tab throws its own distinct exception when setContext() was never called at all', function (): void {
+    // Distinct from the sibling test above: that one has a real
+    // CoreTabsContext (setContext() was called), just with myBaseUrl left
+    // null -- contextField()'s own guard. This test forces context()'s own
+    // "self::$context is null" guard instead, which every other test in
+    // this suite (including 'admin_home', which never reads context() at
+    // all) would otherwise make unreachable for the rest of this process.
+    $property = new ReflectionProperty(CoreTabs::class, 'context');
+    $previous = $property->getValue();
+    $property->setValue(null, null);
+
+    try {
+        expect(fn () => CoreTabs::addCoreTabs([], 'tags'))
+            ->toThrow(RuntimeException::class, 'CoreTabs: no context set (writer file forgot CoreTabs::setContext()?)');
+    } finally {
+        $property->setValue(null, $previous);
+    }
+});
+
 test('album reads adminAlbumBaseUrl and adds properties/sort_order/permissions/notification', function (): void {
     CoreTabs::setContext(new CoreTabsContext(adminAlbumBaseUrl: '/admin.php?page=album-5'));
 

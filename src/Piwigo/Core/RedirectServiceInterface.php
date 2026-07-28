@@ -29,9 +29,10 @@ interface RedirectServiceInterface
 {
     /**
      * Redirects to the given URL using a raw HTTP Location header, with no
-     * HTML fallback page.
+     * HTML fallback page. $status defaults to 302 (temporary); pass 301
+     * for a permanent redirect (e.g. a permalink/canonical-URL fix-up).
      */
-    public function redirectHttp(string $url): never;
+    public function redirectHttp(string $url, int $status = 302): never;
 
     /**
      * Redirects to the given URL by rendering an HTML page with a

@@ -41,6 +41,24 @@ it('resolves the plugin-X page-slug alias to page=plugin&section=X/admin.php', f
     H::assertNoServerErrors($page, 'plugin-X page-slug alias');
 });
 
+it('resolves the plugin-X-Y page-slug alias to page=plugin&section=X/admin.php&tab=Y', function (): void {
+    $page = H::loginAsAdmin($this);
+
+    $page = H::navigateOk($page, '/admin.php?page=plugin-community-pendings');
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'plugin-X-Y page-slug alias');
+});
+
+it('rewrites the piwigo_videojs plugin section name to its hyphenated form', function (): void {
+    $page = H::loginAsAdmin($this);
+
+    $page = H::navigateOk($page, '/admin.php?page=plugin-piwigo_videojs');
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'plugin-piwigo_videojs underscore-to-hyphen alias');
+});
+
 it('resolves the album-N-tab page-slug alias to page=album&cat_id=N&tab=notification', function (): void {
     $page = H::loginAsAdmin($this);
     $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'AdminShell Alias Album ' . uniqid()]);

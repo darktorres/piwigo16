@@ -86,6 +86,43 @@ final class WsTopLevelTest extends ContractTestCase
         self::assertSame('Invalid types', $response['message']);
     }
 
+    public function test_getMissingDerivatives_ids_filter_only_considers_the_given_image(): void
+    {
+        // fixture image 1's real on-disk file (dedicated fixture asset,
+        // never touched by other Contract test files) is missing its
+        // 'square' derivative on disk -- confirmed live before writing this
+        // assertion (`i.php?/.../20260801000000-2e7e64c7-sq.jpg` shows up
+        // in the un-filtered call's result too).
+        $response = $this->wsAdmin('pwg.getMissingDerivatives', ['ids' => [1], 'max_urls' => 5000]);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $urls = $result['urls'];
+        self::assertIsArray($urls);
+        self::assertNotEmpty($urls);
+        foreach ($urls as $url) {
+            self::assertIsString($url);
+            self::assertStringContainsString('2e7e64c7', $url);
+        }
+    }
+
+    public function test_getMissingDerivatives_paginates_when_max_urls_is_reached(): void
+    {
+        // A max_urls this low forces the do/while loop to stop mid-scan
+        // (real fixture data has more than one image with a missing
+        // derivative) and report a next_page cursor to resume from.
+        $response = $this->wsAdmin('pwg.getMissingDerivatives', ['max_urls' => 1]);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        self::assertArrayHasKey('next_page', $result);
+        self::assertIsInt($result['next_page']);
+        self::assertGreaterThan(0, $result['next_page']);
+        self::assertNotEmpty($result['urls']);
+    }
+
     public function test_ratesDelete_removes_all_rates_for_a_user(): void
     {
         $status = $this->wsAdmin('pwg.session.getStatus');

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Category\CreateCategoryResult;
+use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\Dto\UserGroupPair;
 use Piwigo\Permalink\Projection\OldPermalink;
 
@@ -10,9 +11,13 @@ use Piwigo\Permalink\Projection\OldPermalink;
  * A handful of small DTO/projection classes that had zero dedicated
  * coverage (see /home/torres/.claude/plans/piped-enchanting-spark.md,
  * Wave 1) but carry real narrowing/named-constructor logic worth a
- * direct test, unlike their pure-data-holder siblings (PaginatedResult,
- * NotificationChannelConfig, the Sensitive attribute) which have no
- * behavior beyond constructor assignment.
+ * direct test, unlike their pure-data-holder siblings (NotificationChannelConfig,
+ * the Sensitive attribute) which have no behavior beyond constructor
+ * assignment. PaginatedResult is the same "no behavior" shape but is
+ * included below anyway -- its constructor body itself was genuinely
+ * 0% covered (no test anywhere ever instantiated it), unlike the other
+ * two which are only ever built via array-literal instantiation the
+ * coverage tool doesn't attribute a line to.
  */
 test('UserGroupPair::fromRow narrows a full real row', function (): void {
     $pair = UserGroupPair::fromRow(['user_id' => '3', 'group_id' => '7']);
@@ -86,4 +91,18 @@ test('OldPermalink::toArray round-trips every field', function (): void {
         'last_hit' => null,
         'hit' => 0,
     ]);
+});
+
+test('PaginatedResult carries its rows and a known total', function (): void {
+    $result = new PaginatedResult(['photo-a', 'photo-b', 'photo-c'], 42);
+
+    expect($result->rows)->toBe(['photo-a', 'photo-b', 'photo-c']);
+    expect($result->total)->toBe(42);
+});
+
+test('PaginatedResult accepts a null total when SQL_CALC_FOUND_ROWS was skipped', function (): void {
+    $result = new PaginatedResult([], null);
+
+    expect($result->rows)->toBe([]);
+    expect($result->total)->toBeNull();
 });

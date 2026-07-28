@@ -100,3 +100,33 @@ test('params() defaults to mysqli when db_driver is unset', function (): void {
 
     expect(DbConnection::params()['driver'])->toBe('mysqli');
 });
+
+test('params() carries an explicit port through for the mysqli driver with a TCP host', function (): void {
+    putenv('PIWIGO_DB_HOST=db.example.test');
+    putenv('PIWIGO_DB_USER=piwigo_app');
+    putenv('PIWIGO_DB_PASSWORD=secret');
+    putenv('PIWIGO_DB_BASE=piwigo_prod');
+    putenv('PIWIGO_DB_PORT=3307');
+    DbCredentials::reset();
+
+    $params = DbConnection::params();
+
+    expect($params)->toHaveKey('port', 3307)
+        ->and($params)->toHaveKey('host', 'db.example.test');
+});
+
+test('params() carries an explicit port through for the pgsql driver', function (): void {
+    putenv('PIWIGO_DB_DRIVER=pgsql');
+    putenv('PIWIGO_DB_HOST=pg.example.test');
+    putenv('PIWIGO_DB_USER=piwigo_app');
+    putenv('PIWIGO_DB_PASSWORD=secret');
+    putenv('PIWIGO_DB_BASE=piwigo_prod');
+    putenv('PIWIGO_DB_PORT=6432');
+    DbCredentials::reset();
+
+    $params = DbConnection::params();
+
+    expect($params['driver'])->toBe('pgsql')
+        ->and($params)->toHaveKey('port', 6432)
+        ->and($params)->toHaveKey('host', 'pg.example.test');
+});

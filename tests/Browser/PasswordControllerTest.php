@@ -47,22 +47,16 @@ it('rejects an empty username_or_email, then enumeration-safely accepts an unkno
     $page = $page->fill('user_code', '111111')->click('submit');
     $page->assertSee('Invalid verification code');
 
-    // CONFIRMED REAL BUG (not a test-assertion issue -- reproduced directly
-    // with raw curl, independent of this Browser test, before writing this
-    // assertion): the lockout branch's own
-    // `$this->errors['login_page_error'] = Lang::t('Too many attempts, please
-    // try later..')` is set, but the lockout branch ALSO
-    // `unset($_SESSION['reset_password_code'])` first -- and __invoke()'s
-    // later, unconditional guard
-    // `if ($this->action === 'lost_code' and ! isset($_SESSION['reset_password_code']))`
-    // then redirects to identification.php before ever reaching
-    // flushKeyedErrors($formErrors), discarding that error message entirely.
-    // A real user who triggers this lockout is silently bounced to the
-    // login page with NO visible explanation of why -- this asserts the
-    // real (buggy) observed behavior rather than the intended one.
+    // The lockout branch redirects to identification.php (matching
+    // IdentificationController's own 'login_page_error' key convention --
+    // this message is meant for that page, not this one) and flashes the
+    // message through $_SESSION['page_errors'] so it survives the redirect
+    // instead of being discarded with the rest of this request's local
+    // $this->errors.
     $page = $page->fill('user_code', '222222')->click('submit');
     $currentUrl = H::rawWebpage($page)->url();
     expect($currentUrl)->toContain('identification.php');
+    $page->assertSee('Too many attempts, please try later..');
     H::assertNoServerErrors($page, 'password lockout redirect target');
 });
 
@@ -423,9 +417,16 @@ it('locks a real user out of password reset after 3 wrong codes, then rejects a 
         // unknown-user lockout test above (no resolvable user_id, so the
         // CurrentUser-switch/PreferencesService/activity-record block is
         // skipped entirely), this real user_id hits all of it, persisting
-        // `reset_password_forbidden_until` ~1 hour into the future.
+        // `reset_password_forbidden_until` ~1 hour into the future. Also
+        // redirects to identification.php with the "Too many attempts"
+        // message flashed through $_SESSION['page_errors'] -- same
+        // mechanism as the unknown-user lockout test above, now exercised
+        // for the has_valid_user_id=true branch specifically.
         $page = $page->fill('user_code', '222222');
         H::clickWithTimeout($page, 'submit');
+        $currentUrl = H::rawWebpage($page)->url();
+        expect($currentUrl)->toContain('identification.php');
+        $page->assertSee('Too many attempts, please try later..');
 
         $preferences = passwordUserPreferences($userId);
         expect($preferences)->not->toBeNull();
@@ -490,23 +491,15 @@ it('expires a pending reset code once its configured duration has elapsed', func
 
         sleep(2);
 
-        // CONFIRMED REAL BUG, same shape as the lockout test above (not a
-        // test-assertion issue -- reproduced directly with raw curl,
-        // independent of this Browser test, before writing this
-        // assertion): the expiry branch's own
-        // `unset($_SESSION['reset_password_code'])` runs before returning
-        // false with the 'Code expired' error queued, and __invoke()'s
-        // later, unconditional guard
-        // `if ($this->action === 'lost_code' and ! isset($_SESSION['reset_password_code']))`
-        // then redirects to identification.php before ever reaching
-        // flushKeyedErrors($formErrors), discarding that error message
-        // entirely -- a real user hitting an expired code is silently
-        // bounced to the login page with no explanation. This asserts the
-        // real (buggy) observed behavior rather than the intended one.
+        // The expiry branch queues a password_form_error ('Code expired')
+        // meant to render right here on password.php -- __invoke()'s own
+        // "no pending code at all" redirect guard is narrowed to skip
+        // exactly this case (a real password_form_error is queued), so
+        // this stays on password.php instead of bouncing to
+        // identification.php with the message discarded.
         $page = $page->fill('user_code', '000000')->click('submit');
-        $currentUrl = H::rawWebpage($page)->url();
-        expect($currentUrl)->toContain('identification.php');
-        H::assertNoServerErrors($page, 'password expired-code redirect target');
+        $page->assertSee('Code expired');
+        H::assertNoServerErrors($page, 'password expired-code inline error');
     } finally {
         H::restoreConfig($snapshot);
     }

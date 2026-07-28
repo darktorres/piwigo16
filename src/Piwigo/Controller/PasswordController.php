@@ -47,10 +47,13 @@ final class PasswordController implements ControllerInterface
 
     /**
      * Field-keyed, controller-local -- read by specific key
-     * ('password_page_error'/'password_form_error'/'login_page_error') in
-     * password.tpl, a different shape than PageState::$errors' plain
-     * list<string>. Shared across the private handler methods below via
-     * this property since they're all called from the same __invoke().
+     * ('password_page_error'/'password_form_error') in password.tpl, a
+     * different shape than PageState::$errors' plain list<string>. Shared
+     * across the private handler methods below via this property since
+     * they're all called from the same __invoke(). The lockout branch of
+     * processPasswordRequest() deliberately does NOT use this property --
+     * see its own comment for why it flashes through
+     * $_SESSION['page_errors'] instead.
      *
      * @var array<string, string>
      */
@@ -170,7 +173,24 @@ final class PasswordController implements ControllerInterface
             $this->redirectService->redirect($this->urlService->getGalleryHomeUrl());
         }
 
-        if ($this->action === 'lost_code' and ! isset($_SESSION['reset_password_code'])) {
+        // ! isset($this->errors['password_form_error']): processPasswordRequest()
+        // unsets $_SESSION['reset_password_code'] as part of 3 of its own
+        // *inline* error branches (expired code, valid code with no
+        // resolvable user_id, valid code but reset-not-allowed-for-user) --
+        // each already queues a password_form_error message meant to render
+        // right here on password.tpl, not to be silently discarded by this
+        // "you never had a pending code at all" guard. Provably safe: this
+        // guard is only ever reached with action==='lost_code' after a
+        // submission when processPasswordRequest() returned false while the
+        // session var WAS a valid array at call time (its only other return
+        // path, `! is_array($state)`, returns true and sets action='reset'
+        // instead, never reaching here) -- so a real, empty-handed stale GET
+        // to ?action=lost_code (no error ever queued) is unaffected.
+        if (
+            $this->action === 'lost_code'
+            and ! isset($_SESSION['reset_password_code'])
+            and ! isset($this->errors['password_form_error'])
+        ) {
             $this->redirectService->redirect($this->urlService->getGalleryHomeUrl() . 'identification.php');
         }
 
@@ -433,7 +453,21 @@ final class PasswordController implements ControllerInterface
 
                     self::activityService($conn)->record('user', (int) $user_id_raw, 'reset_password_failure_too_many');
                 }
-                $this->errors['login_page_error'] = Lang::t('Too many attempts, please try later..');
+                // Not $this->errors: this branch redirects to
+                // identification.php (see __invoke()'s own
+                // ! isset($_SESSION['reset_password_code']) guard, now
+                // deliberately still allowed to fire here since no
+                // password_form_error is queued) -- $this->errors is local
+                // to this request and would be discarded by that redirect.
+                // $_SESSION['page_errors'] is the same flash channel
+                // CommentsController's own moderate/redirect flow uses;
+                // HtmlService::flushMessageMode() merges it in regardless of
+                // which controller's flushPageMessages() call reads it, so
+                // identification.php's own render picks this up for real.
+                if (! isset($_SESSION['page_errors']) or ! is_array($_SESSION['page_errors'])) {
+                    $_SESSION['page_errors'] = [];
+                }
+                $_SESSION['page_errors'][] = Lang::t('Too many attempts, please try later..');
                 return false;
             }
 

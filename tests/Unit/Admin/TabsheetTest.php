@@ -1,0 +1,241 @@
+<?php
+
+declare(strict_types=1);
+
+use Piwigo\Admin\Tabsheet;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Paths;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Template;
+
+function tabsheetTestRrmdir(string $dir): void
+{
+    if (! is_dir($dir)) {
+        return;
+    }
+    $nodes = scandir($dir);
+    foreach ($nodes !== false ? $nodes : [] as $node) {
+        if ($node === '.' || $node === '..') {
+            continue;
+        }
+        $path = $dir . '/' . $node;
+        is_dir($path) ? tabsheetTestRrmdir($path) : unlink($path);
+    }
+    rmdir($dir);
+}
+
+// Template::__construct() unconditionally mkgetdir()s a real "templates_c"
+// compile directory under CurrentPaths::get()->root -- same
+// "point CurrentPaths at a fresh temp root, clean it up after" shape as
+// PictureCommentRendererTest's own makePictureCommentTestTemplate().
+// Tabsheet::assign()'s own assign_var_from_handle() call actually parses
+// a real 'tabsheet.tpl' through Smarty (theme='' -> template_dir is the
+// $root passed to the constructor), so a trivial real file is seeded at
+// that same root -- its rendered content is never asserted on, only the
+// other template vars assign() also sets.
+beforeEach(function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-tabsheet-test-' . bin2hex(random_bytes(8));
+    mkdir($root, 0o777, true);
+    file_put_contents($root . '/tabsheet.tpl', '');
+    CurrentPaths::set(Paths::fromRoot($root));
+    CurrentConfig::setDataLocation('data/');
+    CurrentConfig::setDataDirChecked('1');
+    CurrentTemplate::set(new Template($root));
+});
+
+afterEach(function (): void {
+    tabsheetTestRrmdir(CurrentPaths::get()->root);
+    CurrentTemplate::reset();
+    CurrentPaths::reset();
+    CurrentConfig::reset();
+});
+
+test('the constructor defaults name/titlename and starts with no tabs and nothing selected', function (): void {
+    $tabsheet = new Tabsheet();
+
+    expect($tabsheet->name)->toBe('TABSHEET');
+    expect($tabsheet->titlename)->toBe('TABSHEET_TITLE');
+    expect($tabsheet->sheets)->toBe([]);
+    expect($tabsheet->uniqid)->toBeNull();
+    expect($tabsheet->selected)->toBe('');
+    expect($tabsheet->get_selected())->toBeNull();
+});
+
+test('the constructor accepts custom name/titlename', function (): void {
+    $tabsheet = new Tabsheet('CUSTOM_SHEET', 'CUSTOM_TITLE');
+
+    expect($tabsheet->name)->toBe('CUSTOM_SHEET');
+    expect($tabsheet->titlename)->toBe('CUSTOM_TITLE');
+});
+
+test('set_id stores the given id', function (): void {
+    $tabsheet = new Tabsheet();
+    $tabsheet->set_id('my-tabsheet');
+
+    expect($tabsheet->uniqid)->toBe('my-tabsheet');
+});
+
+test('add succeeds for a new tab name and fails for a duplicate one', function (): void {
+    $tabsheet = new Tabsheet();
+
+    expect($tabsheet->add('general', 'General', '/admin.php?page=general'))->toBeTrue();
+    expect($tabsheet->sheets)->toBe(['general' => ['caption' => 'General', 'url' => '/admin.php?page=general']]);
+
+    expect($tabsheet->add('general', 'General Again', '/admin.php?page=general2'))->toBeFalse();
+    // The failed add must not have overwritten the original entry.
+    expect($tabsheet->sheets['general'])->toBe(['caption' => 'General', 'url' => '/admin.php?page=general']);
+});
+
+test('add with selected=true marks that tab as the selected one', function (): void {
+    $tabsheet = new Tabsheet();
+    $tabsheet->add('general', 'General', '/general', false);
+    $tabsheet->add('advanced', 'Advanced', '/advanced', true);
+
+    expect($tabsheet->selected)->toBe('advanced');
+});
+
+test('delete removes an existing tab and returns true, or returns false for an unknown one', function (): void {
+    $tabsheet = new Tabsheet();
+    $tabsheet->add('general', 'General', '/general');
+    $tabsheet->add('advanced', 'Advanced', '/advanced');
+
+    expect($tabsheet->delete('general'))->toBeTrue();
+    expect($tabsheet->sheets)->toBe(['advanced' => ['caption' => 'Advanced', 'url' => '/advanced']]);
+
+    expect($tabsheet->delete('not-a-real-tab'))->toBeFalse();
+});
+
+test('delete clears the selected tab when the deleted tab was the selected one', function (): void {
+    $tabsheet = new Tabsheet();
+    $tabsheet->add('general', 'General', '/general', true);
+
+    expect($tabsheet->selected)->toBe('general');
+    $tabsheet->delete('general');
+    expect($tabsheet->selected)->toBe('');
+});
+
+test('delete leaves the selected tab untouched when a different tab is deleted', function (): void {
+    $tabsheet = new Tabsheet();
+    $tabsheet->add('general', 'General', '/general', true);
+    $tabsheet->add('advanced', 'Advanced', '/advanced');
+
+    $tabsheet->delete('advanced');
+    expect($tabsheet->selected)->toBe('general');
+});
+
+test('select picks the requested tab when it exists', function (): void {
+    $tabsheet = new Tabsheet();
+    $tabsheet->add('general', 'General', '/general');
+    $tabsheet->add('advanced', 'Advanced', '/advanced');
+
+    $tabsheet->select('advanced');
+
+    expect($tabsheet->selected)->toBe('advanced');
+    expect($tabsheet->get_selected())->toBe(['caption' => 'Advanced', 'url' => '/advanced']);
+});
+
+test('select falls back to the first remaining tab when the requested name does not exist', function (): void {
+    $tabsheet = new Tabsheet();
+    $tabsheet->add('general', 'General', '/general');
+    $tabsheet->add('advanced', 'Advanced', '/advanced');
+
+    $tabsheet->select('not-a-real-tab');
+
+    expect($tabsheet->selected)->toBe('general');
+});
+
+test('select applies a tabsheet_before_select handler that filters and appends tabs', function (): void {
+    $handler = function (array $sheets): array {
+        unset($sheets['removed-by-handler']);
+        $sheets['added-by-handler'] = ['caption' => 'Added', 'url' => '/added'];
+
+        return $sheets;
+    };
+    EventDispatcher::get()->addEventHandler('tabsheet_before_select', $handler);
+
+    try {
+        $tabsheet = new Tabsheet();
+        $tabsheet->add('removed-by-handler', 'Removed', '/removed');
+        $tabsheet->add('kept', 'Kept', '/kept');
+
+        $tabsheet->select('added-by-handler');
+
+        expect($tabsheet->sheets)->toBe([
+            'kept' => ['caption' => 'Kept', 'url' => '/kept'],
+            'added-by-handler' => ['caption' => 'Added', 'url' => '/added'],
+        ]);
+        expect($tabsheet->selected)->toBe('added-by-handler');
+    } finally {
+        EventDispatcher::get()->removeEventHandler('tabsheet_before_select', $handler);
+    }
+});
+
+test('select discards a handler-returned entry that does not match the expected shape', function (): void {
+    $handler = function (array $sheets): array {
+        $sheets['malformed'] = ['caption' => 'Missing url'];
+        $sheets[] = 'not-even-an-array-entry'; // int key, non-array value
+
+        return $sheets;
+    };
+    EventDispatcher::get()->addEventHandler('tabsheet_before_select', $handler);
+
+    try {
+        $tabsheet = new Tabsheet();
+        $tabsheet->add('general', 'General', '/general');
+
+        $tabsheet->select('general');
+
+        expect($tabsheet->sheets)->toBe(['general' => ['caption' => 'General', 'url' => '/general']]);
+    } finally {
+        EventDispatcher::get()->removeEventHandler('tabsheet_before_select', $handler);
+    }
+});
+
+test('select keeps the current sheets unchanged when a handler returns a non-array value', function (): void {
+    $handler = fn (array $sheets): string => 'not-an-array';
+    EventDispatcher::get()->addEventHandler('tabsheet_before_select', $handler);
+
+    try {
+        $tabsheet = new Tabsheet();
+        $tabsheet->add('general', 'General', '/general');
+
+        $tabsheet->select('general');
+
+        expect($tabsheet->sheets)->toBe(['general' => ['caption' => 'General', 'url' => '/general']]);
+    } finally {
+        EventDispatcher::get()->removeEventHandler('tabsheet_before_select', $handler);
+    }
+});
+
+test('set_titlename overwrites titlename and returns the new value', function (): void {
+    $tabsheet = new Tabsheet();
+
+    expect($tabsheet->set_titlename('NEW_TITLE'))->toBe('NEW_TITLE');
+    expect($tabsheet->titlename)->toBe('NEW_TITLE');
+    expect($tabsheet->get_titlename())->toBe('NEW_TITLE');
+});
+
+test('assign writes the sheets, the selected key, and the bracketed selected caption into the template', function (): void {
+    $tabsheet = new Tabsheet('MY_TABSHEET', 'MY_TITLE');
+    $tabsheet->add('general', 'General Settings', '/general', true);
+    $tabsheet->add('advanced', 'Advanced', '/advanced');
+
+    $tabsheet->assign();
+
+    $template = CurrentTemplate::get();
+    expect($template->get_template_vars('tabsheet_selected'))->toBe('general');
+    expect($template->get_template_vars('MY_TITLE'))->toBe('[General Settings]');
+});
+
+test('assign does not set the titlename var when nothing is selected', function (): void {
+    $tabsheet = new Tabsheet('MY_TABSHEET', 'MY_TITLE');
+    $tabsheet->add('general', 'General', '/general');
+
+    $tabsheet->assign();
+
+    $template = CurrentTemplate::get();
+    expect($template->get_template_vars('tabsheet_selected'))->toBe('');
+    expect($template->get_template_vars('MY_TITLE'))->toBeNull();
+});

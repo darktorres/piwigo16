@@ -23,13 +23,13 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *
  * Deliberately light on: the private-category permission-inheritance
  * branch (`inheritance_by_default`), `enable_formats`, a
- * `subcats-included=0` scoped-to-one-category sync, `meta_empty_overrides`,
- * and the `general_failure` branch (site directory unreadable) -- each is
- * a real but narrow combinatorial branch of an already very large
- * handler; render + guard-clause + the core create/simulate/delete/
- * metadata/quick_sync flows cover the large majority of this file's real
- * gap without the disproportionate setup those would need (matching
- * AdminConfigurationTest's own documented scoping precedent).
+ * `subcats-included=0` scoped-to-one-category sync, and
+ * `meta_empty_overrides` -- each is a real but narrow combinatorial
+ * branch of an already very large handler; render + guard-clause + the
+ * core create/simulate/delete/metadata/quick_sync flows cover the large
+ * majority of this file's real gap without the disproportionate setup
+ * those would need (matching AdminConfigurationTest's own documented
+ * scoping precedent).
  */
 function suDbPrefix(): string
 {
@@ -254,6 +254,44 @@ it('fatal-errors for a remote site', function (): void {
         expect($result['body'])->toContain('remote sites not supported');
     } finally {
         suDeleteSite($remoteSiteId);
+    }
+});
+
+it('reports all-zero counts when the site directory cannot be opened', function (): void {
+    // LocalSiteReader::open() is a bare is_dir() check -- a site row
+    // pointing at a nonexistent (but still local, not remote) path makes
+    // it return false, setting $general_failure = true. That gates every
+    // counting block, but NOT the final update_result template assign
+    // (isset($post['submit']) && sync in [dirs,files] alone) -- so the
+    // page still renders a real summary, just with every count at 0
+    // rather than a fatal error.
+    $page = H::loginAsAdmin($this);
+    $unreadableSiteId = suInsertRemoteSite('galleries/ct-does-not-exist-' . uniqid() . '/');
+    $token = H::pwgToken($page);
+
+    try {
+        // suSync()'s own suPath() call is hardcoded to site=1 -- the
+        // controller reads the target site from the URL query string,
+        // not $_POST, so the override has to go there too (same shape as
+        // the existing "fatal-errors for a remote site" test above).
+        $result = H::adminPost($page, suPath(['site' => (string) $unreadableSiteId]), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'sync' => 'files',
+            'subcats-included' => '1',
+            'privacy_level' => '0',
+            'display_info' => '1',
+            'add_to_caddie' => '0',
+            'simulate' => '0',
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Fatal error');
+        expect($result['body'])->toContain('0 albums added in the database');
+        expect($result['body'])->toContain('0 photos added in the database');
+        expect($result['body'])->toContain('0 errors during synchronization');
+    } finally {
+        suDeleteSite($unreadableSiteId);
     }
 });
 

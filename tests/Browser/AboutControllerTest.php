@@ -37,3 +37,47 @@ it('sets the About page title and body id', function (): void {
     $page->assertTitleContains('About Piwigo');
     $page->assertPresent('body#theAboutPage');
 });
+
+/**
+ * Piwigo\Menu\MenubarRenderer::render()'s own "external links" (mbLinks)
+ * block -- rendered on every page via MenubarRenderer, exercised here
+ * through about.php (the simplest real caller) since the block itself has
+ * no dedicated test elsewhere. Covers the plain-string-label shape
+ * (`is_array($url_data)` false -> rebuilt as `['label' => ...]`, which
+ * also defaults `new_window` to true), the array shape with an explicit
+ * `new_window => false`, and eval_visible's true/false gating (the eval()
+ * call is a real, preserved-as-is legacy plugin contract, not touched by
+ * this pass).
+ */
+it('renders the mbLinks menu block for configured links, honoring eval_visible and new_window', function (): void {
+    $snapshot = H::snapshotConfig(['links']);
+
+    try {
+        $links = json_encode([
+            'https://example.test/plain' => 'Plain String Link',
+            'https://example.test/no-popup' => [
+                'label' => 'No Popup Link',
+                'new_window' => false,
+            ],
+            'https://example.test/hidden' => [
+                'label' => 'Should Not Appear',
+                'eval_visible' => 'return false;',
+            ],
+        ]);
+        if ($links === false) {
+            throw new RuntimeException('json_encode failed for the links config value');
+        }
+        H::setConfigValue('links', $links);
+
+        $page = H::gotoOk($this, '/about.php');
+
+        $page->assertSeeLink('Plain String Link');
+        $page->assertSeeLink('No Popup Link');
+        $page->assertDontSee('Should Not Appear');
+        $page->assertPresent('a.external[href="https://example.test/plain"][onclick]');
+        $page->assertPresent('a.external[href="https://example.test/no-popup"]:not([onclick])');
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});

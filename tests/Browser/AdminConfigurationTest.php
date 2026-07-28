@@ -12,19 +12,59 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * (unlike Contract's per-process fixture reset), so every test that
  * saves a real form snapshots + restores whatever config params it
  * touches.
- *
- * Deliberately light on 'sizes' (the derivative-size validation matrix
- * spans ~230 lines of its own combinatorial per-type step1/2/3 checks)
- * and 'watermark' (file-glob + WatermarkParams persistence) beyond a
- * render + the one real, independently-gated restore_settings action --
- * exhaustively covering every derivative-type/field combination would be
- * disproportionate to this pass's remaining scope; render coverage plus
- * the guard/action branches below still closes the large majority of
- * this file's real gap.
  */
 function ctConfigSection(string $section): string
 {
     return '/admin.php?page=configuration&section=' . $section;
+}
+
+/**
+ * ImageStdParams::get_default_sizes()'s own w/h values, in ImageStdParams::
+ * get_all_types() order -- strictly ascending in both w and h, which
+ * processSizes()'s step-2 validation (each type's w/h must exceed the
+ * previous enabled type's) requires. Mirrors the real configuration_sizes.tpl
+ * form, which always posts a full d[type][...] row per type (one row per
+ * ImageStdParams::get_all_types() entry, unconditionally rendered).
+ *
+ * @return array<string, array{w: int, h: int}>
+ */
+function ctDefaultDerivativeSizes(): array
+{
+    return [
+        'square' => ['w' => 120, 'h' => 120],
+        'thumb' => ['w' => 144, 'h' => 144],
+        '2small' => ['w' => 240, 'h' => 240],
+        'xsmall' => ['w' => 432, 'h' => 324],
+        'small' => ['w' => 576, 'h' => 432],
+        'medium' => ['w' => 792, 'h' => 594],
+        'large' => ['w' => 1008, 'h' => 756],
+        'xlarge' => ['w' => 1224, 'h' => 918],
+        'xxlarge' => ['w' => 1656, 'h' => 1242],
+        '3xlarge' => ['w' => 2232, 'h' => 1674],
+        '4xlarge' => ['w' => 3000, 'h' => 2250],
+    ];
+}
+
+/**
+ * @param array<string, array{w: int, h: int}> $overrides per-type w/h
+ *   overrides layered on top of ctDefaultDerivativeSizes() (for tests that
+ *   need one out-of-order/invalid type while keeping the rest valid).
+ * @return array<string, array{enabled: string, w: string, h: string, sharpen: string}>
+ */
+function ctDerivativesPayload(array $overrides = []): array
+{
+    $payload = [];
+    foreach (ctDefaultDerivativeSizes() as $type => $size) {
+        $size = $overrides[$type] ?? $size;
+        $payload[$type] = [
+            'enabled' => '1',
+            'w' => (string) $size['w'],
+            'h' => (string) $size['h'],
+            'sharpen' => '0',
+        ];
+    }
+
+    return $payload;
 }
 
 /** @return array<string, mixed> */
@@ -346,6 +386,57 @@ it('renders the default tab (guest profile)', function (): void {
     $page->assertNoJavaScriptErrors();
 });
 
+it('saves the default tab (guest profile) and persists real user_infos values', function (): void {
+    // ConfigurationSubController's 'default' case is a thin wrapper
+    // around Piwigo\Controller\ProfileFormHandler::saveFromPost() applied
+    // to the guest user -- guest is a "special user"
+    // (ProfileFormHandler unsets username/mail_address/password/theme/
+    // language from $post for it, overriding theme/language internally),
+    // so only nb_image_page/recent_period are real, submittable fields
+    // here; both are required by saveFromPost's own validation once
+    // AdminContext::isActive() (always true under admin.php). This data
+    // lives on guest's own piwigo_user_infos row, not the config table --
+    // same direct-mysqli snapshot/restore shape as
+    // NotificationByMailSubControllerTest's own DB helpers, since
+    // H::snapshotConfig()/restoreConfig() only ever touch `config`.
+    $page = H::loginAsAdmin($this);
+    H::navigateOk($page, ctConfigSection('default'));
+    $token = H::pwgToken($page);
+
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+    $prefix = $prefix !== false ? $prefix : 'piwigo_';
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $guestRow = H::fetchAssocOrFail($db, 'SELECT nb_image_page, recent_period FROM ' . $prefix . 'user_infos WHERE user_id = 2');
+
+    try {
+        $result = H::adminPost($page, ctConfigSection('default'), [
+            'validate' => '1',
+            'pwg_token' => $token,
+            'nb_image_page' => '25',
+            'recent_period' => '10',
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Fatal error');
+        expect($result['body'])->toContain('Information data registered in database');
+
+        $updated = H::fetchAssocOrFail($db, 'SELECT nb_image_page, recent_period FROM ' . $prefix . 'user_infos WHERE user_id = 2');
+        expect((int) $updated['nb_image_page'])->toBe(25);
+        expect((int) $updated['recent_period'])->toBe(10);
+    } finally {
+        $db->query(
+            'UPDATE ' . $prefix . 'user_infos SET nb_image_page = ' . (int) $guestRow['nb_image_page']
+            . ', recent_period = ' . (int) $guestRow['recent_period'] . ' WHERE user_id = 2'
+        );
+        $db->close();
+    }
+});
+
 it('renders the sizes tab', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, ctConfigSection('sizes'));
@@ -365,10 +456,299 @@ it('sizes tab: restore_settings resets derivative params to Piwigo defaults', fu
     expect($result['body'])->not->toContain('Fatal error');
 });
 
+it('sizes tab: saves every derivative type with valid ascending sizes', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives', 'disabled_derivatives']);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        $result = H::adminPost($page, ctConfigSection('sizes'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'resize_quality' => '90',
+            'd' => ctDerivativesPayload(),
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('Your configuration settings are saved');
+        expect($result['body'])->not->toContain('Fatal error');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('sizes tab: rejects an out-of-range resize_quality without saving', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives', 'disabled_derivatives']);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        $result = H::adminPost($page, ctConfigSection('sizes'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'resize_quality' => '10',
+            'd' => ctDerivativesPayload(),
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Your configuration settings are saved');
+        expect($result['body'])->not->toContain('Fatal error');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('sizes tab: rejects a thumb size that is not strictly larger than the square size', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives', 'disabled_derivatives']);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        // thumb's max(w,h) must exceed square's w (120) -- 100 is smaller,
+        // exercising processSizes()'s THUMB-specific max(w,h) <= prev_w branch.
+        $result = H::adminPost($page, ctConfigSection('sizes'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'resize_quality' => '90',
+            'd' => ctDerivativesPayload(['thumb' => ['w' => 100, 'h' => 100]]),
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Your configuration settings are saved');
+        expect($result['body'])->not->toContain('Fatal error');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('sizes tab: rejects a non-thumb size that is not strictly larger than the previous type', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives', 'disabled_derivatives']);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        // 'small' must exceed 'xsmall' (432x324) in both w and h --
+        // exercises processSizes()'s non-THUMB `$v <= $prev_w`/`$prev_h` branch.
+        $result = H::adminPost($page, ctConfigSection('sizes'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'resize_quality' => '90',
+            'd' => ctDerivativesPayload(['small' => ['w' => 100, 'h' => 100]]),
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Your configuration settings are saved');
+        expect($result['body'])->not->toContain('Fatal error');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('sizes tab: leaving a non-required type disabled skips its validation', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives', 'disabled_derivatives']);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        $payload = ctDerivativesPayload();
+        // '4xlarge' is not must_enable (not square/thumb/the configured
+        // default derivative size) -- omitting its 'enabled' key disables
+        // it and skips step-2 validation entirely, even with an otherwise-
+        // invalid (too-small) size posted for it.
+        unset($payload['4xlarge']['enabled']);
+        $payload['4xlarge']['w'] = '1';
+        $payload['4xlarge']['h'] = '1';
+
+        $result = H::adminPost($page, ctConfigSection('sizes'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'resize_quality' => '90',
+            'd' => $payload,
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('Your configuration settings are saved');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
 it('renders the watermark tab', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, ctConfigSection('watermark'));
     $page->assertNoJavaScriptErrors();
+});
+
+it('saves the watermark tab with a fixed topleft position, persisting the derived xpos/ypos', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives']);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        $result = H::adminPost($page, ctConfigSection('watermark'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'w' => [
+                'file' => '',
+                'position' => 'topleft',
+                'xpos' => '0',
+                'ypos' => '0',
+                'xrepeat' => '0',
+                'yrepeat' => '0',
+                'opacity' => '50',
+                'minw' => '10',
+                'minh' => '10',
+            ],
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('Your configuration settings are saved');
+
+        $page = H::navigateOk($page, ctConfigSection('watermark'));
+        $page->assertPresent('option[value="topleft"][selected]');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('saves a custom watermark position with explicit xpos/ypos/repeat', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives']);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        $result = H::adminPost($page, ctConfigSection('watermark'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'w' => [
+                'file' => '',
+                'position' => 'custom',
+                'xpos' => '25',
+                'ypos' => '75',
+                'xrepeat' => '1',
+                'yrepeat' => '0',
+                'opacity' => '80',
+                'minw' => '10',
+                'minh' => '10',
+            ],
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('Your configuration settings are saved');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('rejects an out-of-range watermark opacity, without saving', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives']);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        $result = H::adminPost($page, ctConfigSection('watermark'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'w' => [
+                'file' => '',
+                'position' => 'middle',
+                'xpos' => '50',
+                'ypos' => '50',
+                'xrepeat' => '0',
+                'yrepeat' => '0',
+                'opacity' => '0',
+                'minw' => '10',
+                'minh' => '10',
+            ],
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Your configuration settings are saved');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('rejects an out-of-range watermark xpos, without saving', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives']);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        $result = H::adminPost($page, ctConfigSection('watermark'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'w' => [
+                'file' => '',
+                'position' => 'custom',
+                'xpos' => '150',
+                'ypos' => '50',
+                'xrepeat' => '0',
+                'yrepeat' => '0',
+                'opacity' => '50',
+                'minw' => '10',
+                'minh' => '10',
+            ],
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Your configuration settings are saved');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('saves the watermark tab with each named position, deriving the matching xpos/ypos', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives']);
+
+    try {
+        $page = H::loginAsAdmin($this);
+
+        $cases = [
+            'topright' => ['100', '0'],
+            'middle' => ['50', '50'],
+            'bottomleft' => ['0', '100'],
+            'bottomright' => ['100', '100'],
+        ];
+
+        foreach ($cases as $position => [$expectedXpos, $expectedYpos]) {
+            $token = H::pwgToken($page);
+
+            $result = H::adminPost($page, ctConfigSection('watermark'), [
+                'pwg_token' => $token,
+                'submit' => '1',
+                'w' => [
+                    'file' => '',
+                    'position' => $position,
+                    // deliberately wrong, to prove the switch overwrites them
+                    'xpos' => '5',
+                    'ypos' => '5',
+                    'xrepeat' => '0',
+                    'yrepeat' => '0',
+                    'opacity' => '50',
+                    'minw' => '10',
+                    'minh' => '10',
+                ],
+            ]);
+
+            expect($result['status'])->toBe(200);
+            expect($result['body'])->toContain('Your configuration settings are saved');
+
+            $page = H::navigateOk($page, ctConfigSection('watermark'));
+            $page->assertPresent('option[value="' . $position . '"][selected]');
+        }
+    } finally {
+        H::restoreConfig($snapshot);
+    }
 });
 
 it('rejects a submission with a wrong (present) CSRF token', function (): void {

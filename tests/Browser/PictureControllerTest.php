@@ -380,6 +380,114 @@ it('delete_comment succeeds for an anonymous (NULL author_id) comment', function
     expect(pictureCommentRow($anonCommentId))->toBeNull();
 });
 
+it("edits a comment's own content via the edit_comment action, validating it as admin", function (): void {
+    // Distinct from delete_comment/validate_comment above: edit_comment
+    // is the "change a comment's own text" flow
+    // (CommentService::updateComment()), never exercised before. Its
+    // ephemeral post key is only ever rendered into the page for the ONE
+    // comment currently being edited (comment_list.tpl's own
+    // {if isset($comment.IN_EDIT)} guard around the hidden `key` field),
+    // so a real 2-step interaction is required: a first GET with
+    // action=edit_comment&comment_to_edit=<id> (no `content` posted, so
+    // PictureController's own `if ($pictureRequest->content !== null...)`
+    // guard skips straight to rendering the edit form) to obtain a real
+    // key, then a real POST using it -- mirrors clicking "Edit" then
+    // submitting the form, not a fabricated key.
+    //
+    // Raw curl throughout (not H::adminPost()'s in-browser fetch(manual)):
+    // a successful edit takes the 'validate' branch, which issues a real
+    // redirect() -- fetch(manual)'s own Response.status is always the
+    // spec's opaque 0 for a redirect, never the real 302 (confirmed
+    // elsewhere this session), so FOLLOWLOCATION is required to observe
+    // the real final status. Matches "delete_comment succeeds for an
+    // anonymous comment"'s own raw-curl login pattern above.
+    $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_browser_editcomment_');
+    if ($cookieJar === false) {
+        throw new RuntimeException('tempnam failed');
+    }
+
+    $curl = static function (string $url, array $fields = [], bool $followRedirects = true) use ($cookieJar): array {
+        $ch = curl_init($url);
+        if ($ch === false) {
+            throw new RuntimeException('curl_init failed');
+        }
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, $followRedirects);
+        if ($fields !== []) {
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
+        }
+        $body = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        unset($ch);
+
+        return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+    };
+
+    $baseUrl = H::baseUrl();
+    $curl($baseUrl . '/identification.php');
+    $curl($baseUrl . '/identification.php', [
+        'username' => H::ADMIN_USER,
+        'password' => H::ADMIN_PASS,
+        'login' => 'Login',
+    ]);
+
+    $statusResult = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.session.getStatus']);
+    $decodedStatus = json_decode($statusResult['body'], true);
+    $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
+    $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+    $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
+    expect($pwgToken)->not->toBe('');
+
+    $album = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.categories.add', 'name' => 'Picture Edit Comment Album ' . uniqid()]);
+    $decodedAlbum = json_decode($album['body'], true);
+    $albumResultData = is_array($decodedAlbum) ? ($decodedAlbum['result'] ?? null) : null;
+    $albumIdRaw = is_array($albumResultData) ? ($albumResultData['id'] ?? null) : null;
+    $albumId = is_numeric($albumIdRaw) ? (int) $albumIdRaw : 0;
+    expect($albumId)->toBeGreaterThan(0);
+
+    $image = H::makeTestImage('Edit Comment Photo');
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Edit Comment Photo');
+    @unlink($image);
+
+    $commentId = pictureInsertComment($imageId, 'edit-me-' . uniqid(), 'Original content.', false, 3);
+
+    $editUrl = $baseUrl . '/picture.php?/' . $imageId . '/category/' . $albumId
+        . '&action=edit_comment&comment_to_edit=' . $commentId;
+
+    $getResult = $curl($editUrl);
+    if (preg_match('/name="key" value="([^"]+)"/', $getResult['body'], $matches) !== 1) {
+        throw new RuntimeException('Could not find the edit-comment form\'s hidden key field in: ' . $getResult['body']);
+    }
+    $key = html_entity_decode($matches[1]);
+
+    $newContent = 'Edited content ' . uniqid();
+    $postResult = $curl($editUrl, [
+        'content' => $newContent,
+        'website_url' => '',
+        'key' => $key,
+        'pwg_token' => $pwgToken,
+    ]);
+
+    @unlink($cookieJar);
+
+    expect($postResult['status'])->toBe(200);
+    expect($postResult['body'])->not->toContain('Fatal error');
+
+    $db = pictureDbConnect();
+    $row = H::fetchAssocOrFail($db, sprintf('SELECT content, validated FROM %scomments WHERE id = %d', pictureDbPrefix(), $commentId));
+    $db->close();
+    expect($row['content'])->toBe($newContent);
+    // Admin editing any comment always takes the 'validate' branch
+    // (CommentService::updateComment(): `!commentsValidation() ||
+    // isAdmin()`), regardless of the fixture's own comments_validation
+    // setting.
+    expect((int) $row['validated'])->toBe(1);
+});
+
 it('navigates between previous/next/first/last items across a 3-photo album, ordered by title', function (): void {
     $page = H::loginAsAdmin($this);
     $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Nav Test Album ' . uniqid()]);

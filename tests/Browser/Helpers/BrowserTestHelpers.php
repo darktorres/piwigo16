@@ -509,6 +509,41 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Same in-browser fetch() technique as adminPost(), but for a plain
+     * authenticated GET whose real HTTP status code needs asserting (e.g. a
+     * CSRF-gated GET action) -- navigateOk()/gotoOk() only assert success,
+     * they don't hand back the status code for a real 400/403 response.
+     *
+     * @return array{status: int, body: string}
+     */
+    public static function rawGet(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $path): array
+    {
+        $url = self::baseUrl() . '/' . ltrim($path, '/');
+        $js = <<<JS
+        fetch('{$url}', {
+            method: 'GET',
+            redirect: 'manual',
+        }).then(async r => JSON.stringify({status: r.status, body: await r.text()}))
+        JS;
+
+        $result = $page->script($js);
+        if (!is_string($result)) {
+            throw new ExpectationFailedException(
+                "rawGet to {$path} did not return a string result: " . var_export($result, true)
+            );
+        }
+
+        $decoded = json_decode($result, true);
+        if (!is_array($decoded) || !is_int($decoded['status'] ?? null) || !is_string($decoded['body'] ?? null)) {
+            throw new ExpectationFailedException(
+                "rawGet to {$path} did not return the expected {status, body} shape: " . var_export($result, true)
+            );
+        }
+
+        return ['status' => $decoded['status'], 'body' => $decoded['body']];
+    }
+
+    /**
      * Polls in-browser (via script(), which awaits the returned promise —
      * see wsCall()) until $selector is absent or hidden, instead of racing a
      * single check against an async request. Neither assertSee() nor
@@ -1090,6 +1125,28 @@ final class BrowserTestHelpers
         $body = curl_exec($ch);
 
         return is_string($body) ? $body : '';
+    }
+
+    /**
+     * Runs a single-row SELECT directly against mysqli and returns its
+     * associative row, failing loudly instead of letting a raw
+     * mysqli_result|bool/array|null ambiguity leak into a caller's own
+     * narrowing.
+     *
+     * @return array<string, float|int|string|null>
+     */
+    public static function fetchAssocOrFail(\mysqli $db, string $sql): array
+    {
+        $result = $db->query($sql);
+        if (! $result instanceof \mysqli_result) {
+            throw new ExpectationFailedException('Query did not return a result set: ' . $sql);
+        }
+        $row = $result->fetch_assoc();
+        if (! is_array($row)) {
+            throw new ExpectationFailedException('Query returned no row: ' . $sql);
+        }
+
+        return $row;
     }
 
     /** @param array<string, mixed> $fields */

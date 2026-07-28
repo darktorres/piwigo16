@@ -45,6 +45,11 @@ it('API search finds photo by name', function (): void {
 it('gallery search page renders without errors', function (): void {
     $page = H::gotoOk($this, '/qsearch.php?q=sunset');
     $page->assertNoJavaScriptErrors();
+
+    // Piwigo\Menu\MenubarRenderer::render() assigns QUERY_SEARCH from the
+    // real SectionContext's qsearchDetails (section === 'search') --
+    // menubar_menu.tpl pre-fills the quick-search box's value from it.
+    $page->assertPresent('input#qsearchInput[value="sunset"]');
 });
 
 it('search with no results renders an empty state without errors', function (): void {

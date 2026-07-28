@@ -152,3 +152,21 @@ it("renders a category's description when present", function (): void {
         galSetCategoryComment(1, null);
     }
 });
+
+it('renders the recent-albums page, exercising CategoryCatsRenderer\'s isRecentCats branch', function (): void {
+    // Distinct from the plain '/category/1' navigation above:
+    // GalleryController only calls
+    // CoreDomainAccessor::categoryCatsRenderer()->render('recent_cats', ...)
+    // for this specific URL section (UrlService's own 'recent_cats'
+    // token), never for a plain category page -- CategoryCatsRenderer's
+    // own isRecentCats-gated filtering/sort (CategoryService::
+    // isRecentCategory()/compareByGlobalRank(), as opposed to the
+    // plain-category compareByRank()) had no test reaching it at all.
+    // Fixture category 1's photos are all dated 2026-08-01, matching
+    // PIWIGO_TEST_NOW exactly, well within any real recent_period
+    // default -- so it's real, fixture-driven "recent" data, not a
+    // fabricated date.
+    $page = H::loginAsAdmin($this);
+    $page = H::navigateOk($page, '/index.php?/recent_cats');
+    $page->assertNoJavaScriptErrors();
+});

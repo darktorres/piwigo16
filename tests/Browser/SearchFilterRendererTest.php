@@ -66,3 +66,28 @@ it('renders an empty search-results page for a freshly created tag with no match
     $page = H::navigateOk($page, '/search.php?tag_id=' . $tagId);
     $page->assertNoJavaScriptErrors();
 });
+
+it('renders search results for a plain text query, exercising the allwords filter branch', function (): void {
+    // Distinct from the tag_id/cat_id tests above: `q` drives
+    // SearchController's own `count($words) > 0` branch
+    // (SearchService::splitAllwords()), building the 'allwords' search
+    // field neither of those params ever populate -- and
+    // SearchFilterRenderer::render()'s own matching
+    // `isset($searchFields['allwords'])` branch downstream.
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Text Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $uniqueWord = 'ctsearchword' . uniqid();
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Photo ' . $uniqueWord);
+    @unlink($image);
+    expect($imageId)->toBeGreaterThan(0);
+
+    $page = H::navigateOk($page, '/search.php?q=' . $uniqueWord);
+    $page->assertNoJavaScriptErrors();
+    $page->assertSee('Photo ' . $uniqueWord);
+});

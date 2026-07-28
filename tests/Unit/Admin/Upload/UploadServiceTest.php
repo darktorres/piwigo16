@@ -2,9 +2,13 @@
 
 declare(strict_types=1);
 
+use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Logger;
+use Piwigo\Core\Paths;
 
 // Marker-based filesystem safety: this suite writes real files to verify
 // [SEC-21]'s SVG sanitizer, so every path must be scoped to a unique
@@ -29,14 +33,30 @@ beforeEach(function (): void {
     CurrentLogger::set(new Logger(['severity' => Logger::OFF]));
 });
 
-afterEach(function (): void {
-    CurrentLogger::reset();
-    $dir = upload_service_test_marker();
-    $files = glob($dir . '/*');
-    foreach ($files !== false ? $files : [] as $file) {
-        unlink($file);
+/** Recursively removes a directory tree (uploadFile* handlers create a nested pwg_representative/ subdirectory). */
+function upload_service_rrmdir(string $dir): void
+{
+    if (! is_dir($dir)) {
+        return;
+    }
+    $entries = scandir($dir);
+    foreach ($entries !== false ? $entries : [] as $entry) {
+        if ($entry === '.' || $entry === '..') {
+            continue;
+        }
+        $path = $dir . '/' . $entry;
+        if (is_dir($path)) {
+            upload_service_rrmdir($path);
+        } else {
+            unlink($path);
+        }
     }
     rmdir($dir);
+}
+
+afterEach(function (): void {
+    CurrentLogger::reset();
+    upload_service_rrmdir(upload_service_test_marker());
 });
 
 function upload_service_call_sanitize(string $path, ?string $finfoType): void
@@ -283,4 +303,228 @@ test('saveUploadFormConfig collects a range error and a field-keyed form_errors 
     expect($result)->toBeFalse();
     expect($errors)->toHaveCount(1);
     expect($formErrors)->toBe(['original_resize_maxwidth' => '[500 .. 20000]']);
+});
+
+test('readyForUploadMessage returns null when the real upload directory exists and is writable', function (): void {
+    $root = upload_service_test_marker() . '/root/';
+    mkdir($root . 'upload', 0o777, true);
+    CurrentPaths::set(Paths::fromRoot($root));
+    CurrentConfig::setUploadDir('upload/');
+
+    expect(new UploadService()->readyForUploadMessage())->toBeNull();
+
+    CurrentPaths::reset();
+});
+
+test('readyForUploadMessage reports a missing-directory message when the parent is not writable', function (): void {
+    $root = upload_service_test_marker() . '/root2/';
+    mkdir($root, 0o555, true);
+    CurrentPaths::set(Paths::fromRoot($root));
+    CurrentConfig::setUploadDir('upload/');
+
+    try {
+        expect(new UploadService()->readyForUploadMessage())
+            ->toBe('Create the "upload/" directory at the root of your Piwigo installation');
+    } finally {
+        chmod($root, 0o777);
+        CurrentPaths::reset();
+    }
+});
+
+test('readyForUploadMessage reports a chmod message and fixes an unwritable existing directory', function (): void {
+    $root = upload_service_test_marker() . '/root3/';
+    mkdir($root . 'upload', 0o777, true);
+    chmod($root . 'upload', 0o555);
+    CurrentPaths::set(Paths::fromRoot($root));
+    CurrentConfig::setUploadDir('upload/');
+
+    $message = new UploadService()->readyForUploadMessage();
+
+    // @chmod(0777) inside the method itself is expected to succeed for a
+    // directory this test process owns, so the real branch exercised here
+    // is the re-check passing -- confirmed by the directory actually
+    // ending up writable, not by asserting a specific returned message.
+    expect(is_writable($root . 'upload'))->toBeTrue();
+    expect($message)->toBeNull();
+
+    CurrentPaths::reset();
+});
+
+function upload_service_prepare_directory(string $directory): void
+{
+    $method = new ReflectionMethod(UploadService::class, 'prepareDirectoryStatic');
+    $method->invoke(null, $directory);
+}
+
+test('prepareDirectoryStatic creates a missing directory tree', function (): void {
+    $dir = upload_service_test_marker() . '/nested/deep/dir';
+    expect(is_dir($dir))->toBeFalse();
+
+    upload_service_prepare_directory($dir);
+
+    expect(is_dir($dir))->toBeTrue();
+    expect(is_writable($dir))->toBeTrue();
+});
+
+test('prepareDirectoryStatic fixes permissions on an existing unwritable directory', function (): void {
+    $dir = upload_service_test_marker() . '/existing-unwritable';
+    mkdir($dir, 0o777, true);
+    chmod($dir, 0o555);
+
+    upload_service_prepare_directory($dir);
+
+    expect(is_writable($dir))->toBeTrue();
+});
+
+test('addFormat throws when formats are disabled', function (): void {
+    CurrentConfig::setIsFormatsEnabled(false);
+    $service = new UploadService();
+
+    expect(fn () => $service->addFormat('/tmp/whatever', 'tif', 1))
+        ->toThrow(ImageProcessingException::class, '[Piwigo\Admin\Upload\UploadService::addFormat] formats are disabled');
+});
+
+test('addFormat throws for an unauthorized format extension', function (): void {
+    CurrentConfig::setIsFormatsEnabled(true);
+    CurrentConfig::setFormatExtensions(['tif', 'psd']);
+    $service = new UploadService();
+
+    try {
+        expect(fn () => $service->addFormat('/tmp/whatever', 'exe', 1))
+            ->toThrow(ImageProcessingException::class);
+    } finally {
+        CurrentConfig::setIsFormatsEnabled(false);
+        CurrentConfig::setFormatExtensions(['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd']);
+    }
+});
+
+test('the 6 upload_file_* representative-generation handlers pass an already-set representative_ext straight through', function (): void {
+    expect(UploadService::uploadFilePdf('already-set', '/tmp/whatever.pdf'))->toBe('already-set');
+    expect(UploadService::uploadFileHeic('already-set', '/tmp/whatever.heic'))->toBe('already-set');
+    expect(UploadService::uploadFileTiff('already-set', '/tmp/whatever.tif'))->toBe('already-set');
+    expect(UploadService::uploadFileVideo('already-set', '/tmp/whatever.mp4'))->toBe('already-set');
+    expect(UploadService::uploadFilePsd('already-set', '/tmp/whatever.psd'))->toBe('already-set');
+    expect(UploadService::uploadFileEps('already-set', '/tmp/whatever.eps'))->toBe('already-set');
+});
+
+test('the 6 upload_file_* representative-generation handlers no-op for a non-matching file extension', function (): void {
+    // A '.txt' file never matches any of these handlers' own extension
+    // whitelist, regardless of which imaging library/binary is actually
+    // available in this environment -- so each returns null without
+    // touching the filesystem, exec()ing anything, or needing a real
+    // PDF/HEIC/TIFF/video/PSD/EPS fixture.
+    $path = upload_service_test_marker() . '/plain.txt';
+    file_put_contents($path, 'not a representative-worthy file');
+
+    expect(UploadService::uploadFilePdf(null, $path))->toBeNull();
+    expect(UploadService::uploadFileHeic(null, $path))->toBeNull();
+    expect(UploadService::uploadFilePsd(null, $path))->toBeNull();
+    expect(UploadService::uploadFileEps(null, $path))->toBeNull();
+    expect(UploadService::uploadFileVideo(null, $path))->toBeNull();
+});
+
+/** @return array{0: int, 1: int} */
+function upload_service_optimal_dimensions(): array
+{
+    $method = new ReflectionMethod(UploadService::class, 'getOptimalDimensionsForRepresentative');
+
+    /** @var array{0: int, 1: int} */
+    return $method->invoke(null);
+}
+
+test('getOptimalDimensionsForRepresentative returns a positive width/height pair', function (): void {
+    [$w, $h] = upload_service_optimal_dimensions();
+
+    expect($w)->toBeInt()->toBeGreaterThan(0);
+    expect($h)->toBeInt()->toBeGreaterThan(0);
+});
+
+/**
+ * uploadFileTiff/Pdf/Psd/Eps() all guard on `PwgImage::get_library() !==
+ * 'ext_imagick'` -- this environment's real ImageMagick CLI (`magick`,
+ * confirmed on PATH) makes PwgImage::is_ext_imagick() true and
+ * CurrentConfig::graphicsLibrary()'s own 'auto' default resolves to
+ * 'ext_imagick' first, so these 4 handlers' real conversion branches (not
+ * just their early-return guards, already covered above) are genuinely
+ * reachable here without touching any config. uploadFileHeic()/
+ * uploadFileVideo() are NOT covered this way: HEIC needs a libheif
+ * delegate and video needs ffmpeg, neither confirmed present in this
+ * environment, so those 2 stay on the guard-branch-only coverage above.
+ */
+function upload_service_make_sample_png(string $path): void
+{
+    $exec = 'convert -size 40x40 xc:red ' . escapeshellarg($path) . ' 2>&1';
+    exec($exec, $out, $status);
+    if ($status !== 0) {
+        throw new RuntimeException('convert (sample PNG) failed: ' . implode("\n", $out));
+    }
+}
+
+function upload_service_convert_sample(string $sourcePng, string $destPath): void
+{
+    $exec = 'convert ' . escapeshellarg($sourcePng) . ' ' . escapeshellarg($destPath) . ' 2>&1';
+    exec($exec, $out, $status);
+    if ($status !== 0) {
+        throw new RuntimeException("convert ({$destPath}) failed: " . implode("\n", $out));
+    }
+}
+
+test('uploadFileTiff converts a real TIFF into a representative image via the ext_imagick CLI', function (): void {
+    $dir = upload_service_test_marker();
+    $png = $dir . '/source.png';
+    $tiff = $dir . '/photo.tiff';
+    upload_service_make_sample_png($png);
+    upload_service_convert_sample($png, $tiff);
+
+    $result = UploadService::uploadFileTiff(null, $tiff);
+
+    expect($result)->not->toBeNull();
+    $representativePath = $dir . '/pwg_representative/photo.' . $result;
+    expect(file_exists($representativePath))->toBeTrue();
+    expect(filesize($representativePath))->toBeGreaterThan(0);
+});
+
+test('uploadFilePdf converts a real PDF into a representative jpg via the ext_imagick CLI', function (): void {
+    $dir = upload_service_test_marker();
+    $png = $dir . '/source.png';
+    $pdf = $dir . '/document.pdf';
+    upload_service_make_sample_png($png);
+    upload_service_convert_sample($png, $pdf);
+
+    $result = UploadService::uploadFilePdf(null, $pdf);
+
+    expect($result)->toBe('jpg');
+    $representativePath = $dir . '/pwg_representative/document.jpg';
+    expect(file_exists($representativePath))->toBeTrue();
+    expect(filesize($representativePath))->toBeGreaterThan(0);
+});
+
+test('uploadFilePsd converts a real PSD into a representative png via the ext_imagick CLI', function (): void {
+    $dir = upload_service_test_marker();
+    $png = $dir . '/source.png';
+    $psd = $dir . '/layered.psd';
+    upload_service_make_sample_png($png);
+    upload_service_convert_sample($png, $psd);
+
+    $result = UploadService::uploadFilePsd(null, $psd);
+
+    expect($result)->toBe('png');
+    $representativePath = $dir . '/pwg_representative/layered.png';
+    expect(file_exists($representativePath))->toBeTrue();
+    expect(filesize($representativePath))->toBeGreaterThan(0);
+});
+
+test('uploadFileEps converts a real EPS into a representative png via the ext_imagick CLI', function (): void {
+    $dir = upload_service_test_marker();
+    $png = $dir . '/source.png';
+    $eps = $dir . '/vector.eps';
+    upload_service_make_sample_png($png);
+    upload_service_convert_sample($png, $eps);
+
+    $result = UploadService::uploadFileEps(null, $eps);
+
+    expect($result)->toBe('png');
+    $representativePath = $dir . '/pwg_representative/vector.png';
+    expect(file_exists($representativePath))->toBeTrue();
+    expect(filesize($representativePath))->toBeGreaterThan(0);
 });

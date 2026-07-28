@@ -150,6 +150,129 @@ final class WsUploadTest extends ContractTestCase
     }
 
     /**
+     * Multipart POST for pwg.images.addSimple -- $_FILES['image'] is
+     * mandatory, so http_build_query()-based callWs() can't express this
+     * request.
+     * @param array<string, mixed> $fields
+     * @return array<string, mixed>
+     */
+    private function addSimpleMultipart(array $fields, bool $withFile = true): array
+    {
+        $tmpFile = null;
+        $postFields = $fields;
+        if ($withFile) {
+            $tmpName = tempnam(sys_get_temp_dir(), 'pwg_ct_addsimple_');
+            self::assertNotFalse($tmpName);
+            $tmpFile = $tmpName . '.png';
+            file_put_contents($tmpFile, $this->pngBytes());
+            $postFields['image'] = new \CURLFile($tmpFile, 'image/png', 'addsimple.png');
+        }
+        $postFields['method'] = 'pwg.images.addSimple';
+
+        try {
+            $url = $this->baseUrl . '/ws.php?format=json';
+            $ch  = curl_init($url);
+            self::assertNotFalse($ch);
+
+            $cookieJar = $this->cookieJar();
+            assert($cookieJar !== '');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+            curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+            curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
+
+            $body = curl_exec($ch);
+            unset($ch);
+        } finally {
+            if ($tmpFile !== null) {
+                @unlink($tmpFile);
+            }
+        }
+
+        self::assertIsString($body);
+        $decoded = json_decode($body, true);
+        self::assertIsArray($decoded);
+        /** @var array<string, mixed> $decoded */
+        return $decoded;
+    }
+
+    public function test_addSimple_missing_file_returns_error(): void
+    {
+        $response = $this->addSimpleMultipart(['category' => 1], withFile: false);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(405, $response['err']);
+    }
+
+    public function test_addSimple_with_unknown_image_id_returns_404(): void
+    {
+        $response = $this->addSimpleMultipart(['category' => 1, 'image_id' => 999999]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(404, $response['err']);
+    }
+
+    public function test_addSimple_sets_info_columns_and_tags_and_returns_the_category_url(): void
+    {
+        $uniqueName = 'Contract Test addSimple ' . uniqid();
+        $response = $this->addSimpleMultipart([
+            'category' => 1,
+            'name' => $uniqueName,
+            'author' => 'addSimple Author',
+            'comment' => 'addSimple Comment',
+            'tags' => 'addsimple-tag-one,addsimple-tag-two',
+        ]);
+
+        self::assertSame('ok', $response['stat'], (string) json_encode($response));
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $imageId = $result['image_id'];
+        self::assertIsNumeric($imageId);
+        $this->uploadedImageId = (int) $imageId;
+
+        self::assertIsString($result['url']);
+        self::assertStringContainsString('category', $result['url']);
+
+        $row = $this->conn->fetchAssociative(
+            'SELECT name, author, comment FROM ' . Tables::images() . ' WHERE id = ?',
+            [(int) $imageId]
+        );
+        self::assertIsArray($row);
+        self::assertSame($uniqueName, $row['name']);
+        self::assertSame('addSimple Author', $row['author']);
+        self::assertSame('addSimple Comment', $row['comment']);
+
+        $tagNames = $this->conn->fetchFirstColumn(
+            'SELECT t.name FROM ' . Tables::tags() . ' t
+             INNER JOIN ' . Tables::imageTag() . ' it ON it.tag_id = t.id
+             WHERE it.image_id = ?',
+            [(int) $imageId]
+        );
+        self::assertContains('addsimple-tag-one', $tagNames);
+        self::assertContains('addsimple-tag-two', $tagNames);
+    }
+
+    public function test_addSimple_without_a_category_omits_the_category_from_the_url(): void
+    {
+        $response = $this->addSimpleMultipart([
+            'name' => 'Contract Test addSimple No Category ' . uniqid(),
+        ]);
+
+        self::assertSame('ok', $response['stat'], (string) json_encode($response));
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $imageId = $result['image_id'];
+        self::assertIsNumeric($imageId);
+        $this->uploadedImageId = (int) $imageId;
+
+        self::assertIsString($result['url']);
+        self::assertStringNotContainsString('category', $result['url']);
+    }
+
+    /**
      * Legacy Coupling Retirement gap-closure (Workstream C2): pwg.images.upload
      * used to die() a hardcoded raw JSON-RPC error string on this exact
      * condition (a multipart request with no $_FILES['file'] entry),

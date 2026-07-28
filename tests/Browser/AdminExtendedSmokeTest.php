@@ -80,6 +80,22 @@ $routes = [
     'admin site_manager'              => '/admin.php?page=site_manager',
     'admin site_update'               => '/admin.php?page=site_update&site=1',
     'admin themes_standard_pages'     => '/admin.php?page=themes_standard_pages',
+    // Extension-tabs batch: plugins/themes/languages/updates and their
+    // "new"/"update" tabs had no Browser coverage at all (not even a plain
+    // GET) -- each dispatches to a distinct PageRenderer per
+    // PluginsSubController/ThemesSubController/LanguagesSubController/
+    // UpdatesSubController's own tab switch.
+    'admin plugins (installed)'       => '/admin.php?page=plugins',
+    'admin plugins (new)'             => '/admin.php?page=plugins&tab=new',
+    'admin plugins (update)'          => '/admin.php?page=plugins&tab=update',
+    'admin themes (installed)'        => '/admin.php?page=themes',
+    'admin themes (new)'              => '/admin.php?page=themes&tab=new',
+    'admin themes (update)'           => '/admin.php?page=themes&tab=update',
+    'admin languages (installed)'     => '/admin.php?page=languages',
+    'admin languages (new)'           => '/admin.php?page=languages&tab=new',
+    'admin languages (update)'        => '/admin.php?page=languages&tab=update',
+    'admin updates (piwigo)'          => '/admin.php?page=updates',
+    'admin updates (ext)'             => '/admin.php?page=updates&tab=ext',
 ];
 
 foreach ($routes as $name => $path) {

@@ -372,7 +372,18 @@ final readonly class MetadataService
 
         $path = $infos['path'] ?? null;
         $path = is_string($path) ? $path : '';
-        $file = CurrentPaths::get()->root . $path;
+        // `path` is root-relative for uploaded photos (UploadService's own
+        // storage-relative convention) but already absolute for locally
+        // site-synced photos (LocalSiteReader/SiteUpdateSubController --
+        // `galleries_url` itself is seeded as an absolute path by
+        // InstallWizard/install.php, unlike legacy Piwigo's relative
+        // PHPWG_ROOT_PATH). Prepending the root a second time onto an
+        // already-absolute path produced an unreadable, doubled-up path --
+        // confirmed live: metadata sync silently failed with "File/directory
+        // read error" for every photo synced via the "Synchronize" tool on a
+        // fresh install.
+        $originalFile = str_starts_with($path, '/') ? $path : CurrentPaths::get()->root . $path;
+        $file = $originalFile;
         if (! is_readable($file)) {
             return false;
         }
@@ -424,7 +435,7 @@ final readonly class MetadataService
 
         if ($isTiff) {
             // back to original file
-            $file = CurrentPaths::get()->root . $path;
+            $file = $originalFile;
         }
 
         if (\Piwigo\Config\CurrentConfig::useExif()) {

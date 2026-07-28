@@ -103,3 +103,47 @@ test('renderElementDescription returns empty string when comment is not set', fu
 
     expect($service->renderElementDescription([]))->toBe('');
 });
+
+test('tagAlphaCompare sorts by the transliterated tag name', function (): void {
+    // Plain ASCII names -- no accent-transliteration ambiguity to worry
+    // about (see StringHelperTest's own pwgTransliterate notes).
+    $service = new HtmlService();
+
+    expect($service->tagAlphaCompare(['name' => 'zebra'], ['name' => 'apple']))->toBeGreaterThan(0);
+    expect($service->tagAlphaCompare(['name' => 'apple'], ['name' => 'apple']))->toBe(0);
+});
+
+test('getTagsContentTitle pluralizes based on the number of tags', function (): void {
+    $service = new HtmlService();
+
+    expect($service->getTagsContentTitle([['name' => 'one tag']]))->toContain('Tag')
+        ->and($service->getTagsContentTitle([['name' => 'one tag']]))->not->toContain('Tags');
+    expect($service->getTagsContentTitle([['name' => 'a'], ['name' => 'b']]))->toContain('Tags');
+});
+
+test('getThumbnailTitle appends visit/comment counts and a truncated comment, HTML-escaped', function (): void {
+    $service = new HtmlService();
+
+    $title = $service->getThumbnailTitle(['hit' => 5, 'nb_comments' => 2], 'My Photo', 'A <b>nice</b> shot');
+
+    expect($title)->toContain('My Photo');
+    expect($title)->toContain('5 visits');
+    expect($title)->toContain('2 comments');
+    expect($title)->toContain('A nice shot');
+    expect($title)->not->toContain('<b>');
+});
+
+test('getThumbnailTitle omits the parenthesized details block when hit/comments are zero or absent', function (): void {
+    $service = new HtmlService();
+
+    expect($service->getThumbnailTitle([], 'My Photo'))->toBe('My Photo');
+});
+
+test('getThumbnailTitle truncates a long comment to 100 characters with an ellipsis', function (): void {
+    $service = new HtmlService();
+    $longComment = str_repeat('x', 150);
+
+    $title = $service->getThumbnailTitle([], 'Title', $longComment);
+
+    expect($title)->toBe('Title ' . str_repeat('x', 100) . '...');
+});

@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\Logger;
 
 // Marker-based filesystem safety: this suite writes real files to verify
 // [SEC-21]'s SVG sanitizer, so every path must be scoped to a unique
@@ -21,9 +23,14 @@ function upload_service_test_marker(): string
 
 beforeEach(function (): void {
     mkdir(upload_service_test_marker(), 0o777, true);
+    // needResize() reads Piwigo\Core\CurrentLogger directly (an info-level
+    // log line on its own "too big" branch) -- OFF severity is a real,
+    // side-effect-free logger, never touching the filesystem.
+    CurrentLogger::set(new Logger(['severity' => Logger::OFF]));
 });
 
 afterEach(function (): void {
+    CurrentLogger::reset();
     $dir = upload_service_test_marker();
     $files = glob($dir . '/*');
     foreach ($files !== false ? $files : [] as $file) {
@@ -131,4 +138,149 @@ test('getIniSize converts a shorthand ini value to bytes', function (): void {
     $service = new UploadService();
 
     expect($service->getIniSize('memory_limit', true))->not->toBeFalse();
+});
+
+function upload_service_convert_shorthand(string|false $value): int|string|false
+{
+    $service = new UploadService();
+    $method = new ReflectionMethod($service, 'convertShorthandNotationToBytes');
+
+    /** @var int|string|false */
+    return $method->invoke($service, $value);
+}
+
+test('convertShorthandNotationToBytes multiplies K/M/G suffixes and passes through a bare number', function (): void {
+    expect(upload_service_convert_shorthand('8K'))->toBe(8 * 1024);
+    expect(upload_service_convert_shorthand('8M'))->toBe(8 * 1024 * 1024);
+    expect(upload_service_convert_shorthand('2G'))->toBe(2 * 1024 * 1024 * 1024);
+    expect(upload_service_convert_shorthand('1024'))->toBe('1024');
+    expect(upload_service_convert_shorthand(false))->toBeFalse();
+});
+
+function upload_service_is_falsy(mixed $value): bool
+{
+    $service = new UploadService();
+    $method = new ReflectionMethod($service, 'isFalsy');
+
+    /** @var bool */
+    return $method->invoke($service, $value);
+}
+
+test('isFalsy matches PHP\'s own empty() falsy set exactly, including the ones empty() shares with loose equality traps', function (): void {
+    foreach ([null, false, 0, 0.0, '0', '', []] as $falsy) {
+        expect(upload_service_is_falsy($falsy))->toBeTrue();
+    }
+    foreach (['0.0', ' ', '00', [0], true, 1, -1] as $truthy) {
+        expect(upload_service_is_falsy($truthy))->toBeFalse();
+    }
+});
+
+test('isValidImageExtension returns the lowercased, deduplicated picture extensions by default', function (): void {
+    $service = new UploadService();
+    $result = $service->isValidImageExtension('JPG');
+
+    expect($result)->toBe(array_unique($result));
+    foreach ($result as $extension) {
+        expect($extension)->toBe(strtolower($extension));
+    }
+    expect($result)->toContain('jpg');
+});
+
+test('addUploadError appends to, rather than replaces, an existing upload_id\'s error list', function (): void {
+    $_SESSION['uploads_error'] = [];
+    $service = new UploadService();
+
+    $service->addUploadError('42', 'first error');
+    $service->addUploadError('42', 'second error');
+    $service->addUploadError('99', 'unrelated upload');
+
+    expect($_SESSION['uploads_error'])->toBe([
+        '42' => ['first error', 'second error'],
+        '99' => ['unrelated upload'],
+    ]);
+
+    $_SESSION['uploads_error'] = [];
+});
+
+test('pwgImageInfos reads real width/height/filesize from a generated image', function (): void {
+    $path = upload_service_test_marker() . '/infos.png';
+    $img = imagecreatetruecolor(37, 21);
+    if ($img === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagepng($img, $path);
+
+    $service = new UploadService();
+    $infos = $service->pwgImageInfos($path);
+
+    expect($infos['width'])->toBe(37);
+    expect($infos['height'])->toBe(21);
+    expect($infos['filesize'])->toBeFloat();
+});
+
+test('pwgImageInfos throws when getimagesize() can\'t read the file', function (): void {
+    $path = upload_service_test_marker() . '/not-an-image.png';
+    file_put_contents($path, 'definitely not a real PNG');
+
+    $service = new UploadService();
+
+    expect(fn () => $service->pwgImageInfos($path))->toThrow(\Exception::class);
+});
+
+function upload_service_need_resize(string $path, int $maxWidth, int $maxHeight): bool
+{
+    $service = new UploadService();
+    $method = new ReflectionMethod($service, 'needResize');
+
+    /** @var bool */
+    return $method->invoke($service, $path, $maxWidth, $maxHeight);
+}
+
+test('needResize is false when the image already fits within the max bounds', function (): void {
+    $path = upload_service_test_marker() . '/small.jpg';
+    $img = imagecreatetruecolor(50, 50);
+    if ($img === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagejpeg($img, $path);
+
+    expect(upload_service_need_resize($path, 200, 200))->toBeFalse();
+});
+
+test('needResize is true when the image exceeds either max bound', function (): void {
+    $path = upload_service_test_marker() . '/big.jpg';
+    $img = imagecreatetruecolor(500, 50);
+    if ($img === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagejpeg($img, $path);
+
+    expect(upload_service_need_resize($path, 200, 200))->toBeTrue();
+});
+
+test('needResize is false for a non-picture extension, without even reading the file', function (): void {
+    expect(upload_service_need_resize(upload_service_test_marker() . '/definitely-missing.svg', 1, 1))->toBeFalse();
+});
+
+test('saveUploadFormConfig returns false without writing anything when given no data', function (): void {
+    $service = new UploadService();
+    $errors = [];
+    $formErrors = [];
+
+    expect($service->saveUploadFormConfig([], $errors, $formErrors))->toBeFalse();
+    expect($errors)->toBe([]);
+    expect($formErrors)->toBe([]);
+});
+
+test('saveUploadFormConfig collects a range error and a field-keyed form_errors marker, without persisting anything', function (): void {
+    $service = new UploadService();
+    $errors = [];
+    $formErrors = [];
+
+    // 999999 is far above original_resize_maxwidth's own max (20000).
+    $result = $service->saveUploadFormConfig(['original_resize_maxwidth' => '999999'], $errors, $formErrors);
+
+    expect($result)->toBeFalse();
+    expect($errors)->toHaveCount(1);
+    expect($formErrors)->toBe(['original_resize_maxwidth' => '[500 .. 20000]']);
 });

@@ -115,5 +115,26 @@ namespace Piwigo\Tests\Integration {
             // argument (false) unchanged.
             self::assertFalse($this->service->tryLogUser('anyone', 'anything', false));
         }
+
+        public function test_find_user_by_username_or_email_matches_by_username(): void
+        {
+            $user = $this->service->findUserByUsernameOrEmail('fixture_admin');
+
+            self::assertNotNull($user);
+            self::assertSame('fixture_admin', $user->username);
+        }
+
+        public function test_find_user_by_username_or_email_returns_null_for_an_unknown_identifier(): void
+        {
+            self::assertNull($this->service->findUserByUsernameOrEmail('no-such-user-' . uniqid()));
+        }
+
+        public function test_has_already_logged_in_is_true_for_a_user_with_no_login_activity_history(): void
+        {
+            // Fixture user 4 (power_user) -- see this suite's own
+            // fixture-shape memory notes; no login-activity rows exist for
+            // it in the fixture, so countLoginActivity() === 0.
+            self::assertTrue($this->service->hasAlreadyLoggedIn(4));
+        }
     }
 }

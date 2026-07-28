@@ -194,3 +194,56 @@ test('getMailConfiguration reads debug_mail-adjacent smtp settings from CurrentC
         ->and($config['smtp_password'])->toBe('secret')
         ->and($config['smtp_secure'])->toBe('tls');
 });
+
+test('generateResetPasswordMail builds an HTML mail with the reset link and gallery-title-prefixed subject', function (): void {
+    $service = new MailService();
+
+    $mail = $service->generateResetPasswordMail('jane', 'https://example.test/password.php?key=abc', 'My Gallery', '2 hours');
+
+    expect($mail['subject'])->toBe('[My Gallery] Password Reset');
+    expect($mail['content_format'])->toBe('text/html');
+    expect($mail['content'])->toContain('jane');
+    expect($mail['content'])->toContain('https://example.test/password.php?key=abc');
+    expect($mail['content'])->toContain('2 hours');
+});
+
+test('generateSetPasswordMail builds an HTML mail with the activation link and a welcome subject', function (): void {
+    $service = new MailService();
+
+    $mail = $service->generateSetPasswordMail('jane', 'https://example.test/password.php?key=xyz', 'My Gallery', '48 hours');
+
+    expect($mail['subject'])->toBe('Welcome to My Gallery');
+    expect($mail['content_format'])->toBe('text/html');
+    expect($mail['content'])->toContain('jane');
+    expect($mail['content'])->toContain('https://example.test/password.php?key=xyz');
+    expect($mail['content'])->toContain('48 hours');
+});
+
+test('generateCodeVerificationMail embeds the raw verification code and the current gallery title', function (): void {
+    CurrentConfig::setGalleryTitle('My Gallery');
+    $service = new MailService();
+
+    $mail = $service->generateCodeVerificationMail('482913');
+
+    expect($mail['subject'])->toBe('[My Gallery] Your verification code');
+    expect($mail['content_format'])->toBe('text/html');
+    expect($mail['content'])->toContain('482913');
+});
+
+test('generateSuccessResetPasswordMail omits the API-key-revocation notice when there are no API keys', function (): void {
+    $service = new MailService();
+
+    $mail = $service->generateSuccessResetPasswordMail('jane', 0);
+
+    expect($mail['content'])->toContain('Hello jane,');
+    expect($mail['content'])->not->toContain('API keys');
+});
+
+test('generateSuccessResetPasswordMail includes the API-key-revocation notice with the real key count when there are some', function (): void {
+    $service = new MailService();
+
+    $mail = $service->generateSuccessResetPasswordMail('jane', 3);
+
+    expect($mail['content'])->toContain('Hello jane,');
+    expect($mail['content'])->toContain('3 API keys');
+});

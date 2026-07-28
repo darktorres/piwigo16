@@ -92,3 +92,156 @@ it('shows "Invalid key" and hides the form for a malformed reset key', function 
     $page->assertMissing('input[name="user_code"]');
     $page->assertMissing('input[name="use_new_pwd"]');
 });
+
+function passwordDbConnect(): mysqli
+{
+    return new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+}
+
+function passwordDbPrefix(): string
+{
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+
+    return $prefix !== false ? $prefix : 'piwigo_';
+}
+
+/**
+ * Directly inserts a real user + user_infos row with a real, valid
+ * activation_key -- this is the same bcrypt hashing PasswordService::
+ * hash() itself uses (plain PHP password_hash(), no app-class dependency,
+ * matching this suite's black-box-over-HTTP convention), so
+ * checkPasswordResetKey()'s own PasswordService::verify() call succeeds
+ * against $plainKey without ever needing to read a real, undeliverable
+ * test email. `last_visit` stays NULL (never logged in, never visited) so
+ * AuthService::hasAlreadyLoggedIn() -- countLoginActivity() === 0 -- is
+ * true, exercising __invoke()'s $first_login/"Welcome" branch too.
+ *
+ * @return array{userId: int, plainKey: string}
+ */
+function passwordInsertResetUser(): array
+{
+    $db = passwordDbConnect();
+    $prefix = passwordDbPrefix();
+    $username = 'pwreset_' . uniqid();
+    $plainKey = substr(bin2hex(random_bytes(16)), 0, 20);
+    $hashedKey = password_hash($plainKey, PASSWORD_BCRYPT, ['cost' => 4]);
+
+    $db->query(sprintf(
+        "INSERT INTO %susers (username, password, mail_address) VALUES ('%s', '%s', NULL)",
+        $prefix,
+        $db->real_escape_string($username),
+        $db->real_escape_string(password_hash('original-password', PASSWORD_BCRYPT, ['cost' => 4]))
+    ));
+    $userId = (int) $db->insert_id;
+
+    $db->query(sprintf(
+        "INSERT INTO %suser_infos (user_id, status, activation_key, activation_key_expire) VALUES (%d, 'normal', '%s', DATE_ADD(NOW(), INTERVAL 1 HOUR))",
+        $prefix,
+        $userId,
+        $db->real_escape_string($hashedKey)
+    ));
+    $db->close();
+
+    return ['userId' => $userId, 'plainKey' => $plainKey];
+}
+
+/** @return array{password: string}|null */
+function passwordUserRow(int $userId): ?array
+{
+    $db = passwordDbConnect();
+    $prefix = passwordDbPrefix();
+    $result = $db->query(sprintf('SELECT password FROM %susers WHERE id = %d', $prefix, $userId));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+
+    return is_array($row) ? ['password' => (string) $row['password']] : null;
+}
+
+/** @return array{activation_key: string|null}|null */
+function passwordUserInfosRow(int $userId): ?array
+{
+    $db = passwordDbConnect();
+    $prefix = passwordDbPrefix();
+    $result = $db->query(sprintf('SELECT activation_key FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+
+    if (! is_array($row)) {
+        return null;
+    }
+
+    $activationKey = $row['activation_key'] ?? null;
+
+    return ['activation_key' => is_string($activationKey) ? $activationKey : null];
+}
+
+function passwordDeleteUser(int $userId): void
+{
+    $db = passwordDbConnect();
+    $prefix = passwordDbPrefix();
+    $db->query(sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
+    $db->query(sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+    $db->close();
+}
+
+it('completes a full reset-key password reset for a never-logged-in user, welcoming them and clearing the key', function (): void {
+    $fixture = passwordInsertResetUser();
+    $userId = $fixture['userId'];
+    $originalHash = passwordUserRow($userId)['password'] ?? null;
+
+    try {
+        $page = H::gotoOk($this, '/password.php?key=' . $fixture['plainKey']);
+
+        // hasAlreadyLoggedIn() === true for this brand new, never-visited
+        // user -- __invoke()'s $action === 'reset' and $first_login branch.
+        $page->assertTitleContains('Welcome');
+        $page->assertPresent('input[name="use_new_pwd"]');
+
+        $page = $page->fill('use_new_pwd', 'a-brand-new-password-1')
+            ->fill('passwordConf', 'a-brand-new-password-1')
+            ->click('submit');
+
+        $page->assertSee('Your password has been reset');
+        $page->assertSee('Login');
+
+        $newHash = passwordUserRow($userId)['password'] ?? null;
+        expect($newHash)->not->toBeNull();
+        expect($newHash)->not->toBe($originalHash);
+
+        // resetPasswordKey() deactivates the reset key as soon as it's
+        // consumed, regardless of whether the password-confirmation match
+        // succeeds afterward.
+        $infosRow = passwordUserInfosRow($userId);
+        if ($infosRow === null) {
+            throw new RuntimeException("expected a real user_infos row for user {$userId}");
+        }
+        expect($infosRow['activation_key'])->toBeNull();
+    } finally {
+        passwordDeleteUser($userId);
+    }
+});
+
+it('rejects a reset submission whose passwords do not match, without consuming the key', function (): void {
+    $fixture = passwordInsertResetUser();
+    $userId = $fixture['userId'];
+
+    try {
+        $page = H::gotoOk($this, '/password.php?key=' . $fixture['plainKey']);
+
+        $page = $page->fill('use_new_pwd', 'first-password-1')
+            ->fill('passwordConf', 'a-different-password-2')
+            ->click('submit');
+
+        $page->assertSee('The passwords do not match');
+        // resetPassword()'s own mismatch check returns before ever calling
+        // resetPasswordKey() -- the key must still be intact.
+        expect(passwordUserInfosRow($userId)['activation_key'] ?? null)->not->toBeNull();
+    } finally {
+        passwordDeleteUser($userId);
+    }
+});

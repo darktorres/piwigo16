@@ -218,5 +218,23 @@ final class MetadataServiceTest extends IntegrationTestCase
         self::assertSame(123, $result['width']);
         self::assertSame(456, $result['height']);
     }
+
+    public function test_strip_html_in_metadata_removes_tag_markup_in_place(): void
+    {
+        $value = '<b>bold</b> text';
+
+        $this->service->stripHtmlInMetadata($value, 'comment');
+
+        self::assertSame('bold text', $value);
+    }
+
+    public function test_strip_html_in_metadata_coerces_a_non_scalar_value_to_an_empty_string(): void
+    {
+        $value = ['not', 'a', 'scalar'];
+
+        $this->service->stripHtmlInMetadata($value, 'comment');
+
+        self::assertSame('', $value);
+    }
 }
 }

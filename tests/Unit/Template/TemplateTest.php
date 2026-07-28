@@ -110,3 +110,18 @@ test('mod_ternary returns the false branch for a falsy param', function (): void
 test('mod_ternary returns the false branch for an empty string param', function (): void {
     expect(Template::mod_ternary('', 'yes', 'no'))->toBe('no');
 });
+
+test('postfilter_language replaces a compiled echo-string-literal with its evaluated value', function (): void {
+    // $smarty is genuinely unused by this method's own body -- a bare
+    // Smarty instance (no template dirs configured) is enough to satisfy
+    // the parameter type.
+    $result = Template::postfilter_language("<?php echo 'Hello World';?>\n", new Smarty\Smarty());
+
+    expect($result)->toBe('Hello World');
+});
+
+test('postfilter_language handles a double-quoted literal and leaves non-matching PHP untouched', function (): void {
+    $result = Template::postfilter_language("<?php echo \"Bonjour\";?>\n<?php \$x = 1; ?>\n", new Smarty\Smarty());
+
+    expect($result)->toBe("Bonjour<?php \$x = 1; ?>\n");
+});

@@ -104,6 +104,75 @@ function pictureCommentRow(int $commentId): ?array
     return is_array($row) ? ['validated' => (int) $row['validated']] : null;
 }
 
+function pictureCategoryRepresentativeId(int $categoryId): ?int
+{
+    $db = pictureDbConnect();
+    $result = $db->query(sprintf('SELECT representative_picture_id FROM %scategories WHERE id = %d', pictureDbPrefix(), $categoryId));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+
+    return is_array($row) && $row['representative_picture_id'] !== null ? (int) $row['representative_picture_id'] : null;
+}
+
+function pictureCaddieExists(int $imageId, int $userId): bool
+{
+    $db = pictureDbConnect();
+    $result = $db->query(sprintf(
+        'SELECT COUNT(*) AS c FROM %scaddie WHERE element_id = %d AND user_id = %d',
+        pictureDbPrefix(),
+        $imageId,
+        $userId
+    ));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+
+    return is_array($row) && (int) $row['c'] > 0;
+}
+
+function pictureRateValue(int $imageId, int $userId): ?int
+{
+    $db = pictureDbConnect();
+    // RateService::rate() always stores the real (IP-derived) anonymous_id
+    // column value, even for a logged-in user -- it's not a literal ''
+    // sentinel for "not anonymous" -- so this only filters by
+    // element_id/user_id (deleteExistingRate() already guarantees at most
+    // one row per user_id+element_id for a non-anonymous rater).
+    $result = $db->query(sprintf(
+        'SELECT rate FROM %srate WHERE element_id = %d AND user_id = %d',
+        pictureDbPrefix(),
+        $imageId,
+        $userId
+    ));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+
+    return is_array($row) ? (int) $row['rate'] : null;
+}
+
+/**
+ * Plain GET through a persistent cookie jar -- used to keep a guest
+ * session's `image_order` choice alive across two separate requests
+ * (GalleryController stores it server-side in the session, not just in
+ * the URL).
+ *
+ * @param  non-empty-string  $cookieJar
+ */
+function pictureGetWithCookies(string $cookieJar, string $path): string
+{
+    $ch = curl_init(H::baseUrl() . '/' . ltrim($path, '/'));
+    if ($ch === false) {
+        throw new RuntimeException('curl_init failed');
+    }
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+    curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    $body = curl_exec($ch);
+
+    return is_string($body) ? $body : '';
+}
+
 it('increments the hit counter on first view, then not on an immediate same-picture reload', function (): void {
     $page = H::loginAsAdmin($this);
     $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Picture Test Album ' . uniqid()]);
@@ -309,4 +378,124 @@ it('delete_comment succeeds for an anonymous (NULL author_id) comment', function
 
     expect($result['status'])->toBe(302);
     expect(pictureCommentRow($anonCommentId))->toBeNull();
+});
+
+it('navigates between previous/next/first/last items across a 3-photo album, ordered by title', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Nav Test Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+
+    $suffix = uniqid();
+    $imageA = H::makeTestImage($suffix . 'a');
+    $idA = H::uploadPhotoViaApi($imageA, $albumId, 'Nav Photo A ' . $suffix);
+    @unlink($imageA);
+    $imageB = H::makeTestImage($suffix . 'b');
+    $idB = H::uploadPhotoViaApi($imageB, $albumId, 'Nav Photo B ' . $suffix);
+    @unlink($imageB);
+    $imageC = H::makeTestImage($suffix . 'c');
+    $idC = H::uploadPhotoViaApi($imageC, $albumId, 'Nav Photo C ' . $suffix);
+    @unlink($imageC);
+
+    $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_nav_');
+    if ($cookieJar === false) {
+        throw new RuntimeException('tempnam failed');
+    }
+
+    // image_order=1 is "Photo title, A -> Z" (CategoryService::
+    // getPreferredImageOrders()) -- GalleryController stores the choice in
+    // the session, so it also governs the $items ordering PictureController
+    // computes for the very same album, giving deterministic prev/next/
+    // first/last positions purely from the photo titles.
+    pictureGetWithCookies($cookieJar, '/index.php?/category/' . $albumId . '&image_order=1');
+
+    $middleBody = pictureGetWithCookies($cookieJar, '/picture.php?/' . $idB . '/category/' . $albumId);
+    expect($middleBody)->toContain('Previous :');
+    expect($middleBody)->toContain('Nav Photo A ' . $suffix);
+    expect($middleBody)->toContain('Next :');
+    expect($middleBody)->toContain('Nav Photo C ' . $suffix);
+
+    $firstBody = pictureGetWithCookies($cookieJar, '/picture.php?/' . $idA . '/category/' . $albumId);
+    expect($firstBody)->not->toContain('Previous :');
+    expect($firstBody)->toContain('Next :');
+    expect($firstBody)->toContain('Nav Photo B ' . $suffix);
+
+    $lastBody = pictureGetWithCookies($cookieJar, '/picture.php?/' . $idC . '/category/' . $albumId);
+    expect($lastBody)->toContain('Previous :');
+    expect($lastBody)->toContain('Nav Photo B ' . $suffix);
+    expect($lastBody)->not->toContain('Next :');
+
+    @unlink($cookieJar);
+});
+
+it('sets a photo as the album representative via the set_as_representative action', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Representative Test Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    // A freshly created album auto-assigns its first-ever uploaded photo
+    // as representative (confirmed live) -- upload a second photo and
+    // explicitly re-target it, so this test proves the action itself
+    // changes the representative rather than observing an already-set
+    // default.
+    $firstImage = H::makeTestImage(uniqid());
+    $firstImageId = H::uploadPhotoViaApi($firstImage, $albumId, 'First Photo');
+    @unlink($firstImage);
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Representative Photo');
+    @unlink($image);
+
+    expect(pictureCategoryRepresentativeId($albumId))->toBe($firstImageId);
+
+    $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId . '&action=set_as_representative');
+    expect(pictureCategoryRepresentativeId($albumId))->toBe($imageId);
+});
+
+it('adds a photo to the caddie via the add_to_caddie action', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Caddie Test Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Caddie Photo');
+    @unlink($image);
+
+    expect(pictureCaddieExists($imageId, 1))->toBeFalse();
+
+    $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId . '&action=add_to_caddie');
+    expect(pictureCaddieExists($imageId, 1))->toBeTrue();
+});
+
+it('rates a photo via the rate action', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Rate Test Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Rate Photo');
+    @unlink($image);
+
+    expect(pictureRateValue($imageId, 1))->toBeNull();
+
+    // The action's own success path ends in RedirectServiceInterface::
+    // redirect() -- adminPost() uses fetch(..., {redirect:'manual'}), so a
+    // real 30x comes back as an opaque status 0, not the real code (see
+    // this session's own feedback_fetch_manual_redirect_status_zero memory).
+    $result = H::adminPost($page, '/picture.php?/' . $imageId . '/category/' . $albumId . '&action=rate', [
+        'rate' => '4',
+    ]);
+    expect($result['status'])->toBe(0);
+    expect(pictureRateValue($imageId, 1))->toBe(4);
 });

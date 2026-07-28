@@ -34,6 +34,37 @@ afterEach(function (): void {
     RequestMountDepth::reset();
 });
 
+test('getActionUrl builds action.php with id/part, adding a bare download flag when requested', function (): void {
+    // addUrlParams()'s own default separator is the HTML-safe '&amp;'
+    // (outside a WS request context) -- see that method's own docblock
+    // example.
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getActionUrl(42, 'e', false))->toBe('action.php?id=42&amp;part=e');
+    expect($service->getActionUrl(42, 'e', true))->toBe('action.php?id=42&amp;part=e&amp;download');
+});
+
+test('getGalleryHomeUrl returns a remote gallery_url unchanged', function (): void {
+    CurrentConfig::setGalleryUrl('https://elsewhere.example.test/gallery/');
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getGalleryHomeUrl())->toBe('https://elsewhere.example.test/gallery/');
+});
+
+test('getGalleryHomeUrl prefixes a relative gallery_url with the root URL', function (): void {
+    CurrentConfig::setGalleryUrl('my-gallery/');
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getGalleryHomeUrl())->toBe('my-gallery/');
+});
+
+test('getGalleryHomeUrl falls back to makeIndexUrl when gallery_url is unset', function (): void {
+    CurrentConfig::setGalleryUrl(null);
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getGalleryHomeUrl())->toBe($service->makeIndexUrl());
+});
+
 test('getRootUrl returns an empty string at the app\'s real root (no mount depth, no override)', function (): void {
     $service = new UrlService(new HtmlService());
 

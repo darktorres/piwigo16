@@ -63,6 +63,21 @@ function bmInsertCaddie(int $userId, int $imageId): void
     $db->close();
 }
 
+function bmImageHasTag(int $imageId, int $tagId): bool
+{
+    $db = bmDbConnect();
+    $result = $db->query(sprintf(
+        'SELECT COUNT(*) AS c FROM %simage_tag WHERE image_id = %d AND tag_id = %d',
+        bmDbPrefix(),
+        $imageId,
+        $tagId
+    ));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+
+    return is_array($row) && (int) $row['c'] > 0;
+}
+
 /**
  * Every submission goes through BatchManagerSubController::handle(),
  * which always ends by delegating to BatchManagerGlobalPageRenderer::
@@ -311,4 +326,96 @@ it('applies a plain (non-duplicates) prefilter via a URL filter token', function
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=batch_manager&filter=prefilter-no_album');
     $page->assertNoJavaScriptErrors();
+});
+
+it('applies add_tags then del_tags to a whole_set selection, round-tripping the association in piwigo_image_tag', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch AddTags Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Batch AddTags Photo');
+    @unlink($image);
+
+    // Fixture tag 1 ('nature') -- see this suite's own fixture-shape
+    // memory notes. Default bulk_manager_filter has no 'tags' key, so
+    // neither action's own redirect-on-filter-affecting-change branch
+    // fires here -- both stay a normal 200 render, not an opaque redirect.
+    expect(bmImageHasTag($imageId, 1))->toBeFalse();
+
+    $addResult = bmPost($page, [
+        'submit' => '1',
+        'selectAction' => 'add_tags',
+        'setSelected' => '1',
+        'whole_set' => (string) $imageId,
+        // TagService::getTagIds() treats a plain string as a tag NAME to
+        // look up (creating a new tag if none matches) -- the '~~ID~~'
+        // sentinel is what selects an existing tag by id directly (the
+        // real admin tag-selector widget's own format for an
+        // already-picked tag).
+        'add_tags' => ['~~1~~'],
+    ]);
+    expect($addResult['status'])->toBe(200);
+    expect(bmImageHasTag($imageId, 1))->toBeTrue();
+
+    $delResult = bmPost($page, [
+        'submit' => '1',
+        'selectAction' => 'del_tags',
+        'setSelected' => '1',
+        'whole_set' => (string) $imageId,
+        'del_tags' => ['1'],
+    ]);
+    expect($delResult['status'])->toBe(200);
+    expect(bmImageHasTag($imageId, 1))->toBeFalse();
+});
+
+it('associates a whole_set selection with another album via the associate action', function (): void {
+    $page = H::loginAsAdmin($this);
+    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Associate Source ' . uniqid()]);
+    $sourceResult = $sourceAlbum['result'] ?? null;
+    if (! is_array($sourceResult) || ! is_numeric($sourceResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($sourceAlbum, true));
+    }
+    $sourceAlbumId = (int) $sourceResult['id'];
+    $targetAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Associate Target ' . uniqid()]);
+    $targetResult = $targetAlbum['result'] ?? null;
+    if (! is_array($targetResult) || ! is_numeric($targetResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($targetAlbum, true));
+    }
+    $targetAlbumId = (int) $targetResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $sourceAlbumId, 'Batch Associate Photo');
+    @unlink($image);
+
+    $db = bmDbConnect();
+    $before = $db->query(sprintf(
+        'SELECT COUNT(*) AS c FROM %simage_category WHERE image_id = %d AND category_id = %d',
+        bmDbPrefix(),
+        $imageId,
+        $targetAlbumId
+    ));
+    $beforeRow = $before instanceof mysqli_result ? $before->fetch_assoc() : null;
+    expect(is_array($beforeRow) ? (int) $beforeRow['c'] : -1)->toBe(0);
+
+    $result = bmPost($page, [
+        'submit' => '1',
+        'selectAction' => 'associate',
+        'setSelected' => '1',
+        'whole_set' => (string) $imageId,
+        'associate' => [(string) $targetAlbumId],
+    ]);
+    expect($result['status'])->toBe(200);
+
+    $after = $db->query(sprintf(
+        'SELECT COUNT(*) AS c FROM %simage_category WHERE image_id = %d AND category_id = %d',
+        bmDbPrefix(),
+        $imageId,
+        $targetAlbumId
+    ));
+    $afterRow = $after instanceof mysqli_result ? $after->fetch_assoc() : null;
+    $db->close();
+    expect(is_array($afterRow) ? (int) $afterRow['c'] : -1)->toBe(1);
 });

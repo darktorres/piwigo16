@@ -236,5 +236,34 @@ namespace Piwigo\Tests\Integration {
             self::assertIsString($user['nb_total_images']);
             self::assertIsString($user['last_photo_date']);
         }
+
+        public function test_get_current_language_returns_null_when_current_user_is_not_initialized(): void
+        {
+            \Piwigo\Users\CurrentUser::reset();
+
+            self::assertNull($this->service->getCurrentLanguage());
+        }
+
+        public function test_get_current_language_returns_the_initialized_current_users_own_language(): void
+        {
+            $user = $this->service->buildUser(UserId::from(1));
+            \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
+
+            try {
+                self::assertSame($user['language'], $this->service->getCurrentLanguage());
+            } finally {
+                \Piwigo\Users\CurrentUser::reset();
+            }
+        }
+
+        public function test_get_username_returns_the_real_username_for_a_known_user(): void
+        {
+            self::assertSame('fixture_admin', $this->service->getUsername(UserId::from(1)));
+        }
+
+        public function test_get_username_returns_false_for_an_unknown_user(): void
+        {
+            self::assertFalse($this->service->getUsername(UserId::from(999999)));
+        }
     }
 }

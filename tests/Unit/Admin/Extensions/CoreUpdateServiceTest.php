@@ -46,3 +46,75 @@ test('containerVersionCompare falls back to the container letter suffix on a sem
 test('containerVersionCompare treats an identical version as no earlier suffix', function (): void {
     expect(core_update_service()->containerVersionCompare('16.2.0a', '16.2.0a'))->toBeFalse();
 });
+
+function core_update_service_test_marker(): string
+{
+    /** @var string|null $marker */
+    static $marker = null;
+
+    return $marker ??= sys_get_temp_dir() . '/piwigo-core-update-service-test-' . bin2hex(random_bytes(8));
+}
+
+beforeEach(function (): void {
+    mkdir(core_update_service_test_marker(), 0o777, true);
+});
+
+afterEach(function (): void {
+    $dir = core_update_service_test_marker();
+    if (is_dir($dir)) {
+        $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($it as $path) {
+            assert($path instanceof SplFileInfo);
+            $path->isDir() ? rmdir($path->getPathname()) : unlink($path->getPathname());
+        }
+        rmdir($dir);
+    }
+});
+
+function core_update_service_at(string $root): CoreUpdateService
+{
+    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
+
+    return new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService()), new ConfigService($repo), Paths::fromRoot($root));
+}
+
+function core_update_service_step_is(int|string $step, int $target): bool
+{
+    $method = new ReflectionMethod(core_update_service(), 'stepIs');
+
+    /** @var bool */
+    return $method->invoke(core_update_service(), $step, $target);
+}
+
+test('stepIs matches both the int and numeric-string form of the same step', function (): void {
+    expect(core_update_service_step_is(2, 2))->toBeTrue();
+    expect(core_update_service_step_is('2', 2))->toBeTrue();
+    expect(core_update_service_step_is(3, 2))->toBeFalse();
+    expect(core_update_service_step_is('3', 2))->toBeFalse();
+});
+
+function core_update_service_process_obsolete_list(CoreUpdateService $service, string $file): void
+{
+    $method = new ReflectionMethod($service, 'processObsoleteList');
+    $method->invoke($service, $file);
+}
+
+test('processObsoleteList deletes every listed file plus the list itself', function (): void {
+    $root = core_update_service_test_marker() . '/';
+    file_put_contents($root . 'stale.php', 'old code');
+    file_put_contents($root . 'obsolete.list', "stale.php\n");
+
+    core_update_service_process_obsolete_list(core_update_service_at($root), 'obsolete.list');
+
+    expect(file_exists($root . 'stale.php'))->toBeFalse();
+    expect(file_exists($root . 'obsolete.list'))->toBeFalse();
+});
+
+test('processObsoleteList does nothing when the list file does not exist', function (): void {
+    $root = core_update_service_test_marker() . '/';
+    file_put_contents($root . 'keep.php', 'still here');
+
+    core_update_service_process_obsolete_list(core_update_service_at($root), 'no-such-list.txt');
+
+    expect(file_exists($root . 'keep.php'))->toBeTrue();
+});

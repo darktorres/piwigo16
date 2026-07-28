@@ -47,5 +47,17 @@ until mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "SELECT COUNT(*) FROM ${PI
   sleep 0.5
 done
 
+# tests/Fixtures/piwigo-17.0.sql ships an entirely empty `themes` table (no
+# INSERT rows at all) -- ThemeCatalog::getPwgThemes() reads this table
+# directly, so ANY profile-save submission (ProfileController's own form, or
+# ConfigurationSubController's "default" tab, both funnel through the same
+# ProfileFormHandler::saveFromPost()) hits its `in_array($post['theme'],
+# array_keys(getPwgThemes()), true)` guard against an empty haystack and
+# 500s with "[Hacking attempt] incorrect theme value" -- confirmed live,
+# independently, from two separate Browser test files. Seeded here (once,
+# for the whole suite) rather than per-test, now that a second file hit the
+# same wall.
+mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "INSERT INTO ${PIWIGO_DB_PREFIX}themes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON DUPLICATE KEY UPDATE name = 'Default';"
+
 sudo rm -rf _data/cache/piwigo.*/
 sudo rm -rf _data/combined/*

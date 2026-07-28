@@ -440,7 +440,7 @@ function bmImageCategoryLinks(int $imageId, int $storageAlbumId, int $targetAlbu
     return ['storage' => in_array($storageAlbumId, $ids, true), 'target' => in_array($targetAlbumId, $ids, true)];
 }
 
-it('moves a whole_set selection, preserving the storage album and adding the target', function (): void {
+it('moves a whole_set selection, clearing all prior album links and adding the target', function (): void {
     $page = H::loginAsAdmin($this);
     $storageAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Move Storage ' . uniqid()]);
     $storageResult = $storageAlbum['result'] ?? null;
@@ -468,7 +468,14 @@ it('moves a whole_set selection, preserving the storage album and adding the tar
         'move' => (string) $targetAlbumId,
     ]);
     expect($result['status'])->toBe(200);
-    expect(bmImageCategoryLinks($imageId, $storageAlbumId, $targetAlbumId))->toBe(['storage' => true, 'target' => true]);
+    // ImageService::moveImagesToCategories()'s own comment says it "breaks
+    // links with all old albums but their storage album" -- but a photo
+    // uploaded via pwg.images.addSimple (H::uploadPhotoViaApi(), not a
+    // filesystem-synchronized one) always has a real NULL
+    // storage_category_id (confirmed live), so no existing link is ever
+    // exempt: move() clears every prior album, including the one it was
+    // uploaded to.
+    expect(bmImageCategoryLinks($imageId, $storageAlbumId, $targetAlbumId))->toBe(['storage' => false, 'target' => true]);
 });
 
 it('dissociates a whole_set selection from a non-storage album', function (): void {
@@ -499,6 +506,11 @@ it('dissociates a whole_set selection from a non-storage album', function (): vo
     expect($associateResult['status'])->toBe(200);
     expect(bmImageCategoryLinks($imageId, $storageAlbumId, $otherAlbumId))->toBe(['storage' => true, 'target' => true]);
 
+    // Unlike associate (only conditionally redirects, depending on
+    // prefilter), dissociate unconditionally sets $redirect = true on
+    // success (BatchManagerGlobalPageRenderer's own source) -- a real
+    // HTTP redirect becomes an opaque response under fetch(manual), same
+    // documented shape as this file's own empty_caddie test above.
     $result = bmPost($page, [
         'submit' => '1',
         'selectAction' => 'dissociate',
@@ -506,7 +518,7 @@ it('dissociates a whole_set selection from a non-storage album', function (): vo
         'whole_set' => (string) $imageId,
         'dissociate' => (string) $otherAlbumId,
     ]);
-    expect($result['status'])->toBe(200);
+    expect($result['status'])->toBe(0);
     expect(bmImageCategoryLinks($imageId, $storageAlbumId, $otherAlbumId))->toBe(['storage' => true, 'target' => false]);
 });
 
@@ -663,7 +675,9 @@ it('rejects a delete action without confirm_deletion, then deletes and records a
         'whole_set' => (string) $imageId,
     ]);
     expect($unconfirmedResult['status'])->toBe(200);
-    expect($unconfirmedResult['body'])->toContain('You need to confirm deletion');
+    // The loaded en_UK catalog rephrases this from its literal PHP source
+    // msgid ("You need to confirm deletion") -- confirmed live.
+    expect($unconfirmedResult['body'])->toContain('You must confirm deletion');
 
     $db = bmDbConnect();
     $stillThere = $db->query(sprintf('SELECT COUNT(*) AS c FROM %simages WHERE id = %d', bmDbPrefix(), $imageId));

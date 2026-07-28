@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -34,8 +35,25 @@ final class AdminUiHelper
     public static function getExtents(string $start = ''): array
     {
         if ($start === '') {
-            $start = './template-extension';
+            // Anchored to the real install root, not a `./`-relative path
+            // -- every real HTTP entry point's cwd is wherever Apache/PHP-FPM
+            // started the process (typically the document root, `public/`),
+            // NOT this project's root where `template-extension/` actually
+            // lives, so the former relative default silently resolved to a
+            // nonexistent directory (opendir() returning false) on every
+            // real request, confirmed live: the whole "extend for templates"
+            // feature never applied a single replacement in production.
+            $start = rtrim(CurrentPaths::get()->root, '/') . '/template-extension';
         }
+
+        return self::collectExtents($start, strlen($start) + 1);
+    }
+
+    /**
+     * @return string[]
+     */
+    private static function collectExtents(string $start, int $prefixLen): array
+    {
         $extents = [];
 
         $dir = opendir($start);
@@ -49,10 +67,15 @@ final class AdminUiHelper
             }
             $path = $start . '/' . $file;
             if (is_dir($path)) {
-                $extents = array_merge($extents, self::getExtents($path));
+                $extents = array_merge($extents, self::collectExtents($path, $prefixLen));
             } elseif (! is_link($path) and file_exists($path)
                     and StringHelper::getExtension($path) === 'tpl') {
-                $extents[] = substr($path, 21);
+                // $prefixLen is always the length of the ORIGINAL top-level
+                // $start (+1 for its trailing slash), not this recursion
+                // level's own (longer) $start -- every $path is built by
+                // concatenating down from that same top-level start, so a
+                // single fixed offset strips it correctly at any depth.
+                $extents[] = substr($path, $prefixLen);
             }
         }
         closedir($dir);

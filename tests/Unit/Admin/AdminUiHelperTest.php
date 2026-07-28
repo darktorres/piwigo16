@@ -4,12 +4,27 @@ declare(strict_types=1);
 
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Paths;
 
-test('getExtents finds every .tpl file under the real template-extension directory, stripping the fixed 21-char prefix', function (): void {
-    // No args -> real default './template-extension', relative to this
-    // test process's own CWD (the repo root, same as every other test
-    // process in this suite) -- a real, committed asset, not a throwaway
-    // fixture, so this asserts its known real contents exactly.
+beforeEach(function (): void {
+    // getExtents()'s no-args default is anchored to CurrentPaths::get()->
+    // root (a real HTTP request's cwd is wherever Apache/PHP-FPM started
+    // the process, not this project's root, so a `./`-relative default
+    // silently resolved to nothing in production -- fixed at the source,
+    // see AdminUiHelper's own docblock).
+    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3)));
+});
+
+afterEach(function (): void {
+    CurrentPaths::reset();
+});
+
+test('getExtents finds every .tpl file under the real template-extension directory, stripping the resolved root prefix', function (): void {
+    // No args -> real default anchored to CurrentPaths::get()->root (the
+    // repo root, same as every other test process in this suite) -- a
+    // real, committed asset, not a throwaway fixture, so this asserts its
+    // known real contents exactly.
     $result = AdminUiHelper::getExtents();
 
     sort($result);
@@ -48,20 +63,15 @@ test('getExtents skips symlinked .tpl files and non-.tpl files', function (): vo
         file_put_contents($dir . '/link-target.tpl', 'linked template');
         symlink($dir . '/link-target.tpl', $dir . '/symlinked.tpl');
 
-        // The fixed substr(21) prefix-strip only produces a meaningful
-        // relative path for the real './template-extension' entry point
-        // (see the class's own docblock reasoning) -- this custom $dir is
-        // a different length, so this test only asserts the real,
-        // length-independent behavior: real.tpl and link-target.tpl (a
-        // genuine file, not itself a symlink) both survive; only the
-        // symlink itself (symlinked.tpl) and the non-.tpl file are
-        // excluded.
+        // The prefix strip is relative to whatever $start was actually
+        // passed (not a hardcoded length) -- real.tpl and link-target.tpl
+        // (a genuine file, not itself a symlink) both survive as bare
+        // filenames; only the symlink itself (symlinked.tpl) and the
+        // non-.tpl file are excluded.
         $result = AdminUiHelper::getExtents($dir);
         sort($result);
 
-        expect($result)->toHaveCount(2);
-        expect($result[0])->toEndWith('/link-target.tpl');
-        expect($result[1])->toEndWith('/real.tpl');
+        expect($result)->toBe(['link-target.tpl', 'real.tpl']);
     } finally {
         unlink($dir . '/symlinked.tpl');
         unlink($dir . '/link-target.tpl');

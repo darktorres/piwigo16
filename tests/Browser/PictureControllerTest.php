@@ -464,6 +464,15 @@ it("edits a comment's own content via the edit_comment action, validating it as 
     }
     $key = html_entity_decode($matches[1]);
 
+    // EphemeralKeyService::generate(2, ...) (PictureCommentRenderer's own
+    // edit-mode key) requires >=2 real wall-clock seconds between issuing
+    // and verifying the key -- a deliberate "the form couldn't have been
+    // submitted this fast" anti-bot check, confirmed live: verify()
+    // rejects (silently falls through to $commentAction = 'reject', a
+    // 200 with the comment left unchanged, no error) when posted
+    // immediately after the GET.
+    sleep(3);
+
     $newContent = 'Edited content ' . uniqid();
     $postResult = $curl($editUrl, [
         'content' => $newContent,
@@ -584,26 +593,39 @@ it('adds a photo to the caddie via the add_to_caddie action', function (): void 
 });
 
 it('rates a photo via the rate action', function (): void {
-    $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Rate Test Album ' . uniqid()]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    // RateService::rate() silently no-ops (returns false, never inserts a
+    // row) unless CurrentConfig::rateEnabled() is true -- and this
+    // fixture's own `rate` config param (not `rate_enabled`: the DB
+    // param/property mapping is `'rate' => 'rateEnabled'`, confirmed live)
+    // is explicitly seeded 'false', so rating is genuinely disabled by
+    // default in this environment.
+    $snapshot = H::snapshotConfig(['rate']);
+    H::setConfigValue('rate', 'true');
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Rate Test Album ' . uniqid()]);
+        $albumResult = $album['result'] ?? null;
+        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumId = (int) $albumResult['id'];
+        $image = H::makeTestImage(uniqid());
+        $imageId = H::uploadPhotoViaApi($image, $albumId, 'Rate Photo');
+        @unlink($image);
+
+        expect(pictureRateValue($imageId, 1))->toBeNull();
+
+        // The action's own success path ends in RedirectServiceInterface::
+        // redirect() -- adminPost() uses fetch(..., {redirect:'manual'}), so a
+        // real 30x comes back as an opaque status 0, not the real code (see
+        // this session's own feedback_fetch_manual_redirect_status_zero memory).
+        $result = H::adminPost($page, '/picture.php?/' . $imageId . '/category/' . $albumId . '&action=rate', [
+            'rate' => '4',
+        ]);
+        expect($result['status'])->toBe(0);
+        expect(pictureRateValue($imageId, 1))->toBe(4);
+    } finally {
+        H::restoreConfig($snapshot);
     }
-    $albumId = (int) $albumResult['id'];
-    $image = H::makeTestImage(uniqid());
-    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Rate Photo');
-    @unlink($image);
-
-    expect(pictureRateValue($imageId, 1))->toBeNull();
-
-    // The action's own success path ends in RedirectServiceInterface::
-    // redirect() -- adminPost() uses fetch(..., {redirect:'manual'}), so a
-    // real 30x comes back as an opaque status 0, not the real code (see
-    // this session's own feedback_fetch_manual_redirect_status_zero memory).
-    $result = H::adminPost($page, '/picture.php?/' . $imageId . '/category/' . $albumId . '&action=rate', [
-        'rate' => '4',
-    ]);
-    expect($result['status'])->toBe(0);
-    expect(pictureRateValue($imageId, 1))->toBe(4);
 });

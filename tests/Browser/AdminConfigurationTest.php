@@ -392,11 +392,19 @@ it('saves the default tab (guest profile) and persists real user_infos values', 
     // to the guest user -- guest is a "special user"
     // (ProfileFormHandler unsets username/mail_address/password/theme/
     // language from $post for it, overriding theme/language internally),
-    // so only nb_image_page/recent_period are real, submittable fields
-    // here; both are required by saveFromPost's own validation once
-    // AdminContext::isActive() (always true under admin.php). This data
-    // lives on guest's own piwigo_user_infos row, not the config table --
-    // same direct-mysqli snapshot/restore shape as
+    // so those never need to be submitted here; nb_image_page/
+    // recent_period are both required by saveFromPost's own validation
+    // once AdminContext::isActive() (always true under admin.php).
+    // `expand` is NOT unset/defaulted for the special user, though --
+    // profile_content.tpl's real {html_radios name='expand' ...} always
+    // submits it from a real browser (a radio group, never absent like a
+    // checkbox), and massUpdate()'s own generated UPDATE always includes
+    // every column in $fields regardless of whether $data has the key --
+    // omitting it here reproduces a genuine `Column 'expand' cannot be
+    // null` DB crash (confirmed live), same class of gap as this admin
+    // form's own established "send the whole section" convention. This
+    // data lives on guest's own piwigo_user_infos row, not the config
+    // table -- same direct-mysqli snapshot/restore shape as
     // NotificationByMailSubControllerTest's own DB helpers, since
     // H::snapshotConfig()/restoreConfig() only ever touch `config`.
     $page = H::loginAsAdmin($this);
@@ -419,6 +427,9 @@ it('saves the default tab (guest profile) and persists real user_infos values', 
             'pwg_token' => $token,
             'nb_image_page' => '25',
             'recent_period' => '10',
+            'expand' => 'false',
+            'show_nb_hits' => 'false',
+            'show_nb_comments' => 'false',
         ]);
 
         expect($result['status'])->toBe(200);
@@ -610,8 +621,11 @@ it('saves the watermark tab with a fixed topleft position, persisting the derive
         expect($result['status'])->toBe(200);
         expect($result['body'])->toContain('Your configuration settings are saved');
 
+        // w[position] is a radio group (input[type=radio]), not a
+        // <select>/<option> pair -- confirmed live via a real raw POST +
+        // GET round trip.
         $page = H::navigateOk($page, ctConfigSection('watermark'));
-        $page->assertPresent('option[value="topleft"][selected]');
+        $page->assertPresent('input[name="w[position]"][value="topleft"][checked]');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -744,7 +758,7 @@ it('saves the watermark tab with each named position, deriving the matching xpos
             expect($result['body'])->toContain('Your configuration settings are saved');
 
             $page = H::navigateOk($page, ctConfigSection('watermark'));
-            $page->assertPresent('option[value="' . $position . '"][selected]');
+            $page->assertPresent('input[name="w[position]"][value="' . $position . '"][checked]');
         }
     } finally {
         H::restoreConfig($snapshot);

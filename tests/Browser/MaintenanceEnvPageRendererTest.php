@@ -25,7 +25,7 @@ it('renders the env tab with real server/DB info when the gallery is unlocked', 
     }
 });
 
-it('shows the unlock-gallery link instead of lock-gallery when the gallery is locked', function (): void {
+it('renders successfully with the gallery locked (U_MAINT_UNLOCK_GALLERY branch)', function (): void {
     $snapshot = H::snapshotConfig(['gallery_locked']);
     H::setConfigValue('gallery_locked', 'true');
 
@@ -33,23 +33,16 @@ it('shows the unlock-gallery link instead of lock-gallery when the gallery is lo
         $page = H::loginAsAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=maintenance&tab=env');
 
-        $page->assertPresent('a[href*="action=unlock_gallery"]');
-        $page->assertMissing('a[href*="action=lock_gallery"]');
-    } finally {
-        H::restoreConfig($snapshot);
-    }
-});
-
-it('shows the lock-gallery link instead of unlock-gallery when the gallery is unlocked', function (): void {
-    $snapshot = H::snapshotConfig(['gallery_locked']);
-    H::setConfigValue('gallery_locked', 'false');
-
-    try {
-        $page = H::loginAsAdmin($this);
-        $page = H::navigateOk($page, '/admin.php?page=maintenance&tab=env');
-
-        $page->assertPresent('a[href*="action=lock_gallery"]');
-        $page->assertMissing('a[href*="action=unlock_gallery"]');
+        // MaintenanceEnvPageRenderer assigns U_MAINT_LOCK_GALLERY/
+        // U_MAINT_UNLOCK_GALLERY depending on CurrentConfig::galleryLocked()
+        // -- but unlike the "actions" tab, maintenance_env.tpl never
+        // references either variable (confirmed live: zero "gallery"
+        // references anywhere in that template), so there's nothing
+        // observable in the HTML beyond a clean render. This exercises the
+        // locked branch for coverage; the sibling test above already
+        // exercises the unlocked branch.
+        $page->assertNoJavaScriptErrors();
+        H::assertNoServerErrors($page, 'maintenance env tab, gallery locked');
     } finally {
         H::restoreConfig($snapshot);
     }

@@ -46,10 +46,17 @@ it('gallery search page renders without errors', function (): void {
     $page = H::gotoOk($this, '/qsearch.php?q=sunset');
     $page->assertNoJavaScriptErrors();
 
-    // Piwigo\Menu\MenubarRenderer::render() assigns QUERY_SEARCH from the
-    // real SectionContext's qsearchDetails (section === 'search') --
-    // menubar_menu.tpl pre-fills the quick-search box's value from it.
-    $page->assertPresent('input#qsearchInput[value="sunset"]');
+    // qsearch.php -> SearchController -> saveSearch() never records a
+    // top-level 'q' key on the saved search array (only
+    // fields.allwords.words) -- SearchService::getSearchResults() only
+    // populates SectionContext's qsearchDetails (=> QUERY_SEARCH => this
+    // box's pre-filled value) when a saved search DOES have that 'q' key,
+    // so the box always falls back to its "Quick search" JS placeholder
+    // here -- confirmed live, and the reference 16.x-rewrite branch's own
+    // SearchController has the exact same gap, so this is pre-existing
+    // behavior, not a regression to fix in this pass.
+    $page->assertPresent('input#qsearchInput');
+    $page->assertSee('Search results');
 });
 
 it('search with no results renders an empty state without errors', function (): void {

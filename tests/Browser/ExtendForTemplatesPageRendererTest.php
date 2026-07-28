@@ -19,11 +19,16 @@ it('saves a real template replacement and echoes it back on the next render', fu
 
         // One of template-extension/distributed/samples/'s 4 real .tpl
         // files (see AdminUiHelperTest's own exact-listing test) -- a real
-        // filesystem-discovered extension, not a fixture.
+        // filesystem-discovered extension, not a fixture. AdminUiHelper::
+        // getExtents() strips the leading directory prefix entirely (no
+        // leading slash, confirmed live) -- a leading-slash value doesn't
+        // strict-match the real discovered path, so the renderer's own
+        // "Clearing" step immediately unsets it again even though it did
+        // get persisted to config.
         $result = H::adminPost($page, '/admin.php?page=extend_for_templates', [
             'pwg_token' => H::pwgToken($page),
             'submit' => '1',
-            'reptpl' => ['/distributed/samples/my-picture.tpl'],
+            'reptpl' => ['distributed/samples/my-picture.tpl'],
             'original' => ['about.tpl'],
             'url' => ['category'],
             'bound' => ['----------'],
@@ -33,7 +38,7 @@ it('saves a real template replacement and echoes it back on the next render', fu
         expect($result['body'])->toContain('Templates configuration has been recorded');
 
         $page = H::navigateOk($page, '/admin.php?page=extend_for_templates');
-        $page->assertSee('/distributed/samples/my-picture.tpl');
+        $page->assertSee('distributed/samples/my-picture.tpl');
         $page->assertNoJavaScriptErrors();
     } finally {
         H::restoreConfig($snapshot);
@@ -49,7 +54,7 @@ it('skips a malformed replacement row (non-string field) without erroring', func
         $result = H::adminPost($page, '/admin.php?page=extend_for_templates', [
             'pwg_token' => H::pwgToken($page),
             'submit' => '1',
-            'reptpl' => ['/distributed/samples/my-thumbnails.tpl'],
+            'reptpl' => ['distributed/samples/my-thumbnails.tpl'],
             'original' => [['not-a-string']],
             'url' => ['category'],
             'bound' => ['----------'],

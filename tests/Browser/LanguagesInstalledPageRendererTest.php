@@ -50,8 +50,11 @@ it('activates and deactivates a real, non-default language', function (): void {
         expect($activateResult['status'])->toBe(0);
         expect(languagesInstalledIsActive('fr_FR'))->toBeTrue();
 
+        // The list shows the language's display name, not its raw code --
+        // 'fr_FR' itself is only ever visible text nowhere on this page
+        // (confirmed live: it only appears inside href query strings).
         $listPage = H::navigateOk($page, '/admin.php?page=languages');
-        $listPage->assertSee('fr_FR');
+        $listPage->assertSee('Français (France)');
     } finally {
         H::rawGet($page, '/admin.php?page=languages&action=deactivate&language=fr_FR&pwg_token=' . $token);
     }

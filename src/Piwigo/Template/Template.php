@@ -285,7 +285,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         $this->smarty->assign('lang_info', $lang_info);
 
         if (! AdminContext::isActive()) {
-            $this->set_extents(\Piwigo\Config\CurrentConfig::extentsForTemplates(), './template-extension/', true, $theme);
+            $this->set_extents(\Piwigo\Config\CurrentConfig::extentsForTemplates(), CurrentPaths::get()->root . 'template-extension/', true, $theme);
         }
     }
 

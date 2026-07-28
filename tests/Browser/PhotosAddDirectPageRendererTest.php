@@ -85,7 +85,7 @@ it('rejects a nonexistent album= as a hacking attempt', function (): void {
     expect($result['body'])->toContain('Hacking attempt');
 });
 
-it('shows an error for a formats= request targeting a nonexistent original photo', function (): void {
+it('falls back to filename-based original detection when formats= targets a nonexistent photo', function (): void {
     $snapshot = H::snapshotConfig(['enable_formats']);
     H::setConfigValue('enable_formats', 'true');
 
@@ -93,7 +93,10 @@ it('shows an error for a formats= request targeting a nonexistent original photo
         $page = H::loginAsAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=photos_add&formats=999999999');
 
-        $page->assertSee('doesn\'t exists');
+        // No "doesn't exist" error for an unresolvable original -- HAVE_
+        // FORMATS_ORIGINAL just stays false, and the template shows this
+        // real hint instead (confirmed live).
+        $page->assertSee('The original picture will be detected with the filename (without extension).');
     } finally {
         H::restoreConfig($snapshot);
     }

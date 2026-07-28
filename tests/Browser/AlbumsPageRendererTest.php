@@ -28,10 +28,14 @@ function albumsPageChildrenOrderedByRank(int $parentId): array
         (string) getenv('PIWIGO_DB_BASE')
     );
     $prefix = albumsPageDbPrefix();
+    // Root categories store id_uppercat as a real SQL NULL, never 0 --
+    // `id_uppercat = 0` matches nothing for them, confirmed live against
+    // the real fixture schema.
+    $whereClause = $parentId === 0 ? 'id_uppercat IS NULL' : sprintf('id_uppercat = %d', $parentId);
     $result = $db->query(sprintf(
-        'SELECT id, name FROM %scategories WHERE id_uppercat = %d ORDER BY `rank` ASC',
+        'SELECT id, name FROM %scategories WHERE %s ORDER BY `rank` ASC',
         $prefix,
-        $parentId
+        $whereClause
     ));
     $ordered = [];
     if ($result instanceof mysqli_result) {

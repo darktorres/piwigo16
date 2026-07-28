@@ -21,10 +21,18 @@ it('downloads a photo\'s original file via part=e', function (): void {
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller Photo');
     @unlink($image);
 
-    $result = H::rawGet($page, '/action.php?id=' . $imageId . '&part=e');
+    try {
+        $result = H::rawGet($page, '/action.php?id=' . $imageId . '&part=e');
 
-    expect($result['status'])->toBe(200);
-    expect(strlen($result['body']))->toBeGreaterThan(0);
+        expect($result['status'])->toBe(200);
+        expect(strlen($result['body']))->toBeGreaterThan(0);
+    } finally {
+        H::wsCall($page, 'pwg.categories.delete', [
+            'category_id' => $albumId,
+            'photo_deletion_mode' => 'force_delete',
+            'pwg_token' => H::pwgToken($page),
+        ]);
+    }
 });
 
 it('returns 400 for an invalid id/part combination', function (): void {
@@ -65,28 +73,36 @@ it('returns 404 for part=r when the photo has no representative file', function 
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller No Rep Photo');
     @unlink($image);
 
-    $result = H::rawGet($page, '/action.php?id=' . $imageId . '&part=r');
+    try {
+        $result = H::rawGet($page, '/action.php?id=' . $imageId . '&part=r');
 
-    expect($result['status'])->toBe(404);
-    expect($result['body'])->toContain('Requested file not found');
+        expect($result['status'])->toBe(404);
+        expect($result['body'])->toContain('Requested file not found');
+    } finally {
+        H::wsCall($page, 'pwg.categories.delete', [
+            'category_id' => $albumId,
+            'photo_deletion_mode' => 'force_delete',
+            'pwg_token' => H::pwgToken($page),
+        ]);
+    }
 });
 
 it('returns 400 for part=f when the extensions-format system is disabled', function (): void {
     $snapshot = H::snapshotConfig(['enable_formats']);
     H::setConfigValue('enable_formats', 'false');
 
-    try {
-        $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller Format Off Album ' . uniqid()]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
-        }
-        $albumId = (int) $albumResult['id'];
-        $image = H::makeTestImage(uniqid());
-        $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller Format Off Photo');
-        @unlink($image);
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller Format Off Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller Format Off Photo');
+    @unlink($image);
 
+    try {
         // isFormatsEnabled()=false means format= is never even parsed as a
         // format request -- falls through to the plain id/part branch,
         // which is missing here, so this is really the id/part-missing 400.
@@ -94,6 +110,11 @@ it('returns 400 for part=f when the extensions-format system is disabled', funct
 
         expect($result['status'])->toBe(400);
     } finally {
+        H::wsCall($page, 'pwg.categories.delete', [
+            'category_id' => $albumId,
+            'photo_deletion_mode' => 'force_delete',
+            'pwg_token' => H::pwgToken($page),
+        ]);
         H::restoreConfig($snapshot);
     }
 });
@@ -126,9 +147,17 @@ it('sends a Content-Disposition attachment header when download is requested', f
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller Download Photo');
     @unlink($image);
 
-    $result = H::rawGet($page, '/action.php?id=' . $imageId . '&part=e&download');
+    try {
+        $result = H::rawGet($page, '/action.php?id=' . $imageId . '&part=e&download');
 
-    expect($result['status'])->toBe(200);
+        expect($result['status'])->toBe(200);
+    } finally {
+        H::wsCall($page, 'pwg.categories.delete', [
+            'category_id' => $albumId,
+            'photo_deletion_mode' => 'force_delete',
+            'pwg_token' => H::pwgToken($page),
+        ]);
+    }
 });
 
 it('rejects access to a private album\'s photo for a guest', function (): void {
@@ -146,11 +175,19 @@ it('rejects access to a private album\'s photo for a guest', function (): void {
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller Private Photo');
     @unlink($image);
 
-    $guestPage = H::visitPwg($this, '/index.php');
-    H::assertNoServerErrors($guestPage, 'guest gallery home');
+    try {
+        $guestPage = H::visitPwg($this, '/index.php');
+        H::assertNoServerErrors($guestPage, 'guest gallery home');
 
-    $result = H::rawGet($guestPage, '/action.php?id=' . $imageId . '&part=e');
+        $result = H::rawGet($guestPage, '/action.php?id=' . $imageId . '&part=e');
 
-    expect($result['status'])->toBe(401);
-    expect($result['body'])->toContain('Access denied');
+        expect($result['status'])->toBe(401);
+        expect($result['body'])->toContain('Access denied');
+    } finally {
+        H::wsCall($page, 'pwg.categories.delete', [
+            'category_id' => $albumId,
+            'photo_deletion_mode' => 'force_delete',
+            'pwg_token' => H::pwgToken($page),
+        ]);
+    }
 });

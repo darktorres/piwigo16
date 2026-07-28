@@ -122,7 +122,10 @@ it('creates a new site for a real, existing directory, then deletes it via the C
         expect($siteId)->toBeGreaterThan(0);
 
         $listPage = H::navigateOk($page, '/admin.php?page=site_manager');
-        $listPage->assertPresent('a[href*="page=site_update&amp;site=' . $siteId . '"]');
+        // The source HTML entity-encodes the href as "&amp;", but a CSS
+        // attribute selector matches the DOM's own decoded attribute value
+        // (a literal "&"), not the markup's escaped form -- confirmed live.
+        $listPage->assertPresent('a[href*="page=site_update&site=' . $siteId . '"]');
 
         $deleteResult = H::rawGet($page, '/admin.php?page=site_manager&action=delete&site=' . $siteId . '&pwg_token=' . $token);
         expect($deleteResult['status'])->toBe(200);

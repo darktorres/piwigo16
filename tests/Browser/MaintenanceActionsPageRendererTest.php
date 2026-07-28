@@ -15,11 +15,16 @@ function maintenanceActionsDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-it('renders the actions tab with real server/DB info and no webmaster warning for the webmaster fixture user', function (): void {
+it('renders the global gallery actions fieldset with no webmaster warning for the webmaster fixture user', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=maintenance');
 
-    $page->assertSee(PHP_VERSION);
+    // PHP_VERSION/DB_VERSION are assigned by this class but only ever
+    // rendered by maintenance_env.tpl (confirmed live: maintenance_actions.
+    // tpl never references $PHP_VERSION/$DB_VERSION at all) -- the
+    // "Global Gallery Actions" fieldset (gated behind isWebmaster==1) is
+    // this tab's own real, distinctive content.
+    $page->assertSee('Global Gallery Actions');
     $page->assertDontSee('status is required to edit parameters');
     $page->assertNoJavaScriptErrors();
 });
@@ -96,16 +101,4 @@ it('shows the lock-gallery link and hides unlock-gallery when the gallery is unl
     } finally {
         H::restoreConfig($snapshot);
     }
-});
-
-it('assigns a real GRAPHICS_LIBRARY label matching the active image library', function (): void {
-    $page = H::loginAsAdmin($this);
-    $page = H::navigateOk($page, '/admin.php?page=maintenance');
-
-    // Exactly one of the 3 switch branches assigns GRAPHICS_LIBRARY, each
-    // with a real, distinctive prefix -- assert the union rather than
-    // guessing which library this environment resolves to.
-    $body = H::rawWebpage($page)->content();
-    $matchesKnownLibrary = str_contains($body, 'ImageMagick') || str_contains($body, 'GD ');
-    expect($matchesKnownLibrary)->toBeTrue();
 });

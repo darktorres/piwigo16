@@ -52,14 +52,18 @@ it('reports each known installstatus error with its own message', function (): v
     try {
         $page = H::loginAsAdmin($this);
 
+        // The loaded en_UK translation catalog rephrases these from their
+        // literal PHP source msgids (e.g. "Can't create temporary file."
+        // becomes "Temporary file cannot be created.") -- confirmed live
+        // via a real raw request, not assumed from source.
         $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new&installstatus=temp_path_error');
-        $page->assertSee('Can\'t create temporary file');
+        $page->assertSee('Temporary file cannot be created');
 
         $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new&installstatus=dl_archive_error');
-        $page->assertSee('Can\'t download archive');
+        $page->assertSee('Archive cannot be downloaded');
 
         $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new&installstatus=archive_error');
-        $page->assertSee('Can\'t read or extract archive');
+        $page->assertSee('Archive cannot be read or extracted');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -73,7 +77,7 @@ it('reports an unrecognized installstatus with the generic extraction-error mess
         $page = H::loginAsAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new&installstatus=some-unknown-status');
 
-        $page->assertSee('An error occured during extraction');
+        $page->assertSee('An error occured during the files');
         $page->assertSee('Please check "plugins" folder and sub-folders permissions');
     } finally {
         H::restoreConfig($snapshot);

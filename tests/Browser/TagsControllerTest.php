@@ -29,10 +29,34 @@ it('renders the tag cloud (default display mode) with a real tag', function (): 
 
 it('renders the letters display mode, grouping tags by first letter', function (): void {
     $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Tags Controller Letters Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Tags Controller Letters Photo');
+    @unlink($image);
+
+    // TagService::getAvailableTags() only returns tags actually linked to
+    // a visible image (an inner join against image_category/image_tag,
+    // confirmed live) -- a bare pwg.tags.add row with no photo never
+    // appears on this front-end page. The result is also cached for 300s
+    // (Piwigo\Cache\CachePools::tagCloud()), so a freshly-tagged photo
+    // still needs that pool cleared to show up within this same test run.
     $suffix = uniqid();
-    tagsControllerAddTag($page, 'Alpha Tag ' . $suffix);
-    tagsControllerAddTag($page, 'Alternate Tag ' . $suffix);
-    tagsControllerAddTag($page, 'Beta Tag ' . $suffix);
+    $alphaTagId = tagsControllerAddTag($page, 'Alpha Tag ' . $suffix);
+    $alternateTagId = tagsControllerAddTag($page, 'Alternate Tag ' . $suffix);
+    $betaTagId = tagsControllerAddTag($page, 'Beta Tag ' . $suffix);
+
+    $updateResult = H::wsCall($page, 'pwg.images.setInfo', [
+        'image_id' => (string) $imageId,
+        'tag_ids' => $alphaTagId . ',' . $alternateTagId . ',' . $betaTagId,
+    ]);
+    expect($updateResult['stat'] ?? null)->toBe('ok');
+
+    \Piwigo\Cache\CachePools::tagCloud()->clear();
 
     $page = H::navigateOk($page, '/tags.php?display_mode=letters');
 

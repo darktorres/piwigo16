@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -98,8 +99,19 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             }
             $url = preg_replace('/[\/]*$/', '', $galleries_url_input);
             $url .= '/';
-            if (! (str_starts_with($url, '.'))) {
-                $url = './' . $url;
+            // Anchored to the real install root, not a `./`-relative path
+            // -- every real HTTP entry point's cwd is wherever Apache/
+            // PHP-FPM started the process (typically the document root,
+            // `public/`), not this project's root; a relative galleries_url
+            // also never matched any existing site's own absolute value
+            // (InstallWizard seeds site 1 as CurrentPaths::get()->root .
+            // 'galleries/', not a relative path -- same convention
+            // MetadataService::getSyncMetadata() already documents), so
+            // "add a new site" silently produced both a false "directory
+            // does not exist" rejection and, had that check been bypassed,
+            // an inconsistent DB row relative to every other site.
+            if (! str_starts_with($url, '/')) {
+                $url = CurrentPaths::get()->root . $url;
             }
 
             // site must not exists

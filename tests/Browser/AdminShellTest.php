@@ -97,12 +97,28 @@ it('shows the pending-comments counter when at least one unvalidated comment exi
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'AdminShell Comment Photo');
     @unlink($image);
 
-    $commentResult = H::wsCall($page, 'pwg.comments.add', [
-        'image_id' => (string) $imageId,
-        'author' => 'AdminShell Test Author',
-        'content' => 'Pending comment for AdminShell coverage',
-    ]);
-    expect($commentResult['stat'] ?? null)->toBe('ok');
+    // There is no pwg.comments.add WS method (confirmed: nothing in
+    // Piwigo\Ws\PwgComments registers one) -- a real comment only ever
+    // gets created through picture.php's own form action, so a direct
+    // insert is the established way to seed one for a test (same shape as
+    // PictureControllerTest's own pictureInsertComment() helper).
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+    $prefix = $prefix !== false ? $prefix : 'piwigo_';
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $db->query(sprintf(
+        "INSERT INTO %scomments (image_id, date, author, anonymous_id, content, validated) VALUES (%d, NOW(), '%s', '127.0.0.9', '%s', 0)",
+        $prefix,
+        $imageId,
+        $db->real_escape_string('AdminShell Test Author'),
+        $db->real_escape_string('Pending comment for AdminShell coverage')
+    ));
+    $commentId = (int) $db->insert_id;
+    $db->close();
 
     try {
         $page = H::navigateOk($page, '/admin.php?page=intro');

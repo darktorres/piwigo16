@@ -78,8 +78,11 @@ it('renders the per-image thumbnail grid for a real category filter', function (
     // STORAGE_CATEGORY/TITLE/DIMENSIONS/FILESIZE/DATE fields all render off
     // this photo's own real row -- confirms the ~400-line per-image loop
     // (categories, tags, jump-to link, level options, filesize/date
-    // formatting) executes without a fatal error for a real photo.
-    $page->assertSee('Batch Unit Grid Photo');
+    // formatting) executes without a fatal error for a real photo. The
+    // title is an <input> value, not a visible text node -- confirmed
+    // live via a screenshot -- so a raw-content check, not assertSee(),
+    // is the correct way to confirm it rendered.
+    expect(H::rawWebpage($page)->content())->toContain('value="Batch Unit Grid Photo"');
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'batch_manager unit-mode thumbnail grid');
 });
@@ -109,7 +112,9 @@ it('submits the unit-mode edit form for a whole_set selection and mass-updates e
     ]);
 
     expect($result['status'])->toBe(200);
-    expect($result['body'])->toContain('Photo informations updated');
+    // The loaded en_UK catalog rephrases this from its literal PHP source
+    // msgid ("Photo informations updated") -- confirmed live.
+    expect($result['body'])->toContain('Photo information updated');
 
     $row = batchManagerUnitImageRow($imageId);
     expect($row['name'])->toBe('Unit Edited Title');
@@ -135,10 +140,16 @@ it('strips HTML tags from the description when HTML descriptions are disabled', 
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Batch Unit HTML Photo');
         @unlink($image);
 
+        // level-<id> is read unconditionally into $data['level'] (a real
+        // NOT NULL column) with no isset() guard, unlike name/author --
+        // omitting it crashes with a genuine "Column 'level' cannot be
+        // null" DB error (confirmed live), so it must always be submitted
+        // even when this test only cares about the description field.
         $result = H::adminPost($page, '/admin.php?page=batch_manager&mode=unit', [
             'pwg_token' => H::pwgToken($page),
             'submit' => '1',
             'element_ids' => (string) $imageId,
+            'level-' . $imageId => '0',
             'description-' . $imageId => '<b>bold</b> text',
         ]);
 

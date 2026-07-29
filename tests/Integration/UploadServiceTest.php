@@ -108,9 +108,12 @@ final class UploadServiceTestThemeConfProvider implements ThemeConfProviderInter
  * piwigo_config's own `lounge_active` row is 'true' in the fixture, but
  * this suite deliberately never calls ConfigService::loadConfFromDb() --
  * ImageStdParams::load_from_db() (needed for DerivativeImage::url(),
- * addUploadedFile()'s own "cache a derivative" tail) already falls back to
- * sane built-in sizing when CurrentConfig::derivatives() is unpopulated,
- * same as TemplateDefineDerivativeTest's own identical setup, so skipping
+ * addUploadedFile()'s own "cache a derivative" tail) is independent of
+ * ConfigService/CurrentConfig entirely (reaches derivative_settings/
+ * derivative_size via its own fresh EntityManagerFactory::build(DbConnection::
+ * build())) and already falls back to sane built-in sizing when the
+ * fixture's rows for those two tables are empty, same as
+ * TemplateDefineDerivativeTest's own identical setup, so skipping
  * loadConfFromDb() avoids the fixture's own DB-stored 'lounge_active'
  * value leaking into CurrentConfig::loungeActive()'s in-memory state.
  * Every test controls that flag (and loungeActivateThreshold, forced high
@@ -162,8 +165,8 @@ final class UploadServiceTest extends IntegrationTestCase
         // Needed for DerivativeImage::url()'s own ImageStdParams::
         // get_by_type() call (addUploadedFile()'s "cache a derivative"
         // tail) to resolve real sizing; falls back to sane built-in
-        // defaults since CurrentConfig::derivatives() is unpopulated here
-        // (see this class's own docblock), matching
+        // defaults since the fixture's derivative_settings/derivative_size
+        // rows are empty here (see this class's own docblock), matching
         // TemplateDefineDerivativeTest's own identical setup.
         ImageStdParams::load_from_db();
 

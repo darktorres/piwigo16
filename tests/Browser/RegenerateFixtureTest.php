@@ -313,9 +313,13 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         ));
 
         // 14. A few config tweaks. piwigo_config.value is JSON-encoded
-        // (gap-closure Stage 1a-bis item 5: ConfigService::encode()) except
-        // for the 2 OBJECT_SERIALIZED_PARAMS keys, neither of which this
-        // list touches -- each entry below is json_encode()d to match.
+        // (gap-closure Stage 1a-bis item 5: ConfigService::encode()) --
+        // each entry below is json_encode()d to match. The former
+        // `derivatives`/`disabled_derivatives` serialize()-blob exception
+        // (ConfigService::OBJECT_SERIALIZED_PARAMS) is gone entirely: both
+        // keys retired in favor of the real derivative_settings/
+        // derivative_size tables, so there's no longer any non-JSON
+        // config value to special-case.
         // show_piwigo_latest_news/dashboard_check_for_updates default to
         // true (config_default.inc.php) and have no row from a fresh
         // install, so this must be an upsert, not an UPDATE — matching

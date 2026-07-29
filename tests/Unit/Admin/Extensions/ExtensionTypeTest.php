@@ -31,10 +31,16 @@ test('pemCategoryId returns each type\'s own pem category id', function (): void
         ->and(ExtensionType::Language->pemCategoryId())->toBe(CurrentConfig::pemLanguagesCategory());
 });
 
-test('updatesIgnoredKey returns each type\'s plural CurrentConfig::updatesIgnored() key', function (): void {
-    expect(ExtensionType::Plugin->updatesIgnoredKey())->toBe('plugins')
-        ->and(ExtensionType::Theme->updatesIgnoredKey())->toBe('themes')
-        ->and(ExtensionType::Language->updatesIgnoredKey())->toBe('languages');
+test('fromPluralWsParam maps each type\'s plural pwg.extensions.ignoreUpdate wire value back to its enum case', function (): void {
+    expect(ExtensionType::fromPluralWsParam('plugins'))->toBe(ExtensionType::Plugin)
+        ->and(ExtensionType::fromPluralWsParam('themes'))->toBe(ExtensionType::Theme)
+        ->and(ExtensionType::fromPluralWsParam('languages'))->toBe(ExtensionType::Language);
+});
+
+test('fromPluralWsParam returns null for an unrecognized string', function (): void {
+    expect(ExtensionType::fromPluralWsParam('plugin'))->toBeNull()
+        ->and(ExtensionType::fromPluralWsParam(''))->toBeNull()
+        ->and(ExtensionType::fromPluralWsParam('not-a-real-type'))->toBeNull();
 });
 
 test('scanDirectory returns each type\'s own filesystem root', function (): void {

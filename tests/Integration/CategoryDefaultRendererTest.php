@@ -68,13 +68,15 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // thumbnails.tpl reads $derivative_params (assigned from
         // ImageStdParams::get_by_type() by CategoryDefaultRenderer::render()
         // itself) -- ImageStdParams::$all_type_map starts empty until
-        // load_from_db() populates it. Same real-config-row pattern as
-        // tests/Integration/CalendarMonthlyTest.php: the fixture's real
-        // `derivatives` config row (already containing a 'thumb' entry) is
-        // only visible to CurrentConfig::derivatives() after
-        // loadConfFromDb() -- without it, load_from_db() falls to its
-        // "build defaults + save()" branch, which needs a
-        // CurrentConfigService this test never activates.
+        // load_from_db() populates it. load_from_db() reaches its own
+        // repositories via a fresh EntityManagerFactory::build(DbConnection::
+        // build()), independent of ConfigService/CurrentConfig entirely, so
+        // it works here whether or not the fixture's derivative_settings/
+        // derivative_size rows are populated (falls back to sane built-in
+        // sizing if not, same as UploadServiceTest's own identical setup).
+        // loadConfFromDb() below is unrelated to ImageStdParams -- it's
+        // this test's own way of seeding every other real config-backed
+        // display flag CategoryDefaultRenderer/thumbnails.tpl reads.
         $configService = new ConfigService($this->buildConfigRepository());
         $configService->loadConfFromDb();
         ImageStdParams::load_from_db();

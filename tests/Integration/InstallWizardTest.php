@@ -17,6 +17,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Session\SessionService;
 
 /**
  * InstallWizard is install.php's whole orchestration, ported verbatim from
@@ -166,6 +167,15 @@ final class InstallWizardTest extends IntegrationTestCase
         ErrorCollector::reset();
         Kernel::reset();
         CurrentConfig::reset();
+        // render()'s step-2 body (via AuthService::logUser()'s
+        // session_start()/session_regenerate_id()) is the only thing in
+        // this file that ever touches SessionService -- its self-managed
+        // singleton (see SessionService::get()'s own docblock) otherwise
+        // survives into the next test still bound to this test's own
+        // throwaway database connection, dropped a few lines below. Reset
+        // before the drop so a later test starts from a clean, un-memoized
+        // state instead of resolving a stale connection.
+        SessionService::reset();
         foreach ($this->createdDatabases as $dbName) {
             $db = $this->newMysqli('');
             $db->query(sprintf('DROP DATABASE IF EXISTS `%s`', $dbName));
@@ -865,6 +875,22 @@ final class InstallWizardTest extends IntegrationTestCase
      * session/cookie/mail primitives from the rest of this ~60-line
      * method, and every real caller (install.php) hits the identical
      * unavoidable combination.
+     *
+     * render()'s own step-2 body registers session_write_close() via
+     * register_shutdown_function() (matching the original top-level
+     * install.php code exactly) -- correct for a real request, where "PHP
+     * script shutdown" and "end of this HTTP request" are the same
+     * moment, so the deferred write always lands before anything else
+     * runs. In this shared PHPUnit/Pest process they are NOT the same
+     * moment: shutdown functions only fire at the very end of the whole
+     * test binary, long after this test's own tearDown() has already
+     * dropped its throwaway database, so the deferred write later fails
+     * with "Unknown database" (confirmed empirically: reproduces
+     * identically on the pre-WS1-6 codebase, single test in isolation,
+     * different throwaway db each run). Calling session_write_close()
+     * here forces that write to happen now, while the database still
+     * exists -- a no-op for any other caller of this helper with no
+     * active session (PHP's own documented behavior).
      */
     private function renderSuppressingHeaderWarnings(InstallWizard $wizard): string
     {
@@ -873,6 +899,7 @@ final class InstallWizardTest extends IntegrationTestCase
             ob_start();
             $wizard->render();
             $output = ob_get_clean();
+            session_write_close();
         } finally {
             restore_error_handler();
         }

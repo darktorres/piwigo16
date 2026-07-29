@@ -245,12 +245,28 @@ function idcSaveWatermarkConfig(string $cookieJar, string $pwgToken, array $fiel
         throw new RuntimeException('idcSaveWatermarkConfig(): watermark config save failed: ' . $result['body']);
     }
 
-    $derivatives = H::configValue('derivatives');
-    if (! is_string($derivatives) || preg_match('/s:4:"file";s:\d+:"([^"]*)"/', $derivatives, $matches) !== 1) {
-        throw new RuntimeException('idcSaveWatermarkConfig(): could not find the uploaded watermark file entry');
+    $file = idcWatermarkFileFromSettings('idcSaveWatermarkConfig(): could not find the uploaded watermark file entry');
+
+    return dirname(__DIR__, 2) . '/' . ltrim($file, '/');
+}
+
+/**
+ * Reads derivative_settings.watermark_json's own `file` field directly --
+ * replaces the former raw-serialize()-blob regex extraction (watermark
+ * config is real JSON now, no unserialize() class-instantiation side
+ * effect to avoid).
+ */
+function idcWatermarkFileFromSettings(string $errorMessage): string
+{
+    $settings = H::snapshotDerivativeConfig()['settings'];
+    $watermarkJson = is_array($settings) ? ($settings['watermark_json'] ?? null) : null;
+    $decoded = is_string($watermarkJson) ? json_decode($watermarkJson, true) : null;
+    $file = is_array($decoded) ? ($decoded['file'] ?? null) : null;
+    if (! is_string($file) || $file === '') {
+        throw new RuntimeException($errorMessage);
     }
 
-    return dirname(__DIR__, 2) . '/' . ltrim($matches[1], '/');
+    return $file;
 }
 
 it("sends 304 Not Modified when If-Modified-Since matches the cached derivative's own mtime", function (): void {
@@ -369,10 +385,10 @@ it('serves a theme asset through the derivative pipeline and redirects to the ra
     //
     // Deliberately xxlarge ('xx'), not 4xlarge ('4x') despite 4xlarge's
     // bigger box also fitting: 4xlarge is disabled by default (the
-    // fixture's own `disabled_derivatives` config row), and
-    // ImageStdParams::load_from_db() self-heals disabled_derivatives back
-    // to its default set (3xlarge/4xlarge) the moment it reads back empty
-    // -- confirmed live, clearing the config row doesn't stick past the
+    // fixture's own derivative_size row for '4xlarge' has enabled=0), and
+    // ImageStdParams::load_from_db() self-heals the disabled set back to
+    // its default (3xlarge/4xlarge) the moment it reads back zero disabled
+    // rows -- confirmed live, deleting those rows doesn't stick past the
     // next request. xxlarge needs no config change at all.
     $path = 'i.php?/themes/standard_pages/skins/light-default-xx.jpg';
 
@@ -435,7 +451,7 @@ it('rejects a custom-size request whose derived crop fraction falls outside [0, 
 });
 
 it('composites an opaque watermark onto a freshly-generated derivative', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_idc_watermark_');
     if ($cookieJar === false) {
@@ -516,18 +532,13 @@ it('composites an opaque watermark onto a freshly-generated derivative', functio
         expect($uploadResult['status'])->toBe(200);
         expect($uploadResult['body'])->toContain('Your configuration settings are saved');
 
-        $derivatives = H::configValue('derivatives');
-        expect($derivatives)->not->toBeNull();
-        assert(is_string($derivatives));
-        if (preg_match('/s:4:"file";s:\d+:"([^"]*)"/', $derivatives, $matches) !== 1) {
-            throw new RuntimeException('Could not find the uploaded watermark file entry');
-        }
+        $watermarkFile = idcWatermarkFileFromSettings('Could not find the uploaded watermark file entry');
         // The watermark compose path reads this via
         // `$this->paths->root . $wm->file` (ImageDerivativeController.php)
         // -- root is the repo root, one level *above* public/, not public/
         // itself (public/ has no `local/` symlink the way it does for
         // `themes/`, so watermarks are never web-servable directly).
-        $uploadedWatermarkPath = dirname(__DIR__, 2) . '/' . ltrim($matches[1], '/');
+        $uploadedWatermarkPath = dirname(__DIR__, 2) . '/' . ltrim($watermarkFile, '/');
 
         $imageId = idcCreateTestPhoto($this, 'Derivative Watermark Album');
         $path = 'i.php?/' . idcDerivativePath(H::imagePath($imageId), 'th');
@@ -565,7 +576,7 @@ it('composites an opaque watermark onto a freshly-generated derivative', functio
         if ($uploadedWatermarkPath !== null) {
             @unlink($uploadedWatermarkPath);
         }
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
@@ -649,7 +660,7 @@ it('applies the stored rotation angle before crop/scale, swapping width/height f
 });
 
 it('scales an oversized watermark down to fit the destination before compositing', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
     $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_idc_wmscale_');
     if ($cookieJar === false) {
         throw new RuntimeException('tempnam failed');
@@ -729,12 +740,12 @@ it('scales an oversized watermark down to fit the destination before compositing
         if ($uploadedWatermarkPath !== null) {
             @unlink($uploadedWatermarkPath);
         }
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
 it('tiles a repeated watermark at valid offsets and skips offsets that would overflow the canvas', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
     $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_idc_wmtile_');
     if ($cookieJar === false) {
         throw new RuntimeException('tempnam failed');
@@ -820,7 +831,7 @@ it('tiles a repeated watermark at valid offsets and skips offsets that would ove
         if ($uploadedWatermarkPath !== null) {
             @unlink($uploadedWatermarkPath);
         }
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 

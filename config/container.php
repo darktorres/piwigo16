@@ -10,9 +10,15 @@ use Monolog\Logger as MonologLogger;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateEntity;
+use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateRepository;
+use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
+use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Admin\PiwigoInfosSender;
 use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Audit\AuditRepository;
+use Piwigo\Auth\UserFailedLoginEntity;
+use Piwigo\Auth\UserFailedLoginRepository;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Category\CategoryEntity;
@@ -269,4 +275,10 @@ return [
     RateRepository::class => factory(static fn (EntityManagerInterface $em): RateRepository => $em->getRepository(RateEntity::class)),
 
     HistoryRepository::class => factory(static fn (EntityManagerInterface $em): HistoryRepository => $em->getRepository(HistoryEntity::class)),
+
+    ExtensionIgnoredUpdateRepository::class => factory(static fn (EntityManagerInterface $em): ExtensionIgnoredUpdateRepository => $em->getRepository(ExtensionIgnoredUpdateEntity::class)),
+
+    UserFailedLoginRepository::class => factory(static fn (EntityManagerInterface $em): UserFailedLoginRepository => $em->getRepository(UserFailedLoginEntity::class)),
+
+    IntegrityIgnoredAnomalyRepository::class => factory(static fn (EntityManagerInterface $em): IntegrityIgnoredAnomalyRepository => $em->getRepository(IntegrityIgnoredAnomalyEntity::class)),
 ];

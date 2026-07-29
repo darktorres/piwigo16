@@ -671,6 +671,7 @@ final class RequestBootstrap
             new HtmlService(),
             new PasswordService(new PasswordRepository($conn)),
             new CookieService(),
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
         )->pwgLogin(...));
         // Relocated from admin/include/functions_upload.inc.php (deleted in P23
         // sub-batch 8b-3) -- must stay after PluginLoader::loadPlugins() (in

@@ -5,30 +5,37 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Piwigo\Admin\Integrity\CheckIntegrity;
+use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
+use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Env;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 
 /**
- * CheckIntegrity::check()/display()/maintenance() -- the Unit suite
- * (tests/Unit/Admin/Integrity/CheckIntegrityTest.php) already covers
- * add_anomaly()/get_htlm_links_more_info() directly (pure logic, no
- * DB/event/template dependency); check()/display() genuinely need a real
- * DI-bootstrapped ConfigService (update_conf()'s own
- * CurrentConfigService::get()) and a real rendered check_integrity.tpl
- * (themes/admin/default/template/), so this suite boots Kernel + a real
- * admin Template directly, the same shape as
- * PictureCommentRendererTest's own gallery-theme Template construction.
+ * CheckIntegrity::check()/display()/maintenance() -- the sibling
+ * Integration suite (tests/Integration/Admin/Integrity/
+ * CheckIntegrityAddAnomalyTest.php, relocated from tests/Unit/ once
+ * CheckIntegrity's constructor started needing a real
+ * IntegrityIgnoredAnomalyRepository) already covers add_anomaly()/
+ * get_htlm_links_more_info() directly (pure logic, no event/template
+ * dependency of their own); check()/display() genuinely need a real
+ * IntegrityIgnoredAnomalyRepository (update_conf()'s own persistence) and
+ * a real rendered check_integrity.tpl (themes/admin/default/template/), so
+ * this suite boots Kernel + a real admin Template directly, the same
+ * shape as PictureCommentRendererTest's own gallery-theme Template
+ * construction.
  *
  * check() overwrites $this->retrieve_list from the 'list_check_integrity'
  * event on every call (there is no other way to populate it) -- this
@@ -83,7 +90,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         Kernel::boot();
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
 
-        DbConnection::build()->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'c13y_ignore'");
+        DbConnection::build()->executeStatement('DELETE FROM ' . Tables::integrityIgnoredAnomalies());
 
         self::$queuedAnomalies = [];
         EventDispatcher::get()->addEventHandler('list_check_integrity', [self::class, 'pushQueuedAnomalies']);
@@ -98,7 +105,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
     {
         EventDispatcher::get()->removeEventHandler('list_check_integrity', [self::class, 'pushQueuedAnomalies']);
         unset($_POST['c13y_submit_correction'], $_POST['c13y_submit_ignore'], $_POST['c13y_selection']);
-        DbConnection::build()->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'c13y_ignore'");
+        DbConnection::build()->executeStatement('DELETE FROM ' . Tables::integrityIgnoredAnomalies());
         CurrentTemplate::reset();
         Kernel::reset();
         parent::tearDown();
@@ -110,11 +117,24 @@ final class CheckIntegrityTest extends IntegrationTestCase
         return md5($anomaly . $correctionFct . serialize($correctionFctArgs) . $correctionMsg);
     }
 
+    private function buildIntegrityRepo(): IntegrityIgnoredAnomalyRepository
+    {
+        $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
+        self::assertInstanceOf(IntegrityIgnoredAnomalyRepository::class, $repo);
+
+        return $repo;
+    }
+
+    private function newCheckIntegrity(): CheckIntegrity
+    {
+        return new CheckIntegrity($this->buildIntegrityRepo());
+    }
+
     public function test_check_reports_no_header_note_when_zero_anomalies_are_found(): void
     {
         $before = count(PageState::current()->headerNotes);
 
-        new CheckIntegrity()->check();
+        $this->newCheckIntegrity()->check();
 
         self::assertCount($before, PageState::current()->headerNotes);
     }
@@ -125,7 +145,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
             ['anomaly' => 'Singular anomaly ' . uniqid(), 'correction_fct' => null, 'correction_fct_args' => null, 'correction_msg' => null],
         ];
 
-        new CheckIntegrity()->check();
+        $this->newCheckIntegrity()->check();
 
         self::assertContains('1 anomaly has been detected.', PageState::current()->headerNotes);
     }
@@ -137,7 +157,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
             ['anomaly' => 'Plural anomaly two ' . uniqid(), 'correction_fct' => null, 'correction_fct_args' => null, 'correction_msg' => null],
         ];
 
-        new CheckIntegrity()->check();
+        $this->newCheckIntegrity()->check();
 
         self::assertContains('2 anomalies have been detected.', PageState::current()->headerNotes);
     }
@@ -152,7 +172,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         $_POST['c13y_submit_correction'] = '1';
         $_POST['c13y_selection'] = [$this->anomalyId($anomaly, $correctionFct)];
 
-        $c13y = new CheckIntegrity();
+        $c13y = $this->newCheckIntegrity();
         $c13y->check();
 
         self::assertContains('1 anomaly has been corrected.', PageState::current()->infos);
@@ -169,7 +189,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         $_POST['c13y_submit_correction'] = '1';
         $_POST['c13y_selection'] = [$this->anomalyId($anomaly, $correctionFct)];
 
-        $c13y = new CheckIntegrity();
+        $c13y = $this->newCheckIntegrity();
         $c13y->check();
 
         self::assertContains('1 anomaly has not been corrected.', PageState::current()->errors);
@@ -186,31 +206,31 @@ final class CheckIntegrityTest extends IntegrationTestCase
         $_POST['c13y_submit_ignore'] = '1';
         $_POST['c13y_selection'] = [$id];
 
-        $c13y = new CheckIntegrity();
+        $c13y = $this->newCheckIntegrity();
         $c13y->check();
 
         self::assertContains('1 anomaly has been ignored.', PageState::current()->infos);
         self::assertTrue($c13y->retrieve_list[0]['ignored'] ?? false);
         self::assertSame([$id], $c13y->build_ignore_list);
 
-        $raw = DbConnection::build()->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'c13y_ignore'");
-        self::assertIsString($raw);
-        $decoded = json_decode($raw, true);
-        self::assertIsArray($decoded);
-        self::assertSame(AppInfo::VERSION, $decoded['version']);
-        self::assertSame([$id], $decoded['list']);
+        $rows = DbConnection::build()->fetchAllAssociative(
+            'SELECT anomaly_id, piwigo_version FROM ' . Tables::integrityIgnoredAnomalies()
+        );
+        self::assertCount(1, $rows);
+        self::assertSame($id, $rows[0]['anomaly_id']);
+        self::assertSame(AppInfo::VERSION, $rows[0]['piwigo_version']);
     }
 
     public function test_check_skips_an_already_ignored_anomaly_reported_via_current_config(): void
     {
         $anomaly = 'Pre-ignored anomaly ' . uniqid();
         $id = $this->anomalyId($anomaly);
-        CurrentConfig::setC13yIgnore(['version' => AppInfo::VERSION, 'list' => [$id]]);
+        $this->buildIntegrityRepo()->syncForVersion(AppInfo::VERSION, [$id], Env::now()->format('Y-m-d H:i:s'));
         self::$queuedAnomalies = [
             ['anomaly' => $anomaly, 'correction_fct' => null, 'correction_fct_args' => null, 'correction_msg' => null],
         ];
 
-        $c13y = new CheckIntegrity();
+        $c13y = $this->newCheckIntegrity();
         $c13y->check();
 
         self::assertSame([], $c13y->retrieve_list);
@@ -219,26 +239,27 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     public function test_maintenance_delegates_to_update_conf_and_clears_the_ignore_list(): void
     {
-        DbConnection::build()->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('c13y_ignore', '{\"version\":\"stale\",\"list\":[\"stale-id\"]}')
-             ON DUPLICATE KEY UPDATE value = VALUES(value)"
-        );
+        // A row for a *different* version than AppInfo::VERSION -- must
+        // survive maintenance()/update_conf() untouched, since
+        // syncForVersion() is scoped to the current version only (proves
+        // the version-scoping design, not just that clearing works).
+        $this->buildIntegrityRepo()->syncForVersion('stale-version', ['stale-id'], Env::now()->format('Y-m-d H:i:s'));
+        $this->buildIntegrityRepo()->syncForVersion(AppInfo::VERSION, ['current-id'], Env::now()->format('Y-m-d H:i:s'));
 
-        new CheckIntegrity()->maintenance();
+        $this->newCheckIntegrity()->maintenance();
 
-        $raw = DbConnection::build()->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'c13y_ignore'");
-        self::assertIsString($raw);
-        $decoded = json_decode($raw, true);
-        self::assertIsArray($decoded);
-        self::assertSame(AppInfo::VERSION, $decoded['version']);
-        self::assertSame([], $decoded['list']);
+        $currentVersionRows = $this->buildIntegrityRepo()->findIgnoredAnomalyIdsForVersion(AppInfo::VERSION);
+        self::assertSame([], $currentVersionRows);
+
+        $staleVersionRows = $this->buildIntegrityRepo()->findIgnoredAnomalyIdsForVersion('stale-version');
+        self::assertSame(['stale-id'], $staleVersionRows);
     }
 
     // ------------------------------------------------------------ display()
 
     public function test_display_flags_an_ignored_anomaly_and_never_offers_it_for_selection(): void
     {
-        $c13y = new CheckIntegrity();
+        $c13y = $this->newCheckIntegrity();
         $c13y->retrieve_list = [
             [
                 'id' => 'ignored-1',
@@ -265,7 +286,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     public function test_display_throws_when_an_anomaly_is_marked_ignored_false(): void
     {
-        $c13y = new CheckIntegrity();
+        $c13y = $this->newCheckIntegrity();
         $c13y->retrieve_list = [
             [
                 'id' => 'bad-1',
@@ -286,7 +307,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     public function test_display_flags_a_successfully_corrected_anomaly(): void
     {
-        $c13y = new CheckIntegrity();
+        $c13y = $this->newCheckIntegrity();
         $c13y->retrieve_list = [
             [
                 'id' => 'corrected-1',
@@ -310,7 +331,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     public function test_display_flags_a_failed_correction_with_the_more_info_links(): void
     {
-        $c13y = new CheckIntegrity();
+        $c13y = $this->newCheckIntegrity();
         $c13y->retrieve_list = [
             [
                 'id' => 'failed-1',
@@ -337,7 +358,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     public function test_display_offers_a_callable_uncorrected_anomaly_for_automatic_correction(): void
     {
-        $c13y = new CheckIntegrity();
+        $c13y = $this->newCheckIntegrity();
         $c13y->retrieve_list = [
             [
                 'id' => 'selectable-1',
@@ -366,7 +387,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     public function test_display_flags_a_non_callable_correction_function_as_a_bad_fct(): void
     {
-        $c13y = new CheckIntegrity();
+        $c13y = $this->newCheckIntegrity();
         $c13y->retrieve_list = [
             [
                 'id' => 'bad-fct-1',
@@ -389,7 +410,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     public function test_display_shows_a_correction_msg_for_an_anomaly_with_no_correction_function(): void
     {
-        $c13y = new CheckIntegrity();
+        $c13y = $this->newCheckIntegrity();
         $c13y->retrieve_list = [
             [
                 'id' => 'msg-only-1',
@@ -412,7 +433,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     public function test_display_does_nothing_when_there_are_no_anomalies(): void
     {
-        $c13y = new CheckIntegrity();
+        $c13y = $this->newCheckIntegrity();
 
         $c13y->display();
 

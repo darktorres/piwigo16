@@ -4,10 +4,21 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
+use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
+use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+
+function c13yInternalTestCheckIntegrity(): CheckIntegrity
+{
+    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
+    expect($repo)->toBeInstanceOf(IntegrityIgnoredAnomalyRepository::class);
+
+    return new CheckIntegrity($repo);
+}
 
 // c13y_correction_user() reaches CoreDomainAccessor::userService(), which
 // needs the DI container -- unlike every other function-style Integration
@@ -34,7 +45,7 @@ beforeEach(function (): void {
 // not just today's incidental happy path.
 
 test('c13y_version adds no anomaly when the running PHP/MySQL already satisfy the app\'s own minimum versions', function (): void {
-    $c13y = new CheckIntegrity();
+    $c13y = c13yInternalTestCheckIntegrity();
 
     new C13yInternal()->c13y_version($c13y);
 
@@ -44,7 +55,7 @@ test('c13y_version adds no anomaly when the running PHP/MySQL already satisfy th
 test('c13y_exif adds no anomaly when exif_read_data() is available', function (): void {
     expect(function_exists('exif_read_data'))->toBeTrue();
 
-    $c13y = new CheckIntegrity();
+    $c13y = c13yInternalTestCheckIntegrity();
     new C13yInternal()->c13y_exif($c13y);
 
     expect($c13y->retrieve_list)->toBe([]);
@@ -65,7 +76,7 @@ test('c13y_user flags a configured webmaster_id that has no matching user row, a
     CurrentConfig::setDefaultUserId(2);
     CurrentConfig::setWebmasterId(999999);
 
-    $c13y = new CheckIntegrity();
+    $c13y = c13yInternalTestCheckIntegrity();
     new C13yInternal()->c13y_user($c13y);
 
     expect($c13y->retrieve_list)->toHaveCount(1);
@@ -103,7 +114,7 @@ test('c13y_user flags a real user whose status does not match the expected one, 
     try {
         $conn->executeStatement("UPDATE " . \Piwigo\Db\Tables::userInfos() . " SET status = 'normal' WHERE user_id = 1");
 
-        $c13y = new CheckIntegrity();
+        $c13y = c13yInternalTestCheckIntegrity();
         new C13yInternal()->c13y_user($c13y);
 
         $webmasterAnomaly = null;

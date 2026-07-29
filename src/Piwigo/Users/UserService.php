@@ -1315,6 +1315,7 @@ SELECT
             $this->htmlRenderer,
             $this->passwordService(),
             new CookieService(),
+            \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
         );
 
         if (isset($updates[$user_fields['password']])) {

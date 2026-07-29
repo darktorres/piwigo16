@@ -180,7 +180,8 @@ final class MaintenanceActionDispatcher
 
             case 'c13y':
 
-                $c13y = new CheckIntegrity();
+                $integrityRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity::class);
+                $c13y = new CheckIntegrity($integrityRepo);
                 $c13y->maintenance();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Reinitialize check integrity'), Lang::t('action successfully performed.')));
                 break;

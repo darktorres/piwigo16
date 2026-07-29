@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigService;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Config\CurrentConfigService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeParams;
@@ -20,11 +17,10 @@ use Piwigo\Image\WatermarkParams;
  * Integration suite that calls load_from_db() (CalendarMonthlyTest,
  * CategoryDefaultRendererTest, NotificationByMailSenderTest,
  * PwgTemplateAdapterTest) deliberately keeps the fixture's own real
- * `derivatives`/`disabled_derivatives` config rows valid so load_from_db()
- * never needs a live CurrentConfigService -- which is exactly why its own
- * "missing/invalid config" fallback branches, and get_custom()'s real
- * DB-writing save() path, stayed uncovered. This file needs real DB/DI
- * (ConfigService/ConfigRepository), hence Integration rather than Unit.
+ * `derivative_settings`/`derivative_size` rows valid so load_from_db()
+ * never needs to exercise its own "missing/invalid row" fallback branches.
+ * This file needs real DB access (DerivativeSettingsRepository/
+ * DerivativeSizeRepository), hence Integration rather than Unit.
  *
  * ImageStdParams's own private statics ($type_map/$all_type_map/
  * $disabled_type_map/$undefined_type_map/$watermark) persist for this
@@ -33,12 +29,18 @@ use Piwigo\Image\WatermarkParams;
  * file's own assertions don't depend on suite run order, same convention
  * as FilesystemHelperTest's reflection-seeded static setter.
  *
- * The real `derivatives`/`disabled_derivatives` config rows are shared,
+ * The real `derivative_settings`/`derivative_size` rows are shared,
  * mutable fixture state every one of those other suites also reads --
- * this file snapshots their raw DB value in setUp() and restores it
- * verbatim in tearDown(), the same restore-in-teardown convention
+ * this file snapshots every row from both tables in setUp() and restores
+ * them verbatim in tearDown(), the same restore-in-teardown convention
  * LoungeMaintenanceTest uses for its own shared-row mutation
  * (`date_available`).
+ *
+ * ImageStdParams reaches its repositories via a fresh
+ * EntityManagerFactory::build(DbConnection::build()) per call, not the
+ * container-shared Bootstrap\InfrastructureAccessor -- so unlike
+ * UploadServiceTest's own ImageStdParams usage, this file never needs
+ * Kernel::boot().
  */
 final class ImageStdParamsTest extends IntegrationTestCase
 {
@@ -46,9 +48,15 @@ final class ImageStdParamsTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    private ?string $originalDerivativesValue;
+    /**
+     * @var list<array<string, mixed>>
+     */
+    private array $originalSettingsRows;
 
-    private ?string $originalDisabledDerivativesValue;
+    /**
+     * @var list<array<string, mixed>>
+     */
+    private array $originalSizeRows;
 
     #[\Override]
     protected function setUp(): void
@@ -64,27 +72,25 @@ final class ImageStdParamsTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
 
-        $derivatives = $this->conn->fetchOne('SELECT value FROM ' . Tables::config() . " WHERE param = 'derivatives'");
-        $this->originalDerivativesValue = is_string($derivatives) ? $derivatives : null;
-        $disabled = $this->conn->fetchOne('SELECT value FROM ' . Tables::config() . " WHERE param = 'disabled_derivatives'");
-        $this->originalDisabledDerivativesValue = is_string($disabled) ? $disabled : null;
+        $this->originalSettingsRows = $this->conn->fetchAllAssociative('SELECT * FROM ' . Tables::derivativeSettings());
+        $this->originalSizeRows = $this->conn->fetchAllAssociative('SELECT * FROM ' . Tables::derivativeSize());
 
-        CurrentConfig::reset();
         $this->resetImageStdParamsStatics();
     }
 
     #[\Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement(
-            'UPDATE ' . Tables::config() . ' SET value = ? WHERE param = ?',
-            [$this->originalDerivativesValue, 'derivatives']
-        );
-        $this->conn->executeStatement(
-            'UPDATE ' . Tables::config() . ' SET value = ? WHERE param = ?',
-            [$this->originalDisabledDerivativesValue, 'disabled_derivatives']
-        );
-        \Piwigo\Cache\CachePools::config()->clear();
+        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSettings());
+        foreach ($this->originalSettingsRows as $row) {
+            $this->conn->insert(Tables::derivativeSettings(), $row);
+        }
+
+        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
+        foreach ($this->originalSizeRows as $row) {
+            $this->conn->insert(Tables::derivativeSize(), $row);
+        }
+
         $this->resetImageStdParamsStatics();
         parent::tearDown();
     }
@@ -100,11 +106,10 @@ final class ImageStdParamsTest extends IntegrationTestCase
         ImageStdParams::$quality = 95;
     }
 
-    public function test_load_from_db_falls_back_to_enabled_defaults_and_a_fresh_watermark_when_no_derivatives_row_is_readable(): void
+    public function test_load_from_db_falls_back_to_enabled_defaults_and_a_fresh_watermark_when_no_rows_exist(): void
     {
-        CurrentConfig::setDerivatives(null);
-        CurrentConfig::setDisabledDerivatives([]);
-        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
+        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSettings());
+        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
 
         ImageStdParams::load_from_db();
 
@@ -116,7 +121,6 @@ final class ImageStdParamsTest extends IntegrationTestCase
         $disabledKeys = array_keys(ImageStdParams::get_disabled_default_sizes());
         self::assertSame(['3xlarge', '4xlarge'], $disabledKeys);
         $disabledTypeMap = ImageStdParams::get_disabled_type_map();
-        self::assertIsArray($disabledTypeMap);
         self::assertSame($disabledKeys, array_keys($disabledTypeMap));
 
         // build_maps() maps each of the 2 disabled-by-default types to the
@@ -128,41 +132,61 @@ final class ImageStdParamsTest extends IntegrationTestCase
         self::assertSame($allTypeMap['xxlarge'], $allTypeMap['3xlarge']);
         self::assertSame($allTypeMap['xxlarge'], $allTypeMap['4xlarge']);
 
-        $savedDerivatives = $this->conn->fetchOne('SELECT value FROM ' . Tables::config() . " WHERE param = 'derivatives'");
-        self::assertIsString($savedDerivatives);
-        self::assertNotSame('', $savedDerivatives);
-        $savedDisabled = $this->conn->fetchOne('SELECT value FROM ' . Tables::config() . " WHERE param = 'disabled_derivatives'");
-        self::assertIsString($savedDisabled);
-        self::assertNotSame('', $savedDisabled);
+        $settingsRowCount = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::derivativeSettings());
+        self::assertSame(1, is_numeric($settingsRowCount) ? (int) $settingsRowCount : -1);
+        $sizeRowCount = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::derivativeSize());
+        self::assertSame(11, is_numeric($sizeRowCount) ? (int) $sizeRowCount : -1);
     }
 
-    public function test_load_from_db_defaults_a_fresh_watermark_and_filters_custom_key_entries_from_a_real_blob(): void
+    public function test_load_from_db_reads_a_real_settings_row_and_filters_malformed_custom_json_entries(): void
     {
-        $thumb = new DerivativeParams(SizingParams::classic(100, 100));
-
-        $blob = serialize([
-            'd' => ['thumb' => $thumb],
-            'q' => 90,
-            // Deliberately no 'w' key -- exercises the ternary's default
-            // branch (a fresh WatermarkParams()).
-            'c' => [
+        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSettings());
+        $this->conn->insert(Tables::derivativeSettings(), [
+            'id' => 1,
+            'default_quality' => 90,
+            // Deliberately no 'file' key inside watermark_json -- exercises
+            // watermarkFromJson()'s own default-value fallback (a fresh
+            // WatermarkParams()'s file stays '').
+            'watermark_json' => '{}',
+            // Invalid entries the parse loop must filter out: a
+            // numeric-string-looking key that PHP coerces to an int array
+            // key ("0" -> is_string() fails after json_decode()) and a
+            // non-numeric value (is_numeric() fails).
+            'custom_json' => json_encode([
                 'my_custom_key' => 1_700_000_000,
-                // Invalid entries the parse loop must filter out: an
-                // int key (is_string() fails) and a non-numeric value
-                // (is_numeric() fails).
-                0 => 5,
+                '0' => 5,
                 'not_numeric' => 'nope',
-            ],
+            ]),
         ]);
-        CurrentConfig::setDerivatives($blob);
+
+        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
+        $thumb = new DerivativeParams(SizingParams::classic(100, 100));
+        $this->conn->insert(Tables::derivativeSize(), [
+            'name' => 'thumb',
+            'enabled' => 1,
+            'max_width' => 100,
+            'max_height' => 100,
+            'max_crop' => '0.0000',
+            'min_width' => null,
+            'min_height' => null,
+            'sharpen' => '0.0000',
+            'last_mod_time' => $thumb->last_mod_time,
+        ]);
         // Non-empty so load_from_db()'s own "disabled map is empty ->
         // rebuild defaults" branch (covered by the previous test) isn't
-        // exercised again here -- this test stays focused on the 'd'/'w'/
-        // 'c' parsing above, and never touches CurrentConfigService since
-        // neither save() path is taken.
-        CurrentConfig::setDisabledDerivatives(serialize([
-            '3xlarge' => new DerivativeParams(SizingParams::classic(2232, 1674)),
-        ]));
+        // exercised again here -- this test stays focused on settings/size
+        // row parsing above.
+        $this->conn->insert(Tables::derivativeSize(), [
+            'name' => '3xlarge',
+            'enabled' => 0,
+            'max_width' => 2232,
+            'max_height' => 1674,
+            'max_crop' => '0.0000',
+            'min_width' => null,
+            'min_height' => null,
+            'sharpen' => '0.0000',
+            'last_mod_time' => 0,
+        ]);
 
         ImageStdParams::load_from_db();
 
@@ -176,19 +200,18 @@ final class ImageStdParamsTest extends IntegrationTestCase
         self::assertSame('thumb', $defined['thumb']->type);
 
         $disabledTypeMap = ImageStdParams::get_disabled_type_map();
-        self::assertIsArray($disabledTypeMap);
         self::assertSame(['3xlarge'], array_keys($disabledTypeMap));
     }
 
     public function test_get_custom_returns_a_derivative_params_matching_the_given_size_and_records_a_fresh_custom_key_only_once_per_size(): void
     {
-        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
-        // Seeded non-empty so get_custom()'s own save() -> save_disabled()
-        // upserts the disabled_derivatives row instead of deleting it
-        // (save_disabled() deletes the row when the in-memory map is
-        // empty) -- this test's own tearDown() restores the real fixture
-        // row regardless, but an upsert (rather than a delete followed by
-        // a same-test re-read) keeps this test's own assertions simple.
+        // Seeded non-empty so get_custom()'s own save() -> syncDisabled()
+        // upserts the derivative_size disabled rows instead of deleting
+        // them all (syncDisabled([]) deletes every disabled row when the
+        // in-memory map is empty) -- this test's own tearDown() restores
+        // the real fixture rows regardless, but an upsert (rather than a
+        // delete followed by a same-test re-read) keeps this test's own
+        // assertions simple.
         new \ReflectionProperty(ImageStdParams::class, 'disabled_type_map')
             ->setValue(null, ImageStdParams::get_disabled_default_sizes());
 
@@ -230,15 +253,86 @@ final class ImageStdParamsTest extends IntegrationTestCase
             self::assertSame($timestamp, ImageStdParams::$custom[$key]);
         }
 
-        // 'derivatives'/'disabled_derivatives' are ConfigService's own
-        // OBJECT_SERIALIZED_PARAMS -- stored via plain serialize(), not
-        // json_encode() like every other config value (see
-        // ConfigService::encode()'s own special case).
-        $savedRaw = $this->conn->fetchOne('SELECT value FROM ' . Tables::config() . " WHERE param = 'derivatives'");
-        self::assertIsString($savedRaw);
-        $decoded = unserialize($savedRaw);
+        $savedCustomJson = $this->conn->fetchOne(
+            'SELECT custom_json FROM ' . Tables::derivativeSettings() . ' WHERE id = 1'
+        );
+        self::assertIsString($savedCustomJson);
+        $decoded = json_decode($savedCustomJson, true);
         self::assertIsArray($decoded);
-        self::assertIsArray($decoded['c']);
-        self::assertCount(2, $decoded['c']);
+        self::assertCount(2, $decoded);
+    }
+
+    public function test_save_and_load_from_db_round_trip_every_field_of_a_size_and_the_watermark(): void
+    {
+        $watermark = new WatermarkParams();
+        $watermark->file = 'my-watermark.png';
+        $watermark->min_size = [300, 250];
+        $watermark->xpos = 10;
+        $watermark->ypos = 90;
+        $watermark->xrepeat = 2;
+        $watermark->yrepeat = 3;
+        $watermark->opacity = 50;
+        ImageStdParams::set_watermark($watermark);
+        ImageStdParams::$quality = 82;
+
+        $params = new DerivativeParams(new SizingParams([500, 400], 0.5, [200, 150]));
+        $params->sharpen = 0.25;
+        $params->last_mod_time = 1_800_000_000;
+
+        ImageStdParams::set_and_save(['medium' => $params]);
+        ImageStdParams::set_and_save_disabled([]);
+
+        // Checked here, immediately after set_and_save_disabled([]) and
+        // before the reload below -- load_from_db()'s own "disabled map
+        // came back empty -> reseed the 2 defaults" fallback (preserved
+        // faithfully from the original blob-based behavior) would
+        // otherwise mask a real deletion bug by refilling the table right
+        // back up before this test could observe the empty state.
+        $sizeRowCountAfterClear = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::derivativeSize() . ' WHERE enabled = 0');
+        self::assertSame(0, is_numeric($sizeRowCountAfterClear) ? (int) $sizeRowCountAfterClear : -1, 'set_and_save_disabled([]) must delete every disabled row, not leave stale ones behind.');
+
+        $this->resetImageStdParamsStatics();
+        ImageStdParams::load_from_db();
+
+        self::assertSame('my-watermark.png', ImageStdParams::get_watermark()->file);
+        self::assertSame([300, 250], ImageStdParams::get_watermark()->min_size);
+        self::assertSame(10, ImageStdParams::get_watermark()->xpos);
+        self::assertSame(90, ImageStdParams::get_watermark()->ypos);
+        self::assertSame(2, ImageStdParams::get_watermark()->xrepeat);
+        self::assertSame(3, ImageStdParams::get_watermark()->yrepeat);
+        self::assertSame(50, ImageStdParams::get_watermark()->opacity);
+        self::assertSame(82, ImageStdParams::$quality);
+
+        $reloaded = ImageStdParams::get_defined_type_map()['medium'];
+        self::assertSame([500, 400], $reloaded->sizing->ideal_size);
+        self::assertSame(0.5, $reloaded->sizing->max_crop);
+        self::assertSame([200, 150], $reloaded->sizing->min_size);
+        self::assertSame(0.25, $reloaded->sharpen);
+        self::assertSame(1_800_000_000, $reloaded->last_mod_time);
+
+        // load_from_db()'s own reseed-on-empty fallback (see the earlier
+        // assertion's own comment) means the disabled set is back to the
+        // 2 defaults after this reload, not empty -- that fallback is
+        // pre-existing, faithfully preserved behavior, not something this
+        // round-trip test is about.
+        self::assertSame(['3xlarge', '4xlarge'], array_keys(ImageStdParams::get_disabled_type_map()));
+    }
+
+    public function test_enabling_a_previously_disabled_size_moves_it_in_place_rather_than_duplicating_the_row(): void
+    {
+        $params = new DerivativeParams(SizingParams::classic(2232, 1674));
+        ImageStdParams::set_and_save_disabled(['3xlarge' => $params]);
+
+        self::assertSame(['3xlarge'], array_keys(ImageStdParams::get_disabled_type_map()));
+
+        ImageStdParams::set_and_save(['3xlarge' => $params]);
+        ImageStdParams::set_and_save_disabled([]);
+
+        $rows = $this->conn->fetchAllAssociative(
+            'SELECT enabled FROM ' . Tables::derivativeSize() . " WHERE name = '3xlarge'"
+        );
+        self::assertCount(1, $rows, '3xlarge must have exactly one row after moving from disabled to enabled, not two.');
+        $enabledValue = $rows[0]['enabled'];
+        self::assertSame(1, is_numeric($enabledValue) ? (int) $enabledValue : -1);
     }
 }

@@ -70,6 +70,8 @@ namespace Piwigo\Tests\Integration {
 
         private Connection $conn;
 
+        private \Piwigo\Auth\UserFailedLoginRepository $failedLoginRepo;
+
         #[\Override]
         protected function setUp(): void
         {
@@ -91,12 +93,15 @@ namespace Piwigo\Tests\Integration {
 
             $this->conn = DbConnection::build();
 
+            $this->failedLoginRepo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class);
+
             $this->service = new AuthService(
                 new AuthRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())),
                 new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)),
                 new HtmlService(),
                 new PasswordService(new PasswordRepository(DbConnection::build())),
                 new CookieService(),
+                $this->failedLoginRepo,
             );
         }
 
@@ -275,6 +280,92 @@ namespace Piwigo\Tests\Integration {
                 self::assertFalse($result);
             } finally {
                 EventDispatcher::get()->removeEventHandler('finalize_login', $handler);
+                $this->conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
+            }
+        }
+
+        public function test_pwg_login_records_a_failed_login_row_for_a_wrong_password(): void
+        {
+            $countFailedLoginsForFixtureAdmin = function (): int {
+                $count = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
+                return is_numeric($count) ? (int) $count : 0;
+            };
+
+            $before = $countFailedLoginsForFixtureAdmin();
+
+            try {
+                $result = $this->service->pwgLogin(false, 'fixture_admin', 'definitely-wrong-password', false);
+
+                self::assertFalse($result);
+                self::assertSame($before + 1, $countFailedLoginsForFixtureAdmin());
+            } finally {
+                $this->conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
+            }
+        }
+
+        public function test_pwg_login_locks_out_the_username_after_max_attempts_even_with_the_correct_password(): void
+        {
+            // Empty $_SERVER['REMOTE_ADDR'] in this CLI test process means
+            // pwgLogin()'s ip-scoped check never fires (its own '$ip !== ""'
+            // guard), so this exercises the username-scoped lockout alone.
+            CurrentConfig::setLoginLockoutMaxAttempts(3);
+
+            try {
+                for ($i = 0; $i < 3; $i++) {
+                    self::assertFalse($this->service->pwgLogin(false, 'fixture_admin', 'definitely-wrong-password', false));
+                }
+
+                // generateFakeUser() is the only thing that ever sets this
+                // -- unset it first so the assertion below can tell whether
+                // pwgLogin() reached it on this specific call.
+                unset($_SESSION['fake_user_cache']);
+
+                $result = $this->service->pwgLogin(false, 'fixture_admin', 'fixture_admin', false);
+
+                self::assertFalse($result, 'Expected pwgLogin() to reject a locked-out username even with the correct password.');
+                self::assertArrayNotHasKey(
+                    'fake_user_cache',
+                    $_SESSION,
+                    'pwgLogin() should fast-reject a locked-out username before reaching generateFakeUser()/password_verify().'
+                );
+            } finally {
+                unset($_SESSION['fake_user_cache']);
+                $this->conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
+            }
+        }
+
+        public function test_pwg_login_locks_out_by_ip_even_for_an_unknown_username(): void
+        {
+            CurrentConfig::setLoginLockoutMaxAttempts(3);
+            $originalRemoteAddr = $_SERVER['REMOTE_ADDR'] ?? null;
+            $_SERVER['REMOTE_ADDR'] = '203.0.113.55';
+
+            try {
+                for ($i = 0; $i < 3; $i++) {
+                    self::assertFalse($this->service->pwgLogin(false, 'no-such-user-' . $i . '-' . uniqid(), 'irrelevant', false));
+                }
+
+                unset($_SESSION['fake_user_cache']);
+
+                // A brand-new, never-before-seen username -- proves the
+                // lockout is keyed on the IP, not on having seen this exact
+                // username fail before.
+                $result = $this->service->pwgLogin(false, 'no-such-user-final-' . uniqid(), 'irrelevant', false);
+
+                self::assertFalse($result);
+                self::assertArrayNotHasKey(
+                    'fake_user_cache',
+                    $_SESSION,
+                    'pwgLogin() should fast-reject a locked-out IP before reaching generateFakeUser()/password_verify().'
+                );
+            } finally {
+                unset($_SESSION['fake_user_cache']);
+                if ($originalRemoteAddr === null) {
+                    unset($_SERVER['REMOTE_ADDR']);
+                } else {
+                    $_SERVER['REMOTE_ADDR'] = $originalRemoteAddr;
+                }
+                $this->conn->executeStatement("DELETE FROM " . Tables::userFailedLogins() . " WHERE ip = '203.0.113.55'");
             }
         }
 
@@ -385,6 +476,37 @@ namespace Piwigo\Tests\Integration {
                 $this->conn->executeStatement(
                     'UPDATE ' . Tables::userInfos() . ' SET activation_key = NULL, activation_key_expire = NULL WHERE user_id = 4'
                 );
+            }
+        }
+
+        public function test_generate_password_link_still_works_for_a_user_locked_out_of_pwg_login(): void
+        {
+            // generatePasswordLink() is the password-reset escape hatch --
+            // it never routes through pwgLogin()/tryLogUser()/logUser(), so
+            // a username-scoped lockout on user 4 must not affect it.
+            CurrentConfig::setLoginLockoutMaxAttempts(3);
+
+            for ($i = 0; $i < 3; $i++) {
+                self::assertFalse($this->service->pwgLogin(false, 'power_user', 'definitely-wrong-password', false));
+            }
+
+            try {
+                // Confirm the lockout genuinely took effect first, so this
+                // test would actually fail if generatePasswordLink() ever
+                // started depending on pwgLogin()'s own state. (The
+                // narrower claim that this fast-rejects without calling
+                // password_verify() is already covered by
+                // test_pwg_login_locks_out_the_username_after_max_attempts_even_with_the_correct_password().)
+                self::assertFalse($this->service->pwgLogin(false, 'power_user', 'anything', false));
+
+                $result = $this->service->generatePasswordLink(4, new UrlService(new HtmlService()), false);
+
+                self::assertStringContainsString('password.php?key=', $result['password_link']);
+            } finally {
+                $this->conn->executeStatement(
+                    'UPDATE ' . Tables::userInfos() . ' SET activation_key = NULL, activation_key_expire = NULL WHERE user_id = 4'
+                );
+                $this->conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 4');
             }
         }
     }

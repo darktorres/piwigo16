@@ -1417,22 +1417,7 @@ SELECT
     private static function getOptimalDimensionsForRepresentative(): array
     {
         $enabled = ImageStdParams::get_defined_type_map();
-
-        $disabled_raw = \Piwigo\Core\ArrayHelper::safeUnserialize(ImageStdParams::get_disabled_type_map());
-        // ImageStdParams persists this map as serialize()d DerivativeParams[]
-        // (see ImageStdParams::get_disabled_type_map()'s docblock);
-        // unserialize() is only typed mixed by PHP itself, so filter out
-        // anything that isn't actually a DerivativeParams instance rather
-        // than trusting the blob blindly.
-        /** @var array<string, DerivativeParams> $disabled */
-        $disabled = [];
-        if (is_array($disabled_raw)) {
-            foreach ($disabled_raw as $disabled_type => $disabled_params) {
-                if (is_string($disabled_type) && $disabled_params instanceof DerivativeParams) {
-                    $disabled[$disabled_type] = $disabled_params;
-                }
-            }
-        }
+        $disabled = ImageStdParams::get_disabled_type_map();
 
         $w = $h = 2000; // safe default values
 

@@ -54,8 +54,6 @@ final class UpdatesExtPageRenderer
             \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        $updates_ignored = \Piwigo\Config\CurrentConfig::updatesIgnored();
-
         // updates.class.php::__construct() restricts itself to a single type when
         // reached from that type's own page (?page=plugins&tab=update etc.), and
         // checks all 3 when reached from ?page=updates&tab=ext -- same selection
@@ -107,7 +105,7 @@ final class UpdatesExtPageRenderer
 
             $type_updates = [];
 
-            $ignored_ids = $updates_ignored[$type];
+            $ignored_ids = $extension_update_checker->findIgnoredIdsByType($extension_type);
 
             foreach ($pending as $ext_id => $data) {
                 $fs_ext = $data['fs'];

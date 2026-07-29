@@ -64,7 +64,8 @@ final class LanguagesNewPageRenderer
         $extension_repository = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()));
         $pem_catalog = new PemCatalog(new ZipExtractor());
         $extension_scanner = new ExtensionScanner();
-        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService, $this->configService);
+        $plugin_migration_repo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
+        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo);
 
         // +-----------------------------------------------------------------------+
         // |                           setup check                                 |

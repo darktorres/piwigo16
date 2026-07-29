@@ -32,7 +32,6 @@ INSERT INTO piwigo_config (param,value,comment) VALUES ('email_admin_on_new_user
 INSERT INTO piwigo_config (param,value,comment) VALUES ('email_admin_on_comment','false','Send an email to the administrators when a valid comment is entered');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('email_admin_on_comment_validation','true','Send an email to the administrators when a comment requires validation');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('obligatory_user_mail_address','false','Mail address is obligatory for users');
-INSERT INTO piwigo_config (param,value,comment) VALUES ('c13y_ignore',null,'List of ignored anomalies');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('extents_for_templates','[]','Actived template-extension(s)');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('menubar_filter_icon','false','Display filter icon');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('index_sort_order_input','true','Display image order selection list');
@@ -55,7 +54,6 @@ INSERT INTO piwigo_config (param,value,comment)
     'Information displayed on picture page'
   );
 INSERT INTO piwigo_config (param,value,comment) VALUES ('week_starts_on','"monday"','Monday may not be the first day of the week');
-INSERT INTO piwigo_config (param,value,comment) VALUES ('updates_ignored','{"plugins":[],"themes":[],"languages":[]}','Extensions ignored for update');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('order_by','"ORDER BY date_available DESC, file ASC, id ASC"','default photo order');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('order_by_inside_category','"ORDER BY date_available DESC, file ASC, id ASC"','default photo order inside category');
 INSERT INTO piwigo_config (param,value) VALUES ('original_resize','false');

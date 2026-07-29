@@ -19,6 +19,22 @@ function ctConfigSection(string $section): string
 }
 
 /**
+ * Raw mysqli row values here are `mixed` -- these narrow a fetched
+ * column to the numeric type ctDecodedDerivatives() actually needs
+ * without PHPStan's Cannot-cast-mixed complaint, falling back to
+ * $default only for a genuinely absent/non-numeric column.
+ */
+function ctIntFromMixed(mixed $value, int $default): int
+{
+    return is_numeric($value) ? (int) $value : $default;
+}
+
+function ctFloatFromMixed(mixed $value, float $default): float
+{
+    return is_numeric($value) ? (float) $value : $default;
+}
+
+/**
  * ImageStdParams::get_default_sizes()'s own w/h values, in ImageStdParams::
  * get_all_types() order -- strictly ascending in both w and h, which
  * processSizes()'s step-2 validation (each type's w/h must exceed the
@@ -68,74 +84,136 @@ function ctDerivativesPayload(array $overrides = []): array
 }
 
 /**
- * Fully decodes the raw `derivatives` config blob (see
- * BrowserTestHelpers::configValue()'s own docblock: ImageStdParams::save()
- * persists it as a real PHP serialize() blob, not JSON) into its real
- * 'd'/'q'/'w'/'c' structure. Unlike the flat regex extraction the
- * watermark-upload tests below use for the single `file` string they need
- * to read (chosen there specifically to avoid a real unserialize() for a
- * value those tests only need to read one flat string out of), the tests
- * below inspect a specific derivative type's own last_mod_time and the
- * custom-derivatives map -- both real nested values a regex can't safely
- * target. DerivativeParams/SizingParams/WatermarkParams are all plain
- * DTOs with no __unserialize()/side effects of their own (confirmed by
- * reading their source), so a real, allowed_classes-scoped unserialize()
- * here is safe.
+ * Reconstructs the same 'd'/'q'/'w'/'c' structure the former `derivatives`
+ * config blob held, now sourced from the real derivative_settings/
+ * derivative_size tables ImageStdParams persists to (see its own
+ * sizesFromEntities()/watermarkFromJson()/customFromJson() -- this mirrors
+ * that same mapping, just against raw mysqli rows instead of Doctrine
+ * entities, since this file has no app-container access).
  *
  * @return array{d: array<string, \Piwigo\Image\DerivativeParams>, q: int, w: \Piwigo\Image\WatermarkParams, c: array<string, int>}
  */
 function ctDecodedDerivatives(): array
 {
-    $raw = H::configValue('derivatives');
-    expect($raw)->not->toBeNull();
-    assert(is_string($raw));
+    $snapshot = H::snapshotDerivativeConfig();
+    $settings = $snapshot['settings'];
+    expect($settings)->not->toBeNull();
+    assert(is_array($settings));
 
-    $decoded = unserialize($raw, ['allowed_classes' => [
-        \Piwigo\Image\DerivativeParams::class,
-        \Piwigo\Image\SizingParams::class,
-        \Piwigo\Image\WatermarkParams::class,
-    ]]);
-    expect($decoded)->toBeArray();
-    assert(is_array($decoded));
+    $watermarkJson = $settings['watermark_json'] ?? null;
+    $watermarkDecoded = is_string($watermarkJson) ? json_decode($watermarkJson, true) : [];
+    $w = new \Piwigo\Image\WatermarkParams();
+    if (is_array($watermarkDecoded)) {
+        $w->file = is_string($watermarkDecoded['file'] ?? null) ? $watermarkDecoded['file'] : $w->file;
+        $minSize = $watermarkDecoded['min_size'] ?? null;
+        if (is_array($minSize) && isset($minSize[0], $minSize[1])) {
+            $w->min_size = [ctIntFromMixed($minSize[0], $w->min_size[0]), ctIntFromMixed($minSize[1], $w->min_size[1])];
+        }
+        $w->xpos = is_numeric($watermarkDecoded['xpos'] ?? null) ? (int) $watermarkDecoded['xpos'] : $w->xpos;
+        $w->ypos = is_numeric($watermarkDecoded['ypos'] ?? null) ? (int) $watermarkDecoded['ypos'] : $w->ypos;
+        $w->xrepeat = is_numeric($watermarkDecoded['xrepeat'] ?? null) ? (int) $watermarkDecoded['xrepeat'] : $w->xrepeat;
+        $w->yrepeat = is_numeric($watermarkDecoded['yrepeat'] ?? null) ? (int) $watermarkDecoded['yrepeat'] : $w->yrepeat;
+        $w->opacity = is_numeric($watermarkDecoded['opacity'] ?? null) ? (int) $watermarkDecoded['opacity'] : $w->opacity;
+    }
+
+    $customJson = $settings['custom_json'] ?? null;
+    $customDecoded = is_string($customJson) ? json_decode($customJson, true) : [];
+    $c = [];
+    foreach (is_array($customDecoded) ? $customDecoded : [] as $key => $value) {
+        if (is_string($key) && is_numeric($value)) {
+            $c[$key] = (int) $value;
+        }
+    }
+
+    $q = ctIntFromMixed($settings['default_quality'] ?? null, 95);
 
     $d = [];
-    $rawD = $decoded['d'] ?? null;
-    foreach (is_array($rawD) ? $rawD : [] as $type => $params) {
-        if (is_string($type) && $params instanceof \Piwigo\Image\DerivativeParams) {
-            $d[$type] = $params;
+    foreach ($snapshot['sizes'] as $row) {
+        if (ctIntFromMixed($row['enabled'] ?? null, 0) !== 1) {
+            continue;
         }
+        $rowName = $row['name'] ?? null;
+        $name = is_string($rowName) ? $rowName : '';
+        $minWidth = $row['min_width'] ?? null;
+        $minHeight = $row['min_height'] ?? null;
+        $minSize = $minWidth !== null && $minHeight !== null ? [ctIntFromMixed($minWidth, 0), ctIntFromMixed($minHeight, 0)] : null;
+
+        $params = new \Piwigo\Image\DerivativeParams(new \Piwigo\Image\SizingParams(
+            [ctIntFromMixed($row['max_width'] ?? null, 0), ctIntFromMixed($row['max_height'] ?? null, 0)],
+            ctFloatFromMixed($row['max_crop'] ?? null, 0.0),
+            $minSize,
+        ));
+        $params->sharpen = ctFloatFromMixed($row['sharpen'] ?? null, 0.0);
+        $params->last_mod_time = ctIntFromMixed($row['last_mod_time'] ?? null, 0);
+        $params->type = $name;
+
+        $d[$name] = $params;
     }
-
-    $c = [];
-    $rawC = $decoded['c'] ?? null;
-    foreach (is_array($rawC) ? $rawC : [] as $key => $value) {
-        if (is_string($key) && is_int($value)) {
-            $c[$key] = $value;
-        }
-    }
-
-    $w = $decoded['w'] ?? null;
-    expect($w)->toBeInstanceOf(\Piwigo\Image\WatermarkParams::class);
-    assert($w instanceof \Piwigo\Image\WatermarkParams);
-
-    $q = $decoded['q'] ?? null;
-    expect($q)->toBeInt();
-    assert(is_int($q));
 
     return ['d' => $d, 'q' => $q, 'w' => $w, 'c' => $c];
 }
 
 /**
- * Re-serializes and writes back a full `derivatives` blob -- the
- * counterpart to ctDecodedDerivatives(), for seeding a specific fixture
- * state (a custom-derivative entry, an artificially-old last_mod_time)
- * this page's own POST handlers have no form field to set directly.
+ * Writes back a specific settings/enabled-sizes state -- the counterpart
+ * to ctDecodedDerivatives(), for seeding a specific fixture state (a
+ * custom-derivative entry, an artificially-old last_mod_time) this page's
+ * own POST handlers have no form field to set directly. Only ever touches
+ * derivative_settings and the *enabled* partition of derivative_size, same
+ * scope as the original blob-based version (which only ever wrote the
+ * `derivatives` config key, never `disabled_derivatives`).
  *
  * @param array{d: array<string, \Piwigo\Image\DerivativeParams>, q: int, w: \Piwigo\Image\WatermarkParams, c: array<string, int>} $decoded
  */
 function ctSetDecodedDerivatives(array $decoded): void
 {
-    H::setConfigValue('derivatives', serialize($decoded));
+    H::setDerivativeSettingsRow([
+        'default_quality' => $decoded['q'],
+        'watermark_json' => H::jsonEncode([
+            'file' => $decoded['w']->file,
+            'min_size' => $decoded['w']->min_size,
+            'xpos' => $decoded['w']->xpos,
+            'ypos' => $decoded['w']->ypos,
+            'xrepeat' => $decoded['w']->xrepeat,
+            'yrepeat' => $decoded['w']->yrepeat,
+            'opacity' => $decoded['w']->opacity,
+        ]),
+        'custom_json' => H::jsonEncode($decoded['c']),
+    ]);
+
+    $rows = [];
+    foreach ($decoded['d'] as $name => $params) {
+        $rows[] = [
+            'name' => $name,
+            'enabled' => 1,
+            'max_width' => $params->sizing->ideal_size[0],
+            'max_height' => $params->sizing->ideal_size[1],
+            'max_crop' => number_format((float) $params->sizing->max_crop, 4, '.', ''),
+            'min_width' => $params->sizing->min_size[0] ?? null,
+            'min_height' => $params->sizing->min_size[1] ?? null,
+            'sharpen' => number_format($params->sharpen, 4, '.', ''),
+            'last_mod_time' => $params->last_mod_time,
+        ];
+    }
+    H::syncEnabledDerivativeSizes($rows);
+}
+
+/**
+ * Reads derivative_settings.watermark_json's own `file` field directly
+ * (replaces the former raw-serialize()-blob regex extraction -- watermark
+ * config is real JSON now, no unserialize() class-instantiation side
+ * effect to avoid).
+ */
+function ctWatermarkFileFromSettings(string $errorMessage): string
+{
+    $settings = H::snapshotDerivativeConfig()['settings'];
+    $watermarkJson = is_array($settings) ? ($settings['watermark_json'] ?? null) : null;
+    $decoded = is_string($watermarkJson) ? json_decode($watermarkJson, true) : null;
+    $file = is_array($decoded) ? ($decoded['file'] ?? null) : null;
+    if (! is_string($file) || $file === '') {
+        throw new RuntimeException($errorMessage);
+    }
+
+    return $file;
 }
 
 /** @return array<string, mixed> */
@@ -539,7 +617,7 @@ it('sizes tab: restore_settings resets derivative params to Piwigo defaults', fu
 });
 
 it('sizes tab: saves every derivative type with valid ascending sizes', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives', 'disabled_derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -556,12 +634,12 @@ it('sizes tab: saves every derivative type with valid ascending sizes', function
         expect($result['body'])->toContain('Your configuration settings are saved');
         expect($result['body'])->not->toContain('Fatal error');
     } finally {
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
 it('sizes tab: rejects an out-of-range resize_quality without saving', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives', 'disabled_derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -578,12 +656,12 @@ it('sizes tab: rejects an out-of-range resize_quality without saving', function 
         expect($result['body'])->not->toContain('Your configuration settings are saved');
         expect($result['body'])->not->toContain('Fatal error');
     } finally {
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
 it('sizes tab: rejects a thumb size that is not strictly larger than the square size', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives', 'disabled_derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -602,12 +680,12 @@ it('sizes tab: rejects a thumb size that is not strictly larger than the square 
         expect($result['body'])->not->toContain('Your configuration settings are saved');
         expect($result['body'])->not->toContain('Fatal error');
     } finally {
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
 it('sizes tab: rejects a non-thumb size that is not strictly larger than the previous type', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives', 'disabled_derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -626,12 +704,12 @@ it('sizes tab: rejects a non-thumb size that is not strictly larger than the pre
         expect($result['body'])->not->toContain('Your configuration settings are saved');
         expect($result['body'])->not->toContain('Fatal error');
     } finally {
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
 it('sizes tab: leaving a non-required type disabled skips its validation', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives', 'disabled_derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -656,7 +734,7 @@ it('sizes tab: leaving a non-required type disabled skips its validation', funct
         expect($result['status'])->toBe(200);
         expect($result['body'])->toContain('Your configuration settings are saved');
     } finally {
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
@@ -667,7 +745,7 @@ it('renders the watermark tab', function (): void {
 });
 
 it('saves the watermark tab with a fixed topleft position, persisting the derived xpos/ypos', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -698,12 +776,12 @@ it('saves the watermark tab with a fixed topleft position, persisting the derive
         $page = H::navigateOk($page, ctConfigSection('watermark'));
         $page->assertPresent('input[name="w[position]"][value="topleft"][checked]');
     } finally {
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
 it('saves a custom watermark position with explicit xpos/ypos/repeat', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -728,12 +806,12 @@ it('saves a custom watermark position with explicit xpos/ypos/repeat', function 
         expect($result['status'])->toBe(200);
         expect($result['body'])->toContain('Your configuration settings are saved');
     } finally {
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
 it('rejects an out-of-range watermark opacity, without saving', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -758,12 +836,12 @@ it('rejects an out-of-range watermark opacity, without saving', function (): voi
         expect($result['status'])->toBe(200);
         expect($result['body'])->not->toContain('Your configuration settings are saved');
     } finally {
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
 it('rejects an out-of-range watermark xpos, without saving', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -788,12 +866,12 @@ it('rejects an out-of-range watermark xpos, without saving', function (): void {
         expect($result['status'])->toBe(200);
         expect($result['body'])->not->toContain('Your configuration settings are saved');
     } finally {
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
 it('saves the watermark tab with each named position, deriving the matching xpos/ypos', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -832,7 +910,7 @@ it('saves the watermark tab with each named position, deriving the matching xpos
             $page->assertPresent('input[name="w[position]"][value="' . $position . '"][checked]');
         }
     } finally {
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
@@ -921,7 +999,7 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
 });
 
 it('uploads a real PNG watermark image and rejects a non-PNG upload', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_browser_watermark_upload_');
     if ($cookieJar === false) {
@@ -1012,17 +1090,16 @@ it('uploads a real PNG watermark image and rejects a non-PNG upload', function (
         expect($pngResult['status'])->toBe(200);
         expect($pngResult['body'])->toContain('Your configuration settings are saved');
 
-        // ImageStdParams::save() persists `derivatives` as a real PHP
-        // serialize() blob (confirmed live), not JSON -- ['w' => a real
-        // WatermarkParams object] holds the watermark, its own `file`
-        // property root-relative to CurrentPaths::get()->root. A plain
-        // regex extraction avoids unserialize()'s own class-instantiation
-        // side effects for a value this test only needs to read.
-        $derivatives = H::configValue('derivatives');
-        if (! is_string($derivatives) || preg_match('/s:4:"file";s:\d+:"([^"]*)"/', $derivatives, $matches) !== 1) {
-            throw new RuntimeException('Could not find a watermark file entry in the derivatives config: ' . var_export($derivatives, true));
+        // ImageStdParams::save() persists watermark config as real JSON in
+        // derivative_settings.watermark_json -- `file` is root-relative to
+        // CurrentPaths::get()->root.
+        $settings = H::snapshotDerivativeConfig()['settings'];
+        $watermarkJson = is_array($settings) ? ($settings['watermark_json'] ?? null) : null;
+        $watermarkDecoded = is_string($watermarkJson) ? json_decode($watermarkJson, true) : null;
+        $watermarkFile = is_array($watermarkDecoded) ? ($watermarkDecoded['file'] ?? null) : null;
+        if (! is_string($watermarkFile) || $watermarkFile === '') {
+            throw new RuntimeException('Could not find a watermark file entry in derivative_settings: ' . var_export($settings, true));
         }
-        $watermarkFile = $matches[1];
         expect($watermarkFile)->not->toBe('');
         expect($watermarkFile)->toContain('watermarks/');
 
@@ -1033,7 +1110,7 @@ it('uploads a real PNG watermark image and rejects a non-PNG upload', function (
         @unlink($cookieJar);
         @unlink($pngPath);
         @unlink($jpgPath);
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
@@ -1148,8 +1225,8 @@ it('main tab: shows the order-by-is-custom notice and disables the selector when
 });
 
 it('sizes tab: saves valid original-resize settings alongside derivative sizes', function (): void {
+    $derivativeSnapshot = H::snapshotDerivativeConfig();
     $snapshot = H::snapshotConfig([
-        'derivatives', 'disabled_derivatives',
         'original_resize', 'original_resize_maxwidth', 'original_resize_maxheight', 'original_resize_quality',
     ]);
 
@@ -1181,12 +1258,13 @@ it('sizes tab: saves valid original-resize settings alongside derivative sizes',
         expect(H::configValue('original_resize_quality'))->toBe('85');
     } finally {
         H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($derivativeSnapshot);
     }
 });
 
 it('sizes tab: rejects an out-of-range original_resize_maxwidth, redisplaying the submitted fields', function (): void {
+    $derivativeSnapshot = H::snapshotDerivativeConfig();
     $snapshot = H::snapshotConfig([
-        'derivatives', 'disabled_derivatives',
         'original_resize', 'original_resize_maxwidth', 'original_resize_maxheight', 'original_resize_quality',
     ]);
 
@@ -1215,11 +1293,12 @@ it('sizes tab: rejects an out-of-range original_resize_maxwidth, redisplaying th
         expect(H::configValue('original_resize_maxwidth'))->toBe($snapshot['original_resize_maxwidth']);
     } finally {
         H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($derivativeSnapshot);
     }
 });
 
 it('sizes tab: toggles a non-required derivative type off then back on across successive saves', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives', 'disabled_derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -1268,12 +1347,12 @@ it('sizes tab: toggles a non-required derivative type off then back on across su
         $page = H::navigateOk($page, ctConfigSection('sizes'));
         $page->assertPresent('input[name="d[4xlarge][enabled]"][checked]');
     } finally {
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
 it('rejects an out-of-range watermark ypos, without saving', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -1298,12 +1377,12 @@ it('rejects an out-of-range watermark ypos, without saving', function (): void {
         expect($result['status'])->toBe(200);
         expect($result['body'])->not->toContain('Your configuration settings are saved');
     } finally {
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
 it('avoids a watermark filename collision by appending a numbered suffix on a repeat upload', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_browser_watermark_collision_');
     if ($cookieJar === false) {
@@ -1387,13 +1466,7 @@ it('avoids a watermark filename collision by appending a numbered suffix on a re
         expect($firstResult['status'])->toBe(200);
         expect($firstResult['body'])->toContain('Your configuration settings are saved');
 
-        $derivativesAfterFirst = H::configValue('derivatives');
-        expect($derivativesAfterFirst)->not->toBeNull();
-        assert(is_string($derivativesAfterFirst));
-        if (preg_match('/s:4:"file";s:\d+:"([^"]*)"/', $derivativesAfterFirst, $matches) !== 1) {
-            throw new RuntimeException('Could not find a watermark file entry after the first upload');
-        }
-        $firstStoredFile = $matches[1];
+        $firstStoredFile = ctWatermarkFileFromSettings('Could not find a watermark file entry after the first upload');
         expect($firstStoredFile)->toContain($sharedName . '.png');
         expect($firstStoredFile)->not->toContain($sharedName . '-1.png');
         $firstStoredPath = __DIR__ . '/../../' . ltrim($firstStoredFile, '/');
@@ -1409,13 +1482,7 @@ it('avoids a watermark filename collision by appending a numbered suffix on a re
         expect($secondResult['status'])->toBe(200);
         expect($secondResult['body'])->toContain('Your configuration settings are saved');
 
-        $derivativesAfterSecond = H::configValue('derivatives');
-        expect($derivativesAfterSecond)->not->toBeNull();
-        assert(is_string($derivativesAfterSecond));
-        if (preg_match('/s:4:"file";s:\d+:"([^"]*)"/', $derivativesAfterSecond, $matches) !== 1) {
-            throw new RuntimeException('Could not find a watermark file entry after the second upload');
-        }
-        $secondStoredFile = $matches[1];
+        $secondStoredFile = ctWatermarkFileFromSettings('Could not find a watermark file entry after the second upload');
         expect($secondStoredFile)->toContain($sharedName . '-1.png');
         $secondStoredPath = __DIR__ . '/../../' . ltrim($secondStoredFile, '/');
         expect(file_exists($secondStoredPath))->toBeTrue();
@@ -1433,7 +1500,7 @@ it('avoids a watermark filename collision by appending a numbered suffix on a re
         if ($secondStoredPath !== null) {
             @unlink($secondStoredPath);
         }
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
@@ -1513,7 +1580,7 @@ it('main tab: warns about a deprecated $conf[\'order_by\'] set in a real local c
 });
 
 it('sizes tab: resubmitting identical derivative values leaves an unchanged type\'s last_mod_time untouched', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives', 'disabled_derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -1548,12 +1615,12 @@ it('sizes tab: resubmitting identical derivative values leaves an unchanged type
 
         expect($lastModAfterSecond)->toBe($lastModAfterFirst);
     } finally {
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
 it('sizes tab: deletes a custom derivative entry when its delete flag is submitted', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives', 'disabled_derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     try {
         $decoded = ctDecodedDerivatives();
@@ -1583,12 +1650,12 @@ it('sizes tab: deletes a custom derivative entry when its delete flag is submitt
         expect($result['body'])->toContain('Your configuration settings are saved');
         expect(ctDecodedDerivatives()['c'])->not->toHaveKey($customKey);
     } finally {
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
 it('watermark tab: reports a write-access error for a genuinely unwritable upload directory', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     $repoRoot = dirname(__DIR__, 2);
     $watermarksDir = $repoRoot . '/local/watermarks';
@@ -1731,12 +1798,12 @@ it('watermark tab: reports a write-access error for a genuinely unwritable uploa
             @rmdir($holdingDir);
         }
 
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });
 
 it('watermark tab: lowering the size threshold bumps last_mod_time for a still-eligible derivative type', function (): void {
-    $snapshot = H::snapshotConfig(['derivatives']);
+    $snapshot = H::snapshotDerivativeConfig();
 
     try {
         $decoded = ctDecodedDerivatives();
@@ -1795,6 +1862,6 @@ it('watermark tab: lowering the size threshold bumps last_mod_time for a still-e
         expect($changed['body'])->toContain('Your configuration settings are saved');
         expect(ctDecodedDerivatives()['d']['small']->last_mod_time)->toBeGreaterThan($seededLastMod);
     } finally {
-        H::restoreConfig($snapshot);
+        H::restoreDerivativeConfig($snapshot);
     }
 });

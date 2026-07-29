@@ -604,7 +604,8 @@ SELECT
         $template->assign_var_from_handle('ADMIN_CONTENT', 'intro');
 
         // Check integrity
-        $c13y = new CheckIntegrity();
+        $integrityRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity::class);
+        $c13y = new CheckIntegrity($integrityRepo);
         // add internal checks
         new C13yInternal()
             ->registerHandlers();

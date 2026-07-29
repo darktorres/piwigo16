@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
-use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Env;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Http\HttpClientService;
 
@@ -31,8 +31,36 @@ final readonly class ExtensionUpdateChecker
         private ExtensionScanner $scanner,
         private PemCatalog $pemCatalog,
         private UrlServiceInterface $urlService,
-        private ConfigService $configService,
+        private ExtensionIgnoredUpdateRepository $ignoredUpdateRepo,
     ) {}
+
+    public function isIgnored(ExtensionType $type, string $extensionId): bool
+    {
+        return $this->ignoredUpdateRepo->isIgnored($type, $extensionId);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function findIgnoredIdsByType(ExtensionType $type): array
+    {
+        return $this->ignoredUpdateRepo->findIgnoredIdsByType($type);
+    }
+
+    public function ignoreUpdate(ExtensionType $type, string $extensionId): void
+    {
+        $this->ignoredUpdateRepo->ignore($type, $extensionId, Env::now()->format('Y-m-d H:i:s'));
+    }
+
+    public function resetIgnoredForType(ExtensionType $type): void
+    {
+        $this->ignoredUpdateRepo->resetType($type);
+    }
+
+    public function resetAllIgnored(): void
+    {
+        $this->ignoredUpdateRepo->resetAll();
+    }
 
     /**
      * Extension ids (fs directory names) for $type whose installed version
@@ -99,15 +127,15 @@ final readonly class ExtensionUpdateChecker
     /**
      * Computes pending updates for every ExtensionType, stores the result
      * in $_SESSION['extensions_need_update'] (consumed by
-     * Piwigo\Ws\PwgExtensions::checkUpdates()), and persists the ignore-list into
-     * $conf['updates_ignored'] -- mirrors updates.class.php::check_extensions()
-     * exactly, including its ignore-list side effect.
+     * Piwigo\Ws\PwgExtensions::checkUpdates()), and syncs the ignore-list
+     * in extension_ignored_updates via $ignoredUpdateRepo -- mirrors
+     * updates.class.php::check_extensions()'s own behavior, including its
+     * "an ignored id no longer pending silently un-ignores" side effect
+     * (see the loop's own comment below).
      */
     public function checkExtensions(): void
     {
         $_SESSION['extensions_need_update'] = [];
-
-        $updatesIgnored = \Piwigo\Config\CurrentConfig::updatesIgnored();
 
         foreach (ExtensionType::cases() as $type) {
             $pending = $this->getPendingUpdates($type);
@@ -115,24 +143,29 @@ final readonly class ExtensionUpdateChecker
                 continue;
             }
 
-            $ignoredForType = $updatesIgnored[$type->updatesIgnoredKey()] ?? null;
-            $ignoredForType = is_array($ignoredForType) ? $ignoredForType : [];
+            $ignoredForType = $this->ignoredUpdateRepo->findIgnoredIdsByType($type);
+            $stillPendingIgnoredIds = [];
 
-            $ignoreList = [];
             foreach ($pending as $extId => $data) {
                 if (in_array($extId, $ignoredForType, true)) {
-                    $ignoreList[] = $extId;
+                    $stillPendingIgnoredIds[] = $extId;
                     continue;
                 }
 
                 $revisionNameRaw = $data['server']['revision_name'] ?? null;
                 $_SESSION['extensions_need_update'][$type->value][$extId] = is_string($revisionNameRaw) ? $revisionNameRaw : '';
             }
-            $updatesIgnored[$type->updatesIgnoredKey()] = $ignoreList;
-        }
 
-        \Piwigo\Config\CurrentConfig::setUpdatesIgnored($updatesIgnored);
-        $this->configService->confUpdateParam('updates_ignored', $updatesIgnored);
+            // Matches the original blob-based behavior exactly: an ignored
+            // id that's no longer pending (the extension caught up, or was
+            // removed from disk) silently drops out of the ignore set
+            // instead of lingering forever.
+            foreach ($ignoredForType as $extId) {
+                if (! in_array($extId, $stillPendingIgnoredIds, true)) {
+                    $this->ignoredUpdateRepo->unignore($type, $extId);
+                }
+            }
+        }
     }
 
     /**

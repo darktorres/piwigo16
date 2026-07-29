@@ -23,12 +23,22 @@ namespace Piwigo\Image;
  * Calendar/Admin/Controller -- none below L2a, so no deptrac layering
  * concern, unlike finding 8's cases).
  *
- * Legacy Coupling Retirement Phase 8, 8d: its write methods (save()/
- * save_disabled()/restore_default()/set_and_save()/
- * set_and_save_disabled()) go through CurrentConfigService::get()
- * (Tier 2) -- Controller\Admin\ConfigurationSubController calls all 5
- * directly from the admin Configuration page's save handler, covered by
- * InstallBootstrap::activateConfigService() on the normal request path.
+ * Persistence: `load_from_db()`/`save()`/`save_disabled()`/`set_and_save()`/
+ * `set_and_save_disabled()`/`restore_default()` go through
+ * {@see DerivativeSettingsRepository} (the single `derivative_settings` row
+ * -- quality/watermark/the on-demand custom-size throttle cache) and
+ * {@see DerivativeSizeRepository} (one `derivative_size` row per named
+ * size, `enabled` column replacing the former separate enabled/disabled
+ * config keys) -- reached via a fresh `EntityManagerFactory::build(DbConnection::build())`
+ * per call, same "static utility, throwaway EM, no container dependency"
+ * shape as `Piwigo\Caddie\CaddieService`, not the container-shared EM
+ * (see `settingsRepository()`/`sizeRepository()`'s own docblock for why).
+ * Retired the former `derivatives`/`disabled_derivatives` piwigo_config
+ * keys (raw PHP `serialize()`, the last non-JSON exception in that table)
+ * entirely -- every field below round-trips through real typed columns
+ * now. Controller\Admin\ConfigurationSubController still calls all 5
+ * public write methods directly from the admin Configuration page's save
+ * handler; their signatures are unchanged by this persistence swap.
  */
 final class ImageStdParams
 {
@@ -80,7 +90,7 @@ final class ImageStdParams
     private static $type_map = [];
 
     /**
-     * @var DerivativeParams[]
+     * @var array<string, DerivativeParams>
      */
     private static array $disabled_type_map = [];
 
@@ -90,7 +100,13 @@ final class ImageStdParams
     private static $undefined_type_map = [];
 
     /**
-     * @var WatermarkParams
+     * Genuinely nullable, not just defensively typed: this property has no
+     * default value, and is only ever populated by set_watermark()/
+     * load_from_db() -- a caller reaching save()/apply_global() before
+     * either of those ran (confirmed live, a real Integration test hits
+     * this) sees a real null here, not just a theoretical one.
+     *
+     * @var ?WatermarkParams
      */
     private static $watermark;
 
@@ -129,19 +145,11 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]|string \Piwigo\Config\CurrentConfig::disabledDerivatives() is
-     *   stored serialized in the database — callers must safe_unserialize()
-     *   this when it falls through to that fallback
+     * @return array<string, DerivativeParams>
      */
-    public static function get_disabled_type_map(): array|string
+    public static function get_disabled_type_map(): array
     {
-
-        if ((bool) count(self::$disabled_type_map)) {
-            return self::$disabled_type_map;
-        }
-
-        $disabled_derivatives = \Piwigo\Config\CurrentConfig::disabledDerivatives();
-        return is_string($disabled_derivatives) ? $disabled_derivatives : [];
+        return self::$disabled_type_map;
     }
 
     /**
@@ -186,10 +194,18 @@ final class ImageStdParams
     }
 
     /**
+     * Lazily defaults $watermark the same way apply_global() does -- a
+     * caller reaching this before set_watermark()/load_from_db() ever ran
+     * gets a sensible fresh WatermarkParams(), not null, keeping this
+     * method's own return type (and every real caller's expectations)
+     * unchanged.
+     *
      * @return WatermarkParams
      */
     public static function get_watermark()
     {
+        self::$watermark ??= new WatermarkParams();
+
         return self::$watermark;
     }
 
@@ -198,73 +214,172 @@ final class ImageStdParams
      */
     public static function load_from_db(): void
     {
+        $settings = self::settingsRepository()->load();
 
-        // \Piwigo\Config\CurrentConfig::derivatives() does not exist at all until save() has been
-        // called once (a fresh install's config.sql has no 'derivatives'
-        // row) -- guard with is_string() rather than unserialize()-ing a
-        // possibly-null value directly, which would throw a TypeError
-        // under strict_types instead of falling through to the "build
-        // defaults" branch below like this function intends.
-        $derivatives_raw = \Piwigo\Config\CurrentConfig::derivatives() ?? null;
-        $arr = is_string($derivatives_raw) ? @unserialize($derivatives_raw) : false;
-        // unserialize() is only typed mixed by PHP itself (the serialized
-        // blob could decode to any PHP value, or to a malformed non-array
-        // shape from a hand-edited config row) -- narrow every sub-value
-        // for real before trusting it, rather than assigning the blob
-        // blindly into these precisely-typed properties.
-        if ($arr !== false && is_array($arr)) {
-            $type_map = [];
-            if (isset($arr['d']) && is_array($arr['d'])) {
-                foreach ($arr['d'] as $type => $params) {
-                    if (is_string($type) && $params instanceof DerivativeParams) {
-                        $type_map[$type] = $params;
-                    }
-                }
-            }
-            self::$type_map = $type_map;
-
-            self::$watermark = isset($arr['w']) && $arr['w'] instanceof WatermarkParams
-                ? $arr['w']
-                : new WatermarkParams();
-
-            $custom = [];
-            if (isset($arr['c']) && is_array($arr['c'])) {
-                foreach ($arr['c'] as $key => $value) {
-                    if (is_string($key) && is_numeric($value)) {
-                        $custom[$key] = (int) $value;
-                    }
-                }
-            }
-            self::$custom = $custom;
-
-            if (isset($arr['q']) && is_numeric($arr['q'])) {
-                self::$quality = (int) $arr['q'];
-            }
+        if ($settings !== null) {
+            self::$quality = $settings->defaultQuality;
+            self::$watermark = self::watermarkFromJson($settings->watermarkJson);
+            self::$custom = self::customFromJson($settings->customJson);
+            self::$type_map = self::sizesFromEntities(self::sizeRepository()->findAllEnabled());
         } else {
             self::$watermark = new WatermarkParams();
             self::$type_map = self::get_enabled_default_sizes();
             self::save(false);
         }
 
-        $disabled_raw = \Piwigo\Core\ArrayHelper::safeUnserialize(self::get_disabled_type_map());
-        // get_disabled_type_map() persists its map as serialize()d
-        // DerivativeParams[] too (see its own docblock) -- same
-        // untyped-blob situation as above, so filter it the same way.
-        $disabled_type_map = [];
-        if (is_array($disabled_raw)) {
-            foreach ($disabled_raw as $disabled_type => $disabled_params) {
-                if (is_string($disabled_type) && $disabled_params instanceof DerivativeParams) {
-                    $disabled_type_map[$disabled_type] = $disabled_params;
-                }
-            }
-        }
-        self::$disabled_type_map = $disabled_type_map;
+        self::$disabled_type_map = self::sizesFromEntities(self::sizeRepository()->findAllDisabled());
         if (self::$disabled_type_map === []) {
             self::$disabled_type_map = self::get_disabled_default_sizes();
             self::save_disabled();
         }
 
         self::build_maps();
+    }
+
+    /**
+     * Fresh, throwaway EntityManager per call (like Piwigo\Caddie\CaddieService's
+     * own `new CaddieRepository(DbConnection::build())`) rather than
+     * Bootstrap\InfrastructureAccessor's container-shared one -- unlike a
+     * raw bulk-write onto a table other repositories concurrently read in
+     * the same request (InfrastructureAccessor's own stated reason to
+     * exist), nothing else in a request reads/writes derivative_settings/
+     * derivative_size alongside this class, so there's no identity-map
+     * coherency to preserve, and avoiding the container dependency means
+     * load_from_db() (called every request, very early in
+     * RequestBootstrap) doesn't require Kernel::boot() to have run first.
+     */
+    private static function settingsRepository(): DerivativeSettingsRepository
+    {
+        // Unlike Bootstrap\*Accessor's own container-resolved services (a
+        // plain PHP-DI binding, not statically provable), getRepository()'s
+        // return type here is a real Doctrine generic tied to
+        // DerivativeSettingsEntity's own #[ORM\Entity(repositoryClass:...)]
+        // attribute -- PHPStan already proves this exact, no runtime guard
+        // needed.
+        return \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(DerivativeSettingsEntity::class);
+    }
+
+    private static function sizeRepository(): DerivativeSizeRepository
+    {
+        return \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(DerivativeSizeEntity::class);
+    }
+
+    /**
+     * @param array<string, mixed> $json
+     */
+    private static function watermarkFromJson(array $json): WatermarkParams
+    {
+        $watermark = new WatermarkParams();
+
+        $file = $json['file'] ?? null;
+        $watermark->file = is_string($file) ? $file : $watermark->file;
+
+        $minSize = $json['min_size'] ?? null;
+        if (is_array($minSize) && isset($minSize[0], $minSize[1]) && is_numeric($minSize[0]) && is_numeric($minSize[1])) {
+            $watermark->min_size = [(int) $minSize[0], (int) $minSize[1]];
+        }
+
+        $xpos = $json['xpos'] ?? null;
+        $watermark->xpos = is_numeric($xpos) ? (int) $xpos : $watermark->xpos;
+
+        $ypos = $json['ypos'] ?? null;
+        $watermark->ypos = is_numeric($ypos) ? (int) $ypos : $watermark->ypos;
+
+        $xrepeat = $json['xrepeat'] ?? null;
+        $watermark->xrepeat = is_numeric($xrepeat) ? (int) $xrepeat : $watermark->xrepeat;
+
+        $yrepeat = $json['yrepeat'] ?? null;
+        $watermark->yrepeat = is_numeric($yrepeat) ? (int) $yrepeat : $watermark->yrepeat;
+
+        $opacity = $json['opacity'] ?? null;
+        $watermark->opacity = is_numeric($opacity) ? (int) $opacity : $watermark->opacity;
+
+        return $watermark;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function watermarkToJson(WatermarkParams $watermark): array
+    {
+        return [
+            'file' => $watermark->file,
+            'min_size' => $watermark->min_size,
+            'xpos' => $watermark->xpos,
+            'ypos' => $watermark->ypos,
+            'xrepeat' => $watermark->xrepeat,
+            'yrepeat' => $watermark->yrepeat,
+            'opacity' => $watermark->opacity,
+        ];
+    }
+
+    /**
+     * Doctrine's `json` type only guarantees the column decodes to an
+     * array -- it doesn't validate the shape stored inside it (a
+     * hand-edited row, or a future format change, could leave a
+     * non-numeric value under a key) -- so this narrows every entry the
+     * same way load_from_db() always has for DB-sourced data, rather than
+     * trusting customJson blindly.
+     *
+     * @param array<mixed> $json
+     * @return array<string, int>
+     */
+    private static function customFromJson(array $json): array
+    {
+        $custom = [];
+        foreach ($json as $key => $value) {
+            if (is_string($key) && is_numeric($value)) {
+                $custom[$key] = (int) $value;
+            }
+        }
+        return $custom;
+    }
+
+    /**
+     * @param list<DerivativeSizeEntity> $entities
+     * @return array<string, DerivativeParams>
+     */
+    private static function sizesFromEntities(array $entities): array
+    {
+        $map = [];
+        foreach ($entities as $entity) {
+            $minSize = $entity->minWidth !== null && $entity->minHeight !== null
+                ? [$entity->minWidth, $entity->minHeight]
+                : null;
+
+            $params = new DerivativeParams(new SizingParams(
+                [$entity->maxWidth, $entity->maxHeight],
+                (float) $entity->maxCrop,
+                $minSize,
+            ));
+            $params->sharpen = (float) $entity->sharpen;
+            $params->last_mod_time = $entity->lastModTime;
+
+            $map[$entity->name] = $params;
+        }
+        return $map;
+    }
+
+    private static function sizeEntityFromParams(string $name, bool $enabled, DerivativeParams $params): DerivativeSizeEntity
+    {
+        $minSize = $params->sizing->min_size;
+
+        return new DerivativeSizeEntity(
+            $name,
+            $enabled,
+            $params->sizing->ideal_size[0],
+            $params->sizing->ideal_size[1],
+            self::decimalToString((float) $params->sizing->max_crop),
+            $minSize !== null ? $minSize[0] : null,
+            $minSize !== null ? $minSize[1] : null,
+            self::decimalToString($params->sharpen),
+            $params->last_mod_time,
+        );
+    }
+
+    private static function decimalToString(float $value): string
+    {
+        return number_format($value, 4, '.', '');
     }
 
     /**
@@ -292,20 +407,24 @@ final class ImageStdParams
      */
     public static function save(bool $save_disabled = true): void
     {
-        // Legacy Coupling Retirement Phase 8, 8d: pass the raw array, not a
-        // manually serialize()'d + addslashes()'d string -- ConfigService::
-        // confUpdateParam()'s own encode() already serializes array values
-        // (same serialize() call, same input, identical stored string) and
-        // never needs addslashes() (Doctrine parameterizes values safely;
-        // that escaping was only ever needed for ConfigDb's raw SQL
-        // concatenation -- passing an already-escaped string through here
-        // would have baked stray backslashes into the stored data).
-        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('derivatives', [
-            'd' => self::$type_map,
-            'q' => self::$quality,
-            'w' => self::$watermark,
-            'c' => self::$custom,
-        ]);
+        // $watermark can still be null here if save() is reached before
+        // load_from_db()/set_watermark() ever ran (e.g. a caller sets
+        // $type_map directly then calls set_and_save()) -- the original
+        // serialize()-blob code tolerated this silently (a null 'w' entry,
+        // resolved to a fresh WatermarkParams() on the next load_from_db()
+        // via its own instanceof check); this preserves that same
+        // tolerance now that watermarkToJson() needs a real object.
+        self::settingsRepository()->save(
+            self::$quality,
+            self::watermarkToJson(self::$watermark ?? new WatermarkParams()),
+            self::$custom,
+        );
+
+        $rows = [];
+        foreach (self::$type_map as $type => $params) {
+            $rows[] = self::sizeEntityFromParams($type, true, $params);
+        }
+        self::sizeRepository()->syncEnabled($rows);
 
         if ($save_disabled) {
             self::save_disabled();
@@ -317,15 +436,15 @@ final class ImageStdParams
      */
     public static function save_disabled(): void
     {
-        if (count(self::$disabled_type_map) > 0) {
-            \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('disabled_derivatives', self::$disabled_type_map);
-        } else {
-            \Piwigo\Config\CurrentConfigService::get()->confDeleteParam('disabled_derivatives');
+        $rows = [];
+        foreach (self::$disabled_type_map as $type => $params) {
+            $rows[] = self::sizeEntityFromParams($type, false, $params);
         }
+        self::sizeRepository()->syncDisabled($rows);
     }
 
     /**
-     * @param DerivativeParams[] $map
+     * @param array<string, DerivativeParams> $map
      */
     public static function set_and_save_disabled(array $map): void
     {
@@ -342,7 +461,7 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]
+     * @return array<string, DerivativeParams>
      */
     public static function get_default_sizes(): array
     {
@@ -367,7 +486,7 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]
+     * @return array<string, DerivativeParams>
      */
     public static function get_enabled_default_sizes(): array
     {
@@ -379,7 +498,7 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]
+     * @return array<string, DerivativeParams>
      */
     public static function get_disabled_default_sizes(): array
     {
@@ -391,10 +510,20 @@ final class ImageStdParams
     /**
      * Compute 'use_watermark'
      *
+     * Pre-existing fragility, not introduced by the derivative_settings/
+     * derivative_size migration: $watermark is only ever populated by
+     * set_watermark()/load_from_db(), so a caller reaching build_maps()
+     * (via set_and_save()/restore_default()/get_custom()) before either of
+     * those ran would hit a read on null here, in the original
+     * serialize()-blob code too. Lazily defaults it instead of crashing --
+     * self-healing, matching the same null-tolerance save() already needs.
+     *
      * @param DerivativeParams $params
      */
     public static function apply_global($params): void
     {
+        self::$watermark ??= new WatermarkParams();
+
         $params->use_watermark = self::$watermark->file !== '' &&
             (self::$watermark->min_size[0] <= $params->sizing->ideal_size[0]
             or self::$watermark->min_size[1] <= $params->sizing->ideal_size[1]);

@@ -1,0 +1,73 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Tests\Integration;
+
+use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
+use Piwigo\Auth\UserFailedLoginEntity;
+use Piwigo\Command\MaintenancePurgeFailedLoginsCommand;
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\Tables;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Tester\CommandTester;
+
+final class MaintenancePurgeFailedLoginsCommandTest extends IntegrationTestCase
+{
+    private static bool $fixtureReady = false;
+
+    #[\Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->setUpConnectionFromEnv();
+
+        if (! self::$fixtureReady) {
+            $this->resetDatabase();
+            $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
+            self::$fixtureReady = true;
+        }
+
+        CurrentConfig::reset();
+        ConfigLoader::applyDefaults();
+        ConfigLoader::applyEnvOverrides();
+    }
+
+    public function test_purges_old_failed_logins_and_stale_integrity_ignores_but_keeps_recent_ones(): void
+    {
+        $conn = DbConnection::build();
+        $em = EntityManagerFactory::build($conn);
+        $failedLoginRepo = $em->getRepository(UserFailedLoginEntity::class);
+        $ignoredAnomalyRepo = $em->getRepository(IntegrityIgnoredAnomalyEntity::class);
+
+        $failedLoginRepo->recordFailure(1, '203.0.113.10', '2000-01-01 00:00:00');
+        $failedLoginRepo->recordFailure(1, '203.0.113.10', date('Y-m-d H:i:s'));
+
+        $ignoredAnomalyRepo->syncForVersion('16.0.0', ['old-anomaly'], '2000-01-01 00:00:00');
+        $ignoredAnomalyRepo->syncForVersion('99.0.0', ['recent-anomaly'], date('Y-m-d H:i:s'));
+
+        try {
+            $command = new MaintenancePurgeFailedLoginsCommand($failedLoginRepo, $ignoredAnomalyRepo);
+            $tester = new CommandTester($command);
+
+            $exitCode = $tester->execute([]);
+
+            self::assertSame(Command::SUCCESS, $exitCode);
+
+            $remainingFailedLogins = $conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
+            self::assertSame(1, is_numeric($remainingFailedLogins) ? (int) $remainingFailedLogins : -1);
+
+            $remainingOld = $conn->fetchOne("SELECT COUNT(*) FROM " . Tables::integrityIgnoredAnomalies() . " WHERE anomaly_id = 'old-anomaly'");
+            self::assertSame(0, is_numeric($remainingOld) ? (int) $remainingOld : -1);
+
+            $remainingRecent = $conn->fetchOne("SELECT COUNT(*) FROM " . Tables::integrityIgnoredAnomalies() . " WHERE anomaly_id = 'recent-anomaly'");
+            self::assertSame(1, is_numeric($remainingRecent) ? (int) $remainingRecent : -1);
+        } finally {
+            $conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
+            $conn->executeStatement("DELETE FROM " . Tables::integrityIgnoredAnomalies() . " WHERE anomaly_id IN ('old-anomaly', 'recent-anomaly')");
+        }
+    }
+}

@@ -1713,6 +1713,57 @@ final class CurrentConfig
         self::$logLevel = $value;
     }
 
+    // === login_lockout_duration_minutes ===
+    /**
+     * Minutes a username/IP stays locked out after too many failed logins.
+     */
+    private static int $loginLockoutDurationMinutes = 15;
+
+    public static function loginLockoutDurationMinutes(): int
+    {
+        return self::$loginLockoutDurationMinutes;
+    }
+
+    public static function setLoginLockoutDurationMinutes(int $value): void
+    {
+        self::$loginLockoutDurationMinutes = $value;
+    }
+
+    // === login_lockout_max_attempts ===
+    /**
+     * Failed logins allowed (per username, and separately per IP) within
+     * the lockout window before AuthService::pwgLogin() starts rejecting
+     * outright.
+     */
+    private static int $loginLockoutMaxAttempts = 5;
+
+    public static function loginLockoutMaxAttempts(): int
+    {
+        return self::$loginLockoutMaxAttempts;
+    }
+
+    public static function setLoginLockoutMaxAttempts(int $value): void
+    {
+        self::$loginLockoutMaxAttempts = $value;
+    }
+
+    // === login_lockout_window_minutes ===
+    /**
+     * Rolling window, in minutes, over which failed logins are counted
+     * towards the lockout threshold.
+     */
+    private static int $loginLockoutWindowMinutes = 15;
+
+    public static function loginLockoutWindowMinutes(): int
+    {
+        return self::$loginLockoutWindowMinutes;
+    }
+
+    public static function setLoginLockoutWindowMinutes(int $value): void
+    {
+        self::$loginLockoutWindowMinutes = $value;
+    }
+
     // === lounge_activate_threshold ===
     /**
      * Number of photos in the lounge that triggers automatic album creation.
@@ -4181,34 +4232,6 @@ final class CurrentConfig
         self::$blkMenubar = $value;
     }
 
-    // === c13y_ignore ===
-    /**
-     * {version, list} of integrity-check anomalies the admin has
-     * acknowledged/ignored (Admin/Integrity CheckIntegrity.php). Typed
-     * ?array (not ?string) so ConfigService::hydrate()/encode() handle the
-     * serialize()/unserialize() round-trip -- was raw ?string until
-     * gap-closure Stage 1a-bis item 1 found CheckIntegrity.php doing that
-     * conversion by hand at both call sites.
-     * @var array<mixed>|null
-     */
-    private static ?array $c13yIgnore = null;
-
-    /**
-     * @return array<mixed>|null
-     */
-    public static function c13yIgnore(): ?array
-    {
-        return self::$c13yIgnore;
-    }
-
-    /**
-     * @param array<mixed>|null $value
-     */
-    public static function setC13yIgnore(?array $value): void
-    {
-        self::$c13yIgnore = $value;
-    }
-
     // === cache_sizes ===
     /**
      * Serialized [name, value] rows of cache-directory sizes computed by the
@@ -4351,48 +4374,6 @@ final class CurrentConfig
                 : $defaultEntry;
         }
         self::$defaultFiltersViews = $result;
-    }
-
-    // === derivatives ===
-    /**
-     * Serialized ImageStdParams derivative-size definitions saved by the photo
-     * sizes admin page. Absent on a fresh install until the admin saves the
-     * sizes form once.
-     */
-    private static ?string $derivatives = null;
-
-    public static function derivatives(): ?string
-    {
-        return self::$derivatives;
-    }
-
-    public static function setDerivatives(?string $value): void
-    {
-        self::$derivatives = $value;
-    }
-
-    // === disabled_derivatives ===
-    /**
-     * Serialized list of derivative type keys the admin has disabled from
-     * generation via the photo sizes admin page.
-     * @var array<mixed>|string
-     */
-    private static array|string $disabledDerivatives = [];
-
-    /**
-     * @return array<mixed>|string
-     */
-    public static function disabledDerivatives(): array|string
-    {
-        return self::$disabledDerivatives;
-    }
-
-    /**
-     * @param array<mixed>|string $value
-     */
-    public static function setDisabledDerivatives(array|string $value): void
-    {
-        self::$disabledDerivatives = $value;
     }
 
     // === empty_lounge_running ===
@@ -5056,43 +5037,6 @@ final class CurrentConfig
             $result['notified_on'] = $value['notified_on'];
         }
         self::$updateNotifyLastNotification = $result;
-    }
-
-    // === updates_ignored ===
-    /**
-     * @var array{plugins: list<string>, themes: list<string>, languages: list<string>}
-     */
-    private const array DEFAULT_UPDATES_IGNORED = [
-        'plugins' => [],
-        'themes' => [],
-        'languages' => [],
-    ];
-
-    /**
-     * Serialized {plugins, themes, languages} lists of extension IDs the
-     * admin has dismissed from update notifications.
-     * @var array{plugins: list<string>, themes: list<string>, languages: list<string>}
-     */
-    private static array $updatesIgnored = self::DEFAULT_UPDATES_IGNORED;
-
-    /**
-     * @return array{plugins: list<string>, themes: list<string>, languages: list<string>}
-     */
-    public static function updatesIgnored(): array
-    {
-        return self::$updatesIgnored;
-    }
-
-    /**
-     * @param array<mixed> $value
-     */
-    public static function setUpdatesIgnored(array $value): void
-    {
-        self::$updatesIgnored = [
-            'plugins' => is_array($value['plugins'] ?? null) ? array_values(array_filter($value['plugins'], is_string(...))) : [],
-            'themes' => is_array($value['themes'] ?? null) ? array_values(array_filter($value['themes'], is_string(...))) : [],
-            'languages' => is_array($value['languages'] ?? null) ? array_values(array_filter($value['languages'], is_string(...))) : [],
-        ];
     }
 
     // === use_exif_mapping ===

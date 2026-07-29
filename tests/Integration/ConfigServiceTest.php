@@ -232,40 +232,6 @@ final class ConfigServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_confUpdateParam_leaves_disabled_derivatives_as_a_serialize_blob(): void
-    {
-        // ConfigService::OBJECT_SERIALIZED_PARAMS: this key holds real
-        // DerivativeParams objects reconstructed via unserialize()'s own
-        // object-identity-preserving behavior -- json_encode() would
-        // silently lose their class identity.
-        $params = ['a', 'b', 'c'];
-
-        $this->service->confUpdateParam('disabled_derivatives', $params);
-
-        $repo = $this->buildConfigRepository();
-        $entry = $repo->find('disabled_derivatives');
-        self::assertNotNull($entry);
-        self::assertSame(serialize($params), $entry->value);
-
-        $repo->deleteByParam('disabled_derivatives');
-    }
-
-    public function test_load_conf_from_db_hydrates_disabled_derivatives_as_the_raw_serialize_blob(): void
-    {
-        $params = ['a', 'b', 'c'];
-
-        try {
-            $this->service->confUpdateParam('disabled_derivatives', $params);
-            $this->service->loadConfFromDb('disabled_derivatives');
-
-            // Deliberately still the raw blob, not a decoded array -- every
-            // real reader (ImageStdParams) unserialize()s it itself.
-            self::assertSame(serialize($params), CurrentConfig::disabledDerivatives());
-        } finally {
-            $this->service->confDeleteParam('disabled_derivatives');
-        }
-    }
-
     public function test_pwgIsDbconfWriteable_returns_true_against_a_real_writable_db(): void
     {
         self::assertTrue($this->service->pwgIsDbconfWriteable());

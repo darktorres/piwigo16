@@ -68,7 +68,6 @@ final readonly class ConfigService
         'batch_manager_images_per_page_unit' => 'batchManagerImagesPerPageUnit',
         'blk_menubar' => 'blkMenubar',
         'browser_language' => 'browserLanguage',
-        'c13y_ignore' => 'c13yIgnore',
         'cache.backend' => 'cacheBackend',
         'cache.default_ttl' => 'cacheDefaultTtl',
         'cache.namespace' => 'cacheNamespace',
@@ -104,10 +103,8 @@ final readonly class ConfigService
         'default_user_id' => 'defaultUserId',
         'derivative_default_size' => 'derivativeDefaultSize',
         'derivative_url_style' => 'derivativeUrlStyle',
-        'derivatives' => 'derivatives',
         'derivatives_strip_metadata_threshold' => 'derivativesStripMetadataThreshold',
         'die_on_sql_error' => 'dieOnSqlError',
-        'disabled_derivatives' => 'disabledDerivatives',
         'display_fromto' => 'displayFromto',
         'double_password_type_in_admin' => 'doublePasswordTypeInAdmin',
         'email_admin_on_comment' => 'emailAdminOnComment',
@@ -167,6 +164,9 @@ final readonly class ConfigService
         'log_archive_days' => 'logArchiveDays',
         'log_dir' => 'logDir',
         'log_level' => 'logLevel',
+        'login_lockout_duration_minutes' => 'loginLockoutDurationMinutes',
+        'login_lockout_max_attempts' => 'loginLockoutMaxAttempts',
+        'login_lockout_window_minutes' => 'loginLockoutWindowMinutes',
         'lounge_activate_threshold' => 'loungeActivateThreshold',
         'lounge_active' => 'loungeActive',
         'lounge_max_duration' => 'loungeMaxDuration',
@@ -312,7 +312,6 @@ final readonly class ConfigService
         'update_notify_last_check' => 'updateNotifyLastCheck',
         'update_notify_last_notification' => 'updateNotifyLastNotification',
         'update_notify_reminder_period' => 'updateNotifyReminderPeriod',
-        'updates_ignored' => 'updatesIgnored',
         'upload_detect_duplicate' => 'uploadDetectDuplicate',
         'upload_dir' => 'uploadDir',
         'upload_form_all_types' => 'uploadFormAllTypes',
@@ -341,23 +340,6 @@ final readonly class ConfigService
      * namespace with no other consumer, so one well-known key is enough.
      */
     private const string CACHE_ITEM_KEY = 'all_rows';
-
-    /**
-     * Both keys hold real PHP objects (DerivativeParams/WatermarkParams,
-     * reconstructed via unserialize()'s own object-identity-preserving
-     * behavior -- DerivativeParams even declares its own __serialize()
-     * hook specifically for this), not plain scalar/array data --
-     * json_encode()/json_decode() would silently lose their class
-     * identity, turning every element into a plain array/stdClass.
-     * Piwigo\Image\ImageStdParams is the sole real reader/writer of both
-     * (its own unserialize()+instanceof narrowing already exists there),
-     * so encode()/hydrate() below pass the raw serialize() blob straight
-     * through unchanged for these two, same as every real consumer
-     * already expects.
-     *
-     * @var list<string>
-     */
-    private const array OBJECT_SERIALIZED_PARAMS = ['derivatives', 'disabled_derivatives'];
 
     public function __construct(
         private ConfigRepository $repo,
@@ -561,12 +543,6 @@ final readonly class ConfigService
             return;
         }
 
-        if (in_array($param, self::OBJECT_SERIALIZED_PARAMS, true)) {
-            $setter->invoke(null, $raw);
-
-            return;
-        }
-
         $decoded = json_decode($raw, true);
 
         $value = match ($paramTypeName) {
@@ -594,10 +570,6 @@ final readonly class ConfigService
     {
         if ($value === null) {
             return null;
-        }
-
-        if (in_array($param, self::OBJECT_SERIALIZED_PARAMS, true)) {
-            return is_string($value) ? $value : serialize($value);
         }
 
         $encoded = json_encode($value);

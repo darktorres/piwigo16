@@ -49,20 +49,19 @@ enum ExtensionType: string
     }
 
     /**
-     * This type's key in CurrentConfig::updatesIgnored()'s
-     * array{plugins: list<string>, themes: list<string>, languages: list<string>}
-     * shape -- plural, unlike $this->value (singular). Real bug found via
-     * PHPStan: ExtensionUpdateChecker::checkExtensions() used to index that
-     * array with $type->value directly, silently missing every read/write
-     * (the ignore-list feature never actually excluded anything, and every
-     * run persisted stray singular-keyed junk alongside the real data).
+     * The plural form used by the WS API's own `pwg.extensions.ignoreUpdate`
+     * wire parameter (and, historically, the retired `updates_ignored`
+     * config blob) -- plural, unlike $this->value (singular). Null for an
+     * unrecognized string, so callers can reject an invalid `type` param
+     * the same way they already reject any other malformed input.
      */
-    public function updatesIgnoredKey(): string
+    public static function fromPluralWsParam(string $value): ?self
     {
-        return match ($this) {
-            self::Plugin => 'plugins',
-            self::Theme => 'themes',
-            self::Language => 'languages',
+        return match ($value) {
+            'plugins' => self::Plugin,
+            'themes' => self::Theme,
+            'languages' => self::Language,
+            default => null,
         };
     }
 

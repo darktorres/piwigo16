@@ -796,6 +796,181 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Captures every row of `derivative_settings` (0 or 1 row) and
+     * `derivative_size` (one row per named size) -- the derivative-sizing
+     * equivalent of snapshotConfig(), now that ImageStdParams persists to
+     * these two real tables instead of the former `derivatives`/
+     * `disabled_derivatives` config blobs. Same "shared, global state
+     * across the whole Browser suite run" rationale as snapshotConfig()'s
+     * own docblock.
+     *
+     * @return array{settings: ?array<string, mixed>, sizes: list<array<string, mixed>>}
+     */
+    public static function snapshotDerivativeConfig(): array
+    {
+        $db = new \mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $prefix = getenv('PIWIGO_DB_PREFIX');
+        $prefix = $prefix !== false ? $prefix : 'piwigo_';
+
+        $settings = null;
+        $result = $db->query(sprintf('SELECT * FROM %sderivative_settings', $prefix));
+        if ($result instanceof \mysqli_result) {
+            $row = $result->fetch_assoc();
+            if (is_array($row)) {
+                $settings = $row;
+            }
+        }
+
+        $sizes = [];
+        $result = $db->query(sprintf('SELECT * FROM %sderivative_size', $prefix));
+        if ($result instanceof \mysqli_result) {
+            while (is_array($row = $result->fetch_assoc())) {
+                $sizes[] = $row;
+            }
+        }
+
+        $db->close();
+
+        return ['settings' => $settings, 'sizes' => $sizes];
+    }
+
+    /**
+     * Counterpart to snapshotDerivativeConfig(): replaces every current row
+     * in both tables with exactly what was snapshotted (delete-then-insert,
+     * not an upsert -- a test may have added/removed whole size rows, not
+     * just edited existing ones).
+     *
+     * @param array{settings: ?array<string, mixed>, sizes: list<array<string, mixed>>} $snapshot
+     */
+    public static function restoreDerivativeConfig(array $snapshot): void
+    {
+        $db = new \mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $prefix = getenv('PIWIGO_DB_PREFIX');
+        $prefix = $prefix !== false ? $prefix : 'piwigo_';
+
+        $db->query(sprintf('DELETE FROM %sderivative_settings', $prefix));
+        if ($snapshot['settings'] !== null) {
+            self::insertRow($db, $prefix . 'derivative_settings', $snapshot['settings']);
+        }
+
+        $db->query(sprintf('DELETE FROM %sderivative_size', $prefix));
+        foreach ($snapshot['sizes'] as $row) {
+            self::insertRow($db, $prefix . 'derivative_size', $row);
+        }
+
+        $db->close();
+    }
+
+    /**
+     * Upserts the single `derivative_settings` row (id=1 by convention,
+     * see DerivativeSettingsEntity) -- for seeding a specific
+     * quality/watermark_json/custom_json state a test needs before driving
+     * the real admin form, the derivative-sizing equivalent of
+     * setConfigValue().
+     *
+     * @param array<string, mixed> $row must not include 'id' -- always
+     *   written as DerivativeSettingsEntity::SINGLETON_ID (1)
+     */
+    public static function setDerivativeSettingsRow(array $row): void
+    {
+        $db = new \mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $prefix = getenv('PIWIGO_DB_PREFIX');
+        $prefix = $prefix !== false ? $prefix : 'piwigo_';
+
+        $db->query(sprintf('DELETE FROM %sderivative_settings', $prefix));
+        self::insertRow($db, $prefix . 'derivative_settings', ['id' => 1] + $row);
+        $db->close();
+    }
+
+    /**
+     * Replaces every currently-*enabled* `derivative_size` row with exactly
+     * the given set (upsert given rows, delete any other enabled row not
+     * in the set) -- mirrors DerivativeSizeRepository::syncEnabled()'s own
+     * partitioned-delete semantics (never touches disabled rows), the
+     * derivative-sizing equivalent of setConfigValue() for the former
+     * `derivatives` config key specifically (never `disabled_derivatives`
+     * -- same scope as the original ctSetDecodedDerivatives()).
+     *
+     * @param list<array<string, mixed>> $rows every row must have enabled=1
+     */
+    public static function syncEnabledDerivativeSizes(array $rows): void
+    {
+        $db = new \mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $prefix = getenv('PIWIGO_DB_PREFIX');
+        $prefix = $prefix !== false ? $prefix : 'piwigo_';
+
+        $names = array_map(static function (array $row) use ($db, $prefix): string {
+            $rowName = $row['name'] ?? null;
+            $name = is_string($rowName) ? $rowName : '';
+            $db->query(sprintf(
+                'DELETE FROM %sderivative_size WHERE name = \'%s\'',
+                $prefix,
+                $db->real_escape_string($name)
+            ));
+            self::insertRow($db, $prefix . 'derivative_size', $row);
+
+            return $name;
+        }, $rows);
+
+        $inClause = $names === []
+            ? "'\\0'" // never matches a real name -- keeps the DELETE valid SQL when $rows is empty
+            : implode(', ', array_map(static fn (string $n): string => "'" . $db->real_escape_string($n) . "'", $names));
+
+        $db->query(sprintf(
+            'DELETE FROM %sderivative_size WHERE enabled = 1 AND name NOT IN (%s)',
+            $prefix,
+            $inClause
+        ));
+
+        $db->close();
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private static function insertRow(\mysqli $db, string $table, array $row): void
+    {
+        $columns = array_keys($row);
+        $values = array_map(static function (mixed $value) use ($db): string {
+            if ($value === null) {
+                return 'NULL';
+            }
+            if (! is_scalar($value)) {
+                throw new \InvalidArgumentException('insertRow() only accepts scalar column values, got ' . get_debug_type($value));
+            }
+
+            return "'" . $db->real_escape_string((string) $value) . "'";
+        }, array_values($row));
+
+        $db->query(sprintf(
+            'INSERT INTO %s (%s) VALUES (%s)',
+            $table,
+            implode(', ', array_map(static fn (string $c): string => '`' . $c . '`', $columns)),
+            implode(', ', $values)
+        ));
+    }
+
+    /**
      * Flips a category's status and clears the effective-permission cache
      * pools accordingly -- the same 2-step real permission recomputation a
      * real "make this album private" admin action performs (via

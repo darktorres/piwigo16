@@ -698,8 +698,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                     // derivatives = multiple size
                     $enabled = ImageStdParams::get_defined_type_map();
-                    $disabled_unserialized = \Piwigo\Core\ArrayHelper::safeUnserialize(ImageStdParams::get_disabled_type_map());
-                    $disabled = is_array($disabled_unserialized) ? $disabled_unserialized : [];
+                    $disabled = ImageStdParams::get_disabled_type_map();
 
                     $tpl_vars = [];
                     foreach (ImageStdParams::get_all_types() as $type) {
@@ -1097,20 +1096,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             ImageStdParams::$quality = $resize_quality;
 
             $enabled = ImageStdParams::get_defined_type_map();
-            $disabled_raw = \Piwigo\Core\ArrayHelper::safeUnserialize(ImageStdParams::get_disabled_type_map());
-            // ImageStdParams persists this map as serialize()d DerivativeParams[]
-            // (see ImageStdParams::save_disabled()); unserialize() is only typed
-            // mixed by PHP itself, so filter out anything that isn't actually a
-            // DerivativeParams instance rather than trusting the blob blindly.
-            /** @var array<string, DerivativeParams> $disabled */
-            $disabled = [];
-            if (is_array($disabled_raw)) {
-                foreach ($disabled_raw as $disabled_type => $disabled_params) {
-                    if (is_string($disabled_type) && $disabled_params instanceof DerivativeParams) {
-                        $disabled[$disabled_type] = $disabled_params;
-                    }
-                }
-            }
+            $disabled = ImageStdParams::get_disabled_type_map();
             $changed_types = [];
 
             foreach (ImageStdParams::get_all_types() as $type) {

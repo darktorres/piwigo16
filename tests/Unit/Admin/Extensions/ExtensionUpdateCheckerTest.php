@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
+use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateEntity;
+use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
-use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
-use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
@@ -42,10 +42,13 @@ use Piwigo\Url\UrlService;
 // checkUpdatedExtensions() never has a version to catch up to, and
 // getMergedExtensions()/getMissingExtensions() always see an empty
 // server-side data set -- real, exercised branches below, not vacuous
-// ones. checkExtensions() itself is not covered here at all: it
-// unconditionally ends with a real ConfigService::confUpdateParam() DB
-// write, which is exactly the class of method ConfigServiceTest's own
-// docblock defers to Integration instead of Unit.
+// ones. checkExtensions() itself is still not covered here at all: every
+// one of its own ExtensionIgnoredUpdateRepository reads/writes lives
+// inside the `if ($pending === null) { continue; }`-gated loop body, which
+// never runs in this environment for the same PEM-unreachable reason as
+// getPendingUpdates() above -- calling it here would only exercise the
+// trivial "$_SESSION reset, nothing else happens" no-op path, not the
+// actual repository interaction this migration added.
 //
 // ExtensionType::scanDirectory() for Plugin/Language both resolve
 // against CurrentPaths (like ExtensionScannerTest already relies on for
@@ -108,15 +111,21 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
 {
     // Same "lazy DBAL connection, never actually queried by the methods
     // under test here" reasoning as CoreUpdateServiceTest's own
-    // core_update_service() helper -- ConfigService is only needed to
-    // satisfy ExtensionUpdateChecker's constructor type, not exercised.
-    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
+    // core_update_service() helper -- the repository is only needed to
+    // satisfy ExtensionUpdateChecker's constructor type; none of
+    // getPendingUpdates()/checkUpdatedExtensions()/getMergedExtensions()/
+    // getMissingExtensions() (the methods under test here) ever touch it,
+    // only checkExtensions() does, and that method is still not covered
+    // here at all -- see this file's own docblock on why (real PEM
+    // network access, unavailable in this environment).
+    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ExtensionIgnoredUpdateEntity::class);
+    expect($repo)->toBeInstanceOf(ExtensionIgnoredUpdateRepository::class);
 
     return new ExtensionUpdateChecker(
         new ExtensionScanner(),
         new PemCatalog(new ZipExtractor()),
         new UrlService(new HtmlService()),
-        new ConfigService($repo),
+        $repo,
     );
 }
 

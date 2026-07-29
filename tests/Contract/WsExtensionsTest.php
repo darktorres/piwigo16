@@ -17,8 +17,9 @@ use Piwigo\Db\Tables;
  * (RequestBootstrap::pemUrl()/download.php, AppInfo::URL/download/
  * all_versions.php), which a test suite must not depend on. Every other
  * branch (guards, install/activate/deactivate/delete/uninstall on a
- * fake, filesystem-absent extension id, ignoreUpdate's config
- * read/write) is real, local, and side-effect-contained.
+ * fake, filesystem-absent extension id, ignoreUpdate's real
+ * extension_ignored_updates read/write) is real, local, and
+ * side-effect-contained.
  */
 final class WsExtensionsTest extends ContractTestCase
 {
@@ -39,11 +40,7 @@ final class WsExtensionsTest extends ContractTestCase
     protected function tearDown(): void
     {
         $this->setConfigBool('enable_extensions_install', true);
-        $this->conn->executeStatement(
-            "UPDATE " . Tables::config() . " SET value = ? WHERE param = 'updates_ignored'",
-            ['{"plugins":[],"themes":[],"languages":[]}']
-        );
-        \Piwigo\Cache\CachePools::config()->clear();
+        $this->conn->executeStatement('DELETE FROM ' . Tables::extensionIgnoredUpdates());
 
         if ($this->extraUserIdsToDelete !== []) {
             $this->loginAsAdmin();
@@ -422,24 +419,60 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
         self::assertTrue($response['result']);
 
-        $stored = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'updates_ignored'");
-        self::assertIsString($stored);
-        $decoded = json_decode($stored, true);
-        self::assertIsArray($decoded);
-        $plugins = $decoded['plugins'] ?? null;
-        self::assertIsArray($plugins);
-        self::assertContains($pluginId, $plugins);
+        // extension_type stores ExtensionType::value (singular: 'plugin'),
+        // not the plural wire-format 'plugins' the WS param itself uses --
+        // see ExtensionIgnoredUpdateEntity's own docblock.
+        $rows = $this->conn->fetchAllAssociative(
+            'SELECT extension_id FROM ' . Tables::extensionIgnoredUpdates() . " WHERE extension_type = 'plugin'"
+        );
+        self::assertCount(1, $rows);
+        self::assertSame($pluginId, $rows[0]['extension_id']);
+    }
+
+    public function test_ignoreUpdate_ignoring_the_same_extension_twice_does_not_error(): void
+    {
+        // Adversarially-motivated: extension_ignored_updates has a
+        // composite (extension_type, extension_id) PK -- a set-membership
+        // table, not an append-only log -- so re-ignoring an
+        // already-ignored extension (e.g. two admins clicking "ignore" in
+        // the same session, or checkExtensions() re-syncing an id that's
+        // still pending) must be a no-op, never a duplicate-key error.
+        $token = $this->getPwgToken();
+        $pluginId = 'ct_fake_plugin_' . uniqid();
+        $params = [
+            'type' => 'plugins',
+            'id' => $pluginId,
+            'pwg_token' => $token,
+        ];
+
+        $first = $this->callWs('pwg.extensions.ignoreUpdate', $params);
+        $second = $this->callWs('pwg.extensions.ignoreUpdate', $params);
+
+        self::assertSame('ok', $first['stat']);
+        self::assertSame('ok', $second['stat']);
+
+        $rows = $this->conn->fetchAllAssociative(
+            'SELECT extension_id FROM ' . Tables::extensionIgnoredUpdates() . " WHERE extension_type = 'plugin' AND extension_id = ?",
+            [$pluginId]
+        );
+        self::assertCount(1, $rows, 'ignoring the same extension twice must not create a duplicate row');
     }
 
     public function test_ignoreUpdate_reset_with_type_clears_only_that_type(): void
     {
         $token = $this->getPwgToken();
         $pluginId = 'ct_fake_plugin_' . uniqid();
-        $this->conn->executeStatement(
-            "UPDATE " . Tables::config() . " SET value = ? WHERE param = 'updates_ignored'",
-            [json_encode(['plugins' => [$pluginId], 'themes' => ['some_theme'], 'languages' => []])]
-        );
-        \Piwigo\Cache\CachePools::config()->clear();
+        $now = \Piwigo\Core\Env::now()->format('Y-m-d H:i:s');
+        $this->conn->insert(Tables::extensionIgnoredUpdates(), [
+            'extension_type' => 'plugin',
+            'extension_id' => $pluginId,
+            'ignored_at' => $now,
+        ]);
+        $this->conn->insert(Tables::extensionIgnoredUpdates(), [
+            'extension_type' => 'theme',
+            'extension_id' => 'some_theme',
+            'ignored_at' => $now,
+        ]);
 
         $response = $this->callWs('pwg.extensions.ignoreUpdate', [
             'type' => 'plugins',
@@ -449,22 +482,24 @@ final class WsExtensionsTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
 
-        $stored = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'updates_ignored'");
-        self::assertIsString($stored);
-        $decoded = json_decode($stored, true);
-        self::assertIsArray($decoded);
-        self::assertSame([], $decoded['plugins']);
-        self::assertSame(['some_theme'], $decoded['themes'], 'reset with a specific type must not touch other types');
+        $pluginRows = $this->conn->fetchAllAssociative(
+            'SELECT extension_id FROM ' . Tables::extensionIgnoredUpdates() . " WHERE extension_type = 'plugin'"
+        );
+        self::assertSame([], $pluginRows);
+
+        $themeRows = $this->conn->fetchAllAssociative(
+            'SELECT extension_id FROM ' . Tables::extensionIgnoredUpdates() . " WHERE extension_type = 'theme'"
+        );
+        self::assertSame(['some_theme'], array_column($themeRows, 'extension_id'), 'reset with a specific type must not touch other types');
     }
 
     public function test_ignoreUpdate_reset_without_type_clears_everything(): void
     {
         $token = $this->getPwgToken();
-        $this->conn->executeStatement(
-            "UPDATE " . Tables::config() . " SET value = ? WHERE param = 'updates_ignored'",
-            [json_encode(['plugins' => ['a'], 'themes' => ['b'], 'languages' => ['c']])]
-        );
-        \Piwigo\Cache\CachePools::config()->clear();
+        $now = \Piwigo\Core\Env::now()->format('Y-m-d H:i:s');
+        $this->conn->insert(Tables::extensionIgnoredUpdates(), ['extension_type' => 'plugin', 'extension_id' => 'a', 'ignored_at' => $now]);
+        $this->conn->insert(Tables::extensionIgnoredUpdates(), ['extension_type' => 'theme', 'extension_id' => 'b', 'ignored_at' => $now]);
+        $this->conn->insert(Tables::extensionIgnoredUpdates(), ['extension_type' => 'language', 'extension_id' => 'c', 'ignored_at' => $now]);
 
         $response = $this->callWs('pwg.extensions.ignoreUpdate', [
             'reset' => true,
@@ -473,9 +508,7 @@ final class WsExtensionsTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
 
-        $stored = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'updates_ignored'");
-        self::assertIsString($stored);
-        $decoded = json_decode($stored, true);
-        self::assertSame(['plugins' => [], 'themes' => [], 'languages' => []], $decoded);
+        $remaining = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::extensionIgnoredUpdates());
+        self::assertSame(0, is_numeric($remaining) ? (int) $remaining : -1);
     }
 }

@@ -79,11 +79,13 @@ final class InstallService
     public static function activateCoreThemes(): void
     {
         $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
+        $conn = DbConnection::build();
         $lifecycle = new ExtensionLifecycle(
-            new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())),
+            new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             new PemCatalog(new ZipExtractor()),
             $urlService,
             CurrentConfigService::get(),
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
         );
         $fs_themes = new ExtensionScanner()
             ->scan(ExtensionType::Theme, $urlService);

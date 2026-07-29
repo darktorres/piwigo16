@@ -9,6 +9,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Admin\Extensions\ExtensionRepository;
     use Piwigo\Admin\Extensions\ExtensionType;
     use Piwigo\Admin\Extensions\PemCatalog;
+    use Piwigo\Admin\Extensions\PluginMigrationEntity;
+    use Piwigo\Admin\Extensions\PluginMigrationRepository;
     use Piwigo\Admin\Extensions\ZipExtractor;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
@@ -39,6 +41,8 @@ namespace Piwigo\Tests\Integration {
 
         private ExtensionRepository $repo;
 
+        private PluginMigrationRepository $pluginMigrationRepo;
+
         private ExtensionLifecycle $lifecycle;
 
         private Connection $conn;
@@ -68,7 +72,10 @@ namespace Piwigo\Tests\Integration {
 
             $this->conn = DbConnection::build();
             $this->repo = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
-            $this->lifecycle = new ExtensionLifecycle($this->repo, new PemCatalog(new ZipExtractor()), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository()));
+            $pluginMigrationRepo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(PluginMigrationEntity::class);
+            self::assertInstanceOf(PluginMigrationRepository::class, $pluginMigrationRepo);
+            $this->pluginMigrationRepo = $pluginMigrationRepo;
+            $this->lifecycle = new ExtensionLifecycle($this->repo, new PemCatalog(new ZipExtractor()), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository()), $this->pluginMigrationRepo);
 
             CurrentConfig::setEnableExtensionsInstall(true);
             CurrentConfig::setPhpExtensionInUrls(false);
@@ -91,6 +98,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn->executeStatement('DELETE FROM ' . Tables::languages() . " WHERE id != 'en_UK'");
             $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET theme = 'default' WHERE user_id IN (1, 2)");
             $this->conn->executeStatement('DELETE FROM ' . Tables::activity());
+            $this->conn->executeStatement('DELETE FROM ' . Tables::pluginMigrations());
             Kernel::reset();
             parent::tearDown();
         }
@@ -122,6 +130,7 @@ namespace Piwigo\Tests\Integration {
             self::assertNotNull($row);
             self::assertSame('inactive', $row['state']);
             self::assertSame('1.0', $row['version']);
+            self::assertSame(['1.0'], $this->findMigrationVersions($id), 'a successful install must record a plugin_migrations row');
         }
 
         public function test_plugin_install_when_already_installed_is_a_noop(): void
@@ -205,6 +214,12 @@ namespace Piwigo\Tests\Integration {
 
         public function test_plugin_restore_uninstalls_then_reactivates(): void
         {
+            // Adversarially-motivated: 'restore' runs 'uninstall' (deletes
+            // the plugins row) then 'activate', which -- since dbRow is now
+            // null -- re-invokes 'install' at the SAME version. That's a
+            // real, expected re-insert into plugin_migrations' own
+            // composite (plugin_id, version) PK -- must upsert cleanly, not
+            // throw a duplicate-key error.
             $id = $this->pluginId();
             $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, ['version' => '1.0']);
 
@@ -214,6 +229,7 @@ namespace Piwigo\Tests\Integration {
             $row = $this->repo->find(ExtensionType::Plugin, $id);
             self::assertNotNull($row);
             self::assertSame('active', $row['state']);
+            self::assertSame(['1.0'], $this->findMigrationVersions($id), 'restoring at the same version must upsert the ledger row, not duplicate or fail');
         }
 
         public function test_plugin_delete_with_no_filesystem_entry_only_uninstalls(): void
@@ -437,6 +453,22 @@ namespace Piwigo\Tests\Integration {
         private function pluginId(): string
         {
             return 'p17-test-plugin-' . bin2hex(random_bytes(4));
+        }
+
+        /**
+         * @return list<string>
+         */
+        private function findMigrationVersions(string $pluginId): array
+        {
+            $rows = $this->conn->fetchAllAssociative(
+                'SELECT version FROM ' . Tables::pluginMigrations() . ' WHERE plugin_id = ?',
+                [$pluginId]
+            );
+
+            return array_map(
+                static fn (mixed $version): string => is_string($version) ? $version : '',
+                array_column($rows, 'version')
+            );
         }
 
         private function themeId(): string

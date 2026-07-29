@@ -3,23 +3,32 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Integrity\CheckIntegrity;
+use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
+use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 
-// check()/display() both need a real DI-bootstrapped CurrentConfigService/
-// PageState/Translator/Template plus the 'list_check_integrity' event
-// (registered only when a caller -- IntroSubController -- explicitly wires
-// C13yInternal::registerHandlers() first), so those two stay Browser/
-// Integration territory (already incidentally exercised by every real
-// admin-dashboard visit in IntroSubControllerTest.php). add_anomaly() is
-// this class's own pure data-structure logic -- no event/DB/template
-// dependency at all -- and is directly, deterministically testable here.
+// add_anomaly()/get_htlm_links_more_info() are CheckIntegrity's own pure
+// data-structure logic -- no event/template dependency at all -- but since
+// the derivative_settings/derivative_size-adjacent migration gave
+// CheckIntegrity a real constructor dependency (IntegrityIgnoredAnomalyRepository,
+// replacing the former c13y_ignore piwigo_config blob), constructing one at
+// all now needs a real EntityManager/DB connection, even though neither
+// method under test here ever touches it. Relocated from
+// tests/Unit/Admin/Integrity/CheckIntegrityTest.php for exactly that reason
+// -- check()/display() (tests/Integration/CheckIntegrityTest.php) already
+// established the DB-backed Integration precedent for this class.
 
-function check_integrity_new(): CheckIntegrity
+function checkIntegrityAddAnomalyNew(): CheckIntegrity
 {
-    return new CheckIntegrity();
+    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
+    expect($repo)->toBeInstanceOf(IntegrityIgnoredAnomalyRepository::class);
+
+    return new CheckIntegrity($repo);
 }
 
 test('add_anomaly records a new anomaly with is_callable computed from a real function name', function (): void {
-    $c13y = check_integrity_new();
+    $c13y = checkIntegrityAddAnomalyNew();
 
     $c13y->add_anomaly('Something is wrong', 'strlen', ['arg' => 'x'], 'fix it');
 
@@ -34,7 +43,7 @@ test('add_anomaly records a new anomaly with is_callable computed from a real fu
 });
 
 test('add_anomaly marks is_callable false for a non-existent function name', function (): void {
-    $c13y = check_integrity_new();
+    $c13y = checkIntegrityAddAnomalyNew();
 
     $c13y->add_anomaly('Bad correction fn', 'this_function_does_not_exist_anywhere');
 
@@ -42,7 +51,7 @@ test('add_anomaly marks is_callable false for a non-existent function name', fun
 });
 
 test('add_anomaly with no correction function is never callable and carries a null correction_fct', function (): void {
-    $c13y = check_integrity_new();
+    $c13y = checkIntegrityAddAnomalyNew();
 
     $c13y->add_anomaly('Plain anomaly, no fix available');
 
@@ -53,7 +62,7 @@ test('add_anomaly with no correction function is never callable and carries a nu
 });
 
 test('add_anomaly routes an already-ignored id into build_ignore_list instead of retrieve_list', function (): void {
-    $c13y = check_integrity_new();
+    $c13y = checkIntegrityAddAnomalyNew();
     $anomalyId = md5('Ignored anomaly' . '' . serialize(null) . '');
     $c13y->ignore_list = [$anomalyId];
 
@@ -64,7 +73,7 @@ test('add_anomaly routes an already-ignored id into build_ignore_list instead of
 });
 
 test('add_anomaly generates distinct ids for anomalies that differ only by correction_fct_args', function (): void {
-    $c13y = check_integrity_new();
+    $c13y = checkIntegrityAddAnomalyNew();
 
     $c13y->add_anomaly('Same message', 'strlen', ['a' => 1]);
     $c13y->add_anomaly('Same message', 'strlen', ['a' => 2]);
@@ -78,7 +87,7 @@ test('add_anomaly generates distinct ids for anomalies that differ only by corre
 // Lang::t()/Translator::get() self-initialize without any Lang::load() call
 // (untranslated gettext falls back to the literal English string).
 test('get_htlm_links_more_info formats a forum + wiki link pair from the fixed pwg URL map', function (): void {
-    $c13y = check_integrity_new();
+    $c13y = checkIntegrityAddAnomalyNew();
 
     $result = $c13y->get_htlm_links_more_info();
 

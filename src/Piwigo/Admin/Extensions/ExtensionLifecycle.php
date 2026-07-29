@@ -45,6 +45,13 @@ use Piwigo\Users\UserService;
  *   private per-type methods calling each other directly (not through the
  *   public entry point, so the delete-disabled guard below -- which only
  *   ever gates a top-level 'delete' call -- doesn't re-run pointlessly).
+ *
+ * A successful plugin 'install'/'update' also records a plugin_migrations
+ * row via $pluginMigrationRepo -- a minimal, auto-recorded history ledger
+ * (plugin_id, version, timestamp), not a real migration runner. Written
+ * via an upsert (see PluginMigrationRepository::record()) because
+ * 'restore' (uninstall then re-activate) can legitimately re-run 'install'
+ * at the same version the plugin was already at.
  */
 /**
  * `$fsEntry` throughout this class is `array<string, mixed>|null` even
@@ -66,6 +73,7 @@ final readonly class ExtensionLifecycle
         private PemCatalog $pemCatalog,
         private UrlServiceInterface $urlService,
         private ConfigService $configService,
+        private PluginMigrationRepository $pluginMigrationRepo,
     ) {}
 
     private static function userService(): UserService
@@ -138,6 +146,7 @@ final readonly class ExtensionLifecycle
 
                 if ($errors === []) {
                     $this->repo->insertPlugin($id, $fsVersion);
+                    $this->pluginMigrationRepo->record($id, $fsVersion, \Piwigo\Core\Env::now()->format('Y-m-d H:i:s'));
                 } else {
                     $activityDetails['result'] = 'error';
                 }
@@ -174,6 +183,7 @@ final readonly class ExtensionLifecycle
 
                     if ($newVersion !== 'auto') {
                         $this->repo->updateVersion(ExtensionType::Plugin, $id, $newVersion);
+                        $this->pluginMigrationRepo->record($id, $newVersion, \Piwigo\Core\Env::now()->format('Y-m-d H:i:s'));
                     }
                 } else {
                     $activityDetails['result'] = 'error';

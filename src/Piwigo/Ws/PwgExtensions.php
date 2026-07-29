@@ -116,11 +116,13 @@ final class PwgExtensions
         // src/Piwigo/) arch-test violation.
 
         $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
+        $conn = DbConnection::build();
         $lifecycle = new ExtensionLifecycle(
-            new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())),
+            new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             new PemCatalog(new ZipExtractor()),
             $urlService,
             CurrentConfigService::get(),
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
         );
         $fsEntry = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService)[$params['plugin']] ?? null;
@@ -162,11 +164,13 @@ final class PwgExtensions
         // this request.
 
         $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
+        $conn = DbConnection::build();
         $lifecycle = new ExtensionLifecycle(
-            new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())),
+            new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             new PemCatalog(new ZipExtractor()),
             $urlService,
             CurrentConfigService::get(),
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
         );
         $fsEntry = new ExtensionScanner()
             ->scan(ExtensionType::Theme, $urlService)[$params['theme']] ?? null;
@@ -225,9 +229,11 @@ final class PwgExtensions
 
         $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         $scanner = new ExtensionScanner();
-        $repo = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()));
+        $conn = DbConnection::build();
+        $repo = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
         $pemCatalog = new PemCatalog(new ZipExtractor());
-        $lifecycle = new ExtensionLifecycle($repo, $pemCatalog, $urlService, CurrentConfigService::get());
+        $pluginMigrationRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
+        $lifecycle = new ExtensionLifecycle($repo, $pemCatalog, $urlService, CurrentConfigService::get(), $pluginMigrationRepo);
 
         if ($type === ExtensionType::Plugin) {
             $dbPluginsById = $repo->findAll(ExtensionType::Plugin);
@@ -336,37 +342,31 @@ final class PwgExtensions
             return new PwgError(403, 'Invalid security token');
         }
 
-        $updates_ignored = \Piwigo\Config\CurrentConfig::updatesIgnored();
+        $updateChecker = \Piwigo\Bootstrap\AdminAccessor::extensionUpdateChecker();
+        $type = is_string($params['type']) ? ExtensionType::fromPluralWsParam($params['type']) : null;
 
         // Reset ignored extension
         if ($params['reset']) {
-            if (! in_array($params['type'], [null, ''], true) and isset($updates_ignored[$params['type']])) {
-                $updates_ignored[$params['type']] = [];
+            if ($type !== null) {
+                $updateChecker->resetIgnoredForType($type);
             } else {
-                $updates_ignored = [
-                    'plugins' => [],
-                    'themes' => [],
-                    'languages' => [],
-                ];
+                $updateChecker->resetAllIgnored();
             }
-            \Piwigo\Config\CurrentConfig::setUpdatesIgnored($updates_ignored);
 
-            \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('updates_ignored', $updates_ignored);
             unset($_SESSION['extensions_need_update']);
             return true;
         }
 
-        if (in_array($params['id'], [null, ''], true) or in_array($params['type'], [null, ''], true) or ! in_array($params['type'], ['plugins', 'themes', 'languages'], true)) {
+        if (in_array($params['id'], [null, ''], true) or $type === null) {
             return new PwgError(403, 'Invalid parameters');
         }
 
-        // Add or remove extension from ignore list
-        if (! in_array($params['id'], $updates_ignored[$params['type']], true)) {
-            $updates_ignored[$params['type']][] = $params['id'];
-        }
+        // Add extension to ignore list -- ignoreUpdate() is itself an
+        // idempotent upsert (see ExtensionIgnoredUpdateRepository::ignore()),
+        // so no existence check is needed before calling it here, unlike
+        // the former blob's own manual in_array() guard.
+        $updateChecker->ignoreUpdate($type, $params['id']);
 
-        \Piwigo\Config\CurrentConfig::setUpdatesIgnored($updates_ignored);
-        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('updates_ignored', $updates_ignored);
         unset($_SESSION['extensions_need_update']);
         return true;
     }

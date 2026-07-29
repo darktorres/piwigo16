@@ -31,6 +31,18 @@ use Piwigo\Session\SessionService;
  * the original (global \Piwigo\Config\CurrentConfig::secretKey(), never Piwigo\Config\Config)
  * -- preserved as-is, not the CurrentConfig::secretKey() bug found and fixed
  * elsewhere this phase (CsrfService/EphemeralKeyService).
+ *
+ * pwgLogin() also enforces a dual-scope (IP and username) lockout backed
+ * by UserFailedLoginRepository (user_failed_logins table) -- see that
+ * method's own comments for why the IP check runs before the username is
+ * even resolved, and why the username check running before
+ * password_verify() doesn't regress the constant-time anti-enumeration
+ * property below it. Scoped to username/password login only: autoLogin()
+ * and authKeyLogin() authenticate against high-entropy random tokens, a
+ * different threat model that doesn't call for the same lockout.
+ * generatePasswordLink() (password reset) never routes through
+ * pwgLogin()/tryLogUser()/logUser() at all, so it stays a working escape
+ * hatch for a legitimately locked-out user.
  */
 final readonly class AuthService
 {
@@ -40,6 +52,7 @@ final readonly class AuthService
         private HtmlRenderingInterface $htmlRenderer,
         private PasswordService $passwordService,
         private CookieService $cookieService,
+        private UserFailedLoginRepository $failedLoginRepo,
     ) {}
 
     /**
@@ -298,8 +311,40 @@ final readonly class AuthService
         // we force the session table to be clean
         SessionService::get()->sessionGc();
 
+        // see IpAddress's own docblock for why this is a plain -> (not
+        // ?->) before the ?? -- the null-coalescing already handles a null
+        // left-hand side safely.
+        $ip = \Piwigo\Common\ValueObject\IpAddress::fromRemoteAddr()->value ?? '';
+        $now = Env::now();
+        $nowFormatted = $now->format('Y-m-d H:i:s');
+        $windowStart = (clone $now)->modify('-' . \Piwigo\Config\CurrentConfig::loginLockoutWindowMinutes() . ' minutes')->format('Y-m-d H:i:s');
+        $maxAttempts = \Piwigo\Config\CurrentConfig::loginLockoutMaxAttempts();
+
+        // LOCKOUT (IP-scoped): checked before the username is even resolved
+        // below, so a fast reject here can never leak whether $username
+        // exists -- it doesn't depend on the lookup at all.
+        if ($ip !== '' && $this->failedLoginRepo->countRecentByIp($ip, $windowStart) >= $maxAttempts) {
+            $this->failedLoginRepo->recordFailure(null, $ip, $nowFormatted);
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('login_failure', stripslashes($username));
+            return false;
+        }
+
         // Find user by username or email (if it exists)
         $user_found = $this->findUserByUsernameOrEmail($username);
+        $userId = $this->resolveUserId($user_found);
+
+        // LOCKOUT (user-scoped): checked before password_verify() runs
+        // below. Only reachable once $maxAttempts real failed attempts
+        // already happened against this exact username -- by then the
+        // attacker already knows the account exists (they caused those
+        // failures), so fast-rejecting here doesn't regress the
+        // constant-time anti-enumeration property that the block below
+        // still provides for every not-yet-locked-out attempt.
+        if ($userId !== null && $this->failedLoginRepo->countRecentByUserId($userId, $windowStart) >= $maxAttempts) {
+            $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);
+            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('login_failure', stripslashes($username));
+            return false;
+        }
 
         // SECURITY: Constant-time authentication to prevent timing attacks
         //
@@ -327,6 +372,7 @@ final readonly class AuthService
             if ($user_found !== null && ! $password_verify) {
                 $this->activityLogger->record('user', $user_found->id, 'login_failure_wrong_password');
             }
+            $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);
             \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('login_failure', stripslashes($username));
             return false;
         }
@@ -362,6 +408,7 @@ final readonly class AuthService
         $authenticated = is_array($state) && (bool) ($state['authenticated'] ?? null);
 
         if (! $can_login) {
+            $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);
             $this->activityLogger->record('user', $user_found->id, is_string($reason) ? $reason : 'login_failure_before_log_user');
             \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('login_failure_before_log_user', stripslashes($username));
             return false;
@@ -376,6 +423,16 @@ final readonly class AuthService
         $this->clearFakeUserCache();
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('login_success', stripslashes($username));
         return true;
+    }
+
+    /**
+     * AuthUser::$id is a numeric string by convention (see the class's own
+     * docblock) -- narrows to a real int for UserFailedLoginRepository, or
+     * null when there's no resolved user to attribute the attempt to.
+     */
+    private function resolveUserId(?\Piwigo\Auth\Projection\AuthUser $user): ?int
+    {
+        return $user !== null && is_numeric($user->id) ? (int) $user->id : null;
     }
 
     /**

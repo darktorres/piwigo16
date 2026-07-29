@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Piwigo\Admin\Extensions\ExtensionLifecycle;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\PluginMigrationEntity;
+use Piwigo\Admin\Extensions\PluginMigrationRepository;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Admin\ThemesInstalledPageRenderer;
 use Piwigo\Config\ConfigEntry;
@@ -160,17 +162,19 @@ function fsThemeEntry(array $overrides = []): array
 /**
  * Same "lazy DBAL connection, never actually queried" reasoning as
  * ExtensionUpdateCheckerTest's own extensionUpdateChecker() helper --
- * ExtensionRepository/ConfigService only satisfy ExtensionLifecycle's
- * constructor type here, never exercised by missingParentTheme()/
- * getChildrenThemes().
+ * ExtensionRepository/ConfigService/PluginMigrationRepository only satisfy
+ * ExtensionLifecycle's constructor type here, never exercised by
+ * missingParentTheme()/getChildrenThemes().
  */
 function themesInstalledLifecycle(): ExtensionLifecycle
 {
     $conn = DbConnection::build();
     $repo = new ExtensionRepository(EntityManagerFactory::build($conn));
     $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
+    $pluginMigrationRepo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
+    expect($pluginMigrationRepo)->toBeInstanceOf(PluginMigrationRepository::class);
 
-    return new ExtensionLifecycle($repo, new PemCatalog(new ZipExtractor()), new UrlService(new HtmlService()), new ConfigService($configRepo));
+    return new ExtensionLifecycle($repo, new PemCatalog(new ZipExtractor()), new UrlService(new HtmlService()), new ConfigService($configRepo), $pluginMigrationRepo);
 }
 
 /**

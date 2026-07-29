@@ -6,6 +6,7 @@ use Piwigo\Command\BackupCreateCommand;
 use Piwigo\Command\BackupRestoreCommand;
 use Piwigo\Command\CacheClearCommand;
 use Piwigo\Command\MaintenanceOrphanTagsCommand;
+use Piwigo\Command\MaintenancePurgeFailedLoginsCommand;
 use Piwigo\Command\MaintenancePurgeHistoryCommand;
 use Piwigo\Command\MaintenancePurgeSessionsCommand;
 use Piwigo\Command\MaintenanceRepairDbCommand;
@@ -33,4 +34,5 @@ return [
     MaintenancePurgeSessionsCommand::class,
     MaintenanceOrphanTagsCommand::class,
     MaintenanceRepairDbCommand::class,
+    MaintenancePurgeFailedLoginsCommand::class,
 ];

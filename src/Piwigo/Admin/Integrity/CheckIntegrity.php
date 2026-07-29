@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Integrity;
 
 use Piwigo\Admin\AdminUiHelper;
-use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Lang\Translator;
@@ -20,13 +19,11 @@ use Piwigo\Lang\Translator;
 final class CheckIntegrity
 {
     /**
-     * Round-trips through CurrentConfig::c13yIgnore()'s persisted config
-     * value (see check() below) -- genuinely of unknown origin/shape if
-     * that config value were ever corrupted or hand-edited, even though
-     * this class itself only ever writes it as a list<string> of
-     * add_anomaly()-generated md5 ids (via update_conf() -> build_ignore_list).
+     * Now backed by a real typed column (see $repo) -- no more risk of an
+     * unknown/corrupted blob shape, always a real list<string> of
+     * add_anomaly()-generated md5 ids for the current AppInfo::VERSION.
      *
-     * @var array<int, mixed>
+     * @var list<string>
      */
     public $ignore_list;
 
@@ -53,8 +50,14 @@ final class CheckIntegrity
      */
     public $build_ignore_list;
 
-    public function __construct()
-    {
+    /**
+     * @param IntegrityIgnoredAnomalyRepository $repo persists per-(anomaly,
+     *   version) ignore rows -- replaces the former `c13y_ignore`
+     *   piwigo_config blob entirely
+     */
+    public function __construct(
+        private readonly IntegrityIgnoredAnomalyRepository $repo,
+    ) {
         $this->ignore_list = [];
         $this->retrieve_list = [];
         $this->build_ignore_list = [];
@@ -65,21 +68,11 @@ final class CheckIntegrity
      */
     public function check(): void
     {
-        // Ignore list
-        $conf_c13y_ignore = \Piwigo\Config\CurrentConfig::c13yIgnore() ?? false;
-        if (
-            is_array($conf_c13y_ignore) and
-            isset($conf_c13y_ignore['version']) and
-            is_string($conf_c13y_ignore['version']) and
-            ($conf_c13y_ignore['version'] === AppInfo::VERSION) and
-            is_array($conf_c13y_ignore['list'])
-        ) {
-            $ignore_list_changed = false;
-            $this->ignore_list = array_values($conf_c13y_ignore['list']);
-        } else {
-            $ignore_list_changed = true;
-            $this->ignore_list = [];
-        }
+        // Ignore list -- always the real, current-version ignore set now
+        // (no more all-or-nothing blob-version gate: a version bump simply
+        // means no rows exist yet for that version, same observable
+        // "everything comes back un-ignored" behavior as before).
+        $this->ignore_list = $this->repo->findIgnoredAnomalyIdsForVersion(AppInfo::VERSION);
 
         // Retrieve list
         $this->retrieve_list = [];
@@ -158,14 +151,16 @@ final class CheckIntegrity
             }
         }
 
-        $scalar_ignore_list = array_filter($this->ignore_list, is_scalar(...));
-        $scalar_build_ignore_list = array_filter($this->build_ignore_list, is_scalar(...));
-        $ignore_list_changed =
-          (
-              ($ignore_list_changed) or
-        (count(array_diff($scalar_ignore_list, $scalar_build_ignore_list)) > 0) or
-        (count(array_diff($scalar_build_ignore_list, $scalar_ignore_list)) > 0)
-          );
+        // Both sides are already real list<string> (repo-loaded/
+        // add_anomaly()-built respectively) -- no more untyped-blob
+        // filtering needed before diffing them. Parenthesized explicitly:
+        // `$x = a or b;` would assign only `a` (`=` binds tighter than
+        // `or`), silently discarding the `b` side -- a real, easy-to-miss
+        // precedence trap for exactly this "= ... or ..." shape.
+        $ignore_list_changed = (
+            array_diff($this->ignore_list, $this->build_ignore_list) !== []
+            or array_diff($this->build_ignore_list, $this->ignore_list) !== []
+        );
 
         if ($ignore_list_changed) {
             $this->update_conf($this->build_ignore_list);
@@ -286,12 +281,16 @@ final class CheckIntegrity
      *
      * @param list<string> $conf_ignore_list add_anomaly()-generated md5 ids
      */
+    /**
+     * @param list<string> $conf_ignore_list
+     */
     public function update_conf(array $conf_ignore_list = []): void
     {
-        $conf_c13y_ignore = [];
-        $conf_c13y_ignore['version'] = AppInfo::VERSION;
-        $conf_c13y_ignore['list'] = $conf_ignore_list;
-        CurrentConfigService::get()->confUpdateParam('c13y_ignore', $conf_c13y_ignore);
+        $this->repo->syncForVersion(
+            AppInfo::VERSION,
+            $conf_ignore_list,
+            \Piwigo\Core\Env::now()->format('Y-m-d H:i:s'),
+        );
     }
 
     /**

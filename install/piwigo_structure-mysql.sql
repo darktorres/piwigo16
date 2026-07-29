@@ -1,15 +1,6 @@
 -- Final v17 schema (InnoDB + utf8mb4, all FK constraints, all indexes).
 -- Hand-maintained -- there is no Doctrine Migrations layer between "what
 -- the schema should be" and what a fresh install creates.
---
--- piwigo_config.value stays `text`, not `JSON`, despite every other
--- former-TEXT/serialize() column in this file being retyped to JSON
--- during gap-closure Stage 1a-bis: two keys (`derivatives`/
--- `disabled_derivatives`, see ConfigService::OBJECT_SERIALIZED_PARAMS)
--- deliberately keep storing real PHP objects via serialize(), which is
--- not valid JSON -- MySQL's JSON column type rejects non-JSON content
--- outright (confirmed live: `ERROR 3140 Invalid JSON text`), so the
--- column has to stay a generic text type to hold both encodings.
 
 --
 -- Table structure for table `piwigo_activity`
@@ -99,7 +90,7 @@ CREATE TABLE `piwigo_comments` (
 DROP TABLE IF EXISTS `piwigo_config`;
 CREATE TABLE `piwigo_config` (
   `param` varchar(40) NOT NULL default '' COMMENT 'configuration key',
-  `value` text COMMENT 'JSON-encoded configuration value, except derivatives/disabled_derivatives which stay PHP serialize() output, see ConfigService::OBJECT_SERIALIZED_PARAMS',
+  `value` JSON DEFAULT NULL COMMENT 'JSON-encoded configuration value, see ConfigService::encode()/hydrate()',
   `comment` varchar(255) default NULL COMMENT 'human-readable description of the param, seeded for built-in settings by install/config.sql',
   PRIMARY KEY  (`param`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='configuration table';
@@ -516,7 +507,7 @@ CREATE TABLE `piwigo_derivative_settings` (
   `watermark_json` JSON NOT NULL COMMENT 'encoded watermark configuration',
   `custom_json` JSON NOT NULL COMMENT 'encoded custom derivative-generation parameters',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='global derivative-image generation settings, unused: not read or written by any repository or service in this codebase, live config is still the piwigo_config derivatives blob';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='global derivative-image generation settings, read and written by ImageStdParams via DerivativeSettingsRepository';
 
 DROP TABLE IF EXISTS `piwigo_derivative_size`;
 CREATE TABLE `piwigo_derivative_size` (
@@ -530,7 +521,7 @@ CREATE TABLE `piwigo_derivative_size` (
   `sharpen` decimal(5,4) NOT NULL DEFAULT 0 COMMENT 'sharpening amount from 0, none, to 1, max, see DerivativeParams::sharpen',
   `last_mod_time` int NOT NULL DEFAULT 0 COMMENT 'unix timestamp of the last parameter change, used to invalidate cached derivatives, see DerivativeParams::last_mod_time',
   PRIMARY KEY (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-named derivative size definitions, unused: not read or written by any repository or service in this codebase, live sizing config is still the piwigo_config derivatives blob';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-named derivative size definitions, read and written by ImageStdParams via DerivativeSizeRepository';
 
 DROP TABLE IF EXISTS `piwigo_extension_ignored_updates`;
 CREATE TABLE `piwigo_extension_ignored_updates` (
@@ -538,7 +529,7 @@ CREATE TABLE `piwigo_extension_ignored_updates` (
   `extension_id` varchar(64) NOT NULL COMMENT 'directory-name identifier of the extension whose update is being ignored',
   `ignored_at` DATETIME NOT NULL COMMENT 'when the update was dismissed',
   PRIMARY KEY (`extension_type`,`extension_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='extension updates an admin dismissed, unused: not read or written by any repository or service in this codebase';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='extension updates an admin dismissed, read and written by ExtensionUpdateChecker via ExtensionIgnoredUpdateRepository';
 
 DROP TABLE IF EXISTS `piwigo_integrity_ignored_anomalies`;
 CREATE TABLE `piwigo_integrity_ignored_anomalies` (
@@ -546,7 +537,7 @@ CREATE TABLE `piwigo_integrity_ignored_anomalies` (
   `piwigo_version` varchar(16) NOT NULL COMMENT 'Piwigo version the anomaly was ignored under',
   `ignored_at` DATETIME NOT NULL COMMENT 'when the anomaly was dismissed',
   PRIMARY KEY (`anomaly_id`,`piwigo_version`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='integrity-check anomalies an admin dismissed, unused: the live ignore list is still CurrentConfig::c13yIgnore(), a piwigo_config blob, not this table';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='integrity-check anomalies an admin dismissed, read and written by CheckIntegrity via IntegrityIgnoredAnomalyRepository';
 
 DROP TABLE IF EXISTS `piwigo_plugin_migrations`;
 CREATE TABLE `piwigo_plugin_migrations` (
@@ -554,7 +545,7 @@ CREATE TABLE `piwigo_plugin_migrations` (
   `version` varchar(191) NOT NULL COMMENT 'plugin-internal migration version identifier',
   `executed_at` DATETIME NOT NULL COMMENT 'when this plugin migration ran',
   PRIMARY KEY (`plugin_id`,`version`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-plugin versioned migration history, unused: not read or written by any repository or service in this codebase, no plugin migration runner exists yet';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-plugin install/update history, read and written by ExtensionLifecycle via PluginMigrationRepository, not a real migration runner';
 
 DROP TABLE IF EXISTS `piwigo_search_filter_view`;
 CREATE TABLE `piwigo_search_filter_view` (
@@ -573,7 +564,7 @@ CREATE TABLE `piwigo_user_failed_logins` (
   PRIMARY KEY (`id`),
   KEY `idx_user_failed_logins_user_time` (`user_id`, `attempted_at`),
   KEY `idx_user_failed_logins_ip_time` (`ip`, `attempted_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='failed login attempts, meant to back brute-force lockout, unused: not read or written by any repository or service in this codebase';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='failed login attempts, read and written by AuthService::pwgLogin() via UserFailedLoginRepository to back its dual-scope (username + IP) lockout';
 
 --
 -- SEC-57: append-only, hash-chained audit trail

@@ -209,6 +209,7 @@ final class UserBootstrapTest extends IntegrationTestCase
             new HtmlService(),
             new PasswordService(new PasswordRepository($this->conn)),
             new CookieService(),
+            EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
         )->pwgLogin(...));
 
         WsContext::mark();

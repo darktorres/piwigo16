@@ -544,12 +544,19 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
         );
 
         // fill languages table, only activate the current language
+        // Deliberately a fresh DbConnection::build(), not the outer $conn
+        // (still needed as $this->conn, unshadowed, by BatchWriter/
+        // PasswordRepository/userService() calls further down this same
+        // method) -- matches this call's own pre-existing "fresh
+        // connection" shape, just extended to the new repository too.
         $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
+        $languageActivationConn = DbConnection::build();
         new ExtensionLifecycle(
-            new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())),
+            new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($languageActivationConn)),
             new PemCatalog(new ZipExtractor()),
             $urlService,
             $configService,
+            \Piwigo\Db\EntityManagerFactory::build($languageActivationConn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
         )->performAction(ExtensionType::Language, 'activate', $this->language, $this->fsLanguages[$this->language] ?? null);
 
         // fill CurrentConfig::$data from the freshly-seeded config table
@@ -698,7 +705,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             // data; this mirrors that method's own two calls verbatim.
             \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
             \Piwigo\Users\CurrentUser::markRealUserResolved();
-            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService())
+            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class))
                 ->logUser($login_user_id, false);
             $_SESSION['connected_with'] = 'pwg_ui';
 

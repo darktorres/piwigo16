@@ -59,6 +59,7 @@ final class UserBootstrap
             new HtmlService(),
             new PasswordService(new PasswordRepository($conn)),
             new CookieService(),
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
         );
         $userService = new \Piwigo\Users\UserService(
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),

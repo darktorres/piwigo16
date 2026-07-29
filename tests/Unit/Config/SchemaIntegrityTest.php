@@ -128,10 +128,13 @@ test('every setter trivially assigns its own property, minus the documented allo
 // JSON typing). Both private statics are called directly via reflection --
 // pure functions, no DB needed for either. Skips: keys not in
 // KEY_TO_PROPERTY (property has no DB-backed key, e.g. computed/lazy
-// properties), ConfigService::OBJECT_SERIALIZED_PARAMS (serialize(), not
-// JSON, by design), union/object-typed setters (no single generic
-// round-trip contract), and a null default (encode()/hydrate() both take
-// a separate, already-covered branch for null).
+// properties), union/object-typed setters (no single generic round-trip
+// contract), and a null default (encode()/hydrate() both take a separate,
+// already-covered branch for null). ConfigService::OBJECT_SERIALIZED_PARAMS
+// (the former derivatives/disabled_derivatives serialize() exception) no
+// longer exists -- both keys retired in favor of the real
+// derivative_settings/derivative_size tables, so every config value is now
+// plain JSON, no skip-list needed for this reason anymore.
 test('every scalar/array-typed property survives a real encode()/hydrate() round trip', function (): void {
     $keyToProperty = new ReflectionClass(ConfigService::class)->getConstant('KEY_TO_PROPERTY');
     if (! is_array($keyToProperty)) {
@@ -139,11 +142,6 @@ test('every scalar/array-typed property survives a real encode()/hydrate() round
     }
     /** @var array<string, string> $keyToProperty */
     $propertyToKey = array_flip($keyToProperty);
-
-    $objectSerializedParams = new ReflectionClass(ConfigService::class)->getConstant('OBJECT_SERIALIZED_PARAMS');
-    if (! is_array($objectSerializedParams)) {
-        throw new RuntimeException('ConfigService::OBJECT_SERIALIZED_PARAMS is not an array.');
-    }
 
     $encode = new ReflectionMethod(ConfigService::class, 'encode');
     $hydrate = new ReflectionMethod(ConfigService::class, 'hydrate');
@@ -154,7 +152,7 @@ test('every scalar/array-typed property survives a real encode()/hydrate() round
         foreach (schemaIntegrityConfigProperties() as $property) {
             $name = $property->getName();
             $key = $propertyToKey[$name] ?? null;
-            if ($key === null || in_array($key, $objectSerializedParams, true)) {
+            if ($key === null) {
                 continue;
             }
 

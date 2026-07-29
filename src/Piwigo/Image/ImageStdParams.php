@@ -357,7 +357,26 @@ final class ImageStdParams
 
             $map[$entity->name] = $params;
         }
-        return $map;
+
+        // DerivativeSizeRepository::findAllEnabled()/findAllDisabled() have
+        // no ORDER BY (name is the PK, so rows come back alphabetically) --
+        // every admin-facing consumer of get_defined_type_map()/
+        // get_disabled_type_map() (e.g. MaintenanceActionsPageRenderer's
+        // "delete multiple size images" list) expects the same canonical
+        // square/thumb/.../4xlarge order the former blob-based array always
+        // preserved. Re-sort by self::$all_types instead of adding a
+        // MySQL-specific ORDER BY FIELD(...) to the repository.
+        $ordered = [];
+        foreach (self::$all_types as $type) {
+            if (isset($map[$type])) {
+                $ordered[$type] = $map[$type];
+            }
+        }
+        foreach ($map as $type => $params) {
+            $ordered[$type] ??= $params;
+        }
+
+        return $ordered;
     }
 
     private static function sizeEntityFromParams(string $name, bool $enabled, DerivativeParams $params): DerivativeSizeEntity

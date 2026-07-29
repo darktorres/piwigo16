@@ -60,6 +60,47 @@ final class ProfileController implements ControllerInterface
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
         }
 
+        // Load language if cookie is set from login/register/password pages.
+        // Real bug, found while adding coverage for this branch: this block
+        // used to run much later in this method, *after*
+        // assign_var_from_handle('PROFILE_CONTENT', 'profile_content')
+        // below -- Smarty's assign_var_from_handle() renders the referenced
+        // template immediately (not lazily deferred to the final page
+        // render), so profile_content.tpl was always rendered with
+        // whatever language was active BEFORE this switch, and the
+        // Lang::load() call had no effect on anything the response actually
+        // showed. Moved to run first, before $userdata/any template
+        // rendering, so the whole response (including $userdata's own
+        // 'language' field) consistently reflects the just-switched
+        // language.
+        $cookie_lang = $_COOKIE['lang'] ?? null;
+        if ($cookie_lang !== null and (! is_string($cookie_lang) or \Piwigo\Users\CurrentUser::get()->language !== $cookie_lang)) {
+            if (! is_string($cookie_lang)) {
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                    ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
+            }
+            if (! array_key_exists($cookie_lang, \Piwigo\Lang\LangService::getLanguages())) {
+                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                    ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
+            }
+
+            \Piwigo\Users\CurrentUser::updateLanguage($cookie_lang);
+            new BatchWriter(DbConnection::build())->singleUpdate(
+                Tables::userInfos(),
+                [
+                    'language' => $cookie_lang,
+                ],
+                [
+                    'user_id' => \Piwigo\Users\CurrentUser::get()->id->value,
+                ]
+            );
+            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+
+            Lang::load('common.lang', '', [
+                'language' => $cookie_lang,
+            ]);
+        }
+
         $userdata = \Piwigo\Users\CurrentUser::get()->toUserArray();
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_profile');
@@ -160,35 +201,6 @@ SELECT ' . implode(',', $fields) . '
 
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title);
-
-        // Load language if cookie is set from login/register/password pages
-        $cookie_lang = $_COOKIE['lang'] ?? null;
-        if ($cookie_lang !== null and (! is_string($cookie_lang) or \Piwigo\Users\CurrentUser::get()->language !== $cookie_lang)) {
-            if (! is_string($cookie_lang)) {
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
-                    ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
-            }
-            if (! array_key_exists($cookie_lang, \Piwigo\Lang\LangService::getLanguages())) {
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
-                    ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
-            }
-
-            \Piwigo\Users\CurrentUser::updateLanguage($cookie_lang);
-            new BatchWriter(DbConnection::build())->singleUpdate(
-                Tables::userInfos(),
-                [
-                    'language' => $cookie_lang,
-                ],
-                [
-                    'user_id' => \Piwigo\Users\CurrentUser::get()->id->value,
-                ]
-            );
-            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
-
-            Lang::load('common.lang', '', [
-                'language' => $cookie_lang,
-            ]);
-        }
 
         // Get list of languages
         $language_options = [];

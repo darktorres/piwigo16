@@ -243,13 +243,22 @@ test('pwgImageInfos reads real width/height/filesize from a generated image', fu
     expect($infos['filesize'])->toBeFloat();
 });
 
-test('pwgImageInfos throws when getimagesize() can\'t read the file', function (): void {
+test('pwgImageInfos returns null width/height when getimagesize() can\'t read the file, instead of throwing', function (): void {
+    // Real bug, fixed during the coverage-gap-closure pass (see
+    // tests/Integration/UploadServiceTest.php's own docblock): every real
+    // upload of a non-picture file allowed via
+    // CurrentConfig::uploadFormAllTypes() reaches this exact path, and
+    // piwigo_images.width/height are nullable columns precisely for it --
+    // this used to throw unconditionally, crashing every such upload.
     $path = upload_service_test_marker() . '/not-an-image.png';
     file_put_contents($path, 'definitely not a real PNG');
 
     $service = new UploadService();
+    $infos = $service->pwgImageInfos($path);
 
-    expect(fn () => $service->pwgImageInfos($path))->toThrow(\Exception::class);
+    expect($infos['width'])->toBeNull();
+    expect($infos['height'])->toBeNull();
+    expect($infos['filesize'])->toBeFloat();
 });
 
 function upload_service_need_resize(string $path, int $maxWidth, int $maxHeight): bool

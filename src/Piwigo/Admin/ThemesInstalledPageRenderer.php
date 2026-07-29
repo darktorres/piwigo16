@@ -113,70 +113,7 @@ final class ThemesInstalledPageRenderer
                 continue;
             }
 
-            $tpl_theme = [
-                'ID' => $theme_id,
-                'NAME' => $fs_theme['name'],
-                'VISIT_URL' => $fs_theme['uri'],
-                'VERSION' => $fs_theme['version'],
-                'DESC' => $fs_theme['description'],
-                'AUTHOR' => $fs_theme['author'],
-                'AUTHOR_URL' => $fs_theme['author uri'] ?? null,
-                'PARENT' => $fs_theme['parent'] ?? null,
-                'SCREENSHOT' => $fs_theme['screenshot'],
-                'IS_MOBILE' => $fs_theme['mobile'],
-                'ADMIN_URI' => $fs_theme['admin_uri'] ?? null,
-            ];
-
-            if (in_array($theme_id, $db_theme_ids, true)) {
-                $tpl_theme['STATE'] = 'active';
-                $tpl_theme['IS_DEFAULT'] = ($theme_id === $default_theme);
-                $tpl_theme['DEACTIVABLE'] = true;
-
-                if (count($db_theme_ids) <= 1) {
-                    $tpl_theme['DEACTIVABLE'] = false;
-                    $tpl_theme['DEACTIVATE_TOOLTIP'] = Lang::t('Impossible to deactivate this theme, you need at least one theme.');
-                }
-                if ($tpl_theme['IS_DEFAULT']) {
-                    $tpl_theme['DEACTIVABLE'] = false;
-                    $tpl_theme['DEACTIVATE_TOOLTIP'] = Lang::t('Impossible to deactivate the default theme.');
-                }
-            } else {
-                $tpl_theme['STATE'] = 'inactive';
-
-                // is the theme "activable" ?
-                if (isset($fs_theme['activable']) and ! (bool) $fs_theme['activable']) {
-                    $tpl_theme['ACTIVABLE'] = false;
-                    $tpl_theme['ACTIVABLE_TOOLTIP'] = Lang::t('This theme was not designed to be directly activated');
-                } else {
-                    $tpl_theme['ACTIVABLE'] = true;
-                }
-
-                $missing_parent = $extension_lifecycle->missingParentTheme($theme_id, $fs_theme);
-                if (isset($missing_parent)) {
-                    $tpl_theme['ACTIVABLE'] = false;
-
-                    $tpl_theme['ACTIVABLE_TOOLTIP'] = Lang::t(
-                        'Impossible to activate this theme, the parent theme is missing: %s',
-                        $missing_parent
-                    );
-                }
-
-                // is the theme "deletable" ?
-                $children = $extension_lifecycle->getChildrenThemes($theme_id);
-
-                $tpl_theme['DELETABLE'] = true;
-
-                if (count($children) > 0) {
-                    $tpl_theme['DELETABLE'] = false;
-
-                    $tpl_theme['DELETE_TOOLTIP'] = Lang::t(
-                        'Impossible to delete this theme. Other themes depends on it: %s',
-                        implode(', ', array_filter($children, is_string(...)))
-                    );
-                }
-            }
-
-            $tpl_themes[] = $tpl_theme;
+            $tpl_themes[] = $this->buildTplTheme($theme_id, $fs_theme, $db_theme_ids, $default_theme, $extension_lifecycle);
         }
 
         usort($tpl_themes, $this->compareThemes(...));
@@ -205,6 +142,93 @@ final class ThemesInstalledPageRenderer
             'themes' => 'themes_installed.tpl',
         ]);
         $template->assign_var_from_handle('ADMIN_CONTENT', 'themes');
+    }
+
+    /**
+     * Builds one $tpl_themes row -- extracted out of render()'s own foreach
+     * body (Unit-testable via reflection with a real {@see ExtensionLifecycle}
+     * and plain array/string inputs, the same pattern this class's own
+     * compareThemes() below already uses; see
+     * tests/Unit/Admin/ThemesInstalledPageRendererTest.php).
+     *
+     * @param array<string, mixed> $fs_theme ExtensionScanner's scanned entry
+     *   for $theme_id -- see that method's own docblock for the precise
+     *   per-key shape this reads defensively.
+     * @param list<string> $db_theme_ids every theme id currently installed
+     *   (has a DB row)
+     * @return array<string, mixed>
+     */
+    private function buildTplTheme(
+        string $theme_id,
+        array $fs_theme,
+        array $db_theme_ids,
+        string $default_theme,
+        ExtensionLifecycle $extension_lifecycle,
+    ): array {
+        $tpl_theme = [
+            'ID' => $theme_id,
+            'NAME' => $fs_theme['name'],
+            'VISIT_URL' => $fs_theme['uri'],
+            'VERSION' => $fs_theme['version'],
+            'DESC' => $fs_theme['description'],
+            'AUTHOR' => $fs_theme['author'],
+            'AUTHOR_URL' => $fs_theme['author uri'] ?? null,
+            'PARENT' => $fs_theme['parent'] ?? null,
+            'SCREENSHOT' => $fs_theme['screenshot'],
+            'IS_MOBILE' => $fs_theme['mobile'],
+            'ADMIN_URI' => $fs_theme['admin_uri'] ?? null,
+        ];
+
+        if (in_array($theme_id, $db_theme_ids, true)) {
+            $tpl_theme['STATE'] = 'active';
+            $tpl_theme['IS_DEFAULT'] = ($theme_id === $default_theme);
+            $tpl_theme['DEACTIVABLE'] = true;
+
+            if (count($db_theme_ids) <= 1) {
+                $tpl_theme['DEACTIVABLE'] = false;
+                $tpl_theme['DEACTIVATE_TOOLTIP'] = Lang::t('Impossible to deactivate this theme, you need at least one theme.');
+            }
+            if ($tpl_theme['IS_DEFAULT']) {
+                $tpl_theme['DEACTIVABLE'] = false;
+                $tpl_theme['DEACTIVATE_TOOLTIP'] = Lang::t('Impossible to deactivate the default theme.');
+            }
+        } else {
+            $tpl_theme['STATE'] = 'inactive';
+
+            // is the theme "activable" ?
+            if (isset($fs_theme['activable']) and ! (bool) $fs_theme['activable']) {
+                $tpl_theme['ACTIVABLE'] = false;
+                $tpl_theme['ACTIVABLE_TOOLTIP'] = Lang::t('This theme was not designed to be directly activated');
+            } else {
+                $tpl_theme['ACTIVABLE'] = true;
+            }
+
+            $missing_parent = $extension_lifecycle->missingParentTheme($theme_id, $fs_theme);
+            if (isset($missing_parent)) {
+                $tpl_theme['ACTIVABLE'] = false;
+
+                $tpl_theme['ACTIVABLE_TOOLTIP'] = Lang::t(
+                    'Impossible to activate this theme, the parent theme is missing: %s',
+                    $missing_parent
+                );
+            }
+
+            // is the theme "deletable" ?
+            $children = $extension_lifecycle->getChildrenThemes($theme_id);
+
+            $tpl_theme['DELETABLE'] = true;
+
+            if (count($children) > 0) {
+                $tpl_theme['DELETABLE'] = false;
+
+                $tpl_theme['DELETE_TOOLTIP'] = Lang::t(
+                    'Impossible to delete this theme. Other themes depends on it: %s',
+                    implode(', ', array_filter($children, is_string(...)))
+                );
+            }
+        }
+
+        return $tpl_theme;
     }
 
     /**

@@ -496,7 +496,17 @@ test('webp_info throws for a well-formed VP8 header with an unrecognized sub-for
         ->toThrow(\Exception::class, 'webp_info(): could not detect webp type');
 });
 
-test('get_rotation_angle throws when getimagesize() fails to read the file', function (): void {
+test('get_rotation_angle returns null when getimagesize() fails to read the file, instead of throwing', function (): void {
+    // Real bug, fixed during the coverage-gap-closure pass (see
+    // tests/Integration/UploadServiceTest.php's own docblock): every real
+    // call site of get_rotation_angle() (UploadService::addUploadedFile()
+    // in particular, for any non-picture file allowed via
+    // CurrentConfig::uploadFormAllTypes()) calls this with no surrounding
+    // try/catch, so a genuinely non-image upload always crashed with an
+    // uncaught Exception. "Not decodable as an image at all" is a strict
+    // superset of "not a JPEG", which this method already treats as a
+    // plain `null` (no rotation) two lines below -- the throw served no
+    // real caller.
     $path = pwgImageTestMarker() . '/does-not-exist.jpg';
 
     // getimagesize() on a missing file also emits a real PHP warning --
@@ -504,8 +514,7 @@ test('get_rotation_angle throws when getimagesize() fails to read the file', fun
     // above.
     set_error_handler(static fn (): bool => true);
     try {
-        expect(fn () => PwgImage::get_rotation_angle($path))
-            ->toThrow(\Exception::class, "get_rotation_angle(): getimagesize({$path}): Failed");
+        expect(PwgImage::get_rotation_angle($path))->toBeNull();
     } finally {
         restore_error_handler();
     }

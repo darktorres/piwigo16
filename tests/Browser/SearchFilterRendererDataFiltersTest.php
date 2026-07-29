@@ -203,11 +203,37 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
         $page->assertNoJavaScriptErrors();
         $page->assertSee('Square Data Filter Photo');
 
+        // Real gap, found via adversarial mutation testing: nothing in
+        // this suite ever asserted on SearchFilterRenderer::render()'s own
+        // ratio-bucket *counts* (search_filters.inc.tpl's `{foreach
+        // from=$RATIOS item=ratio key=k}` block) -- every existing test
+        // only uploads ratio-varied fixture photos incidentally, as setup
+        // for other criteria, so the bucket-counting loop (lines ~729-753)
+        // ran on every load but its actual output was never checked; a
+        // broken bucket boundary would have passed silently. Only the
+        // 'square' photo satisfies every OTHER active filter here
+        // (ratings=3 alone already narrows to it: rating_score 2.5 is the
+        // only one in the [2,3) bucket), so getItemsForFilter('ratios',
+        // ...)'s cross-filter intersection -- which excludes the 'ratios'
+        // criterion itself -- resolves to that one photo: Portrait/
+        // Landscape/Panorama must each show as the disabled, zero-count
+        // checkbox state, 'square' as the sole non-zero, undisabled one.
+        $html1 = H::rawWebpage($page)->content();
+        expect($html1)->toMatch('/<input type="checkbox" id="ratio-square"[^>]*>(?!.*disabled)/')
+            ->and($html1)->toContain('<label for="ratio-square">')
+            ->and(substr($html1, (int) strpos($html1, '<label for="ratio-square">'), 400))->toContain('<span class="ratio-badge">1</span>')
+            ->and($html1)->toMatch('/<input type="checkbox" id="ratio-Portrait" [^>]*disabled/')
+            ->and($html1)->toMatch('/<input type="checkbox" id="ratio-Landscape" [^>]*disabled/')
+            ->and($html1)->toMatch('/<input type="checkbox" id="ratio-Panorama" [^>]*disabled/');
+
         // 2nd load: same search -- exercises every per-filter cache-hit
         // branch instead.
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'search data filters (2nd load, cache hit)');
         $page->assertNoJavaScriptErrors();
+        $html2 = H::rawWebpage($page)->content();
+        expect($html2)->toContain('<span class="ratio-badge">1</span>')
+            ->and($html2)->toMatch('/<input type="checkbox" id="ratio-Portrait" [^>]*disabled/');
     } finally {
         H::restoreConfig($snapshot);
     }

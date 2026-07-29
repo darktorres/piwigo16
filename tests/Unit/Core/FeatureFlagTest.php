@@ -7,13 +7,6 @@ use Piwigo\Core\FeatureFlag;
 // config/feature-flags.php is empty right now (no real flag exists yet --
 // see the plan's read-only, no-write-path scoping). Every check is
 // correctly false until a later phase adds a real entry.
-//
-// isEnabled()'s "must return an array" RuntimeException is deliberately
-// not exercised: the require path is a hard-coded real production file
-// (config/feature-flags.php), not injectable -- the only way to make it
-// return something other than an array would be to edit that real file
-// to return garbage, which would break the actual application for every
-// other reader, not just this one test.
 
 test('a flag not present in config/feature-flags.php is disabled', function (): void {
     expect(FeatureFlag::isEnabled('nonexistent_flag'))->toBeFalse();
@@ -22,3 +15,38 @@ test('a flag not present in config/feature-flags.php is disabled', function (): 
 test('an empty flag name is disabled', function (): void {
     expect(FeatureFlag::isEnabled(''))->toBeFalse();
 });
+
+test('isEnabled returns true only for a flag whose config value is the exact boolean true, not merely truthy', function (): void {
+    // Real gap, found via adversarial mutation testing: no existing test
+    // ever exercised a flag config file with a real entry at all (the
+    // real config/feature-flags.php is genuinely empty right now -- see
+    // this file's own top-of-file comment), so `=== true` (strict) could
+    // have silently regressed to a loose `(bool)` cast -- which would
+    // also enable a flag set to a truthy non-bool ('yes', 1, '1') -- with
+    // every existing test still green.
+    $configPath = sys_get_temp_dir() . '/piwigo-feature-flags-real-entries-' . bin2hex(random_bytes(8)) . '.php';
+    file_put_contents($configPath, "<?php\n\ndeclare(strict_types=1);\n\nreturn ['on_flag' => true, 'off_flag' => false, 'truthy_string_flag' => 'yes', 'truthy_int_flag' => 1];\n");
+
+    try {
+        expect(FeatureFlag::isEnabled('on_flag', $configPath))->toBeTrue()
+            ->and(FeatureFlag::isEnabled('off_flag', $configPath))->toBeFalse()
+            ->and(FeatureFlag::isEnabled('truthy_string_flag', $configPath))->toBeFalse()
+            ->and(FeatureFlag::isEnabled('truthy_int_flag', $configPath))->toBeFalse();
+    } finally {
+        unlink($configPath);
+    }
+});
+
+test('isEnabled throws when the config file does not return an array', function (): void {
+    // $configPath mirrors CliBootstrap::buildApplication()'s own
+    // $commandsFile seam -- a disposable fixture under sys_get_temp_dir()
+    // instead of ever overwriting the real, shared config/feature-flags.php.
+    $configPath = sys_get_temp_dir() . '/piwigo-feature-flags-not-array-' . bin2hex(random_bytes(8)) . '.php';
+    file_put_contents($configPath, "<?php\n\ndeclare(strict_types=1);\n\nreturn 'not-an-array';\n");
+
+    try {
+        FeatureFlag::isEnabled('any_flag', $configPath);
+    } finally {
+        unlink($configPath);
+    }
+})->throws(RuntimeException::class, 'config/feature-flags.php must return an array of flag => bool.');

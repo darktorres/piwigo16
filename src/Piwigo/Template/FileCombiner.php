@@ -189,6 +189,18 @@ final class FileCombiner
             if ($return_content) {
                 return $content;
             }
+            // Unlike flush_pending()'s multi-item ('combi') branch, this
+            // single-item ('t'-prefixed) cache file has no other call site
+            // that ever creates CurrentConfig::combinedDir() -- on a fresh
+            // install (or right after clear_combined_files(), which only
+            // unlinks *.js/*.css and never rmdir()s the directory itself,
+            // so this is only reachable pre-first-write) the very first
+            // single-combinable template request would silently fail to
+            // write here (file_put_contents() against a non-existent
+            // directory) while still pointing $combinable->path at the
+            // never-written file. Found live while adding coverage for this
+            // branch.
+            \Piwigo\Core\FilesystemHelper::mkgetdir(dirname($this->paths->root . $file));
             file_put_contents($this->paths->root . $file, $content);
             $combinable->path = $file;
 

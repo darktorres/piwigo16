@@ -17,10 +17,27 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * check_key 'ghijkl9876543210', disabled) -- real, restorable state to
  * drive the subscribe/unsubscribe/send actions without needing new users.
  *
- * Deliberately skips the timeout/"must repost" branch
- * (NotificationByMailSender::isSendmailTimeout(), ~20 lines) -- it fires
- * only when real mail-sending exceeds an internal wall-clock threshold,
- * not practically triggerable from a fast, deterministic test.
+ * The timeout/"must repost" branch (NotificationByMailSender::
+ * isSendmailTimeout()) IS covered below, via nbmForceInstantSendmailTimeout().
+ * Neither nbm_max_treatment_timeout_percent nor nbm_treatment_timeout_default
+ * has an existing `config` row in this fixture, so the 'param' tab's own
+ * admin-UI round trip -- which only updates *existing* nbm_% rows, see the
+ * `select ... where param like 'nbm\_%'` loop in
+ * NotificationByMailSubController::handle() -- can never reach them.
+ * H::setConfigValue() writes the config table directly instead (properly
+ * JSON-typed, matching every other Browser test file's config-override
+ * convention), forcing NotificationByMailSender's own $sendmailTimeout to
+ * 0 -- so checkSendmailTimeout()'s `(moment - start) > threshold` is
+ * satisfied by any nonzero elapsed time, which the real DB round trips
+ * each of these flows already performs before its first per-user check
+ * (getUserNotifications(), beginUsersEnv()'s webmaster-address lookup)
+ * reliably guarantees. This always lands on the "zero users treated
+ * before the timeout" branch, matching NotificationByMailSenderTest's own
+ * identically-reasoned senderWithImmediateTimeout() helper (same
+ * real-elapsed-time constraint) -- the timing race needed to land
+ * mid-batch (some users treated, then a timeout mid-loop) isn't reachable
+ * deterministically over real HTTP either, the same conclusion that
+ * Integration test file's own docblock already reaches.
  */
 function nbmDbPrefix(): string
 {
@@ -88,6 +105,57 @@ function nbmSetUserMailNotificationRow(int $userId, ?array $row): void
 function nbmPost(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $mode, array $fields): array
 {
     return H::adminPost($page, '/admin.php?page=notification_by_mail&mode=' . $mode, $fields);
+}
+
+/**
+ * users.mail_address is untouched by any of the helpers above (they only
+ * ever read/write user_mail_notification) -- 'send' action eligibility
+ * (NotificationByMailRepository::findUserNotifications()) requires a
+ * non-null email on the *users* table itself, unlike subscribe/unsubscribe.
+ */
+function nbmUserMailAddress(int $userId): ?string
+{
+    $db = nbmDbConnect();
+    $result = $db->query(sprintf('SELECT mail_address FROM %susers WHERE id = %d', nbmDbPrefix(), $userId));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+
+    return is_array($row) && is_string($row['mail_address'] ?? null) ? $row['mail_address'] : null;
+}
+
+function nbmSetUserMailAddress(int $userId, ?string $mailAddress): void
+{
+    $db = nbmDbConnect();
+    if ($mailAddress === null) {
+        $db->query(sprintf('UPDATE %susers SET mail_address = NULL WHERE id = %d', nbmDbPrefix(), $userId));
+    } else {
+        $db->query(sprintf(
+            "UPDATE %susers SET mail_address = '%s' WHERE id = %d",
+            nbmDbPrefix(),
+            $db->real_escape_string($mailAddress),
+            $userId
+        ));
+    }
+    $db->close();
+}
+
+/**
+ * Forces NotificationByMailSender::checkSendmailTimeout() to report a
+ * timeout on its very first real call in the request that follows,
+ * deterministically -- see this file's own top docblock for the full
+ * reasoning (neither config key has an existing row, so the 'param' tab
+ * itself can't be used to set them; H::setConfigValue() writes the
+ * `config` table directly, properly JSON-typed, instead).
+ *
+ * @return array<string, ?string> snapshot for H::restoreConfig()
+ */
+function nbmForceInstantSendmailTimeout(): array
+{
+    $snapshot = H::snapshotConfig(['nbm_max_treatment_timeout_percent', 'nbm_treatment_timeout_default']);
+    H::setConfigValue('nbm_max_treatment_timeout_percent', '0');
+    H::setConfigValue('nbm_treatment_timeout_default', '0');
+
+    return $snapshot;
 }
 
 it('renders the send tab by default', function (): void {
@@ -250,5 +318,190 @@ it('self-heals a missing notification-subscription row on a plain page load', fu
         expect($recreated)->not->toBeNull();
     } finally {
         nbmSetUserMailNotificationRow(1, $snapshot);
+    }
+});
+
+it('reports a repost for falsify with the estimated-time message when the sendmail timeout is forced', function (): void {
+    // doTimeoutTreatment()'s 'falsify' branch (unsubscribeNotificationByMail())
+    // filters on enabled=1 (see NotificationByMailService::getUserNotifications()'s
+    // own docblock on `! $isSubscribe`), so this temp row needs enabled=1
+    // to even be picked up by the per-user loop that calls
+    // checkSendmailTimeout() in the first place.
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+
+    $timeoutSnapshot = nbmForceInstantSendmailTimeout();
+    nbmSetUserMailNotificationRow(4, ['check_key' => 'ct00falsifytmo', 'enabled' => 1, 'last_send' => null]);
+
+    try {
+        $result = nbmPost($page, 'subscribe', [
+            'pwg_token' => $token,
+            'falsify' => '1',
+            'cat_true' => ['ct00falsifytmo'],
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Fatal error');
+        // REPOST_SUBMIT_NAME: 'falsify' propagated straight through to the
+        // repost form's own submit button name (handle(), ~line 244-252).
+        expect($result['body'])->toContain('<input type="submit" value="Continue ongoing treatment" name="falsify">');
+        // doTimeoutTreatment(): the loop broke before treating anyone, so
+        // $treated_count stays 0 -- English plural picks msgstr[1] for n=0
+        // ("Execution time exceeded, the treatment must continue...").
+        expect($result['body'])->toContain('Execution time exceeded, the treatment must continue [Estimated time: 0 seconds].');
+        // doSubscribeUnsubscribeNotificationByMail()'s own break-timeout
+        // message, fired on the same forced timeout one call earlier.
+        expect($result['body'])->toContain('The time to send mail is limited. Others mails have been skipped.');
+    } finally {
+        nbmSetUserMailNotificationRow(4, null);
+        H::restoreConfig($timeoutSnapshot);
+    }
+});
+
+it('reports a repost for trueify with the estimated-time message when the sendmail timeout is forced', function (): void {
+    // Unlike 'falsify' above, subscribeNotificationByMail() passes
+    // isSubscribe=true, which drops the enabled filter entirely (`! true`
+    // == false == NotificationByMailService's own documented "no filter"
+    // sentinel) -- enabled=0 here is deliberately the opposite of the
+    // 'falsify' test's row, to also exercise that the filter really is
+    // absent for this branch.
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+
+    $timeoutSnapshot = nbmForceInstantSendmailTimeout();
+    nbmSetUserMailNotificationRow(4, ['check_key' => 'ct00trueifytmo', 'enabled' => 0, 'last_send' => null]);
+
+    try {
+        $result = nbmPost($page, 'subscribe', [
+            'pwg_token' => $token,
+            'trueify' => '1',
+            'cat_false' => ['ct00trueifytmo'],
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Fatal error');
+        expect($result['body'])->toContain('<input type="submit" value="Continue ongoing treatment" name="trueify">');
+        expect($result['body'])->toContain('Execution time exceeded, the treatment must continue [Estimated time: 0 seconds].');
+    } finally {
+        nbmSetUserMailNotificationRow(4, null);
+        H::restoreConfig($timeoutSnapshot);
+    }
+});
+
+it('reports a repost for send_submit with the batch-timing estimate when the sendmail timeout is forced', function (): void {
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+
+    $timeoutSnapshot = nbmForceInstantSendmailTimeout();
+    $snapshot = nbmUserMailNotificationRow(1);
+    expect($snapshot)->not->toBeNull();
+    assert($snapshot !== null);
+
+    try {
+        $result = nbmPost($page, 'send', [
+            'pwg_token' => $token,
+            'send_submit' => '1',
+            'send_selection' => [$snapshot['check_key']],
+            'send_customize_mail_content' => 'CT timeout content ' . uniqid(),
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Fatal error');
+        expect($result['body'])->toContain('<input type="submit" value="Continue ongoing treatment" name="send_submit">');
+        expect($result['body'])->toContain('Execution time exceeded, the treatment must continue [Estimated time: 0 seconds].');
+        expect($result['body'])->toContain('The time to send mail is limited. Others mails have been skipped.');
+    } finally {
+        nbmSetUserMailNotificationRow(1, $snapshot);
+        H::restoreConfig($timeoutSnapshot);
+    }
+});
+
+it('renders only the previously-selected user as checked when redisplaying the send tab after a partial selection', function (): void {
+    // No forced timeout here -- $must_repost stays false, so the send
+    // display section's outer filter includes *every* eligible candidate
+    // (`(! $must_repost) or ...`), letting the per-user CHECKED formula's
+    // own `isset($post['send_selection']) and ! in_array(...)` branch
+    // (empty/unchecked for a candidate that exists but wasn't selected)
+    // actually be reached -- the must_repost branch above can only ever
+    // produce 'checked="checked"' for the users it includes at all.
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+
+    $snapshot = nbmUserMailNotificationRow(1);
+    expect($snapshot)->not->toBeNull();
+    assert($snapshot !== null);
+
+    $originalMailAddress = nbmUserMailAddress(4);
+    nbmSetUserMailAddress(4, 'ct00sendlistun@example.test');
+    nbmSetUserMailNotificationRow(4, ['check_key' => 'ct00sendlistun', 'enabled' => 1, 'last_send' => null]);
+
+    try {
+        $result = nbmPost($page, 'send', [
+            'pwg_token' => $token,
+            'send_submit' => '1',
+            'send_selection' => [$snapshot['check_key']],
+            'send_customize_mail_content' => 'CT partial selection ' . uniqid(),
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Fatal error');
+        // User 4's temp row was never part of send_selection[] -- its own
+        // {$u.CHECKED} slot renders as a literal empty string, leaving the
+        // two template-source spaces on either side of it adjacent.
+        expect($result['body'])->toContain('value="ct00sendlistun"  id="send_selection-ct00sendlistun"');
+    } finally {
+        nbmSetUserMailNotificationRow(4, null);
+        nbmSetUserMailAddress(4, $originalMailAddress);
+        nbmSetUserMailNotificationRow(1, $snapshot);
+    }
+});
+
+it('cleans up newly-inserted notification rows and redirects when the plain-load self-heal hits the sendmail timeout', function (): void {
+    // insertNewDataUserMailNotification() passes
+    // CurrentConfig::nbmDefaultValueUserEnabled() (default false) as
+    // doSubscribeUnsubscribeNotificationByMail()'s own $isSubscribe --
+    // with the default, `! $isSubscribe` becomes an enabled=1 filter,
+    // which the rows this method itself just massInsert()-ed (hardcoded
+    // enabled=0) could never match, so the per-user loop -- and therefore
+    // checkSendmailTimeout() -- would never even run. Forcing
+    // nbm_default_value_user_enabled=true flips $isSubscribe to true,
+    // which drops that filter entirely (see the 'trueify' test above),
+    // letting the just-inserted rows reach the loop for real.
+    $page = H::loginAsAdmin($this);
+
+    $snapshot = nbmUserMailNotificationRow(1);
+    expect($snapshot)->not->toBeNull();
+    assert($snapshot !== null);
+
+    $configSnapshot = H::snapshotConfig([
+        'nbm_max_treatment_timeout_percent',
+        'nbm_treatment_timeout_default',
+        'nbm_default_value_user_enabled',
+    ]);
+    H::setConfigValue('nbm_max_treatment_timeout_percent', '0');
+    H::setConfigValue('nbm_treatment_timeout_default', '0');
+    H::setConfigValue('nbm_default_value_user_enabled', 'true');
+
+    nbmSetUserMailNotificationRow(1, null);
+
+    try {
+        $result = H::rawGet($page, '/admin.php?page=notification_by_mail');
+
+        // fetch()'s own 'manual' redirect mode always reports status 0 for
+        // a genuine 30x response (an opaque-redirect, not an app bug --
+        // see BrowserTestHelpers::rawGet()'s own established convention
+        // elsewhere in this suite), confirming
+        // insertNewDataUserMailNotification()'s own redirect() call fired.
+        expect($result['status'])->toBe(0);
+
+        // The just-inserted row was deleted again by the timeout cleanup
+        // (`delete from user_mail_notification where check_key in (...)`)
+        // before the self-heal could ever "stick" -- unlike the plain
+        // self-heal test above (no forced timeout there), which expects
+        // the opposite outcome.
+        expect(nbmUserMailNotificationRow(1))->toBeNull();
+    } finally {
+        nbmSetUserMailNotificationRow(1, $snapshot);
+        H::restoreConfig($configSnapshot);
     }
 });

@@ -104,6 +104,55 @@ final class WsServerTest extends ContractTestCase
         }
     }
 
+    /**
+     * WsController::__invoke()'s own gate, reached before WsInitializer::
+     * init()/PwgServer::run() ever construct a request handler -- this is
+     * genuinely different from the guest_access-disabled case above (that
+     * one is a normal WS JSON 'fail'/401 envelope produced from inside
+     * PwgServer::invoke()). Here, HtmlService::pageForbidden() throws
+     * ResponseReadyException with a real HTML 403 body before any WS
+     * dispatch happens at all, so a plain callWs()/ws() JSON-decode
+     * wouldn't apply -- this uses a raw curl call and inspects the HTTP
+     * status/body directly, matching test_invoke_a_post_only_method_via_get_returns_405()'s
+     * own style above.
+     */
+    public function test_invoke_when_web_services_are_disabled_returns_a_forbidden_page(): void
+    {
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('allow_web_services', 'false')
+             ON DUPLICATE KEY UPDATE value = VALUES(value)"
+        );
+        \Piwigo\Cache\CachePools::config()->clear();
+
+        try {
+            $url = $this->baseUrl . '/ws.php?format=json&' . http_build_query([
+                'method' => 'pwg.getVersion',
+            ]);
+            $ch = curl_init($url);
+            self::assertNotFalse($ch);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
+            curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
+
+            $body = curl_exec($ch);
+            $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            unset($ch);
+
+            self::assertIsString($body);
+            self::assertSame(403, $status);
+            self::assertStringContainsString('Web services are disabled', $body);
+            self::assertStringContainsString('Forbidden', $body);
+
+            // Confirms this really is HtmlService::pageForbidden()'s HTML
+            // redirect page, not the WS JSON envelope -- json_decode()'ing
+            // it would not produce the usual stat/err/message shape.
+            self::assertNull(json_decode($body, true));
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'allow_web_services'");
+            \Piwigo\Cache\CachePools::config()->clear();
+        }
+    }
+
     public function test_checkType_rejects_a_non_boolean_scalar(): void
     {
         // pwg.users.setInfo's 'expand' param is WsParamType::BOOL, no

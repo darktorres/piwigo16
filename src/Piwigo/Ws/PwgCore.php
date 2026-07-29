@@ -272,9 +272,28 @@ SELECT id, path, representative_ext, width, height, rotation
     public static function getCacheSize(array $params, PwgServer &$service): array
     {
         $data_location = \Piwigo\Config\CurrentConfig::dataLocation();
+        // Real bug fix, not just a straight port: $data_location ('_data/')
+        // is a path relative to the install root, not to whatever the PHP
+        // process's CWD happens to be -- every other real call site of
+        // dataLocation() in this codebase (PersistentFileCache,
+        // FeedController, RequestBootstrap, Template, IntroSubController,
+        // MailService, CoreUpdateService) already composes it against
+        // CurrentPaths::get()->root per Paths' own class-level contract
+        // ("Config-driven directories ... compose against data/root at the
+        // call site"). This one was missed when ws_getCacheSize() was
+        // ported -- the pre-rewrite legacy code got away with the bare
+        // relative path because its entry scripts lived at the install
+        // root itself, but this rewrite's public/ webroot means the real
+        // request-time CWD is public/, not the root, so `du -sk _data/...`
+        // silently resolved against public/_data/ (an unrelated, near-empty
+        // stub containing only a `combined` symlink) instead of the real
+        // cache directory -- confirmed live: cache_size reported a bogus
+        // ~4KB and tsizes was always null (public/_data has no
+        // templates_c/ at all) rather than the real, much larger sizes.
+        $root = \Piwigo\Core\CurrentPaths::get()->root;
 
         // Cache size
-        $path_cache = $data_location;
+        $path_cache = $root . $data_location;
         $infos = [];
         $infos['cache_size'] = null;
         if (function_exists('exec')) {
@@ -289,7 +308,7 @@ SELECT id, path, representative_ext, width, height, rotation
         }
 
         // Multiples sizes size
-        $path_msizes = $data_location . 'i';
+        $path_msizes = $root . $data_location . 'i';
         $msizes = FilesystemHelper::getCacheSizeDerivatives($path_msizes);
 
         $infos['msizes'] = array_fill_keys(array_keys(ImageStdParams::get_defined_type_map()), 0);
@@ -318,7 +337,7 @@ SELECT id, path, representative_ext, width, height, rotation
         $infos['msizes']['all'] = $all;
 
         // Compiled templates size
-        $path_template_c = $data_location . 'templates_c';
+        $path_template_c = $root . $data_location . 'templates_c';
         $infos['tsizes'] = null;
         if (function_exists('exec')) {
             $return_array_template_c = [];

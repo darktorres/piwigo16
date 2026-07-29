@@ -719,15 +719,36 @@ final class ImageDerivativeController implements ControllerInterface
                 continue;
             }
 
-            if ($params->sizing->max_crop === 0.0) {
-                if ($candidate->sizing->max_crop !== 0.0) {
+            // Real bug, found live via a candidate-reuse test that never
+            // observed any reuse regardless of fixture setup: SizingParams::
+            // $max_crop is untyped (@var float per its own docblock, but
+            // *every* real construction site -- classic()'s implicit
+            // default, square()'s literal 1 -- assigns a plain *int*; even
+            // DerivativeUrlCodec::charToFraction()'s int/int division
+            // returns an int whenever it divides evenly, e.g. 'a' -> 0,
+            // 'z' -> 1). A strict `=== 0.0`/`!== 0.0` float comparison
+            // never matches a native int 0 in PHP (`0 === 0.0` is false),
+            // so both branches below always took the "not zero" path for
+            // every standard defined type -- $candidates stayed empty on
+            // every real request, silently disabling this entire reuse
+            // optimization (always falling back to regenerating from the
+            // true original) rather than just never hitting the (harmless)
+            // add_url_tokens() fast-path SizingParamsTest.php already
+            // documents this exact int/float quirk for. compute() itself
+            // (a few lines above, in the same class) already treats
+            // max_crop as a plain number via `> 0`, not a float-typed
+            // value -- matching that precedent, an explicit (float) cast
+            // normalizes the comparison instead of switching to a loose
+            // `==`/`!=` throughout this security-adjacent method.
+            if ((float) $params->sizing->max_crop === 0.0) {
+                if ((float) $candidate->sizing->max_crop !== 0.0) {
                     continue;
                 }
             } else {
                 if ($use_watermark && $candidate->use_watermark) {
                     continue;
                 } // a square that requires watermark should not be generated from a larger derivative with watermark, because if the watermark is not centered on the large image, it will be cropped.
-                if ($candidate->sizing->max_crop !== 0.0) {
+                if ((float) $candidate->sizing->max_crop !== 0.0) {
                     continue;
                 } // this could be optimized
                 $minSize = $params->sizing->min_size;

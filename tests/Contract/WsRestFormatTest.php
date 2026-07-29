@@ -78,10 +78,19 @@ final class WsRestFormatTest extends ContractTestCase
         self::assertMatchesRegularExpression('/<name>msizes<\/name>\s*<value>.*<square>\d+<\/square>.*<\/value>/s', $body);
         self::assertMatchesRegularExpression('/<name>msizes<\/name>\s*<value>.*<all>\d+<\/all>.*<\/value>/s', $body);
 
-        // 'tsizes' is null when `du` on templates_c produced no parseable
-        // size -- the <name>tsizes</name> item element must still be
-        // present (from the 'infos' PwgNamedArray loop), but with no
-        // sibling <value> for it.
-        self::assertMatchesRegularExpression('/<name>tsizes<\/name>\s*<\/item>/', $body);
+        // Real bug fixed during the coverage-gap-closure pass (see
+        // PwgCore::getCacheSize()'s own docblock): tsizes/msizes/cache_size
+        // used to `du`/scan CurrentConfig::dataLocation() ('_data/') as a
+        // bare relative path, which resolves against the front-controller
+        // script's own cwd (public/) under a real Apache request -- an
+        // unrelated, near-empty public/_data/ stub -- not the real _data/
+        // tree this suite's own compiled templates actually live under, so
+        // tsizes was always null here. Now that it's prefixed with
+        // CurrentPaths::get()->root, `du` finds this suite's own real
+        // compiled Smarty templates under _data/templates_c/ and tsizes is
+        // a real, present, non-null byte count -- same "item/name/value"
+        // shape as the msizes assertions above, not the previous
+        // no-sibling-<value> shape.
+        self::assertMatchesRegularExpression('/<name>tsizes<\/name>\s*<value>\d+<\/value>/', $body);
     }
 }

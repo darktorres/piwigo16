@@ -35,6 +35,51 @@ final class WsSessionTest extends ContractTestCase
         self::assertMatchesSchema('session.getStatus', $response);
     }
 
+    /**
+     * sessionGetStatus() hides 'save_visits'/'connected_with' from any
+     * client whose User-Agent starts with 'PiwigoRemoteSync' (that client
+     * doesn't support receiving them) -- every other test in this file uses
+     * the fixed USER_AGENT constant, so this branch is otherwise never hit.
+     */
+    public function test_getStatus_omits_save_visits_and_connected_with_for_piwigo_remote_sync_user_agent(): void
+    {
+        $response = $this->wsWithUserAgent('PiwigoRemoteSync/1.0', 'pwg.session.getStatus');
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        self::assertArrayNotHasKey('save_visits', $result);
+        self::assertArrayNotHasKey('connected_with', $result);
+    }
+
+    /** Contrast with the PiwigoRemoteSync test above: a normal client keeps both fields. */
+    public function test_getStatus_includes_save_visits_and_connected_with_for_a_normal_user_agent(): void
+    {
+        $response = $this->ws('pwg.session.getStatus');
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        self::assertArrayHasKey('save_visits', $result);
+        self::assertArrayHasKey('connected_with', $result);
+    }
+
+    /**
+     * sessionGetStatus() also hides 'available_sizes' from any client
+     * whose User-Agent starts with 'Apache-HttpClient/' (a distinct
+     * compatibility exception from the PiwigoRemoteSync one above -- keyed
+     * on str_starts_with() against a different literal prefix).
+     */
+    public function test_getStatus_omits_available_sizes_for_apache_http_client_user_agent(): void
+    {
+        $response = $this->wsWithUserAgent('Apache-HttpClient/4.5.13 (Java/1.8)', 'pwg.session.getStatus');
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        self::assertArrayNotHasKey('available_sizes', $result);
+    }
+
     public function test_login_with_bad_credentials_returns_fail(): void
     {
         $response = $this->ws('pwg.session.login', [
@@ -189,6 +234,40 @@ final class WsSessionTest extends ContractTestCase
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge(['method' => $method], $params)));
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
+
+        $body = curl_exec($ch);
+        unset($ch);
+
+        self::assertIsString($body);
+        $decoded = json_decode($body, true);
+        self::assertIsArray($decoded);
+        /** @var array<string, mixed> $decoded */
+        return $decoded;
+    }
+
+    /**
+     * Same as callWs(), but with a caller-supplied User-Agent instead of
+     * the fixed USER_AGENT constant -- sessionGetStatus()'s own
+     * PiwigoRemoteSync/Apache-HttpClient compatibility branches key off
+     * the real HTTP User-Agent header, which callWs() always hardcodes.
+     * @param non-empty-string $userAgent
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
+    private function wsWithUserAgent(string $userAgent, string $method, array $params = []): array
+    {
+        $ch = curl_init($this->baseUrl . '/ws.php?format=json');
+        self::assertNotFalse($ch);
+
+        $cookieJar = $this->cookieJar();
+        assert($cookieJar !== '');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge(['method' => $method], $params)));
         curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
         curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);

@@ -217,4 +217,150 @@ final class FilterResolverTest extends IntegrationTestCase
     {
         self::assertNull($this->resolver->filesizePhotoIds([], ''));
     }
+
+    public function test_resolve_prefilter_last_import_returns_empty_when_the_images_table_is_empty(): void
+    {
+        // MAX(date_available) over an empty table is NULL, which must trip
+        // the `! is_string($lastDate) || $lastDate === ''` guard rather than
+        // building a query around a NULL/empty date.
+        $this->conn->beginTransaction();
+
+        try {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::images());
+
+            $ids = $this->resolver->resolvePrefilter('last_import', ['prefilter' => 'last_import'], 1, '');
+
+            self::assertSame([], $ids);
+        } finally {
+            $this->conn->rollBack();
+        }
+    }
+
+    public function test_resolve_prefilter_last_import_returns_only_images_within_the_recent_period_of_the_true_max_date(): void
+    {
+        // The true max date_available across the whole table (not just the
+        // fixture's own 2026-08-01 images) drives the window, so every id
+        // inserted below is chosen to prove the BETWEEN bound is exact: one
+        // becomes the new max, one sits exactly on the inclusive lower
+        // boundary (max minus 1 day), and one sits 1 second outside it.
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::images() . " (file, path, date_available) VALUES ('last-import-max.jpg', 'upload/last-import-max.jpg', '2026-08-10 12:00:00')"
+        );
+        $maxId = (int) $this->conn->lastInsertId();
+
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::images() . " (file, path, date_available) VALUES ('last-import-boundary.jpg', 'upload/last-import-boundary.jpg', '2026-08-09 12:00:00')"
+        );
+        $boundaryId = (int) $this->conn->lastInsertId();
+
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::images() . " (file, path, date_available) VALUES ('last-import-excluded.jpg', 'upload/last-import-excluded.jpg', '2026-08-09 11:59:59')"
+        );
+        $excludedId = (int) $this->conn->lastInsertId();
+
+        try {
+            $ids = $this->resolver->resolvePrefilter('last_import', ['prefilter' => 'last_import'], 1, '');
+            self::assertNotNull($ids);
+            sort($ids);
+
+            // $maxId is inserted before $boundaryId above, so it always gets
+            // the lower auto-increment id -- sort()'s ascending order puts
+            // it first, not the insertion/narrative order the two ids are
+            // introduced in.
+            self::assertSame(
+                [$maxId, $boundaryId],
+                $ids,
+                'only the new max-date image and the one exactly on the 1-day-recent boundary should come back; the fixture\'s 2026-08-01 images and the 1-second-early image must be excluded'
+            );
+        } finally {
+            $this->conn->executeStatement(
+                'DELETE FROM ' . Tables::images() . ' WHERE id IN (?, ?, ?)',
+                [$maxId, $boundaryId, $excludedId]
+            );
+        }
+    }
+
+    public function test_resolve_prefilter_no_virtual_album_excludes_images_linked_only_to_a_virtual_category(): void
+    {
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::categories() . " (name, dir) VALUES ('Real Album', 'real_album')"
+        );
+        $realCategoryId = (int) $this->conn->lastInsertId();
+
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::images() . " (file, path) VALUES ('no-virtual-real.jpg', 'upload/no-virtual-real.jpg')"
+        );
+        $realImageId = (int) $this->conn->lastInsertId();
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (?, ?)',
+            [$realImageId, $realCategoryId]
+        );
+
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::images() . " (file, path) VALUES ('no-virtual-virtual-only.jpg', 'upload/no-virtual-virtual-only.jpg')"
+        );
+        $virtualOnlyImageId = (int) $this->conn->lastInsertId();
+        // Category 1 is one of the fixture's own virtual categories (dir IS
+        // NULL, confirmed via direct read of tests/Fixtures/piwigo-17.0.sql).
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (?, 1)',
+            [$virtualOnlyImageId]
+        );
+
+        try {
+            $ids = $this->resolver->resolvePrefilter('no_virtual_album', ['prefilter' => 'no_virtual_album'], 1, '');
+
+            // The fixture's own 5 images are all linked only to virtual
+            // categories (1 and 2, both dir IS NULL), so the full result is
+            // exactly the one image linked to the new real album.
+            self::assertSame([$realImageId], $ids);
+        } finally {
+            $this->conn->executeStatement(
+                'DELETE FROM ' . Tables::images() . ' WHERE id IN (?, ?)',
+                [$realImageId, $virtualOnlyImageId]
+            );
+            $this->conn->executeStatement(
+                'DELETE FROM ' . Tables::categories() . ' WHERE id = ?',
+                [$realCategoryId]
+            );
+        }
+    }
+
+    public function test_resolve_prefilter_no_virtual_album_returns_all_images_when_no_virtual_categories_exist(): void
+    {
+        $virtualCategoryIds = array_map(
+            static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0,
+            $this->conn->createQueryBuilder()
+                ->select('id')
+                ->from(Tables::categories())
+                ->where('dir IS NULL')
+                ->executeQuery()
+                ->fetchFirstColumn()
+        );
+
+        self::assertNotEmpty(
+            $virtualCategoryIds,
+            'the fixture must have at least one virtual (dir IS NULL) category for this to be a real before/after test'
+        );
+
+        $this->conn->executeStatement(
+            'UPDATE ' . Tables::categories() . " SET dir = 'temp-real-dir' WHERE dir IS NULL"
+        );
+
+        try {
+            $ids = $this->resolver->resolvePrefilter('no_virtual_album', ['prefilter' => 'no_virtual_album'], 1, '');
+            self::assertNotNull($ids);
+            sort($ids);
+
+            self::assertSame(
+                [1, 2, 3, 4, 5],
+                $ids,
+                'with zero virtual categories left, $virtualCategoryIds === [] and every image id is returned unfiltered'
+            );
+        } finally {
+            $this->conn->executeStatement(
+                'UPDATE ' . Tables::categories() . ' SET dir = NULL WHERE id IN (' . implode(',', $virtualCategoryIds) . ')'
+            );
+        }
+    }
 }

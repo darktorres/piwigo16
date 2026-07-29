@@ -142,12 +142,21 @@ final class ThemesStandardPagesPageRenderer
                     // intentionally-public file is served.
                     $relative_path = 'logo/' . $logo_filename;
 
-                    $this->configService->confUpdateParam('standard_pages_selected_logo_path', $relative_path, true);
-
+                    // Persisted only once the write below actually succeeds
+                    // (real bug found and fixed while adding test coverage
+                    // for the fopen()-failure branch: this used to run
+                    // unconditionally *before* fopen()/writeStream() ever
+                    // ran, so a failed write still left config pointing at
+                    // a logo file that was never written -- breaking both
+                    // Piwigo\Controller\CustomLogoController's serving of
+                    // it and this method's own "existing logo preview" vs.
+                    // "upload a logo" UI toggle a few lines below, which
+                    // gates on this exact config value).
                     $logo_stream = fopen($std_pgs_logo_tmp_name, 'rb');
                     if ($logo_stream !== false) {
                         StorageRegistry::disk('local')->writeStream($relative_path, $logo_stream);
                         fclose($logo_stream);
+                        $this->configService->confUpdateParam('standard_pages_selected_logo_path', $relative_path, true);
                     } else {
                         $template->assign(
                             [

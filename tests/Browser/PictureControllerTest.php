@@ -698,12 +698,9 @@ it('rejects an edit_comment submission whose key is used before its 2-second min
     // test above -- EphemeralKeyService::verify() requires >=2 real
     // wall-clock seconds since the key was issued, so posting immediately
     // deterministically hits CommentService::updateComment()'s own
-    // $commentAction = 'reject' branch (confirmed live): a 200 response,
-    // no error surfaced (the $_SESSION['page_errors'] write that branch
-    // makes has no reader anywhere in this codebase, confirmed via a
-    // full-repo grep -- same class of dead-write gap as this file's own
-    // moderate/validate branches use), and the comment's content column
-    // left untouched.
+    // $commentAction = 'reject' branch (confirmed live): a 200 response
+    // (the switch's own 'reject' case never sets $perform_redirect), and
+    // the comment's content column left untouched.
     $newContent = 'Rejected content ' . uniqid();
     $postResult = $curl($editUrl, [
         'content' => $newContent,
@@ -716,6 +713,15 @@ it('rejects an edit_comment submission whose key is used before its 2-second min
 
     expect($postResult['status'])->toBe(200);
     expect($postResult['body'])->not->toContain('Fatal error');
+    // $_SESSION['page_errors'][] does have a real reader: HtmlService::
+    // flushMessageMode() reads `$_SESSION['page_' . $mode]` generically
+    // (not the literal string 'page_errors'), which a plain repo-wide grep
+    // for that literal string misses -- confirmed live, and the same
+    // mechanism this session's own PasswordController fix (a873f5ca7d)
+    // relies on for its own page_errors flash. Since 'reject' never
+    // redirects, this same response (not a follow-up one) is what
+    // flushPageMessages() renders it into.
+    expect($postResult['body'])->toContain('Your comment has NOT been registered because it did not pass the validation rules');
 
     $db = pictureDbConnect();
     $row = H::fetchAssocOrFail($db, sprintf('SELECT content FROM %scomments WHERE id = %d', pictureDbPrefix(), $commentId));
@@ -838,6 +844,94 @@ function pictureSetImageDateAvailable(int $imageId, string $mysqlDateTime): void
         $imageId
     ));
     $db->close();
+}
+
+/** Directly links an image to an additional category -- for the multi-category breadcrumb test below, which needs a photo genuinely associated with 2+ real albums, not achievable through pwg.images.addSimple's own single-category upload. */
+function pictureAddImageToCategory(int $imageId, int $categoryId): void
+{
+    $db = pictureDbConnect();
+    $db->query(sprintf(
+        'INSERT INTO %simage_category (image_id, category_id) VALUES (%d, %d)',
+        pictureDbPrefix(),
+        $imageId,
+        $categoryId
+    ));
+    $db->close();
+}
+
+/** Directly strips every image_category row for an image -- for the fetchOne()===false access-denied branch below, which needs a real, otherwise-normal image genuinely orphaned from every category (not reachable by simply viewing it through the wrong album, which the row_level/filtered checks intercept first). */
+function pictureRemoveImageFromAllCategories(int $imageId): void
+{
+    $db = pictureDbConnect();
+    $db->query(sprintf('DELETE FROM %simage_category WHERE image_id = %d', pictureDbPrefix(), $imageId));
+    $db->close();
+}
+
+/** Directly inserts a piwigo_image_format row -- for the format-list building test below (download-URL fallback/Lang-key label lookup/filesize MB-formatting), not reachable through any WS method that lets a test control the stored filesize precisely. */
+function pictureInsertImageFormat(int $imageId, string $ext, int $filesizeKb): void
+{
+    $db = pictureDbConnect();
+    $db->query(sprintf(
+        "INSERT INTO %simage_format (image_id, ext, filesize) VALUES (%d, '%s', %d)",
+        pictureDbPrefix(),
+        $imageId,
+        $db->real_escape_string($ext),
+        $filesizeKb
+    ));
+    $db->close();
+}
+
+/**
+ * Reads the `pwg_id` session cookie's raw value out of a curl cookie-jar
+ * file (Netscape format) -- for pictureSessionDerivType() below, which
+ * needs the exact id to look the session row up by.
+ */
+function pictureCookieJarSessionId(string $cookieJar): string
+{
+    $contents = file_get_contents($cookieJar);
+    if ($contents === false) {
+        throw new RuntimeException('failed to read cookie jar: ' . $cookieJar);
+    }
+    foreach (explode("\n", $contents) as $line) {
+        $fields = explode("\t", $line);
+        if (($fields[5] ?? null) === 'pwg_id' && isset($fields[6])) {
+            return trim($fields[6]);
+        }
+    }
+
+    throw new RuntimeException('pwg_id cookie not found in jar: ' . $cookieJar);
+}
+
+/**
+ * Reads the real `pwg_picture_deriv` session var straight out of the
+ * DB-backed `sessions` table (Piwigo\Session\PwgSession's own save
+ * handler), keyed the same way that handler stores it: a literal '7F00'
+ * prefix in front of the session id carried by the `pwg_id` cookie
+ * (confirmed live -- the same fixed prefix appears for every session id
+ * regardless of client, not an IP-derived value despite the hex look).
+ * Session data uses PHP's own default `session.serialize_handler` format,
+ * and every real session var this app writes is itself namespaced with a
+ * `pwg_` prefix (SessionService's own convention) -- a plain regex avoids
+ * depending on session_decode()'s own ambient ini state from this
+ * separate CLI process.
+ */
+function pictureSessionDerivType(string $pwgIdCookieValue): ?string
+{
+    $db = pictureDbConnect();
+    $result = $db->query(sprintf(
+        "SELECT data FROM %ssessions WHERE id = '7F00%s'",
+        pictureDbPrefix(),
+        $db->real_escape_string($pwgIdCookieValue)
+    ));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+
+    $data = is_array($row) && is_string($row['data'] ?? null) ? $row['data'] : '';
+    if (preg_match('/pwg_picture_deriv\|s:\d+:"([^"]*)";/', $data, $matches) === 1) {
+        return $matches[1];
+    }
+
+    return null;
 }
 
 it("shows the access-denied page for a photo whose privacy level exceeds the viewer's, reached via a mismatched album", function (): void {
@@ -1021,6 +1115,31 @@ it('remembers a picture_deriv cookie choice in the session across a follow-up re
 
     // First request carries the cookie: defaultPictureContent() reads it,
     // persists 'large' into the session, and clears the cookie itself.
+    //
+    // The picture_deriv cookie must be appended to the cookie *jar file*
+    // itself, not passed as a manual 'Cookie:' header alongside
+    // CURLOPT_COOKIEFILE -- confirmed live via CURLOPT_VERBOSE that doing
+    // the latter sends TWO separate `Cookie:` header lines on the wire
+    // (one from the jar's real pwg_id, one from the manual header), which
+    // Apache/PHP only honors one of (whichever it picks -- confirmed by a
+    // brand-new pwg_id being issued back, meaning it silently dropped the
+    // real session cookie), losing the logged-in admin session entirely.
+    // Writing both cookies into the same jar file lets curl's own loader
+    // merge them into one real `Cookie: picture_deriv=large; pwg_id=...`
+    // header, which is what a real browser sending both cookies would
+    // produce.
+    $jarContents = file_get_contents($session['cookieJar']);
+    if ($jarContents === false) {
+        throw new RuntimeException('failed to read cookie jar: ' . $session['cookieJar']);
+    }
+    $baseUrlParts = parse_url($baseUrl);
+    $cookieHost = is_string($baseUrlParts['host'] ?? null) ? $baseUrlParts['host'] : '127.0.0.1';
+    $cookiePath = is_string($baseUrlParts['path'] ?? null) && $baseUrlParts['path'] !== '' ? $baseUrlParts['path'] : '/';
+    file_put_contents(
+        $session['cookieJar'],
+        $jarContents . "{$cookieHost}\tFALSE\t{$cookiePath}\tFALSE\t0\tpicture_deriv\tlarge\n"
+    );
+
     $ch = curl_init($picUrl);
     if ($ch === false) {
         throw new RuntimeException('curl_init failed');
@@ -1029,12 +1148,20 @@ it('remembers a picture_deriv cookie choice in the session across a follow-up re
     curl_setopt($ch, CURLOPT_COOKIEJAR, $session['cookieJar']);
     curl_setopt($ch, CURLOPT_COOKIEFILE, $session['cookieJar']);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [...H::testHeaders(), 'Cookie: picture_deriv=large']);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
     $firstBody = curl_exec($ch);
     $firstStatus = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     unset($ch);
     expect($firstStatus)->toBe(200);
     expect(is_string($firstBody) ? $firstBody : '')->not->toContain('Fatal error');
+
+    // Direct proof it was actually picked up and re-set into the session
+    // (not just "a follow-up request happens not to error", which the
+    // second request below alone would leave ambiguous) -- 'large' is not
+    // CurrentConfig::derivativeDefaultSize()'s own default ('medium'), so
+    // this can only be true if defaultPictureContent() really read the
+    // cookie and wrote it through SessionService::setSessionVar().
+    expect(pictureSessionDerivType(pictureCookieJarSessionId($session['cookieJar'])))->toBe('large');
 
     // Second request, no cookie this time: the session value from the
     // first request alone must still drive defaultPictureContent()'s
@@ -1068,6 +1195,46 @@ it('renders the related-categories breadcrumb via the single-category fast path 
     $page->assertSee($albumName);
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'picture.php related-categories single-category fast path');
+});
+
+it('renders the related-categories breadcrumb for every album a multi-category photo belongs to', function (): void {
+    // Distinct from the single-category fast path above:
+    // `count($related_categories) === 1` is false once a photo belongs to
+    // 2+ real albums, forcing PictureController's own multi-category else
+    // branch (the `SELECT id, name, permalink ... WHERE id IN (...)`
+    // lookup, one getCatDisplayName() call per related category) instead
+    // of reading straight off $page_category['upper_names'].
+    $page = H::loginAsAdmin($this);
+    $albumAName = 'Multi Cat Album A ' . uniqid();
+    $albumA = H::wsCall($page, 'pwg.categories.add', ['name' => $albumAName]);
+    $albumAResult = $albumA['result'] ?? null;
+    if (! is_array($albumAResult) || ! is_numeric($albumAResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($albumA, true));
+    }
+    $albumAId = (int) $albumAResult['id'];
+
+    $albumBName = 'Multi Cat Album B ' . uniqid();
+    $albumB = H::wsCall($page, 'pwg.categories.add', ['name' => $albumBName]);
+    $albumBResult = $albumB['result'] ?? null;
+    if (! is_array($albumBResult) || ! is_numeric($albumBResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($albumB, true));
+    }
+    $albumBId = (int) $albumBResult['id'];
+
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumAId, 'Multi Cat Photo');
+    @unlink($image);
+
+    // pwg.images.addSimple only ever links to its own single 'category'
+    // param -- a direct image_category insert is the only way to give a
+    // real, fully-wired photo a genuine SECOND album association.
+    pictureAddImageToCategory($imageId, $albumBId);
+
+    $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumAId);
+    $page->assertSee($albumAName);
+    $page->assertSee($albumBName);
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'picture.php related-categories multi-category branch');
 });
 
 it('renders slideshow mode with play/repeat/period controls and a real next item', function (): void {
@@ -1110,4 +1277,540 @@ it('renders slideshow mode with play/repeat/period controls and a real next item
     expect($body)->toContain('Do not repeat slideshow');
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'picture.php slideshow mode');
+});
+
+it('shows access-denied via the flat "all items" view when the photo\'s only album is private', function (): void {
+    // PictureController::__invoke()'s own flat-view branch
+    // (`$page_section === 'categories' and $page_category === null`) is
+    // only reachable when the image genuinely isn't part of the current
+    // flat item list -- engineered here deterministically by making its
+    // one and only album private (excluded from the permission-filtered
+    // flat query for a non-admin viewer, regardless of ambient
+    // site-wide image counts/pagination, unlike a bare picture.php
+    // request -- see this file's own top-of-file comment on exactly that
+    // fragility). The bare `/{imageId}` URL form (no `/category/`) is
+    // what UrlService::parseSectionUrl() turns into `page['flat'] = true`
+    // with no category -- confirmed live via source read
+    // (SectionPopulator.php's own "access a picture only by id, file or
+    // id-file without given section" comment).
+    $adminSession = pictureCurlLoginSession(H::ADMIN_USER, H::ADMIN_PASS);
+    $curl = $adminSession['curl'];
+    $baseUrl = $adminSession['baseUrl'];
+
+    $album = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.categories.add', 'name' => 'Flat View Denied Album ' . uniqid()]);
+    $albumData = json_decode($album['body'], true);
+    $albumResult = is_array($albumData) ? ($albumData['result'] ?? null) : null;
+    $albumIdRaw = is_array($albumResult) ? ($albumResult['id'] ?? null) : null;
+    $albumId = is_numeric($albumIdRaw) ? (int) $albumIdRaw : 0;
+    expect($albumId)->toBeGreaterThan(0);
+
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Flat View Denied Photo');
+    @unlink($image);
+
+    H::setCategoryPrivate($albumId, true);
+
+    try {
+        $regularSession = pictureCurlLoginSession('regular_user', 'regular_user_pass');
+        $result = $regularSession['curl']($baseUrl . '/picture.php?/' . $imageId);
+        @unlink($regularSession['cookieJar']);
+
+        expect($result['status'])->toBe(401);
+        expect($result['body'])->toContain('You are not authorized to access the requested page');
+    } finally {
+        H::setCategoryPrivate($albumId, false);
+        @unlink($adminSession['cookieJar']);
+    }
+});
+
+it('shows access-denied when a viewed image has no category association at all (the "try to access it differently" query finds nothing)', function (): void {
+    // Distinct from the flat-view branch above: this is reached via a
+    // real, specific /category/X view (so $page_category !== null,
+    // skipping the flat-view check entirely) once the image is confirmed
+    // not-filtered and not-over-level -- PictureController's own
+    // "try to see if we can access it differently" fetchOne() query joins
+    // image_category, and a real image genuinely orphaned from every
+    // category (the same state an image fully removed from its albums,
+    // or a still lounge-parked upload, would be in) makes that query find
+    // nothing, hitting access-denied() rather than either the best_rated
+    // fallback or the redirect this file's other tests cover for the
+    // "found via a different category" case.
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Orphaned Image Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Orphaned Image Photo');
+    @unlink($image);
+
+    pictureRemoveImageFromAllCategories($imageId);
+
+    $adminSession = pictureCurlLoginSession(H::ADMIN_USER, H::ADMIN_PASS);
+    $result = $adminSession['curl']($adminSession['baseUrl'] . '/picture.php?/' . $imageId . '/category/' . $albumId);
+    @unlink($adminSession['cookieJar']);
+
+    expect($result['status'])->toBe(401);
+    expect($result['body'])->toContain('You are not authorized to access the requested page');
+});
+
+it('appends the current photo into best_rated\'s own item list instead of redirecting, when it is accessible but not actually top-rated', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Best Rated Fallback Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Best Rated Fallback Photo');
+    @unlink($image);
+
+    // No rate config/data manipulation needed: SectionPopulator's own
+    // best_rated query (`ORDER BY rating_score DESC`) only ever returns
+    // images with at least one real piwigo_rate row -- a brand-new,
+    // never-rated photo is guaranteed to not already be part of that
+    // list. Viewing it via /best_rated therefore deterministically
+    // exercises PictureController's own best_rated-specific fallback
+    // (`$rank_of[$image_id] = count($items); $items[] = $image_id;` then
+    // SectionContextRegistry::set()) rather than the redirect the exact
+    // same "not in the section's item list, but accessible via a
+    // different category" state hits for every other section (covered by
+    // the sibling test below) -- a real 200 render, not a 30x.
+    $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/best_rated');
+    $page->assertSee('Best Rated Fallback Photo');
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'picture.php best_rated fallback');
+});
+
+it('redirects to the canonical flat picture URL when the image is not part of the requested section (301 for recent_pics, 302 for most_visited)', function (): void {
+    $adminSession = pictureCurlLoginSession(H::ADMIN_USER, H::ADMIN_PASS);
+    $curl = $adminSession['curl'];
+    $baseUrl = $adminSession['baseUrl'];
+
+    $album = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.categories.add', 'name' => 'Redirect Section Album ' . uniqid()]);
+    $albumData = json_decode($album['body'], true);
+    $albumResult = is_array($albumData) ? ($albumData['result'] ?? null) : null;
+    $albumIdRaw = is_array($albumResult) ? ($albumResult['id'] ?? null) : null;
+    $albumId = is_numeric($albumIdRaw) ? (int) $albumIdRaw : 0;
+    expect($albumId)->toBeGreaterThan(0);
+
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Redirect Section Photo');
+    @unlink($image);
+
+    // Backdated well outside any real "recent" window (same technique as
+    // the "filtered" test above) AND never viewed (hit stays 0, the
+    // freshly-inserted default) -- excludes this SAME photo from both the
+    // recent_pics query (date_available-gated) and the most_visited query
+    // (`WHERE hit > 0`) at once, so one photo deterministically drives
+    // both assertions below without an intervening view bumping its hit
+    // count.
+    pictureSetImageDateAvailable($imageId, date('Y-m-d H:i:s', strtotime('-90 days')));
+
+    // Raw curl, no auto-follow: need the real 30x status code + Location
+    // header, not fetch(manual)'s always-opaque status.
+    $fetchRedirect = static function (string $url) use ($adminSession): array {
+        $ch = curl_init($url);
+        if ($ch === false) {
+            throw new RuntimeException('curl_init failed');
+        }
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $adminSession['cookieJar']);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $adminSession['cookieJar']);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+        curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        $location = curl_getinfo($ch, CURLINFO_REDIRECT_URL);
+        unset($ch);
+
+        return ['status' => $status, 'location' => is_string($location) ? $location : ''];
+    };
+
+    $recent = $fetchRedirect($baseUrl . '/picture.php?/' . $imageId . '/recent_pics');
+    $mostVisited = $fetchRedirect($baseUrl . '/picture.php?/' . $imageId . '/most_visited');
+    @unlink($adminSession['cookieJar']);
+
+    expect($recent['status'])->toBe(301);
+    expect($recent['location'])->toContain('/' . $imageId . '/categories');
+    expect($mostVisited['status'])->toBe(302);
+    expect($mostVisited['location'])->toContain('/' . $imageId . '/categories');
+});
+
+it('flashes an admin-authorization message via the session when a non-admin\'s comment edit needs moderation', function (): void {
+    // CommentService::updateComment()'s own 'moderate' branch requires
+    // BOTH comments_validation=true AND the editor NOT being an admin --
+    // and canManageComment('edit', ...) additionally requires
+    // user_can_edit_comment=true for a non-admin to manage their OWN
+    // comment at all (both false by default in this fixture).
+    $snapshot = H::snapshotConfig(['comments_validation', 'user_can_edit_comment']);
+    H::setConfigValue('comments_validation', 'true');
+    H::setConfigValue('user_can_edit_comment', 'true');
+
+    try {
+        $adminSession = pictureCurlLoginSession(H::ADMIN_USER, H::ADMIN_PASS);
+        $baseUrl = $adminSession['baseUrl'];
+        $album = $adminSession['curl']($baseUrl . '/ws.php?format=json', ['method' => 'pwg.categories.add', 'name' => 'Moderate Flash Album ' . uniqid()]);
+        $albumData = json_decode($album['body'], true);
+        $albumResult = is_array($albumData) ? ($albumData['result'] ?? null) : null;
+        $albumIdRaw = is_array($albumResult) ? ($albumResult['id'] ?? null) : null;
+        $albumId = is_numeric($albumIdRaw) ? (int) $albumIdRaw : 0;
+        expect($albumId)->toBeGreaterThan(0);
+
+        $image = H::makeTestImage(uniqid());
+        $imageId = H::uploadPhotoViaApi($image, $albumId, 'Moderate Flash Photo');
+        @unlink($image);
+        @unlink($adminSession['cookieJar']);
+
+        // author_id=3 (regular_user, the same real account this file's
+        // other edit_comment tests already use) -- editing their OWN
+        // comment is what canManageComment('edit', ...) allows for a
+        // non-admin.
+        $commentId = pictureInsertComment($imageId, 'moderate-me-' . uniqid(), 'Original moderate content.', true, 3);
+
+        $userSession = pictureCurlLoginSession('regular_user', 'regular_user_pass');
+        $curl = $userSession['curl'];
+
+        $statusResult = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.session.getStatus']);
+        $decodedStatus = json_decode($statusResult['body'], true);
+        $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
+        $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+        $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
+        expect($pwgToken)->not->toBe('');
+
+        $editUrl = $baseUrl . '/picture.php?/' . $imageId . '/category/' . $albumId
+            . '&action=edit_comment&comment_to_edit=' . $commentId;
+
+        $getResult = $curl($editUrl);
+        if (preg_match('/name="key" value="([^"]+)"/', $getResult['body'], $matches) !== 1) {
+            throw new RuntimeException('Could not find the edit-comment form\'s hidden key field in: ' . $getResult['body']);
+        }
+        $key = html_entity_decode($matches[1]);
+
+        // Same >=2 real wall-clock second minimum-key-age wait this file's
+        // other edit_comment tests already use.
+        sleep(3);
+
+        $postResult = $curl($editUrl, [
+            'content' => 'Moderated content update ' . uniqid(),
+            'website_url' => '',
+            'key' => $key,
+            'pwg_token' => $pwgToken,
+        ], false);
+        expect($postResult['status'])->toBe(302);
+
+        // 'moderate' falls through to 'validate' in PictureController's own
+        // switch (no `break` between the two cases) -- BOTH messages are
+        // queued via $_SESSION['page_infos'][], and $perform_redirect ends
+        // up true from the 'validate' case, so a real redirect happens.
+        // Follow it for real (not fetch(manual)'s opaque status) to prove
+        // HtmlService::flushMessageMode() -- which reads
+        // `$_SESSION['page_' . $mode]` generically, not the literal string
+        // 'page_infos' -- actually surfaces this on the next page, the
+        // same mechanism this session's own PasswordController fix
+        // (a873f5ca7d) relies on for its own $_SESSION['page_errors']
+        // flash. $url_self (the real redirect target, computed early in
+        // __invoke() as a bare duplicatePictureUrl(), before the
+        // action-handling switch ever runs) has no action/comment params
+        // of its own -- match it exactly rather than reusing $editUrl.
+        $plainPictureUrl = $baseUrl . '/picture.php?/' . $imageId . '/category/' . $albumId;
+        $finalBody = $curl($plainPictureUrl)['body'];
+
+        $db = pictureDbConnect();
+        $row = H::fetchAssocOrFail($db, sprintf('SELECT content, validated FROM %scomments WHERE id = %d', pictureDbPrefix(), $commentId));
+        $db->close();
+        @unlink($userSession['cookieJar']);
+
+        expect((int) $row['validated'])->toBe(0);
+        expect($finalBody)->toContain('An administrator must authorize your comment before it becomes visible.');
+        expect($finalBody)->toContain('Your comment has been registered');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('logs a PHP warning and still renders when a plugin-registered user_comment_check handler returns an unrecognized action', function (): void {
+    // CommentService::updateComment() only ever produces 'validate',
+    // 'moderate' or 'reject' on its own -- the `default:
+    // trigger_error(E_USER_WARNING)` case in PictureController's own
+    // switch is a defensive guard against a MISBEHAVING plugin handler of
+    // the `user_comment_check` event (its own contract explicitly
+    // requires one of those 3 strings back), not reachable through normal
+    // request input alone. Reaching it for real needs a real plugin --
+    // Admin\PluginLoader::loadPlugins() include_once()s
+    // plugins/{id}/main.inc.php for every DB-active row on every request,
+    // the same real mechanism a genuine misbehaving 3rd-party plugin would
+    // use. Content-marker-gated (only ever intervenes for THIS test's own
+    // unique comment content) so it's a complete no-op for every other
+    // concurrent request against this shared dev server while active, and
+    // both the DB row and the plugin file are removed again in `finally`.
+    $pluginId = 'pwgtest-picture-bogus-comment-action';
+    $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
+    $marker = 'PWGTEST_BOGUS_ACTION_MARKER_' . uniqid();
+
+    if (! is_dir($pluginDir) && ! mkdir($pluginDir, 0o777, true) && ! is_dir($pluginDir)) {
+        throw new RuntimeException('failed to create plugin dir: ' . $pluginDir);
+    }
+    $mainFile = $pluginDir . '/main.inc.php';
+    file_put_contents($mainFile, <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        /*
+        Plugin Name: PictureController Test -- Bogus Comment Action
+        Version: 1.0.0
+        Description: Test-only fixture plugin (tests/Browser/PictureControllerTest.php).
+        */
+
+        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addEventHandler(
+            'user_comment_check',
+            static function (mixed \$action, array \$comment): mixed {
+                \$content = is_string(\$comment['content'] ?? null) ? \$comment['content'] : '';
+                if (str_contains(\$content, '{$marker}')) {
+                    return 'this-is-not-a-real-comment-action';
+                }
+
+                return \$action;
+            }
+        );
+
+        PHP);
+
+    $pluginDb = pictureDbConnect();
+    $pluginDb->query(sprintf(
+        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
+        pictureDbPrefix(),
+        $pluginId
+    ));
+    $pluginDb->close();
+    // The DB `config` cache pool has no bearing on plugin *loading* itself
+    // (PluginLoader::loadPlugins() always re-queries active plugins fresh,
+    // no cache layer of its own) -- no cache-clear needed here, unlike the
+    // config-param tests elsewhere in this suite.
+
+    // canManageComment('edit', ...) requires user_can_edit_comment=true for
+    // a non-admin to manage their OWN comment at all (false by default in
+    // this fixture) -- same requirement as this file's own "flashes an
+    // admin-authorization message..." test above. Without it, regular_user
+    // never reaches the edit_comment action at all and the page silently
+    // falls back to rendering the plain "Add a comment" form instead.
+    $configSnapshot = H::snapshotConfig(['user_can_edit_comment']);
+    H::setConfigValue('user_can_edit_comment', 'true');
+
+    try {
+        $adminSession = pictureCurlLoginSession(H::ADMIN_USER, H::ADMIN_PASS);
+        $baseUrl = $adminSession['baseUrl'];
+        $album = $adminSession['curl']($baseUrl . '/ws.php?format=json', ['method' => 'pwg.categories.add', 'name' => 'Bogus Action Album ' . uniqid()]);
+        $albumData = json_decode($album['body'], true);
+        $albumResult = is_array($albumData) ? ($albumData['result'] ?? null) : null;
+        $albumIdRaw = is_array($albumResult) ? ($albumResult['id'] ?? null) : null;
+        $albumId = is_numeric($albumIdRaw) ? (int) $albumIdRaw : 0;
+        expect($albumId)->toBeGreaterThan(0);
+
+        $image = H::makeTestImage(uniqid());
+        $imageId = H::uploadPhotoViaApi($image, $albumId, 'Bogus Action Photo');
+        @unlink($image);
+        @unlink($adminSession['cookieJar']);
+
+        $commentId = pictureInsertComment($imageId, 'bogus-action-' . uniqid(), 'Original bogus-action content.', true, 3);
+
+        $userSession = pictureCurlLoginSession('regular_user', 'regular_user_pass');
+        $curl = $userSession['curl'];
+
+        $statusResult = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.session.getStatus']);
+        $decodedStatus = json_decode($statusResult['body'], true);
+        $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
+        $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+        $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
+        expect($pwgToken)->not->toBe('');
+
+        $editUrl = $baseUrl . '/picture.php?/' . $imageId . '/category/' . $albumId
+            . '&action=edit_comment&comment_to_edit=' . $commentId;
+
+        $getResult = $curl($editUrl);
+        if (preg_match('/name="key" value="([^"]+)"/', $getResult['body'], $matches) !== 1) {
+            throw new RuntimeException('Could not find the edit-comment form\'s hidden key field in: ' . $getResult['body']);
+        }
+        $key = html_entity_decode($matches[1]);
+        sleep(3);
+
+        $postResult = $curl($editUrl, [
+            'content' => 'Bogus action content update ' . $marker,
+            'website_url' => '',
+            'key' => $key,
+            'pwg_token' => $pwgToken,
+        ]);
+        @unlink($userSession['cookieJar']);
+
+        // The switch's `default` case has no `$perform_redirect = true` of
+        // its own (only 'validate' sets that) -- execution falls straight
+        // through to rendering the SAME picture page again (200, still in
+        // edit-comment mode), not a redirect.
+        expect($postResult['status'])->toBe(200);
+        expect($postResult['body'])->not->toContain('Fatal error');
+
+        // CommentService::updateComment()'s own DB write
+        // (`'validated' => $commentAction === 'validate'`) still runs
+        // unconditionally for any $commentAction !== 'reject' -- the
+        // content update itself is real, only 'validated' differs from
+        // the normal 'validate'/'moderate' outcomes (also both false/0
+        // here, so this alone wouldn't distinguish the branch -- the 200
+        // instead of the redirect this file's other successful-edit tests
+        // get is the real, distinguishing signal above).
+        $db = pictureDbConnect();
+        $row = H::fetchAssocOrFail($db, sprintf('SELECT content, validated FROM %scomments WHERE id = %d', pictureDbPrefix(), $commentId));
+        $db->close();
+        expect($row['content'])->toBe('Bogus action content update ' . $marker);
+        expect((int) $row['validated'])->toBe(0);
+    } finally {
+        $cleanupDb = pictureDbConnect();
+        $cleanupDb->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", pictureDbPrefix(), $pluginId));
+        $cleanupDb->close();
+        @unlink($mainFile);
+        @rmdir($pluginDir);
+        H::restoreConfig($configSnapshot);
+    }
+});
+
+it('builds a download-format list with the URL fallback, strtoupper() label fallback, and MB-formatted filesize for a real extra format row', function (): void {
+    // isFormatsEnabled() defaults false; pictureDownloadIcon() defaults
+    // true and enabled_high defaults true for the fixture admin (both
+    // already exercised implicitly by every other passing test, so left
+    // alone here) -- only enable_formats needs a real snapshot/restore.
+    $snapshot = H::snapshotConfig(['enable_formats']);
+    H::setConfigValue('enable_formats', 'true');
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Format List Album ' . uniqid()]);
+        $albumResult = $album['result'] ?? null;
+        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumId = (int) $albumResult['id'];
+        $image = H::makeTestImage(uniqid());
+        $imageId = H::uploadPhotoViaApi($image, $albumId, 'Format List Photo');
+        @unlink($image);
+
+        // A real piwigo_image_format row with no lang catalog entry for
+        // 'format WEBP' (confirmed live: no core language file, en_UK or
+        // otherwise, in this repo or the 16.x reference tree defines any
+        // 'format <EXT>' msgid -- Lang::has()'s own true branch is
+        // realistically unreachable with the shipped catalogs, so this
+        // deliberately exercises the strtoupper() fallback, the one real
+        // path). 2048 KB -> exactly 2.0MB (2048/1024) once
+        // sprintf('%.1fMB', ...) formats it.
+        pictureInsertImageFormat($imageId, 'webp', 2048);
+
+        $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId);
+        $body = H::rawWebpage($page)->content();
+
+        // The array_unshift()-ed original entry already has its own real
+        // download_url (action.php?id=...&part=e&download) set directly
+        // on the literal -- the format-fallback branch
+        // (`action.php?format=<id>&amp;download`) only ever applies to
+        // the *other* rows built from Projection\ImageFormat::toArray(),
+        // which never has a 'download_url' key at all.
+        expect($body)->toMatch('/action\.php\?format=\d+&amp;download/');
+        expect($body)->toContain('>WEBP<span class="downloadformatDetails"> (2.0MB)</span>');
+        $page->assertNoJavaScriptErrors();
+        H::assertNoServerErrors($page, 'picture.php format list');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('assigns PDF_VIEWER_FILESIZE_THRESHOLD/PDF_NB_PAGES and renders the inline PDF viewer for a PDF-format image', function (): void {
+    // No Browser-suite fixture already produces a real PDF upload
+    // end-to-end (UploadServiceTest's own uploadFilePdf() coverage is
+    // Unit-level, calling the static conversion method directly, never
+    // through a live HTTP request) -- and CurrentConfig::
+    // uploadFormAllTypes() defaults false, gating the WS upload pipeline's
+    // own non-image branch. Rather than flipping that global config for
+    // the whole shared dev server (affecting every concurrent request
+    // while active) just to exercise ONE unrelated template-var branch,
+    // this uploads a real, fully-wired JPEG through the normal path (real
+    // category/permission/thumbnail wiring) and then swaps its `file`/
+    // `path`/`filesize` DB columns to point at a real PDF placed at that
+    // same on-disk location -- exactly what PictureController itself
+    // reads (extension + path + filesize), independent of how the image
+    // got there.
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'PDF Viewer Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'PDF Viewer Photo');
+    @unlink($image);
+
+    $relativePath = H::imagePath($imageId);
+    $root = dirname(__DIR__, 2) . '/';
+    $absoluteJpgPath = $root . $relativePath;
+    $absolutePdfPath = preg_replace('/\.[^.\/]+$/', '.pdf', $absoluteJpgPath);
+    $relativePdfPath = preg_replace('/\.[^.\/]+$/', '.pdf', $relativePath);
+    if (! is_string($absolutePdfPath) || ! is_string($relativePdfPath)) {
+        throw new RuntimeException('preg_replace() failed to build the .pdf path');
+    }
+
+    // Same real ImageMagick CLI conversion UploadServiceTest's own
+    // uploadFilePdf() coverage uses (`convert`, confirmed on PATH) --
+    // produces a genuine PDF with real internal `/Page` markers
+    // ImageService::countPdfPages() can actually count, not a fake
+    // "%PDF" byte-stub.
+    $sourcePng = sys_get_temp_dir() . '/pwg_pdf_viewer_source_' . uniqid() . '.png';
+    exec('convert -size 40x40 xc:blue ' . escapeshellarg($sourcePng) . ' 2>&1', $out1, $status1);
+    if ($status1 !== 0) {
+        throw new RuntimeException('convert (sample PNG) failed: ' . implode("\n", $out1));
+    }
+    exec('convert ' . escapeshellarg($sourcePng) . ' ' . escapeshellarg($absolutePdfPath) . ' 2>&1', $out2, $status2);
+    @unlink($sourcePng);
+    if ($status2 !== 0) {
+        throw new RuntimeException('convert (PNG -> PDF) failed: ' . implode("\n", $out2));
+    }
+    $pdfFilesizeBytes = filesize($absolutePdfPath);
+    if ($pdfFilesizeBytes === false) {
+        throw new RuntimeException('filesize() failed for ' . $absolutePdfPath);
+    }
+    // Matches UploadService::pwgImageInfos()'s own floor(bytes/1024)
+    // convention for the images.filesize column (KB, not bytes) -- well
+    // under the 5*1024 KB default pdf_viewer_filesize_threshold either
+    // way, so the inline <embed> branch (not the "too large" one) is the
+    // one genuinely exercised here.
+    $pdfFilesizeKb = (int) floor($pdfFilesizeBytes / 1024);
+
+    $pdfFilename = basename($relativePdfPath);
+    $db = pictureDbConnect();
+    $db->query(sprintf(
+        "UPDATE %simages SET file = '%s', path = '%s', filesize = %d WHERE id = %d",
+        pictureDbPrefix(),
+        $db->real_escape_string($pdfFilename),
+        $db->real_escape_string($relativePdfPath),
+        $pdfFilesizeKb,
+        $imageId
+    ));
+    $db->close();
+
+    try {
+        $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId);
+        $body = H::rawWebpage($page)->content();
+
+        expect($body)->toContain('<embed src="' . $relativePdfPath . '" type="application/pdf"');
+        expect($body)->not->toContain('too large to display');
+        expect($body)->toContain('<dt>Pages</dt>');
+        // countPdfPages()'s own preg_match_all('/\/Page\W/', ...) on a
+        // real single-page ImageMagick-converted PDF is always exactly 1
+        // -- confirmed live.
+        expect($body)->toMatch('/<dt>Pages<\/dt>\s*<dd>1<\/dd>/');
+        $page->assertNoJavaScriptErrors();
+        H::assertNoServerErrors($page, 'picture.php PDF viewer');
+    } finally {
+        @unlink($absolutePdfPath);
+    }
 });

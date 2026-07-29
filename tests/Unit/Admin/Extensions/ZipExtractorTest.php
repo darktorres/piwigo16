@@ -160,3 +160,164 @@ test('extract with a bare "." removePrefix does not strip anything', function ()
     expect($result)->not->toBeNull();
     expect(file_get_contents($dest . '/main.inc.php'))->toBe('<?php // main');
 });
+
+test('extract marks the directory entry that exactly matches removePrefix as filtered instead of creating it', function (): void {
+    $archive = zip_extractor_test_marker() . '/a.zip';
+    zip_extractor_build_archive($archive, [
+        // The archive's own root marker directory entry -- stored name
+        // equals removePrefix ('plugin_id/') exactly once the trailing
+        // slash is appended, so it must be filtered rather than mkdir'd
+        // into the destination tree as a real 'plugin_id' subfolder.
+        'plugin_id/' => '',
+        'plugin_id/main.inc.php' => '<?php // main',
+    ]);
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id');
+
+    expect($result)->toBe([
+        [
+            'filename' => 'plugin_id/',
+            'stored_filename' => 'plugin_id/',
+            'status' => 'filtered',
+        ],
+        [
+            'filename' => $dest . '/main.inc.php',
+            'stored_filename' => 'plugin_id/main.inc.php',
+            'status' => 'ok',
+        ],
+    ]);
+    expect(is_dir($dest . '/plugin_id'))->toBeFalse();
+    expect(file_get_contents($dest . '/main.inc.php'))->toBe('<?php // main');
+});
+
+test('extract recursively creates a nested directory entry and lists it with ok status', function (): void {
+    $archive = zip_extractor_test_marker() . '/a.zip';
+    zip_extractor_build_archive($archive, [
+        'plugin_id/assets/img/' => '',
+        'plugin_id/assets/img/logo.png' => 'PNGDATA',
+    ]);
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id');
+
+    expect($result)->toBe([
+        [
+            'filename' => $dest . '/assets/img/',
+            'stored_filename' => 'plugin_id/assets/img/',
+            'status' => 'ok',
+        ],
+        [
+            'filename' => $dest . '/assets/img/logo.png',
+            'stored_filename' => 'plugin_id/assets/img/logo.png',
+            'status' => 'ok',
+        ],
+    ]);
+    expect(is_dir($dest . '/assets/img'))->toBeTrue();
+    expect(file_get_contents($dest . '/assets/img/logo.png'))->toBe('PNGDATA');
+});
+
+test('extract marks a file entry as already_a_directory when its target path was already created as a directory', function (): void {
+    $archive = zip_extractor_test_marker() . '/a.zip';
+    zip_extractor_build_archive($archive, [
+        // A directory entry ('foo/') followed by a file entry whose
+        // stripped name ('foo') resolves to the exact same destination
+        // path -- the file must not clobber the directory.
+        'plugin_id/foo/' => '',
+        'plugin_id/foo' => 'should not be written',
+    ]);
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id');
+
+    expect($result)->toBe([
+        [
+            'filename' => $dest . '/foo/',
+            'stored_filename' => 'plugin_id/foo/',
+            'status' => 'ok',
+        ],
+        [
+            'filename' => $dest . '/foo',
+            'stored_filename' => 'plugin_id/foo',
+            'status' => 'already_a_directory',
+        ],
+    ]);
+    expect(is_dir($dest . '/foo'))->toBeTrue();
+    expect(is_file($dest . '/foo'))->toBeFalse();
+});
+
+test('extract overwrites an existing destination file with the archive contents', function (): void {
+    $archive = zip_extractor_test_marker() . '/a.zip';
+    zip_extractor_build_archive($archive, [
+        'plugin_id/main.inc.php' => '<?php // new',
+    ]);
+    $dest = zip_extractor_test_marker() . '/extracted';
+    mkdir($dest, 0o777, true);
+    file_put_contents($dest . '/main.inc.php', '<?php // old');
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id');
+
+    expect($result)->toBe([
+        [
+            'filename' => $dest . '/main.inc.php',
+            'stored_filename' => 'plugin_id/main.inc.php',
+            'status' => 'ok',
+        ],
+    ]);
+    expect(file_get_contents($dest . '/main.inc.php'))->toBe('<?php // new');
+});
+
+test('extract records a write_error result and leaves the file unwritten when the destination directory is not writable', function (): void {
+    $archive = zip_extractor_test_marker() . '/a.zip';
+    zip_extractor_build_archive($archive, [
+        'plugin_id/main.inc.php' => '<?php // main',
+    ]);
+    $dest = zip_extractor_test_marker() . '/extracted';
+    mkdir($dest, 0o777, true);
+    chmod($dest, 0o555);
+
+    // fopen()'s own permission-denied failure raises a real E_WARNING --
+    // this project's phpunit.xml.dist (failOnWarning) would otherwise
+    // convert that into a test failure. Suppressed here deliberately, same
+    // technique as tests/Integration/BackupServiceTest.php's own
+    // set_error_handler() use, so extract() reaches its own write_error
+    // status instead of a PHPUnit\Framework\Error\Warning.
+    set_error_handler(static fn (): bool => true, E_WARNING);
+    try {
+        $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id');
+    } finally {
+        restore_error_handler();
+    }
+
+    expect($result)->toBe([
+        [
+            'filename' => $dest . '/main.inc.php',
+            'stored_filename' => 'plugin_id/main.inc.php',
+            'status' => 'write_error',
+        ],
+    ]);
+    expect(file_exists($dest . '/main.inc.php'))->toBeFalse();
+});
+
+test('extract applies the given chmod mode to each extracted file', function (): void {
+    $archive = zip_extractor_test_marker() . '/a.zip';
+    zip_extractor_build_archive($archive, [
+        'plugin_id/main.inc.php' => '<?php // main',
+    ]);
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', 0o640);
+
+    expect($result)->not->toBeNull();
+    expect(fileperms($dest . '/main.inc.php') & 0o777)->toBe(0o640);
+});
+
+test('extract returns null for a corrupt (non-zip) archive file', function (): void {
+    $corrupt = zip_extractor_test_marker() . '/corrupt.zip';
+    file_put_contents($corrupt, 'this is not a zip file');
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($corrupt, $dest, 'plugin_id');
+
+    expect($result)->toBeNull();
+});

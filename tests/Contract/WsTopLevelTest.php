@@ -64,6 +64,55 @@ final class WsTopLevelTest extends ContractTestCase
         self::assertSame('fail', $response['stat']);
     }
 
+    /**
+     * getCacheSize() shells out to `du -sk <path>` and, when it parses a
+     * leading numeric KB count from the output, converts it to bytes via
+     * `(int) $matches[1] * 1024` -- for both the top-level cache dir
+     * ('cache_size') and _data/templates_c ('tsizes'). This repo's own
+     * real _data/ directory (and _data/templates_c within it) always has
+     * real content by the time this Contract suite runs, so both real `du`
+     * invocations always succeed and parse -- confirmed live (a real WS
+     * call against the real Apache-served app, not a unit test poking
+     * internals) before writing this assertion.
+     *
+     * Real production bug fixed alongside this test, not just a test
+     * addition: getCacheSize() used $data_location ('_data/') completely
+     * bare, unlike every other real call site of
+     * CurrentConfig::dataLocation() in this codebase (PersistentFileCache,
+     * FeedController, RequestBootstrap, Template, IntroSubController,
+     * MailService, CoreUpdateService), all of which correctly prefix it
+     * with CurrentPaths::get()->root per Paths' own class-level contract.
+     * Under this rewrite's public/ webroot, the real request-time CWD is
+     * public/, not the install root, so the bare relative path silently
+     * resolved `du` against public/_data/ -- an unrelated, near-empty stub
+     * containing only a `combined` symlink -- instead of the real _data/
+     * directory. That made cache_size report a bogus ~4KB and tsizes
+     * always null (public/_data has no templates_c/ at all), confirmed
+     * live before the fix by the same manual WS call above.
+     */
+    public function test_getCacheSize_computes_real_byte_sizes_from_du(): void
+    {
+        $response = $this->wsAdmin('pwg.getCacheSize');
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $infos = $result['infos'];
+        self::assertIsArray($infos);
+
+        $values = array_column($infos, 'value', 'name');
+        self::assertArrayHasKey('cache_size', $values);
+        self::assertArrayHasKey('tsizes', $values);
+
+        self::assertIsInt($values['cache_size']);
+        self::assertGreaterThan(0, $values['cache_size']);
+        self::assertSame(0, $values['cache_size'] % 1024, 'cache_size must be a whole multiple of 1024 (KB parsed from du, times 1024)');
+
+        self::assertIsInt($values['tsizes']);
+        self::assertGreaterThan(0, $values['tsizes']);
+        self::assertSame(0, $values['tsizes'] % 1024, 'tsizes must be a whole multiple of 1024 (KB parsed from du, times 1024)');
+    }
+
     public function test_getMissingDerivatives_returns_url_list(): void
     {
         $response = $this->wsAdmin('pwg.getMissingDerivatives', ['max_urls' => 10]);
@@ -169,5 +218,66 @@ final class WsTopLevelTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
         self::assertSame(0, $response['result']);
+    }
+
+    /**
+     * ratesDelete()'s anonymous_id branch is only reachable when the
+     * request supplies a non-empty, non-null anonymous_id -- every other
+     * test above omits it (the WS default), which never touches this AND
+     * anonymous_id=... SQL fragment at all. Uses a throwaway image (not a
+     * fixture image 1-5) and cleans up via a real pwg.rates.delete call
+     * before deleting it, same "avoid nudging the shared fixture's
+     * rating_score, which other test files also read" rationale as
+     * WsImagesMutationTest's own insertThrowawayImage() helper --
+     * RateService::updateRatingScore() (triggered by every real delete)
+     * recomputes every image's rating_score from a global average over the
+     * whole piwigo_rate table, not just the touched row.
+     */
+    public function test_ratesDelete_with_anonymous_id_only_removes_the_matching_rate(): void
+    {
+        $guestId = $this->conn->fetchOne(
+            'SELECT id FROM ' . Tables::users() . ' WHERE username = ?',
+            ['guest']
+        );
+        self::assertIsNumeric($guestId);
+
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::images() . ' (file, path) VALUES (?, ?)',
+            ['pwgcore-throwaway-' . uniqid() . '.jpg', 'upload/pwgcore-throwaway.jpg']
+        );
+        $imageId = (int) $this->conn->lastInsertId();
+
+        try {
+            $this->conn->executeStatement(
+                'INSERT INTO ' . Tables::rate() . ' (user_id, element_id, anonymous_id, rate, date) VALUES (?, ?, ?, 4, CURDATE())',
+                [(int) $guestId, $imageId, 'anon-a']
+            );
+            $this->conn->executeStatement(
+                'INSERT INTO ' . Tables::rate() . ' (user_id, element_id, anonymous_id, rate, date) VALUES (?, ?, ?, 2, CURDATE())',
+                [(int) $guestId, $imageId, 'anon-b']
+            );
+
+            $response = $this->wsAdmin('pwg.rates.delete', [
+                'user_id' => (int) $guestId,
+                'image_id' => $imageId,
+                'anonymous_id' => 'anon-a',
+            ]);
+
+            self::assertSame('ok', $response['stat']);
+            self::assertSame(1, $response['result']);
+
+            $remaining = $this->conn->fetchAllAssociative(
+                'SELECT anonymous_id FROM ' . Tables::rate() . ' WHERE user_id = ? AND element_id = ?',
+                [(int) $guestId, $imageId]
+            );
+            self::assertSame(['anon-b'], array_column($remaining, 'anonymous_id'));
+        } finally {
+            // Deletes the still-remaining 'anon-b' rate via the real WS
+            // method (not raw SQL) so RateService::updateRatingScore() gets
+            // one final recompute against the fully-restored piwigo_rate
+            // table before the throwaway image itself is removed.
+            $this->wsAdmin('pwg.rates.delete', ['user_id' => (int) $guestId, 'image_id' => $imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        }
     }
 }

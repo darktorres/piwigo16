@@ -15,9 +15,18 @@ namespace Piwigo\Core;
  */
 final class FeatureFlag
 {
-    public static function isEnabled(string $flag): bool
+    /**
+     * `$configPath` defaults to null and falls back to the real
+     * `config/feature-flags.php`, mirroring `CliBootstrap::buildApplication()`'s
+     * `$commandsFile` parameter -- the only seam for
+     * tests/Unit/Core/FeatureFlagTest.php to exercise the
+     * must-return-an-array guard against a disposable fixture file instead
+     * of ever having to overwrite the real, shared production file
+     * mid-suite.
+     */
+    public static function isEnabled(string $flag, ?string $configPath = null): bool
     {
-        $flags = require dirname(__DIR__, 3) . '/config/feature-flags.php';
+        $flags = require $configPath ?? dirname(__DIR__, 3) . '/config/feature-flags.php';
         if (! is_array($flags)) {
             throw new \RuntimeException('config/feature-flags.php must return an array of flag => bool.');
         }

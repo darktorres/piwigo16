@@ -104,6 +104,22 @@ test('getRemoteAddrSessionHash returns empty string for an ipv6 REMOTE_ADDR', fu
     expect($service->getRemoteAddrSessionHash())->toBe('');
 });
 
+test('getRemoteAddrSessionHash returns empty string instead of throwing when REMOTE_ADDR is unset', function (): void {
+    // Real bug, found via a new Integration test that legitimately creates
+    // a session outside a real HTTP request (a CLI-driven install/
+    // bootstrap flow, with no REMOTE_ADDR at all): IpAddress::fromRemoteAddr()
+    // returns null, ->value ?? '' resolves to '', and explode('.', '')
+    // used to be handed straight to vsprintf('%02X%02X', ...), which
+    // throws a ValueError for a 1-element array instead of falling back
+    // to the same "no real IP" empty-string result this method already
+    // returns for ipv6.
+    unset($_SERVER['REMOTE_ADDR']);
+    $service = makeSessionService();
+    CurrentConfig::setSessionUseIpAddress(true);
+
+    expect($service->getRemoteAddrSessionHash())->toBe('');
+});
+
 test('setSessionVar/getSessionVar/unsetSessionVar round-trip through $_SESSION', function (): void {
     $service = makeSessionService();
     $_SESSION = [];

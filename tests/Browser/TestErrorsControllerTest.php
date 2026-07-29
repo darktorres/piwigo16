@@ -26,8 +26,11 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * ''@'localhost'" DB-connection fatal from RequestBootstrap::configure(),
  * well before this controller's own body ever runs), so that branch is
  * untestable via a real HTTP request in this environment regardless of
- * which route is hit -- an environment-configuration gap, not something
- * this controller's own code can be exercised around.
+ * which route is hit. It IS covered directly though, bypassing HTTP/DB
+ * bootstrap entirely, by tests/Unit/Controller/TestErrorsControllerTest.php
+ * (the controller never reads its $request argument, and
+ * Env::testModeIsActive() reads $_SERVER directly, so a plain Unit
+ * invocation with the header cleared reaches the real branch).
  */
 
 it('drains the ErrorCollector buffer as JSON when test mode is active', function (): void {

@@ -288,3 +288,19 @@ test('resolveRedirectTarget resolves a bare relative Location against the curren
     ])
         ->and((string) $response->getBody())->toBe('landed-bare-relative');
 });
+
+test('fetch returns false instead of throwing when the url has no host segment', function (): void {
+    // Real bug: UploadService::addUploadedFile()'s own self-priming
+    // fetch() call (forcing derivative-image generation right after
+    // upload) can build exactly this shape -- "http:///path" -- whenever
+    // no gallery_url is configured and there's no real Host/
+    // X-Forwarded-Host header (a CLI-driven upload, not a real Apache
+    // request). nyholm/psr7's Uri constructor throws
+    // InvalidArgumentException while merely parsing that string, before
+    // guardedFetch() ever reaches the transport -- fetch()'s own
+    // "fire-and-forget" contract requires this to fail the same graceful
+    // way as any other unreachable request, not escape as a fatal
+    // exception. No client mocking needed: the exception fires at
+    // URI-parse time, before self::defaultClient() is ever dispatched to.
+    expect(HttpClientService::fetch('http:///i.php?/upload/2026/08/01/photo.png'))->toBeFalse();
+});

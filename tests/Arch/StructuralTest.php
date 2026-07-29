@@ -1148,8 +1148,19 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         'Admin/PluginsInstalledPageRenderer.php' => 2,
         'Admin/Maintenance/MaintenanceActionDispatcher.php' => 1,
         'Admin/UserActivityPageRenderer.php' => 1,
-        'Admin/Install/InstallWizard.php' => 1,
         'Controller/Admin/IntroSubController.php' => 1,
+
+        // Admin/Install/InstallWizard.php's own ?dl= database-config-
+        // download branch used to be here too (a raw header()/echo/
+        // unlink()/exit() sequence) -- found while adding coverage for
+        // that exact branch (an exit()-terminated method can't be
+        // exercised from inside the same PHP process without exit()ing
+        // the whole test run) and converted to throw
+        // Piwigo\Http\ResponseReadyException instead, the same C3
+        // mechanism this allowlist's own already-converted entries use
+        // (public/install.php's entry shell already had a catch point for
+        // it, from the mysqli-extension/already-installed guards a few
+        // lines below this same branch). Gone from this allowlist.
 
         // Workstream C3b: Controller/ActionController.php's doError()/304
         // early-return no longer call exit() -- doError() now returns a

@@ -256,9 +256,26 @@ SELECT id
                                     'flat' => true,
                                 ]
                             );
-                            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
-                                ->setStatusHeader($page_section === 'recent_pics' ? 301 : 302);
-                            $this->redirectService->redirectHttp($url);
+                            // Real bug, found while adding coverage for this
+                            // branch: the legacy equivalent's own raw
+                            // set_status_header()+redirect_http() pair
+                            // worked because legacy redirect_http() never
+                            // re-issued the status line itself -- the
+                            // earlier header() call stuck. This migration's
+                            // Response-object model does re-issue it:
+                            // RedirectServiceInterface::redirectHttp()'s own
+                            // $status defaults to 302, and
+                            // Http\ResponseEmitter::emit() always sends
+                            // `header(..., true, $response->getStatusCode())`,
+                            // which unconditionally overwrites whatever a
+                            // prior setStatusHeader() call already sent --
+                            // confirmed live, every recent_pics redirect came
+                            // back 302, never the intended 301. Passing the
+                            // real status straight into redirectHttp() (which
+                            // already accepts one) is the fix; the separate
+                            // setStatusHeader() call is dropped as dead
+                            // weight, not left in as a no-op.
+                            $this->redirectService->redirectHttp($url, $page_section === 'recent_pics' ? 301 : 302);
                         }
                     }
                 }
@@ -1155,8 +1172,23 @@ SELECT id, name, permalink
             $template->assign(
                 [
                     'PDF_VIEWER_FILESIZE_THRESHOLD' => $pdf_viewer_filesize_threshold * 1024,
+                    // Real bug, found while adding coverage for this branch:
+                    // $picture['current']['path'] is the raw images.path
+                    // column, root-relative (e.g. 'upload/2026/07/x.pdf'),
+                    // same as every other real filesystem read of this
+                    // column elsewhere in this codebase (e.g. SrcImage::
+                    // get_path()'s own `CurrentPaths::get()->root .
+                    // $this->rel_path`). countPdfPages() calls is_file()/
+                    // is_readable() on whatever path it's given with no
+                    // root of its own, so passing the bare relative path
+                    // resolves against the PHP process's cwd -- the
+                    // directory of the executing front-controller script
+                    // (public/) under a real Apache/mod_php request, one
+                    // level below the real upload root -- silently
+                    // returning false (never a real page count) on every
+                    // live request; confirmed live via a real PDF upload.
                     'PDF_NB_PAGES' => self::imageService()
-                        ->countPdfPages($picture['current']['path']),
+                        ->countPdfPages(\Piwigo\Core\CurrentPaths::get()->root . $picture['current']['path']),
                 ]
             );
         }

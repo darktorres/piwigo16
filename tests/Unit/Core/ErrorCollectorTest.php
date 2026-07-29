@@ -116,3 +116,88 @@ test('label maps E_NOTICE/E_USER_NOTICE to the NOTICE code', function (): void {
     expect($method->invoke(null, E_NOTICE))->toBe('NOTICE')
         ->and($method->invoke(null, E_USER_NOTICE))->toBe('NOTICE');
 });
+
+test('label maps E_ERROR/E_USER_ERROR/E_CORE_ERROR/E_COMPILE_ERROR to the ERROR code', function (): void {
+    $method = new ReflectionMethod(ErrorCollector::class, 'label');
+
+    expect($method->invoke(null, E_ERROR))->toBe('ERROR')
+        ->and($method->invoke(null, E_USER_ERROR))->toBe('ERROR')
+        ->and($method->invoke(null, E_CORE_ERROR))->toBe('ERROR')
+        ->and($method->invoke(null, E_COMPILE_ERROR))->toBe('ERROR');
+});
+
+test('label maps E_WARNING/E_USER_WARNING/E_CORE_WARNING/E_COMPILE_WARNING to the WARNING code', function (): void {
+    $method = new ReflectionMethod(ErrorCollector::class, 'label');
+
+    expect($method->invoke(null, E_WARNING))->toBe('WARNING')
+        ->and($method->invoke(null, E_USER_WARNING))->toBe('WARNING')
+        ->and($method->invoke(null, E_CORE_WARNING))->toBe('WARNING')
+        ->and($method->invoke(null, E_COMPILE_WARNING))->toBe('WARNING');
+});
+
+test('label maps E_DEPRECATED/E_USER_DEPRECATED to the DEPRECATED code', function (): void {
+    $method = new ReflectionMethod(ErrorCollector::class, 'label');
+
+    expect($method->invoke(null, E_DEPRECATED))->toBe('DEPRECATED')
+        ->and($method->invoke(null, E_USER_DEPRECATED))->toBe('DEPRECATED');
+});
+
+test('label falls back to the PHP code for a type matching none of the known categories', function (): void {
+    // E_PARSE is deliberately absent from every one of label()'s own
+    // bitmasks (flush() checks it separately, as part of the fatal-type
+    // guard, but label() itself never lists it under ERROR/WARNING/
+    // DEPRECATED/NOTICE) -- confirmed by reading every arm above -- so
+    // it is a real, always-available way to reach the `default => 'PHP'`
+    // arm without relying on some made-up out-of-range integer.
+    $method = new ReflectionMethod(ErrorCollector::class, 'label');
+
+    expect($method->invoke(null, E_PARSE))->toBe('PHP');
+});
+
+/**
+ * A later coverage-gap sweep re-flagged flush()'s own fatal-error branch
+ * (the `error_get_last()`-is-fatal body) and its X-PHP-Error-N header-
+ * emission loop as closable. Re-investigated independently of this
+ * file's own docblock above and reached the identical conclusion, with
+ * two additional, concrete confirmations:
+ *  - eval() of malformed PHP raises a catchable \ParseError (PHP turned
+ *    eval()'s own E_PARSE into a real Throwable years ago) and never
+ *    touches error_get_last() at all -- confirmed live: `var_dump
+ *    (error_get_last())` right after catching that ParseError prints
+ *    NULL. So eval() is not the injection seam either; nothing short of
+ *    actually crashing the interpreter produces one of the four fatal
+ *    types flush() checks for.
+ *  - PHPUnit's own console output (vendor/phpunit/phpunit/src/TextUI/
+ *    Output/Printer/DefaultPrinter.php) writes every dot/summary line via
+ *    a raw fwrite() to an explicitly fopen()'d php://stdout stream, never
+ *    echo/print -- so the test runner's own progress output cannot be
+ *    what latches headers_sent() true (fwrite() to an explicit stream
+ *    handle bypasses the SAPI output layer headers_sent() tracks
+ *    entirely). Whatever does latch it is real script-level output
+ *    somewhere else in this large, shared, single Unit-suite process --
+ *    and this CLI SAPI's implicit_flush is On by default (unchanged by
+ *    tests/bootstrap.php or phpunit.xml.dist), which forces even output
+ *    produced *inside* PHPUnit's own per-test ob_start() straight through
+ *    to the real SAPI layer instead of staying safely discarded by its
+ *    matching ob_get_clean(). Once latched, headers_sent() has no
+ *    userland reset, and no runkit/uopz extension is installed here to
+ *    stub the builtin itself. The two lines below add real, still-closable
+ *    coverage adjacent to that guard instead: the `headers_sent()` half
+ *    of flush()'s `self::$collected === [] || headers_sent()` check
+ *    (previously only its `self::$collected === []` half was exercised),
+ *    proving flush() never mutates the buffer either way.
+ */
+test('flush leaves a non-empty buffer untouched when headers are already sent', function (): void {
+    $seeded = ['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2'];
+    seedCollected($seeded);
+
+    $method = new ReflectionMethod(ErrorCollector::class, 'flush');
+    $method->invoke(null);
+
+    // Whether this run's headers_sent() is true (the early return fires)
+    // or -- in some future environment where it genuinely isn't -- the
+    // header-emission loop runs for real, flush() never drains or
+    // otherwise mutates self::$collected: it is byte-for-byte identical
+    // to what was seeded either way.
+    expect(ErrorCollector::collected())->toBe($seeded);
+});

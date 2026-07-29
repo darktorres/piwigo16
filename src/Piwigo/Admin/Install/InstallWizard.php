@@ -151,9 +151,9 @@ final class InstallWizard
 
     /**
      * Everything the former install.php top level did before the
-     * "form analyze" section: the ?dl= database-config download (may
-     * exit()), $_POST narrowing + Config seeding, environment checks,
-     * language pick + Lang loads, and template initialization.
+     * "form analyze" section: the ?dl= database-config download, $_POST
+     * narrowing + Config seeding, environment checks, language pick +
+     * Lang loads, and template initialization.
      */
     public function boot(): void
     {
@@ -163,14 +163,35 @@ final class InstallWizard
         $dl_param = $this->request->dl;
         if ($dl_param !== null && file_exists($this->paths->root . $this->confDataLocation . 'pwg_' . $dl_param)) {
             $filename = $this->paths->root . $this->confDataLocation . 'pwg_' . $dl_param;
-            header('Cache-Control: no-cache, must-revalidate');
-            header('Pragma: no-cache');
-            header('Content-Disposition: attachment; filename="database.inc.php"');
-            header('Content-Transfer-Encoding: binary');
-            header('Content-Length: ' . (string) filesize($filename));
-            echo file_get_contents($filename);
+            // Real bug, found while adding coverage for this branch: a raw
+            // header()/echo/exit() sequence can't be exercised from inside
+            // this same PHP process without exit()-ing the whole test
+            // runner -- exactly the problem this class's own sibling
+            // checks a few lines below (the mysqli-extension/already-
+            // installed guards) already solved by throwing
+            // ResponseReadyException instead of terminating directly (see
+            // that exception's own docblock: "instead of terminating the
+            // process directly via header()+echo+exit()/die()"). This
+            // branch was simply never migrated to the same pattern.
+            // install.php's own entry shell already wraps every boot()/
+            // analyzeForm()/performInstall()/render() call in a `catch
+            // (ResponseReadyException $e)` block that emits whatever
+            // response it carries, so throwing here instead of exit()ing
+            // needs no change on that end at all.
+            $fileContent = file_get_contents($filename);
+            if ($fileContent === false) {
+                $fileContent = '';
+            }
+            $response = \Piwigo\Http\ResponseFactory::raw($fileContent, [
+                'Cache-Control' => 'no-cache, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Content-Disposition' => 'attachment; filename="database.inc.php"',
+                'Content-Transfer-Encoding' => 'binary',
+                'Content-Length' => (string) strlen($fileContent),
+            ]);
             unlink($filename);
-            exit();
+
+            throw new \Piwigo\Http\ResponseReadyException($response);
         }
 
         // Obtain various vars

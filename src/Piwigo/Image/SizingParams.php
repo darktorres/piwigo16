@@ -19,8 +19,12 @@ final class SizingParams
 {
     /**
      * @param int[] $ideal_size - two element array of maximum output dimensions (width, height)
-     * @param float $max_crop - from 0=no cropping to 1= max cropping (100% of width/height);
-     *    expressed as a factor of the input width/height
+     * @param float|int $max_crop - from 0=no cropping to 1= max cropping (100% of width/height);
+     *    expressed as a factor of the input width/height. Genuinely holds either
+     *    type at runtime -- square()'s int literal 1, the constructor's own int
+     *    default 0, and DerivativeUrlCodec::charToFraction()'s int|float-typed
+     *    division all feed real int values here, alongside round()'s always-float
+     *    result at ConfigurationSubController's own construction site.
      * @param int[]|null $min_size - (used only if _$max_crop_ !=0) two element array of output dimensions (width, height); null when $max_crop=0
      */
     public function __construct(

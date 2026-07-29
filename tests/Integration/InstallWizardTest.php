@@ -50,21 +50,43 @@ use Piwigo\Http\ResponseReadyException;
  * temporarily unsetting that one $_SERVER key for the single call that
  * needs real prod-mode behavior, then restoring it immediately after.
  *
- * render() itself is only exercised for step 1 (the initial form, before
+ * render() itself is fully exercised for step 1 (the initial form, before
  * any submission) -- real, low-risk, and it's the exact page the disabled
- * tests/Browser/InstallTest.php's first assertions cover. Step 2's
- * rendering (post-install session/activity-log/mail sequence) is NOT
- * exercised here: it needs a real PHP session lifecycle and
- * UrlService request-derived URL generation, and (unless carefully
- * disabled) a real outbound mail/HTTP newsletter call -- genuinely the
- * territory of a full install.php HTTP request, which is exactly the gap
+ * tests/Browser/InstallTest.php's first assertions cover. Step 2's full
+ * happy-path rendering (the real session_start()/AuthService::logUser()
+ * cookie lifecycle actually taking effect, real UrlService request-derived
+ * URL generation, a real outbound mail/HTTP newsletter call actually
+ * succeeding) is still NOT exercised here -- genuinely the territory of a
+ * full install.php HTTP request, which is exactly the gap
  * tests/Browser/InstallTest.php exists for (see that file's own extensive
  * docblock on just how many real, non-obvious issues that exact rendering
  * path surfaced, including a request thread hanging on a real sendmail
- * invocation). Every DB row and file *that step's own logic doesn't touch*
- * (webmaster/guest users, sites, config, activated language, the written
- * .env/database.inc.php/install stamp) is already fully covered below via
- * performInstall() directly.
+ * invocation once send_credentials_by_mail is left checked). Two of step
+ * 2's own branches ARE exercised below though (the
+ * isSendCredentialsByMail/isNewsletterSubscribe conditionals), by forcing
+ * each one's real outbound call to fail fast and deterministically instead
+ * of hanging or reaching a live host: a real closed local port
+ * (smtp_host=127.0.0.1:1, the same trick MailServiceTest already
+ * establishes) for the mail branch, and AppInfo::URL's own
+ * 'upstream.example.invalid' domain (RFC 2606 -- guaranteed to never
+ * resolve, confirmed empirically to fail HttpClientService::fetch()'s own
+ * SSRF-guard host check in ~10ms with no network egress at all, not just a
+ * slow/blocked one) for the newsletter branch. Calling render() this far
+ * also reaches AuthService::logUser()'s own unconditional setcookie() and
+ * session_start() calls, which -- confirmed empirically -- both emit a
+ * real E_WARNING("headers already sent") once Pest's own console output
+ * has already occurred earlier in this shared CLI process (the same
+ * CLI-SAPI limitation tests/Unit/Http/Middleware/SessionMiddlewareTest.php's
+ * own docblock documents for session_start() alone); neither warning is a
+ * real application bug (a genuine HTTP response hasn't sent headers yet
+ * when this code runs for real), so both new tests below suppress
+ * warnings for the render() call the same way MailServiceTest's own
+ * suppressMailerWarning() does, just over that call's necessarily wider
+ * span (no seam exists to isolate just the session/cookie/mail primitives
+ * from the rest of the method). Every DB row and file *step 1/2's shared
+ * logic doesn't touch* (webmaster/guest users, sites, config, activated
+ * language, the written .env/database.inc.php/install stamp) is already
+ * fully covered below via performInstall() directly.
  */
 final class InstallWizardTest extends IntegrationTestCase
 {
@@ -642,6 +664,92 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertSame('de_DE', $this->reflectPrivate($wizard, 'language'));
     }
 
+    // ------------------------------------------------------- boot(), ?dl= download
+
+    /**
+     * Real bug fixed alongside this test: boot()'s own ?dl= branch used to
+     * call header()/echo/unlink()/exit() directly -- exactly the pattern
+     * every sibling check in this same method (a few lines below: the
+     * mysqli-extension guard, the already-installed guard) had already
+     * moved off of, onto throw new ResponseReadyException(...), precisely
+     * because an exit()-terminated branch can't be exercised from inside
+     * this same PHP test process without killing the whole run. Converted
+     * it to the same pattern here -- public/install.php's own entry shell
+     * already wraps every boot()/analyzeForm()/performInstall()/render()
+     * call in a `catch (ResponseReadyException $e)` that emits whatever
+     * response it carries, so this needed no change on that end.
+     */
+    public function test_boot_serves_and_deletes_the_temporary_database_config_file_for_a_valid_dl_param(): void
+    {
+        $this->bootInstallBootstrap();
+
+        // Mirrors the real shape performInstall()'s own config-write-
+        // failure fallback leaves behind: a temp `pwg_<hash>` file under
+        // confDataLocation, named after a 32-hex-char hash -- matches both
+        // InstallWizardRequest::fromArrays()'s own dl validation regex
+        // ('/^[a-f0-9]{32}$/') and install.tpl's own config_url template
+        // var (see performInstall()'s own 'config_url' => 'install.php?dl='
+        // . $tmp_filename assignment; an md5() digest -- the real hash
+        // that branch generates -- is exactly 32 lowercase hex chars).
+        mkdir($this->tempRoot . '_data', 0777, true);
+        $hash = md5('install-wizard-dl-test-fixture');
+        $fileContent = "<?php\n\$conf['dblayer'] = 'mysqli';\n\$conf['db_base'] = 'whatever';\n";
+        $tmpFile = $this->tempRoot . '_data/pwg_' . $hash;
+        file_put_contents($tmpFile, $fileContent);
+
+        $body = null;
+        $headers = [];
+        try {
+            $this->submit([], ['dl' => $hash]);
+            self::fail('expected boot() to throw ResponseReadyException for a valid, existing dl= download');
+        } catch (ResponseReadyException $e) {
+            $response = $e->response();
+            $body = (string) $response->getBody();
+            $headers = [
+                'Cache-Control' => $response->getHeader('Cache-Control'),
+                'Pragma' => $response->getHeader('Pragma'),
+                'Content-Disposition' => $response->getHeader('Content-Disposition'),
+                'Content-Transfer-Encoding' => $response->getHeader('Content-Transfer-Encoding'),
+                'Content-Length' => $response->getHeader('Content-Length'),
+            ];
+        }
+
+        self::assertSame($fileContent, $body);
+        self::assertSame(
+            [
+                'Cache-Control' => ['no-cache, must-revalidate'],
+                'Pragma' => ['no-cache'],
+                'Content-Disposition' => ['attachment; filename="database.inc.php"'],
+                'Content-Transfer-Encoding' => ['binary'],
+                'Content-Length' => [(string) strlen($fileContent)],
+            ],
+            $headers
+        );
+
+        // Real, load-bearing cleanup -- the original header()/echo/
+        // unlink()/exit() sequence deleted the temp file once served, and
+        // the ResponseReadyException-based replacement preserves that
+        // exactly (unlink() happens before the throw, not in some
+        // finally/emitter step this test would otherwise miss).
+        self::assertFileDoesNotExist($tmpFile);
+    }
+
+    public function test_boot_falls_through_to_the_normal_request_body_for_a_dl_param_with_no_matching_file(): void
+    {
+        $this->bootInstallBootstrap();
+
+        // Syntactically valid (32 lowercase hex chars, passes
+        // InstallWizardRequest's own dl validation regex) but nothing on
+        // disk matches it -- proves the branch's file_exists() half
+        // actually gates it, not just the "dl param is present" half the
+        // test above alone couldn't distinguish.
+        $hash = str_repeat('a', 32);
+
+        $wizard = $this->submit([], ['dl' => $hash]);
+
+        self::assertSame(1, $this->reflectPrivate($wizard, 'step'));
+    }
+
     // --------------------------------------------------------- analyzeForm(), more
 
     public function test_analyzeForm_prints_the_errors_when_the_db_connection_itself_fails(): void
@@ -736,18 +844,185 @@ final class InstallWizardTest extends IntegrationTestCase
         );
     }
 
-    // ------------------------------------------------------------ render(), step 2 guard
+    // ------------------------------------------------------------ render(), step 2
 
     /**
-     * render()'s full step-2 body (session_set_save_handler(), a real
-     * login, newsletter subscription, credential email) is deliberately
-     * NOT exercised here -- see this file's own top-of-class docblock:
-     * tests/Browser/InstallTest.php already covers it through a real
+     * render()'s step-2 body reaches AuthService::logUser()'s own
+     * unconditional setcookie() call and (since session_id() starts empty
+     * in a fresh process) its session_start() call too -- both confirmed
+     * empirically to emit a real E_WARNING ("headers already sent") once
+     * Pest's own console output has already occurred earlier in this
+     * shared CLI process, the same CLI-SAPI limitation
+     * tests/Unit/Http/Middleware/SessionMiddlewareTest.php's own docblock
+     * documents for session_start() alone. Neither warning reflects a real
+     * application bug (a genuine HTTP response hasn't sent headers yet
+     * when this code runs for real) -- a plain `@` does NOT stop PHPUnit's
+     * ErrorHandler from surfacing them regardless (confirmed elsewhere in
+     * this suite, see MailServiceTest's own suppressMailerWarning()), so a
+     * real no-op error handler for the whole render() call is the only
+     * reliable way to swallow them. Wider than that helper's own
+     * single-call scope on purpose: there's no seam to isolate just the
+     * session/cookie/mail primitives from the rest of this ~60-line
+     * method, and every real caller (install.php) hits the identical
+     * unavoidable combination.
+     */
+    private function renderSuppressingHeaderWarnings(InstallWizard $wizard): string
+    {
+        set_error_handler(static fn (): bool => true);
+        try {
+            ob_start();
+            $wizard->render();
+            $output = ob_get_clean();
+        } finally {
+            restore_error_handler();
+        }
+        self::assertIsString($output);
+
+        return $output;
+    }
+
+    /**
+     * Covers render()'s own isSendCredentialsByMail branch (Lang::
+     * buildArgs() content array + PresentationAccessor::mailService()->
+     * mail() call) -- a container-resolved real MailService this test
+     * can't inject a spy into (see this class's own use of MailService in
+     * the sibling MailServiceTest.php, which faces the identical
+     * constraint), so this proves the branch actually ran the same way
+     * that file's own test_sendMailTest_dumps_a_labelled_error_file_when_
+     * debug_mail_is_enabled() does: force the send to fail fast and
+     * deterministically against a real closed local port
+     * (smtp_host=127.0.0.1:1, instead of falling through to Symfony's
+     * native sendmail transport -- see tests/Browser/InstallTest.php's own
+     * docblock for the real 60-120s hang that transport causes in this
+     * sandbox with send_credentials_by_mail left checked), then enable
+     * debug_mail so the failed send dumps the actually-composed email
+     * (subject/To/body -- built from this exact branch's own
+     * Lang::buildArgs() calls) to _data/tmp/mail.*.ERROR.txt under this
+     * test's own throwaway Paths::root.
+     */
+    public function test_render_step2_emails_credentials_when_send_credentials_by_mail_was_submitted(): void
+    {
+        $this->bootInstallBootstrap();
+        $freshDb = $this->createFreshDatabase();
+
+        $wizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $freshDb,
+            'admin_name' => 'p17mailcreds',
+            'admin_pass1' => 'Mail-Creds-Secret-1!',
+            'admin_pass2' => 'Mail-Creds-Secret-1!',
+            'admin_mail' => 'mailcreds@example.test',
+            'install' => '1',
+            'send_credentials_by_mail' => '1',
+            // Deliberately NOT set -- keeps this test isolated to only the
+            // mail branch; the newsletter branch has its own dedicated
+            // test below.
+        ]);
+        $wizard->analyzeForm();
+        self::assertFalse($wizard->hasErrors(), 'unexpected validation/connection errors: ' . $this->reflectErrorsJoined($wizard));
+        $wizard->performInstall();
+        self::assertFalse($wizard->hasErrors(), 'unexpected performInstall() errors: ' . $this->reflectErrorsJoined($wizard));
+
+        CurrentConfig::setSmtpHost('127.0.0.1:1');
+        CurrentConfig::setDebugMail(true);
+
+        $mailTmpDir = $this->tempRoot . '_data/tmp';
+        $before = glob($mailTmpDir . '/mail.*');
+        self::assertIsArray($before);
+
+        $output = $this->renderSuppressingHeaderWarnings($wizard);
+
+        self::assertStringContainsString('Congratulations', $output);
+
+        $after = glob($mailTmpDir . '/mail.*');
+        self::assertIsArray($after);
+        $created = array_values(array_diff($after, $before));
+        self::assertCount(1, $created, 'expected exactly one dumped mail (the credentials email) after the send_credentials_by_mail branch ran');
+        self::assertStringEndsWith('.ERROR.txt', $created[0]);
+
+        $contents = file_get_contents($created[0]);
+        self::assertIsString($contents);
+        self::assertStringStartsWith('ERROR: ', $contents);
+        // The To: header of a real Symfony Email is never MIME-encoded
+        // (only non-ASCII display names are) -- a reliable, unmocked proof
+        // this exact branch's mail() call really did address the admin's
+        // own submitted email, not some other recipient.
+        self::assertStringContainsString('mailcreds@example.test', $contents);
+
+        unlink($created[0]);
+    }
+
+    /**
+     * Covers render()'s own isNewsletterSubscribe branch (~lines 692-704):
+     * HttpClientService::fetch() has no injectable seam (confirmed by this
+     * project's own tests/Unit/Http/HttpClientServiceTest.php, which
+     * explicitly declines to cover fetch()/guardedFetch() for the same
+     * reason), so this can't spy on the call itself -- but AppInfo::URL
+     * resolves to 'https://upstream.example.invalid' (RFC 2606 -- a domain
+     * reserved to NEVER resolve), which makes HttpClientService's own
+     * SSRF guard (assertUrlIsSafe()'s gethostbyname() lookup, which
+     * returns the unmodified hostname on failure per PHP's own
+     * documented behavior, then fails the private/reserved-IP format
+     * check) reject the request in ~10ms flat, confirmed empirically
+     * (a standalone script against this exact URL returned `false` in
+     * 11.5ms, no warning, no exception escaping) -- fast, deterministic,
+     * and with zero real network egress, not just "unlikely to hang".
+     * What IS asserted directly: preferences.show_newsletter_subscription
+     * gets persisted to the real user_infos row as false regardless of
+     * that fetch() outcome, exactly as the source comment above it
+     * ("Fire-and-forget: the response content is never read") promises.
+     */
+    public function test_render_step2_disables_the_newsletter_preference_when_newsletter_subscribe_was_submitted(): void
+    {
+        $this->bootInstallBootstrap();
+        $freshDb = $this->createFreshDatabase();
+
+        $wizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $freshDb,
+            'admin_name' => 'p17newsletter',
+            'admin_pass1' => 'Newsletter-Secret-1!',
+            'admin_pass2' => 'Newsletter-Secret-1!',
+            'admin_mail' => 'newsletter@example.test',
+            'install' => '1',
+            'newsletter_subscribe' => '1',
+            // send_credentials_by_mail deliberately NOT set -- keeps this
+            // test isolated to only the newsletter branch, avoiding the
+            // separate smtp_host workaround the mail test above needs.
+        ]);
+        $wizard->analyzeForm();
+        self::assertFalse($wizard->hasErrors(), 'unexpected validation/connection errors: ' . $this->reflectErrorsJoined($wizard));
+        $wizard->performInstall();
+        self::assertFalse($wizard->hasErrors(), 'unexpected performInstall() errors: ' . $this->reflectErrorsJoined($wizard));
+
+        $output = $this->renderSuppressingHeaderWarnings($wizard);
+
+        self::assertStringContainsString('Congratulations', $output);
+
+        $prefsRow = $this->queryOne($freshDb, 'SELECT preferences FROM itest_user_infos WHERE user_id = 1');
+        self::assertIsArray($prefsRow);
+        self::assertIsString($prefsRow['preferences']);
+        $preferences = json_decode($prefsRow['preferences'], true);
+        self::assertIsArray($preferences);
+        self::assertArrayHasKey('show_newsletter_subscription', $preferences);
+        self::assertFalse($preferences['show_newsletter_subscription']);
+    }
+
+    /**
+     * render()'s full step-2 happy path (a real session_start()/
+     * setcookie() lifecycle actually taking effect, a real outbound mail/
+     * newsletter call actually succeeding) is still deliberately NOT
+     * exercised here -- see this file's own top-of-class docblock:
+     * tests/Browser/InstallTest.php already covers that through a real
      * install.php request, and that file's own docblock documents a real
      * hung request thread this suite previously hit trying to exercise the
-     * same real session/mail lifecycle in-process. Only the one pure guard
-     * at the very top of the step-2 branch -- reachable with zero session/
-     * mail setup -- is safe and cheap to exercise directly here.
+     * same real session/mail lifecycle in-process. This one pure guard at
+     * the very top of the step-2 branch -- reachable with zero session/
+     * mail setup -- is safe and cheap to exercise directly here too.
      */
     public function test_render_throws_when_step_2_is_reached_without_a_successful_connection(): void
     {

@@ -438,3 +438,150 @@ it('rejects access to a private album\'s photo for a guest', function (): void {
         ]);
     }
 });
+
+it('returns 400 for an empty format value when formats are enabled', function (): void {
+    $snapshot = H::snapshotConfig(['enable_formats']);
+    H::setConfigValue('enable_formats', 'true');
+
+    try {
+        $page = H::loginAsAdmin($this);
+
+        // `format=` with no value: isset($_GET['format']) is still true, so
+        // ActionRequest::formatRequested is true, but InputValidator::
+        // validate() short-circuits on the empty string (its own
+        // emptyValue() check) before ever checking against
+        // ValidationPattern::ID, so ActionRequest ends up with
+        // formatId=null via is_numeric('')===false rather than a fatalError
+        // -- a genuinely different route to "Invalid request - format" than
+        // the real-but-unknown-id 400 covered above (format=999999999,
+        // which fails the later DB lookup instead).
+        $result = H::rawGet($page, '/action.php?format=');
+
+        expect($result['status'])->toBe(400);
+        expect($result['body'])->toContain('Invalid request - format');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('returns 400 for part=f requested directly on a real photo, without a format id', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller Direct Part F Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller Direct Part F Photo');
+    @unlink($image);
+
+    try {
+        // part=f reached directly (not via format=) never resolves a
+        // format row, so the switch's 'f' case runs with $format_row still
+        // null -- a second, distinct route to the same "Invalid request -
+        // format" 400 message as the format-id branch above.
+        $result = H::rawGet($page, '/action.php?id=' . $imageId . '&part=f');
+
+        expect($result['status'])->toBe(400);
+        expect($result['body'])->toContain('Invalid request - format');
+    } finally {
+        H::wsCall($page, 'pwg.categories.delete', [
+            'category_id' => $albumId,
+            'photo_deletion_mode' => 'force_delete',
+            'pwg_token' => H::pwgToken($page),
+        ]);
+    }
+});
+
+it('returns 404 naming the resolved path when the original file is missing from disk', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller Missing File Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller Missing File Photo');
+    @unlink($image);
+
+    $realPath = actionImagePath($imageId);
+    // See the format-id test above: root is the repo root (one level above
+    // public/), the same base ImagePathHelper::getElementPath() itself
+    // resolves against.
+    $root = dirname(__DIR__, 2) . '/';
+    $absolutePath = $root . $realPath;
+    // The DB row (and its category membership/permission) stays intact --
+    // only the on-disk original is gone, so the request sails past every
+    // earlier check (id lookup, permission, is_original()/enabledHigh --
+    // none of those touch the filesystem) and only fails at the
+    // is_readable() guard right before the file would be streamed back.
+    @unlink($absolutePath);
+
+    try {
+        $result = H::rawGet($page, '/action.php?id=' . $imageId . '&part=e');
+
+        expect($result['status'])->toBe(404);
+        expect($result['body'])->toContain('Requested file not found - ');
+        expect($result['body'])->toContain(basename($realPath));
+    } finally {
+        H::wsCall($page, 'pwg.categories.delete', [
+            'category_id' => $albumId,
+            'photo_deletion_mode' => 'force_delete',
+            'pwg_token' => H::pwgToken($page),
+        ]);
+    }
+});
+
+it('bypasses the no-HD-access restriction for an admin download carrying a valid pwg_token', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller Admin Download Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+
+    // Same oversized-original setup as the guest 401 test above, but this
+    // time it's fixture_admin's own enabled_high (user_id 1) that's turned
+    // off, isolating is_admin_download's withEnabledHigh(true) bypass from
+    // AccessControl::isAdmin() itself (already true for this whole file's
+    // session, and not what's under test here).
+    $db = actionDbConnect();
+    $db->query(sprintf('UPDATE %suser_infos SET enabled_high = 0 WHERE user_id = 1', actionDbPrefix()));
+    $db->close();
+
+    $img = imagecreatetruecolor(2000, 1500);
+    if ($img === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    $tmpPath = tempnam(sys_get_temp_dir(), 'pwg_action_admin_dl_') . '.jpg';
+    imagejpeg($img, $tmpPath, 80);
+    $imageId = H::uploadPhotoViaApi($tmpPath, $albumId, 'Action Controller Admin Download Photo');
+    @unlink($tmpPath);
+
+    try {
+        // Without a matching pwg_token, is_admin_download stays false, so
+        // the admin is subject to the same HD-access check as anyone else.
+        $withoutToken = H::rawGet($page, '/action.php?id=' . $imageId . '&part=e');
+        expect($withoutToken['status'])->toBe(401);
+        expect($withoutToken['body'])->toContain('Access denied e');
+
+        // A matching pwg_token flips is_admin_download=true, which forces
+        // CurrentUser::withEnabledHigh(true) for the rest of the request --
+        // the same oversized original that was just denied now succeeds.
+        $withToken = H::rawGet($page, '/action.php?id=' . $imageId . '&part=e&pwg_token=' . H::pwgToken($page));
+        expect($withToken['status'])->toBe(200);
+        expect(strlen($withToken['body']))->toBeGreaterThan(0);
+    } finally {
+        $restoreDb = actionDbConnect();
+        $restoreDb->query(sprintf('UPDATE %suser_infos SET enabled_high = 1 WHERE user_id = 1', actionDbPrefix()));
+        $restoreDb->close();
+        H::wsCall($page, 'pwg.categories.delete', [
+            'category_id' => $albumId,
+            'photo_deletion_mode' => 'force_delete',
+            'pwg_token' => H::pwgToken($page),
+        ]);
+    }
+});

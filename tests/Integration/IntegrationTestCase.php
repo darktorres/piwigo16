@@ -47,6 +47,19 @@ abstract class IntegrationTestCase extends TestCase
     protected string $baseUrl = '';
 
     /**
+     * Set by buildConfigRepository() -- exposed so a test that bypasses
+     * ConfigRepository with a raw SQL write (e.g. corrupting a config row
+     * to prove a guard's behavior) can clear this EntityManager's identity
+     * map afterward. Without that, a later ConfigRepository::upsert() call
+     * would resolve find()'s stale, pre-raw-write entity via the identity
+     * map, see no property change, and flush() would silently skip the
+     * UPDATE -- this EntityManager is a private `new EntityManager(...)`
+     * distinct from Kernel::container()'s own, so clearing the container's
+     * doesn't reach it.
+     */
+    protected ?\Doctrine\ORM\EntityManagerInterface $configEntityManager = null;
+
+    /**
      * Piwigo\Users\UserService::getDefaultUserInfo() memoizes its DB read
      * into Piwigo\Core\ProcessCache (Legacy Coupling Retirement Track A
      * gap-fill batch G5, formerly `global $cache['default_user'];`) for
@@ -145,6 +158,21 @@ abstract class IntegrationTestCase extends TestCase
         \Piwigo\Core\AdminContext::reset();
         \Piwigo\Core\WsContext::reset();
         \Piwigo\Core\InstallationFlag::reset();
+        // A test that exercises a real login/install-completion flow (e.g.
+        // AuthService's own session_start()) leaves PHP's native session
+        // machinery genuinely active -- PHPUnit/Pest run every Integration
+        // test file in one shared process (see this class's own docblock
+        // above), so an unclosed session here bleeds into the next test
+        // file entirely: a later, unrelated setUp() calling session_id()
+        // to pin a fixed id (CsrfService::getToken() needs one) throws the
+        // "cannot be changed when a session is active" PHP warning.
+        // Real bug this exact way, found via
+        // tests/Integration/InstallWizardTest.php's own
+        // isSendCredentialsByMail/isNewsletterSubscribe scenarios reaching
+        // a real post-install auto-login for the first time.
+        if (session_status() === \PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
         parent::tearDown();
     }
 
@@ -164,6 +192,7 @@ abstract class IntegrationTestCase extends TestCase
         $ormConfig->enableNativeLazyObjects(true);
         $em = new EntityManager($conn, $ormConfig);
         $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener());
+        $this->configEntityManager = $em;
 
         $repo = $em->getRepository(ConfigEntry::class);
         self::assertInstanceOf(ConfigRepository::class, $repo);

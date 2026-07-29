@@ -73,8 +73,16 @@ final class CliBootstrap
      * which requires it) so existing tests calling `buildApplication()` with no
      * arguments keep working -- passing a null Paths to the container
      * builder simply skips registering `Paths::class`.
+     *
+     * `$commandsFile` likewise defaults to null and falls back to the real
+     * `config/commands.php`, mirroring `$paths`'s own shape -- the only seam
+     * for tests/Unit/Bootstrap/CliBootstrapTest.php to exercise this
+     * method's three defensive guards (must-return-an-array,
+     * entries-must-be-class-strings, entry-must-resolve-to-a-Command)
+     * against a disposable fixture file instead of ever having to
+     * overwrite the real, shared production file mid-suite.
      */
-    public static function buildApplication(?Paths $paths = null): Application
+    public static function buildApplication(?Paths $paths = null, ?string $commandsFile = null): Application
     {
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
@@ -87,7 +95,7 @@ final class CliBootstrap
         }
         CurrentConfigService::set($configService);
 
-        $commandClasses = require dirname(__DIR__, 3) . '/config/commands.php';
+        $commandClasses = require $commandsFile ?? dirname(__DIR__, 3) . '/config/commands.php';
         if (! is_array($commandClasses)) {
             throw new \RuntimeException('config/commands.php must return an array of Command class-strings.');
         }

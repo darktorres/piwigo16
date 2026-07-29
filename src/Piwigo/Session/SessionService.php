@@ -114,11 +114,28 @@ final class SessionService
 
         $remoteAddr = IpAddress::fromRemoteAddr()->value ?? '';
 
-        if (! str_contains($remoteAddr, ':')) { // ipv4
-            return vsprintf('%02X%02X', explode('.', $remoteAddr));
+        // Real bug, found via a new Integration test that legitimately
+        // initializes a session with no HTTP request behind it (no real
+        // REMOTE_ADDR -- e.g. a CLI-driven install/bootstrap flow):
+        // explode('.', '') yields a single-element array, and vsprintf()
+        // requires exactly 2 for '%02X%02X', throwing a ValueError instead
+        // of the "no IP available" empty-string fallback this method
+        // already uses for ipv6/no-REMOTE_ADDR below. Same pre-existing
+        // gap in the original include/functions_session.inc.php (a bare
+        // (string) cast of an unset $_SERVER['REMOTE_ADDR'] hits the
+        // identical crash there too) -- never reachable in a real Apache
+        // request (the web server always populates REMOTE_ADDR), only in
+        // a session created outside one.
+        $octets = explode('.', $remoteAddr);
+        if (! str_contains($remoteAddr, ':') && count($octets) === 4) { // ipv4
+            // Deliberately only the first 2 octets -- see
+            // SessionServiceTest.php's own docblock for why this narrower
+            // hash is the original, long-standing behavior, not something
+            // to widen here.
+            return vsprintf('%02X%02X', array_slice($octets, 0, 2));
         }
 
-        return ''; // ipv6 not yet
+        return ''; // ipv6, or no real IP available, not yet
     }
 
     /**

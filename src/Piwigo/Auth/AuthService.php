@@ -159,7 +159,17 @@ final readonly class AuthService
             ]);
         }
 
-        if (session_id() !== '') { // we regenerate the session for security reasons
+        // Real bug, found via a new Integration test that calls this
+        // directly (no SessionMiddleware ahead of it to have already
+        // started a session): session_id() !== '' (the original
+        // include/functions_user.inc.php's own check, unchanged here) only
+        // tells you an id string has been *set* -- e.g. via a fixed
+        // session_id('...') call, same as this project's own test helpers
+        // do -- not that a session is actually *active*.
+        // session_regenerate_id() requires an active session and emits a
+        // PHP warning otherwise; session_status() is the real predicate
+        // this branch needs.
+        if (session_status() === \PHP_SESSION_ACTIVE) { // we regenerate the session for security reasons
             // see http://www.acros.si/papers/session_fixation.pdf
             session_regenerate_id(true);
         } else {

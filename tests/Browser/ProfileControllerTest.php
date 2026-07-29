@@ -352,3 +352,299 @@ it('changes both the email address and password given the correct current passwo
         profileRestoreAuthRow($before['email'], $before['password']);
     }
 });
+
+/**
+ * Raw curl through a persistent cookie jar, logging in first -- same shape
+ * as PictureControllerTest's own pictureCurlLoginSession(), needed here
+ * (rather than a Playwright-driven page) for the 3 tests below that target
+ * ProfileController::__invoke()'s own `$_COOKIE['lang']` handling
+ * (~L165-191), distinct from the 'language' POST field handled by
+ * ProfileFormHandler above:
+ *
+ *  - a real `Cookie: lang[]=x; lang[]=y` header is the only way a real
+ *    HTTP request can make $_COOKIE['lang'] a PHP array rather than a
+ *    string (confirmed live against a throwaway PHP built-in server before
+ *    writing the first test below -- PHP's cookie parser honors bracket
+ *    notation in cookie names exactly like it does for GET/POST), matching
+ *    Integration\AuthServiceTest's own identical rationale for the sibling
+ *    guard in AuthService::logUser();
+ *  - sending a plain `Cookie: lang=...` value ALONGSIDE the session cookie
+ *    needs curl's CURLOPT_COOKIE specifically, not a manual `Cookie:` entry
+ *    in CURLOPT_HTTPHEADER -- confirmed live (same throwaway server) that a
+ *    manual header REPLACES rather than merges with the cookie engine's own
+ *    Cookie header, comma-joining and corrupting both instead of sending
+ *    two real `; `-separated pairs, which would silently drop the session
+ *    cookie and log the request out before ever reaching profile.php's own
+ *    logic.
+ *
+ * @return array{curl: Closure(string, array<string, string>=, string=): array{status: int, body: string}, cookieJar: non-empty-string, baseUrl: string}
+ */
+function profileCurlLoginSession(string $username, string $password): array
+{
+    $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_profile_session_');
+    if ($cookieJar === false) {
+        throw new RuntimeException('tempnam failed');
+    }
+
+    /**
+     * @param  array<string, string>  $fields
+     * @param  string  $extraCookie  raw `name=value[; name=value...]` string
+     *   merged alongside the session cookie jar via CURLOPT_COOKIE -- see
+     *   this function's own docblock for why that option (and not a manual
+     *   CURLOPT_HTTPHEADER 'Cookie:' entry) is required here.
+     */
+    $curl = static function (string $url, array $fields = [], string $extraCookie = '') use ($cookieJar): array {
+        $ch = curl_init($url);
+        if ($ch === false) {
+            throw new RuntimeException('curl_init failed');
+        }
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        if ($extraCookie !== '') {
+            curl_setopt($ch, CURLOPT_COOKIE, $extraCookie);
+        }
+        if ($fields !== []) {
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
+        }
+        $body = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        unset($ch);
+
+        return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+    };
+
+    $baseUrl = H::baseUrl();
+    $curl($baseUrl . '/identification.php');
+    $curl($baseUrl . '/identification.php', [
+        'username' => $username,
+        'password' => $password,
+        'login' => 'Login',
+    ]);
+
+    return ['curl' => $curl, 'cookieJar' => $cookieJar, 'baseUrl' => $baseUrl];
+}
+
+it('fatal-errors on an array-valued lang cookie (hacking attempt)', function (): void {
+    $session = profileCurlLoginSession(PROFILE_TEST_USER, PROFILE_TEST_PASS);
+    $curl = $session['curl'];
+
+    // Exercises ProfileController's own `! is_string($cookie_lang)` guard
+    // (~L167-170) -- distinct from the "valid string but unrecognized
+    // language code" guard covered by the next test (~L171-174).
+    $result = $curl($session['baseUrl'] . '/profile.php', [], 'lang[]=x; lang[]=y');
+
+    expect($result['status'])->toBe(500);
+    expect($result['body'])->toContain('[Hacking attempt] the input parameter "lang" is not valid');
+
+    @unlink($session['cookieJar']);
+});
+
+it('fatal-errors on an unrecognized lang cookie value (hacking attempt)', function (): void {
+    $session = profileCurlLoginSession(PROFILE_TEST_USER, PROFILE_TEST_PASS);
+    $curl = $session['curl'];
+
+    $bogusLang = 'not_a_real_language_' . uniqid();
+    $result = $curl($session['baseUrl'] . '/profile.php', [], 'lang=' . $bogusLang);
+
+    expect($result['status'])->toBe(500);
+    expect($result['body'])->toContain('[Hacking attempt] the input parameter "' . $bogusLang . '" is not valid');
+
+    @unlink($session['cookieJar']);
+});
+
+function profileUserLanguage(): string
+{
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+    $prefix = $prefix !== false ? $prefix : 'piwigo_';
+    $result = $db->query(sprintf(
+        "SELECT ui.language FROM %suser_infos ui INNER JOIN %susers u ON u.id = ui.user_id WHERE u.username = '%s'",
+        $prefix,
+        $prefix,
+        $db->real_escape_string(PROFILE_TEST_USER)
+    ));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+    if (! is_array($row)) {
+        throw new RuntimeException('regular_user user_infos row not found');
+    }
+
+    return (string) $row['language'];
+}
+
+function profileSetUserLanguage(string $language): void
+{
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+    $prefix = $prefix !== false ? $prefix : 'piwigo_';
+    $db->query(sprintf(
+        "UPDATE %suser_infos ui INNER JOIN %susers u ON u.id = ui.user_id SET ui.language = '%s' WHERE u.username = '%s'",
+        $prefix,
+        $prefix,
+        $db->real_escape_string($language),
+        $db->real_escape_string(PROFILE_TEST_USER)
+    ));
+    $db->close();
+}
+
+it('switches the interface language via a valid, different lang cookie and persists it to user_infos', function (): void {
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+    $prefix = $prefix !== false ? $prefix : 'piwigo_';
+    // Same fixture gap/workaround shape as this file's own
+    // profileEnsureDefaultThemeRegistered(): the fixture's piwigo_languages
+    // table only ever seeds 'en_UK' (confirmed by reading
+    // tests/Fixtures/piwigo-17.0.sql directly), but LangService::getLanguages()
+    // requires a real DB row (AND a real `language/<code>/` directory,
+    // already present on disk for fr_FR) before it counts as a known
+    // language -- without this insert, ProfileController's own
+    // `array_key_exists($cookie_lang, LangService::getLanguages())` guard
+    // would always fail and this couldn't reach the real switch path at
+    // all.
+    $db->query(sprintf(
+        "INSERT INTO %slanguages (id, version, name) VALUES ('fr_FR', '1.0.0', 'French') ON DUPLICATE KEY UPDATE name = VALUES(name)",
+        $prefix
+    ));
+    $db->close();
+
+    $originalLanguage = profileUserLanguage();
+    expect($originalLanguage)->toBe('en_UK');
+
+    try {
+        $session = profileCurlLoginSession(PROFILE_TEST_USER, PROFILE_TEST_PASS);
+        $curl = $session['curl'];
+
+        $result = $curl($session['baseUrl'] . '/profile.php', [], 'lang=fr_FR');
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Hacking attempt');
+        // Confirms Lang::load() really reloaded the French catalog for
+        // THIS request's own template rendering (profile_content.tpl is
+        // parsed at the very end of __invoke(), after the language-switch
+        // block runs) -- not just that no error occurred. $title
+        // (Lang::t('Your Gallery Customization'), computed earlier in
+        // __invoke() at L148, BEFORE the switch block) deliberately stays
+        // English for this one request, so this checks a template string
+        // instead.
+        expect($result['body'])->toContain('Nombre de miniatures par page');
+
+        // The authoritative check the task brief asks for: a real
+        // BatchWriter DB UPDATE actually landed in user_infos, not just
+        // CurrentUser::updateLanguage()'s in-memory state and not just "no
+        // error was thrown".
+        expect(profileUserLanguage())->toBe('fr_FR');
+
+        @unlink($session['cookieJar']);
+    } finally {
+        profileSetUserLanguage($originalLanguage);
+        $db2 = new mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $db2->query(sprintf("DELETE FROM %slanguages WHERE id = 'fr_FR'", $prefix));
+        $db2->close();
+    }
+});
+
+/** @return array{nb_image_page: int, recent_period: int} the guest (default_user_id=2) row's own current custom-settings values */
+function profileGuestDefaults(): array
+{
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+    $prefix = $prefix !== false ? $prefix : 'piwigo_';
+    $result = $db->query('SELECT nb_image_page, recent_period FROM ' . $prefix . 'user_infos WHERE user_id = 2');
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+    if (! is_array($row)) {
+        throw new RuntimeException('guest (user_id=2) user_infos row not found');
+    }
+
+    return ['nb_image_page' => (int) $row['nb_image_page'], 'recent_period' => (int) $row['recent_period']];
+}
+
+function profileSetImageSettings(int $nbImagePage, int $recentPeriod): void
+{
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+    $prefix = $prefix !== false ? $prefix : 'piwigo_';
+    $db->query(sprintf(
+        'UPDATE %suser_infos ui INNER JOIN %susers u ON u.id = ui.user_id SET ui.nb_image_page = %d, ui.recent_period = %d WHERE u.username = \'%s\'',
+        $prefix,
+        $prefix,
+        $nbImagePage,
+        $recentPeriod,
+        $db->real_escape_string(PROFILE_TEST_USER)
+    ));
+    $db->close();
+}
+
+it('previews the guest-default values in the rendered form on reset-to-default, without persisting them', function (): void {
+    $before = profileUserSettings();
+    $guestDefaults = profileGuestDefaults();
+
+    // Deliberately offset from the guest (default_user_id) row's own
+    // CURRENT values (read live above, not hardcoded -- AdminConfigurationTest's
+    // "default tab" test also mutates/restores this exact row) so the merge
+    // assertion below is unambiguous: if ProfileController's own
+    // `array_merge($userdata, $default_user)` (~L122-124) didn't run, the
+    // form would keep re-showing these instead.
+    profileSetImageSettings($guestDefaults['nb_image_page'] + 50, $guestDefaults['recent_period'] + 50);
+
+    try {
+        $page = profileLogin($this);
+        $page = H::navigateOk($page, '/profile.php');
+
+        // No 'validate' key in this POST -- a real browser only ever sends
+        // the ONE submit button that was actually clicked
+        // (profile_content.tpl's `<input type="submit" name="reset_to_default"
+        // ...>` is a separate button from the main 'validate' one), so
+        // ProfileFormSubmitRequest::isValidateSubmitted stays false and
+        // ProfileFormHandler::saveFromPost() returns immediately without
+        // touching the DB -- this is a pure preview render, verified below.
+        $result = H::adminPost($page, '/profile.php', [
+            'pwg_token' => H::pwgToken($page),
+            'reset_to_default' => '1',
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('id="nb_image_page" value="' . $guestDefaults['nb_image_page'] . '"');
+        expect($result['body'])->toContain('id="recent_period" value="' . $guestDefaults['recent_period'] . '"');
+
+        $unchanged = profileUserSettings();
+        expect($unchanged['nb_image_page'])->toBe($guestDefaults['nb_image_page'] + 50);
+        expect($unchanged['recent_period'])->toBe($guestDefaults['recent_period'] + 50);
+    } finally {
+        profileSetImageSettings($before['nb_image_page'], $before['recent_period']);
+    }
+});

@@ -231,6 +231,22 @@ final readonly class HttpClientService implements ClientInterface
             $status = $response->getStatusCode();
         } catch (ClientExceptionInterface) {
             return null;
+        } catch (\InvalidArgumentException) {
+            // Real bug, found via a new Integration test that legitimately
+            // calls UploadService::addUploadedFile() with no real HTTP host
+            // configured (no `gallery_url`, no Host/X-Forwarded-Host
+            // header -- a CLI-driven upload path): the self-request's own
+            // "full" URL ends up with an empty host segment
+            // (`http:///i.php?...`), and nyholm/psr7's Uri constructor
+            // throws InvalidArgumentException while merely *parsing* that
+            // string, before any network I/O or ClientExceptionInterface
+            // is even reachable. Every caller of fetch()/fetchToFile()
+            // treats a null/false guardedFetch() result as "the request
+            // didn't happen, move on" (UploadService::addUploadedFile()'s
+            // own self-priming call is explicitly documented as
+            // "fire-and-forget"), so a malformed self-generated URL must
+            // fail the same graceful way, not escape as a fatal exception.
+            return null;
         }
 
         if ($status < 200 || $status >= 400) {

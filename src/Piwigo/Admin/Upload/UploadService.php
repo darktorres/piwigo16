@@ -290,6 +290,24 @@ SELECT
                 throw new ImageProcessingException('[' . __METHOD__ . '] this photo does not exist in the database');
             }
 
+            // Real bug, found while writing a real "update an existing
+            // photo" integration test (confirmed live, matching what
+            // WsImagesUploadGapsTest's own docblock already documented as
+            // a pre-existing 500: "getimagesize(upload/2026/08/01/....jpg):
+            // Failed to open stream"): images.path is stored root-relative
+            // (see the "new photo" branch's own preg_replace() a bit
+            // further down, and addFormat()'s own identical "images.path
+            // ... is relative, not yet an absolute path" handling just
+            // below in this same class) -- but every downstream use of
+            // $file_path past this point (StorageRegistry::stripRoot(),
+            // chmod(), get_rotation_angle()/pwgImageInfos()'s own
+            // getimagesize()/filesize() calls) requires an absolute
+            // filesystem path, exactly like the "new photo" branch's own
+            // $file_path already is. Prefixing here, once, right after the
+            // DB read, keeps both branches producing the same absolute
+            // shape for the rest of the method.
+            $file_path = \Piwigo\Core\CurrentPaths::get()->root . $file_path;
+
             // delete all physical files related to the photo (thumbnail, web site, HD)
             \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
                 ->deleteElementFiles([$image_id], $urlService);
@@ -546,10 +564,21 @@ SELECT
             ->syncMetadata([(int) $image_id]);
 
         // cache a derivative
+        //
+        // Real bug, found alongside the update-branch $file_path one above
+        // (also confirmed live via WsImagesUploadGapsTest's own documented
+        // "Undefined array key 'file' in SrcImage.php"): SrcImage::
+        // __construct()'s own docblock states id/path/file are all
+        // NOT-NULL DB columns it trusts will be present -- unlike
+        // representative_ext, which it reads via `?? null` as genuinely
+        // optional -- but this query never selected `file`, so every real
+        // addUploadedFile() call (new photo or update) hit that warning
+        // right here, not just the update branch.
         $query = '
 SELECT
     id,
     path,
+    file,
     representative_ext
   FROM ' . Tables::images() . '
   WHERE id = ' . $image_id . '
@@ -1226,17 +1255,26 @@ SELECT
     }
 
     /**
-     * @return array{width: int, height: int, filesize: float}
+     * @return array{width: ?int, height: ?int, filesize: float}
      */
     public function pwgImageInfos(string $path): array
     {
         $image_size = getimagesize($path);
+        // Not decodable as an image at all (e.g. a non-picture file
+        // uploaded via CurrentConfig::uploadFormAllTypes()) -- width/height
+        // are genuinely unknown, not an error: piwigo_images.width/height
+        // are nullable columns precisely for this case (see the schema),
+        // and addFormat()'s own call to this method (the only other real
+        // caller) never reads width/height at all. This used to throw
+        // unconditionally, crashing every non-image upload; same fix
+        // family as PwgImage::get_rotation_angle() in this same
+        // coverage-gap-closure pass.
         if ($image_size === false) {
-            // every caller stores width/height straight into the database;
-            // there is no sane fallback shape to return here
-            throw new \Exception(__METHOD__ . '(): getimagesize() failed for ' . $path);
+            $width = null;
+            $height = null;
+        } else {
+            [$width, $height] = $image_size;
         }
-        [$width, $height] = $image_size;
         $filesize_bytes = filesize($path);
         if ($filesize_bytes === false) {
             // same rationale as the getimagesize() guard above: every caller

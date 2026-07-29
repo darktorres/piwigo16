@@ -67,6 +67,77 @@ function ctDerivativesPayload(array $overrides = []): array
     return $payload;
 }
 
+/**
+ * Fully decodes the raw `derivatives` config blob (see
+ * BrowserTestHelpers::configValue()'s own docblock: ImageStdParams::save()
+ * persists it as a real PHP serialize() blob, not JSON) into its real
+ * 'd'/'q'/'w'/'c' structure. Unlike the flat regex extraction the
+ * watermark-upload tests below use for the single `file` string they need
+ * to read (chosen there specifically to avoid a real unserialize() for a
+ * value those tests only need to read one flat string out of), the tests
+ * below inspect a specific derivative type's own last_mod_time and the
+ * custom-derivatives map -- both real nested values a regex can't safely
+ * target. DerivativeParams/SizingParams/WatermarkParams are all plain
+ * DTOs with no __unserialize()/side effects of their own (confirmed by
+ * reading their source), so a real, allowed_classes-scoped unserialize()
+ * here is safe.
+ *
+ * @return array{d: array<string, \Piwigo\Image\DerivativeParams>, q: int, w: \Piwigo\Image\WatermarkParams, c: array<string, int>}
+ */
+function ctDecodedDerivatives(): array
+{
+    $raw = H::configValue('derivatives');
+    expect($raw)->not->toBeNull();
+    assert(is_string($raw));
+
+    $decoded = unserialize($raw, ['allowed_classes' => [
+        \Piwigo\Image\DerivativeParams::class,
+        \Piwigo\Image\SizingParams::class,
+        \Piwigo\Image\WatermarkParams::class,
+    ]]);
+    expect($decoded)->toBeArray();
+    assert(is_array($decoded));
+
+    $d = [];
+    $rawD = $decoded['d'] ?? null;
+    foreach (is_array($rawD) ? $rawD : [] as $type => $params) {
+        if (is_string($type) && $params instanceof \Piwigo\Image\DerivativeParams) {
+            $d[$type] = $params;
+        }
+    }
+
+    $c = [];
+    $rawC = $decoded['c'] ?? null;
+    foreach (is_array($rawC) ? $rawC : [] as $key => $value) {
+        if (is_string($key) && is_int($value)) {
+            $c[$key] = $value;
+        }
+    }
+
+    $w = $decoded['w'] ?? null;
+    expect($w)->toBeInstanceOf(\Piwigo\Image\WatermarkParams::class);
+    assert($w instanceof \Piwigo\Image\WatermarkParams);
+
+    $q = $decoded['q'] ?? null;
+    expect($q)->toBeInt();
+    assert(is_int($q));
+
+    return ['d' => $d, 'q' => $q, 'w' => $w, 'c' => $c];
+}
+
+/**
+ * Re-serializes and writes back a full `derivatives` blob -- the
+ * counterpart to ctDecodedDerivatives(), for seeding a specific fixture
+ * state (a custom-derivative entry, an artificially-old last_mod_time)
+ * this page's own POST handlers have no form field to set directly.
+ *
+ * @param array{d: array<string, \Piwigo\Image\DerivativeParams>, q: int, w: \Piwigo\Image\WatermarkParams, c: array<string, int>} $decoded
+ */
+function ctSetDecodedDerivatives(array $decoded): void
+{
+    H::setConfigValue('derivatives', serialize($decoded));
+}
+
 /** @return array<string, mixed> */
 function ctArr(mixed $value): array
 {
@@ -1362,6 +1433,368 @@ it('avoids a watermark filename collision by appending a numbered suffix on a re
         if ($secondStoredPath !== null) {
             @unlink($secondStoredPath);
         }
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('main tab: falls back to "all" new-user notifications when a group filter has no group selected', function (): void {
+    $page = H::loginAsAdmin($this);
+    H::navigateOk($page, ctConfigSection('main'));
+    $token = H::pwgToken($page);
+
+    $snapshot = H::snapshotConfig(array_merge(
+        ['email_admin_on_new_user', 'order_by', 'order_by_inside_category', 'gallery_title'],
+        ctMainCheckboxes()
+    ));
+
+    try {
+        $result = H::adminPost($page, ctConfigSection('main'), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'gallery_title' => 'CT Group Fallback Gallery',
+            'order_by' => ['id ASC'],
+            'email_admin_on_new_user' => '1',
+            // filter is 'group' (not 'all'), but the group id field is
+            // deliberately omitted -- the inner emptyValue() check on
+            // email_admin_on_new_user_filter_group must fall back to
+            // 'all', not silently produce a bare 'group:' value.
+            'email_admin_on_new_user_filter' => 'group',
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Fatal error');
+        expect(H::configValue('email_admin_on_new_user'))->toBe(json_encode('all'));
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('main tab: warns about a deprecated $conf[\'order_by\'] set in a real local configuration file', function (): void {
+    $repoRoot = dirname(__DIR__, 2);
+    $localConfigPath = $repoRoot . '/local/config/config.inc.php';
+
+    // local/config/ is torres-owned in this dev environment (unlike
+    // local/watermarks/, created at runtime by the live www-data-run app --
+    // see this file's own watermark-upload tests above), so a plain direct
+    // file write is safe here -- the same direct-filesystem-fixture
+    // technique BrowserTestHelpers::setCustomLogo() already uses under
+    // `local/`, just targeting the actual file orderByIsLocal() itself
+    // @include()s (Piwigo\Core\CurrentPaths::get()->local .
+    // 'config/config.inc.php'), not a config-table row. Confirmed via a
+    // full grep of every real @include site of this exact path
+    // (Admin\UserListPageRenderer, Admin\Install\LegacyFileConf, this
+    // controller, and BackupService's own file copy) that it is NEVER read
+    // into the live app's real runtime $conf during normal request
+    // bootstrap (ConfigLoader::applyDefaults()/applyEnvOverrides() are both
+    // no-ops) -- writing it here cannot affect any other concurrently-
+    // scoped behavior.
+    if (file_exists($localConfigPath)) {
+        throw new RuntimeException("Refusing to overwrite a pre-existing {$localConfigPath} -- clean up a prior failed run first.");
+    }
+
+    // Also sets $conf['local_dir_site'], the only thing that makes
+    // orderByIsLocal() take its second @include (of siteLocal's own
+    // config.inc.php) -- PIWIGO_LOCAL_DIR is unset in this test
+    // environment, so local === siteLocal and this second include re-reads
+    // the exact same file, but the source line itself only runs when this
+    // key is set, so this is needed to exercise that line at all.
+    file_put_contents(
+        $localConfigPath,
+        "<?php\n\$conf['order_by'] = 'ORDER BY id ASC';\n\$conf['local_dir_site'] = true;\n"
+    );
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, ctConfigSection('main'));
+        $page->assertSee('in your local configuration file, this parameter in deprecated, please remove it or rename it into');
+    } finally {
+        @unlink($localConfigPath);
+    }
+});
+
+it('sizes tab: resubmitting identical derivative values leaves an unchanged type\'s last_mod_time untouched', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives', 'disabled_derivatives']);
+
+    try {
+        $page = H::loginAsAdmin($this);
+
+        $payload = [
+            'submit' => '1',
+            'resize_quality' => '90',
+            'd' => ctDerivativesPayload(),
+        ];
+
+        $token = H::pwgToken($page);
+        $first = H::adminPost($page, ctConfigSection('sizes'), array_merge(['pwg_token' => $token], $payload));
+        expect($first['status'])->toBe(200);
+        expect($first['body'])->toContain('Your configuration settings are saved');
+
+        $lastModAfterFirst = ctDecodedDerivatives()['d']['square']->last_mod_time;
+
+        // A real elapsed-time gap (not just "same request"): if
+        // processSizes()'s own same-value detection (comparing ideal_size/
+        // max_crop/min_size/sharpen/quality against the previously saved
+        // DerivativeParams) were broken and unconditionally stamped
+        // last_mod_time = time() on every save, this second, byte-identical
+        // resubmission would show a strictly newer timestamp.
+        sleep(2);
+
+        $token = H::pwgToken($page);
+        $second = H::adminPost($page, ctConfigSection('sizes'), array_merge(['pwg_token' => $token], $payload));
+        expect($second['status'])->toBe(200);
+        expect($second['body'])->toContain('Your configuration settings are saved');
+
+        $lastModAfterSecond = ctDecodedDerivatives()['d']['square']->last_mod_time;
+
+        expect($lastModAfterSecond)->toBe($lastModAfterFirst);
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('sizes tab: deletes a custom derivative entry when its delete flag is submitted', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives', 'disabled_derivatives']);
+
+    try {
+        $decoded = ctDecodedDerivatives();
+        $customKey = 'ct_custom_' . uniqid();
+        $decoded['c'][$customKey] = time() - 100;
+        ctSetDecodedDerivatives($decoded);
+
+        expect(ctDecodedDerivatives()['c'])->toHaveKey($customKey);
+
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        $result = H::adminPost($page, ctConfigSection('sizes'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'resize_quality' => '90',
+            'd' => ctDerivativesPayload(),
+            // Mirrors ImageStdParams::get_custom()'s own key shape closely
+            // enough for this branch's purposes -- processSizes() only
+            // checks `isset($post['delete_custom_derivative_' . $custom])`
+            // for each key already present in ImageStdParams::$custom, it
+            // never validates the key's own format.
+            'delete_custom_derivative_' . $customKey => '1',
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('Your configuration settings are saved');
+        expect(ctDecodedDerivatives()['c'])->not->toHaveKey($customKey);
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('watermark tab: reports a write-access error for a genuinely unwritable upload directory', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives']);
+
+    $repoRoot = dirname(__DIR__, 2);
+    $watermarksDir = $repoRoot . '/local/watermarks';
+    $holdingDir = sys_get_temp_dir() . '/pwg_watermarks_holding_' . uniqid();
+    $preserved = [];
+    $cookieJar = null;
+    $pngPath = null;
+
+    // Every step below (including the fixture setup itself, not just the
+    // HTTP assertions) is inside this one try/finally -- local/watermarks/
+    // is real, shared state this whole file's OTHER watermark-upload tests
+    // depend on, so even a failure while seeding the unwritable fixture
+    // must still restore it, not just a failure in the assertions.
+    try {
+        mkdir($holdingDir, 0777, true);
+
+        // Preserve whatever the live app (running as www-data -- confirmed
+        // via this environment's reciprocal torres/www-data group
+        // membership, the same shared-filesystem assumption every direct-
+        // DB/-filesystem fixture helper in BrowserTestHelpers already
+        // makes) currently has in local/watermarks/, rather than deleting
+        // it outright, so this test is fully restorable regardless of what
+        // an earlier run left behind.
+        $entries = scandir($watermarksDir);
+        foreach ($entries !== false ? $entries : [] as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+            rename($watermarksDir . '/' . $entry, $holdingDir . '/' . $entry);
+            $preserved[] = $entry;
+        }
+        rmdir($watermarksDir);
+
+        // A real, deterministic unwritable directory: torres owns it (mode
+        // 0555, no write bit for owner/group/other), which the live Apache
+        // process (running as www-data, a member of torres' own group in
+        // this environment) can still read/traverse but never write into --
+        // so FilesystemHelper::mkgetdir()'s own is_writable() check
+        // genuinely fails, a real filesystem permission state, not a mock.
+        // Deleting the directory (torres owns its parent, local/) and
+        // recreating it as torres is the only way to control its
+        // permissions at all: the live app normally creates/owns
+        // local/watermarks/ as www-data, which torres cannot chmod()
+        // (confirmed live: chmod() requires file ownership, group
+        // membership alone isn't enough).
+        mkdir($watermarksDir, 0555);
+        chmod($watermarksDir, 0555);
+
+        $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_browser_watermark_unwritable_');
+        if ($cookieJar === false) {
+            throw new RuntimeException('tempnam failed');
+        }
+
+        $curl = static function (string $url, array $fields = []) use ($cookieJar): array {
+            $ch = curl_init($url);
+            if ($ch === false) {
+                throw new RuntimeException('curl_init failed');
+            }
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+            curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            if ($fields !== []) {
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+            }
+            $body = curl_exec($ch);
+            $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+            unset($ch);
+
+            return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+        };
+
+        $baseUrl = H::baseUrl();
+        $curl($baseUrl . '/identification.php');
+        $curl($baseUrl . '/identification.php', [
+            'username' => H::ADMIN_USER,
+            'password' => H::ADMIN_PASS,
+            'login' => 'Login',
+        ]);
+
+        $statusResult = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.session.getStatus']);
+        $decodedStatus = json_decode($statusResult['body'], true);
+        $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
+        $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+        $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
+        expect($pwgToken)->not->toBe('');
+
+        $watermarkUrl = $baseUrl . '/' . ltrim(ctConfigSection('watermark'), '/');
+        $pngPath = tempnam(sys_get_temp_dir(), 'pwg_watermark_') . '.png';
+        $img = imagecreatetruecolor(20, 20);
+        if ($img === false) {
+            throw new RuntimeException('imagecreatetruecolor failed');
+        }
+        imagepng($img, $pngPath);
+
+        $result = $curl($watermarkUrl, [
+            'pwg_token' => $pwgToken,
+            'submit' => '1',
+            'w[file]' => '',
+            'w[position]' => 'topleft',
+            'w[xpos]' => '0',
+            'w[ypos]' => '0',
+            'w[xrepeat]' => '0',
+            'w[yrepeat]' => '0',
+            'w[opacity]' => '50',
+            'w[minw]' => '10',
+            'w[minh]' => '10',
+            'watermarkImage' => new CURLFile($pngPath, 'image/png', 'ct-unwritable-watermark.png'),
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('Add write access to the');
+        expect($result['body'])->not->toContain('Your configuration settings are saved');
+        expect($result['body'])->not->toContain('Fatal error');
+    } finally {
+        if (is_string($cookieJar)) {
+            @unlink($cookieJar);
+        }
+        if ($pngPath !== null) {
+            @unlink($pngPath);
+        }
+
+        // Best-effort, idempotent restoration -- @-suppressed since a step
+        // here may legitimately no-op (e.g. chmod() on a directory this
+        // process doesn't own, if the try block above never got far enough
+        // to replace it with a torres-owned one in the first place).
+        if (! is_dir($watermarksDir)) {
+            @mkdir($watermarksDir, 0777);
+        }
+        @chmod($watermarksDir, 0777);
+        foreach ($preserved as $entry) {
+            $from = $holdingDir . '/' . $entry;
+            if (file_exists($from)) {
+                @rename($from, $watermarksDir . '/' . $entry);
+            }
+        }
+        if (is_dir($holdingDir)) {
+            @rmdir($holdingDir);
+        }
+
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('watermark tab: lowering the size threshold bumps last_mod_time for a still-eligible derivative type', function (): void {
+    $snapshot = H::snapshotConfig(['derivatives']);
+
+    try {
+        $decoded = ctDecodedDerivatives();
+        expect($decoded['d'])->toHaveKey('small');
+
+        // 'small' (576x432) qualifies for the watermark at BOTH thresholds
+        // below (500<=576 and 300<=576) -- its own use_watermark boolean
+        // never flips, isolating the specific "the threshold itself moved"
+        // branch (processWatermark()'s 3rd $changed check) from the other
+        // two (use_watermark flipping, or file/xpos/ypos/xrepeat/yrepeat/
+        // opacity changing).
+        $decoded['w']->file = 'watermarks/ct_lastmod_fixture.png';
+        $decoded['w']->min_size = [500, 500];
+        $decoded['w']->xpos = 0;
+        $decoded['w']->ypos = 0;
+        $decoded['w']->xrepeat = 0;
+        $decoded['w']->yrepeat = 0;
+        $decoded['w']->opacity = 50;
+        $seededLastMod = time() - 100_000;
+        $decoded['d']['small']->last_mod_time = $seededLastMod;
+        ctSetDecodedDerivatives($decoded);
+
+        $page = H::loginAsAdmin($this);
+
+        $watermarkFields = [
+            'file' => 'watermarks/ct_lastmod_fixture.png',
+            'position' => 'topleft',
+            'xpos' => '0',
+            'ypos' => '0',
+            'xrepeat' => '0',
+            'yrepeat' => '0',
+            'opacity' => '50',
+        ];
+
+        // First: resubmit the SAME threshold seeded above -- confirms the
+        // seeded last_mod_time is a stable starting point, not itself a
+        // fresh "changed" write (a real, elapsed-time-independent no-op).
+        $token = H::pwgToken($page);
+        $unchanged = H::adminPost($page, ctConfigSection('watermark'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'w' => $watermarkFields + ['minw' => '500', 'minh' => '500'],
+        ]);
+        expect($unchanged['status'])->toBe(200);
+        expect($unchanged['body'])->toContain('Your configuration settings are saved');
+        expect(ctDecodedDerivatives()['d']['small']->last_mod_time)->toBe($seededLastMod);
+
+        // Second: lower the threshold only, everything else identical.
+        $token = H::pwgToken($page);
+        $changed = H::adminPost($page, ctConfigSection('watermark'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'w' => $watermarkFields + ['minw' => '300', 'minh' => '300'],
+        ]);
+        expect($changed['status'])->toBe(200);
+        expect($changed['body'])->toContain('Your configuration settings are saved');
+        expect(ctDecodedDerivatives()['d']['small']->last_mod_time)->toBeGreaterThan($seededLastMod);
+    } finally {
         H::restoreConfig($snapshot);
     }
 });

@@ -188,6 +188,117 @@ final class WsHistoryTest extends ContractTestCase
         }
     }
 
+    /**
+     * The 'admins_only' setting is a distinct branch from 'none' above --
+     * it keeps a login/logout row when its object_id (the user who
+     * logged in/out) is an admin, and excludes it otherwise, via a
+     * `NOT (action IN ('login','logout') AND object_id NOT IN (<admin
+     * ids>))` filter (UserRepository::findAdminIds()).
+     */
+    public function test_activityGetList_admins_only_keeps_admin_logins_but_excludes_non_admin_logins(): void
+    {
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('activity_display_connections', '\"admins_only\"')
+             ON DUPLICATE KEY UPDATE value = VALUES(value)"
+        );
+        \Piwigo\Cache\CachePools::config()->clear();
+
+        try {
+            $adminId = $this->conn->fetchOne("SELECT id FROM " . Tables::users() . " WHERE username = 'fixture_admin'");
+            self::assertIsNumeric($adminId);
+            $regularUserId = $this->conn->fetchOne("SELECT id FROM " . Tables::users() . " WHERE username = 'regular_user'");
+            self::assertIsNumeric($regularUserId);
+
+            // fixture_admin (webmaster status) logs in first -- its own
+            // 'user'/'login' row's object_id is an admin id, so admins_only
+            // must keep it.
+            $this->loginAsAdmin();
+
+            // regular_user (status 'normal', not an admin) logs in on the
+            // same cookie jar -- its 'user'/'login' row's object_id is not
+            // an admin id, so admins_only must exclude it.
+            $regularLogin = $this->callWs('pwg.session.login', [
+                'username' => 'regular_user',
+                'password' => 'regular_user_pass',
+            ]);
+            self::assertSame('ok', $regularLogin['stat']);
+
+            // pwg.activity.getList is admin_only -- log back in as admin on
+            // the same cookie jar to read the results.
+            $this->loginAsAdmin();
+            $response = $this->callWs('pwg.activity.getList', ['object' => 'user', 'action' => 'login']);
+
+            self::assertSame('ok', $response['stat']);
+            $result = $response['result'];
+            self::assertIsArray($result);
+            $lines = $result['result_lines'];
+            self::assertIsArray($lines);
+
+            $objectIds = [];
+            foreach ($lines as $line) {
+                self::assertIsArray($line);
+                self::assertIsArray($line['object_id']);
+                foreach ($line['object_id'] as $objectId) {
+                    $objectIds[] = $objectId;
+                }
+            }
+
+            self::assertContains((string) (int) $adminId, $objectIds, 'admins_only must keep an admin login');
+            self::assertNotContains((string) (int) $regularUserId, $objectIds, 'admins_only must exclude a non-admin login');
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'activity_display_connections'");
+            \Piwigo\Cache\CachePools::config()->clear();
+        }
+    }
+
+    /**
+     * getActivityList()'s $username_of enrichment (built from the
+     * performed_by/object_id of every fetched row) and its object==='user'
+     * per-line 'details.users'/'details.users_string' enrichment loop --
+     * neither is exercised by the object/action-filter tests above, which
+     * never inspect a line's 'username' or 'details' fields.
+     */
+    public function test_activityGetList_login_event_enriches_username_and_details_users(): void
+    {
+        $adminId = $this->conn->fetchOne("SELECT id FROM " . Tables::users() . " WHERE username = 'fixture_admin'");
+        self::assertIsNumeric($adminId);
+        $adminIdString = (string) (int) $adminId;
+
+        // wsAdmin() performs a real pwg.session.login, which AuthService::
+        // login() records as a 'user'/'login' row with object_id = the user
+        // who just logged in (fixture_admin) but performed_by = the
+        // pre-login identity (guest -- login is recorded before CurrentUser
+        // is re-resolved to the newly authenticated user, confirmed live
+        // via a direct DB query before writing this assertion).
+        $response = $this->wsAdmin('pwg.activity.getList', ['object' => 'user', 'action' => 'login']);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $lines = $result['result_lines'];
+        self::assertIsArray($lines);
+        self::assertNotEmpty($lines);
+
+        $line = null;
+        foreach ($lines as $candidate) {
+            self::assertIsArray($candidate);
+            if ($candidate['object_id'] === [$adminIdString]) {
+                $line = $candidate;
+                break;
+            }
+        }
+        self::assertNotNull($line, 'expected a login row whose object_id is fixture_admin');
+
+        // 'username' reflects the performer (performed_by = guest), not the
+        // object being logged in.
+        self::assertSame('guest', $line['username']);
+
+        $details = $line['details'];
+        self::assertIsArray($details);
+        self::assertSame(['fixture_admin'], $details['users']);
+        self::assertSame('fixture_admin', $details['users_string']);
+    }
+
     public function test_historySearch_response_matches_schema(): void
     {
         $response = $this->wsAdmin('pwg.history.search');
@@ -674,6 +785,155 @@ final class WsHistoryTest extends ContractTestCase
         self::assertIsArray($summary);
         self::assertIsNumeric($summary['FILESIZE']);
         self::assertSame((int) ceil((int) $filesize / 1024), (int) $summary['FILESIZE']);
+    }
+
+    /**
+     * historySearch()'s per-line image/category formatting has explicit
+     * fallback defaults when the referenced image_id/category_id no
+     * longer matches a real row: EDIT_IMAGE/IMAGENAME fall back to
+     * ""/" unknown filename" when image_infos[$line_image_id]['label']
+     * is unset, and CATEGORY/FULL_CATEGORY_PATH fall back to
+     * Lang::t('Root') . $line_category_id (here, both null, so just
+     * 'Root'). A real dangling image_id can only happen via a raw write
+     * (fk_history_image_id is ON DELETE SET NULL, so a normal image
+     * deletion just nulls the column instead of leaving a real dangling
+     * id) -- same "reproduce the only real way this state has ever
+     * existed" rationale as UserServiceTest's own
+     * SET FOREIGN_KEY_CHECKS=0 pattern -- confirmed live (a real WS call
+     * against the real Apache-served app) before writing this assertion.
+     */
+    public function test_historySearch_with_a_dangling_image_id_and_no_category_falls_back_to_defaults(): void
+    {
+        $this->enableHistoryForAdmin();
+        $this->wsAdmin('pwg.history.log', ['image_id' => 1]);
+
+        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=0');
+        $this->conn->executeStatement(
+            'UPDATE ' . Tables::history() . ' SET image_id = 999999, category_id = NULL, section = NULL WHERE image_id = 1 ORDER BY id DESC LIMIT 1'
+        );
+        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=1');
+
+        $response = $this->wsAdmin('pwg.history.search', ['image_id' => 999999]);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $lines = $result['lines'];
+        self::assertIsArray($lines);
+        self::assertNotEmpty($lines);
+        $line = $lines[0];
+        self::assertIsArray($line);
+
+        self::assertSame('999999', $line['IMAGEID']);
+        self::assertSame('', $line['EDIT_IMAGE']);
+        self::assertSame(' unknown filename', $line['IMAGENAME']);
+        self::assertIsString($line['IMAGE']);
+        self::assertStringContainsString('unknown', $line['IMAGE']);
+
+        self::assertSame('Root', $line['CATEGORY']);
+        self::assertSame('Root', $line['FULL_CATEGORY_PATH']);
+    }
+
+    /**
+     * historySearch()'s per-line image formatting is entirely skipped when
+     * a history row's image_id is null -- IMAGE/IMAGENAME/IMAGEID/
+     * EDIT_IMAGE all stay at their initial '' default (`if
+     * ($line_image_id !== null)` never runs at all) -- distinct from the
+     * "dangling image_id" test above, where line_image_id is a real,
+     * non-null (but orphaned) value. A real image_id-less history row can
+     * only come from a genuine category/album browse
+     * (GalleryController::index()'s own logVisit() call passes
+     * section/category only, no image_id argument at all) --
+     * pwg.history.log always requires a real positive image_id
+     * (WsParamType::ID), so the WS API itself can never produce one; a
+     * real page visit is needed, confirmed live before writing this
+     * assertion.
+     */
+    public function test_historySearch_with_an_album_browse_row_leaves_image_fields_empty(): void
+    {
+        $this->enableHistoryForAdmin();
+        $this->loginAsAdmin();
+
+        $cookieJar = $this->cookieJar();
+        assert($cookieJar !== '');
+        $ch = curl_init($this->baseUrl . '/index.php');
+        self::assertNotFalse($ch);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
+        curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        unset($ch);
+        self::assertSame(200, $status);
+
+        $row = $this->conn->fetchAssociative(
+            'SELECT id FROM ' . Tables::history() . " WHERE image_id IS NULL AND section = 'categories' ORDER BY id DESC LIMIT 1"
+        );
+        self::assertIsArray($row, 'expected the /index.php visit above to log a real image_id-less history row');
+
+        $response = $this->wsAdmin('pwg.history.search');
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $lines = $result['lines'];
+        self::assertIsArray($lines);
+
+        $line = null;
+        foreach ($lines as $candidate) {
+            self::assertIsArray($candidate);
+            if ($candidate['SECTION'] === 'categories' && $candidate['IMAGEID'] === '') {
+                $line = $candidate;
+                break;
+            }
+        }
+        self::assertNotNull($line, 'expected a category-browse row with no image_id');
+
+        self::assertSame('', $line['IMAGE']);
+        self::assertSame('', $line['IMAGENAME']);
+        self::assertSame('', $line['EDIT_IMAGE']);
+    }
+
+    /**
+     * historySearch()'s display_thumbnail cookie: emptyValue('')
+     * short-circuits InputValidator::validate()'s mandatory=false check
+     * (no [Hacking attempt] error, unlike the invalid non-empty value
+     * tested below), but the `$param['display_thumbnail'] !== ''` guard
+     * around the setCookieVar() call means an explicit empty value clears
+     * the cookie (CookieService::setCookieVar(..., null, ...)) instead of
+     * persisting a chosen value -- every other call in this file omits
+     * the param entirely, which uses the non-empty
+     * 'display_thumbnail_classic' default and always takes the opposite
+     * branch. Raw curl (not callWs()) to inspect the real Set-Cookie
+     * header.
+     */
+    public function test_historySearch_with_an_empty_display_thumbnail_clears_the_cookie(): void
+    {
+        $this->loginAsAdmin();
+        $url = $this->baseUrl . '/ws.php?format=json';
+        $ch = curl_init($url);
+        self::assertNotFalse($ch);
+
+        $cookieJar = $this->cookieJar();
+        assert($cookieJar !== '');
+        curl_setopt($ch, CURLOPT_HEADER, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, 'method=pwg.history.search&display_thumbnail=');
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
+
+        $response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        unset($ch);
+
+        self::assertIsString($response);
+        self::assertSame(200, $status);
+        self::assertStringContainsString('Set-Cookie: pwg_display_thumbnail=deleted;', $response);
     }
 
     /**

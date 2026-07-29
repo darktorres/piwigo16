@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
+use Piwigo\Core\FilesystemHelper;
 use ZipArchive;
 
 /**
@@ -167,7 +168,7 @@ final class ZipExtractor
             $isDir = str_ends_with($storedName, '/');
 
             if ($isDir) {
-                @mkdir($filename, 0777, true);
+                FilesystemHelper::mkgetdir($filename, FilesystemHelper::MKGETDIR_RECURSIVE);
                 $result[] = [
                     'filename' => $filename,
                     'stored_filename' => $storedName,
@@ -185,7 +186,7 @@ final class ZipExtractor
                 continue;
             }
 
-            @mkdir(dirname($filename), 0777, true);
+            FilesystemHelper::mkgetdir(dirname($filename), FilesystemHelper::MKGETDIR_RECURSIVE);
 
             $source = $zip->getStream($storedName);
             $dest = $source !== false ? @fopen($filename, 'wb') : false;
